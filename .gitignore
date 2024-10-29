@@ -155,4 +155,4 @@ dmypy.json
 cython_debug/
 
 # Other
-.git-credentials
+*.git-credentials
