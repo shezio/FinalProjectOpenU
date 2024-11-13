@@ -100,7 +100,7 @@
             <mxPoint x="635" y="688.62" as="targetPoint" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="43rfYfOqclGS9a-UTzkt-34" value="בוגרים " style="rounded=1;fillColor=#ffcc99;strokeColor=#36393d;shadow=1;fontStyle=1;fontSize=14;align=center;" vertex="1" parent="1">
+        <mxCell id="43rfYfOqclGS9a-UTzkt-34" value="רכזים" style="rounded=1;fillColor=#ffcc99;strokeColor=#36393d;shadow=1;fontStyle=1;fontSize=14;align=center;" vertex="1" parent="1">
           <mxGeometry x="853" y="570" width="100" height="60" as="geometry" />
         </mxCell>
         <mxCell id="43rfYfOqclGS9a-UTzkt-35" value="" style="edgeStyle=elbowEdgeStyle;elbow=vertical;strokeWidth=4;endArrow=baseDash;endFill=0;fontStyle=1;strokeColor=#808080;entryX=1;entryY=0.5;entryDx=0;entryDy=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;rounded=1;align=center;verticalAlign=middle;spacingRight=0;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;" edge="1" parent="1" source="43rfYfOqclGS9a-UTzkt-34" target="bQVK4K-JHT9RS3OZxk5x-64">
