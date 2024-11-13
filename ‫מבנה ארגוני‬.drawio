@@ -4,19 +4,19 @@
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
-        <mxCell id="2" value="&#xa;נועם ניזרי&#xa;מנכ&quot;ל העמותה&#xa;" style="rounded=1;fillColor=#ffcc99;strokeColor=#36393d;shadow=1;fontStyle=1;fontSize=14;" parent="1" vertex="1">
+        <mxCell id="2" value="&#xa;נועם ניזרי&#xa;מנכ&quot;ל העמותה&#xa;" style="rounded=1;fillColor=#e6d0de;strokeColor=#996185;shadow=1;fontStyle=1;fontSize=14;align=center;verticalAlign=middle;fontFamily=Helvetica;fontColor=default;gradientColor=#d5739d;" parent="1" vertex="1">
           <mxGeometry x="745" y="205.5" width="130" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="3" value="ליאם אביבי&#xa;סמנכ&quot;ל תפעול וכספים" style="rounded=1;fillColor=#ffcc99;strokeColor=#36393d;shadow=1;fontStyle=1;fontSize=14;" parent="1" vertex="1">
+        <mxCell id="3" value="ליאם אביבי&#xa;סמנכ&quot;ל תפעול וכספים" style="rounded=1;fillColor=#e6d0de;strokeColor=#996185;shadow=1;fontStyle=1;fontSize=14;align=center;verticalAlign=middle;fontFamily=Helvetica;fontColor=default;gradientColor=#d5739d;" parent="1" vertex="1">
           <mxGeometry x="735" y="310" width="150" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="4" value="יובל ברגיל&#xa;רכז חונכים" style="rounded=1;fillColor=#ffcc99;strokeColor=#36393d;shadow=1;fontStyle=1;fontSize=14;" parent="1" vertex="1">
+        <mxCell id="4" value="יובל ברגיל&#xa;רכז חונכים" style="rounded=1;fillColor=#e6d0de;strokeColor=#996185;shadow=1;fontStyle=1;fontSize=14;align=center;verticalAlign=middle;fontFamily=Helvetica;fontColor=default;gradientColor=#d5739d;" parent="1" vertex="1">
           <mxGeometry x="450" y="455.5" width="100" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="5" value="ליה צוהר&#xa;רכזת משפחות" style="rounded=1;fillColor=#ffcc99;strokeColor=#36393d;shadow=1;fontStyle=1;fontSize=14;" parent="1" vertex="1">
+        <mxCell id="5" value="ליה צוהר&#xa;רכזת משפחות" style="rounded=1;fillColor=#e6d0de;strokeColor=#996185;shadow=1;fontStyle=1;fontSize=14;align=center;verticalAlign=middle;fontFamily=Helvetica;fontColor=default;gradientColor=#d5739d;" parent="1" vertex="1">
           <mxGeometry x="590" y="457.75" width="110" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="6" value="נבו ג׳יבלי&#xa;רכז בוגרים " style="rounded=1;fillColor=#ffcc99;strokeColor=#36393d;shadow=1;fontStyle=1;fontSize=14;align=center;" parent="1" vertex="1">
+        <mxCell id="6" value="נבו ג׳יבלי&#xa;רכז בוגרים " style="rounded=1;fillColor=#e6d0de;strokeColor=#996185;shadow=1;fontStyle=1;fontSize=14;align=center;verticalAlign=middle;fontFamily=Helvetica;fontColor=default;gradientColor=#d5739d;" parent="1" vertex="1">
           <mxGeometry x="966" y="460" width="100" height="60" as="geometry" />
         </mxCell>
         <mxCell id="29" value="" style="edgeStyle=elbowEdgeStyle;elbow=vertical;strokeWidth=4;endArrow=baseDash;endFill=0;fontStyle=1;strokeColor=#808080;rounded=1;align=center;verticalAlign=middle;spacingRight=0;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;" parent="1" source="2" target="3" edge="1">
@@ -43,7 +43,7 @@
             <mxPoint x="122" y="165.5" as="targetPoint" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="bQVK4K-JHT9RS3OZxk5x-55" value="אילה קריץ&#xa;רכזת טכנולוגיה&#xa;רכזת רישום משפחות ומתנדבים " style="rounded=1;fillColor=#ffcc99;strokeColor=#36393d;shadow=1;fontStyle=1;fontSize=14;" parent="1" vertex="1">
+        <mxCell id="bQVK4K-JHT9RS3OZxk5x-55" value="אילה קריץ&#xa;רכזת טכנולוגיה&#xa;רכזת רישום משפחות ומתנדבים " style="rounded=1;fillColor=#e6d0de;strokeColor=#996185;shadow=1;fontStyle=1;fontSize=14;gradientColor=#d5739d;" parent="1" vertex="1">
           <mxGeometry x="1114" y="460" width="210" height="60" as="geometry" />
         </mxCell>
         <mxCell id="bQVK4K-JHT9RS3OZxk5x-56" value="" style="edgeStyle=elbowEdgeStyle;elbow=vertical;strokeWidth=4;endArrow=baseDash;endFill=0;fontStyle=1;strokeColor=#808080;entryX=0.5;entryY=0;entryDx=0;entryDy=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;spacingRight=0;rounded=1;align=center;verticalAlign=middle;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;" parent="1" source="3" target="bQVK4K-JHT9RS3OZxk5x-55" edge="1">
@@ -52,7 +52,7 @@
             <mxPoint x="1230" y="455.5" as="targetPoint" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="bQVK4K-JHT9RS3OZxk5x-59" value="טל לנגרמן&#xa;רכזת מתנדבים" style="rounded=1;fillColor=#ffcc99;strokeColor=#36393d;shadow=1;fontStyle=1;fontSize=14;" parent="1" vertex="1">
+        <mxCell id="bQVK4K-JHT9RS3OZxk5x-59" value="טל לנגרמן&#xa;רכזת מתנדבים" style="rounded=1;fillColor=#e6d0de;strokeColor=#996185;shadow=1;fontStyle=1;fontSize=14;align=center;verticalAlign=middle;fontFamily=Helvetica;fontColor=default;gradientColor=#d5739d;" parent="1" vertex="1">
           <mxGeometry x="750" y="455.5" width="120" height="64.5" as="geometry" />
         </mxCell>
         <mxCell id="bQVK4K-JHT9RS3OZxk5x-60" value="" style="edgeStyle=elbowEdgeStyle;elbow=vertical;strokeWidth=4;endArrow=baseDash;endFill=0;fontStyle=1;strokeColor=#808080;entryX=0.5;entryY=0;entryDx=0;entryDy=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;rounded=1;align=center;verticalAlign=middle;spacingRight=0;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;" parent="1" source="3" target="bQVK4K-JHT9RS3OZxk5x-59" edge="1">
@@ -64,7 +64,7 @@
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="bQVK4K-JHT9RS3OZxk5x-61" value="בוגרים " style="rounded=1;fillColor=#ffcc99;strokeColor=#36393d;shadow=1;fontStyle=1;fontSize=14;align=center;" parent="1" vertex="1">
+        <mxCell id="bQVK4K-JHT9RS3OZxk5x-61" value="בוגרים " style="rounded=1;fillColor=#e6d0de;strokeColor=#996185;shadow=1;fontStyle=1;fontSize=14;align=center;verticalAlign=middle;fontFamily=Helvetica;fontColor=default;gradientColor=#d5739d;" parent="1" vertex="1">
           <mxGeometry x="966" y="570" width="100" height="60" as="geometry" />
         </mxCell>
         <mxCell id="bQVK4K-JHT9RS3OZxk5x-63" value="" style="edgeStyle=elbowEdgeStyle;elbow=vertical;strokeWidth=4;endArrow=baseDash;endFill=0;fontStyle=1;strokeColor=#808080;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;rounded=1;align=center;verticalAlign=middle;spacingRight=0;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;" parent="1" source="6" target="bQVK4K-JHT9RS3OZxk5x-61" edge="1">
@@ -73,7 +73,7 @@
             <mxPoint x="970" y="650" as="targetPoint" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="bQVK4K-JHT9RS3OZxk5x-64" value="מתנדבים" style="rounded=1;fillColor=#ffcc99;strokeColor=#36393d;shadow=1;fontStyle=1;fontSize=14;align=center;" parent="1" vertex="1">
+        <mxCell id="bQVK4K-JHT9RS3OZxk5x-64" value="מתנדבים" style="rounded=1;fillColor=#e6d0de;strokeColor=#996185;shadow=1;fontStyle=1;fontSize=14;align=center;verticalAlign=middle;fontFamily=Helvetica;fontColor=default;gradientColor=#d5739d;" parent="1" vertex="1">
           <mxGeometry x="760" y="675" width="100" height="60" as="geometry" />
         </mxCell>
         <mxCell id="bQVK4K-JHT9RS3OZxk5x-65" value="" style="edgeStyle=elbowEdgeStyle;elbow=vertical;strokeWidth=4;endArrow=baseDash;endFill=0;fontStyle=1;strokeColor=#808080;entryX=0.5;entryY=0;entryDx=0;entryDy=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;rounded=1;align=center;verticalAlign=middle;spacingRight=0;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;" parent="1" source="bQVK4K-JHT9RS3OZxk5x-59" target="bQVK4K-JHT9RS3OZxk5x-64" edge="1">
@@ -82,7 +82,7 @@
             <mxPoint x="800" y="650" as="targetPoint" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="bQVK4K-JHT9RS3OZxk5x-68" value="חונכים" style="rounded=1;fillColor=#ffcc99;strokeColor=#36393d;shadow=1;fontStyle=1;fontSize=14;align=center;" parent="1" vertex="1">
+        <mxCell id="bQVK4K-JHT9RS3OZxk5x-68" value="חונכים" style="rounded=1;fillColor=#e6d0de;strokeColor=#996185;shadow=1;fontStyle=1;fontSize=14;align=center;verticalAlign=middle;fontFamily=Helvetica;fontColor=default;gradientColor=#d5739d;" parent="1" vertex="1">
           <mxGeometry x="450" y="570" width="100" height="60" as="geometry" />
         </mxCell>
         <mxCell id="bQVK4K-JHT9RS3OZxk5x-69" value="" style="edgeStyle=elbowEdgeStyle;elbow=vertical;strokeWidth=4;endArrow=baseDash;endFill=0;fontStyle=1;strokeColor=#808080;entryX=0.5;entryY=0;entryDx=0;entryDy=0;rounded=1;align=center;verticalAlign=middle;spacingRight=0;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;" parent="1" source="4" target="bQVK4K-JHT9RS3OZxk5x-68" edge="1">
@@ -91,7 +91,7 @@
             <mxPoint x="490" y="660" as="targetPoint" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="bQVK4K-JHT9RS3OZxk5x-70" value="משפחות" style="rounded=1;fillColor=#ffcc99;strokeColor=#36393d;shadow=1;fontStyle=1;fontSize=14;align=center;" parent="1" vertex="1">
+        <mxCell id="bQVK4K-JHT9RS3OZxk5x-70" value="משפחות" style="rounded=1;fillColor=#e6d0de;strokeColor=#996185;shadow=1;fontStyle=1;fontSize=14;align=center;verticalAlign=middle;fontFamily=Helvetica;fontColor=default;gradientColor=#d5739d;" parent="1" vertex="1">
           <mxGeometry x="595" y="570" width="100" height="60" as="geometry" />
         </mxCell>
         <mxCell id="bQVK4K-JHT9RS3OZxk5x-71" value="" style="edgeStyle=elbowEdgeStyle;elbow=vertical;strokeWidth=4;endArrow=baseDash;endFill=0;fontStyle=1;strokeColor=#808080;entryX=0.5;entryY=0;entryDx=0;entryDy=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;rounded=1;align=center;verticalAlign=middle;spacingRight=0;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;" parent="1" source="5" target="bQVK4K-JHT9RS3OZxk5x-70" edge="1">
@@ -100,7 +100,7 @@
             <mxPoint x="635" y="688.62" as="targetPoint" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="43rfYfOqclGS9a-UTzkt-34" value="רכזים" style="rounded=1;fillColor=#ffcc99;strokeColor=#36393d;shadow=1;fontStyle=1;fontSize=14;align=center;" vertex="1" parent="1">
+        <mxCell id="43rfYfOqclGS9a-UTzkt-34" value="רכזים" style="rounded=1;fillColor=#e6d0de;strokeColor=#996185;shadow=1;fontStyle=1;fontSize=14;align=center;verticalAlign=middle;fontFamily=Helvetica;fontColor=default;gradientColor=#d5739d;" vertex="1" parent="1">
           <mxGeometry x="853" y="570" width="100" height="60" as="geometry" />
         </mxCell>
         <mxCell id="43rfYfOqclGS9a-UTzkt-35" value="" style="edgeStyle=elbowEdgeStyle;elbow=vertical;strokeWidth=4;endArrow=baseDash;endFill=0;fontStyle=1;strokeColor=#808080;entryX=1;entryY=0.5;entryDx=0;entryDy=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;rounded=1;align=center;verticalAlign=middle;spacingRight=0;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;" edge="1" parent="1" source="43rfYfOqclGS9a-UTzkt-34" target="bQVK4K-JHT9RS3OZxk5x-64">
