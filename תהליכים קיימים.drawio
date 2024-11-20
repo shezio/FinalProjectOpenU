@@ -1,6 +1,6 @@
 <mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36" version="24.8.6">
   <diagram id="C5RBs43oDa-KdzZeNtuy" name="Page-1">
-    <mxGraphModel dx="2049" dy="1380" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+    <mxGraphModel dx="1687" dy="1207" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
       <root>
         <mxCell id="WIyWlLk6GJQsqaUBKTNV-0" />
         <mxCell id="WIyWlLk6GJQsqaUBKTNV-1" parent="WIyWlLk6GJQsqaUBKTNV-0" />
@@ -277,8 +277,8 @@
             <mxPoint x="863.14" y="3324" as="targetPoint" />
             <mxPoint x="785.8154881808838" y="3023.4285714285716" as="sourcePoint" />
             <Array as="points">
-              <mxPoint x="970" y="3091" />
-              <mxPoint x="970" y="3374" />
+              <mxPoint x="940" y="3091" />
+              <mxPoint x="940" y="3374" />
             </Array>
           </mxGeometry>
         </mxCell>
@@ -309,7 +309,7 @@
         <mxCell id="kO3r3DAcr7mypJtlHNvK-30" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="WIyWlLk6GJQsqaUBKTNV-1" source="kO3r3DAcr7mypJtlHNvK-22" target="kO3r3DAcr7mypJtlHNvK-24">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="kO3r3DAcr7mypJtlHNvK-22" value="&lt;div style=&quot;font-size: 14px;&quot;&gt;חיפוש חונכים ללא חניך&lt;/div&gt;" style="shape=parallelogram;perimeter=parallelogramPerimeter;whiteSpace=wrap;html=1;fixedSize=1;rounded=1;fontSize=14;fontFamily=Tahoma;" vertex="1" parent="WIyWlLk6GJQsqaUBKTNV-1">
+        <mxCell id="kO3r3DAcr7mypJtlHNvK-22" value="&lt;div style=&quot;font-size: 14px;&quot;&gt;חיפוש חונכים&lt;/div&gt;&lt;div style=&quot;font-size: 14px;&quot;&gt;&lt;span style=&quot;background-color: initial;&quot;&gt;&amp;nbsp;ללא חניך&lt;/span&gt;&lt;/div&gt;" style="shape=parallelogram;perimeter=parallelogramPerimeter;whiteSpace=wrap;html=1;fixedSize=1;rounded=1;fontSize=14;fontFamily=Tahoma;" vertex="1" parent="WIyWlLk6GJQsqaUBKTNV-1">
           <mxGeometry x="671.25" y="2249" width="172.5" height="80" as="geometry" />
         </mxCell>
         <mxCell id="kO3r3DAcr7mypJtlHNvK-33" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="WIyWlLk6GJQsqaUBKTNV-1" source="kO3r3DAcr7mypJtlHNvK-23" target="kO3r3DAcr7mypJtlHNvK-32">
@@ -321,8 +321,8 @@
         <mxCell id="kO3r3DAcr7mypJtlHNvK-29" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=1;entryY=0.5;entryDx=0;entryDy=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" edge="1" parent="WIyWlLk6GJQsqaUBKTNV-1" source="kO3r3DAcr7mypJtlHNvK-24" target="kO3r3DAcr7mypJtlHNvK-7">
           <mxGeometry relative="1" as="geometry">
             <Array as="points">
-              <mxPoint x="970" y="2449" />
-              <mxPoint x="970" y="3374" />
+              <mxPoint x="940" y="2449" />
+              <mxPoint x="940" y="3374" />
             </Array>
           </mxGeometry>
         </mxCell>
@@ -342,8 +342,8 @@
           <mxGeometry relative="1" as="geometry">
             <mxPoint x="942.5" y="2762.5" as="targetPoint" />
             <Array as="points">
-              <mxPoint x="970" y="2762" />
-              <mxPoint x="970" y="3374" />
+              <mxPoint x="940" y="2763" />
+              <mxPoint x="940" y="3374" />
             </Array>
           </mxGeometry>
         </mxCell>
@@ -377,12 +377,12 @@
           <mxGeometry relative="1" as="geometry">
             <mxPoint x="790" y="3373" as="targetPoint" />
             <Array as="points">
-              <mxPoint x="854" y="3373" />
+              <mxPoint x="840" y="3373" />
             </Array>
           </mxGeometry>
         </mxCell>
         <mxCell id="kO3r3DAcr7mypJtlHNvK-47" value="עדכון משפחה בטבלת&amp;nbsp; משפחות על ידי&amp;nbsp;&lt;div&gt;רכז משפחות&lt;/div&gt;" style="shape=parallelogram;perimeter=parallelogramPerimeter;whiteSpace=wrap;html=1;fixedSize=1;fontSize=14;fontFamily=Tahoma;rounded=1;" vertex="1" parent="WIyWlLk6GJQsqaUBKTNV-1">
-          <mxGeometry x="760" y="3203" width="187.5" height="95" as="geometry" />
+          <mxGeometry x="742.5" y="3203" width="187.5" height="95" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>
