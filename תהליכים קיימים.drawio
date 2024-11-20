@@ -183,7 +183,7 @@
             <mxPoint x="1760.0000000000005" y="1955" as="targetPoint" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="tCzCncr1Cg9Iic0I1L8x-104" value="&lt;span style=&quot;font-size: 14px; text-align: right;&quot;&gt;תחילת תהליך&lt;/span&gt;&lt;br style=&quot;font-size: 14px; text-align: right;&quot;&gt;&lt;span style=&quot;font-size: 14px; text-align: right;&quot;&gt;עדכון פרטי משפחה&amp;nbsp;&lt;/span&gt;" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fontSize=14;fontFamily=Tahoma;" parent="WIyWlLk6GJQsqaUBKTNV-1" vertex="1">
+        <mxCell id="tCzCncr1Cg9Iic0I1L8x-104" value="&lt;span style=&quot;font-size: 14px; text-align: right;&quot;&gt;תחילת תהליך&lt;/span&gt;&lt;br style=&quot;font-size: 14px; text-align: right;&quot;&gt;&lt;span style=&quot;font-size: 14px; text-align: right;&quot;&gt;מחיקת משפחה&amp;nbsp;&lt;/span&gt;" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fontSize=14;fontFamily=Tahoma;" parent="WIyWlLk6GJQsqaUBKTNV-1" vertex="1">
           <mxGeometry x="1627.5" y="1550" width="100" height="100" as="geometry" />
         </mxCell>
         <mxCell id="tCzCncr1Cg9Iic0I1L8x-146" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="WIyWlLk6GJQsqaUBKTNV-1" source="tCzCncr1Cg9Iic0I1L8x-105" target="tCzCncr1Cg9Iic0I1L8x-145" edge="1">
@@ -204,7 +204,7 @@
         <mxCell id="tCzCncr1Cg9Iic0I1L8x-130" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="WIyWlLk6GJQsqaUBKTNV-1" source="tCzCncr1Cg9Iic0I1L8x-108" target="tCzCncr1Cg9Iic0I1L8x-121" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="tCzCncr1Cg9Iic0I1L8x-108" value="יש פרטים לעדכן" style="rhombus;whiteSpace=wrap;html=1;rounded=1;fontSize=14;fontFamily=Tahoma;" parent="WIyWlLk6GJQsqaUBKTNV-1" vertex="1">
+        <mxCell id="tCzCncr1Cg9Iic0I1L8x-108" value="משפחה עזבה" style="rhombus;whiteSpace=wrap;html=1;rounded=1;fontSize=14;fontFamily=Tahoma;" parent="WIyWlLk6GJQsqaUBKTNV-1" vertex="1">
           <mxGeometry x="1487.5" y="1940" width="145" height="139" as="geometry" />
         </mxCell>
         <mxCell id="tCzCncr1Cg9Iic0I1L8x-110" value="סוף תהליך" style="ellipse;whiteSpace=wrap;html=1;fontSize=14;fontFamily=Tahoma;" parent="WIyWlLk6GJQsqaUBKTNV-1" vertex="1">
@@ -218,13 +218,13 @@
             <mxPoint x="1560.0000000000005" y="2421.0000000000005" as="targetPoint" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="tCzCncr1Cg9Iic0I1L8x-115" value="&lt;div style=&quot;font-size: 14px;&quot;&gt;עדכון פרטים&lt;/div&gt;&lt;div style=&quot;font-size: 14px;&quot;&gt;&lt;span style=&quot;background-color: initial; font-size: 14px;&quot;&gt;על ידי רכז חונכים&lt;/span&gt;&lt;/div&gt;" style="shape=parallelogram;perimeter=parallelogramPerimeter;whiteSpace=wrap;html=1;fixedSize=1;rounded=1;fontSize=14;fontFamily=Tahoma;" parent="WIyWlLk6GJQsqaUBKTNV-1" vertex="1">
+        <mxCell id="tCzCncr1Cg9Iic0I1L8x-115" value="&lt;div style=&quot;font-size: 14px;&quot;&gt;מחיקה&lt;/div&gt;&lt;div style=&quot;font-size: 14px;&quot;&gt;&lt;span style=&quot;background-color: initial; font-size: 14px;&quot;&gt;על ידי רכז חונכים&lt;/span&gt;&lt;/div&gt;" style="shape=parallelogram;perimeter=parallelogramPerimeter;whiteSpace=wrap;html=1;fixedSize=1;rounded=1;fontSize=14;fontFamily=Tahoma;" parent="WIyWlLk6GJQsqaUBKTNV-1" vertex="1">
           <mxGeometry x="1473.75" y="2261" width="172.5" height="80" as="geometry" />
         </mxCell>
         <mxCell id="tCzCncr1Cg9Iic0I1L8x-131" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="WIyWlLk6GJQsqaUBKTNV-1" source="tCzCncr1Cg9Iic0I1L8x-121" target="tCzCncr1Cg9Iic0I1L8x-115" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="tCzCncr1Cg9Iic0I1L8x-121" value="מתנדב פונה לרכז חונכים" style="rounded=1;whiteSpace=wrap;html=1;fontSize=14;fontFamily=Tahoma;" parent="WIyWlLk6GJQsqaUBKTNV-1" vertex="1">
+        <mxCell id="tCzCncr1Cg9Iic0I1L8x-121" value="חונך פונה לרכז חונכים" style="rounded=1;whiteSpace=wrap;html=1;fontSize=14;fontFamily=Tahoma;" parent="WIyWlLk6GJQsqaUBKTNV-1" vertex="1">
           <mxGeometry x="1500" y="2139" width="120" height="60" as="geometry" />
         </mxCell>
         <mxCell id="tCzCncr1Cg9Iic0I1L8x-124" value="כן" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=14;fontFamily=Tahoma;" parent="WIyWlLk6GJQsqaUBKTNV-1" vertex="1">
@@ -260,7 +260,7 @@
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="tCzCncr1Cg9Iic0I1L8x-145" value="&lt;div style=&quot;font-size: 14px;&quot;&gt;עדכון פרטים&lt;/div&gt;&lt;div style=&quot;font-size: 14px;&quot;&gt;&lt;span style=&quot;background-color: initial; font-size: 14px;&quot;&gt;על ידי רכזת משפחות&lt;/span&gt;&lt;/div&gt;" style="shape=parallelogram;perimeter=parallelogramPerimeter;whiteSpace=wrap;html=1;fixedSize=1;rounded=1;fontSize=14;fontFamily=Tahoma;" parent="WIyWlLk6GJQsqaUBKTNV-1" vertex="1">
+        <mxCell id="tCzCncr1Cg9Iic0I1L8x-145" value="&lt;div style=&quot;font-size: 14px;&quot;&gt;מחיקה&lt;/div&gt;&lt;div style=&quot;font-size: 14px;&quot;&gt;&lt;span style=&quot;background-color: initial; font-size: 14px;&quot;&gt;על ידי רכזת משפחות&lt;/span&gt;&lt;/div&gt;" style="shape=parallelogram;perimeter=parallelogramPerimeter;whiteSpace=wrap;html=1;fixedSize=1;rounded=1;fontSize=14;fontFamily=Tahoma;" parent="WIyWlLk6GJQsqaUBKTNV-1" vertex="1">
           <mxGeometry x="1741" y="2250" width="172.5" height="80" as="geometry" />
         </mxCell>
         <mxCell id="kO3r3DAcr7mypJtlHNvK-25" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="WIyWlLk6GJQsqaUBKTNV-1" source="kO3r3DAcr7mypJtlHNvK-1" target="kO3r3DAcr7mypJtlHNvK-21">
