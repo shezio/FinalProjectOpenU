@@ -1,6 +1,6 @@
 <mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36" version="24.8.6">
   <diagram id="C5RBs43oDa-KdzZeNtuy" name="Page-1">
-    <mxGraphModel dx="2607" dy="1709" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+    <mxGraphModel dx="2206" dy="1508" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
       <root>
         <mxCell id="WIyWlLk6GJQsqaUBKTNV-0" />
         <mxCell id="WIyWlLk6GJQsqaUBKTNV-1" parent="WIyWlLk6GJQsqaUBKTNV-0" />
@@ -183,7 +183,7 @@
             <mxPoint x="1760.0000000000005" y="1955" as="targetPoint" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="tCzCncr1Cg9Iic0I1L8x-104" value="&lt;span style=&quot;font-size: 14px; text-align: right;&quot;&gt;תחילת תהליך&lt;/span&gt;&lt;br style=&quot;font-size: 14px; text-align: right;&quot;&gt;&lt;span style=&quot;font-size: 14px; text-align: right;&quot;&gt;מחיקת משפחה&amp;nbsp;&lt;/span&gt;" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fontSize=14;fontFamily=Tahoma;" parent="WIyWlLk6GJQsqaUBKTNV-1" vertex="1">
+        <mxCell id="tCzCncr1Cg9Iic0I1L8x-104" value="&lt;span style=&quot;font-size: 14px; text-align: right;&quot;&gt;תחילת תהליך&lt;/span&gt;&lt;br style=&quot;font-size: 14px; text-align: right;&quot;&gt;&lt;span style=&quot;font-size: 14px; text-align: right;&quot;&gt;עדכון פרטי משפחה&amp;nbsp;&lt;/span&gt;" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fontSize=14;fontFamily=Tahoma;" parent="WIyWlLk6GJQsqaUBKTNV-1" vertex="1">
           <mxGeometry x="1627.5" y="1550" width="100" height="100" as="geometry" />
         </mxCell>
         <mxCell id="tCzCncr1Cg9Iic0I1L8x-146" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="WIyWlLk6GJQsqaUBKTNV-1" source="tCzCncr1Cg9Iic0I1L8x-105" target="tCzCncr1Cg9Iic0I1L8x-145" edge="1">
@@ -204,7 +204,7 @@
         <mxCell id="tCzCncr1Cg9Iic0I1L8x-130" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="WIyWlLk6GJQsqaUBKTNV-1" source="tCzCncr1Cg9Iic0I1L8x-108" target="tCzCncr1Cg9Iic0I1L8x-121" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="tCzCncr1Cg9Iic0I1L8x-108" value="משפחה עזבה" style="rhombus;whiteSpace=wrap;html=1;rounded=1;fontSize=14;fontFamily=Tahoma;" parent="WIyWlLk6GJQsqaUBKTNV-1" vertex="1">
+        <mxCell id="tCzCncr1Cg9Iic0I1L8x-108" value="יש פרטים לעדכן" style="rhombus;whiteSpace=wrap;html=1;rounded=1;fontSize=14;fontFamily=Tahoma;" parent="WIyWlLk6GJQsqaUBKTNV-1" vertex="1">
           <mxGeometry x="1487.5" y="1940" width="145" height="139" as="geometry" />
         </mxCell>
         <mxCell id="tCzCncr1Cg9Iic0I1L8x-110" value="סוף תהליך" style="ellipse;whiteSpace=wrap;html=1;fontSize=14;fontFamily=Tahoma;" parent="WIyWlLk6GJQsqaUBKTNV-1" vertex="1">
@@ -218,7 +218,7 @@
             <mxPoint x="1560.0000000000005" y="2421.0000000000005" as="targetPoint" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="tCzCncr1Cg9Iic0I1L8x-115" value="&lt;div style=&quot;font-size: 14px;&quot;&gt;מחיקה&lt;/div&gt;&lt;div style=&quot;font-size: 14px;&quot;&gt;&lt;span style=&quot;background-color: initial; font-size: 14px;&quot;&gt;על ידי רכז חונכים&lt;/span&gt;&lt;/div&gt;" style="shape=parallelogram;perimeter=parallelogramPerimeter;whiteSpace=wrap;html=1;fixedSize=1;rounded=1;fontSize=14;fontFamily=Tahoma;" parent="WIyWlLk6GJQsqaUBKTNV-1" vertex="1">
+        <mxCell id="tCzCncr1Cg9Iic0I1L8x-115" value="&lt;div style=&quot;font-size: 14px;&quot;&gt;עדכון פרטים&lt;/div&gt;&lt;div style=&quot;font-size: 14px;&quot;&gt;&lt;span style=&quot;background-color: initial; font-size: 14px;&quot;&gt;על ידי רכז חונכים&lt;/span&gt;&lt;/div&gt;" style="shape=parallelogram;perimeter=parallelogramPerimeter;whiteSpace=wrap;html=1;fixedSize=1;rounded=1;fontSize=14;fontFamily=Tahoma;" parent="WIyWlLk6GJQsqaUBKTNV-1" vertex="1">
           <mxGeometry x="1473.75" y="2261" width="172.5" height="80" as="geometry" />
         </mxCell>
         <mxCell id="tCzCncr1Cg9Iic0I1L8x-131" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="WIyWlLk6GJQsqaUBKTNV-1" source="tCzCncr1Cg9Iic0I1L8x-121" target="tCzCncr1Cg9Iic0I1L8x-115" edge="1">
@@ -260,7 +260,7 @@
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="tCzCncr1Cg9Iic0I1L8x-145" value="&lt;div style=&quot;font-size: 14px;&quot;&gt;מחיקה&lt;/div&gt;&lt;div style=&quot;font-size: 14px;&quot;&gt;&lt;span style=&quot;background-color: initial; font-size: 14px;&quot;&gt;על ידי רכזת משפחות&lt;/span&gt;&lt;/div&gt;" style="shape=parallelogram;perimeter=parallelogramPerimeter;whiteSpace=wrap;html=1;fixedSize=1;rounded=1;fontSize=14;fontFamily=Tahoma;" parent="WIyWlLk6GJQsqaUBKTNV-1" vertex="1">
+        <mxCell id="tCzCncr1Cg9Iic0I1L8x-145" value="&lt;div style=&quot;font-size: 14px;&quot;&gt;עדכון פרטים&lt;/div&gt;&lt;div style=&quot;font-size: 14px;&quot;&gt;&lt;span style=&quot;background-color: initial; font-size: 14px;&quot;&gt;על ידי רכזת משפחות&lt;/span&gt;&lt;/div&gt;" style="shape=parallelogram;perimeter=parallelogramPerimeter;whiteSpace=wrap;html=1;fixedSize=1;rounded=1;fontSize=14;fontFamily=Tahoma;" parent="WIyWlLk6GJQsqaUBKTNV-1" vertex="1">
           <mxGeometry x="1741" y="2250" width="172.5" height="80" as="geometry" />
         </mxCell>
         <mxCell id="kO3r3DAcr7mypJtlHNvK-25" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="WIyWlLk6GJQsqaUBKTNV-1" source="kO3r3DAcr7mypJtlHNvK-1" target="kO3r3DAcr7mypJtlHNvK-21">
@@ -405,6 +405,91 @@
         </mxCell>
         <mxCell id="kO3r3DAcr7mypJtlHNvK-58" value="&lt;div style=&quot;font-size: 14px;&quot;&gt;עדכון פרטים&lt;/div&gt;&lt;div style=&quot;font-size: 14px;&quot;&gt;&lt;span style=&quot;background-color: initial;&quot;&gt;על ידי רכז מתנדבים&lt;/span&gt;&lt;/div&gt;&lt;div style=&quot;font-size: 14px;&quot;&gt;&lt;span style=&quot;background-color: initial;&quot;&gt;והוספה להתנדבות כללית&lt;/span&gt;&lt;/div&gt;" style="shape=parallelogram;perimeter=parallelogramPerimeter;whiteSpace=wrap;html=1;fixedSize=1;rounded=1;fontSize=14;fontFamily=Tahoma;" vertex="1" parent="WIyWlLk6GJQsqaUBKTNV-1">
           <mxGeometry x="280" y="2930" width="202.13" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="kO3r3DAcr7mypJtlHNvK-85" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="WIyWlLk6GJQsqaUBKTNV-1" source="kO3r3DAcr7mypJtlHNvK-86" target="kO3r3DAcr7mypJtlHNvK-101">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1782.4200000000005" y="3015" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="kO3r3DAcr7mypJtlHNvK-86" value="&lt;span style=&quot;font-size: 14px; text-align: right;&quot;&gt;תחילת תהליך&lt;/span&gt;&lt;br style=&quot;font-size: 14px; text-align: right;&quot;&gt;&lt;span style=&quot;font-size: 14px; text-align: right;&quot;&gt;מחיקת משפחה&amp;nbsp;&lt;/span&gt;" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fontSize=14;fontFamily=Tahoma;" vertex="1" parent="WIyWlLk6GJQsqaUBKTNV-1">
+          <mxGeometry x="1649.92" y="2610" width="100" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="kO3r3DAcr7mypJtlHNvK-87" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="WIyWlLk6GJQsqaUBKTNV-1" source="kO3r3DAcr7mypJtlHNvK-88" target="kO3r3DAcr7mypJtlHNvK-105">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="kO3r3DAcr7mypJtlHNvK-88" value="משפחה פונה ישירות לרכזת משפחות" style="rounded=1;whiteSpace=wrap;html=1;fontSize=14;fontFamily=Tahoma;" vertex="1" parent="WIyWlLk6GJQsqaUBKTNV-1">
+          <mxGeometry x="1779.67" y="3190" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="kO3r3DAcr7mypJtlHNvK-89" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;fontSize=14;fontFamily=Tahoma;" edge="1" parent="WIyWlLk6GJQsqaUBKTNV-1" source="kO3r3DAcr7mypJtlHNvK-91" target="kO3r3DAcr7mypJtlHNvK-92">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1517.42" y="3070" />
+              <mxPoint x="1442.42" y="3070" />
+              <mxPoint x="1442.42" y="3660" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="kO3r3DAcr7mypJtlHNvK-90" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="WIyWlLk6GJQsqaUBKTNV-1" source="kO3r3DAcr7mypJtlHNvK-91" target="kO3r3DAcr7mypJtlHNvK-97">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="kO3r3DAcr7mypJtlHNvK-91" value="משפחה עזבה" style="rhombus;whiteSpace=wrap;html=1;rounded=1;fontSize=14;fontFamily=Tahoma;" vertex="1" parent="WIyWlLk6GJQsqaUBKTNV-1">
+          <mxGeometry x="1509.92" y="3000" width="145" height="139" as="geometry" />
+        </mxCell>
+        <mxCell id="kO3r3DAcr7mypJtlHNvK-92" value="סוף תהליך" style="ellipse;whiteSpace=wrap;html=1;fontSize=14;fontFamily=Tahoma;" vertex="1" parent="WIyWlLk6GJQsqaUBKTNV-1">
+          <mxGeometry x="1672.42" y="3500" width="80" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="kO3r3DAcr7mypJtlHNvK-93" value="לא" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=14;fontFamily=Tahoma;" vertex="1" parent="WIyWlLk6GJQsqaUBKTNV-1">
+          <mxGeometry x="1464.92" y="3030" width="40" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="kO3r3DAcr7mypJtlHNvK-94" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" edge="1" parent="WIyWlLk6GJQsqaUBKTNV-1" source="kO3r3DAcr7mypJtlHNvK-95" target="kO3r3DAcr7mypJtlHNvK-92">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1582.4200000000005" y="3481.0000000000005" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="kO3r3DAcr7mypJtlHNvK-95" value="&lt;div style=&quot;font-size: 14px;&quot;&gt;&lt;span style=&quot;background-color: initial;&quot;&gt;מחיקה&lt;/span&gt;&lt;/div&gt;&lt;div style=&quot;font-size: 14px;&quot;&gt;&lt;span style=&quot;background-color: initial;&quot;&gt;על ידי רכז חונכים&lt;/span&gt;&lt;/div&gt;" style="shape=parallelogram;perimeter=parallelogramPerimeter;whiteSpace=wrap;html=1;fixedSize=1;rounded=1;fontSize=14;fontFamily=Tahoma;" vertex="1" parent="WIyWlLk6GJQsqaUBKTNV-1">
+          <mxGeometry x="1496.17" y="3321" width="172.5" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="kO3r3DAcr7mypJtlHNvK-96" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="WIyWlLk6GJQsqaUBKTNV-1" source="kO3r3DAcr7mypJtlHNvK-97" target="kO3r3DAcr7mypJtlHNvK-95">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="kO3r3DAcr7mypJtlHNvK-97" value="חונך פונה לרכז חונכים" style="rounded=1;whiteSpace=wrap;html=1;fontSize=14;fontFamily=Tahoma;" vertex="1" parent="WIyWlLk6GJQsqaUBKTNV-1">
+          <mxGeometry x="1522.42" y="3199" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="kO3r3DAcr7mypJtlHNvK-98" value="כן" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=14;fontFamily=Tahoma;" vertex="1" parent="WIyWlLk6GJQsqaUBKTNV-1">
+          <mxGeometry x="1587.42" y="3139" width="40" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="kO3r3DAcr7mypJtlHNvK-99" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="WIyWlLk6GJQsqaUBKTNV-1" source="kO3r3DAcr7mypJtlHNvK-101" target="kO3r3DAcr7mypJtlHNvK-91">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1582.42" y="2959" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="1582.42" y="2890" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="kO3r3DAcr7mypJtlHNvK-100" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="WIyWlLk6GJQsqaUBKTNV-1" source="kO3r3DAcr7mypJtlHNvK-101" target="kO3r3DAcr7mypJtlHNvK-88">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1734.92" y="2809.5" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="kO3r3DAcr7mypJtlHNvK-101" value="חונך פנה&amp;nbsp;&lt;div&gt;למשפחה&lt;/div&gt;" style="rhombus;whiteSpace=wrap;html=1;rounded=1;fontSize=14;fontFamily=Tahoma;" vertex="1" parent="WIyWlLk6GJQsqaUBKTNV-1">
+          <mxGeometry x="1627.42" y="2820" width="145" height="139" as="geometry" />
+        </mxCell>
+        <mxCell id="kO3r3DAcr7mypJtlHNvK-102" value="כן" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=14;fontFamily=Tahoma;" vertex="1" parent="WIyWlLk6GJQsqaUBKTNV-1">
+          <mxGeometry x="1572.42" y="2835" width="40" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="kO3r3DAcr7mypJtlHNvK-103" value="לא" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=14;fontFamily=Tahoma;" vertex="1" parent="WIyWlLk6GJQsqaUBKTNV-1">
+          <mxGeometry x="1779.67" y="2835" width="40" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="kO3r3DAcr7mypJtlHNvK-104" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" edge="1" parent="WIyWlLk6GJQsqaUBKTNV-1" source="kO3r3DAcr7mypJtlHNvK-105" target="kO3r3DAcr7mypJtlHNvK-92">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1849.42" y="3450" />
+              <mxPoint x="1712.42" y="3450" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="kO3r3DAcr7mypJtlHNvK-105" value="&lt;div style=&quot;font-size: 14px;&quot;&gt;&lt;span style=&quot;background-color: initial;&quot;&gt;מחיקה&lt;/span&gt;&lt;/div&gt;&lt;div style=&quot;font-size: 14px;&quot;&gt;&lt;span style=&quot;background-color: initial;&quot;&gt;על ידי רכזת משפחות&lt;/span&gt;&lt;/div&gt;" style="shape=parallelogram;perimeter=parallelogramPerimeter;whiteSpace=wrap;html=1;fixedSize=1;rounded=1;fontSize=14;fontFamily=Tahoma;" vertex="1" parent="WIyWlLk6GJQsqaUBKTNV-1">
+          <mxGeometry x="1763.42" y="3310" width="172.5" height="80" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>
