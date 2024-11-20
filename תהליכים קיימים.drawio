@@ -267,7 +267,7 @@
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="kO3r3DAcr7mypJtlHNvK-1" value="&lt;span style=&quot;font-size: 14px;&quot;&gt;תחילת תהליך&lt;/span&gt;&lt;br style=&quot;font-size: 14px;&quot;&gt;&lt;div style=&quot;&quot;&gt;&lt;span style=&quot;background-color: initial;&quot;&gt;התאמת חניך לחונך&lt;/span&gt;&lt;/div&gt;" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fontSize=14;fontFamily=Tahoma;align=center;" vertex="1" parent="WIyWlLk6GJQsqaUBKTNV-1">
-          <mxGeometry x="707.5" y="1990" width="100" height="100" as="geometry" />
+          <mxGeometry x="698.75" y="1970" width="117.5" height="117.5" as="geometry" />
         </mxCell>
         <mxCell id="kO3r3DAcr7mypJtlHNvK-7" value="סוף תהליך" style="ellipse;whiteSpace=wrap;html=1;fontSize=14;fontFamily=Tahoma;" vertex="1" parent="WIyWlLk6GJQsqaUBKTNV-1">
           <mxGeometry x="702.5" y="3334" width="80" height="80" as="geometry" />
@@ -329,7 +329,7 @@
         <mxCell id="kO3r3DAcr7mypJtlHNvK-31" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="WIyWlLk6GJQsqaUBKTNV-1" source="kO3r3DAcr7mypJtlHNvK-24" target="kO3r3DAcr7mypJtlHNvK-23">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="kO3r3DAcr7mypJtlHNvK-24" value="נמצאו חונכים ללא חניכים" style="rhombus;whiteSpace=wrap;html=1;rounded=1;fontSize=14;fontFamily=Tahoma;" vertex="1" parent="WIyWlLk6GJQsqaUBKTNV-1">
+        <mxCell id="kO3r3DAcr7mypJtlHNvK-24" value="נמצאו חונכים&amp;nbsp;&lt;div&gt;ללא חניכים&lt;/div&gt;" style="rhombus;whiteSpace=wrap;html=1;rounded=1;fontSize=14;fontFamily=Tahoma;" vertex="1" parent="WIyWlLk6GJQsqaUBKTNV-1">
           <mxGeometry x="685" y="2380" width="145" height="139" as="geometry" />
         </mxCell>
         <mxCell id="kO3r3DAcr7mypJtlHNvK-27" value="כן" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=14;fontFamily=Tahoma;" vertex="1" parent="WIyWlLk6GJQsqaUBKTNV-1">
