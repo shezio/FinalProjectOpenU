@@ -156,3 +156,6 @@ cython_debug/
 
 # Other
 *.git-credentials
+
+# node_modules should never be committed
+/childsmile/frontend/node_modules
