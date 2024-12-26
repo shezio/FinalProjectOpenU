@@ -1,27 +1,51 @@
 from rest_framework import viewsets
-from .models import Family, FamilyMember, Permissions, Staff, Tutor, Tutorship
-from .serializers import FamilySerializer, FamilyMemberSerializer, PermissionsSerializer, StaffSerializer, TutorSerializer, TutorshipSerializer
+from .models import (
+    Family,
+    FamilyMember,
+    Permissions,
+    Staff,
+    Tutor,
+    Tutorship,
+    TutorshipStatus,
+    Volunteer,
+    Mature,
+    HealthyKid,
+)
+
 
 class FamilyViewSet(viewsets.ModelViewSet):
     queryset = Family.objects.all()
-    serializer_class = FamilySerializer
+
 
 class FamilyMemberViewSet(viewsets.ModelViewSet):
     queryset = FamilyMember.objects.all()
-    serializer_class = FamilyMemberSerializer
+
 
 class PermissionsViewSet(viewsets.ModelViewSet):
     queryset = Permissions.objects.all()
-    serializer_class = PermissionsSerializer
+
 
 class StaffViewSet(viewsets.ModelViewSet):
     queryset = Staff.objects.all()
-    serializer_class = StaffSerializer
+
 
 class TutorViewSet(viewsets.ModelViewSet):
     queryset = Tutor.objects.all()
-    serializer_class = TutorSerializer
+
 
 class TutorshipViewSet(viewsets.ModelViewSet):
     queryset = Tutorship.objects.all()
-    serializer_class = TutorshipSerializer
+
+
+class TutorshipStatusViewSet(viewsets.ModelViewSet):
+    queryset = TutorshipStatus.objects.all()
+
+
+class VolunteerViewSet(viewsets.ModelViewSet):
+    queryset = Volunteer.objects.all()
+
+class MatureViewSet(viewsets.ModelViewSet):
+    queryset = Mature.objects.filter(is_active=True, date_of_birth__lte='2008-12-26')  # Adjust the date to ensure age > 16
+
+class HealthyKidViewSet(viewsets.ModelViewSet):
+    queryset = HealthyKid.objects.filter(is_active=True)
