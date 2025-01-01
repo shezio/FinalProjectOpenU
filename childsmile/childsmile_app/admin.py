@@ -6,7 +6,6 @@ from .models import (
     Staff,
     Tutor,
     Tutorship,
-    TutorshipStatus,
     Volunteer,
     Mature,
     HealthyKid,
@@ -21,7 +20,6 @@ admin.site.register(Permissions)
 admin.site.register(Staff)
 admin.site.register(Tutor)
 admin.site.register(Tutorship)
-admin.site.register(TutorshipStatus)
 admin.site.register(Volunteer)
 admin.site.register(Mature)
 admin.site.register(HealthyKid)
