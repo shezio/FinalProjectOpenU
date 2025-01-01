@@ -450,6 +450,87 @@ A report showing the distribution of families by cities in the country. It will 
 5.7.11.7 Potential Tutorship Match Report
 A report listing potential matches between tutors and tutees. It will display the tutor's name (awaiting assignment), the tutee's name, the tutor's and tutee's gender, the tutor's city, the tutee's city, and the distance between the cities. A match will appear in the report if the distance between cities is within 15 km. The report can be exported to Excel or PDF. (Future functionality will include sending the report directly via email to authorized registered users.)
 
+
+### Task Types in the System
+
+#### **1. Tasks Automatically Created by the System**
+
+**a. Candidate Interview for Tutoring:**  
+- Requires searching and updating candidate records.  
+- After a phone interview, the task will mark whether the interview was successful or not.  
+
+**b. Adding a Tutor:**  
+- Following a successful interview, a task is created for the Tutoring Coordinator to add the tutor.  
+- Adding the tutor automatically removes them from the list of candidates.  
+- A new task for matching a tutee to the tutor will then be created.  
+
+**c. Matching a Tutee:**  
+- A complex process for matching a tutee with a tutor.  
+- Both the Tutoring Coordinator and Family Coordinator can perform the matching after initial filtering.  
+- Filtering involves selecting tutors and running a "Perform Filtering" operation based on geographic proximity (city and/or maximum defined distance) and gender.  
+- The task completes only after approval from both coordinators to avoid data loss and parallel work.  
+- The interface will show tutee details (name, age), and clicking will display full details in an organized manner.  
+
+**d. Adding a Family:**  
+- Performed by the Registration Coordinator after filling in preliminary details.  
+- This task appears after a volunteer initially adds a family.  
+
+**e. Family Status Check:**  
+- Created for the Family Coordinator at the start of each calendar month.  
+- The coordinator must contact the family to update details, mark inactive, or add "Healthy" members.  
+- Families created within the last 24 hours will generate a status task for the Family Coordinator.  
+- Can also be performed by other coordinators.  
+
+**f. Family Update:**  
+- A task for the Family Coordinator and Registration Coordinator, created when a family’s details need updating.  
+- Triggered by marking relevant options during the completion of the Family Status Check task.  
+
+**g. Family Deletion:**  
+- A task for the Family Coordinator to mark a family as inactive and move it to the archive.  
+- Triggered by marking options during the Family Status Check task.  
+
+**h. Adding a Healthy Member:**  
+- During a family update task, the user can mark a child as "healthy."  
+- Saving this update generates a task for the Family Coordinator to add the healthy member.  
+- Accessible via the Healthy Member Management screen or directly from the task itself.  
+
+**i. Reviewing a Mature Individual:**  
+- Automatically generated when a tutee turns 16.  
+- A task is created for the Mature Individuals Coordinator to review and update their details if necessary.  
+- Accessible via the Mature Individuals Management screen or directly from the task.  
+
+**j. Tutoring:**  
+- A weekly task for the tutor, valid until completion, with a one-week deadline.  
+- The tutor marks task completion, triggering a feedback task.  
+
+**k. Tutoring Feedback:**  
+- Created immediately after completing a tutoring task, with a 48-hour deadline.  
+- Completion of this task generates a task for the Tutoring Coordinator to review the feedback.  
+
+**l. Reviewing Tutor Feedback:**  
+- Created for the Tutoring Coordinator upon feedback completion by a tutor.  
+- Separate tasks are created for each tutor.  
+- Feedback review can also be managed by generating a Tutor Feedback Report.  
+- Accessible via the Feedback Management screen or directly from the task.  
+
+**m. General Volunteer Feedback:**  
+- After an event or fun day, the Volunteer Coordinator creates feedback tasks for all known participants.  
+- Upon feedback submission, a task is generated for the volunteer to review feedback.  
+
+**n. Reviewing General Volunteer Feedback:**  
+- Created for the Volunteer Coordinator after volunteers submit feedback.  
+- Separate tasks are created for each volunteer.  
+- Feedback review can also be managed by generating a General Volunteer Feedback Report.  
+- Accessible via the Feedback Management screen or directly from the task.  
+
+**o. Feedback Report Generation:**  
+- A monthly task for each coordinator to generate feedback reports for their volunteers (Tutors and General Volunteers).  
+- Coordinators can identify recurring issues and analyze feedback completeness rates (e.g., word count in free-text fields).  
+- Generating a report can automatically complete multiple individual feedback review tasks.  
+- A system admin can restrict this functionality to prevent bulk task completion.  
+
+
+
 ### Current Setup Review
 1. **Models**: You've organized your models into different files based on context, which is great for maintainability.
 3. **Views**: You've set up viewsets for each model to handle CRUD operations.
