@@ -10,6 +10,9 @@ from .models import (
     Volunteer,
     Mature,
     HealthyKid,
+    Feedback,
+    TutorFeedback,
+    VolunteerFeedback,
 )
 
 admin.site.register(Family)
@@ -22,4 +25,7 @@ admin.site.register(TutorshipStatus)
 admin.site.register(Volunteer)
 admin.site.register(Mature)
 admin.site.register(HealthyKid)
+admin.site.register(Feedback)
+admin.site.register(TutorFeedback)
+admin.site.register(VolunteerFeedback)
 

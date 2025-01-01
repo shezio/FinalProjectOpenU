@@ -401,6 +401,55 @@ Deletion of healthy kids will not be allowed on this screen. Such deletions can 
 
 An option to add new healthy kids to the table will also be available. Clicking the "Add Participants" button will display a partial list of families (including name and phone number) for selection. Users will be able to add one or more healthy participants to the table in a single action.
 
+7. Feedback Management (5.7.9)
+
+Feedback Management (5.7.9)
+A table displaying all feedback entries, filtered based on appropriate permissions:
+
+Tutor Coordinators will see only feedback from mentors.
+Volunteer Coordinators will see only feedback from general volunteers.
+The table will include the respondent's name, additional optional details, and the feedback provided. Search and filter options will be available on the screen.
+
+A "Review Feedback" button will appear next to any feedback entry that has not yet been reviewed. Reviewed feedback will display an appropriate indicator in the "Feedback Review" column to signify that the review has been completed.
+
+A button will also be available that, when clicked, navigates to the corresponding volunteer type management screen based on the user's permissions.
+
+8. Tutorship Management (5.7.10)
+A table displaying all tutees participating in weekly tutoring sessions.
+
+The screen will include a "Match Tutorship" button, enabling the addition of new tutorships for tutors who have not yet been assigned tutees. Upon successful matching, a new row will be added to the table to represent the new tutorship.
+
+Tutorships can be created based on criteria such as:
+
+Geographic Proximity: Calculated by the system upon request.
+Gender Match: Ensuring the tutor and tutee are of the same gender, as per the organization's requirements.
+For a detailed explanation of this task, refer to Section 5.7.3, Task C1.
+
+9. 
+Report Generation (5.7.11)
+The reports screen will allow the generation of various detailed reports, as outlined below:
+
+5.7.11.1 Volunteer Feedback Report
+A report containing all volunteer feedback by the appropriate type. It will display the volunteer/tutor's name, the feedback date, and the feedback content. The report can be exported to Excel or PDF. (Future functionality will include sending the report directly via email to authorized registered users.)
+
+5.7.11.2 Tutor-to-Family Assignment Distribution Report
+A report listing all active tutors. It will display the tutor's name and the tutee's name. The report can be exported to Excel or PDF. (Future functionality will include sending the report directly via email to authorized registered users.)
+
+5.7.11.3 Families Waiting for Tutors Report
+A report containing all families waiting for tutoring. It will display the child's name and the parents' phone numbers. The report can be exported to Excel or PDF. (Future functionality will include sending the report directly via email to authorized registered users.)
+
+5.7.11.4 Departed Families Report
+A report listing all families that have left the organization. It will display the child’s name, parents' phone numbers, departure date, the person responsible for the departure, and the reason for departure (e.g., recovery or death). The report can be exported to Excel or PDF. (Future functionality will include sending the report directly via email to authorized registered users.)
+
+5.7.11.5 New Families in the Last Month Report
+A report listing all families that joined the organization in the last month. It will display the child’s name, parents' phone numbers, and the date of joining. The report can be exported to Excel or PDF. (Future functionality will include sending the report directly via email to authorized registered users.)
+
+5.7.11.6 Family Distribution by Cities Report
+A report showing the distribution of families by cities in the country. It will display the city name and the child’s full name in a table. Additionally, a map showing the concentration of families by city will be included. The report can be exported to Excel or PDF, or the map can be exported as an image. (Future functionality will include sending the report directly via email to authorized registered users.)
+
+5.7.11.7 Potential Tutorship Match Report
+A report listing potential matches between tutors and tutees. It will display the tutor's name (awaiting assignment), the tutee's name, the tutor's and tutee's gender, the tutor's city, the tutee's city, and the distance between the cities. A match will appear in the report if the distance between cities is within 15 km. The report can be exported to Excel or PDF. (Future functionality will include sending the report directly via email to authorized registered users.)
+
 ### Current Setup Review
 1. **Models**: You've organized your models into different files based on context, which is great for maintainability.
 3. **Views**: You've set up viewsets for each model to handle CRUD operations.
