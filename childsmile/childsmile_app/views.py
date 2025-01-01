@@ -9,7 +9,6 @@ from .models import (
     Staff,
     Tutor,
     Tutorship,
-    TutorshipStatus,
     Volunteer,
     Mature,
     HealthyKid,
@@ -41,10 +40,6 @@ class StaffViewSet(viewsets.ModelViewSet):
 
 class TutorViewSet(viewsets.ModelViewSet):
     queryset = Tutor.objects.all()
-
-
-class TutorshipViewSet(viewsets.ModelViewSet):
-    queryset = Tutorship.objects.all()
 
 
 class TutorshipViewSet(viewsets.ModelViewSet):
