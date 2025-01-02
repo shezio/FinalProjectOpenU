@@ -6,3 +6,5 @@ from .volunteers_models import Volunteer
 from .mature_models import Mature
 from .healthy_kids_models import HealthyKid
 from .feedback_models import Feedback, TutorFeedback, VolunteerFeedback
+from .tasks_models import Task
+

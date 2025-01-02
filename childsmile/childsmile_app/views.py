@@ -15,6 +15,7 @@ from .models import (
     Feedback,
     TutorFeedback,
     VolunteerFeedback,
+    Task,
 )
 from rest_framework.decorators import action
 from rest_framework.response import Response, status
@@ -299,3 +300,6 @@ class PotentialTutorshipMatchReportView(View):
         # Implement logic to calculate distance between cities
         # Example: Return a dummy value for now
         return 10.0
+
+class TaskViewSet(viewsets.ModelViewSet):
+    queryset = Task.objects.all()
