@@ -12,6 +12,7 @@ from .models import (
     Feedback,
     TutorFeedback,
     VolunteerFeedback,
+    Task,
 )
 
 admin.site.register(Family)
@@ -26,4 +27,5 @@ admin.site.register(HealthyKid)
 admin.site.register(Feedback)
 admin.site.register(TutorFeedback)
 admin.site.register(VolunteerFeedback)
+admin.site.register(Task)
 

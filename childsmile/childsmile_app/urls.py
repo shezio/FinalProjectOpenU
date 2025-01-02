@@ -21,6 +21,7 @@ from .views import (
     NewFamiliesLastMonthReportView,
     FamilyDistributionByCitiesReportView,
     PotentialTutorshipMatchReportView,
+    TaskViewSet,
 )
 
 router = DefaultRouter()
@@ -36,6 +37,7 @@ router.register(r"healthy-kids", HealthyKidViewSet)
 router.register(r"feedback", FeedbackViewSet)
 router.register(r"tutor-feedback", TutorFeedbackViewSet)
 router.register(r"volunteer-feedback", VolunteerFeedbackViewSet)
+router.register(r"tasks", TaskViewSet)
 
 urlpatterns = [
     path("", include(router.urls)),
