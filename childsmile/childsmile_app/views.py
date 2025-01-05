@@ -1,4 +1,7 @@
 from rest_framework import viewsets
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.decorators import action
 from django.http import HttpResponse
 from django.shortcuts import render
 from django.views import View
@@ -16,35 +19,36 @@ from .models import (
     TutorFeedback,
     VolunteerFeedback,
     Task,
+    HasPermission,
 )
-from rest_framework.decorators import action
-from rest_framework.response import Response, status
 import csv
 import datetime
 
 
 class FamilyViewSet(viewsets.ModelViewSet):
     queryset = Family.objects.all()
+    permission_classes = [IsAuthenticated, HasPermission]
 
 
 class FamilyMemberViewSet(viewsets.ModelViewSet):
     queryset = FamilyMember.objects.all()
-
+    permission_classes = [IsAuthenticated, HasPermission]
 
 class PermissionsViewSet(viewsets.ModelViewSet):
     queryset = Permissions.objects.all()
-
+    permission_classes = [IsAuthenticated, HasPermission]
 
 class StaffViewSet(viewsets.ModelViewSet):
     queryset = Staff.objects.all()
-
+    permission_classes = [IsAuthenticated, HasPermission]
 
 class TutorViewSet(viewsets.ModelViewSet):
     queryset = Tutor.objects.all()
-
+    permission_classes = [IsAuthenticated, HasPermission]
 
 class TutorshipViewSet(viewsets.ModelViewSet):
     queryset = Tutorship.objects.all()
+    permission_classes = [IsAuthenticated, HasPermission]
 
     @action(detail=False, methods=["post"])
     def match_tutorship(self, request):
@@ -94,31 +98,32 @@ class TutorshipViewSet(viewsets.ModelViewSet):
 
 class VolunteerViewSet(viewsets.ModelViewSet):
     queryset = Volunteer.objects.all()
-
+    permission_classes = [IsAuthenticated, HasPermission]
 
 class MatureViewSet(viewsets.ModelViewSet):
     queryset = Mature.objects.filter(
         is_active=True, date_of_birth__lte="2008-12-26"
     )  # Adjust the date to ensure age > 16
-
+    permission_classes = [IsAuthenticated, HasPermission]
 
 class HealthyKidViewSet(viewsets.ModelViewSet):
     queryset = HealthyKid.objects.filter(is_active=True)
-
+    permission_classes = [IsAuthenticated, HasPermission]
 
 class FeedbackViewSet(viewsets.ModelViewSet):
     queryset = Feedback.objects.all()
-
+    permission_classes = [IsAuthenticated, HasPermission]
 
 class TutorFeedbackViewSet(viewsets.ModelViewSet):
     queryset = TutorFeedback.objects.all()
-
+    permission_classes = [IsAuthenticated, HasPermission]
 
 class VolunteerFeedbackViewSet(viewsets.ModelViewSet):
     queryset = VolunteerFeedback.objects.all()
-
+    permission_classes = [IsAuthenticated, HasPermission]
 
 class VolunteerFeedbackReportView(View):
+    permission_classes = [IsAuthenticated, HasPermission]
     def get(self, request):
         feedbacks = VolunteerFeedback.objects.all()
         response = HttpResponse(content_type="text/csv")
@@ -141,6 +146,7 @@ class VolunteerFeedbackReportView(View):
 
 
 class TutorToFamilyAssignmentReportView(View):
+    permission_classes = [IsAuthenticated, HasPermission]
     def get(self, request):
         tutorships = Tutorship.objects.filter(status="Active")
         response = HttpResponse(content_type="text/csv")
@@ -164,6 +170,7 @@ class TutorToFamilyAssignmentReportView(View):
 
 
 class FamiliesWaitingForTutorsReportView(View):
+    permission_classes = [IsAuthenticated, HasPermission]
     def get(self, request):
         families = Family.objects.filter(members__tutorship__isnull=True).distinct()
         response = HttpResponse(content_type="text/csv")
@@ -183,6 +190,7 @@ class FamiliesWaitingForTutorsReportView(View):
 
 
 class DepartedFamiliesReportView(View):
+    permission_classes = [IsAuthenticated, HasPermission]
     def get(self, request):
         families = Family.objects.filter(is_active=False)
         response = HttpResponse(content_type="text/csv")
@@ -216,6 +224,7 @@ class DepartedFamiliesReportView(View):
 
 
 class NewFamiliesLastMonthReportView(View):
+    permission_classes = [IsAuthenticated, HasPermission]
     def get(self, request):
         last_month = datetime.date.today() - datetime.timedelta(days=30)
         families = Family.objects.filter(created_at__gte=last_month)
@@ -240,6 +249,7 @@ class NewFamiliesLastMonthReportView(View):
 
 
 class FamilyDistributionByCitiesReportView(View):
+    permission_classes = [IsAuthenticated, HasPermission]
     def get(self, request):
         families = Family.objects.all()
         response = HttpResponse(content_type="text/csv")
@@ -259,6 +269,7 @@ class FamilyDistributionByCitiesReportView(View):
 
 
 class PotentialTutorshipMatchReportView(View):
+    permission_classes = [IsAuthenticated, HasPermission]
     def get(self, request):
         tutors = Tutor.objects.filter(tutorship__isnull=True)
         response = HttpResponse(content_type="text/csv")
@@ -303,3 +314,4 @@ class PotentialTutorshipMatchReportView(View):
 
 class TaskViewSet(viewsets.ModelViewSet):
     queryset = Task.objects.all()
+    permission_classes = [IsAuthenticated, HasPermission]
