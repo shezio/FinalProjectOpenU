@@ -1,5 +1,4 @@
-# 0005_create_initial_roles_and_permissions.py
-
+# 0004_create_initial_roles_and_permissions.py
 from django.db import migrations
 
 def create_initial_roles_and_permissions(apps, schema_editor):

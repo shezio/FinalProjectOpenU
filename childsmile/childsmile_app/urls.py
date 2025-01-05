@@ -1,19 +1,21 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from .views import (
-    FamilyViewSet,
-    FamilyMemberViewSet,
     PermissionsViewSet,
+    RoleViewSet,
     StaffViewSet,
-    TutorViewSet,
-    TutorshipViewSet,
-    TutorshipStatusViewSet,
-    VolunteerViewSet,
-    MatureViewSet,
-    HealthyKidViewSet,
+    SignedUpViewSet,
+    General_VolunteerViewSet,
+    Pending_TutorViewSet,
+    TutorsViewSet,
+    ChildrenViewSet,
+    TutorshipsViewSet,
+    MaturesViewSet,
+    HealthyViewSet,
     FeedbackViewSet,
-    TutorFeedbackViewSet,
-    VolunteerFeedbackViewSet,
+    Tutor_FeedbackViewSet,
+    General_V_FeedbackViewSet,
+    TaskViewSet,
     VolunteerFeedbackReportView,
     TutorToFamilyAssignmentReportView,
     FamiliesWaitingForTutorsReportView,
@@ -21,22 +23,23 @@ from .views import (
     NewFamiliesLastMonthReportView,
     FamilyDistributionByCitiesReportView,
     PotentialTutorshipMatchReportView,
-    TaskViewSet,
 )
 
 router = DefaultRouter()
-router.register(r"families", FamilyViewSet)
-router.register(r"family-members", FamilyMemberViewSet)
 router.register(r"permissions", PermissionsViewSet)
+router.register(r"roles", RoleViewSet)
 router.register(r"staff", StaffViewSet)
-router.register(r"tutors", TutorViewSet)
-router.register(r"tutorships", TutorshipViewSet)
-router.register(r"volunteers", VolunteerViewSet)
-router.register(r"matures", MatureViewSet)
-router.register(r"healthy-kids", HealthyKidViewSet)
+router.register(r"signedup", SignedUpViewSet)
+router.register(r"general_volunteers", General_VolunteerViewSet)
+router.register(r"pending_tutors", Pending_TutorViewSet)
+router.register(r"tutors", TutorsViewSet)
+router.register(r"children", ChildrenViewSet)
+router.register(r"tutorships", TutorshipsViewSet)
+router.register(r"matures", MaturesViewSet)
+router.register(r"healthy", HealthyViewSet)
 router.register(r"feedback", FeedbackViewSet)
-router.register(r"tutor-feedback", TutorFeedbackViewSet)
-router.register(r"volunteer-feedback", VolunteerFeedbackViewSet)
+router.register(r"tutor_feedback", Tutor_FeedbackViewSet)
+router.register(r"general_v_feedback", General_V_FeedbackViewSet)
 router.register(r"tasks", TaskViewSet)
 
 urlpatterns = [
