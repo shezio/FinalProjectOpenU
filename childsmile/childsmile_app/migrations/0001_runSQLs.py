@@ -1,7 +1,5 @@
-# 0001_runSQLs.py
-
+# file: 0001_runSQLs.py
 from django.db import migrations, models
-import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
@@ -42,7 +40,7 @@ class Migration(migrations.Migration):
             $$ LANGUAGE plpgsql;
 
             CREATE TRIGGER trigger_add_to_pending_tutor
-            AFTER INSERT ON SignedUp
+            AFTER INSERT ON signedup
             FOR EACH ROW
             EXECUTE FUNCTION add_to_pending_tutor();
 
@@ -58,7 +56,7 @@ class Migration(migrations.Migration):
             $$ LANGUAGE plpgsql;
 
             CREATE TRIGGER trigger_add_to_general_volunteer
-            AFTER INSERT ON SignedUp
+            AFTER INSERT ON signedup
             FOR EACH ROW
             EXECUTE FUNCTION add_to_general_volunteer();
 
@@ -73,7 +71,7 @@ class Migration(migrations.Migration):
             $$ LANGUAGE plpgsql;
 
             CREATE TRIGGER trigger_validate_pending_tutor
-            BEFORE INSERT ON Tutors
+            BEFORE INSERT ON tutors
             FOR EACH ROW
             EXECUTE FUNCTION validate_pending_tutor();
 
@@ -86,21 +84,21 @@ class Migration(migrations.Migration):
             $$ LANGUAGE plpgsql;
 
             CREATE TRIGGER set_timestamp
-            BEFORE UPDATE ON Feedback
+            BEFORE UPDATE ON feedback
             FOR EACH ROW
             EXECUTE FUNCTION update_timestamp();
             """,
             reverse_sql="""
-            DROP TRIGGER IF EXISTS trigger_add_to_pending_tutor ON SignedUp;
+            DROP TRIGGER IF EXISTS trigger_add_to_pending_tutor ON signedup;
             DROP FUNCTION IF EXISTS add_to_pending_tutor;
 
-            DROP TRIGGER IF EXISTS trigger_add_to_general_volunteer ON SignedUp;
+            DROP TRIGGER IF EXISTS trigger_add_to_general_volunteer ON signedup;
             DROP FUNCTION IF EXISTS add_to_general_volunteer;
 
-            DROP TRIGGER IF EXISTS trigger_validate_pending_tutor ON Tutors;
+            DROP TRIGGER IF EXISTS trigger_validate_pending_tutor ON tutors;
             DROP FUNCTION IF EXISTS validate_pending_tutor;
 
-            DROP TRIGGER IF EXISTS set_timestamp ON Feedback;
+            DROP TRIGGER IF EXISTS set_timestamp ON feedback;
             DROP FUNCTION IF EXISTS update_timestamp;
             """,
         ),

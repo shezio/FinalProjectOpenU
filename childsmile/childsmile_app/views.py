@@ -1,72 +1,83 @@
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.response import Response
+from rest_framework.response import Response, status
 from rest_framework.decorators import action
 from django.http import HttpResponse
-from django.shortcuts import render
 from django.views import View
 from .models import (
-    Family,
-    FamilyMember,
     Permissions,
+    Role,
     Staff,
-    Tutor,
-    Tutorship,
-    Volunteer,
-    Mature,
-    HealthyKid,
+    SignedUp,
+    General_Volunteer,
+    Pending_Tutor,
+    Tutors,
+    Children,
+    Tutorships,
+    Matures,
+    Healthy,
     Feedback,
-    TutorFeedback,
-    VolunteerFeedback,
+    Tutor_Feedback,
+    General_V_Feedback,
     Task,
     HasPermission,
 )
 import csv
 import datetime
 
-
-class FamilyViewSet(viewsets.ModelViewSet):
-    queryset = Family.objects.all()
-    permission_classes = [IsAuthenticated, HasPermission]
-
-
-class FamilyMemberViewSet(viewsets.ModelViewSet):
-    queryset = FamilyMember.objects.all()
-    permission_classes = [IsAuthenticated, HasPermission]
-
 class PermissionsViewSet(viewsets.ModelViewSet):
     queryset = Permissions.objects.all()
-    permission_classes = [IsAuthenticated, HasPermission]
+    permission_classes = [IsAuthenticated]
+
+class RoleViewSet(viewsets.ModelViewSet):
+    queryset = Role.objects.all()
+    permission_classes = [IsAuthenticated]
 
 class StaffViewSet(viewsets.ModelViewSet):
     queryset = Staff.objects.all()
-    permission_classes = [IsAuthenticated, HasPermission]
+    permission_classes = [IsAuthenticated]
 
-class TutorViewSet(viewsets.ModelViewSet):
-    queryset = Tutor.objects.all()
-    permission_classes = [IsAuthenticated, HasPermission]
+class SignedUpViewSet(viewsets.ModelViewSet):
+    queryset = SignedUp.objects.all()
+    permission_classes = [IsAuthenticated]
 
-class TutorshipViewSet(viewsets.ModelViewSet):
-    queryset = Tutorship.objects.all()
-    permission_classes = [IsAuthenticated, HasPermission]
+class General_VolunteerViewSet(viewsets.ModelViewSet):
+    queryset = General_Volunteer.objects.all()
+    permission_classes = [IsAuthenticated]
+
+class Pending_TutorViewSet(viewsets.ModelViewSet):
+    queryset = Pending_Tutor.objects.all()
+    permission_classes = [IsAuthenticated]
+
+class TutorsViewSet(viewsets.ModelViewSet):
+    queryset = Tutors.objects.all()
+    permission_classes = [IsAuthenticated]
+
+class ChildrenViewSet(viewsets.ModelViewSet):
+    queryset = Children.objects.all()
+    permission_classes = [IsAuthenticated]
+
+class TutorshipsViewSet(viewsets.ModelViewSet):
+    queryset = Tutorships.objects.all()
+    permission_classes = [IsAuthenticated]
 
     @action(detail=False, methods=["post"])
     def match_tutorship(self, request):
         # Implement logic for matching tutorships based on criteria
         tutor_id = request.data.get("tutor_id")
-        family_member_id = request.data.get("family_member_id")
+        child_id = request.data.get("child_id")
 
-        tutor = Tutor.objects.get(id=tutor_id)
-        family_member = FamilyMember.objects.get(member_id=family_member_id)
+        tutor = Tutors.objects.get(id=tutor_id)
+        child = Children.objects.get(child_id=child_id)
 
         # Example criteria checks
-        geographic_proximity = self.calculate_geographic_proximity(tutor, family_member)
-        gender_match = tutor.gender == family_member.gender
+        geographic_proximity = self.calculate_geographic_proximity(tutor, child)
+        gender_match = tutor.gender == child.gender
 
         if geographic_proximity <= 10 and gender_match:  # Example criteria
-            tutorship = Tutorship.objects.create(
+            tutorship = Tutorships.objects.create(
                 tutor=tutor,
-                family_member=family_member,
+                child=child,
                 start_date=request.data.get("start_date"),
                 status="Active",
                 geographic_proximity=geographic_proximity,
@@ -74,9 +85,9 @@ class TutorshipViewSet(viewsets.ModelViewSet):
             )
             return Response(
                 {
-                    "tutorship_id": tutorship.tutorship_id,
+                    "tutorship_id": tutorship.id,
                     "tutor_id": tutorship.tutor.id,
-                    "family_member_id": tutorship.family_member.member_id,
+                    "child_id": tutorship.child.child_id,
                     "start_date": tutorship.start_date,
                     "status": tutorship.status,
                     "geographic_proximity": tutorship.geographic_proximity,
@@ -90,42 +101,42 @@ class TutorshipViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-    def calculate_geographic_proximity(self, tutor, family_member):
+    def calculate_geographic_proximity(self, tutor, child):
         # Implement logic to calculate geographic proximity
         # Example: Return a dummy value for now
         return 5.0
 
+class MaturesViewSet(viewsets.ModelViewSet):
+    queryset = Matures.objects.filter(
+        date_of_birth__lte=datetime.date.today() - datetime.timedelta(days=365*16)
+    )  # Ensure age > 16
+    permission_classes = [IsAuthenticated]
 
-class VolunteerViewSet(viewsets.ModelViewSet):
-    queryset = Volunteer.objects.all()
-    permission_classes = [IsAuthenticated, HasPermission]
-
-class MatureViewSet(viewsets.ModelViewSet):
-    queryset = Mature.objects.filter(
-        is_active=True, date_of_birth__lte="2008-12-26"
-    )  # Adjust the date to ensure age > 16
-    permission_classes = [IsAuthenticated, HasPermission]
-
-class HealthyKidViewSet(viewsets.ModelViewSet):
-    queryset = HealthyKid.objects.filter(is_active=True)
-    permission_classes = [IsAuthenticated, HasPermission]
+class HealthyViewSet(viewsets.ModelViewSet):
+    queryset = Healthy.objects.filter(is_active=True)
+    permission_classes = [IsAuthenticated]
 
 class FeedbackViewSet(viewsets.ModelViewSet):
     queryset = Feedback.objects.all()
-    permission_classes = [IsAuthenticated, HasPermission]
+    permission_classes = [IsAuthenticated]
 
-class TutorFeedbackViewSet(viewsets.ModelViewSet):
-    queryset = TutorFeedback.objects.all()
-    permission_classes = [IsAuthenticated, HasPermission]
+class Tutor_FeedbackViewSet(viewsets.ModelViewSet):
+    queryset = Tutor_Feedback.objects.all()
+    permission_classes = [IsAuthenticated]
 
-class VolunteerFeedbackViewSet(viewsets.ModelViewSet):
-    queryset = VolunteerFeedback.objects.all()
-    permission_classes = [IsAuthenticated, HasPermission]
+class General_V_FeedbackViewSet(viewsets.ModelViewSet):
+    queryset = General_V_Feedback.objects.all()
+    permission_classes = [IsAuthenticated]
+
+class TaskViewSet(viewsets.ModelViewSet):
+    queryset = Task.objects.all()
+    permission_classes = [IsAuthenticated]
 
 class VolunteerFeedbackReportView(View):
-    permission_classes = [IsAuthenticated, HasPermission]
+    permission_classes = [IsAuthenticated]
+    
     def get(self, request):
-        feedbacks = VolunteerFeedback.objects.all()
+        feedbacks = General_V_Feedback.objects.all()
         response = HttpResponse(content_type="text/csv")
         response["Content-Disposition"] = (
             'attachment; filename="volunteer_feedback_report.csv"'
@@ -144,11 +155,11 @@ class VolunteerFeedbackReportView(View):
 
         return response
 
-
 class TutorToFamilyAssignmentReportView(View):
-    permission_classes = [IsAuthenticated, HasPermission]
+    permission_classes = [IsAuthenticated]
+    
     def get(self, request):
-        tutorships = Tutorship.objects.filter(status="Active")
+        tutorships = Tutorships.objects.filter(status="Active")
         response = HttpResponse(content_type="text/csv")
         response["Content-Disposition"] = (
             'attachment; filename="tutor_to_family_assignment_report.csv"'
@@ -160,19 +171,17 @@ class TutorToFamilyAssignmentReportView(View):
             writer.writerow(
                 [
                     tutorship.tutor.staff.username,
-                    tutorship.family_member.first_name
-                    + " "
-                    + tutorship.family_member.last_name,
+                    tutorship.child.childfirstname + " " + tutorship.child.childsurname,
                 ]
             )
 
         return response
 
-
 class FamiliesWaitingForTutorsReportView(View):
-    permission_classes = [IsAuthenticated, HasPermission]
+    permission_classes = [IsAuthenticated]
+    
     def get(self, request):
-        families = Family.objects.filter(members__tutorship__isnull=True).distinct()
+        children_without_tutors = Children.objects.filter(tutorships__isnull=True).distinct()
         response = HttpResponse(content_type="text/csv")
         response["Content-Disposition"] = (
             'attachment; filename="families_waiting_for_tutors_report.csv"'
@@ -180,19 +189,18 @@ class FamiliesWaitingForTutorsReportView(View):
 
         writer = csv.writer(response)
         writer.writerow(["Child Name", "Parents Phone Numbers"])
-        for family in families:
-            for member in family.members.all():
-                writer.writerow(
-                    [member.first_name + " " + member.last_name, family.phone_number]
-                )
+        for child in children_without_tutors:
+            writer.writerow(
+                [child.childfirstname + " " + child.childsurname, child.child_phone_number]
+            )
 
         return response
 
-
 class DepartedFamiliesReportView(View):
-    permission_classes = [IsAuthenticated, HasPermission]
+    permission_classes = [IsAuthenticated]
+    
     def get(self, request):
-        families = Family.objects.filter(is_active=False)
+        departed_children = Children.objects.filter(tutoring_status='Departed')
         response = HttpResponse(content_type="text/csv")
         response["Content-Disposition"] = (
             'attachment; filename="departed_families_report.csv"'
@@ -208,26 +216,25 @@ class DepartedFamiliesReportView(View):
                 "Reason for Departure",
             ]
         )
-        for family in families:
-            for member in family.members.all():
-                writer.writerow(
-                    [
-                        member.first_name + " " + member.last_name,
-                        family.phone_number,
-                        family.departure_date,
-                        family.responsible_person,
-                        family.reason_for_departure,
-                    ]
-                )
+        for child in departed_children:
+            writer.writerow(
+                [
+                    child.childfirstname + " " + child.childsurname,
+                    child.child_phone_number,
+                    child.lastupdateddate,  # Assuming this is the departure date
+                    child.responsible_coordinator,  # Assuming this is the responsible person
+                    child.additional_info,  # Assuming this is the reason for departure
+                ]
+            )
 
         return response
 
-
 class NewFamiliesLastMonthReportView(View):
-    permission_classes = [IsAuthenticated, HasPermission]
+    permission_classes = [IsAuthenticated]
+    
     def get(self, request):
         last_month = datetime.date.today() - datetime.timedelta(days=30)
-        families = Family.objects.filter(created_at__gte=last_month)
+        new_children = Children.objects.filter(registrationdate__gte=last_month)
         response = HttpResponse(content_type="text/csv")
         response["Content-Disposition"] = (
             'attachment; filename="new_families_last_month_report.csv"'
@@ -235,23 +242,22 @@ class NewFamiliesLastMonthReportView(View):
 
         writer = csv.writer(response)
         writer.writerow(["Child Name", "Parents Phone Numbers", "Date of Joining"])
-        for family in families:
-            for member in family.members.all():
-                writer.writerow(
-                    [
-                        member.first_name + " " + member.last_name,
-                        family.phone_number,
-                        family.created_at,
-                    ]
-                )
+        for child in new_children:
+            writer.writerow(
+                [
+                    child.childfirstname + " " + child.childsurname,
+                    child.child_phone_number,
+                    child.registrationdate,
+                ]
+            )
 
         return response
 
-
 class FamilyDistributionByCitiesReportView(View):
-    permission_classes = [IsAuthenticated, HasPermission]
+    permission_classes = [IsAuthenticated]
+    
     def get(self, request):
-        families = Family.objects.all()
+        children = Children.objects.all()
         response = HttpResponse(content_type="text/csv")
         response["Content-Disposition"] = (
             'attachment; filename="family_distribution_by_cities_report.csv"'
@@ -259,19 +265,18 @@ class FamilyDistributionByCitiesReportView(View):
 
         writer = csv.writer(response)
         writer.writerow(["City", "Child Name"])
-        for family in families:
-            for member in family.members.all():
-                writer.writerow(
-                    [family.city, member.first_name + " " + member.last_name]
-                )
+        for child in children:
+            writer.writerow(
+                [child.city, child.childfirstname + " " + child.childsurname]
+            )
 
         return response
 
-
 class PotentialTutorshipMatchReportView(View):
-    permission_classes = [IsAuthenticated, HasPermission]
+    permission_classes = [IsAuthenticated]
+    
     def get(self, request):
-        tutors = Tutor.objects.filter(tutorship__isnull=True)
+        tutors = Tutors.objects.filter(tutorships__isnull=True)
         response = HttpResponse(content_type="text/csv")
         response["Content-Disposition"] = (
             'attachment; filename="potential_tutorship_match_report.csv"'
@@ -290,17 +295,17 @@ class PotentialTutorshipMatchReportView(View):
             ]
         )
         for tutor in tutors:
-            for family_member in FamilyMember.objects.all():
-                distance = self.calculate_distance(tutor.city, family_member.city)
+            for child in Children.objects.all():
+                distance = self.calculate_distance(tutor.city, child.city)
                 if distance <= 15:
                     writer.writerow(
                         [
                             tutor.staff.username,
-                            family_member.first_name + " " + family_member.last_name,
+                            child.childfirstname + " " + child.childsurname,
                             tutor.gender,
-                            family_member.gender,
+                            child.gender,
                             tutor.city,
-                            family_member.city,
+                            child.city,
                             distance,
                         ]
                     )
@@ -311,7 +316,3 @@ class PotentialTutorshipMatchReportView(View):
         # Implement logic to calculate distance between cities
         # Example: Return a dummy value for now
         return 10.0
-
-class TaskViewSet(viewsets.ModelViewSet):
-    queryset = Task.objects.all()
-    permission_classes = [IsAuthenticated, HasPermission]

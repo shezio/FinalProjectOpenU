@@ -1,31 +1,34 @@
 from django.contrib import admin
 from .models import (
-    Family,
-    FamilyMember,
     Permissions,
+    Role,
     Staff,
-    Tutor,
-    Tutorship,
-    Volunteer,
-    Mature,
-    HealthyKid,
+    SignedUp,
+    General_Volunteer,
+    Pending_Tutor,
+    Tutors,
+    Children,
+    Tutorships,
+    Matures,
+    Healthy,
     Feedback,
-    TutorFeedback,
-    VolunteerFeedback,
-    Task,
+    Tutor_Feedback,
+    General_V_Feedback,
+    Tasks
 )
 
-admin.site.register(Family)
-admin.site.register(FamilyMember)
 admin.site.register(Permissions)
+admin.site.register(Role)
 admin.site.register(Staff)
-admin.site.register(Tutor)
-admin.site.register(Tutorship)
-admin.site.register(Volunteer)
-admin.site.register(Mature)
-admin.site.register(HealthyKid)
+admin.site.register(SignedUp)
+admin.site.register(General_Volunteer)
+admin.site.register(Pending_Tutor)
+admin.site.register(Tutors)
+admin.site.register(Children)
+admin.site.register(Tutorships)
+admin.site.register(Matures)
+admin.site.register(Healthy)
 admin.site.register(Feedback)
-admin.site.register(TutorFeedback)
-admin.site.register(VolunteerFeedback)
-admin.site.register(Task)
-
+admin.site.register(Tutor_Feedback)
+admin.site.register(General_V_Feedback)
+admin.site.register(Tasks)

@@ -1,5 +1,4 @@
-# 0000_createdbtables.py
-
+# file: 0000_createdbtables.py
 from django.db import migrations, models
 import django.db.models.deletion
 
@@ -21,21 +20,28 @@ class Migration(migrations.Migration):
             ],
         ),
         migrations.CreateModel(
+            name="Role",
+            fields=[
+                ("id", models.AutoField(primary_key=True)),
+                ("role_name", models.CharField(max_length=255, unique=True)),
+            ],
+        ),
+        migrations.CreateModel(
             name="Staff",
             fields=[
                 ("staff_id", models.AutoField(primary_key=True)),
                 ("username", models.CharField(max_length=255, unique=True)),
                 ("password", models.CharField(max_length=255)),
                 (
-                    "role_id",
+                    "role",
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
-                        to="childsmile_app.Permissions",
+                        to="childsmile_app.Role",
                     ),
                 ),
                 ("email", models.EmailField(max_length=255, unique=True)),
-                ("firstname", models.CharField(max_length=255)),
-                ("lastname", models.CharField(max_length=255)),
+                ("first_name", models.CharField(max_length=255)),
+                ("last_name", models.CharField(max_length=255)),
                 ("created_at", models.DateTimeField(auto_now_add=True)),
             ],
         ),
@@ -43,19 +49,19 @@ class Migration(migrations.Migration):
             name="SignedUp",
             fields=[
                 ("id", models.AutoField(primary_key=True)),
-                ("firstname", models.CharField(max_length=255)),
+                ("first_name", models.CharField(max_length=255)),
                 ("surname", models.CharField(max_length=255)),
                 ("age", models.IntegerField()),
                 ("gender", models.BooleanField()),
-                ("phone", models.IntegerField()),
+                ("phone", models.CharField(max_length=20)),
                 ("city", models.CharField(max_length=255)),
-                ("comment", models.CharField(max_length=255, null=True, blank=True)),
+                ("comment", models.TextField(null=True, blank=True)),
                 ("email", models.EmailField(null=True, blank=True)),
                 ("want_tutor", models.BooleanField()),
             ],
         ),
         migrations.CreateModel(
-            name="GeneralVolunteer",
+            name="General_Volunteer",
             fields=[
                 (
                     "id",
@@ -66,18 +72,18 @@ class Migration(migrations.Migration):
                     ),
                 ),
                 (
-                    "staff_id",
+                    "staff",
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
                         to="childsmile_app.Staff",
                     ),
                 ),
                 ("signupdate", models.DateField()),
-                ("comments", models.CharField(max_length=255, null=True, blank=True)),
+                ("comments", models.TextField(null=True, blank=True)),
             ],
         ),
         migrations.CreateModel(
-            name="PendingTutor",
+            name="Pending_Tutor",
             fields=[
                 ("pending_tutor_id", models.AutoField(primary_key=True)),
                 (
@@ -102,16 +108,26 @@ class Migration(migrations.Migration):
                     ),
                 ),
                 (
-                    "staff_id",
+                    "staff",
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
                         to="childsmile_app.Staff",
                     ),
                 ),
-                ("tutorship_status", models.CharField(max_length=255)),
+                (
+                    "tutorship_status",
+                    models.CharField(
+                        max_length=255,
+                        choices=[
+                            ('HAS_TUTEE', 'Has Tutee'),
+                            ('NO_TUTEE', 'No Tutee'),
+                            ('NOT_AVAILABLE', 'Not Available for Assignment')
+                        ]
+                    )
+                ),
                 (
                     "preferences",
-                    models.CharField(max_length=255, null=True, blank=True),
+                    models.TextField(null=True, blank=True),
                 ),
                 ("tutor_email", models.EmailField(null=True, blank=True)),
                 (
@@ -135,23 +151,22 @@ class Migration(migrations.Migration):
                 ("gender", models.BooleanField()),
                 ("responsible_coordinator", models.CharField(max_length=255)),
                 ("city", models.CharField(max_length=255)),
-                ("child_phone_number", models.IntegerField()),
+                ("child_phone_number", models.CharField(max_length=20)),
                 ("treating_hospital", models.CharField(max_length=255)),
                 ("date_of_birth", models.DateField()),
-                ("age", models.IntegerField()),
                 (
                     "medical_diagnosis",
                     models.CharField(max_length=255, null=True, blank=True),
                 ),
                 ("diagnosis_date", models.DateField(null=True, blank=True)),
-                ("marital_status", models.CharField(max_length=255)),
+                ("marital_status", models.CharField(max_length=50)),
                 ("num_of_siblings", models.IntegerField()),
-                ("details_for_tutoring", models.CharField(max_length=255)),
+                ("details_for_tutoring", models.TextField()),
                 (
                     "additional_info",
-                    models.CharField(max_length=255, null=True, blank=True),
+                    models.TextField(null=True, blank=True),
                 ),
-                ("tutoring_status", models.CharField(max_length=255)),
+                ("tutoring_status", models.CharField(max_length=50)),
             ],
         ),
         migrations.CreateModel(
@@ -159,14 +174,14 @@ class Migration(migrations.Migration):
             fields=[
                 ("id", models.AutoField(primary_key=True)),
                 (
-                    "child_id",
+                    "child",
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
                         to="childsmile_app.Children",
                     ),
                 ),
                 (
-                    "tutor_id",
+                    "tutor",
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
                         to="childsmile_app.Tutors",
@@ -179,7 +194,7 @@ class Migration(migrations.Migration):
             fields=[
                 ("timestamp", models.DateTimeField(auto_now_add=True)),
                 (
-                    "child_id",
+                    "child",
                     models.OneToOneField(
                         on_delete=django.db.models.deletion.CASCADE,
                         primary_key=True,
@@ -193,14 +208,14 @@ class Migration(migrations.Migration):
                 ),
                 ("when_completed_treatments", models.DateField(null=True, blank=True)),
                 ("parent_name", models.CharField(max_length=255)),
-                ("parent_phone", models.IntegerField()),
+                ("parent_phone", models.CharField(max_length=20)),
                 (
                     "additional_info",
-                    models.CharField(max_length=255, null=True, blank=True),
+                    models.TextField(null=True, blank=True),
                 ),
                 (
                     "general_comment",
-                    models.CharField(max_length=255, null=True, blank=True),
+                    models.TextField(null=True, blank=True),
                 ),
             ],
         ),
@@ -223,12 +238,12 @@ class Migration(migrations.Migration):
                     "father_name",
                     models.CharField(max_length=255, null=True, blank=True),
                 ),
-                ("father_phone", models.IntegerField(null=True, blank=True)),
+                ("father_phone", models.CharField(max_length=20, null=True, blank=True)),
                 (
                     "mother_name",
                     models.CharField(max_length=255, null=True, blank=True),
                 ),
-                ("mother_phone", models.IntegerField(null=True, blank=True)),
+                ("mother_phone", models.CharField(max_length=20, null=True, blank=True)),
             ],
         ),
         migrations.CreateModel(
@@ -238,22 +253,22 @@ class Migration(migrations.Migration):
                 ("timestamp", models.DateTimeField(auto_now_add=True)),
                 ("event_date", models.DateTimeField()),
                 (
-                    "staff_id",
+                    "staff",
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
                         to="childsmile_app.Staff",
                     ),
                 ),
-                ("description", models.CharField(max_length=255)),
+                ("description", models.TextField()),
                 (
                     "exceptional_events",
-                    models.CharField(max_length=255, null=True, blank=True),
+                    models.TextField(null=True, blank=True),
                 ),
                 (
                     "anything_else",
-                    models.CharField(max_length=255, null=True, blank=True),
+                    models.TextField(null=True, blank=True),
                 ),
-                ("comments", models.CharField(max_length=255, null=True, blank=True)),
+                ("comments", models.TextField(null=True, blank=True)),
             ],
         ),
         migrations.CreateModel(
@@ -270,18 +285,18 @@ class Migration(migrations.Migration):
                 ("tutee_name", models.CharField(max_length=255)),
                 ("tutor_name", models.CharField(max_length=255)),
                 (
-                    "tutor_id",
+                    "tutor",
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
                         to="childsmile_app.Tutors",
                     ),
                 ),
                 ("is_it_your_tutee", models.BooleanField()),
-                ("isfirstvisit", models.BooleanField()),
+                ("is_first_visit", models.BooleanField()),
             ],
         ),
         migrations.CreateModel(
-            name="GeneralVFeedback",
+            name="General_V_Feedback",
             fields=[
                 (
                     "feedback_id",
@@ -293,10 +308,10 @@ class Migration(migrations.Migration):
                 ),
                 ("volunteer_name", models.CharField(max_length=255)),
                 (
-                    "volunteer_id",
+                    "volunteer",
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
-                        to="childsmile_app.GeneralVolunteer",
+                        to="childsmile_app.General_Volunteer",
                     ),
                 ),
             ],
@@ -319,9 +334,9 @@ class Migration(migrations.Migration):
                         to="childsmile_app.Staff",
                     ),
                 ),
-                ("task_description", models.CharField(max_length=255)),
+                ("task_description", models.TextField()),
                 ("due_date", models.DateField()),
-                ("status", models.CharField(max_length=255, default="לביצוע")),
+                ("status", models.CharField(max_length=255, default="Pending")),
                 (
                     "task_type",
                     models.ForeignKey(

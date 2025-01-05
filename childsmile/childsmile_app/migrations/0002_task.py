@@ -1,17 +1,16 @@
-# 0003_task.py
-
+# 0002_task.py: This file contains the migration for creating the Tasks model. The Tasks model is used to store the tasks that are assigned to the staff members. The model contains the following fields:
 import django.db.models.deletion
 from django.db import migrations, models
 
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('childsmile_app', '0002_initial'),
+        ('childsmile_app', '0001_runSQLs'),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='Task',
+            name='Tasks',
             fields=[
                 ('task_id', models.AutoField(primary_key=True, serialize=False)),
                 ('task_type', models.CharField(choices=[
@@ -37,9 +36,9 @@ class Migration(migrations.Migration):
                 ('created_at', models.DateTimeField(auto_now_add=True)),
                 ('updated_at', models.DateTimeField(auto_now=True)),
                 ('assigned_to', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='tasks', to='childsmile_app.Staff')),
-                ('related_child', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='childsmile_app.FamilyMember')),
-                ('related_family', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='childsmile_app.Family')),
-                ('related_tutor', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='childsmile_app.Tutor')),
+                ('related_child', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='childsmile_app.Children')),
+                ('related_family', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='childsmile_app.Children')),
+                ('related_tutor', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='childsmile_app.Tutors')),
             ],
         ),
     ]
