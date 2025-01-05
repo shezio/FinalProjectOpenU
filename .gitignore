@@ -159,3 +159,4 @@ cython_debug/
 
 # node_modules should never be committed
 /childsmile/frontend/node_modules
+%bin%/*
