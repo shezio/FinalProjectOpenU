@@ -1,5 +1,52 @@
-# file: 0001_runSQLs.py
 from django.db import migrations, models
+from django.apps import apps
+from datetime import date
+
+
+def add_to_pending_tutor(sender, instance, created, **kwargs):
+    if created and instance.want_tutor:
+        Pending_Tutor = apps.get_model('childsmile_app', 'Pending_Tutor')
+        Pending_Tutor.objects.create(id=instance, pending_status='Pending')
+
+def add_to_general_volunteer(sender, instance, created, **kwargs):
+    if created and not instance.want_tutor:
+        General_Volunteer = apps.get_model('childsmile_app', 'General_Volunteer')
+        General_Volunteer.objects.create(id=instance, staff=None, signupdate=date.today(), comments=instance.comment)
+
+def validate_pending_tutor(sender, instance, **kwargs):
+    Pending_Tutor = apps.get_model('childsmile_app', 'Pending_Tutor')
+    if not Pending_Tutor.objects.filter(id=instance.id).exists():
+        raise ValueError('Tutor must exist in pending_tutor table before being added to Tutors table')
+
+def update_timestamp(sender, instance, **kwargs):
+    instance.timestamp = date.today()
+
+
+def create_signals(apps, schema_editor):
+    from django.db.models.signals import post_save, pre_save
+    from datetime import date
+    SignedUp = apps.get_model('childsmile_app', 'SignedUp')
+    Tutors = apps.get_model('childsmile_app', 'Tutors')
+    Feedback = apps.get_model('childsmile_app', 'Feedback')
+
+    # Connect signals
+    post_save.connect(add_to_pending_tutor, sender=SignedUp)
+    post_save.connect(add_to_general_volunteer, sender=SignedUp)
+    pre_save.connect(validate_pending_tutor, sender=Tutors)
+    pre_save.connect(update_timestamp, sender=Feedback)
+
+
+def remove_signals(apps, schema_editor):
+    from django.db.models.signals import post_save, pre_save
+    SignedUp = apps.get_model('childsmile_app', 'SignedUp')
+    Tutors = apps.get_model('childsmile_app', 'Tutors')
+    Feedback = apps.get_model('childsmile_app', 'Feedback')
+
+    # Disconnect signals
+    post_save.disconnect(add_to_pending_tutor, sender=SignedUp)
+    post_save.disconnect(add_to_general_volunteer, sender=SignedUp)
+    pre_save.disconnect(validate_pending_tutor, sender=Tutors)
+    pre_save.disconnect(update_timestamp, sender=Feedback)
 
 
 class Migration(migrations.Migration):
@@ -11,6 +58,7 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
+        # Create ENUM types
         migrations.RunSQL(
             sql="""
             CREATE TYPE tutorship_status AS ENUM ('יש_חניך', 'אין_חניך', 'לא_זמין_לשיבוץ');
@@ -26,80 +74,9 @@ class Migration(migrations.Migration):
             DROP TYPE tutoring_status;
             """,
         ),
-        migrations.RunSQL(
-            sql="""
-            CREATE OR REPLACE FUNCTION add_to_pending_tutor()
-            RETURNS TRIGGER AS $$
-            BEGIN
-                IF NEW.want_tutor = TRUE THEN
-                    INSERT INTO pending_tutor (id, pending_status)
-                    VALUES (NEW.id, 'Pending');
-                END IF;
-                RETURN NEW;
-            END;
-            $$ LANGUAGE plpgsql;
-
-            CREATE TRIGGER trigger_add_to_pending_tutor
-            AFTER INSERT ON signedup
-            FOR EACH ROW
-            EXECUTE FUNCTION add_to_pending_tutor();
-
-            CREATE OR REPLACE FUNCTION add_to_general_volunteer()
-            RETURNS TRIGGER AS $$
-            BEGIN
-                IF NEW.want_tutor = FALSE THEN
-                    INSERT INTO general_volunteer (id, signupdate, comments)
-                    VALUES (NEW.id, CURRENT_DATE, NEW.comment);
-                END IF;
-                RETURN NEW;
-            END;
-            $$ LANGUAGE plpgsql;
-
-            CREATE TRIGGER trigger_add_to_general_volunteer
-            AFTER INSERT ON signedup
-            FOR EACH ROW
-            EXECUTE FUNCTION add_to_general_volunteer();
-
-            CREATE OR REPLACE FUNCTION validate_pending_tutor()
-            RETURNS TRIGGER AS $$
-            BEGIN
-                IF NOT EXISTS (SELECT 1 FROM pending_tutor WHERE id = NEW.id) THEN
-                    RAISE EXCEPTION 'Tutor must exist in pending_tutor table before being added to Tutors table';
-                END IF;
-                RETURN NEW;
-            END;
-            $$ LANGUAGE plpgsql;
-
-            CREATE TRIGGER trigger_validate_pending_tutor
-            BEFORE INSERT ON tutors
-            FOR EACH ROW
-            EXECUTE FUNCTION validate_pending_tutor();
-
-            CREATE OR REPLACE FUNCTION update_timestamp()
-            RETURNS TRIGGER AS $$
-            BEGIN
-                NEW.timestamp = CURRENT_TIMESTAMP;
-                RETURN NEW;
-            END;
-            $$ LANGUAGE plpgsql;
-
-            CREATE TRIGGER set_timestamp
-            BEFORE UPDATE ON feedback
-            FOR EACH ROW
-            EXECUTE FUNCTION update_timestamp();
-            """,
-            reverse_sql="""
-            DROP TRIGGER IF EXISTS trigger_add_to_pending_tutor ON signedup;
-            DROP FUNCTION IF EXISTS add_to_pending_tutor;
-
-            DROP TRIGGER IF EXISTS trigger_add_to_general_volunteer ON signedup;
-            DROP FUNCTION IF EXISTS add_to_general_volunteer;
-
-            DROP TRIGGER IF EXISTS trigger_validate_pending_tutor ON tutors;
-            DROP FUNCTION IF EXISTS validate_pending_tutor;
-
-            DROP TRIGGER IF EXISTS set_timestamp ON feedback;
-            DROP FUNCTION IF EXISTS update_timestamp;
-            """,
+        # Add signals to replace triggers
+        migrations.RunPython(
+            code=create_signals,
+            reverse_code=remove_signals,
         ),
     ]
