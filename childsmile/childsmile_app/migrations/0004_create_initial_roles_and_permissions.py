@@ -85,7 +85,7 @@ def create_initial_roles_and_permissions(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('childsmile_app', '0004_role_alter_permissions_role_alter_staff_role'),
+        ('childsmile_app', '0003_role_alter_permissions_role_alter_staff_role'),
     ]
 
     operations = [

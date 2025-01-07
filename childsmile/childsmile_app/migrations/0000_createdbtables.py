@@ -316,34 +316,4 @@ class Migration(migrations.Migration):
                 ),
             ],
         ),
-        migrations.CreateModel(
-            name="TaskTypes",
-            fields=[
-                ("task_type", models.AutoField(primary_key=True)),
-                ("task_name", models.CharField(max_length=255)),
-            ],
-        ),
-        migrations.CreateModel(
-            name="Tasks",
-            fields=[
-                ("task_id", models.AutoField(primary_key=True)),
-                (
-                    "staff_member",
-                    models.ForeignKey(
-                        on_delete=django.db.models.deletion.CASCADE,
-                        to="childsmile_app.Staff",
-                    ),
-                ),
-                ("task_description", models.TextField()),
-                ("due_date", models.DateField()),
-                ("status", models.CharField(max_length=255, default="Pending")),
-                (
-                    "task_type",
-                    models.ForeignKey(
-                        on_delete=django.db.models.deletion.CASCADE,
-                        to="childsmile_app.TaskTypes",
-                    ),
-                ),
-            ],
-        ),
     ]
