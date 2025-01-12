@@ -1,0 +1,73 @@
+/* src/styles.css */
+body {
+    font-family: Arial, sans-serif;
+    direction: rtl; /* RTL support */
+    text-align: right; /* RTL support */
+  }
+  
+  .login-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .login-header {
+    width: 100%;
+    display: flex;
+    justify-content: flex-start;
+    padding: 10px;
+  }
+  
+  .npo-logo {
+    height: 50px;
+  }
+  
+  .login-main {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 20px;
+  }
+  
+  .hero-image {
+    width: 100%;
+    max-width: 300px;
+    margin-bottom: 20px;
+  }
+  
+  .login-form {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    width: 100%;
+    max-width: 300px;
+  }
+  
+  .login-form label {
+    margin-top: 10px;
+  }
+  
+  .login-form input {
+    width: 100%;
+    padding: 8px;
+    margin-top: 5px;
+  }
+  
+  .login-form button {
+    margin-top: 20px;
+    padding: 10px;
+    width: 100%;
+  }
+  
+  .motto {
+    margin-top: 20px;
+    font-style: italic;
+  }
+  
+  .login-footer {
+    margin-top: 20px;
+  }
+  
+  .qr-code {
+    height: 100px;
+  }
