@@ -1,6 +1,6 @@
+// src/index.js
 import React from 'react';
 import ReactDOM from 'react-dom';
+import Login from './components/Login';
 
-const App = () => <div>Hello, React!</div>;
-
-ReactDOM.render(<App />, document.getElementById('root'));
+ReactDOM.render(<Login />, document.getElementById('root'));
