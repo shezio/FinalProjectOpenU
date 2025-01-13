@@ -1,73 +1,50 @@
-/* src/styles.css */
 body {
-    font-family: Arial, sans-serif;
-    direction: rtl; /* RTL support */
-    text-align: right; /* RTL support */
-  }
-  
-  .login-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-  }
-  
-  .login-header {
-    width: 100%;
-    display: flex;
-    justify-content: flex-start;
-    padding: 10px;
-  }
-  
-  .npo-logo {
-    height: 50px;
-  }
-  
-  .login-main {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    margin-top: 20px;
-  }
-  
-  .hero-image {
-    width: 100%;
-    max-width: 300px;
-    margin-bottom: 20px;
-  }
-  
-  .login-form {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    width: 100%;
-    max-width: 300px;
-  }
-  
-  .login-form label {
-    margin-top: 10px;
-  }
-  
-  .login-form input {
-    width: 100%;
-    padding: 8px;
-    margin-top: 5px;
-  }
-  
-  .login-form button {
-    margin-top: 20px;
-    padding: 10px;
-    width: 100%;
-  }
-  
-  .motto {
-    margin-top: 20px;
-    font-style: italic;
-  }
-  
-  .login-footer {
-    margin-top: 20px;
-  }
-  
-  .qr-code {
-    height: 100px;
-  }
+  direction: rtl;
+  font-family: Arial, sans-serif;
+}
+
+.login-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+}
+
+.logo {
+  margin-bottom: 20px;
+  width: 100px; /* Adjust the width as needed */
+  height: auto; /* Maintain aspect ratio */
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.login-form input {
+  margin: 5px 0;
+  padding: 10px;
+  width: 200px;
+}
+
+.login-form button {
+  padding: 10px 20px;
+  margin-top: 10px;
+}
+
+.top-left {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.top-left img {
+  margin: 5px 0;
+  width: 100px; /* Adjust the width as needed */
+  height: auto; /* Maintain aspect ratio */
+}
