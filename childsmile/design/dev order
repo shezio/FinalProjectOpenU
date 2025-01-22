@@ -1,0 +1,102 @@
+Thanks for sharing the SQL scripts and additional details. Let's proceed step by step to ensure everything is in order.
+
+### Development Order
+1. **Roles and Permissions**: These are foundational for managing access control.
+2. **Staff**: Essential for user management.
+3. **SignedUp**: To manage individuals who sign up for the program.
+4. **General_Volunteer** and **Pending_Tutor**: To manage volunteers and tutors.
+5. **Tutors**: To manage tutor-specific details.
+6. **Children**: To manage child-specific details.
+7. **Tutorships**: To manage the relationship between tutors and children.
+8. **Matures** and **Healthy**: To manage mature and healthy children.
+9. **Feedback**: To manage feedback from staff.
+10. **Tasks**: To manage tasks assigned to staff.
+
+### Sample Inserts
+Here are the sample inserts for each table, with texts in Hebrew:
+
+#### Role Table -
+### ROLES  רכז מתנדבים ,רכז משפחות,רכז חונכים,רכז בוגרים,רכז בריאים,רכז טכני ,מנהל מערכת
+```sql
+INSERT INTO role (role_name) VALUES ('רכז טכני');
+INSERT INTO role (role_name) VALUES ('רכז מתנדבים');
+INSERT INTO role (role_name) VALUES ('רכז משפחות');
+INSERT INTO role (role_name) VALUES ('רכז חונכים');
+INSERT INTO role (role_name) VALUES ('רכז בוגרים');
+INSERT INTO role (role_name) VALUES ('רכז בריאים');
+INSERT INTO role (role_name) VALUES ('מנהל מערכת');
+```
+
+#### Permissions Table
+```sql
+INSERT INTO permissions (role, resource, action) VALUES ('מתאם טכני', 'משפחה', 'יצירה');
+INSERT INTO permissions (role, resource, action) VALUES ('מתאם מתנדבים', 'מתנדב', 'צפייה');
+INSERT INTO permissions (role, resource, action) VALUES ('מתאם משפחות', 'משפחה', 'עדכון');
+```
+
+#### Staff Table
+```sql
+INSERT INTO staff (username, password, role_id, email, firstname, lastname, created_at) VALUES ('admin', 'hashed_password', 1, 'admin@example.com', 'אדמין', 'אדמין', '2025-01-16 18:20:03');
+INSERT INTO staff (username, password, role_id, email, firstname, lastname, created_at) VALUES ('volunteer1', 'hashed_password', 2, 'volunteer1@example.com', 'מתנדב', 'ראשון', '2025-01-16 18:20:03');
+INSERT INTO staff (username, password, role_id, email, firstname, lastname, created_at) VALUES ('family1', 'hashed_password', 3, 'family1@example.com', 'משפחה', 'ראשונה', '2025-01-16 18:20:03');
+```
+
+#### SignedUp Table
+```sql
+INSERT INTO signedup (id, firstname, surname, age, gender, phone, city, comment, email, want_tutor) VALUES (1, 'יוסי', 'כהן', 12, TRUE, '0501234567', 'תל אביב', 'הערה', 'yossi@example.com', TRUE);
+INSERT INTO signedup (id, firstname, surname, age, gender, phone, city, comment, email, want_tutor) VALUES (2, 'דנה', 'לוי', 10, FALSE, '0507654321', 'חיפה', 'הערה', 'dana@example.com', FALSE);
+INSERT INTO signedup (id, firstname, surname, age, gender, phone, city, comment, email, want_tutor) VALUES (3, 'אבי', 'מזרחי', 15, TRUE, '0501112222', 'ירושלים', 'הערה', 'avi@example.com', TRUE);
+```
+
+#### General_Volunteer Table
+```sql
+INSERT INTO general_volunteer (id, staff_id, signupdate, comments) VALUES (2, 2, '2025-01-16', 'הערות');
+INSERT INTO general_volunteer (id, staff_id, signupdate, comments) VALUES (3, 2, '2025-01-16', 'הערות');
+```
+
+#### Pending_Tutor Table
+```sql
+INSERT INTO pending_tutor (id, pending_status) VALUES (1, 'Pending');
+INSERT INTO pending_tutor (id, pending_status) VALUES (3, 'Pending');
+```
+
+#### Tutors Table
+```sql
+INSERT INTO tutors (id, staff_id, tutorship_status, preferences, tutor_email, relationship_status, tutee_wellness) VALUES (1, 1, 'יש_חניך', 'העדפות', 'tutor1@example.com', 'סטטוס', 'בריאות');
+INSERT INTO tutors (id, staff_id, tutorship_status, preferences, tutor_email, relationship_status, tutee_wellness) VALUES (3, 1, 'אין_חניך', 'העדפות', 'tutor3@example.com', 'סטטוס', 'בריאות');
+```
+
+#### Children Table
+```sql
+INSERT INTO children (child_id, childfirstname, childsurname, registrationdate, lastupdateddate, gender, responsible_coordinator, city, child_phone_number, treating_hospital, date_of_birth, age, medical_diagnosis, diagnosis_date, marital_status, num_of_siblings, details_for_tutoring, additional_info, tutoring_status) VALUES (1, 'יוסי', 'כהן', '2025-01-16', '2025-01-16', TRUE, 'מתאם', 'תל אביב', '0501234567', 'בית חולים', '2013-01-16', 12, 'אבחנה', '2025-01-16', 'נשואים', 2, 'פרטים', 'מידע נוסף', 'יש_חונך');
+INSERT INTO children (child_id, childfirstname, childsurname, registrationdate, lastupdateddate, gender, responsible_coordinator, city, child_phone_number, treating_hospital, date_of_birth, age, medical_diagnosis, diagnosis_date, marital_status, num_of_siblings, details_for_tutoring, additional_info, tutoring_status) VALUES (2, 'דנה', 'לוי', '2025-01-16', '2025-01-16', FALSE, 'מתאם', 'חיפה', '0507654321', 'בית חולים', '2015-01-16', 10, 'אבחנה', '2025-01-16', 'גרושים', 1, 'פרטים', 'מידע נוסף', 'אין_חונך');
+INSERT INTO children (child_id, childfirstname, childsurname, registrationdate, lastupdateddate, gender, responsible_coordinator, city, child_phone_number, treating_hospital, date_of_birth, age, medical_diagnosis, diagnosis_date, marital_status, num_of_siblings, details_for_tutoring, additional_info, tutoring_status) VALUES (3, 'אבי', 'מזרחי', '2025-01-16', '2025-01-16', TRUE, 'מתאם', 'ירושלים', '0501112222', 'בית חולים', '2010-01-16', 15, 'אבחנה', '2025-01-16', 'פרודים', 3, 'פרטים', 'מידע נוסף', 'למצוא_חונך');
+```
+
+#### Tutorships Table
+```sql
+INSERT INTO tutorships (child_id, tutor_id) VALUES (1, 1);
+INSERT INTO tutorships (child_id, tutor_id) VALUES (3, 3);
+```
+
+#### Matures Table
+```sql
+INSERT INTO matures (timestamp, child_id, full_address, current_medical_state, when_completed_treatments, parent_name, parent_phone, additional_info, general_comment) VALUES ('2025-01-16 18:20:03', 1, 'כתובת מלאה', 'מצב רפואי', '2025-01-16', 'שם הורה', '0501234567', 'מידע נוסף', 'הערה כללית');
+INSERT INTO matures (timestamp, child_id, full_address, current_medical_state, when_completed_treatments, parent_name, parent_phone, additional_info, general_comment) VALUES ('2025-01-16 18:20:03', 2, 'כתובת מלאה', 'מצב רפואי', '2025-01-16', 'שם הורה', '0507654321', 'מידע נוסף', 'הערה כללית');
+```
+
+#### Healthy Table
+```sql
+INSERT INTO healthy (child_id, street_and_apartment_number, father_name, father_phone, mother_name, mother_phone) VALUES (1, 'רחוב ומספר דירה', 'שם אב', '0501234567', 'שם אם', '0507654321');
+INSERT INTO healthy (child_id, street_and_apartment_number, father_name, father_phone, mother_name, mother_phone) VALUES (2, 'רחוב ומספר דירה', 'שם אב', '0501234567', 'שם אם', '0507654321');
+```
+
+#### Feedback Table
+```sql
+INSERT INTO feedback (event_date, staff_id, description, exceptional_events, anything_else, comments) VALUES ('2025-01-16 18:20:03', 1, 'תיאור', 'אירועים חריגים', 'משהו נוסף', 'הערות');
+INSERT INTO feedback (event_date, staff_id, description, exceptional_events, anything_else, comments) VALUES ('2025-01-16 18:20:03', 2, 'תיאור', 'אירועים חריגים', 'משהו נוסף', 'הערות');
+```
+
+#### Tutor_Feedback Table
+```sql
+INSERT INTO tutor_feedback (feedback_id, tutee_name, tutor_name, tutor
