@@ -16,7 +16,8 @@ Thanks for sharing the SQL scripts and additional details. Let's proceed step by
 Here are the sample inserts for each table, with texts in Hebrew:
 
 #### Role Table -
-### ROLES  רכז מתנדבים ,רכז משפחות,רכז חונכים,רכז בוגרים,רכז בריאים,רכז טכני ,מנהל מערכת
+### ROLES  רכז מתנדבים ,רכז משפחות,רכז חונכים,רכז בוגרים
+רכז בריאים,רכז טכני ,מנהל מערכתת,מתנדב,חונך
 ```sql
 INSERT INTO role (role_name) VALUES ('רכז טכני');
 INSERT INTO role (role_name) VALUES ('רכז מתנדבים');
@@ -25,14 +26,256 @@ INSERT INTO role (role_name) VALUES ('רכז חונכים');
 INSERT INTO role (role_name) VALUES ('רכז בוגרים');
 INSERT INTO role (role_name) VALUES ('רכז בריאים');
 INSERT INTO role (role_name) VALUES ('מנהל מערכת');
+INSERT INTO role (role_name) VALUES ('מתנדב');
+INSERT INTO role (role_name) VALUES ('חונך');
 ```
 
 #### Permissions Table
 ```sql
-INSERT INTO permissions (role, resource, action) VALUES ('מתאם טכני', 'משפחה', 'יצירה');
-INSERT INTO permissions (role, resource, action) VALUES ('מתאם מתנדבים', 'מתנדב', 'צפייה');
-INSERT INTO permissions (role, resource, action) VALUES ('מתאם משפחות', 'משפחה', 'עדכון');
+Thank you for providing the detailed descriptions of the screens and functionalities. Based on this information, we can now map out the permissions for each role and the relevant tables they need to access.
+
+### Permissions Mapping
+
+#### 1. Family Management
+- **Roles**: Technical Coordinator, Volunteer Coordinator, Families Coordinator, System Administrator
+- **Resources**: Family
+- **Actions**: CREATE, UPDATE, DELETE, VIEW
+- **Tables**: `signedup`, `general_volunteer`, `pending_tutor`, `tutors`, `children`, `tutorships`, `matures`, `healthy`
+
+#### 2. Tutor Management
+- **Roles**: Technical Coordinator, Tutors Coordinator, System Administrator
+- **Resources**: Tutor
+- **Actions**: CREATE, UPDATE, DELETE, VIEW
+- **Tables**: `tutors`
+
+#### 3. General Volunteer Management
+- **Roles**: Technical Coordinator, Volunteer Coordinator, System Administrator
+- **Resources**: Volunteer
+- **Actions**: CREATE, UPDATE, DELETE, VIEW
+- **Tables**: `general_volunteer`
+
+#### 4. Mature Management
+- **Roles**: Technical Coordinator, Matures Coordinator, System Administrator
+- **Resources**: Mature
+- **Actions**: CREATE, UPDATE, VIEW
+- **Tables**: `matures`
+
+#### 5. Healthy Kids Management
+- **Roles**: Technical Coordinator, Healthy Kids Coordinator, System Administrator
+- **Resources**: Healthy
+- **Actions**: CREATE, UPDATE, VIEW
+- **Tables**: `healthy`
+
+#### 6. Feedback Management
+- **Roles**: Tutors Coordinator, Volunteer Coordinator, System Administrator
+- **Resources**: Feedback
+- **Actions**: VIEW, UPDATE
+- **Tables**: `feedback`, `tutor_feedback`, `general_v_feedback`
+
+#### 7. Tutorship Management
+- **Roles**: Tutors Coordinator, Families Coordinator, System Administrator
+- **Resources**: Tutorship
+- **Actions**: CREATE, UPDATE, DELETE, VIEW
+- **Tables**: `tutorships`
+
+#### 8. Report Generation
+- **Roles**: System Administrator
+- **Resources**: Report
+- **Actions**: VIEW, GENERATE
+- **Tables**: `feedback`, `tutorships`, `children`, `tutors`, `general_volunteer`
+
+#### 9. Task Management
+- **Roles**: Technical Coordinator, Volunteer Coordinator, Tutors Coordinator, Families Coordinator, Matures Coordinator, Healthy Kids Coordinator, System Administrator
+- **Resources**: Task
+- **Actions**: CREATE, UPDATE, DELETE, VIEW
+- **Tables**: `tasks`
+
+### Permissions Inserts
+
+Here are the INSERT statements for the `permissions` table based on the above mapping:
+
+#### Technical Coordinator
+```sql
+INSERT INTO permissions (role, resource, action) VALUES ('Technical Coordinator', 'Family', 'CREATE');
+INSERT INTO permissions (role, resource, action) VALUES ('Technical Coordinator', 'Family', 'UPDATE');
+INSERT INTO permissions (role, resource, action) VALUES ('Technical Coordinator', 'Family', 'DELETE');
+INSERT INTO permissions (role, resource, action) VALUES ('Technical Coordinator', 'Family', 'VIEW');
+INSERT INTO permissions (role, resource, action) VALUES ('Technical Coordinator', 'Tutor', 'VIEW');
+INSERT INTO permissions (role, resource, action) VALUES ('Technical Coordinator', 'Volunteer', 'VIEW');
+INSERT INTO permissions (role, resource, action) VALUES ('Technical Coordinator', 'Mature', 'VIEW');
+INSERT INTO permissions (role, resource, action) VALUES ('Technical Coordinator', 'Healthy', 'VIEW');
+INSERT INTO permissions (role, resource, action) VALUES ('Technical Coordinator', 'Task', 'CREATE');
+INSERT INTO permissions (role, resource, action) VALUES ('Technical Coordinator', 'Task', 'UPDATE');
+INSERT INTO permissions (role, resource, action) VALUES ('Technical Coordinator', 'Task', 'DELETE');
+INSERT INTO permissions (role, resource, action) VALUES ('Technical Coordinator', 'Task', 'VIEW');
 ```
+
+#### Volunteer Coordinator
+```sql
+INSERT INTO permissions (role, resource, action) VALUES ('Volunteer Coordinator', 'Volunteer', 'CREATE');
+INSERT INTO permissions (role, resource, action) VALUES ('Volunteer Coordinator', 'Volunteer', 'UPDATE');
+INSERT INTO permissions (role, resource, action) VALUES ('Volunteer Coordinator', 'Volunteer', 'DELETE');
+INSERT INTO permissions (role, resource, action) VALUES ('Volunteer Coordinator', 'Volunteer', 'VIEW');
+INSERT INTO permissions (role, resource, action) VALUES ('Volunteer Coordinator', 'Family', 'UPDATE');
+INSERT INTO permissions (role, resource, action) VALUES ('Volunteer Coordinator', 'Family', 'DELETE');
+INSERT INTO permissions (role, resource, action) VALUES ('Volunteer Coordinator', 'Family', 'VIEW');
+INSERT INTO permissions (role, resource, action) VALUES ('Volunteer Coordinator', 'Feedback', 'VIEW');
+INSERT INTO permissions (role, resource, action) VALUES ('Volunteer Coordinator', 'Feedback', 'UPDATE');
+INSERT INTO permissions (role, resource, action) VALUES ('Volunteer Coordinator', 'Task', 'CREATE');
+INSERT INTO permissions (role, resource, action) VALUES ('Volunteer Coordinator', 'Task', 'UPDATE');
+INSERT INTO permissions (role, resource, action) VALUES ('Volunteer Coordinator', 'Task', 'DELETE');
+INSERT INTO permissions (role, resource, action) VALUES ('Volunteer Coordinator', 'Task', 'VIEW');
+```
+
+#### Families Coordinator
+```sql
+INSERT INTO permissions (role, resource, action) VALUES ('Families Coordinator', 'Family', 'UPDATE');
+INSERT INTO permissions (role, resource, action) VALUES ('Families Coordinator', 'Family', 'DELETE');
+INSERT INTO permissions (role, resource, action) VALUES ('Families Coordinator', 'Family', 'VIEW');
+INSERT INTO permissions (role, resource, action) VALUES ('Families Coordinator', 'Tutorship', 'CREATE');
+INSERT INTO permissions (role, resource, action) VALUES ('Families Coordinator', 'Tutorship', 'UPDATE');
+INSERT INTO permissions (role, resource, action) VALUES ('Families Coordinator', 'Tutorship', 'DELETE');
+INSERT INTO permissions (role, resource, action) VALUES ('Families Coordinator', 'Tutorship', 'VIEW');
+INSERT INTO permissions (role, resource, action) VALUES ('Families Coordinator', 'Task', 'CREATE');
+INSERT INTO permissions (role, resource, action) VALUES ('Families Coordinator', 'Task', 'UPDATE');
+INSERT INTO permissions (role, resource, action) VALUES ('Families Coordinator', 'Task', 'DELETE');
+INSERT INTO permissions (role, resource, action) VALUES ('Families Coordinator', 'Task', 'VIEW');
+```
+
+#### Tutors Coordinator
+```sql
+INSERT INTO permissions (role, resource, action) VALUES ('Tutors Coordinator', 'Tutor', 'CREATE');
+INSERT INTO permissions (role, resource, action) VALUES ('Tutors Coordinator', 'Tutor', 'UPDATE');
+INSERT INTO permissions (role, resource, action) VALUES ('Tutors Coordinator', 'Tutor', 'DELETE');
+INSERT INTO permissions (role, resource, action) VALUES ('Tutors Coordinator', 'Tutor', 'VIEW');
+INSERT INTO permissions (role, resource, action) VALUES ('Tutors Coordinator', 'Tutorship', 'CREATE');
+INSERT INTO permissions (role, resource, action) VALUES ('Tutors Coordinator', 'Tutorship', 'UPDATE');
+INSERT INTO permissions (role, resource, action) VALUES ('Tutors Coordinator', 'Tutorship', 'DELETE');
+INSERT INTO permissions (role, resource, action) VALUES ('Tutors Coordinator', 'Tutorship', 'VIEW');
+INSERT INTO permissions (role, resource, action) VALUES ('Tutors Coordinator', 'Feedback', 'VIEW');
+INSERT INTO permissions (role, resource, action) VALUES ('Tutors Coordinator', 'Feedback', 'UPDATE');
+INSERT INTO permissions (role, resource, action) VALUES ('Tutors Coordinator', 'Task', 'CREATE');
+INSERT INTO permissions (role, resource, action) VALUES ('Tutors Coordinator', 'Task', 'UPDATE');
+INSERT INTO permissions (role, resource, action) VALUES ('Tutors Coordinator', 'Task', 'DELETE');
+INSERT INTO permissions (role, resource, action) VALUES ('Tutors Coordinator', 'Task', 'VIEW');
+```
+
+#### Matures Coordinator
+```sql
+INSERT INTO permissions (role, resource, action) VALUES ('Matures Coordinator', 'Mature', 'CREATE');
+INSERT INTO permissions (role, resource, action) VALUES ('Matures Coordinator', 'Mature', 'UPDATE');
+INSERT INTO permissions (role, resource, action) VALUES ('Matures Coordinator', 'Mature', 'VIEW');
+INSERT INTO permissions (role, resource, action) VALUES ('Matures Coordinator', 'Task', 'CREATE');
+INSERT INTO permissions (role, resource, action) VALUES ('Matures Coordinator', 'Task', 'UPDATE');
+INSERT INTO permissions (role, resource, action) VALUES ('Matures Coordinator', 'Task', 'DELETE');
+INSERT INTO permissions (role, resource, action) VALUES ('Matures Coordinator', 'Task', 'VIEW');
+```
+
+#### Healthy Kids Coordinator
+```sql
+INSERT INTO permissions (role, resource, action) VALUES ('Healthy Kids Coordinator', 'Healthy', 'CREATE');
+INSERT INTO permissions (role, resource, action) VALUES ('Healthy Kids Coordinator', 'Healthy', 'UPDATE');
+INSERT INTO permissions (role, resource, action) VALUES ('Healthy Kids Coordinator', 'Healthy', 'VIEW');
+INSERT INTO permissions (role, resource, action) VALUES ('Healthy Kids Coordinator', 'Task', 'CREATE');
+INSERT INTO permissions (role, resource, action) VALUES ('Healthy Kids Coordinator', 'Task', 'UPDATE');
+INSERT INTO permissions (role, resource, action) VALUES ('Healthy Kids Coordinator', 'Task', 'DELETE');
+INSERT INTO permissions (role, resource, action) VALUES ('Healthy Kids Coordinator', 'Task', 'VIEW');
+```
+
+#### System Administrator
+```sql
+Thanks for pointing that out! Let's continue with the permissions for the System Administrator and the remaining roles.
+
+#### System Administrator (continued)
+```sql
+INSERT INTO permissions (role, resource, action) VALUES ('System Administrator', 'User', 'UPDATE');
+INSERT INTO permissions (role, resource, action) VALUES ('System Administrator', 'User', 'DELETE');
+INSERT INTO permissions (role, resource, action) VALUES ('System Administrator', 'Role', 'MANAGE');
+INSERT INTO permissions (role, resource, action) VALUES ('System Administrator', 'Permission', 'MANAGE');
+INSERT INTO permissions (role, resource, action) VALUES ('System Administrator', 'Family', 'CREATE');
+INSERT INTO permissions (role, resource, action) VALUES ('System Administrator', 'Family', 'UPDATE');
+INSERT INTO permissions (role, resource, action) VALUES ('System Administrator', 'Family', 'DELETE');
+INSERT INTO permissions (role, resource, action) VALUES ('System Administrator', 'Family', 'VIEW');
+INSERT INTO permissions (role, resource, action) VALUES ('System Administrator', 'Volunteer', 'CREATE');
+INSERT INTO permissions (role, resource, action) VALUES ('System Administrator', 'Volunteer', 'UPDATE');
+INSERT INTO permissions (role, resource, action) VALUES ('System Administrator', 'Volunteer', 'DELETE');
+INSERT INTO permissions (role, resource, action) VALUES ('System Administrator', 'Volunteer', 'VIEW');
+INSERT INTO permissions (role, resource, action) VALUES ('System Administrator', 'Tutor', 'CREATE');
+INSERT INTO permissions (role, resource, action) VALUES ('System Administrator', 'Tutor', 'UPDATE');
+INSERT INTO permissions (role, resource, action) VALUES ('System Administrator', 'Tutor', 'DELETE');
+INSERT INTO permissions (role, resource, action) VALUES ('System Administrator', 'Tutor', 'VIEW');
+INSERT INTO permissions (role, resource, action) VALUES ('System Administrator', 'Mature', 'CREATE');
+INSERT INTO permissions (role, resource, action) VALUES ('System Administrator', 'Mature', 'UPDATE');
+INSERT INTO permissions (role, resource, action) VALUES ('System Administrator', 'Mature', 'DELETE');
+INSERT INTO permissions (role, resource, action) VALUES ('System Administrator', 'Mature', 'VIEW');
+INSERT INTO permissions (role, resource, action) VALUES ('System Administrator', 'Healthy', 'CREATE');
+INSERT INTO permissions (role, resource, action) VALUES ('System Administrator', 'Healthy', 'UPDATE');
+INSERT INTO permissions (role, resource, action) VALUES ('System Administrator', 'Healthy', 'DELETE');
+INSERT INTO permissions (role, resource, action) VALUES ('System Administrator', 'Healthy', 'VIEW');
+INSERT INTO permissions (role, resource, action) VALUES ('System Administrator', 'Feedback', 'VIEW');
+INSERT INTO permissions (role, resource, action) VALUES ('System Administrator', 'Feedback', 'UPDATE');
+INSERT INTO permissions (role, resource, action) VALUES ('System Administrator', 'Task', 'CREATE');
+INSERT INTO permissions (role, resource, action) VALUES ('System Administrator', 'Task', 'UPDATE');
+INSERT INTO permissions (role, resource, action) VALUES ('System Administrator', 'Task', 'DELETE');
+INSERT INTO permissions (role, resource, action) VALUES ('System Administrator', 'Task', 'VIEW');
+INSERT INTO permissions (role, resource, action) VALUES ('System Administrator', 'Report', 'VIEW');
+INSERT INTO permissions (role, resource, action) VALUES ('System Administrator', 'Report', 'GENERATE');
+```
+
+#### Volunteer
+```sql
+INSERT INTO permissions (role, resource, action) VALUES ('Volunteer', 'Family', 'VIEW');
+INSERT INTO permissions (role, resource, action) VALUES ('Volunteer', 'Volunteer', 'VIEW');
+```
+
+#### Tutor
+```sql
+INSERT INTO permissions (role, resource, action) VALUES ('Tutor', 'Family', 'VIEW');
+INSERT INTO permissions (role, resource, action) VALUES ('Tutor', 'Tutor', 'VIEW');
+```
+
+### Summary Table
+
+| Role                  | Resource | Action                | Relevant Tables                                                                 |
+|-----------------------|----------|-----------------------|---------------------------------------------------------------------------------|
+| Technical Coordinator | Family   | CREATE, UPDATE, DELETE, VIEW | `signedup`, `general_volunteer`, `pending_tutor`, `tutors`, `children`, `tutorships`, `matures`, `healthy` |
+| Technical Coordinator | Volunteer| VIEW                  | `general_volunteer`                                                             |
+| Technical Coordinator | Tutor    | VIEW                  | `tutors`                                                                        |
+| Technical Coordinator | Mature   | VIEW                  | `matures`                                                                       |
+| Technical Coordinator | Healthy  | VIEW                  | `healthy`                                                                       |
+| Technical Coordinator | Task     | CREATE, UPDATE, DELETE, VIEW | `tasks`                                                                         |
+| Volunteer Coordinator | Volunteer| CREATE, UPDATE, DELETE, VIEW | `general_volunteer`                                                             |
+| Volunteer Coordinator | Family   | UPDATE, DELETE, VIEW  | `signedup`, `general_volunteer`, `pending_tutor`, `tutors`, `children`, `tutorships`, `matures`, `healthy` |
+| Volunteer Coordinator | Feedback | VIEW, UPDATE          | `feedback`, `tutor_feedback`, `general_v_feedback`                              |
+| Volunteer Coordinator | Task     | CREATE, UPDATE, DELETE, VIEW | `tasks`                                                                         |
+| Families Coordinator  | Family   | UPDATE, DELETE, VIEW  | `signedup`, `general_volunteer`, `pending_tutor`, `tutors`, `children`, `tutorships`, `matures`, `healthy` |
+| Families Coordinator  | Tutorship| CREATE, UPDATE, DELETE, VIEW | `tutorships`                                                                    |
+| Families Coordinator  | Task     | CREATE, UPDATE, DELETE, VIEW | `tasks`                                                                         |
+| Tutors Coordinator    | Tutor    | CREATE, UPDATE, DELETE, VIEW | `tutors`                                                                        |
+| Tutors Coordinator    | Tutorship| CREATE, UPDATE, DELETE, VIEW | `tutorships`                                                                    |
+| Tutors Coordinator    | Feedback | VIEW, UPDATE          | `feedback`, `tutor_feedback`, `general_v_feedback`                              |
+| Tutors Coordinator    | Task     | CREATE, UPDATE, DELETE, VIEW | `tasks`                                                                         |
+| Matures Coordinator   | Mature   | CREATE, UPDATE, VIEW  | `matures`                                                                       |
+| Matures Coordinator   | Task     | CREATE, UPDATE, DELETE, VIEW | `tasks`                                                                         |
+| Healthy Kids Coordinator | Healthy | CREATE, UPDATE, VIEW | `healthy`                                                                       |
+| Healthy Kids Coordinator | Task | CREATE, UPDATE, DELETE, VIEW | `tasks`                                                                         |
+| System Administrator  | User     | CREATE, UPDATE, DELETE| `staff`                                                                         |
+| System Administrator  | Role     | MANAGE                | `role`                                                                          |
+| System Administrator  | Permission | MANAGE              | `permissions`                                                                   |
+| System Administrator  | Family   | CREATE, UPDATE, DELETE, VIEW | `signedup`, `general_volunteer`, `pending_tutor`, `tutors`, `children`, `tutorships`, `matures`, `healthy` |
+| System Administrator  | Volunteer| CREATE, UPDATE, DELETE, VIEW | `general_volunteer`                                                             |
+| System Administrator  | Tutor    | CREATE, UPDATE, DELETE, VIEW | `tutors`                                                                        |
+| System Administrator  | Mature   | CREATE, UPDATE, DELETE, VIEW | `matures`                                                                       |
+| System Administrator  | Healthy  | CREATE, UPDATE, DELETE, VIEW | `healthy`                                                                       |
+| System Administrator  | Feedback | VIEW, UPDATE          | `feedback`, `tutor_feedback`, `general_v_feedback`                              |
+| System Administrator  | Task     | CREATE, UPDATE, DELETE, VIEW | `tasks`                                                                         |
+| System Administrator  | Report   | VIEW, GENERATE        | `feedback`, `tutorships`, `children`, `tutors`, `general_volunteer`             |
+| Volunteer             | Family   | VIEW                  | `signedup`, `general_volunteer`, `pending_tutor`, `tutors`, `children`, `tutorships`, `matures`, `healthy` |
+| Volunteer             | Volunteer| VIEW                  | `general_volunteer`                                                             |
+| Tutor                 | Family   | VIEW                  | `signedup`, `general_volunteer`, `pending_tutor`, `tutors`, `children`, `tutorships`, `matures`, `healthy` |
+| Tutor                 | Tutor    | VIEW                  | `tutors`                                                                        |
+
+This should cover the permissions for each role based on the screens and functionalities you've described. Let me know if you need any further adjustments or details! 😊
 
 #### Staff Table
 ```sql
