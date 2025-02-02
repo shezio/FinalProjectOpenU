@@ -490,6 +490,127 @@ b.	רישום מתנדב – כניסה ללא סיסמה על ידי קישור
 6.2.	
 
 
+Sure, let's organize the permissions for each role and map them to the relevant tables. This will help ensure we have a clear understanding of what each role can do and which tables they need access to.
+
+### Roles and Permissions
+
+#### 1. Technical Coordinator
+- **Resource**: Family
+  - **Action**: CREATE, UPDATE, DELETE, VIEW
+  - **Tables**: `signedup`, `general_volunteer`, `pending_tutor`, `tutors`, `children`, `tutorships`, `matures`, `healthy`
+- **Resource**: Volunteer
+  - **Action**: VIEW
+  - **Tables**: `general_volunteer`
+- **Resource**: Tutor
+  - **Action**: VIEW
+  - **Tables**: `tutors`
+
+#### 2. Volunteer Coordinator
+- **Resource**: Volunteer
+  - **Action**: CREATE, UPDATE, VIEW
+  - **Tables**: `general_volunteer`
+- **Resource**: Family
+  - **Action**: UPDATE, DELETE, VIEW
+  - **Tables**: `signedup`, `general_volunteer`, `pending_tutor`, `tutors`, `children`, `tutorships`, `matures`, `healthy`
+
+#### 3. Families Coordinator
+- **Resource**: Family
+  - **Action**: UPDATE, DELETE, VIEW
+  - **Tables**: `signedup`, `general_volunteer`, `pending_tutor`, `tutors`, `children`, `tutorships`, `matures`, `healthy`
+
+#### 4. Tutors Coordinator
+- **Resource**: Tutor
+  - **Action**: CREATE, UPDATE, VIEW
+  - **Tables**: `tutors`
+- **Resource**: Family
+  - **Action**: UPDATE, DELETE, VIEW
+  - **Tables**: `signedup`, `general_volunteer`, `pending_tutor`, `tutors`, `children`, `tutorships`, `matures`, `healthy`
+
+#### 5. Matures Coordinator
+- **Resource**: Mature
+  - **Action**: CREATE, UPDATE, VIEW
+  - **Tables**: `matures`
+- **Resource**: Family
+  - **Action**: UPDATE, DELETE, VIEW
+  - **Tables**: `signedup`, `general_volunteer`, `pending_tutor`, `tutors`, `children`, `tutorships`, `matures`, `healthy`
+
+#### 6. Healthy Kids Coordinator
+- **Resource**: Healthy
+  - **Action**: CREATE, UPDATE, VIEW
+  - **Tables**: `healthy`
+- **Resource**: Family
+  - **Action**: UPDATE, DELETE, VIEW
+  - **Tables**: `signedup`, `general_volunteer`, `pending_tutor`, `tutors`, `children`, `tutorships`, `matures`, `healthy`
+
+#### 7. System Administrator
+- **Resource**: User
+  - **Action**: CREATE, UPDATE, DELETE
+  - **Tables**: `staff`
+- **Resource**: Role
+  - **Action**: MANAGE
+  - **Tables**: `role`
+- **Resource**: Permission
+  - **Action**: MANAGE
+  - **Tables**: `permissions`
+- **Resource**: Family
+  - **Action**: CREATE, UPDATE, DELETE
+  - **Tables**: `signedup`, `general_volunteer`, `pending_tutor`, `tutors`, `children`, `tutorships`, `matures`, `healthy`
+- **Resource**: Volunteer
+  - **Action**: CREATE, UPDATE, DELETE
+  - **Tables**: `general_volunteer`
+- **Resource**: Tutor
+  - **Action**: CREATE, UPDATE, DELETE
+  - **Tables**: `tutors`
+- **Resource**: Mature
+  - **Action**: CREATE, UPDATE, DELETE
+  - **Tables**: `matures`
+
+#### 8. Volunteer
+- **Resource**: Family
+  - **Action**: VIEW
+  - **Tables**: `signedup`, `general_volunteer`, `pending_tutor`, `tutors`, `children`, `tutorships`, `matures`, `healthy`
+- **Resource**: Volunteer
+  - **Action**: VIEW
+  - **Tables**: `general_volunteer`
+
+#### 9. Tutor
+- **Resource**: Family
+  - **Action**: VIEW
+  - **Tables**: `signedup`, `general_volunteer`, `pending_tutor`, `tutors`, `children`, `tutorships`, `matures`, `healthy`
+- **Resource**: Tutor
+  - **Action**: VIEW
+  - **Tables**: `tutors`
+
+### Summary Table
+
+| Role                  | Resource | Action                | Relevant Tables                                                                 |
+|-----------------------|----------|-----------------------|---------------------------------------------------------------------------------|
+| Technical Coordinator | Family   | CREATE, UPDATE, DELETE, VIEW | `signedup`, `general_volunteer`, `pending_tutor`, `tutors`, `children`, `tutorships`, `matures`, `healthy` |
+| Technical Coordinator | Volunteer| VIEW                  | `general_volunteer`                                                             |
+| Technical Coordinator | Tutor    | VIEW                  | `tutors`                                                                        |
+| Volunteer Coordinator | Volunteer| CREATE, UPDATE, VIEW  | `general_volunteer`                                                             |
+| Volunteer Coordinator | Family   | UPDATE, DELETE, VIEW  | `signedup`, `general_volunteer`, `pending_tutor`, `tutors`, `children`, `tutorships`, `matures`, `healthy` |
+| Families Coordinator  | Family   | UPDATE, DELETE, VIEW  | `signedup`, `general_volunteer`, `pending_tutor`, `tutors`, `children`, `tutorships`, `matures`, `healthy` |
+| Tutors Coordinator    | Tutor    | CREATE, UPDATE, VIEW  | `tutors`                                                                        |
+| Tutors Coordinator    | Family   | UPDATE, DELETE, VIEW  | `signedup`, `general_volunteer`, `pending_tutor`, `tutors`, `children`, `tutorships`, `matures`, `healthy` |
+| Matures Coordinator   | Mature   | CREATE, UPDATE, VIEW  | `matures`                                                                       |
+| Matures Coordinator   | Family   | UPDATE, DELETE, VIEW  | `signedup`, `general_volunteer`, `pending_tutor`, `tutors`, `children`, `tutorships`, `matures`, `healthy` |
+| Healthy Kids Coordinator | Healthy | CREATE, UPDATE, VIEW | `healthy`                                                                       |
+| Healthy Kids Coordinator | Family | UPDATE, DELETE, VIEW  | `signedup`, `general_volunteer`, `pending_tutor`, `tutors`, `children`, `tutorships`, `matures`, `healthy` |
+| System Administrator  | User     | CREATE, UPDATE, DELETE| `staff`                                                                         |
+| System Administrator  | Role     | MANAGE                | `role`                                                                          |
+| System Administrator  | Permission | MANAGE              | `permissions`                                                                   |
+| System Administrator  | Family   | CREATE, UPDATE, DELETE| `signedup`, `general_volunteer`, `pending_tutor`, `tutors`, `children`, `tutorships`, `matures`, `healthy` |
+| System Administrator  | Volunteer| CREATE, UPDATE, DELETE| `general_volunteer`                                                             |
+| System Administrator  | Tutor    | CREATE, UPDATE, DELETE| `tutors`                                                                        |
+| System Administrator  | Mature   | CREATE, UPDATE, DELETE| `matures`                                                                       |
+| Volunteer             | Family   | VIEW                  | `signedup`, `general_volunteer`, `pending_tutor`, `tutors`, `children`, `tutorships`, `matures`, `healthy` |
+| Volunteer             | Volunteer| VIEW                  | `general_volunteer`                                                             |
+| Tutor                 | Family   | VIEW                  | `signedup`, `general_volunteer`, `pending_tutor`, `tutors`, `children`, `tutorships`, `matures`, `healthy` |
+| Tutor                 | Tutor    | VIEW                  | `tutors`                                                                        |
+
+This should give you a clear overview of the permissions for each role and the relevant tables they need access to. Let me know if you need any further adjustments or details! 😊
+
 
 
 
