@@ -614,5 +614,13 @@ This should give you a clear overview of the permissions for each role and the r
 
 
 
-
+System Administrator
+General Volunteer
+Tutor
+Technical Coordinator
+Volunteer Coordinator
+Families Coordinator
+Tutors Coordinator
+Matures Coordinator
+Healthy Kids Coordinator
 
