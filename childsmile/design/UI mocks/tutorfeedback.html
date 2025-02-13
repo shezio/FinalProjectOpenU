@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="he">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>חיוך של ילד - משוב חונכות</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            direction: rtl;
+            margin: 0;
+            display: flex;
+        }
+        .sidebar {
+            background-color: #333;
+            color: white;
+            width: 200px;
+            padding: 20px;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+        }
+        .sidebar button {
+            background-color: #333;
+            color: white;
+            padding: 14px 20px;
+            border: none;
+            cursor: pointer;
+            text-align: center;
+            font-size: 16px;
+            width: 100%;
+            margin-bottom: 10px;
+        }
+        .sidebar button:hover {
+            background-color: #ddd;
+            color: black;
+        }
+        .main-content {
+            flex-grow: 1;
+            padding: 20px;
+        }
+        .header {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px;
+            text-align: left;
+            display: flex;
+            align-items: center;
+        }
+        .header img {
+            width: 50px;
+            vertical-align: middle;
+        }
+        .header h1 {
+            margin: 0;
+            padding-left: 10px;
+        }
+        .header .welcome {
+            margin-left: auto;
+            margin-right: 20px;
+        }
+        .form-container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .form-container h2 {
+            margin-top: 0;
+        }
+        .form-container label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        .form-container p {
+            margin: 5px 0;
+            padding: 10px;
+            background-color: #f9f9f9;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        .form-container textarea {
+            width: calc(100% - 22px);
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            height: 200px;
+        }
+        .form-container button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .form-container button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <button>משימות</button>
+        <button>משפחות</button>
+        <button>מתנדבים</button>
+        <button>חונכות</button>
+        <button>הפקת דוחות</button>
+        <button>ניהול מערכת</button>
+    </div>
+    <div class="main-content">
+        <div class="header">
+            <img src="../../frontend/public/assets/logo.png" alt="חיוך של ילד">
+            <h1>חיוך של ילד</h1>
+            <div class="welcome">שלום ליאם</div>
+        </div>
+        <div class="form-container">
+            <h2>משימת משוב חונכות</h2>
+            <label for="mentee-name">שם חניך</label>
+            <p id="mentee-name">יוסי כהן</p>
+            <label for="mentor-name">שם חונך</label>
+            <p id="mentor-name">דוד לוי</p>
+            <label for="feedback">משוב</label>
+            <textarea id="feedback" placeholder="הכנס משוב כאן..."></textarea>
+            <button type="button" onclick="location.href='mentor_feedback_reading.html'">השלם משוב ושלח לרכז החונכים</button>
+        </div>
+    </div>
+</body>
+</html>
