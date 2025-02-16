@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="he">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>חיוך של ילד - ניהול משובים</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            direction: rtl;
+            margin: 0;
+            display: flex;
+        }
+        .sidebar {
+            background-color: #333;
+            color: white;
+            width: 200px;
+            padding: 20px;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+        }
+        .sidebar button {
+            background-color: #333;
+            color: white;
+            padding: 14px 20px;
+            border: none;
+            cursor: pointer;
+            text-align: center;
+            font-size: 16px;
+            width: 100%;
+            margin-bottom: 10px;
+        }
+        .sidebar button:hover {
+            background-color: #ddd;
+            color: black;
+        }
+        .main-content {
+            flex-grow: 1;
+            padding: 20px;
+            position: relative;
+        }
+        .header {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px;
+            text-align: left;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .header img {
+            width: 50px;
+            vertical-align: middle;
+        }
+        .header h1 {
+            margin: 0;
+            padding-left: 10px;
+        }
+        .header .welcome {
+            margin-left: auto;
+            margin-right: 20px;
+        }
+        .form-container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .form-container h2 {
+            margin-top: 0;
+        }
+        .form-container label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        .form-container p {
+            margin: 5px 0;
+            padding: 10px;
+            background-color: #f9f9f9;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        .form-container select {
+            width: calc(100% - 22px);
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        .form-container button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .form-container button:hover {
+            background-color: #45a049;
+        }
+        .form-container .nav-button {
+            background-color: #2196F3;
+            margin-top: 10px;
+        }
+        .form-container .nav-button:hover {
+            background-color: #1E88E5;
+        }
+        .top-left {
+            display: flex;
+            align-items: center;
+        }
+        .top-left img {
+            width: 100px;
+            margin-left: 10px;
+        }
+        .top-left .quote {
+            margin: 0 10px;
+            padding: 10px;
+            background-color: #fff;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            color: black;
+        }
+        .top-left .qr-code {
+            width: 100px;
+        }
+        .table-container {
+            margin-top: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        th, td {
+            padding: 10px;
+            border: 1px solid #ccc;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .actions {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+        }
+        .actions button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .actions button:hover {
+            background-color: #45a049;
+        }
+        .actions .nav-button {
+            background-color: #2196F3;
+        }
+        .actions .nav-button:hover {
+            background-color: #1E88E5;
+        }
+        .feedback-details {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            cursor: move;
+        }
+        .feedback-details button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .feedback-details button:hover {
+            background-color: #45a049;
+        }
+    </style>
+    <script>
+        function showFeedbackDetails(feedbackId) {
+            const feedbackDetails = `
+                <div class="feedback-details" id="feedbackDetails">
+                    <h2>פרטי משוב</h2>
+                    <p>שם המשיב: דוד לוי</p>
+                    <p>פרטים נוספים: חונך</p>
+                    <p>משוב: המשוב היה מצוין, החונך היה מאוד תומך ועוזר.</p>
+                    <button type="button" onclick="alert('סקור משוב')">סקור משוב</button>
+                </div>
+            `;
+            const detailsContainer = document.createElement('div');
+            detailsContainer.innerHTML = feedbackDetails;
+            document.body.appendChild(detailsContainer);
+            makeElementDraggable(document.getElementById('feedbackDetails'));
+        }
+
+        function makeElementDraggable(elmnt) {
+            let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+            if (document.getElementById(elmnt.id + "header")) {
+                document.getElementById(elmnt.id + "header").onmousedown = dragMouseDown;
+            } else {
+                elmnt.onmousedown = dragMouseDown;
+            }
+
+            function dragMouseDown(e) {
+                e = e || window.event;
+                e.preventDefault();
+                pos3 = e.clientX;
+                pos4 = e.clientY;
+                document.onmouseup = closeDragElement;
+                document.onmousemove = elementDrag;
+            }
+
+            function elementDrag(e) {
+                e = e || window.event;
+                e.preventDefault();
+                pos1 = pos3 - e.clientX;
+                pos2 = pos4 - e.clientY;
+                pos3 = e.clientX;
+                pos4 = e.clientY;
+                elmnt.style.top = (elmnt.offsetTop - pos2) + "px";
+                elmnt.style.left = (elmnt.offsetLeft - pos1) + "px";
+            }
+
+            function closeDragElement() {
+                document.onmouseup = null;
+                document.onmousemove = null;
+            }
+        }
+    </script>
+</head>
+<body>
+    <div class="sidebar">
+        <button>משימות</button>
+        <button>משפחות</button>
+        <button>מתנדבים</button>
+        <button>חונכות</button>
+        <button>הפקת דוחות</button>
+        <button>ניהול מערכת</button>
+    </div>
+    <div class="main-content">
+        <div class="header">
+            <img src="../../frontend/public/assets/logo.png" alt="חיוך של ילד">
+            <h1>חיוך של ילד</h1>
+            <div class="welcome">שלום ליאם</div>
+            <div class="top-left">
+                <img src="../../frontend/public/assets/amit.jpg" alt="Amit">
+                <div class="quote">
+                    הרבה אנשים אומרים שהם רוצים להצליח
+                    <br>
+                    אבל לא כולם מוכנים לשלם את המחיר שצריך כדי להצליח
+                </div>
+                <img src="../../frontend/public/assets/qr-code.png" alt="QR Code" class="qr-code">
+            </div>
+        </div>
+        <div class="form-container">
+            <h2>ניהול משובים</h2>
+            <div class="actions">
+                <button type="button" class="nav-button" onclick="location.href='mentor_feedback_management.html'">ניהול משובי חונכים</button>
+                <button type="button" class="nav-button" onclick="location.href='volunteer_feedback_management.html'">ניהול משובי מתנדבים כלליים</button>
+            </div>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>שם המשיב</th>
+                            <th>פרטים נוספים</th>
+                            <th>משוב</th>
+                            <th>סקירת משוב</th>
+                            <th>פעולות</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>דוד לוי</td>
+                            <td>חונך</td>
+                            <td>החוויה שלי כחונך הייתה מאוד מספקת. נהניתי לעבוד עם החניך ולראות את ההתקדמות שלו.</td>
+                            <td>לא נסקר</td>
+                            <td>
+                                <button type="button" onclick="showFeedbackDetails('1')">סקור משוב</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>יוסי כהן</td>
+                            <td>מתנדב כללי</td>
+                            <td>ההתנדבות הייתה מאוד משמעותית עבורי. נהניתי לעזור ולתרום לקהילה.</td>
+                            <td>נסקר</td>
+                            <td>
+                                <button type="button" onclick="showFeedbackDetails('2')">סקור משוב</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>שרה לוי</td>
+                            <td>חונכת</td>
+                            <td>החוויה שלי כחונכת הייתה מאוד חיובית. נהניתי לראות את ההתקדמות של החניך.</td>
+                            <td>לא נסקר</td>
+                            <td>
+                                <button type="button" onclick="showFeedbackDetails('3')">סקור משוב</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>מיכאל רוזן</td>
+                            <td>מתנדב כללי</td>
+                            <td>ההתנדבות הייתה מאוד מספקת. נהניתי לעבוד עם הצוות ולתרום לקהילה.</td>
+                            <td>נסקר</td>
+                            <td>
+                                <button type="button" onclick="showFeedbackDetails('4')">סקור משוב</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>אורן כהן</td>
+                            <td>חונך</td>
+                            <td>החוויה שלי כחונך הייתה מאוד חיובית. נהניתי לראות את ההתקדמות של החניך.</td>
+                            <td>לא נסקר</td>
+                            <td>
+                                <button type="button" onclick="showFeedbackDetails('5')">סקור משוב</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>דנה שמש</td>
+                            <td>מתנדבת כללית</td>
+                            <td>ההתנדבות הייתה מאוד משמעותית עבורי. נהניתי לעזור ולתרום לקהילה.</td>
+                            <td>נסקר</td>
+                            <td>
+                                <button type="button" onclick="showFeedbackDetails('6')">סקור משוב</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>איתי ברק</td>
+                            <td>חונך</td>
+                            <td>החוויה שלי כחונך הייתה מאוד מספקת. נהניתי לעבוד עם החניך ולראות את ההתקדמות שלו.</td>
+                            <td>לא נסקר</td>
+                            <td>
+                                <button type="button" onclick="showFeedbackDetails('7')">סקור משוב</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>נועה שחר</td>
+                            <td>מתנדבת כללית</td>
+                            <td>ההתנדבות הייתה מאוד מספקת. נהניתי לעבוד עם הצוות ולתרום לקהילה.</td>
+                            <td>נסקר</td>
+                            <td>
+                                <button type="button" onclick="showFeedbackDetails('8')">סקור משוב</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>רון אורן</td>
+                            <td>חונך</td>
+                            <td>החוויה שלי כחונך הייתה מאוד חיובית. נהניתי לראות את ההתקדמות של החניך.</td>
+                            <td>לא נסקר</td>
+                            <td>
+                                <button type="button" onclick="showFeedbackDetails('9')">סקור משוב</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

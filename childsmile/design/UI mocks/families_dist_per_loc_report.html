@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="he">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>חיוך של ילד - דוח התפלגות משפחות לפי ערים</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            direction: rtl;
+            margin: 0;
+            display: flex;
+        }
+        .sidebar {
+            background-color: #333;
+            color: white;
+            width: 200px;
+            padding: 20px;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+        }
+        .sidebar button {
+            background-color: #333;
+            color: white;
+            padding: 14px 20px;
+            border: none;
+            cursor: pointer;
+            text-align: center;
+            font-size: 16px;
+            width: 100%;
+            margin-bottom: 10px;
+        }
+        .sidebar button:hover {
+            background-color: #ddd;
+            color: black;
+        }
+        .main-content {
+            flex-grow: 1;
+            padding: 20px;
+            position: relative;
+        }
+        .header {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px;
+            text-align: left;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .header img {
+            width: 50px;
+            vertical-align: middle;
+        }
+        .header h1 {
+            margin: 0;
+            padding-left: 10px;
+        }
+        .header .welcome {
+            margin-left: auto;
+            margin-right: 20px;
+        }
+        .form-container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            flex-grow: 1;
+        }
+        .form-container h2 {
+            margin-top: 0;
+        }
+        .form-container label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        .form-container select, .form-container input {
+            width: calc(100% - 22px);
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        .form-container button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .form-container button:hover {
+            background-color: #45a049;
+        }
+        .form-container .nav-button {
+            background-color: #2196F3;
+            margin-top: 10px;
+        }
+        .form-container .nav-button:hover {
+            background-color: #1E88E5;
+        }
+        .top-left {
+            display: flex;
+            align-items: center;
+        }
+        .top-left img {
+            width: 100px;
+            margin-left: 10px;
+        }
+        .top-left .quote {
+            margin: 0 10px;
+            padding: 10px;
+            background-color: #fff;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            color: black;
+        }
+        .top-left .qr-code {
+            width: 100px;
+        }
+        .content-container {
+            display: flex;
+            margin-top: 20px;
+        }
+        .table-container {
+            flex-grow: 1;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        th, td {
+            padding: 10px;
+            border: 1px solid #ccc;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .actions {
+            display: flex;
+            justify-content: flex-start;
+            align-items: center;
+            margin-top: 10px;
+        }
+        .actions button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-left: 10px;
+            display: flex;
+            align-items: center;
+        }
+        .actions button:hover {
+            background-color: #45a049;
+        }
+        .actions .nav-button {
+            background-color: #2196F3;
+        }
+        .actions .nav-button:hover {
+            background-color: #1E88E5;
+        }
+        .actions img {
+            width: 30px;
+            margin-right: 5px;
+        }
+        .export-button {
+            background-color: transparent;
+        }
+        .excel-button img, .pdf-button img {
+            width: 60px; /* או כל גודל אחר שתרצה */
+        }
+        .image-button img {
+            width: 30px; /* או כל גודל אחר שתרצה */
+        }
+        .map-container {
+            width: 300px;
+            height: 400px;
+            background-color: #e0e0e0;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            margin-left: 20px;
+            position: relative;
+        }
+        .map {
+            width: 100%;
+            height: 100%;
+            background-image: url('../../frontend/public/assets/il_map.jpg');
+            background-size: cover;
+            position: relative;
+        }
+        .pin {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            background-image: url('../../frontend/public/assets/loc_pin.png');
+            background-size: cover;
+            cursor: pointer;
+        }
+        .pin:hover .details {
+            display: block;
+        }
+        .details {
+            display: none;
+            position: absolute;
+            top: 35px;
+            left: -50px;
+            width: 150px;
+            background-color: white;
+            border: 1px solid #ccc;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <button>משימות</button>
+        <button>משפחות</button>
+        <button>מתנדבים</button>
+        <button>חונכות</button>
+        <button>הפקת דוחות</button>
+        <button>ניהול מערכת</button>
+    </div>
+    <div class="main-content">
+        <div class="header">
+            <img src="../../frontend/public/assets/logo.png" alt="חיוך של ילד">
+            <h1>חיוך של ילד</h1>
+            <div class="welcome">שלום ליאם</div>
+            <div class="top-left">
+                <img src="../../frontend/public/assets/amit.jpg" alt="Amit">
+                <div class="quote">
+                    הרבה אנשים אומרים שהם רוצים להצליח
+                    <br>
+                    אבל לא כולם מוכנים לשלם את המחיר שצריך כדי להצליח
+                </div>
+                <img src="../../frontend/public/assets/qr-code.png" alt="QR Code" class="qr-code">
+            </div>
+        </div>
+        <div class="content-container">
+            <div class="form-container">
+                <h2>דוח התפלגות משפחות לפי ערים</h2>
+                <div>
+                    <button class="export-button excel-button" type="button" onclick="alert('ייצוא לאקסל')">
+                        <img src="../../frontend/public/assets/excel-icon.png" alt="Excel">
+                    </button>
+                    <button class="export-button pdf-button" type="button" onclick="alert('ייצוא ל-PDF')">
+                        <img src="../../frontend/public/assets/pdf-icon.png" alt="PDF">
+                    </button>
+                    <button class="export-button image-button" type="button" onclick="alert('ייצוא מפה כתמונה')">
+                        <img src="../../frontend/public/assets/il_map.jpg" alt="Map">
+                    </button>
+                    <label for="date-from">מתאריך:</label>
+                    <input type="date" id="date-from">
+                    <label for="date-to">עד תאריך:</label>
+                    <input type="date" id="date-to">
+                    <button type="button" onclick="filterByDate()">סנן</button>
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th><input type="checkbox" onclick="toggleSelectAll(this)"></th>
+                                <th>שם העיר</th>
+                                <th>שם הילד</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><input type="checkbox"></td>
+                                <td>תל אביב</td>
+                                <td>יוסי כהן</td>
+                            </tr>
+                            <tr>
+                                <td><input type="checkbox"></td>
+                                <td>חיפה</td>
+                                <td>שרה לוי</td>
+                            </tr>
+                            <tr>
+                                <td><input type="checkbox"></td>
+                                <td>ירושלים</td>
+                                <td>אורן כהן</td>
+                            </tr>
+                            <tr>
+                                <td><input type="checkbox"></td>
+                                <td>נתניה</td>
+                                <td>איתי ברק</td>
+                            </tr>
+                            <tr>
+                                <td><input type="checkbox"></td>
+                                <td>כפר סבא</td>
+                                <td>רון אורן</td>
+                            </tr>
+                            <tr>
+                                <td><input type="checkbox"></td>
+                                <td>תל אביב</td>
+                                <td>דניאל לוי</td>
+                            </tr>
+                            <tr>
+                                <td><input type="checkbox"></td>
+                                <td>חיפה</td>
+                                <td>מיכאל רוזן</td>
+                            </tr>
+                            <tr>
+                                <td><input type="checkbox"></td>
+                                <td>אשדוד</td>
+                                <td>דנה שמש</td>
+                            </tr>
+                            <tr>
+                                <td><input type="checkbox"></td>
+                                <td>רמת גן</td>
+                                <td>איתי ברק</td>
+                            </tr>
+                            <tr>
+                                <td><input type="checkbox"></td>
+                                <td>פתח תקווה</td>
+                                <td>נועה שחר</td>
+                            </tr>
+                            <tr>
+                                <td><input type="checkbox"></td>
+                                <td>כפר סבא</td>
+                                <td>רון אורן</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="map-container">
+                <div class="map">
+                    <div class="pin" style="top: 50%; left: 50%;">
+                        <div class="details">
+                            <p>תל אביב</p>
+                            <p>יוסי כהן</p>
+                        </div>
+                    </div>
+                    <div class="pin" style="top: 40%; left: 60%;">
+                        <div class="details">
+                            <p>חיפה</p>
+                            <p>שרה לוי</p>
+                        </div>
+                    </div>
+                    <div class="pin" style="top: 60%; left: 40%;">
+                        <div class="details">
+                            <p>ירושלים</p>
+                            <p>אורן כהן</p>
+                        </div>
+                    </div>
+                    <!-- Add more pins as needed -->
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        function toggleSelectAll(source) {
+            checkboxes = document.querySelectorAll('tbody input[type="checkbox"]');
+            for (var i = 0; i < checkboxes.length; i++) {
+                checkboxes[i].checked = source.checked;
+            }
+        }
+
+        function filterByDate() {
+            var fromDate = document.getElementById('date-from').value;
+            var toDate = document.getElementById('date-to').value;
+            // Add your filtering logic here
+            alert('סינון לפי תאריכים: ' + fromDate + ' - ' + toDate);
+        }
+    </script>
+</body>
+</html>
