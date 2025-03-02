@@ -1,112 +1,32 @@
+<!-- filename: control_panel.html -->
 <!DOCTYPE html>
 <html lang="he">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>חיוך של ילד - ניהול משתמשים</title>
+    <link rel="stylesheet" href="screens_styles.css">
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f0f0f0;
-            direction: rtl;
-            margin: 0;
-            display: flex;
-        }
-        .sidebar {
-            background-color: #333;
-            color: white;
-            width: 200px;
-            padding: 20px;
-            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
-        }
-        .sidebar button {
-            background-color: #333;
-            color: white;
-            padding: 14px 20px;
-            border: none;
-            cursor: pointer;
-            text-align: center;
-            font-size: 16px;
-            width: 100%;
-            margin-bottom: 10px;
-        }
-        .sidebar button:hover {
-            background-color: #ddd;
-            color: black;
-        }
         .main-content {
             flex-grow: 1;
             padding: 20px;
             position: relative;
         }
-        .header {
-            background-color: #4CAF50;
-            color: white;
-            padding: 10px;
-            text-align: left;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-        .header img {
-            width: 50px;
-            vertical-align: middle;
-        }
-        .header h1 {
-            margin: 0;
-            padding-left: 10px;
-        }
-        .header .welcome {
-            margin-left: auto;
-            margin-right: 20px;
-        }
+
         .form-container {
-            background-color: #fff;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
             flex-grow: 1;
         }
-        .form-container h2 {
-            margin-top: 0;
-        }
-        .form-container label {
-            display: block;
-            margin-bottom: 5px;
-        }
-        .form-container select, .form-container input {
-            width: calc(100% - 22px);
-            padding: 10px;
-            margin-bottom: 10px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-        }
-        .form-container button {
-            background-color: #4CAF50;
-            color: white;
-            padding: 10px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        .form-container button:hover {
-            background-color: #45a049;
-        }
-        .form-container .nav-button {
-            background-color: #2196F3;
-            margin-top: 10px;
-        }
-        .form-container .nav-button:hover {
-            background-color: #1E88E5;
-        }
+
         .top-left {
             display: flex;
             align-items: center;
         }
+
         .top-left img {
             width: 100px;
             margin-left: 10px;
         }
+
         .top-left .quote {
             margin: 0 10px;
             padding: 10px;
@@ -116,32 +36,40 @@
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
             color: black;
         }
+
         .top-left .qr-code {
             width: 100px;
         }
+
         .table-container {
             margin-top: 20px;
         }
+
         table {
             width: 100%;
             border-collapse: collapse;
             background-color: #fff;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
         }
-        th, td {
+
+        th,
+        td {
             padding: 10px;
             border: 1px solid #ccc;
             text-align: left;
         }
+
         th {
             background-color: #f2f2f2;
         }
+
         .actions {
             display: flex;
             justify-content: flex-start;
             align-items: center;
             margin-top: 10px;
         }
+
         .actions button {
             background-color: #4CAF50;
             color: white;
@@ -153,25 +81,31 @@
             display: flex;
             align-items: center;
         }
+
         .actions button:hover {
             background-color: #45a049;
         }
+
         .actions .nav-button {
             background-color: #2196F3;
         }
+
         .actions .nav-button:hover {
             background-color: #1E88E5;
         }
+
         .actions img {
             width: 30px;
             margin-right: 5px;
         }
+
         .eye-button {
             background-color: transparent;
             border: none;
             cursor: pointer;
             font-size: 20px;
         }
+
         .permissions-container {
             display: none;
             position: fixed;
@@ -184,20 +118,25 @@
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
             z-index: 1000;
         }
+
         .permissions-container table {
             width: 100%;
             border-collapse: collapse;
             background-color: #fff;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
         }
-        .permissions-container th, .permissions-container td {
+
+        .permissions-container th,
+        .permissions-container td {
             padding: 10px;
             border: 1px solid #ccc;
             text-align: left;
         }
+
         .permissions-container th {
             background-color: #f2f2f2;
         }
+
         .permissions-container .close-button {
             background-color: #f44336;
             color: white;
@@ -207,11 +146,13 @@
             cursor: pointer;
             margin-top: 10px;
         }
+
         .permissions-container .close-button:hover {
             background-color: #e53935;
         }
     </style>
 </head>
+
 <body>
     <div class="sidebar">
         <button>משימות</button>
@@ -283,7 +224,8 @@
                             <td>רכז מתנדבים</td>
                             <td>volunteer.coord@example.com</td>
                             <td>05/01/2020</td>
-                            <td><button class="eye-button" onclick="showPermissions('volunteer.coord')">👁️</button></td>
+                            <td><button class="eye-button" onclick="showPermissions('volunteer.coord')">👁️</button>
+                            </td>
                         </tr>
                         <tr>
                             <td>ליה צוהר</td>
@@ -311,13 +253,15 @@
                             <td>רכז בריאים</td>
                             <td>healthy.kids.coord@example.com</td>
                             <td>09/01/2020</td>
-                            <td><button class="eye-button" onclick="showPermissions('healthy.kids.coord')">👁️</button></td>
+                            <td><button class="eye-button" onclick="showPermissions('healthy.kids.coord')">👁️</button>
+                            </td>
                         </tr>
                     </tbody>
                 </table>
             </div>
         </div>
     </div>
+    <script src="screens_bold.js"></script>
     <script>
         function showPermissions(userId) {
             const permissions = {
@@ -360,7 +304,7 @@
                     { screen: 'ניהול משובים', permission: 'עדכון' }
                 ]
             };
-    
+
             const userPermissions = permissions[userId] || [];
             let permissionsTable = `
                 <div class="permissions-container" id="permissions-container">
@@ -374,7 +318,7 @@
                         </thead>
                         <tbody>
             `;
-    
+
             userPermissions.forEach(permission => {
                 permissionsTable += `
                     <tr>
@@ -383,20 +327,20 @@
                     </tr>
                 `;
             });
-    
+
             permissionsTable += `
                         </tbody>
                     </table>
                     <button class="close-button" onclick="closePermissions()">סגור</button>
                 </div>
             `;
-    
+
             const permissionsContainer = document.createElement('div');
             permissionsContainer.innerHTML = permissionsTable;
             document.body.appendChild(permissionsContainer);
             document.getElementById('permissions-container').style.display = 'block';
         }
-    
+
         function closePermissions() {
             const permissionsContainer = document.getElementById('permissions-container');
             if (permissionsContainer) {
@@ -405,4 +349,5 @@
         }
     </script>
 </body>
+
 </html>

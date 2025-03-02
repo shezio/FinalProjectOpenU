@@ -1,3 +1,4 @@
+<!-- we dont use the shared CSS here since it has as an issue with the title and the style of the page. -->
 <!DOCTYPE html>
 <html lang="he">
 <head>
@@ -126,6 +127,18 @@
             <img src="../../frontend/public/assets/logo.png" alt="חיוך של ילד">
             <h1>חיוך של ילד</h1>
             <div class="welcome">שלום ליאם</div>
+            <div class="top-left">
+                <img src="../../frontend/public/assets/amit.jpg" alt="Amit">
+                <div class="quote">
+                    הרבה אנשים אומרים שהם רוצים להצליח
+                    <br>
+                    אבל לא כולם מוכנים לשלם את המחיר שצריך כדי להצליח
+                </div>
+                <img src="../../frontend/public/assets/qr-code.png" alt="QR Code" class="qr-code">
+            </div>
+        </div>
+        <div class="form-container">
+            <h2>התאמת חונך חניך</h2>
         </div>
         <div class="search-bar">
             <input type="text" placeholder="חפש חונך...">
@@ -161,5 +174,50 @@
             </div>
         </div>
     </div>
+    <script>
+        const pins = document.querySelectorAll('.pin');
+        pins.forEach(pin => {
+            pin.addEventListener('click', () => {
+                pins.forEach(p => {
+                    p.querySelector('.details').style.display = 'none';
+                });
+                pin.querySelector('.details').style.display = 'block';
+            });
+        });
+    </script>
+    <script>
+        const map = document.querySelector('.map');
+        map.addEventListener('click', e => {
+            const rect = map.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            console.log(x, y);
+        });
+    </script>
+    <script>
+        const filter = document.querySelector('.filter select');
+        filter.addEventListener('change', () => {
+            console.log(filter.value);
+        });
+    </script>
+    <script>
+        const search = document.querySelector('.search-bar input');
+        search.addEventListener('input', () => {
+            console.log(search.value);
+        });
+    </script>
+    <script>
+        const sidebar = document.querySelector('.sidebar');
+        const buttons = sidebar.querySelectorAll('button');
+        buttons.forEach(button => {
+            button.addEventListener('click', () => {
+                buttons.forEach(b => {
+                    b.style.backgroundColor = '#333';
+                });
+                button.style.backgroundColor = '#4CAF50';
+            });
+        });
+    </script>
+    <script src="screens_bold.js"></script>
 </body>
 </html>

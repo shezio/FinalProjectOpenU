@@ -11,7 +11,7 @@ const Login = () => {
       <form className="login-form">
         <input type="text" placeholder="שם משתמש" />
         <input type="password" placeholder="סיסמה" />
-        <button type="submit">התחבר</button>
+        <button type="submit" id="submit-btn">התחבר</button>
       </form>
       <div className="top-left">
         <img src={amit} alt="Amit" />

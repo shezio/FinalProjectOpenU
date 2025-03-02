@@ -1,127 +1,99 @@
 <!DOCTYPE html>
 <html lang="he">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>חיוך של ילד - מסך משימות</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f0f0f0;
-            direction: rtl;
-            margin: 0;
-            display: flex;
-        }
-        .sidebar {
-            background-color: #333;
-            color: white;
-            width: 200px;
-            padding: 20px;
-            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
-        }
-        .sidebar button {
-            background-color: #333;
-            color: white;
-            padding: 14px 20px;
-            border: none;
-            cursor: pointer;
-            text-align: center;
-            font-size: 16px;
-            width: 100%;
-            margin-bottom: 10px;
-        }
-        .sidebar button:hover {
-            background-color: #ddd;
-            color: black;
-        }
-        .main-content {
-            flex-grow: 1;
-            padding: 20px;
-        }
-        .header {
-            background-color: #4CAF50;
-            color: white;
-            padding: 10px;
-            text-align: left;
-            display: flex;
-            align-items: center;
-        }
-        .header img {
-            width: 50px;
-            vertical-align: middle;
-        }
-        .header h1 {
-            margin: 0;
-            padding-left: 10px;
-        }
-        .header .welcome {
-            margin-left: auto;
-            margin-right: 20px;
-        }
-        .tasks {
-            margin-top: 20px;
-        }
-        .tasks .task {
-            background-color: #fff;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            margin-bottom: 10px;
-        }
-        .tasks .task h2 {
-            margin: 0;
-        }
-        .tasks .task p {
-            margin: 5px 0;
-        }
-        .tasks .task .actions {
-            margin-top: 10px;
-        }
-        .tasks .task .actions button {
-            background-color: #4CAF50;
-            color: white;
-            padding: 10px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        .tasks .task .actions button:hover {
-            background-color: #45a049;
-        }
-        .search-bar {
-            margin-bottom: 20px;
-        }
-        .search-bar input {
-            width: calc(100% - 22px);
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-        }
-        .filter {
-            margin-bottom: 20px;
-        }
-        .filter select {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-        }
-        .create-task {
-            margin-top: 20px;
-        }
-        .create-task button {
-            background-color: #4CAF50;
-            color: white;
-            padding: 10px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        .create-task button:hover {
-            background-color: #45a049;
-        }
-    </style>
-</head>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>חיוך של ילד - מסך משימות</title>
+        <link rel="stylesheet" href="screens_styles.css">
+        <style>
+            .main-content {
+                flex-grow: 1;
+                padding: 20px;
+            }
+            .header {
+                background-color: #4CAF50;
+                color: white;
+                padding: 10px;
+                text-align: left;
+                display: flex;
+                align-items: center;
+            }
+            .header img {
+                width: 50px;
+                vertical-align: middle;
+            }
+            .header h1 {
+                margin: 0;
+                padding-left: 10px;
+            }
+            .header .welcome {
+                margin-left: auto;
+                margin-right: 20px;
+            }
+            .tasks {
+                margin-top: 20px;
+            }
+            .tasks .task {
+                background-color: #fff;
+                padding: 20px;
+                border-radius: 10px;
+                box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+                margin-bottom: 10px;
+            }
+            .tasks .task h2 {
+                margin: 0;
+            }
+            .tasks .task p {
+                margin: 5px 0;
+            }
+            .tasks .task .actions {
+                margin-top: 10px;
+            }
+            .tasks .task .actions button {
+                background-color: #4CAF50;
+                color: white;
+                padding: 10px;
+                border: none;
+                border-radius: 5px;
+                cursor: pointer;
+            }
+            .tasks .task .actions button:hover {
+                background-color: #45a049;
+            }
+            .search-bar {
+                margin-bottom: 20px;
+            }
+            .search-bar input {
+                width: calc(100% - 22px);
+                padding: 10px;
+                border: 1px solid #ccc;
+                border-radius: 5px;
+            }
+            .filter {
+                margin-bottom: 20px;
+            }
+            .filter select {
+                width: 100%;
+                padding: 10px;
+                border: 1px solid #ccc;
+                border-radius: 5px;
+            }
+            .create-task {
+                margin-top: 20px;
+            }
+            .create-task button {
+                background-color: #4CAF50;
+                color: white;
+                padding: 10px;
+                border: none;
+                border-radius: 5px;
+                cursor: pointer;
+            }
+            .create-task button:hover {
+                background-color: #45a049;
+            }
+        </style>
+    </head>
 <body>
     <div class="sidebar">
         <button>משימות</button>
@@ -170,5 +142,6 @@
             <button>צור משימה חדשה</button>
         </div>
     </div>
+    <script src="screens_bold.js"></script>
 </body>
 </html>
