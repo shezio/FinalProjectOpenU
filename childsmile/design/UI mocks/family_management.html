@@ -1,118 +1,33 @@
+<!-- file name family_management.html -->
 <!DOCTYPE html>
 <html lang="he">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>חיוך של ילד - ניהול משפחות</title>
+    <link rel="stylesheet" href="screens_styles.css">
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f0f0f0;
-            direction: rtl;
-            margin: 0;
-            display: flex;
-        }
-        .sidebar {
-            background-color: #333;
-            color: white;
-            width: 200px;
-            padding: 20px;
-            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
-        }
-        .sidebar button {
-            background-color: #333;
-            color: white;
-            padding: 14px 20px;
-            border: none;
-            cursor: pointer;
-            text-align: center;
-            font-size: 16px;
-            width: 100%;
-            margin-bottom: 10px;
-        }
-        .sidebar button:hover {
-            background-color: #ddd;
-            color: black;
-        }
         .main-content {
             flex-grow: 1;
             padding: 20px;
             position: relative;
         }
-        .header {
-            background-color: #4CAF50;
-            color: white;
-            padding: 10px;
-            text-align: left;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-        .header img {
-            width: 50px;
-            vertical-align: middle;
-        }
-        .header h1 {
-            margin: 0;
-            padding-left: 10px;
-        }
-        .header .welcome {
-            margin-left: auto;
-            margin-right: 20px;
-        }
+
         .form-container {
-            background-color: #fff;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            flex-grow: 1;
         }
-        .form-container h2 {
-            margin-top: 0;
-        }
-        .form-container label {
-            display: block;
-            margin-bottom: 5px;
-        }
-        .form-container p {
-            margin: 5px 0;
-            padding: 10px;
-            background-color: #f9f9f9;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-        }
-        .form-container select {
-            width: calc(100% - 22px);
-            padding: 10px;
-            margin-bottom: 10px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-        }
-        .form-container button {
-            background-color: #4CAF50;
-            color: white;
-            padding: 10px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        .form-container button:hover {
-            background-color: #45a049;
-        }
-        .form-container .nav-button {
-            background-color: #2196F3;
-            margin-top: 10px;
-        }
-        .form-container .nav-button:hover {
-            background-color: #1E88E5;
-        }
+
         .top-left {
             display: flex;
             align-items: center;
         }
+
         .top-left img {
             width: 100px;
             margin-left: 10px;
         }
+
         .top-left .quote {
             margin: 0 10px;
             padding: 10px;
@@ -122,31 +37,39 @@
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
             color: black;
         }
+
         .top-left .qr-code {
             width: 100px;
         }
+
         .table-container {
             margin-top: 20px;
         }
+
         table {
             width: 100%;
             border-collapse: collapse;
             background-color: #fff;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
         }
-        th, td {
+
+        th,
+        td {
             padding: 10px;
             border: 1px solid #ccc;
             text-align: left;
         }
+
         th {
             background-color: #f2f2f2;
         }
+
         .actions {
             display: flex;
             justify-content: space-between;
             margin-top: 10px;
         }
+
         .actions button {
             background-color: #4CAF50;
             color: white;
@@ -155,15 +78,19 @@
             border-radius: 5px;
             cursor: pointer;
         }
+
         .actions button:hover {
             background-color: #45a049;
         }
+
         .actions .nav-button {
             background-color: #2196F3;
         }
+
         .actions .nav-button:hover {
             background-color: #1E88E5;
         }
+
         .family-details {
             position: fixed;
             top: 50%;
@@ -176,6 +103,7 @@
             z-index: 1000;
             cursor: move;
         }
+
         .family-details button {
             background-color: #4CAF50;
             color: white;
@@ -185,67 +113,13 @@
             cursor: pointer;
             margin: 5px;
         }
+
         .family-details button:hover {
             background-color: #45a049;
         }
     </style>
-    <script>
-        function showFamilyDetails(familyName) {
-            const familyDetails = `
-                <div class="family-details" id="familyDetails">
-                    <h2>פרטי משפחה: ${familyName}</h2>
-                    <p>כתובת: רחוב הדקל 5, תל אביב</p>
-                    <p>טלפון: 03-1234567</p>
-                    <p>סטטוס: פעילה</p>
-                    <p>מספר אחים: 3</p>
-                    <p>תאריך לידה: 01/01/2018</p>
-                    <p>מין: זכר</p>
-                    <p>שם הילד: יוסי</p>
-                    <button type="button" onclick="alert('ערוך משפחה')">✏️</button>
-                    <button type="button" onclick="alert('מחק משפחה')">🗑️</button>
-                </div>
-            `;
-            const detailsContainer = document.createElement('div');
-            detailsContainer.innerHTML = familyDetails;
-            document.body.appendChild(detailsContainer);
-            makeElementDraggable(document.getElementById('familyDetails'));
-        }
-
-        function makeElementDraggable(elmnt) {
-            let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
-            if (document.getElementById(elmnt.id + "header")) {
-                document.getElementById(elmnt.id + "header").onmousedown = dragMouseDown;
-            } else {
-                elmnt.onmousedown = dragMouseDown;
-            }
-
-            function dragMouseDown(e) {
-                e = e || window.event;
-                e.preventDefault();
-                pos3 = e.clientX;
-                pos4 = e.clientY;
-                document.onmouseup = closeDragElement;
-                document.onmousemove = elementDrag;
-            }
-
-            function elementDrag(e) {
-                e = e || window.event;
-                e.preventDefault();
-                pos1 = pos3 - e.clientX;
-                pos2 = pos4 - e.clientY;
-                pos3 = e.clientX;
-                pos4 = e.clientY;
-                elmnt.style.top = (elmnt.offsetTop - pos2) + "px";
-                elmnt.style.left = (elmnt.offsetLeft - pos1) + "px";
-            }
-
-            function closeDragElement() {
-                document.onmouseup = null;
-                document.onmousemove = null;
-            }
-        }
-    </script>
 </head>
+
 <body>
     <div class="sidebar">
         <button>משימות</button>
@@ -274,8 +148,10 @@
             <h2>ניהול משפחות</h2>
             <div class="actions">
                 <button type="button" onclick="alert('הצג משפחות שעזבו')">הצג משפחות שעזבו</button>
-                <button type="button" class="nav-button" onclick="location.href='graduate_management.html'">ניהול בוגרים</button>
-                <button type="button" class="nav-button" onclick="location.href='patient_management.html'">ניהול בריאים</button>
+                <button type="button" class="nav-button" onclick="location.href='graduate_management.html'">ניהול
+                    בוגרים</button>
+                <button type="button" class="nav-button" onclick="location.href='patient_management.html'">ניהול
+                    בריאים</button>
             </div>
             <div class="table-container">
                 <table>
@@ -404,5 +280,63 @@
             </div>
         </div>
     </div>
+    <script>
+        function showFamilyDetails(familyName) {
+            const familyDetails = `
+                <div class="family-details" id="familyDetails">
+                    <h2>פרטי משפחה: ${familyName}</h2>
+                    <p>כתובת: רחוב הדקל 5, תל אביב</p>
+                    <p>טלפון: 03-1234567</p>
+                    <p>סטטוס: פעילה</p>
+                    <p>מספר אחים: 3</p>
+                    <p>תאריך לידה: 01/01/2018</p>
+                    <p>מין: זכר</p>
+                    <p>שם הילד: יוסי</p>
+                    <button type="button" onclick="alert('ערוך משפחה')">✏️</button>
+                    <button type="button" onclick="alert('מחק משפחה')">🗑️</button>
+                </div>
+            `;
+            const detailsContainer = document.createElement('div');
+            detailsContainer.innerHTML = familyDetails;
+            document.body.appendChild(detailsContainer);
+            makeElementDraggable(document.getElementById('familyDetails'));
+        }
+
+        function makeElementDraggable(elmnt) {
+            let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+            if (document.getElementById(elmnt.id + "header")) {
+                document.getElementById(elmnt.id + "header").onmousedown = dragMouseDown;
+            } else {
+                elmnt.onmousedown = dragMouseDown;
+            }
+
+            function dragMouseDown(e) {
+                e = e || window.event;
+                e.preventDefault();
+                pos3 = e.clientX;
+                pos4 = e.clientY;
+                document.onmouseup = closeDragElement;
+                document.onmousemove = elementDrag;
+            }
+
+            function elementDrag(e) {
+                e = e || window.event;
+                e.preventDefault();
+                pos1 = pos3 - e.clientX;
+                pos2 = pos4 - e.clientY;
+                pos3 = e.clientX;
+                pos4 = e.clientY;
+                elmnt.style.top = (elmnt.offsetTop - pos2) + "px";
+                elmnt.style.left = (elmnt.offsetLeft - pos1) + "px";
+            }
+
+            function closeDragElement() {
+                document.onmouseup = null;
+                document.onmousemove = null;
+            }
+        }
+    </script>
+    <script src="screens_bold.js"></script>
 </body>
+
 </html>
