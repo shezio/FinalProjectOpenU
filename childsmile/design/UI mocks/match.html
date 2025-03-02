@@ -1,6 +1,7 @@
 <!-- we dont use the shared CSS here since it has as an issue with the title and the style of the page. -->
 <!DOCTYPE html>
 <html lang="he">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -13,13 +14,16 @@
             margin: 0;
             display: flex;
         }
+
         .sidebar {
             background-color: #333;
             color: white;
             width: 200px;
             padding: 20px;
-            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+            padding-top: 100px;
         }
+
         .sidebar button {
             background-color: #333;
             color: white;
@@ -31,14 +35,18 @@
             width: 100%;
             margin-bottom: 10px;
         }
-        .sidebar button:hover {
+
+        .sidebar button:hover,
+        .sidebar button.active {
             background-color: #ddd;
             color: black;
         }
+
         .main-content {
             flex-grow: 1;
             padding: 20px;
         }
+
         .header {
             background-color: #4CAF50;
             color: white;
@@ -47,40 +55,49 @@
             display: flex;
             align-items: center;
         }
+
         .header img {
             width: 50px;
             vertical-align: middle;
         }
+
         .header h1 {
             margin: 0;
             padding-left: 10px;
         }
+
         .header .welcome {
             margin-left: auto;
             margin-right: 20px;
         }
+
         .search-bar {
             margin-bottom: 20px;
         }
+
         .search-bar input {
             width: calc(100% - 22px);
             padding: 10px;
             border: 1px solid #ccc;
             border-radius: 5px;
         }
+
         .filter {
             margin-bottom: 20px;
         }
+
         .filter select {
             width: 100%;
             padding: 10px;
             border: 1px solid #ccc;
             border-radius: 5px;
         }
+
         .map-container {
             margin-top: 20px;
             position: relative;
         }
+
         .map {
             width: 100%;
             height: 600px;
@@ -88,6 +105,7 @@
             background-size: cover;
             position: relative;
         }
+
         .pin {
             position: absolute;
             width: 30px;
@@ -96,9 +114,11 @@
             background-size: cover;
             cursor: pointer;
         }
+
         .pin:hover .details {
             display: block;
         }
+
         .details {
             display: none;
             position: absolute;
@@ -113,6 +133,7 @@
         }
     </style>
 </head>
+
 <body>
     <div class="sidebar">
         <button>משימות</button>
@@ -220,4 +241,5 @@
     </script>
     <script src="screens_bold.js"></script>
 </body>
+
 </html>
