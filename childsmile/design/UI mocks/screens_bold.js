@@ -9,3 +9,13 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 document.querySelector('.sidebar button:nth-child(1)').style.backgroundColor = '#4CAF50';
+const sidebar = document.querySelector('.sidebar');
+const buttons = sidebar.querySelectorAll('button');
+buttons.forEach(button => {
+    button.addEventListener('click', () => {
+        buttons.forEach(b => {
+            b.style.backgroundColor = '#333';
+        });
+        button.style.backgroundColor = '#4CAF50';
+    });
+});

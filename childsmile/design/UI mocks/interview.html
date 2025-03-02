@@ -2,6 +2,7 @@
 
 <!DOCTYPE html>
 <html lang="he">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -19,8 +20,10 @@
             color: white;
             width: 200px;
             padding: 20px;
-            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+            padding-top: 100px;
         }
+
         .sidebar button {
             background-color: #333;
             color: white;
@@ -32,7 +35,9 @@
             width: 100%;
             margin-bottom: 10px;
         }
-        .sidebar button:hover {
+
+        .sidebar button:hover,
+        .sidebar button.active {
             background-color: #ddd;
             color: black;
         }
@@ -40,6 +45,7 @@
             flex-grow: 1;
             padding: 20px;
         }
+
         .header {
             background-color: #4CAF50;
             color: white;
@@ -48,30 +54,37 @@
             display: flex;
             align-items: center;
         }
+
         .header img {
             width: 50px;
             vertical-align: middle;
         }
+
         .header h1 {
             margin: 0;
             padding-left: 10px;
         }
+
         .header .welcome {
             margin-left: auto;
             margin-right: 20px;
         }
+
         .search-bar {
             margin-bottom: 20px;
         }
+
         .search-bar input {
             width: calc(100% - 22px);
             padding: 10px;
             border: 1px solid #ccc;
             border-radius: 5px;
         }
+
         .candidates {
             margin-top: 20px;
         }
+
         .candidates .candidate {
             background-color: #fff;
             padding: 20px;
@@ -79,15 +92,19 @@
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
             margin-bottom: 10px;
         }
+
         .candidates .candidate h2 {
             margin: 0;
         }
+
         .candidates .candidate p {
             margin: 5px 0;
         }
+
         .candidates .candidate .actions {
             margin-top: 10px;
         }
+
         .candidates .candidate .actions button {
             background-color: #4CAF50;
             color: white;
@@ -96,12 +113,15 @@
             border-radius: 5px;
             cursor: pointer;
         }
+
         .candidates .candidate .actions button:hover {
             background-color: #45a049;
         }
+
         .candidates .candidate .status {
             margin-top: 10px;
         }
+
         .candidates .candidate .status select {
             width: 100%;
             padding: 10px;
@@ -110,6 +130,7 @@
         }
     </style>
 </head>
+
 <body>
     <div class="sidebar">
         <button>משימות</button>
@@ -161,5 +182,7 @@
             </div>
         </div>
     </div>
+    <script src="screens_bold.js"></script>
 </body>
+
 </html>
