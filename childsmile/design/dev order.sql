@@ -37,146 +37,146 @@ Here are the sample inserts for each table, with texts in Hebrew:
 רכז בריאים,רכז טכני ,מנהל מערכתת,מתנדב,חונך
 ```sql
 INSERT INTO childsmile_app_role (role_name) VALUES ('System Administrator');
-INSERT INTO childsmile_app_role (role_name) VALUES ('General Volunteer');
-INSERT INTO childsmile_app_role (role_name) VALUES ('Tutor');
 INSERT INTO childsmile_app_role (role_name) VALUES ('Technical Coordinator');
 INSERT INTO childsmile_app_role (role_name) VALUES ('Volunteer Coordinator');
 INSERT INTO childsmile_app_role (role_name) VALUES ('Families Coordinator');
 INSERT INTO childsmile_app_role (role_name) VALUES ('Tutors Coordinator');
 INSERT INTO childsmile_app_role (role_name) VALUES ('Matures Coordinator');
 INSERT INTO childsmile_app_role (role_name) VALUES ('Healthy Kids Coordinator');
+INSERT INTO childsmile_app_role (role_name) VALUES ('General Volunteer');
+INSERT INTO childsmile_app_role (role_name) VALUES ('Tutor');
 ```
 
-#### Permissions Table
+#### Permissions Table - columns: role_id, resource, action
 ```sql
 
 ### System Administrator - has CREATE, UPDATE, DELETE, VIEW permissions for all tables
 ## Table: role
 ```sql
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('System Administrator', 'childsmile_app_role', 'CREATE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('System Administrator', 'childsmile_app_role', 'UPDATE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('System Administrator', 'childsmile_app_role', 'DELETE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('System Administrator', 'childsmile_app_role', 'VIEW');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='System Administrator'), 'childsmile_app_role', 'CREATE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='System Administrator'), 'childsmile_app_role', 'UPDATE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='System Administrator'), 'childsmile_app_role', 'DELETE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='System Administrator'), 'childsmile_app_role', 'VIEW');
 ```
 
 ## Table: permissions
 ```sql
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('System Administrator', 'childsmile_app_permissions', 'CREATE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('System Administrator', 'childsmile_app_permissions', 'UPDATE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('System Administrator', 'childsmile_app_permissions', 'DELETE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('System Administrator', 'childsmile_app_permissions', 'VIEW');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='System Administrator'), 'childsmile_app_permissions', 'CREATE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='System Administrator'), 'childsmile_app_permissions', 'UPDATE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='System Administrator'), 'childsmile_app_permissions', 'DELETE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='System Administrator'), 'childsmile_app_permissions', 'VIEW');
 ```
 
 ## Table: staff
 ```sql
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('System Administrator', 'childsmile_app_staff', 'CREATE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('System Administrator', 'childsmile_app_staff', 'UPDATE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('System Administrator', 'childsmile_app_staff', 'DELETE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('System Administrator', 'childsmile_app_staff', 'VIEW');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='System Administrator'), 'childsmile_app_staff', 'CREATE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='System Administrator'), 'childsmile_app_staff', 'UPDATE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='System Administrator'), 'childsmile_app_staff', 'DELETE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='System Administrator'), 'childsmile_app_staff', 'VIEW');
 ```
 
 ## Table: signedup
 ```sql
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('System Administrator', 'childsmile_app_signedup', 'CREATE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('System Administrator', 'childsmile_app_signedup', 'UPDATE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('System Administrator', 'childsmile_app_signedup', 'DELETE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('System Administrator', 'childsmile_app_signedup', 'VIEW');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='System Administrator'), 'childsmile_app_signedup', 'CREATE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='System Administrator'), 'childsmile_app_signedup', 'UPDATE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='System Administrator'), 'childsmile_app_signedup', 'DELETE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='System Administrator'), 'childsmile_app_signedup', 'VIEW');
 ```
 
 ## Table: general_volunteer
 ```sql
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('System Administrator', 'childsmile_app_general_volunteer', 'CREATE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('System Administrator', 'childsmile_app_general_volunteer', 'UPDATE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('System Administrator', 'childsmile_app_general_volunteer', 'DELETE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('System Administrator', 'childsmile_app_general_volunteer', 'VIEW');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='System Administrator'), 'childsmile_app_general_volunteer', 'CREATE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='System Administrator'), 'childsmile_app_general_volunteer', 'UPDATE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='System Administrator'), 'childsmile_app_general_volunteer', 'DELETE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='System Administrator'), 'childsmile_app_general_volunteer', 'VIEW');
 ```
 
 ## Table: pending_tutor
 ```sql
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('System Administrator', 'childsmile_app_pending_tutor', 'CREATE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('System Administrator', 'childsmile_app_pending_tutor', 'UPDATE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('System Administrator', 'childsmile_app_pending_tutor', 'DELETE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('System Administrator', 'childsmile_app_pending_tutor', 'VIEW');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='System Administrator'), 'childsmile_app_pending_tutor', 'CREATE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='System Administrator'), 'childsmile_app_pending_tutor', 'UPDATE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='System Administrator'), 'childsmile_app_pending_tutor', 'DELETE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='System Administrator'), 'childsmile_app_pending_tutor', 'VIEW');
 ```
 
 ## Table: tutors
 ```sql
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('System Administrator', 'childsmile_app_tutors', 'CREATE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('System Administrator', 'childsmile_app_tutors', 'UPDATE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('System Administrator', 'childsmile_app_tutors', 'DELETE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('System Administrator', 'childsmile_app_tutors', 'VIEW');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='System Administrator'), 'childsmile_app_tutors', 'CREATE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='System Administrator'), 'childsmile_app_tutors', 'UPDATE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='System Administrator'), 'childsmile_app_tutors', 'DELETE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='System Administrator'), 'childsmile_app_tutors', 'VIEW');
 ```
 
 ## Table: children
 ```sql
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('System Administrator', 'childsmile_app_children', 'CREATE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('System Administrator', 'childsmile_app_children', 'UPDATE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('System Administrator', 'childsmile_app_children', 'DELETE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('System Administrator', 'childsmile_app_children', 'VIEW');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='System Administrator'), 'childsmile_app_children', 'CREATE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='System Administrator'), 'childsmile_app_children', 'UPDATE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='System Administrator'), 'childsmile_app_children', 'DELETE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='System Administrator'), 'childsmile_app_children', 'VIEW');
 ```
 
 ## Table: tutorships
 ```sql
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('System Administrator', 'childsmile_app_tutorships', 'CREATE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('System Administrator', 'childsmile_app_tutorships', 'UPDATE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('System Administrator', 'childsmile_app_tutorships', 'DELETE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('System Administrator', 'childsmile_app_tutorships', 'VIEW');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='System Administrator'), 'childsmile_app_tutorships', 'CREATE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='System Administrator'), 'childsmile_app_tutorships', 'UPDATE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='System Administrator'), 'childsmile_app_tutorships', 'DELETE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='System Administrator'), 'childsmile_app_tutorships', 'VIEW');
 ```
 
 ## Table: matures
 ```sql
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('System Administrator', 'childsmile_app_matures', 'CREATE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('System Administrator', 'childsmile_app_matures', 'UPDATE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('System Administrator', 'childsmile_app_matures', 'DELETE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('System Administrator', 'childsmile_app_matures', 'VIEW');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='System Administrator'), 'childsmile_app_matures', 'CREATE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='System Administrator'), 'childsmile_app_matures', 'UPDATE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='System Administrator'), 'childsmile_app_matures', 'DELETE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='System Administrator'), 'childsmile_app_matures', 'VIEW');
 ```
 
 ## Table: healthy
 ```sql
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('System Administrator', 'childsmile_app_healthy', 'CREATE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('System Administrator', 'childsmile_app_healthy', 'UPDATE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('System Administrator', 'childsmile_app_healthy', 'DELETE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('System Administrator', 'childsmile_app_healthy', 'VIEW');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='System Administrator'), 'childsmile_app_healthy', 'CREATE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='System Administrator'), 'childsmile_app_healthy', 'UPDATE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='System Administrator'), 'childsmile_app_healthy', 'DELETE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='System Administrator'), 'childsmile_app_healthy', 'VIEW');
 ```
 
 ## Table: feedback
 ```sql
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('System Administrator', 'childsmile_app_feedback', 'CREATE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('System Administrator', 'childsmile_app_feedback', 'UPDATE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('System Administrator', 'childsmile_app_feedback', 'DELETE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('System Administrator', 'childsmile_app_feedback', 'VIEW');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='System Administrator'), 'childsmile_app_feedback', 'CREATE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='System Administrator'), 'childsmile_app_feedback', 'UPDATE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='System Administrator'), 'childsmile_app_feedback', 'DELETE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='System Administrator'), 'childsmile_app_feedback', 'VIEW');
 ```
 
 ## Table: tasks
 ```sql
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('System Administrator', 'childsmile_app_tasks', 'CREATE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('System Administrator', 'childsmile_app_tasks', 'UPDATE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('System Administrator', 'childsmile_app_tasks', 'DELETE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('System Administrator', 'childsmile_app_tasks', 'VIEW');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='System Administrator'), 'childsmile_app_tasks', 'CREATE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='System Administrator'), 'childsmile_app_tasks', 'UPDATE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='System Administrator'), 'childsmile_app_tasks', 'DELETE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='System Administrator'), 'childsmile_app_tasks', 'VIEW');
 ```
 
 ## Table: task_types
 ```sql
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('System Administrator', 'childsmile_app_task_types', 'CREATE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('System Administrator', 'childsmile_app_task_types', 'UPDATE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('System Administrator', 'childsmile_app_task_types', 'DELETE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('System Administrator', 'childsmile_app_task_types', 'VIEW');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='System Administrator'), 'childsmile_app_task_types', 'CREATE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='System Administrator'), 'childsmile_app_task_types', 'UPDATE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='System Administrator'), 'childsmile_app_task_types', 'DELETE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='System Administrator'), 'childsmile_app_task_types', 'VIEW');
 ```
 
 ## Table: tutor_feedback
 ```sql
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('System Administrator', 'childsmile_app_tutor_feedback', 'CREATE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('System Administrator', 'childsmile_app_tutor_feedback', 'UPDATE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('System Administrator', 'childsmile_app_tutor_feedback', 'DELETE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('System Administrator', 'childsmile_app_tutor_feedback', 'VIEW');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='System Administrator'), 'childsmile_app_tutor_feedback', 'CREATE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='System Administrator'), 'childsmile_app_tutor_feedback', 'UPDATE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='System Administrator'), 'childsmile_app_tutor_feedback', 'DELETE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='System Administrator'), 'childsmile_app_tutor_feedback', 'VIEW');
 ```
 
 ## Table: general_v_feedback
 ```sql
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('System Administrator', 'childsmile_app_general_v_feedback', 'CREATE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('System Administrator', 'childsmile_app_general_v_feedback', 'UPDATE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('System Administrator', 'childsmile_app_general_v_feedback', 'DELETE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('System Administrator', 'childsmile_app_general_v_feedback', 'VIEW');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='System Administrator'), 'childsmile_app_general_v_feedback', 'CREATE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='System Administrator'), 'childsmile_app_general_v_feedback', 'UPDATE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='System Administrator'), 'childsmile_app_general_v_feedback', 'DELETE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='System Administrator'), 'childsmile_app_general_v_feedback', 'VIEW');
 ```
 
 ### General Volunteer role: 
@@ -200,44 +200,44 @@ INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('System 
 
 ```sql
 -- childsmile_app_signedup
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('General Volunteer', 'childsmile_app_signedup', 'CREATE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('General Volunteer', 'childsmile_app_signedup', 'UPDATE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('General Volunteer', 'childsmile_app_signedup', 'DELETE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('General Volunteer', 'childsmile_app_signedup', 'VIEW');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='General Volunteer'), 'childsmile_app_signedup', 'CREATE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='General Volunteer'), 'childsmile_app_signedup', 'UPDATE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='General Volunteer'), 'childsmile_app_signedup', 'DELETE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='General Volunteer'), 'childsmile_app_signedup', 'VIEW');
 
 -- childsmile_app_general_volunteer
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('General Volunteer', 'childsmile_app_general_volunteer', 'CREATE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('General Volunteer', 'childsmile_app_general_volunteer', 'UPDATE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('General Volunteer', 'childsmile_app_general_volunteer', 'DELETE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('General Volunteer', 'childsmile_app_general_volunteer', 'VIEW');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='General Volunteer'), 'childsmile_app_general_volunteer', 'CREATE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='General Volunteer'), 'childsmile_app_general_volunteer', 'UPDATE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='General Volunteer'), 'childsmile_app_general_volunteer', 'DELETE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='General Volunteer'), 'childsmile_app_general_volunteer', 'VIEW');
 
 -- childsmile_app_pending_tutor
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('General Volunteer', 'childsmile_app_pending_tutor', 'CREATE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('General Volunteer', 'childsmile_app_pending_tutor', 'UPDATE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('General Volunteer', 'childsmile_app_pending_tutor', 'DELETE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('General Volunteer', 'childsmile_app_pending_tutor', 'VIEW');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='General Volunteer'), 'childsmile_app_pending_tutor', 'CREATE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='General Volunteer'), 'childsmile_app_pending_tutor', 'UPDATE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='General Volunteer'), 'childsmile_app_pending_tutor', 'DELETE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='General Volunteer'), 'childsmile_app_pending_tutor', 'VIEW');
 
 -- childsmile_app_tutors
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('General Volunteer', 'childsmile_app_tutors', 'VIEW');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='General Volunteer'), 'childsmile_app_tutors', 'VIEW');
 
 -- childsmile_app_feedback
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('General Volunteer', 'childsmile_app_feedback', 'CREATE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('General Volunteer', 'childsmile_app_feedback', 'UPDATE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('General Volunteer', 'childsmile_app_feedback', 'VIEW');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='General Volunteer'), 'childsmile_app_feedback', 'CREATE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='General Volunteer'), 'childsmile_app_feedback', 'UPDATE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='General Volunteer'), 'childsmile_app_feedback', 'VIEW');
 
 -- childsmile_app_general_v_feedback
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('General Volunteer', 'childsmile_app_general_v_feedback', 'CREATE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('General Volunteer', 'childsmile_app_general_v_feedback', 'UPDATE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('General Volunteer', 'childsmile_app_general_v_feedback', 'VIEW');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='General Volunteer'), 'childsmile_app_general_v_feedback', 'CREATE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='General Volunteer'), 'childsmile_app_general_v_feedback', 'UPDATE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='General Volunteer'), 'childsmile_app_general_v_feedback', 'VIEW');
 
 -- childsmile_app_tasks
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('General Volunteer', 'childsmile_app_tasks', 'CREATE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('General Volunteer', 'childsmile_app_tasks', 'UPDATE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('General Volunteer', 'childsmile_app_tasks', 'DELETE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('General Volunteer', 'childsmile_app_tasks', 'VIEW');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='General Volunteer'), 'childsmile_app_tasks', 'CREATE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='General Volunteer'), 'childsmile_app_tasks', 'UPDATE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='General Volunteer'), 'childsmile_app_tasks', 'DELETE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='General Volunteer'), 'childsmile_app_tasks', 'VIEW');
 
 -- childsmile_app_task_types
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('General Volunteer', 'childsmile_app_task_types', 'VIEW');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='General Volunteer'), 'childsmile_app_task_types', 'VIEW');
 ```
 
 ### Tutor role has permissions as follows:
@@ -260,66 +260,66 @@ INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('General
 
 ```sql
 -- childsmile_app_signedup
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Tutor', 'childsmile_app_signedup', 'CREATE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Tutor', 'childsmile_app_signedup', 'UPDATE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Tutor', 'childsmile_app_signedup', 'DELETE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Tutor', 'childsmile_app_signedup', 'VIEW');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Tutor'), 'childsmile_app_signedup', 'CREATE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Tutor'), 'childsmile_app_signedup', 'UPDATE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Tutor'), 'childsmile_app_signedup', 'DELETE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Tutor'), 'childsmile_app_signedup', 'VIEW');
 
 -- childsmile_app_general_volunteer
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Tutor', 'childsmile_app_general_volunteer', 'VIEW');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Tutor'), 'childsmile_app_general_volunteer', 'VIEW');
 
 -- childsmile_app_pending_tutor
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Tutor', 'childsmile_app_pending_tutor', 'CREATE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Tutor', 'childsmile_app_pending_tutor', 'UPDATE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Tutor', 'childsmile_app_pending_tutor', 'DELETE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Tutor', 'childsmile_app_pending_tutor', 'VIEW');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Tutor'), 'childsmile_app_pending_tutor', 'CREATE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Tutor'), 'childsmile_app_pending_tutor', 'UPDATE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Tutor'), 'childsmile_app_pending_tutor', 'DELETE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Tutor'), 'childsmile_app_pending_tutor', 'VIEW');
 
 -- childsmile_app_tutors
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Tutor', 'childsmile_app_tutors', 'CREATE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Tutor', 'childsmile_app_tutors', 'UPDATE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Tutor', 'childsmile_app_tutors', 'DELETE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Tutor', 'childsmile_app_tutors', 'VIEW');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Tutor'), 'childsmile_app_tutors', 'CREATE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Tutor'), 'childsmile_app_tutors', 'UPDATE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Tutor'), 'childsmile_app_tutors', 'DELETE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Tutor'), 'childsmile_app_tutors', 'VIEW');
 
 -- childsmile_app_children
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Tutor', 'childsmile_app_children', 'UPDATE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Tutor', 'childsmile_app_children', 'VIEW');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Tutor'), 'childsmile_app_children', 'UPDATE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Tutor'), 'childsmile_app_children', 'VIEW');
 
 -- childsmile_app_tutorships
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Tutor', 'childsmile_app_tutorships', 'CREATE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Tutor', 'childsmile_app_tutorships', 'UPDATE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Tutor', 'childsmile_app_tutorships', 'DELETE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Tutor', 'childsmile_app_tutorships', 'VIEW');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Tutor'), 'childsmile_app_tutorships', 'CREATE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Tutor'), 'childsmile_app_tutorships', 'UPDATE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Tutor'), 'childsmile_app_tutorships', 'DELETE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Tutor'), 'childsmile_app_tutorships', 'VIEW');
 
 -- childsmile_app_matures
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Tutor', 'childsmile_app_matures', 'CREATE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Tutor', 'childsmile_app_matures', 'UPDATE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Tutor', 'childsmile_app_matures', 'DELETE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Tutor', 'childsmile_app_matures', 'VIEW');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Tutor'), 'childsmile_app_matures', 'CREATE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Tutor'), 'childsmile_app_matures', 'UPDATE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Tutor'), 'childsmile_app_matures', 'DELETE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Tutor'), 'childsmile_app_matures', 'VIEW');
 
 -- childsmile_app_healthy
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Tutor', 'childsmile_app_healthy', 'CREATE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Tutor', 'childsmile_app_healthy', 'UPDATE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Tutor', 'childsmile_app_healthy', 'DELETE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Tutor', 'childsmile_app_healthy', 'VIEW');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Tutor'), 'childsmile_app_healthy', 'CREATE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Tutor'), 'childsmile_app_healthy', 'UPDATE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Tutor'), 'childsmile_app_healthy', 'DELETE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Tutor'), 'childsmile_app_healthy', 'VIEW');
 
 -- childsmile_app_feedback
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Tutor', 'childsmile_app_feedback', 'CREATE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Tutor', 'childsmile_app_feedback', 'UPDATE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Tutor', 'childsmile_app_feedback', 'VIEW');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Tutor'), 'childsmile_app_feedback', 'CREATE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Tutor'), 'childsmile_app_feedback', 'UPDATE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Tutor'), 'childsmile_app_feedback', 'VIEW');
 
 -- childsmile_app_tutor_feedback
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Tutor', 'childsmile_app_tutor_feedback', 'CREATE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Tutor', 'childsmile_app_tutor_feedback', 'UPDATE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Tutor', 'childsmile_app_tutor_feedback', 'VIEW');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Tutor'), 'childsmile_app_tutor_feedback', 'CREATE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Tutor'), 'childsmile_app_tutor_feedback', 'UPDATE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Tutor'), 'childsmile_app_tutor_feedback', 'VIEW');
 
 -- childsmile_app_tasks
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Tutor', 'childsmile_app_tasks', 'CREATE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Tutor', 'childsmile_app_tasks', 'UPDATE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Tutor', 'childsmile_app_tasks', 'DELETE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Tutor', 'childsmile_app_tasks', 'VIEW');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Tutor'), 'childsmile_app_tasks', 'CREATE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Tutor'), 'childsmile_app_tasks', 'UPDATE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Tutor'), 'childsmile_app_tasks', 'DELETE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Tutor'), 'childsmile_app_tasks', 'VIEW');
 
 -- childsmile_app_task_types
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Tutor', 'childsmile_app_task_types', 'VIEW');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Tutor'), 'childsmile_app_task_types', 'VIEW');
 ```
 
 ### Technical Coordinator role has permissions as follows:
@@ -344,70 +344,70 @@ Sure! Here are the SQL insert statements for the `Technical Coordinator` role ba
 
 ```sql
 -- childsmile_app_staff
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Technical Coordinator', 'childsmile_app_staff', 'CREATE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Technical Coordinator', 'childsmile_app_staff', 'UPDATE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Technical Coordinator', 'childsmile_app_staff', 'DELETE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Technical Coordinator', 'childsmile_app_staff', 'VIEW');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Technical Coordinator'), 'childsmile_app_staff', 'CREATE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Technical Coordinator'), 'childsmile_app_staff', 'UPDATE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Technical Coordinator'), 'childsmile_app_staff', 'DELETE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Technical Coordinator'), 'childsmile_app_staff', 'VIEW');
 
 -- childsmile_app_signedup
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Technical Coordinator', 'childsmile_app_signedup', 'CREATE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Technical Coordinator', 'childsmile_app_signedup', 'UPDATE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Technical Coordinator', 'childsmile_app_signedup', 'DELETE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Technical Coordinator', 'childsmile_app_signedup', 'VIEW');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Technical Coordinator'), 'childsmile_app_signedup', 'CREATE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Technical Coordinator'), 'childsmile_app_signedup', 'UPDATE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Technical Coordinator'), 'childsmile_app_signedup', 'DELETE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Technical Coordinator'), 'childsmile_app_signedup', 'VIEW');
 
 -- childsmile_app_general_volunteer
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Technical Coordinator', 'childsmile_app_general_volunteer', 'CREATE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Technical Coordinator', 'childsmile_app_general_volunteer', 'UPDATE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Technical Coordinator', 'childsmile_app_general_volunteer', 'DELETE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Technical Coordinator', 'childsmile_app_general_volunteer', 'VIEW');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Technical Coordinator'), 'childsmile_app_general_volunteer', 'CREATE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Technical Coordinator'), 'childsmile_app_general_volunteer', 'UPDATE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Technical Coordinator'), 'childsmile_app_general_volunteer', 'DELETE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Technical Coordinator'), 'childsmile_app_general_volunteer', 'VIEW');
 
 -- childsmile_app_pending_tutor
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Technical Coordinator', 'childsmile_app_pending_tutor', 'CREATE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Technical Coordinator', 'childsmile_app_pending_tutor', 'UPDATE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Technical Coordinator', 'childsmile_app_pending_tutor', 'DELETE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Technical Coordinator', 'childsmile_app_pending_tutor', 'VIEW');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Technical Coordinator'), 'childsmile_app_pending_tutor', 'CREATE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Technical Coordinator'), 'childsmile_app_pending_tutor', 'UPDATE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Technical Coordinator'), 'childsmile_app_pending_tutor', 'DELETE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Technical Coordinator'), 'childsmile_app_pending_tutor', 'VIEW');
 
 -- childsmile_app_tutors
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Technical Coordinator', 'childsmile_app_tutors', 'CREATE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Technical Coordinator', 'childsmile_app_tutors', 'UPDATE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Technical Coordinator', 'childsmile_app_tutors', 'DELETE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Technical Coordinator', 'childsmile_app_tutors', 'VIEW');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Technical Coordinator'), 'childsmile_app_tutors', 'CREATE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Technical Coordinator'), 'childsmile_app_tutors', 'UPDATE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Technical Coordinator'), 'childsmile_app_tutors', 'DELETE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Technical Coordinator'), 'childsmile_app_tutors', 'VIEW');
 
 -- childsmile_app_children
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Technical Coordinator', 'childsmile_app_children', 'CREATE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Technical Coordinator', 'childsmile_app_children', 'UPDATE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Technical Coordinator', 'childsmile_app_children', 'DELETE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Technical Coordinator', 'childsmile_app_children', 'VIEW');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Technical Coordinator'), 'childsmile_app_children', 'CREATE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Technical Coordinator'), 'childsmile_app_children', 'UPDATE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Technical Coordinator'), 'childsmile_app_children', 'DELETE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Technical Coordinator'), 'childsmile_app_children', 'VIEW');
 
 -- childsmile_app_tutorships
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Technical Coordinator', 'childsmile_app_tutorships', 'VIEW');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Technical Coordinator'), 'childsmile_app_tutorships', 'VIEW');
 
 -- childsmile_app_matures
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Technical Coordinator', 'childsmile_app_matures', 'VIEW');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Technical Coordinator'), 'childsmile_app_matures', 'VIEW');
 
 -- childsmile_app_healthy
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Technical Coordinator', 'childsmile_app_healthy', 'VIEW');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Technical Coordinator'), 'childsmile_app_healthy', 'VIEW');
 
 -- childsmile_app_feedback
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Technical Coordinator', 'childsmile_app_feedback', 'VIEW');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Technical Coordinator'), 'childsmile_app_feedback', 'VIEW');
 
 -- childsmile_app_tutor_feedback
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Technical Coordinator', 'childsmile_app_tutor_feedback', 'VIEW');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Technical Coordinator'), 'childsmile_app_tutor_feedback', 'VIEW');
 
 -- childsmile_app_general_v_feedback
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Technical Coordinator', 'childsmile_app_general_v_feedback', 'VIEW');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Technical Coordinator'), 'childsmile_app_general_v_feedback', 'VIEW');
 
 -- childsmile_app_tasks
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Technical Coordinator', 'childsmile_app_tasks', 'CREATE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Technical Coordinator', 'childsmile_app_tasks', 'UPDATE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Technical Coordinator', 'childsmile_app_tasks', 'DELETE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Technical Coordinator', 'childsmile_app_tasks', 'VIEW');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Technical Coordinator'), 'childsmile_app_tasks', 'CREATE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Technical Coordinator'), 'childsmile_app_tasks', 'UPDATE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Technical Coordinator'), 'childsmile_app_tasks', 'DELETE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Technical Coordinator'), 'childsmile_app_tasks', 'VIEW');
 
 -- childsmile_app_task_types
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Technical Coordinator', 'childsmile_app_task_types', 'CREATE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Technical Coordinator', 'childsmile_app_task_types', 'UPDATE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Technical Coordinator', 'childsmile_app_task_types', 'DELETE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Technical Coordinator', 'childsmile_app_task_types', 'VIEW');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Technical Coordinator'), 'childsmile_app_task_types', 'CREATE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Technical Coordinator'), 'childsmile_app_task_types', 'UPDATE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Technical Coordinator'), 'childsmile_app_task_types', 'DELETE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Technical Coordinator'), 'childsmile_app_task_types', 'VIEW');
 ```
 
 ### Volunteer Coordinator role has permissions as follows:
@@ -432,49 +432,49 @@ Sure! Here are the SQL insert statements for the `Volunteer Coordinator` role ba
 
 ```sql
 -- childsmile_app_staff
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Volunteer Coordinator', 'childsmile_app_staff', 'CREATE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Volunteer Coordinator', 'childsmile_app_staff', 'UPDATE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Volunteer Coordinator', 'childsmile_app_staff', 'DELETE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Volunteer Coordinator', 'childsmile_app_staff', 'VIEW');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Volunteer Coordinator'), 'childsmile_app_staff', 'CREATE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Volunteer Coordinator'), 'childsmile_app_staff', 'UPDATE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Volunteer Coordinator'), 'childsmile_app_staff', 'DELETE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Volunteer Coordinator'), 'childsmile_app_staff', 'VIEW');
 
 -- childsmile_app_signedup
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Volunteer Coordinator', 'childsmile_app_signedup', 'CREATE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Volunteer Coordinator', 'childsmile_app_signedup', 'UPDATE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Volunteer Coordinator', 'childsmile_app_signedup', 'DELETE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Volunteer Coordinator', 'childsmile_app_signedup', 'VIEW');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Volunteer Coordinator'), 'childsmile_app_signedup', 'CREATE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Volunteer Coordinator'), 'childsmile_app_signedup', 'UPDATE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Volunteer Coordinator'), 'childsmile_app_signedup', 'DELETE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Volunteer Coordinator'), 'childsmile_app_signedup', 'VIEW');
 
 -- childsmile_app_general_volunteer
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Volunteer Coordinator', 'childsmile_app_general_volunteer', 'CREATE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Volunteer Coordinator', 'childsmile_app_general_volunteer', 'UPDATE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Volunteer Coordinator', 'childsmile_app_general_volunteer', 'DELETE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Volunteer Coordinator', 'childsmile_app_general_volunteer', 'VIEW');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Volunteer Coordinator'), 'childsmile_app_general_volunteer', 'CREATE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Volunteer Coordinator'), 'childsmile_app_general_volunteer', 'UPDATE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Volunteer Coordinator'), 'childsmile_app_general_volunteer', 'DELETE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Volunteer Coordinator'), 'childsmile_app_general_volunteer', 'VIEW');
 
 -- childsmile_app_pending_tutor
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Volunteer Coordinator', 'childsmile_app_pending_tutor', 'VIEW');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Volunteer Coordinator'), 'childsmile_app_pending_tutor', 'VIEW');
 
 -- childsmile_app_tutors
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Volunteer Coordinator', 'childsmile_app_tutors', 'VIEW');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Volunteer Coordinator'), 'childsmile_app_tutors', 'VIEW');
 
 -- childsmile_app_feedback
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Volunteer Coordinator', 'childsmile_app_feedback', 'CREATE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Volunteer Coordinator', 'childsmile_app_feedback', 'UPDATE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Volunteer Coordinator', 'childsmile_app_feedback', 'DELETE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Volunteer Coordinator', 'childsmile_app_feedback', 'VIEW');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Volunteer Coordinator'), 'childsmile_app_feedback', 'CREATE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Volunteer Coordinator'), 'childsmile_app_feedback', 'UPDATE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Volunteer Coordinator'), 'childsmile_app_feedback', 'DELETE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Volunteer Coordinator'), 'childsmile_app_feedback', 'VIEW');
 
 -- childsmile_app_general_v_feedback
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Volunteer Coordinator', 'childsmile_app_general_v_feedback', 'CREATE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Volunteer Coordinator', 'childsmile_app_general_v_feedback', 'UPDATE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Volunteer Coordinator', 'childsmile_app_general_v_feedback', 'DELETE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Volunteer Coordinator', 'childsmile_app_general_v_feedback', 'VIEW');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Volunteer Coordinator'), 'childsmile_app_general_v_feedback', 'CREATE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Volunteer Coordinator'), 'childsmile_app_general_v_feedback', 'UPDATE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Volunteer Coordinator'), 'childsmile_app_general_v_feedback', 'DELETE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Volunteer Coordinator'), 'childsmile_app_general_v_feedback', 'VIEW');
 
 -- childsmile_app_tasks
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Volunteer Coordinator', 'childsmile_app_tasks', 'CREATE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Volunteer Coordinator', 'childsmile_app_tasks', 'UPDATE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Volunteer Coordinator', 'childsmile_app_tasks', 'DELETE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Volunteer Coordinator', 'childsmile_app_tasks', 'VIEW');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Volunteer Coordinator'), 'childsmile_app_tasks', 'CREATE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Volunteer Coordinator'), 'childsmile_app_tasks', 'UPDATE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Volunteer Coordinator'), 'childsmile_app_tasks', 'DELETE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Volunteer Coordinator'), 'childsmile_app_tasks', 'VIEW');
 
 -- childsmile_app_task_types
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Volunteer Coordinator', 'childsmile_app_task_types', 'VIEW');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Volunteer Coordinator'), 'childsmile_app_task_types', 'VIEW');
 ```
 
 ### Families Coordinator role has permissions as follows:
@@ -499,43 +499,43 @@ Sure! Here are the SQL insert statements for the `Families Coordinator` role bas
 
 ```sql
 -- childsmile_app_signedup
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Families Coordinator', 'childsmile_app_signedup', 'VIEW');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Families Coordinator'), 'childsmile_app_signedup', 'VIEW');
 
 -- childsmile_app_general_volunteer
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Families Coordinator', 'childsmile_app_general_volunteer', 'VIEW');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Families Coordinator'), 'childsmile_app_general_volunteer', 'VIEW');
 
 -- childsmile_app_pending_tutor
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Families Coordinator', 'childsmile_app_pending_tutor', 'VIEW');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Families Coordinator'), 'childsmile_app_pending_tutor', 'VIEW');
 
 -- childsmile_app_tutors
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Families Coordinator', 'childsmile_app_tutors', 'VIEW');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Families Coordinator'), 'childsmile_app_tutors', 'VIEW');
 
 -- childsmile_app_children
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Families Coordinator', 'childsmile_app_children', 'CREATE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Families Coordinator', 'childsmile_app_children', 'UPDATE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Families Coordinator', 'childsmile_app_children', 'DELETE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Families Coordinator', 'childsmile_app_children', 'VIEW');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Families Coordinator'), 'childsmile_app_children', 'CREATE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Families Coordinator'), 'childsmile_app_children', 'UPDATE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Families Coordinator'), 'childsmile_app_children', 'DELETE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Families Coordinator'), 'childsmile_app_children', 'VIEW');
 
 -- childsmile_app_tutorships
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Families Coordinator', 'childsmile_app_tutorships', 'CREATE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Families Coordinator', 'childsmile_app_tutorships', 'UPDATE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Families Coordinator', 'childsmile_app_tutorships', 'DELETE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Families Coordinator', 'childsmile_app_tutorships', 'VIEW');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Families Coordinator'), 'childsmile_app_tutorships', 'CREATE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Families Coordinator'), 'childsmile_app_tutorships', 'UPDATE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Families Coordinator'), 'childsmile_app_tutorships', 'DELETE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Families Coordinator'), 'childsmile_app_tutorships', 'VIEW');
 
 -- childsmile_app_matures
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Families Coordinator', 'childsmile_app_matures', 'VIEW');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Families Coordinator'), 'childsmile_app_matures', 'VIEW');
 
 -- childsmile_app_healthy
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Families Coordinator', 'childsmile_app_healthy', 'VIEW');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Families Coordinator'), 'childsmile_app_healthy', 'VIEW');
 
 -- childsmile_app_tasks
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Families Coordinator', 'childsmile_app_tasks', 'CREATE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Families Coordinator', 'childsmile_app_tasks', 'UPDATE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Families Coordinator', 'childsmile_app_tasks', 'DELETE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Families Coordinator', 'childsmile_app_tasks', 'VIEW');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Families Coordinator'), 'childsmile_app_tasks', 'CREATE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Families Coordinator'), 'childsmile_app_tasks', 'UPDATE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Families Coordinator'), 'childsmile_app_tasks', 'DELETE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Families Coordinator'), 'childsmile_app_tasks', 'VIEW');
 
 -- childsmile_app_task_types
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Families Coordinator', 'childsmile_app_task_types', 'VIEW');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Families Coordinator'), 'childsmile_app_task_types', 'VIEW');
 ```
 
 ### Tutors Coordinator role has permissions as follows:
@@ -560,70 +560,70 @@ Sure! Here are the SQL insert statements for the `Tutors Coordinator` role based
 
 ```sql
 -- childsmile_app_staff
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Tutors Coordinator', 'childsmile_app_staff', 'CREATE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Tutors Coordinator', 'childsmile_app_staff', 'UPDATE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Tutors Coordinator', 'childsmile_app_staff', 'DELETE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Tutors Coordinator', 'childsmile_app_staff', 'VIEW');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Tutors Coordinator'), 'childsmile_app_staff', 'CREATE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Tutors Coordinator'), 'childsmile_app_staff', 'UPDATE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Tutors Coordinator'), 'childsmile_app_staff', 'DELETE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Tutors Coordinator'), 'childsmile_app_staff', 'VIEW');
 
 -- childsmile_app_signedup
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Tutors Coordinator', 'childsmile_app_signedup', 'CREATE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Tutors Coordinator', 'childsmile_app_signedup', 'UPDATE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Tutors Coordinator', 'childsmile_app_signedup', 'DELETE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Tutors Coordinator', 'childsmile_app_signedup', 'VIEW');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Tutors Coordinator'), 'childsmile_app_signedup', 'CREATE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Tutors Coordinator'), 'childsmile_app_signedup', 'UPDATE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Tutors Coordinator'), 'childsmile_app_signedup', 'DELETE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Tutors Coordinator'), 'childsmile_app_signedup', 'VIEW');
 
 -- childsmile_app_general_volunteer
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Tutors Coordinator', 'childsmile_app_general_volunteer', 'VIEW');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Tutors Coordinator'), 'childsmile_app_general_volunteer', 'VIEW');
 
 -- childsmile_app_pending_tutor
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Tutors Coordinator', 'childsmile_app_pending_tutor', 'CREATE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Tutors Coordinator', 'childsmile_app_pending_tutor', 'UPDATE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Tutors Coordinator', 'childsmile_app_pending_tutor', 'DELETE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Tutors Coordinator', 'childsmile_app_pending_tutor', 'VIEW');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Tutors Coordinator'), 'childsmile_app_pending_tutor', 'CREATE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Tutors Coordinator'), 'childsmile_app_pending_tutor', 'UPDATE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Tutors Coordinator'), 'childsmile_app_pending_tutor', 'DELETE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Tutors Coordinator'), 'childsmile_app_pending_tutor', 'VIEW');
 
 -- childsmile_app_tutors
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Tutors Coordinator', 'childsmile_app_tutors', 'CREATE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Tutors Coordinator', 'childsmile_app_tutors', 'UPDATE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Tutors Coordinator', 'childsmile_app_tutors', 'DELETE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Tutors Coordinator', 'childsmile_app_tutors', 'VIEW');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Tutors Coordinator'), 'childsmile_app_tutors', 'CREATE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Tutors Coordinator'), 'childsmile_app_tutors', 'UPDATE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Tutors Coordinator'), 'childsmile_app_tutors', 'DELETE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Tutors Coordinator'), 'childsmile_app_tutors', 'VIEW');
 
 -- childsmile_app_children
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Tutors Coordinator', 'childsmile_app_children', 'CREATE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Tutors Coordinator', 'childsmile_app_children', 'UPDATE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Tutors Coordinator', 'childsmile_app_children', 'DELETE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Tutors Coordinator', 'childsmile_app_children', 'VIEW');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Tutors Coordinator'), 'childsmile_app_children', 'CREATE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Tutors Coordinator'), 'childsmile_app_children', 'UPDATE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Tutors Coordinator'), 'childsmile_app_children', 'DELETE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Tutors Coordinator'), 'childsmile_app_children', 'VIEW');
 
 -- childsmile_app_tutorships
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Tutors Coordinator', 'childsmile_app_tutorships', 'CREATE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Tutors Coordinator', 'childsmile_app_tutorships', 'UPDATE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Tutors Coordinator', 'childsmile_app_tutorships', 'DELETE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Tutors Coordinator', 'childsmile_app_tutorships', 'VIEW');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Tutors Coordinator'), 'childsmile_app_tutorships', 'CREATE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Tutors Coordinator'), 'childsmile_app_tutorships', 'UPDATE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Tutors Coordinator'), 'childsmile_app_tutorships', 'DELETE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Tutors Coordinator'), 'childsmile_app_tutorships', 'VIEW');
 
 -- childsmile_app_matures
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Tutors Coordinator', 'childsmile_app_matures', 'VIEW');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Tutors Coordinator'), 'childsmile_app_matures', 'VIEW');
 
 -- childsmile_app_healthy
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Tutors Coordinator', 'childsmile_app_healthy', 'VIEW');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Tutors Coordinator'), 'childsmile_app_healthy', 'VIEW');
 
 -- childsmile_app_feedback
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Tutors Coordinator', 'childsmile_app_feedback', 'CREATE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Tutors Coordinator', 'childsmile_app_feedback', 'UPDATE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Tutors Coordinator', 'childsmile_app_feedback', 'DELETE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Tutors Coordinator', 'childsmile_app_feedback', 'VIEW');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Tutors Coordinator'), 'childsmile_app_feedback', 'CREATE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Tutors Coordinator'), 'childsmile_app_feedback', 'UPDATE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Tutors Coordinator'), 'childsmile_app_feedback', 'DELETE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Tutors Coordinator'), 'childsmile_app_feedback', 'VIEW');
 
 -- childsmile_app_tutor_feedback
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Tutors Coordinator', 'childsmile_app_tutor_feedback', 'CREATE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Tutors Coordinator', 'childsmile_app_tutor_feedback', 'UPDATE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Tutors Coordinator', 'childsmile_app_tutor_feedback', 'DELETE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Tutors Coordinator', 'childsmile_app_tutor_feedback', 'VIEW');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Tutors Coordinator'), 'childsmile_app_tutor_feedback', 'CREATE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Tutors Coordinator'), 'childsmile_app_tutor_feedback', 'UPDATE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Tutors Coordinator'), 'childsmile_app_tutor_feedback', 'DELETE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Tutors Coordinator'), 'childsmile_app_tutor_feedback', 'VIEW');
 
 -- childsmile_app_tasks
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Tutors Coordinator', 'childsmile_app_tasks', 'CREATE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Tutors Coordinator', 'childsmile_app_tasks', 'UPDATE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Tutors Coordinator', 'childsmile_app_tasks', 'DELETE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Tutors Coordinator', 'childsmile_app_tasks', 'VIEW');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Tutors Coordinator'), 'childsmile_app_tasks', 'CREATE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Tutors Coordinator'), 'childsmile_app_tasks', 'UPDATE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Tutors Coordinator'), 'childsmile_app_tasks', 'DELETE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Tutors Coordinator'), 'childsmile_app_tasks', 'VIEW');
 
 -- childsmile_app_task_types
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Tutors Coordinator', 'childsmile_app_task_types', 'VIEW');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Tutors Coordinator'), 'childsmile_app_task_types', 'VIEW');
 ```
 
 ### Matures Coordinator role has permissions as follows:
@@ -648,34 +648,34 @@ Sure! Here are the SQL insert statements for the `Matures Coordinator` role base
 
 ```sql
 -- childsmile_app_signedup
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Matures Coordinator', 'childsmile_app_signedup', 'VIEW');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Matures Coordinator'), 'childsmile_app_signedup', 'VIEW');
 
 -- childsmile_app_tutors
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Matures Coordinator', 'childsmile_app_tutors', 'VIEW');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Matures Coordinator'), 'childsmile_app_tutors', 'VIEW');
 
 -- childsmile_app_children
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Matures Coordinator', 'childsmile_app_children', 'CREATE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Matures Coordinator', 'childsmile_app_children', 'UPDATE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Matures Coordinator', 'childsmile_app_children', 'DELETE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Matures Coordinator', 'childsmile_app_children', 'VIEW');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Matures Coordinator'), 'childsmile_app_children', 'CREATE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Matures Coordinator'), 'childsmile_app_children', 'UPDATE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Matures Coordinator'), 'childsmile_app_children', 'DELETE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Matures Coordinator'), 'childsmile_app_children', 'VIEW');
 
 -- childsmile_app_tutorships
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Matures Coordinator', 'childsmile_app_tutorships', 'VIEW');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Matures Coordinator'), 'childsmile_app_tutorships', 'VIEW');
 
 -- childsmile_app_matures
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Matures Coordinator', 'childsmile_app_matures', 'CREATE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Matures Coordinator', 'childsmile_app_matures', 'UPDATE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Matures Coordinator', 'childsmile_app_matures', 'DELETE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Matures Coordinator', 'childsmile_app_matures', 'VIEW');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Matures Coordinator'), 'childsmile_app_matures', 'CREATE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Matures Coordinator'), 'childsmile_app_matures', 'UPDATE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Matures Coordinator'), 'childsmile_app_matures', 'DELETE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Matures Coordinator'), 'childsmile_app_matures', 'VIEW');
 
 -- childsmile_app_tasks
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Matures Coordinator', 'childsmile_app_tasks', 'CREATE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Matures Coordinator', 'childsmile_app_tasks', 'UPDATE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Matures Coordinator', 'childsmile_app_tasks', 'DELETE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Matures Coordinator', 'childsmile_app_tasks', 'VIEW');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Matures Coordinator'), 'childsmile_app_tasks', 'CREATE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Matures Coordinator'), 'childsmile_app_tasks', 'UPDATE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Matures Coordinator'), 'childsmile_app_tasks', 'DELETE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Matures Coordinator'), 'childsmile_app_tasks', 'VIEW');
 
 -- childsmile_app_task_types
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Matures Coordinator', 'childsmile_app_task_types', 'VIEW');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Matures Coordinator'), 'childsmile_app_task_types', 'VIEW');
 ```
 
 ### Healthy Kids Coordinator role has permissions as follows:
@@ -700,31 +700,31 @@ Sure! Here are the SQL insert statements for the `Healthy Kids Coordinator` role
 
 ```sql
 -- childsmile_app_tutors
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Healthy Kids Coordinator', 'childsmile_app_tutors', 'VIEW');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Healthy Kids Coordinator'), 'childsmile_app_tutors', 'VIEW');
 
 -- childsmile_app_children
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Healthy Kids Coordinator', 'childsmile_app_children', 'CREATE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Healthy Kids Coordinator', 'childsmile_app_children', 'UPDATE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Healthy Kids Coordinator', 'childsmile_app_children', 'DELETE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Healthy Kids Coordinator', 'childsmile_app_children', 'VIEW');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Healthy Kids Coordinator'), 'childsmile_app_children', 'CREATE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Healthy Kids Coordinator'), 'childsmile_app_children', 'UPDATE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Healthy Kids Coordinator'), 'childsmile_app_children', 'DELETE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Healthy Kids Coordinator'), 'childsmile_app_children', 'VIEW');
 
 -- childsmile_app_tutorships
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Healthy Kids Coordinator', 'childsmile_app_tutorships', 'VIEW');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Healthy Kids Coordinator'), 'childsmile_app_tutorships', 'VIEW');
 
 -- childsmile_app_healthy
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Healthy Kids Coordinator', 'childsmile_app_healthy', 'CREATE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Healthy Kids Coordinator', 'childsmile_app_healthy', 'UPDATE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Healthy Kids Coordinator', 'childsmile_app_healthy', 'DELETE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Healthy Kids Coordinator', 'childsmile_app_healthy', 'VIEW');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Healthy Kids Coordinator'), 'childsmile_app_healthy', 'CREATE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Healthy Kids Coordinator'), 'childsmile_app_healthy', 'UPDATE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Healthy Kids Coordinator'), 'childsmile_app_healthy', 'DELETE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Healthy Kids Coordinator'), 'childsmile_app_healthy', 'VIEW');
 
 -- childsmile_app_tasks
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Healthy Kids Coordinator', 'childsmile_app_tasks', 'CREATE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Healthy Kids Coordinator', 'childsmile_app_tasks', 'UPDATE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Healthy Kids Coordinator', 'childsmile_app_tasks', 'DELETE');
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Healthy Kids Coordinator', 'childsmile_app_tasks', 'VIEW');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Healthy Kids Coordinator'), 'childsmile_app_tasks', 'CREATE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Healthy Kids Coordinator'), 'childsmile_app_tasks', 'UPDATE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Healthy Kids Coordinator'), 'childsmile_app_tasks', 'DELETE');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Healthy Kids Coordinator'), 'childsmile_app_tasks', 'VIEW');
 
 -- childsmile_app_task_types
-INSERT INTO childsmile_app_permissions (role, resource, action) VALUES ('Healthy Kids Coordinator', 'childsmile_app_task_types', 'VIEW');
+INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Healthy Kids Coordinator'), 'childsmile_app_task_types', 'VIEW');
 ```
 
 ``` now that we created the roles and permissions, i need inserts to all other tables.
@@ -754,11 +754,150 @@ table schema
 ### name fields, must be in Hebrew,
 ### password must be hashed, but i need to know the hashing algorithm so i can test login functionality
 ### created_at must be the current timestamp
+INSERT INTO childsmile_app_role (role_name) VALUES ('System Administrator');
+INSERT INTO childsmile_app_role (role_name) VALUES ('Technical Coordinator');
+INSERT INTO childsmile_app_role (role_name) VALUES ('Volunteer Coordinator');
+INSERT INTO childsmile_app_role (role_name) VALUES ('Families Coordinator');
+INSERT INTO childsmile_app_role (role_name) VALUES ('Tutors Coordinator'); 
+INSERT INTO childsmile_app_role (role_name) VALUES ('Matures Coordinator');
+INSERT INTO childsmile_app_role (role_name) VALUES ('Healthy Kids Coordinator');
+INSERT INTO childsmile_app_role (role_name) VALUES ('General Volunteer');
+INSERT INTO childsmile_app_role (role_name) VALUES ('Tutor');
+
+i cannot know the IDs of the roles as its created by Django, so i need to use a select in every insert to get the ID of the role.
+the names of each role are for starters, we can change them later if needed.
+insert "ליאם אביבי" as the system administrator
+insert "אילה קריץ" as the technical coordinator
+insert "טל לנגרמן" as the volunteer coordinator
+insert "ליה צוהר" as the families coordinator
+insert "יובל ברגיל" as the tutors coordinator
+insert "נבו גיבלי" as the matures coordinator
+insert "אור גולן" as the healthy kids coordinator
+insert "אביגיל גרינברג" as a general volunteer
+insert "אורי כהן" as a tutor
+
+use a select in evert insert to ensure the correct role_id is used.
+
 
 ```sql
 INSERT INTO childsmile_app_staff (username, password, role_id, email, first_name, last_name, created_at)
-VALUES ('ליאם_אביבי', 'hashed_password', 1, 'admin@mail.com', 'ליאם', 'אביבי', current_timestamp);
+VALUES ('ליאם_אביבי', '1234', (SELECT id FROM childsmile_app_role WHERE role_name = 'System Administrator'), 'sysadmin@mail.com', 'ליאם', 'אביבי', current_timestamp);
 INSERT INTO childsmile_app_staff (username, password, role_id, email, first_name, last_name, created_at)
-VALUES ('אילה_קריץ', 'hashed_password', 2, 'tech@mail.com', 'אילה', 'קריץ', current_timestamp);
+VALUES ('אילה_קריץ', '1234', (SELECT id FROM childsmile_app_role WHERE role_name = 'Technical Coordinator'), 'tech@mail.com', 'אילה', 'קריץ', current_timestamp);
 INSERT INTO childsmile_app_staff (username, password, role_id, email, first_name, last_name, created_at)
+VALUES ('טל_לנגרמן', '1234', (SELECT id FROM childsmile_app_role WHERE role_name = 'Volunteer Coordinator'), 'volun@mail.com', 'טל', 'לנגרמן', current_timestamp);
+INSERT INTO childsmile_app_staff (username, password, role_id, email, first_name, last_name, created_at)
+VALUES ('ליה_צוהר', '1234', (SELECT id FROM childsmile_app_role WHERE role_name = 'Families Coordinator'), 'family@mail.com', 'ליה', 'צוהר', current_timestamp);
+INSERT INTO childsmile_app_staff (username, password, role_id, email, first_name, last_name, created_at)
+VALUES ('יובל_ברגיל', '1234', (SELECT id FROM childsmile_app_role WHERE role_name = 'Tutors Coordinator'), 'tutors@mail.com', 'יובל', 'ברגיל', current_timestamp);
+INSERT INTO childsmile_app_staff (username, password, role_id, email, first_name, last_name, created_at)
+VALUES ('נבו_גיבלי', '1234', (SELECT id FROM childsmile_app_role WHERE role_name = 'Matures Coordinator'), 'matures@mail.com', 'נבו', 'גיבלי', current_timestamp);
+INSERT INTO childsmile_app_staff (username, password, role_id, email, first_name, last_name, created_at)    
+VALUES ('אור_גולן', '1234', (SELECT id FROM childsmile_app_role WHERE role_name = 'Healthy Kids Coordinator'), 'healthy@mail.com', 'אור', 'גולן', current_timestamp);
+```
+
+### childsmile_app_signedup - Insert example of a signed up volunteer - 3 records - they do not want to be tutors
+## after that need to insert to all the related tables - childsmile_app_general_volunteer, childsmile_app_staff - using the data from the signedup table
+
+INSERT INTO childsmile_app_staff (username, password, role_id, email, first_name, last_name, created_at)
+VALUES ('אורי_כהן', '1234', (SELECT id FROM childsmile_app_role WHERE role_name = 'Tutor'), 'urico@mail.com', 'אורי', 'כהן', current_timestamp);
+Table schema
+    id integer NOT NULL GENERATED BY DEFAULT AS IDENTITY ( INCREMENT 1 START 1 MINVALUE 1 MAXVALUE 2147483647 CACHE 1 ),
+    first_name character varying(255) COLLATE pg_catalog."default" NOT NULL,
+    surname character varying(255) COLLATE pg_catalog."default" NOT NULL,
+    age integer NOT NULL,
+    gender boolean NOT NULL,
+    phone character varying(20) COLLATE pg_catalog."default" NOT NULL,
+    city character varying(255) COLLATE pg_catalog."default" NOT NULL,
+    comment text COLLATE pg_catalog."default",
+    email character varying(254) COLLATE pg_catalog."default",
+    want_tutor boolean NOT NULL,
+    CONSTRAINT childsmile_app_signedup_pkey PRIMARY KEY (id)
+```sql
+INSERT INTO childsmile_app_signedup (first_name, surname, age, gender, phone, city, comment, email, want_tutor)
+VALUES ('אביגיל', 'גרינברג', 25, TRUE, '052-1234567', 'תל אביב', '', 'aviga@mail.com', FALSE);
+INSERT INTO childsmile_app_signedup (first_name, surname, age, gender, phone, city, comment, email, want_tutor)
+VALUES ('דוד','מנחם', 30, FALSE, '052-1234567', 'ירושלים', '', 'davim@mail.com', FALSE);
+INSERT INTO childsmile_app_signedup (first_name, surname, age, gender, phone, city, comment, email, want_tutor)
+VALUES ('חוני', 'המעגל', 19, FALSE, '052-1234567', 'חיפה', '', 'circle@mail.com', FALSE);
+```
+
+### insert into staff table respecting the foreign key constraint and using the data from childsmile_app_signedup
+```sql
+INSERT INTO childsmile_app_staff (username, password, role_id, email, first_name, last_name, created_at)
+SELECT 
+    CONCAT(first_name, '_', surname) AS username,
+    '1234' AS password,
+    (SELECT id FROM childsmile_app_role WHERE role_name = 'General Volunteer') AS role_id,
+    email,
+    first_name,
+    surname,
+    current_timestamp
+FROM childsmile_app_signedup
+WHERE first_name = 'אביגיל' AND surname = 'גרינברג';
+INSERT INTO childsmile_app_staff (username, password, role_id, email, first_name, last_name, created_at)
+SELECT 
+    CONCAT(first_name, '_', surname) AS username,
+    '1234' AS password,
+    (SELECT id FROM childsmile_app_role WHERE role_name = 'General Volunteer') AS role_id,
+    email,
+    first_name,
+    surname,
+    current_timestamp
+FROM childsmile_app_signedup
+WHERE first_name = 'דוד' AND surname = 'מנחם';
+INSERT INTO childsmile_app_staff (username, password, role_id, email, first_name, last_name, created_at)
+SELECT 
+    CONCAT(first_name, '_', surname) AS username,
+    '1234' AS password,
+    (SELECT id FROM childsmile_app_role WHERE role_name = 'General Volunteer') AS role_id,
+    email,
+    first_name,
+    surname,
+    current_timestamp
+FROM childsmile_app_signedup
+WHERE first_name = 'חוני' AND surname = 'המעגל';
+```
+
+
+### insert to childsmile_app_general_volunteer respecting the foreign key constraint and using the data from childsmile_app_signedup
+### general_volunteer schema
+    id_id integer NOT NULL,
+    staff_id integer NOT NULL,
+    signupdate date NOT NULL,
+    comments text COLLATE pg_catalog."default",
+    CONSTRAINT childsmile_app_general_volunteer_pkey PRIMARY KEY (id_id),
+    CONSTRAINT childsmile_app_gener_id_id_0f1642ef_fk_childsmil FOREIGN KEY (id_id)
+        REFERENCES public.childsmile_app_signedup (id) MATCH SIMPLE
+        ON UPDATE NO ACTION
+        ON DELETE NO ACTION
+        DEFERRABLE INITIALLY DEFERRED,
+    CONSTRAINT childsmile_app_gener_staff_id_ad1c342d_fk_childsmil FOREIGN KEY (staff_id)
+        REFERENCES public.childsmile_app_staff (staff_id) MATCH SIMPLE
+        ON UPDATE NO ACTION
+        ON DELETE NO ACTION
+        DEFERRABLE INITIALLY DEFERRED
+```sql
+INSERT INTO childsmile_app_general_volunteer (id_id, staff_id, signupdate, comments)
+SELECT 
+    (select id from childsmile_app_signedup where first_name = 'אביגיל' AND surname = 'גרינברג') AS id_id,
+    (SELECT staff_id FROM childsmile_app_staff WHERE first_name = 'אביגיל' AND last_name = 'גרינברג') AS staff_id,
+    current_date AS signupdate,
+    '' AS comments
+WHERE EXISTS (SELECT 1 FROM childsmile_app_signedup WHERE first_name = 'אביגיל' AND surname = 'גרינברג');
+INSERT INTO childsmile_app_general_volunteer (id_id, staff_id, signupdate, comments)
+SELECT 
+    (select id from childsmile_app_signedup where first_name = 'דוד' AND surname = 'מנחם') AS id_id,
+    (SELECT staff_id FROM childsmile_app_staff WHERE first_name = 'דוד' AND last_name = 'מנחם') AS staff_id,
+    current_date AS signupdate,
+    '' AS comments
+WHERE EXISTS (SELECT 1 FROM childsmile_app_signedup WHERE first_name = 'דוד' AND surname = 'מנחם');
+INSERT INTO childsmile_app_general_volunteer (id_id, staff_id, signupdate, comments)
+SELECT 
+    (select id from childsmile_app_signedup where first_name = 'חוני' AND surname = 'המעגל') AS id_id,
+    (SELECT staff_id FROM childsmile_app_staff WHERE first_name = 'חוני' AND last_name = 'המעגל') AS staff_id,
+    current_date AS signupdate,
+    '' AS comments
+WHERE EXISTS (SELECT 1 FROM childsmile_app_signedup WHERE first_name = 'חוני' AND surname = 'המעגל');
+```
 
