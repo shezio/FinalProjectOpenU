@@ -53,9 +53,22 @@ class Migration(migrations.Migration):
             name='has_completed_treatments',
             field=models.BooleanField(null=True, blank=True),
         ),
-        migrations.AddField(
+
+        # Change the 'child_id' column to be manually input as a 9-digit number
+        migrations.AlterField(
             model_name='children',
-            name='is_in_school',
-            field=models.BooleanField(null=True, blank=True),
+            name='child_id',
+            field=models.IntegerField(primary_key=True, unique=True),
+        ),
+        # make parent_phone and parent_name in  matures table nullable
+        migrations.AlterField(
+            model_name='matures',
+            name='parent_name',
+            field=models.CharField(max_length=255, null=True, blank=True),
+        ),
+        migrations.AlterField(
+            model_name='matures',
+            name='parent_phone',
+            field=models.CharField(max_length=20, null=True, blank=True),
         ),
     ]
