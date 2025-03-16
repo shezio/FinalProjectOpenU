@@ -74,6 +74,8 @@ class Migration(migrations.Migration):
                 ('tutor_full_name', models.CharField(max_length=255)),
                 ('child_city', models.CharField(max_length=255)),
                 ('tutor_city', models.CharField(max_length=255)),
+                ('child_age', models.IntegerField()),
+                ('tutor_age', models.IntegerField()),
                 ('distance_between_cities', models.IntegerField(default=0)),
                 ('grade', models.IntegerField()),
                 # add a field to indicate the match was used to create a match
