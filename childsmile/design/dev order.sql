@@ -1248,17 +1248,17 @@ VALUES ('יצירת דוח משוב', '2021-12-31', 'לא הושלמה', current
     CONSTRAINT childsmile_app_children_pkey PRIMARY KEY (child_id)
 ```sql
 INSERT INTO childsmile_app_children (child_id, childfirstname, childsurname, registrationdate, lastupdateddate, gender, responsible_coordinator, city, child_phone_number, treating_hospital, date_of_birth, medical_diagnosis, diagnosis_date, marital_status, num_of_siblings, details_for_tutoring, additional_info, tutoring_status, current_medical_state, when_completed_treatments, father_name, father_phone, mother_name, mother_phone, street_and_apartment_number, expected_end_treatment_by_protocol, has_completed_treatments) 
-VALUES ( 352233211, 'אביגיל', 'גולדשטיין', current_timestamp, current_timestamp, TRUE, 'ליה צוהר', 'עכו', '050-3334567', 'רמבם', '2015-01-01', 'לוקמיה', '2021-12-31', 'נשואים', 2, 'פרטים לחונכות', 'מידע נוסף', 'למצוא_חונך', 'התחיל כימותרפיה', '', 'אהרון', '050-1234567', 'צילה', '050-7654321', 'יוסף גדיש 12', '2023-12-31', FALSE);
+VALUES ( 352233211, 'אביגיל', 'גולדשטיין', current_timestamp, current_timestamp, TRUE, 'ליה צוהר', 'עכו', '050-3334567', 'רמבם', '2015-01-01', 'לוקמיה', '2021-12-31', 'נשואים', 2, 'פרטים לחונכות', 'מידע נוסף', 'למצוא_חונך', 'התחיל כימותרפיה', NULL, 'אהרון', '050-1234567', 'צילה', '050-7654321', 'יוסף גדיש 12', '2023-12-31', FALSE);
 -- now insert 2 more sick children
 INSERT INTO childsmile_app_children (child_id, childfirstname, childsurname, registrationdate, lastupdateddate, gender, responsible_coordinator, city, child_phone_number, treating_hospital, date_of_birth, medical_diagnosis, diagnosis_date, marital_status, num_of_siblings, details_for_tutoring, additional_info, tutoring_status, current_medical_state, when_completed_treatments, father_name, father_phone, mother_name, mother_phone, street_and_apartment_number, expected_end_treatment_by_protocol, has_completed_treatments)
-VALUES ( 352233212, 'אביתר', 'אזולאי', current_timestamp, current_timestamp, FALSE, 'ליה צוהר', 'רמת גן', '050-3324561', 'שיבא', '2014-01-01', 'לימפומה', '2021-12-31', 'גרושים', 3, '', '', 'לא_רוצים', 'התחיל כימותרפיה', '', 'אזר', '050-1234567', 'שרה', '050-7654321', 'ביאליק 32', '2023-12-31', FALSE);
+VALUES ( 352233212, 'אביתר', 'אזולאי', current_timestamp, current_timestamp, FALSE, 'ליה צוהר', 'רמת גן', '050-3324561', 'שיבא', '2014-01-01', 'לימפומה', '2021-12-31', 'גרושים', 3, '', '', 'לא_רוצים', 'התחיל כימותרפיה', NULL, 'אזר', '050-1234567', 'שרה', '050-7654321', 'ביאליק 32', '2023-12-31', FALSE);
 INSERT INTO childsmile_app_children (child_id, childfirstname, childsurname, registrationdate, lastupdateddate, gender, responsible_coordinator, city, child_phone_number, treating_hospital, date_of_birth, medical_diagnosis, diagnosis_date, marital_status, num_of_siblings, details_for_tutoring, additional_info, tutoring_status, current_medical_state, when_completed_treatments, father_name, father_phone, mother_name, mother_phone, street_and_apartment_number, expected_end_treatment_by_protocol, has_completed_treatments)
-VALUES ( 352233213, 'אפרים', 'ביטון', current_timestamp, current_timestamp, FALSE, 'ליה צוהר', 'חולון', '050-3331567', 'שניידר', '2013-01-01', 'מדובלסטומה', '2021-12-31', 'אין', 4, '', '', 'למצוא_חונך_בעדיפות_גבוה', 'התחיל כימותרפיה', '', 'אברהם', '050-1234567', 'שרה', '050-7654321', 'סוקולוב 50', '2023-12-31', FALSE);
+VALUES ( 352233213, 'אפרים', 'ביטון', current_timestamp, current_timestamp, FALSE, 'ליה צוהר', 'חולון', '050-3331567', 'שניידר', '2013-01-01', 'מדובלסטומה', '2021-12-31', 'אין', 4, '', '', 'למצוא_חונך_בעדיפות_גבוה', 'התחיל כימותרפיה', NULL, 'אברהם', '050-1234567', 'שרה', '050-7654321', 'סוקולוב 50', '2023-12-31', FALSE);
 
 --- now 3 healthy children - it means insert to childsmile_app_children' then add to childsmile_app_healthy then update the childsmile_app_children with tutoring status לא רלוונטי
 -- and dont use only Askenazi names this is starting to feel racist Mr github copilot
 INSERT INTO childsmile_app_children (child_id, childfirstname, childsurname, registrationdate, lastupdateddate, gender, responsible_coordinator, city, child_phone_number, treating_hospital, date_of_birth, medical_diagnosis, diagnosis_date, marital_status, num_of_siblings, details_for_tutoring, additional_info, tutoring_status, current_medical_state, when_completed_treatments, father_name, father_phone, mother_name, mother_phone, street_and_apartment_number, expected_end_treatment_by_protocol, has_completed_treatments)
-VALUES ( 352233214, 'אבירם', 'מנגיסטה', current_timestamp, current_timestamp, FALSE, 'ליה צוהר', 'דימונה', '058-3334507', 'סורוקה', '2013-01-01', 'ניורובלסטומה', '2021-12-31', 'פרודים', 2, '', '', 'למצוא_חונך', 'התחיל הקרנות', '', 'אברהם', '050-1234567', 'אסתר', '050-7654321', 'המלאכה 3', '2023-12-31', FALSE);
+VALUES ( 352233214, 'אבירם', 'מנגיסטה', current_timestamp, current_timestamp, FALSE, 'ליה צוהר', 'דימונה', '058-3334507', 'סורוקה', '2013-01-01', 'ניורובלסטומה', '2021-12-31', 'פרודים', 2, '', '', 'למצוא_חונך', 'התחיל הקרנות', NULL, 'אברהם', '050-1234567', 'אסתר', '050-7654321', 'המלאכה 3', '2023-12-31', FALSE);
 -- now update children table in all fields that would state that the child is healthy
 UPDATE childsmile_app_children
 SET medical_diagnosis = 'אין',
@@ -1298,9 +1298,9 @@ WHERE child_id = 352233214;
 -- child with date_of_birth is >= 16 years ago from current date
 -- insert 3 kids named רחמים אלעזר,רותם סהר, רוני יוסף בני 18 19 20
 INSERT INTO childsmile_app_children (child_id, childfirstname, childsurname, registrationdate, lastupdateddate, gender, responsible_coordinator, city, child_phone_number, treating_hospital, date_of_birth, medical_diagnosis, diagnosis_date, marital_status, num_of_siblings, details_for_tutoring, additional_info, tutoring_status, current_medical_state, when_completed_treatments, father_name, father_phone, mother_name, mother_phone, street_and_apartment_number, expected_end_treatment_by_protocol, has_completed_treatments)
-VALUES ( 352233215, 'רחמים', 'אלעזר', current_timestamp, current_timestamp, FALSE, 'ליה צוהר', 'חיפה', '050-3334567', 'רמבם', '2007-01-01', 'לוקמיה', '2021-12-31', 'אין', 10, 'פרטים לחונכות', 'מידע נוסף', 'למצוא_חונך', 'התחיל כימותרפיה', '', '', '', '', '', 'זאב שוהם 12', '2023-12-31', FALSE);
+VALUES ( 352233215, 'רחמים', 'אלעזר', current_timestamp, current_timestamp, FALSE, 'ליה צוהר', 'חיפה', '050-3334567', 'רמבם', '2007-01-01', 'לוקמיה', '2021-12-31', 'אין', 10, 'פרטים לחונכות', 'מידע נוסף', 'למצוא_חונך', 'התחיל כימותרפיה', NULL, '', '', '', '', 'זאב שוהם 12', '2023-12-31', FALSE);
 INSERT INTO childsmile_app_children (child_id, childfirstname, childsurname, registrationdate, lastupdateddate, gender, responsible_coordinator, city, child_phone_number, treating_hospital, date_of_birth, medical_diagnosis, diagnosis_date, marital_status, num_of_siblings, details_for_tutoring, additional_info, tutoring_status, current_medical_state, when_completed_treatments, father_name, father_phone, mother_name, mother_phone, street_and_apartment_number, expected_end_treatment_by_protocol, has_completed_treatments)
-VALUES ( 352233216, 'רותם', 'סהר', current_timestamp, current_timestamp, FALSE, 'ליה צוהר', 'אשדוד', '050-3334567', 'אסותא', '2006-01-01', 'לוקמיה', '2021-12-31', 'נשואים', 10, 'פרטים לחונכות', 'מידע נוסף', 'למצוא_חונך', 'התחיל כימותרפיה', '', 'אבי', '052-1232267', 'אילנה', '050-7654999', 'יצחק שדה 12', '2023-12-31', FALSE);
+VALUES ( 352233216, 'רותם', 'סהר', current_timestamp, current_timestamp, FALSE, 'ליה צוהר', 'אשדוד', '050-3334567', 'אסותא', '2006-01-01', 'לוקמיה', '2021-12-31', 'נשואים', 10, 'פרטים לחונכות', 'מידע נוסף', 'למצוא_חונך', 'התחיל כימותרפיה', NULL, 'אבי', '052-1232267', 'אילנה', '050-7654999', 'יצחק שדה 12', '2023-12-31', FALSE);
 
 -- now insert 3 mature individuals - select all children with date_of_birth >= 16 years ago from current date - if not already in childsmile_app_mature
 -- matures table scheme is
@@ -1339,10 +1339,7 @@ SELECT
     additional_info,
     ''
 FROM childsmile_app_children
-WHERE date_of_birth <= (current_date - interval '16 years') AND 
-      (EXTRACT(YEAR FROM current_date) - EXTRACT(YEAR FROM date_of_birth)) * 10000 + 
-      (EXTRACT(MONTH FROM current_date) - EXTRACT(MONTH FROM date_of_birth)) * 100 + 
-      (EXTRACT(DAY FROM current_date) - EXTRACT(DAY FROM date_of_birth)) >= 160000 
+WHERE EXTRACT(YEAR FROM AGE(current_date, date_of_birth))::int >= 16 
 AND child_id NOT IN (SELECT child_id FROM childsmile_app_matures);
 ```
 @todo - create tutorships, then create feedbacks, then create feedback reports - then we will be able to start DEVING the app from front to back
@@ -1394,7 +1391,7 @@ DELETE FROM childsmile_app_pending_tutor
 WHERE id_id = (SELECT id FROM childsmile_app_signedup WHERE first_name = 'אלעזר' AND surname = 'בוזגלו');
 -- insert new child - at the age of 8
 INSERT INTO childsmile_app_children (child_id, childfirstname, childsurname, registrationdate, lastupdateddate, gender, responsible_coordinator, city, child_phone_number, treating_hospital, date_of_birth, medical_diagnosis, diagnosis_date, marital_status, num_of_siblings, details_for_tutoring, additional_info, tutoring_status, current_medical_state, when_completed_treatments, father_name, father_phone, mother_name, mother_phone, street_and_apartment_number, expected_end_treatment_by_protocol, has_completed_treatments)
-VALUES(3522332129, 'שמעון','כהן', current_timestamp, current_timestamp, TRUE, 'ליה צוהר', 'עכו', '052-3834567', 'אסותא חיפה', '2017-01-01', 'לוקמיה', '2021-12-31', 'נשואים', 2, 'פרטים לחונכות', 'מידע נוסף', 'למצוא_חונך', 'התחיל כימותרפיה', '', 'דני', '050-1034567', 'מאשה', '050-7454321', 'ביאליק 44', '2023-12-31', FALSE);
+VALUES(3522332129, 'שמעון','כהן', current_timestamp, current_timestamp, TRUE, 'ליה צוהר', 'עכו', '052-3834567', 'אסותא חיפה', '2017-01-01', 'לוקמיה', '2021-12-31', 'נשואים', 2, 'פרטים לחונכות', 'מידע נוסף', 'למצוא_חונך', 'התחיל כימותרפיה', NULL, 'דני', '050-1034567', 'מאשה', '050-7454321', 'ביאליק 44', '2023-12-31', FALSE);
 -- insert new match
 INSERT INTO childsmile_app_possible_matches (child_id, tutor_id, child_full_name, tutor_full_name, child_city, tutor_city, distance_between_cities, grade)
 SELECT 
@@ -1404,6 +1401,19 @@ SELECT
     CONCAT(tutor.first_name, ' ', tutor.surname) AS tutor_full_name,
     child.city AS child_city,
     tutor.city AS tutor_city,
+    -- insert calculated child age using date_of_birth
+    /*
+    this gives the exact age in years
+    WHERE date_of_birth <= (current_date - interval '16 years') AND 
+      (EXTRACT(YEAR FROM current_date) - EXTRACT(YEAR FROM date_of_birth)) * 10000 + 
+      (EXTRACT(MONTH FROM current_date) - EXTRACT(MONTH FROM date_of_birth)) * 100 + 
+      (EXTRACT(DAY FROM current_date) - EXTRACT(DAY FROM date_of_birth)) >= 160000 
+
+    use same calc to get age in years
+    */
+    EXTRACT(YEAR FROM AGE(current_date, date_of_birth))::int AS child_age,
+    -- get tutor age from signedup table
+    (SELECT age FROM childsmile_app_signedup WHERE id = tutor.id_id)))::int AS tutor_age,
     0 AS distance_between_cities, -- Assuming same city for now
     100 AS grade -- Initial grade value
 FROM childsmile_app_children child
@@ -1457,6 +1467,11 @@ and pm.child_id = 3522332129 AND pm.tutor_id = (SELECT id_id FROM childsmile_app
 UPDATE childsmile_app_possible_matches
 SET is_used = TRUE
 WHERE child_id = 3522332129 AND tutor_id = (SELECT id_id FROM childsmile_app_tutors WHERE first_name = 'אלעזר' AND surname = 'בוזגלו');
+-- update childsmile_app_children with tutoring status יש_חונך, responsible_coordinator יובל ברגיל
+UPDATE childsmile_app_children
+SET tutoring_status = 'יש_חונך',
+    responsible_coordinator = 'יובל ברגיל'
+WHERE child_id = 3522332129;
 ```
 ### now we need feedback from a tutor and feedback from a general volunteer
 ### we will insert 2 feedbacks each
