@@ -727,10 +727,9 @@ INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELE
 INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Healthy Kids Coordinator'), 'childsmile_app_task_types', 'VIEW');
 ```
 
-``` now that we created the roles and permissions, i need inserts to all other tables.
-i must keep the order of the tables, because of the foreign keys. ```
+### now that we created the roles and permissions, i need inserts to all other tables.
+i must keep the order of the tables, because of the foreign keys
 
-Sure! Here are the SQL insert statements for the remaining tables in the correct order to maintain the foreign key constraints:
 ### childsmile_app_staff - Insert example of a staff member - 1 record per role
 
 table schema 
@@ -794,6 +793,9 @@ INSERT INTO childsmile_app_staff (username, password, role_id, email, first_name
 VALUES ('נבו_גיבלי', '1234', (SELECT id FROM childsmile_app_role WHERE role_name = 'Matures Coordinator'), 'matures@mail.com', 'נבו', 'גיבלי', current_timestamp);
 INSERT INTO childsmile_app_staff (username, password, role_id, email, first_name, last_name, created_at)    
 VALUES ('אור_גולן', '1234', (SELECT id FROM childsmile_app_role WHERE role_name = 'Healthy Kids Coordinator'), 'healthy@mail.com', 'אור', 'גולן', current_timestamp);
+
+--- select to see results of previous inserts
+SELECT * FROM childsmile_app_staff;
 ```
 
 ----------------------------TODO: USE CURSOR TO INSERT INTO childsmile_app_staff with an obejct of the whole transaction to be able to use the ID of the signedup table
@@ -1045,13 +1047,19 @@ SELECT
     (SELECT staff_id FROM childsmile_app_staff WHERE first_name = 'נועה' AND last_name = 'רוזנבלום') AS staff_id,
     'אין_חניך' AS tutorship_status,
     '' AS preferences,
-    email AS tutor_email,
+    (select email from childsmile_app_staff where first_name = 'נועה' AND last_name = 'רוזנבלום') AS tutor_email,
     '' AS relationship_status,
     '' AS tutee_wellness
 WHERE EXISTS (SELECT 1 FROM childsmile_app_signedup WHERE first_name = 'נועה' AND surname = 'רוזנבלום');
 -- delete pending tutor
 DELETE FROM childsmile_app_pending_tutor
 WHERE id_id = (SELECT id FROM childsmile_app_signedup WHERE first_name = 'נועה' AND surname = 'רוזנבלום');
+
+-- select all above tables to see the results every step of the way
+SELECT * FROM childsmile_app_signedup;
+SELECT * FROM childsmile_app_staff;
+SELECT * FROM childsmile_app_pending_tutor;
+SELECT * FROM childsmile_app_tutors;
 ```
 --- Create a new tutor named "אביטל גולדשטיין" and approve her
 -- insert signedup
@@ -1087,7 +1095,7 @@ SELECT
     (SELECT staff_id FROM childsmile_app_staff WHERE first_name = 'אביטל' AND last_name = 'גולדשטיין') AS staff_id,
     'אין_חניך' AS tutorship_status,
     '' AS preferences,
-    email AS tutor_email,
+    (select email from childsmile_app_staff where first_name = 'אביטל' AND last_name = 'גולדשטיין') AS tutor_email,
     '' AS relationship_status,
     '' AS tutee_wellness
 WHERE EXISTS (SELECT 1 FROM childsmile_app_signedup WHERE first_name = 'אביטל' AND surname = 'גולדשטיין');
@@ -1264,9 +1272,9 @@ UPDATE childsmile_app_children
 SET medical_diagnosis = 'אין',
     tutoring_status = 'לא רלוונטי',
     current_medical_state = 'בריא',
-    when_completed_treatments = '2024-01-01'
+    when_completed_treatments = '2024-01-01',
     expected_end_treatment_by_protocol = '2023-12-31',
-    responsible_coordinator = 'אור גולן'
+    responsible_coordinator = 'אור גולן',
     has_completed_treatments = TRUE
 WHERE child_id = 352233214;
 -- now insert into childsmile_app_healthy all the details of the healthy child now that we updated the children table
@@ -1382,7 +1390,7 @@ SELECT
     (SELECT staff_id FROM childsmile_app_staff WHERE first_name = 'אלעזר' AND last_name = 'בוזגלו') AS staff_id,
     'אין_חניך' AS tutorship_status,
     '' AS preferences,
-    email AS tutor_email,
+    (SELECT email FROM childsmile_app_signedup WHERE first_name = 'אלעזר' AND surname = 'בוזגלו') AS tutor_email,
     '' AS relationship_status,
     '' AS tutee_wellness
 WHERE EXISTS (SELECT 1 FROM childsmile_app_signedup WHERE first_name = 'אלעזר' AND surname = 'בוזגלו');
@@ -1391,34 +1399,34 @@ DELETE FROM childsmile_app_pending_tutor
 WHERE id_id = (SELECT id FROM childsmile_app_signedup WHERE first_name = 'אלעזר' AND surname = 'בוזגלו');
 -- insert new child - at the age of 8
 INSERT INTO childsmile_app_children (child_id, childfirstname, childsurname, registrationdate, lastupdateddate, gender, responsible_coordinator, city, child_phone_number, treating_hospital, date_of_birth, medical_diagnosis, diagnosis_date, marital_status, num_of_siblings, details_for_tutoring, additional_info, tutoring_status, current_medical_state, when_completed_treatments, father_name, father_phone, mother_name, mother_phone, street_and_apartment_number, expected_end_treatment_by_protocol, has_completed_treatments)
-VALUES(3522332129, 'שמעון','כהן', current_timestamp, current_timestamp, TRUE, 'ליה צוהר', 'עכו', '052-3834567', 'אסותא חיפה', '2017-01-01', 'לוקמיה', '2021-12-31', 'נשואים', 2, 'פרטים לחונכות', 'מידע נוסף', 'למצוא_חונך', 'התחיל כימותרפיה', NULL, 'דני', '050-1034567', 'מאשה', '050-7454321', 'ביאליק 44', '2023-12-31', FALSE);
--- insert new match
-INSERT INTO childsmile_app_possible_matches (child_id, tutor_id, child_full_name, tutor_full_name, child_city, tutor_city, distance_between_cities, grade)
+VALUES(3522332129, 'שמעון','כהן', current_timestamp, current_timestamp, FALSE, 'ליה צוהר', 'עכו', '052-3834567', 'אסותא חיפה', '2017-01-01', 'לוקמיה', '2021-12-31', 'נשואים', 2, 'פרטים לחונכות', 'מידע נוסף', 'למצוא_חונך', 'התחיל כימותרפיה', NULL, 'דני', '050-1034567', 'מאשה', '050-7454321', 'ביאליק 44', '2023-12-31', FALSE);
+-- insert new possible matches
+INSERT INTO childsmile_app_possiblematches (child_id, tutor_id, child_full_name, tutor_full_name, child_city, tutor_city,child_age, tutor_age, distance_between_cities, grade, is_used)
 SELECT 
     child.child_id,
     tutor.id_id,
-    CONCAT(child.childfirstname, ' ', child.childsurname) AS child_full_name,
-    CONCAT(tutor.first_name, ' ', tutor.surname) AS tutor_full_name,
-    child.city AS child_city,
-    tutor.city AS tutor_city,
+    CONCAT(child.childfirstname, ' ', child.childsurname),
+    CONCAT(signedup.first_name, ' ', signedup.surname),
+    child.city,
+    signedup.city,
     -- insert calculated child age using date_of_birth
-    /*
-    this gives the exact age in years
-    WHERE date_of_birth <= (current_date - interval '16 years') AND 
-      (EXTRACT(YEAR FROM current_date) - EXTRACT(YEAR FROM date_of_birth)) * 10000 + 
-      (EXTRACT(MONTH FROM current_date) - EXTRACT(MONTH FROM date_of_birth)) * 100 + 
-      (EXTRACT(DAY FROM current_date) - EXTRACT(DAY FROM date_of_birth)) >= 160000 
-
-    use same calc to get age in years
-    */
-    EXTRACT(YEAR FROM AGE(current_date, date_of_birth))::int AS child_age,
+    EXTRACT(YEAR FROM AGE(current_date, date_of_birth))::int,
     -- get tutor age from signedup table
-    (SELECT age FROM childsmile_app_signedup WHERE id = tutor.id_id)))::int AS tutor_age,
-    0 AS distance_between_cities, -- Assuming same city for now
-    100 AS grade -- Initial grade value
+    signedup.age,
+    0,
+    100,
+    FALSE
 FROM childsmile_app_children child
-JOIN childsmile_app_tutors tutor ON child.gender = tutor.gender AND child.city = tutor.city
-GROUP BY tutor.id_id, child.child_id, child.childfirstname, child.childsurname, tutor.first_name, tutor.surname, child.city, tutor.city;
+JOIN childsmile_app_signedup signedup ON child.city = signedup.city AND child.gender = signedup.gender
+JOIN childsmile_app_tutors tutor ON signedup.id = tutor.id_id
+GROUP BY tutor.id_id, child.child_id, child.childfirstname, child.childsurname, signedup.first_name, signedup.surname, child.city, signedup.city, signedup.age;
+/*consider indexing when coding BE
+CREATE INDEX idx_child_city ON childsmile_app_children (city);
+CREATE INDEX idx_child_gender ON childsmile_app_children (gender);
+CREATE INDEX idx_signedup_city ON childsmile_app_signedup (city);
+CREATE INDEX idx_signedup_gender ON childsmile_app_signedup (gender);
+CREATE INDEX idx_tutor_id ON childsmile_app_tutors (id_id);
+*/
 --Select to get all data from both tables with the id keys
 --Select Query to show all data of child and tutor
 SELECT 
@@ -1429,11 +1437,38 @@ SELECT
     pm.tutor_full_name,
     pm.child_city,
     pm.tutor_city,
+    pm.child_age,
+    pm.tutor_age,
     pm.distance_between_cities,
     pm.grade,
-    child.*,
-    tutor.*
-FROM childsmile_app_possible_matches pm
+    pm.is_used,
+    child.registrationdate,
+    child.lastupdateddate,
+    child.gender AS child_gender,
+    child.responsible_coordinator,
+    child.child_phone_number,
+    child.treating_hospital,
+    child.date_of_birth,
+    child.medical_diagnosis,
+    child.diagnosis_date,
+    child.marital_status,
+    child.num_of_siblings,
+    child.details_for_tutoring,
+    child.additional_info AS child_additional_info,
+    child.tutoring_status,
+    child.current_medical_state,
+    child.when_completed_treatments,
+    child.father_name,
+    child.father_phone,
+    child.mother_name,
+    child.mother_phone,
+    child.street_and_apartment_number,
+    child.expected_end_treatment_by_protocol,
+    child.has_completed_treatments,
+    tutor.tutorship_status,
+    tutor.preferences,
+    tutor.tutor_email,
+FROM childsmile_app_possiblematches pm
 JOIN childsmile_app_children child ON pm.child_id = child.child_id
 JOIN childsmile_app_tutors tutor ON pm.tutor_id = tutor.id_id;
 -- insert new tutorship all lines we want to insert from the possible matches table
@@ -1460,18 +1495,24 @@ INSERT INTO childsmile_app_tutorships (child_id, tutor_id)
 SELECT 
     pm.child_id,
     pm.tutor_id
-FROM childsmile_app_possible_matches pm
-WHERE is_used = FALSE;
-and pm.child_id = 3522332129 AND pm.tutor_id = (SELECT id_id FROM childsmile_app_tutors WHERE first_name = 'אלעזר' AND surname = 'בוזגלו')
+FROM childsmile_app_possiblematches pm
+WHERE is_used = FALSE
+and pm.child_id = 3522332129 AND pm.tutor_id = (SELECT id_id FROM childsmile_app_tutors WHERE id_id = (SELECT id FROM childsmile_app_signedup WHERE first_name = 'אלעזר' AND surname = 'בוזגלו'));
 -- update possible matches
-UPDATE childsmile_app_possible_matches
+UPDATE childsmile_app_possiblematches
 SET is_used = TRUE
-WHERE child_id = 3522332129 AND tutor_id = (SELECT id_id FROM childsmile_app_tutors WHERE first_name = 'אלעזר' AND surname = 'בוזגלו');
+WHERE child_id = 3522332129 AND tutor_id = (SELECT id_id FROM childsmile_app_tutors WHERE id_id = (SELECT id FROM childsmile_app_signedup WHERE first_name = 'אלעזר' AND surname = 'בוזגלו'));
 -- update childsmile_app_children with tutoring status יש_חונך, responsible_coordinator יובל ברגיל
 UPDATE childsmile_app_children
 SET tutoring_status = 'יש_חונך',
     responsible_coordinator = 'יובל ברגיל'
 WHERE child_id = 3522332129;
+-- update childsmile_app_tutors with tutoring status יש_חניך, relationship_status using marital_status, tutee_wellness using current_medical_state
+UPDATE childsmile_app_tutors
+SET tutorship_status = 'יש_חניך',
+    relationship_status = (SELECT marital_status FROM childsmile_app_children WHERE child_id = 3522332129),
+    tutee_wellness = (SELECT current_medical_state FROM childsmile_app_children WHERE child_id = 3522332129)
+WHERE id_id = (SELECT id_id FROM childsmile_app_tutors WHERE id_id = (SELECT id FROM childsmile_app_signedup WHERE first_name = 'אלעזר' AND surname = 'בוזגלו'));
 ```
 ### now we need feedback from a tutor and feedback from a general volunteer
 ### we will insert 2 feedbacks each
