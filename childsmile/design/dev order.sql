@@ -1350,3 +1350,241 @@ AND child_id NOT IN (SELECT child_id FROM childsmile_app_matures);
 ### for that we need a match - a tutor and a child - with same gender, same city or up to 15 KM away
 ### we need a tutor with אין_חניך status and a child with למצוא_חונך status or למצוא_חונך_בעדיפות_גבוה status or למצוא_חונך_אין_באיזור_שלו status
 ### we will insert 3 tutorships
+### need to make sure to insert into all the related tables in the correct order and update where needed
+### the order is - insert new signedup, insert new staff, insert new pending tutor, update pending tutor, insert new tutor, delete pending tutor, insert new child that has the appropriate status, insert new tutorship
+```sql
+-- insert new signedup
+INSERT INTO childsmile_app_signedup (first_name, surname, age, gender, phone, city, comment, email, want_tutor)
+VALUES ('אלעזר', 'בוזגלו', 20, FALSE, '050-3334567', 'עכו', '','elazbu@mail.com', TRUE);
+-- insert new staff
+INSERT INTO childsmile_app_staff (username, password, role_id, email, first_name, last_name, created_at)
+SELECT 
+    CONCAT(first_name, '_', surname) AS username,
+    '1234' AS password,
+    (SELECT id FROM childsmile_app_role WHERE role_name = 'Tutor') AS role_id,
+    email,
+    first_name,
+    surname,
+    current_timestamp
+FROM childsmile_app_signedup
+WHERE first_name = 'אלעזר' AND surname = 'בוזגלו';
+-- insert pending tutor
+INSERT INTO childsmile_app_pending_tutor (id_id, pending_status)
+SELECT 
+    (select id from childsmile_app_signedup where first_name = 'אלעזר' AND surname = 'בוזגלו') AS id_id,
+    'ממתין' AS pending_status
+WHERE EXISTS (SELECT 1 FROM childsmile_app_signedup WHERE first_name = 'אלעזר' AND surname = 'בוזגלו');
+-- update pending tutor
+UPDATE childsmile_app_pending_tutor
+SET pending_status = 'מאושר'
+WHERE id_id = (SELECT id FROM childsmile_app_signedup WHERE first_name = 'אלעזר' AND surname = 'בוזגלו');
+-- insert tutor
+INSERT INTO childsmile_app_tutors (id_id, staff_id, tutorship_status, preferences, tutor_email, relationship_status, tutee_wellness)
+SELECT 
+    (SELECT id FROM childsmile_app_signedup WHERE first_name = 'אלעזר' AND surname = 'בוזגלו') AS id_id,
+    (SELECT staff_id FROM childsmile_app_staff WHERE first_name = 'אלעזר' AND last_name = 'בוזגלו') AS staff_id,
+    'אין_חניך' AS tutorship_status,
+    '' AS preferences,
+    email AS tutor_email,
+    '' AS relationship_status,
+    '' AS tutee_wellness
+WHERE EXISTS (SELECT 1 FROM childsmile_app_signedup WHERE first_name = 'אלעזר' AND surname = 'בוזגלו');
+-- delete pending tutor
+DELETE FROM childsmile_app_pending_tutor
+WHERE id_id = (SELECT id FROM childsmile_app_signedup WHERE first_name = 'אלעזר' AND surname = 'בוזגלו');
+-- insert new child - at the age of 8
+INSERT INTO childsmile_app_children (child_id, childfirstname, childsurname, registrationdate, lastupdateddate, gender, responsible_coordinator, city, child_phone_number, treating_hospital, date_of_birth, medical_diagnosis, diagnosis_date, marital_status, num_of_siblings, details_for_tutoring, additional_info, tutoring_status, current_medical_state, when_completed_treatments, father_name, father_phone, mother_name, mother_phone, street_and_apartment_number, expected_end_treatment_by_protocol, has_completed_treatments)
+VALUES(3522332129, 'שמעון','כהן', current_timestamp, current_timestamp, TRUE, 'ליה צוהר', 'עכו', '052-3834567', 'אסותא חיפה', '2017-01-01', 'לוקמיה', '2021-12-31', 'נשואים', 2, 'פרטים לחונכות', 'מידע נוסף', 'למצוא_חונך', 'התחיל כימותרפיה', '', 'דני', '050-1034567', 'מאשה', '050-7454321', 'ביאליק 44', '2023-12-31', FALSE);
+-- insert new match
+INSERT INTO childsmile_app_possible_matches (child_id, tutor_id, child_full_name, tutor_full_name, child_city, tutor_city, distance_between_cities, grade)
+SELECT 
+    child.child_id,
+    tutor.id_id,
+    CONCAT(child.childfirstname, ' ', child.childsurname) AS child_full_name,
+    CONCAT(tutor.first_name, ' ', tutor.surname) AS tutor_full_name,
+    child.city AS child_city,
+    tutor.city AS tutor_city,
+    0 AS distance_between_cities, -- Assuming same city for now
+    100 AS grade -- Initial grade value
+FROM childsmile_app_children child
+JOIN childsmile_app_tutors tutor ON child.gender = tutor.gender AND child.city = tutor.city
+GROUP BY tutor.id_id, child.child_id, child.childfirstname, child.childsurname, tutor.first_name, tutor.surname, child.city, tutor.city;
+--Select to get all data from both tables with the id keys
+--Select Query to show all data of child and tutor
+SELECT 
+    pm.match_id,
+    pm.child_id,
+    pm.tutor_id,
+    pm.child_full_name,
+    pm.tutor_full_name,
+    pm.child_city,
+    pm.tutor_city,
+    pm.distance_between_cities,
+    pm.grade,
+    child.*,
+    tutor.*
+FROM childsmile_app_possible_matches pm
+JOIN childsmile_app_children child ON pm.child_id = child.child_id
+JOIN childsmile_app_tutors tutor ON pm.tutor_id = tutor.id_id;
+-- insert new tutorship all lines we want to insert from the possible matches table
+/* table scheme
+CREATE TABLE IF NOT EXISTS public.childsmile_app_tutorships
+(
+    id integer NOT NULL GENERATED BY DEFAULT AS IDENTITY ( INCREMENT 1 START 1 MINVALUE 1 MAXVALUE 2147483647 CACHE 1 ),
+    child_id integer NOT NULL,
+    tutor_id integer NOT NULL,
+    CONSTRAINT childsmile_app_tutorships_pkey PRIMARY KEY (id),
+    CONSTRAINT childsmile_app_tutor_child_id_c85fcc79_fk_childsmil FOREIGN KEY (child_id)
+        REFERENCES public.childsmile_app_children (child_id) MATCH SIMPLE
+        ON UPDATE NO ACTION
+        ON DELETE NO ACTION
+        DEFERRABLE INITIALLY DEFERRED,
+    CONSTRAINT childsmile_app_tutor_tutor_id_f57132cc_fk_childsmil FOREIGN KEY (tutor_id)
+        REFERENCES public.childsmile_app_tutors (id_id) MATCH SIMPLE
+        ON UPDATE NO ACTION
+        ON DELETE NO ACTION
+        DEFERRABLE INITIALLY DEFERRED
+)
+*/
+INSERT INTO childsmile_app_tutorships (child_id, tutor_id)
+SELECT 
+    pm.child_id,
+    pm.tutor_id
+FROM childsmile_app_possible_matches pm
+WHERE is_used = FALSE;
+and pm.child_id = 3522332129 AND pm.tutor_id = (SELECT id_id FROM childsmile_app_tutors WHERE first_name = 'אלעזר' AND surname = 'בוזגלו')
+-- update possible matches
+UPDATE childsmile_app_possible_matches
+SET is_used = TRUE
+WHERE child_id = 3522332129 AND tutor_id = (SELECT id_id FROM childsmile_app_tutors WHERE first_name = 'אלעזר' AND surname = 'בוזגלו');
+```
+### now we need feedback from a tutor and feedback from a general volunteer
+### we will insert 2 feedbacks each
+### we will insert 2 feedback reports of a tutor so insert feedback table and tutorfeedback table
+### we will insert 1 feedback report of a general volunteer so insert feedback table and generalvolunteerfeedback table
+```sql
+-- insert feedback from a tutor
+/* table schemes
+CREATE TABLE IF NOT EXISTS public.childsmile_app_feedback
+(
+    feedback_id integer NOT NULL GENERATED BY DEFAULT AS IDENTITY ( INCREMENT 1 START 1 MINVALUE 1 MAXVALUE 2147483647 CACHE 1 ),
+    "timestamp" timestamp with time zone NOT NULL,
+    event_date timestamp with time zone NOT NULL,
+    staff_id integer NOT NULL,
+    description text COLLATE pg_catalog."default" NOT NULL,
+    exceptional_events text COLLATE pg_catalog."default",
+    anything_else text COLLATE pg_catalog."default",
+    comments text COLLATE pg_catalog."default",
+    CONSTRAINT childsmile_app_feedback_pkey PRIMARY KEY (feedback_id),
+    CONSTRAINT childsmile_app_feedb_staff_id_7b92dfbd_fk_childsmil FOREIGN KEY (staff_id)
+        REFERENCES public.childsmile_app_staff (staff_id) MATCH SIMPLE
+        ON UPDATE NO ACTION
+        ON DELETE NO ACTION
+        DEFERRABLE INITIALLY DEFERRED
+) 
+CREATE TABLE IF NOT EXISTS public.childsmile_app_general_v_feedback
+(
+    feedback_id_id integer NOT NULL,
+    volunteer_name character varying(255) COLLATE pg_catalog."default" NOT NULL,
+    volunteer_id integer NOT NULL,
+    CONSTRAINT childsmile_app_general_v_feedback_pkey PRIMARY KEY (feedback_id_id),
+    CONSTRAINT childsmile_app_gener_feedback_id_id_2f8585ab_fk_childsmil FOREIGN KEY (feedback_id_id)
+        REFERENCES public.childsmile_app_feedback (feedback_id) MATCH SIMPLE
+        ON UPDATE NO ACTION
+        ON DELETE NO ACTION
+        DEFERRABLE INITIALLY DEFERRED,
+    CONSTRAINT childsmile_app_gener_volunteer_id_c0260bb4_fk_childsmil FOREIGN KEY (volunteer_id)
+        REFERENCES public.childsmile_app_general_volunteer (id_id) MATCH SIMPLE
+        ON UPDATE NO ACTION
+        ON DELETE NO ACTION
+        DEFERRABLE INITIALLY DEFERRED
+)
+CREATE TABLE IF NOT EXISTS public.childsmile_app_tutor_feedback
+(
+    feedback_id_id integer NOT NULL,
+    tutee_name character varying(255) COLLATE pg_catalog."default" NOT NULL,
+    tutor_name character varying(255) COLLATE pg_catalog."default" NOT NULL,
+    tutor_id integer NOT NULL,
+    is_it_your_tutee boolean NOT NULL,
+    is_first_visit boolean NOT NULL,
+    CONSTRAINT childsmile_app_tutor_feedback_pkey PRIMARY KEY (feedback_id_id),
+    CONSTRAINT childsmile_app_tutor_feedback_id_id_2664fba4_fk_childsmil FOREIGN KEY (feedback_id_id)
+        REFERENCES public.childsmile_app_feedback (feedback_id) MATCH SIMPLE
+        ON UPDATE NO ACTION
+        ON DELETE NO ACTION
+        DEFERRABLE INITIALLY DEFERRED,
+    CONSTRAINT childsmile_app_tutor_tutor_id_dc401869_fk_childsmil FOREIGN KEY (tutor_id)
+        REFERENCES public.childsmile_app_tutors (id_id) MATCH SIMPLE
+        ON UPDATE NO ACTION
+        ON DELETE NO ACTION
+        DEFERRABLE INITIALLY DEFERRED
+)
+
+we will use django's sesssion framework to get the staff_id of the tutor and the volunteer
+from django.contrib.auth import authenticate, login
+from django.shortcuts import redirect
+from myapp.models import Permissions
+
+def user_login(request):
+    if request.method == 'POST':
+        username = request.POST['username']
+        password = request.POST['password']
+        user = authenticate(request, username=username, password=password)
+        if user is not None:
+            login(request, user)
+            # Retrieve and store permissions in session
+            permissions = Permissions.objects.filter(role=user.role).values_list('resource', 'action')
+            request.session['permissions'] = list(permissions)
+            return redirect('home')
+    return render(request, 'login.html')
+def some_view(request):
+    if 'permissions' in request.session:
+        permissions = request.session['permissions']
+        if ('childsmile_app_feedback', 'CREATE') in permissions:
+            # User has permission to create feedback
+            # Proceed with creating feedback
+            pass
+    else:
+        # Handle case where permissions are not found in session
+        pass
+*/
+INSERT INTO childsmile_app_feedback ("timestamp", event_date, staff_id, description, exceptional_events, anything_else, comments)
+VALUES (current_timestamp, 
+-- one week before today
+current_date - interval '7 days',
+%(staff_id)s, 
+-- some long text for description -  at least 200 words
+'החונכות הייתה ממש טובה הפעם הרגשתי שלחניך היה ממש טוב', 'היה שמח', 'פעם הבאה גלידה', '');
+-- insert tutor feedback
+INSERT INTO childsmile_app_tutor_feedback (feedback_id_id, tutee_name, tutor_name, tutor_id, is_it_your_tutee, is_first_visit)
+VALUES (
+ (SELECT feedback_id FROM childsmile_app_feedback WHERE staff_id = %(staff_id)s AND "timestamp" = (SELECT MAX("timestamp") FROM childsmile_app_feedback WHERE staff_id = %(staff_id)s)),
+-- get the exact tutor since we might have more than one tutor with the same name
+-- we will ensure its the tutor that filled up the feedback by using the staff_id from the feedback
+ (SELECT CONCAT(childfirstname, ' ', childsurname) FROM childsmile_app_children WHERE child_id = (SELECT child_id FROM childsmile_app_tutorships WHERE tutor_id = (SELECT id_id FROM childsmile_app_tutors WHERE staff_id = %(staff_id)s))),
+-- tutor name from childsmile_app_tutors 
+(SELECT CONCAT(first_name, ' ', last_name) FROM childsmile_app_staff WHERE staff_id = %(staff_id)s),
+-- tutor id from childsmile_app_tutors
+(SELECT id_id FROM childsmile_app_tutors WHERE staff_id = %(staff_id)s),
+-- is it your tutee
+TRUE,
+-- is it first visit
+FALSE);
+-- now insert feedback from a general volunteer
+INSERT INTO childsmile_app_feedback ("timestamp", event_date, staff_id, description, exceptional_events, anything_else, comments)
+VALUES (current_timestamp,
+-- one week before today
+current_date - interval '7 days',
+%(staff_id)s,
+-- some long text for description -  at least 200 words
+'היה אירוע מרגש','היה שמח', 'פעם הבאה גלידה', '');
+-- insert general volunteer feedback
+INSERT INTO childsmile_app_general_v_feedback (feedback_id_id, volunteer_name, volunteer_id)
+VALUES (
+ (SELECT feedback_id FROM childsmile_app_feedback WHERE staff_id = %(staff_id)s AND "timestamp" = (SELECT MAX("timestamp") FROM childsmile_app_feedback WHERE staff_id = %(staff_id)s)),
+-- get the exact volunteer since we might have more than one volunteer with the same name
+-- we will ensure its the volunteer that filled up the feedback by using the staff_id from the feedback
+ (SELECT CONCAT(first_name, ' ', last_name) FROM childsmile_app_staff WHERE staff_id = %(staff_id)s),
+-- volunteer id from childsmile_app_general_volunteer
+(SELECT id_id FROM childsmile_app_general_volunteer WHERE staff_id = %(staff_id)s));
+```
