@@ -16,6 +16,7 @@ from .views import (
     Tutor_FeedbackViewSet,
     General_V_FeedbackViewSet,
     TaskViewSet,
+    PossibleMatchesViewSet,  # Add this line
     VolunteerFeedbackReportView,
     TutorToFamilyAssignmentReportView,
     FamiliesWaitingForTutorsReportView,
@@ -23,6 +24,7 @@ from .views import (
     NewFamiliesLastMonthReportView,
     FamilyDistributionByCitiesReportView,
     PotentialTutorshipMatchReportView,
+    login_view,
 )
 
 router = DefaultRouter()
@@ -41,6 +43,7 @@ router.register(r"feedback", FeedbackViewSet)
 router.register(r"tutor_feedback", Tutor_FeedbackViewSet)
 router.register(r"general_v_feedback", General_V_FeedbackViewSet)
 router.register(r"tasks", TaskViewSet)
+router.register(r"possible_matches", PossibleMatchesViewSet)  # Add this line
 
 urlpatterns = [
     path("", include(router.urls)),
@@ -51,4 +54,5 @@ urlpatterns = [
     path('reports/new-families-last-month/', NewFamiliesLastMonthReportView.as_view(), name='new_families_last_month_report'),
     path('reports/family-distribution-by-cities/', FamilyDistributionByCitiesReportView.as_view(), name='family_distribution_by_cities_report'),
     path('reports/potential-tutorship-match/', PotentialTutorshipMatchReportView.as_view(), name='potential_tutorship_match_report'),
+    path('api/login/', login_view, name='login'),
 ]

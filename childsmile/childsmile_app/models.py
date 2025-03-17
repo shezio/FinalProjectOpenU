@@ -2,23 +2,44 @@ from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 from rest_framework import permissions
 from django.db import models
 from django.utils.translation import gettext_lazy as _
+'''
+models to appear in the admin panel
+from .models import (
+    Permissions,
+    Role,
+    Staff,
+    SignedUp,
+    General_Volunteer,
+    Pending_Tutor,
+    Tutors,
+    Children,
+    Tutorships,
+    Matures,
+    Healthy,
+    Feedback,
+    Tutor_Feedback,
+    General_V_Feedback,
+    Tasks
+)
 
+'''
 class TutorshipStatus(models.TextChoices):
     HAS_TUTEE = "HAS_TUTEE", "Has Tutee"
     NO_TUTEE = "NO_TUTEE", "No Tutee"
     NOT_AVAILABLE = "NOT_AVAILABLE", "Not Available for Assignment"
-
 
 class Role(models.Model):
     role_name = models.CharField(max_length=255, unique=True)
 
     def __str__(self):
         return self.role_name
-
+    
+    class Meta:
+        db_table = "role"
 
 class Permissions(models.Model):
     permission_id = models.AutoField(primary_key=True)
-    role = models.CharField(max_length=255)
+    role = models.ForeignKey(Role, on_delete=models.CASCADE)
     resource = models.CharField(max_length=255)
     action = models.CharField(max_length=255)
 
@@ -27,7 +48,6 @@ class Permissions(models.Model):
     
     class Meta:
         db_table = "permissions"
-
 
 class StaffManager(BaseUserManager):
     def create_user(self, username, email, password=None):
@@ -54,11 +74,11 @@ class StaffManager(BaseUserManager):
         user.save(using=self._db)
         return user
 
-
 class Staff(AbstractBaseUser):
     staff_id = models.AutoField(primary_key=True)
     username = models.CharField(max_length=255, unique=True)
     email = models.EmailField(max_length=255, unique=True)
+    password = models.CharField(max_length=255)
     role = models.ForeignKey(Role, on_delete=models.CASCADE)
     first_name = models.CharField(max_length=255)
     last_name = models.CharField(max_length=255)
@@ -74,7 +94,6 @@ class Staff(AbstractBaseUser):
     
     class Meta:
         db_table = "staff"
-
 
 class SignedUp(models.Model):
     id = models.AutoField(primary_key=True)
@@ -94,7 +113,6 @@ class SignedUp(models.Model):
     class Meta:
         db_table = "signedup"
 
-
 class General_Volunteer(models.Model):
     id = models.OneToOneField(SignedUp, on_delete=models.CASCADE, primary_key=True)
     staff = models.ForeignKey(Staff, on_delete=models.CASCADE)
@@ -107,7 +125,6 @@ class General_Volunteer(models.Model):
     class Meta:
         db_table = "general_volunteer"
 
-
 class Pending_Tutor(models.Model):
     pending_tutor_id = models.AutoField(primary_key=True)
     id = models.ForeignKey(SignedUp, on_delete=models.CASCADE)
@@ -118,7 +135,6 @@ class Pending_Tutor(models.Model):
     
     class Meta:
         db_table = "pending_tutor"
-
 
 class Tutors(models.Model):
     id = models.OneToOneField(SignedUp, on_delete=models.CASCADE, primary_key=True)
@@ -135,9 +151,8 @@ class Tutors(models.Model):
     class Meta:
         db_table = "tutors"
 
-
 class Children(models.Model):
-    child_id = models.AutoField(primary_key=True)
+    child_id = models.BigIntegerField(primary_key=True, unique=True)  # Updated to BigIntegerField
     childfirstname = models.CharField(max_length=255)
     childsurname = models.CharField(max_length=255)
     registrationdate = models.DateField()
@@ -155,6 +170,15 @@ class Children(models.Model):
     details_for_tutoring = models.TextField()
     additional_info = models.TextField(null=True, blank=True)
     tutoring_status = models.CharField(max_length=50)
+    current_medical_state = models.CharField(max_length=255, null=True, blank=True)  # New field
+    when_completed_treatments = models.DateField(null=True, blank=True)  # New field
+    father_name = models.CharField(max_length=255, null=True, blank=True)  # New field
+    father_phone = models.CharField(max_length=20, null=True, blank=True)  # New field
+    mother_name = models.CharField(max_length=255, null=True, blank=True)  # New field
+    mother_phone = models.CharField(max_length=20, null=True, blank=True)  # New field
+    street_and_apartment_number = models.CharField(max_length=255, null=True, blank=True)  # New field
+    expected_end_treatment_by_protocol = models.DateField(null=True, blank=True)  # New field
+    has_completed_treatments = models.BooleanField(null=True, blank=True)  # New field
 
     def __str__(self):
         return f"{self.childfirstname} {self.childsurname}"
@@ -175,7 +199,6 @@ class Children(models.Model):
     class Meta:
         db_table = "children"
 
-
 class Tutorships(models.Model):
     id = models.AutoField(primary_key=True)
     child = models.ForeignKey(Children, on_delete=models.CASCADE)
@@ -189,15 +212,14 @@ class Tutorships(models.Model):
     class Meta:
         db_table = "tutorships"
 
-
 class Matures(models.Model):
-    timestamp = models.DateTimeField()
+    timestamp = models.DateTimeField(auto_now_add=True)
     child = models.OneToOneField(Children, on_delete=models.CASCADE, primary_key=True)
     full_address = models.CharField(max_length=255)
     current_medical_state = models.CharField(max_length=255, null=True, blank=True)
     when_completed_treatments = models.DateField(null=True, blank=True)
-    parent_name = models.CharField(max_length=255)
-    parent_phone = models.CharField(max_length=20)
+    parent_name = models.CharField(max_length=255, null=True, blank=True)
+    parent_phone = models.CharField(max_length=20, null=True, blank=True)
     additional_info = models.TextField(null=True, blank=True)
     general_comment = models.TextField(null=True, blank=True)
 
@@ -207,12 +229,9 @@ class Matures(models.Model):
     class Meta:
         db_table = "matures"
 
-
 class Healthy(models.Model):
     child = models.OneToOneField(Children, on_delete=models.CASCADE, primary_key=True)
-    street_and_apartment_number = models.CharField(
-        max_length=255, null=True, blank=True
-    )
+    street_and_apartment_number = models.CharField(max_length=255, null=True, blank=True)
     father_name = models.CharField(max_length=255, null=True, blank=True)
     father_phone = models.CharField(max_length=20, null=True, blank=True)
     mother_name = models.CharField(max_length=255, null=True, blank=True)
@@ -240,26 +259,8 @@ class Feedback(models.Model):
     class Meta:
         db_table = "feedback"
 
-class Tutor_Feedback(models.Model):
-    feedback = models.OneToOneField(
-        Feedback, on_delete=models.CASCADE, primary_key=True
-    )
-    tutee_name = models.CharField(max_length=255)
-    tutor_name = models.CharField(max_length=255)
-    tutor = models.ForeignKey(Tutors, on_delete=models.CASCADE)
-    is_it_your_tutee = models.BooleanField()
-    is_first_visit = models.BooleanField()
-
-    def __str__(self):
-        return f"Tutor Feedback {self.feedback.feedback_id} by {self.tutor_name}"
-
-    class Meta:
-        db_table = "tutor_feedback"
-
 class General_V_Feedback(models.Model):
-    feedback = models.OneToOneField(
-        Feedback, on_delete=models.CASCADE, primary_key=True
-    )
+    feedback = models.OneToOneField(Feedback, on_delete=models.CASCADE, primary_key=True)
     volunteer_name = models.CharField(max_length=255)
     volunteer = models.ForeignKey(General_Volunteer, on_delete=models.CASCADE)
 
@@ -269,43 +270,28 @@ class General_V_Feedback(models.Model):
     class Meta:
         db_table = "general_v_feedback"
 
+class PossibleMatches(models.Model):
+    match_id = models.AutoField(primary_key=True)
+    child_id = models.BigIntegerField()
+    tutor_id = models.IntegerField()
+    child_full_name = models.CharField(max_length=255)
+    tutor_full_name = models.CharField(max_length=255)
+    child_city = models.CharField(max_length=255)
+    tutor_city = models.CharField(max_length=255)
+    child_age = models.IntegerField()
+    tutor_age = models.IntegerField()
+    distance_between_cities = models.IntegerField(default=0)
+    grade = models.IntegerField()
+    is_used = models.BooleanField(default=False)
 
-class HasPermission(permissions.BasePermission):
-    def has_permission(self, request, view):
-        user = request.user
-        if not user.is_authenticated:
-            return False
-
-        # Fetch user's role and permissions
-        user_role = user.role.role_name
-        resource = view.__class__.__name__
-        action = request.method
-
-        # Check if the user has the required permission
-        return Permissions.objects.filter(
-            role__role_name=user_role, resource=resource, action=action
-        ).exists()
-
-
-class TaskTypeEnum(models.TextChoices):
-    CANDIDATE_INTERVIEW = "Candidate Interview for Tutoring", _("Candidate Interview for Tutoring")
-    ADD_TUTOR = "Adding a Tutor", _("Adding a Tutor")
-    MATCH_TUTEE = "Matching a Tutee", _("Matching a Tutee")
-    ADD_FAMILY = "Adding a Family", _("Adding a Family")
-    FAMILY_STATUS_CHECK = "Family Status Check", _("Family Status Check")
-    FAMILY_UPDATE = "Family Update", _("Family Update")
-    FAMILY_DELETION = "Family Deletion", _("Family Deletion")
-    ADD_HEALTHY_MEMBER = "Adding a Healthy Member", _("Adding a Healthy Member")
-    REVIEW_MATURE = "Reviewing a Mature Individual", _("Reviewing a Mature Individual")
-    TUTORING = "Tutoring", _("Tutoring")
-    TUTORING_FEEDBACK = "Tutoring Feedback", _("Tutoring Feedback")
-    REVIEW_TUTOR_FEEDBACK = "Reviewing Tutor Feedback", _("Reviewing Tutor Feedback")
-    GENERAL_VOLUNTEER_FEEDBACK = "General Volunteer Feedback", _("General Volunteer Feedback")
-    REVIEW_GENERAL_VOLUNTEER_FEEDBACK = "Reviewing General Volunteer Feedback", _("Reviewing General Volunteer Feedback")
-    FEEDBACK_REPORT_GENERATION = "Feedback Report Generation", _("Feedback Report Generation")
+    def __str__(self):
+        return f"Possible Match {self.match_id} - Child {self.child_full_name} - Tutor {self.tutor_full_name}"
+    
+    class Meta:
+        db_table = "possiblematches"
 
 class Task_Types(models.Model):
-    task_type = models.CharField(max_length=255, unique=True, choices=TaskTypeEnum.choices)
+    task_type = models.CharField(max_length=255, unique=True)
 
     def __str__(self):
         return self.task_type
@@ -330,3 +316,54 @@ class Tasks(models.Model):
     
     class Meta:
         db_table = "tasks"
+
+class Tutor_Feedback(models.Model):
+    feedback = models.OneToOneField(Feedback, on_delete=models.CASCADE, primary_key=True)
+    tutee_name = models.CharField(max_length=255)
+    tutor_name = models.CharField(max_length=255)
+    tutor = models.ForeignKey(Tutors, on_delete=models.CASCADE)
+    is_it_your_tutee = models.BooleanField()
+    is_first_visit = models.BooleanField()
+
+    def __str__(self):
+        return f"Tutor Feedback {self.feedback.feedback_id} by {self.tutor_name}"
+    
+    class Meta:
+        db_table = "tutor_feedback"
+
+class MaritalStatus(models.TextChoices):
+    MARRIED = 'נשואים', 'Married'
+    DIVORCED = 'גרושים', 'Divorced'
+    SEPARATED = 'פרודים', 'Separated'
+    NONE = 'אין', 'None'
+
+class TutoringStatus(models.TextChoices):
+    FIND_TUTOR = 'למצוא_חונך', 'Find Tutor'
+    NOT_WANTED = 'לא_רוצים', 'Not Wanted'
+    NOT_RELEVANT = 'לא_רלוונטי', 'Not Relevant'
+    MATURE = 'בוגר', 'Mature'
+    HAS_TUTOR = 'יש_חונך', 'Has Tutor'
+    FIND_TUTOR_NO_AREA = 'למצוא_חונך_אין_באיזור_שלו', 'Find Tutor No Area'
+    FIND_TUTOR_HIGH_PRIORITY = 'למצוא_חונך_בעדיפות_גבוה', 'Find Tutor High Priority'
+    MATCH_QUESTIONABLE = 'שידוך_בסימן_שאלה', 'Match Questionable'
+
+class TutorshipStatus(models.TextChoices):
+    HAS_TUTEE = 'יש_חניך', 'Has Tutee'
+    NO_TUTEE = 'אין_חניך', 'No Tutee'
+    NOT_AVAILABLE = 'לא_זמין_לשיבוץ', 'Not Available for Assignment'
+
+class HasPermission(permissions.BasePermission):
+    def has_permission(self, request, view):
+        user = request.user
+        if not user.is_authenticated:
+            return False
+
+        # Fetch user's role and permissions
+        user_role = user.role.role_name
+        resource = view.__class__.__name__
+        action = request.method
+
+        # Check if the user has the required permission
+        return Permissions.objects.filter(
+            role__role_name=user_role, resource=resource, action=action
+        ).exists()

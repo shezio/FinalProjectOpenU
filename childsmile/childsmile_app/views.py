@@ -1,8 +1,8 @@
-from rest_framework import viewsets
+from rest_framework import viewsets, status
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.response import Response, status
-from rest_framework.decorators import action
-from django.http import HttpResponse
+from rest_framework.response import Response
+from rest_framework.decorators import action, api_view
+from django.http import HttpResponse, JsonResponse
 from django.views import View
 from .models import (
     Permissions,
@@ -19,8 +19,9 @@ from .models import (
     Feedback,
     Tutor_Feedback,
     General_V_Feedback,
-    Task,
-    HasPermission,
+    Tasks,
+    PossibleMatches,  # Add this line
+    HasPermission,  # Add this line if needed
 )
 import csv
 import datetime
@@ -63,18 +64,16 @@ class TutorshipsViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=["post"])
     def match_tutorship(self, request):
-        # Implement logic for matching tutorships based on criteria
         tutor_id = request.data.get("tutor_id")
         child_id = request.data.get("child_id")
 
         tutor = Tutors.objects.get(id=tutor_id)
         child = Children.objects.get(child_id=child_id)
 
-        # Example criteria checks
         geographic_proximity = self.calculate_geographic_proximity(tutor, child)
         gender_match = tutor.gender == child.gender
 
-        if geographic_proximity <= 10 and gender_match:  # Example criteria
+        if geographic_proximity <= 10 and gender_match:
             tutorship = Tutorships.objects.create(
                 tutor=tutor,
                 child=child,
@@ -102,18 +101,14 @@ class TutorshipsViewSet(viewsets.ModelViewSet):
             )
 
     def calculate_geographic_proximity(self, tutor, child):
-        # Implement logic to calculate geographic proximity
-        # Example: Return a dummy value for now
         return 5.0
 
 class MaturesViewSet(viewsets.ModelViewSet):
-    queryset = Matures.objects.filter(
-        date_of_birth__lte=datetime.date.today() - datetime.timedelta(days=365*16)
-    )  # Ensure age > 16
+    queryset = Matures.objects.all()
     permission_classes = [IsAuthenticated]
 
 class HealthyViewSet(viewsets.ModelViewSet):
-    queryset = Healthy.objects.filter(is_active=True)
+    queryset = Healthy.objects.all()
     permission_classes = [IsAuthenticated]
 
 class FeedbackViewSet(viewsets.ModelViewSet):
@@ -129,7 +124,11 @@ class General_V_FeedbackViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
 
 class TaskViewSet(viewsets.ModelViewSet):
-    queryset = Task.objects.all()
+    queryset = Tasks.objects.all()
+    permission_classes = [IsAuthenticated]
+
+class PossibleMatchesViewSet(viewsets.ModelViewSet):
+    queryset = PossibleMatches.objects.all()
     permission_classes = [IsAuthenticated]
 
 class VolunteerFeedbackReportView(View):
@@ -313,6 +312,17 @@ class PotentialTutorshipMatchReportView(View):
         return response
 
     def calculate_distance(self, city1, city2):
-        # Implement logic to calculate distance between cities
-        # Example: Return a dummy value for now
         return 10.0
+
+@api_view(['POST'])
+def login_view(request):
+    username = request.data.get('username')
+    password = request.data.get('password')
+    try:
+        user = Staff.objects.get(username=username)
+        if user.password == password:
+            return JsonResponse({'message': 'Login successful!'})
+        else:
+            return JsonResponse({'error': 'Invalid password'}, status=400)
+    except Staff.DoesNotExist:
+        return JsonResponse({'error': 'Invalid username'}, status=400)

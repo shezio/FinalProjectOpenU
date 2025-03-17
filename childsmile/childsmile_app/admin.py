@@ -14,7 +14,8 @@ from .models import (
     Feedback,
     Tutor_Feedback,
     General_V_Feedback,
-    Tasks
+    Tasks,
+    PossibleMatches  # Add this line
 )
 
 admin.site.register(Permissions)
@@ -32,3 +33,4 @@ admin.site.register(Feedback)
 admin.site.register(Tutor_Feedback)
 admin.site.register(General_V_Feedback)
 admin.site.register(Tasks)
+admin.site.register(PossibleMatches)  # Add this line

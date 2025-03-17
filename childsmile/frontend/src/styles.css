@@ -1,36 +1,90 @@
 body {
-  direction: rtl;
   font-family: Arial, sans-serif;
+  background-color: #f0f0f0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  margin: 0;
+}
+
+.main-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.header img {
+  width: 150px;
+  margin-bottom: 20px;
+}
+
+.header h1 {
+  margin: 10px 0;
 }
 
 .login-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 100vh;
+  background-color: #fff;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  text-align: center;
 }
 
-.logo {
+.login-container h1 {
   margin-bottom: 20px;
-  width: 100px; /* Adjust the width as needed */
-  height: auto; /* Maintain aspect ratio */
 }
 
-.login-form {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+.login-container img {
+  width: 150px;
+  margin-bottom: 20px;
 }
 
-.login-form input {
-  margin: 5px 0;
+.login-container input[type="text"],
+.login-container input[type="password"] {
+  width: 100%;
   padding: 10px;
-  width: 200px;
+  margin: 10px 0;
+  border: 1px solid #ccc;
+  border-radius: 5px;
 }
 
-.login-form button {
-  padding: 10px 20px;
+.login-container button {
+  width: 100%;
+  padding: 10px;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.login-container button:hover {
+  background-color: #45a049;
+}
+
+.login-container .google-login {
+  background-color: #dd4b39;
+}
+
+.login-container .google-login:hover {
+  background-color: #c23321;
+}
+
+.login-container span {
+  display: block;
+  margin: 10px 0;
+}
+
+.error {
+  color: red;
   margin-top: 10px;
 }
 
@@ -39,12 +93,21 @@ body {
   top: 10px;
   left: 10px;
   display: flex;
-  flex-direction: column;
   align-items: center;
 }
 
-.top-left img {
-  margin: 5px 0;
-  width: 100px; /* Adjust the width as needed */
+.top-left img.amit {
+  width: 50px; /* Adjust the width as needed */
+  height: auto; /* Maintain aspect ratio */
+  margin-right: 10px;
+}
+
+.top-left .quote {
+  font-size: 12px; /* Adjust the font size as needed */
+  margin-right: 10px;
+}
+
+.top-left img.qr-code {
+  width: 50px; /* Adjust the width as needed */
   height: auto; /* Maintain aspect ratio */
 }
