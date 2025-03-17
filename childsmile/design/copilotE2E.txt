@@ -1,3 +1,5 @@
+import { PureComponent } from "react"
+
 Sure, let's get your login flow working with the provided files. We'll use the dummy data and focus on getting the basic functionality up and running.
 
 ### Step 1: Set Up the React Frontend
@@ -225,3 +227,106 @@ export default Login;
 ```
 
 This should give you a working login flow with the provided files. Let me know if you need any further assistance!
+
+
+install npm after new PC 
+To back up and reinstall all your npm packages, follow these steps:
+
+---
+
+### **1. Generate a List of Installed Packages (Backup)**
+On your old PC, navigate to your project folder (`frontend`) and run:
+
+```sh
+npm list --depth=0 --json > npm-packages.json
+```
+
+or, if you prefer a simple text format:
+
+```sh
+npm list --depth=0 > npm-packages.txt
+```
+
+This will list all installed packages **without dependencies** (so you don’t get thousands of lines).
+
+---
+
+### **2. Restore Packages on Your New PC**
+Once you've moved your project folder (`frontend`) to your new PC:
+
+#### **Option 1: Install from `package.json` (Recommended)**
+If you still have `package.json` and `package-lock.json`, just run:
+
+```sh
+npm install
+```
+
+This will install all dependencies exactly as they were.
+
+#### **Option 2: Install from Backup File**
+If you only have the `npm-packages.txt` or `npm-packages.json` file:
+
+1. Extract package names from `npm-packages.txt` and install them:
+
+   ```sh
+   cat npm-packages.txt | awk '{print $2}' | xargs npm install
+   ```
+
+   *(On Windows, open PowerShell and use:)*  
+
+   ```powershell
+   Get-Content npm-packages.txt | ForEach-Object { $_ -split ' ' | Select-Object -Index 1 } | ForEach-Object { npm install $_ }
+   ```
+
+2. If you have `npm-packages.json`, use:
+
+   ```sh
+   cat npm-packages.json | jq -r '.dependencies | keys[]' | xargs npm install
+   ```
+
+   *(On Windows, use PowerShell and install `jq` first or manually copy package names.)*
+
+---
+
+### **3. Verify Everything Works**
+After installing, check if all dependencies are installed:
+
+```sh
+npm list --depth=0
+```
+
+If anything is missing, just run:
+
+```sh
+npm install
+```
+
+Restore on New PC
+On your new PC, navigate to your project folder and run:
+
+sh
+Copy
+Edit
+pip install -r requirements.txt
+
+
+Get-Content git-repos.txt | ForEach-Object {
+    $repo = $_.Trim()
+    if (Test-Path "$repo\.git") {
+        Write-Host "$repo already exists, skipping..."
+    } else {
+        $parentDir = Split-Path $repo -Parent
+        $repoName = Split-Path $repo -Leaf
+        Set-Location $parentDir
+        git clone $(git -C $repo remote get-url origin)
+    }
+}
+
+Restore on New PC
+Restore Databases:
+Move all_databases.sql to the new PC and run:
+
+sh
+Copy
+Edit
+psql -U postgres -f all_databases.sql
