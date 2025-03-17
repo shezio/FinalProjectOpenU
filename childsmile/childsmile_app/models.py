@@ -1,7 +1,4 @@
-from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
-from rest_framework import permissions
 from django.db import models
-from django.utils.translation import gettext_lazy as _
 '''
 models to appear in the admin panel
 from .models import (
@@ -23,10 +20,26 @@ from .models import (
 )
 
 '''
+class MaritalStatus(models.TextChoices):
+    MARRIED = 'נשואים', 'Married'
+    DIVORCED = 'גרושים', 'Divorced'
+    SEPARATED = 'פרודים', 'Separated'
+    NONE = 'אין', 'None'
+
+class TutoringStatus(models.TextChoices):
+    FIND_TUTOR = 'למצוא_חונך', 'Find Tutor'
+    NOT_WANTED = 'לא_רוצים', 'Not Wanted'
+    NOT_RELEVANT = 'לא_רלוונטי', 'Not Relevant'
+    MATURE = 'בוגר', 'Mature'
+    HAS_TUTOR = 'יש_חונך', 'Has Tutor'
+    FIND_TUTOR_NO_AREA = 'למצוא_חונך_אין_באיזור_שלו', 'Find Tutor No Area'
+    FIND_TUTOR_HIGH_PRIORITY = 'למצוא_חונך_בעדיפות_גבוה', 'Find Tutor High Priority'
+    MATCH_QUESTIONABLE = 'שידוך_בסימן_שאלה', 'Match Questionable'
+
 class TutorshipStatus(models.TextChoices):
-    HAS_TUTEE = "HAS_TUTEE", "Has Tutee"
-    NO_TUTEE = "NO_TUTEE", "No Tutee"
-    NOT_AVAILABLE = "NOT_AVAILABLE", "Not Available for Assignment"
+    HAS_TUTEE = 'יש_חניך', 'Has Tutee'
+    NO_TUTEE = 'אין_חניך', 'No Tutee'
+    NOT_AVAILABLE = 'לא_זמין_לשיבוץ', 'Not Available for Assignment'
 
 class Role(models.Model):
     role_name = models.CharField(max_length=255, unique=True)
@@ -35,7 +48,7 @@ class Role(models.Model):
         return self.role_name
     
     class Meta:
-        db_table = "role"
+        db_table = "childsmile_app_role"
 
 class Permissions(models.Model):
     permission_id = models.AutoField(primary_key=True)
@@ -47,34 +60,9 @@ class Permissions(models.Model):
         return f"{self.role} - {self.resource} - {self.action}"
     
     class Meta:
-        db_table = "permissions"
+        db_table = "childsmile_app_permissions"
 
-class StaffManager(BaseUserManager):
-    def create_user(self, username, email, password=None):
-        if not email:
-            raise ValueError("Staff must have an email address")
-        if not username:
-            raise ValueError("Staff must have a username")
-
-        user = self.model(
-            email=self.normalize_email(email),
-            username=username,
-        )
-        user.set_password(password)
-        user.save(using=self._db)
-        return user
-
-    def create_superuser(self, username, email, password=None):
-        user = self.create_user(
-            username=username,
-            email=email,
-            password=password,
-        )
-        user.is_admin = True
-        user.save(using=self._db)
-        return user
-
-class Staff(AbstractBaseUser):
+class Staff(models.Model):
     staff_id = models.AutoField(primary_key=True)
     username = models.CharField(max_length=255, unique=True)
     email = models.EmailField(max_length=255, unique=True)
@@ -84,16 +72,11 @@ class Staff(AbstractBaseUser):
     last_name = models.CharField(max_length=255)
     created_at = models.DateTimeField(auto_now_add=True)
 
-    objects = StaffManager()
-
-    USERNAME_FIELD = "username"
-    REQUIRED_FIELDS = ["email"]
-
     def __str__(self):
         return self.username
     
     class Meta:
-        db_table = "staff"
+        db_table = "childsmile_app_staff"
 
 class SignedUp(models.Model):
     id = models.AutoField(primary_key=True)
@@ -111,7 +94,7 @@ class SignedUp(models.Model):
         return f"{self.first_name} {self.surname}"
     
     class Meta:
-        db_table = "signedup"
+        db_table = "childsmile_app_signedup"
 
 class General_Volunteer(models.Model):
     id = models.OneToOneField(SignedUp, on_delete=models.CASCADE, primary_key=True)
@@ -123,7 +106,7 @@ class General_Volunteer(models.Model):
         return f"General Volunteer {self.id.first_name} {self.id.surname}"
     
     class Meta:
-        db_table = "general_volunteer"
+        db_table = "childsmile_app_general_volunteer"
 
 class Pending_Tutor(models.Model):
     pending_tutor_id = models.AutoField(primary_key=True)
@@ -134,7 +117,7 @@ class Pending_Tutor(models.Model):
         return f"Pending Tutor {self.id.first_name} {self.id.surname}"
     
     class Meta:
-        db_table = "pending_tutor"
+        db_table = "childsmile_app_pending_tutor"
 
 class Tutors(models.Model):
     id = models.OneToOneField(SignedUp, on_delete=models.CASCADE, primary_key=True)
@@ -149,7 +132,7 @@ class Tutors(models.Model):
         return f"Tutor {self.id.first_name} {self.id.surname}"
     
     class Meta:
-        db_table = "tutors"
+        db_table = "childsmile_app_tutors"
 
 class Children(models.Model):
     child_id = models.BigIntegerField(primary_key=True, unique=True)  # Updated to BigIntegerField
@@ -197,7 +180,7 @@ class Children(models.Model):
         )
     
     class Meta:
-        db_table = "children"
+        db_table = "childsmile_app_children"
 
 class Tutorships(models.Model):
     id = models.AutoField(primary_key=True)
@@ -210,7 +193,7 @@ class Tutorships(models.Model):
         )
     
     class Meta:
-        db_table = "tutorships"
+        db_table = "childsmile_app_tutorships"
 
 class Matures(models.Model):
     timestamp = models.DateTimeField(auto_now_add=True)
@@ -227,7 +210,7 @@ class Matures(models.Model):
         return f"Mature {self.child.childfirstname} {self.child.childsurname}"
     
     class Meta:
-        db_table = "matures"
+        db_table = "childsmile_app_matures"
 
 class Healthy(models.Model):
     child = models.OneToOneField(Children, on_delete=models.CASCADE, primary_key=True)
@@ -241,7 +224,7 @@ class Healthy(models.Model):
         return f"Healthy {self.child.childfirstname} {self.child.childsurname}"
 
     class Meta:
-        db_table = "healthy"
+        db_table = "childsmile_app_healthy"
 
 class Feedback(models.Model):
     feedback_id = models.AutoField(primary_key=True)
@@ -257,7 +240,21 @@ class Feedback(models.Model):
         return f"Feedback {self.feedback_id} by {self.staff.username}"
 
     class Meta:
-        db_table = "feedback"
+        db_table = "childsmile_app_feedback"
+
+class Tutor_Feedback(models.Model):
+    feedback = models.OneToOneField(Feedback, on_delete=models.CASCADE, primary_key=True)
+    tutee_name = models.CharField(max_length=255)
+    tutor_name = models.CharField(max_length=255)
+    tutor = models.ForeignKey(Tutors, on_delete=models.CASCADE)
+    is_it_your_tutee = models.BooleanField()
+    is_first_visit = models.BooleanField()
+
+    def __str__(self):
+        return f"Tutor Feedback {self.feedback.feedback_id} by {self.tutor_name}"
+    
+    class Meta:
+        db_table = "childsmile_app_tutor_feedback"
 
 class General_V_Feedback(models.Model):
     feedback = models.OneToOneField(Feedback, on_delete=models.CASCADE, primary_key=True)
@@ -268,7 +265,7 @@ class General_V_Feedback(models.Model):
         return f"General Volunteer Feedback {self.feedback.feedback_id} by {self.volunteer_name}"
     
     class Meta:
-        db_table = "general_v_feedback"
+        db_table = "childsmile_app_general_v_feedback"
 
 class PossibleMatches(models.Model):
     match_id = models.AutoField(primary_key=True)
@@ -288,7 +285,7 @@ class PossibleMatches(models.Model):
         return f"Possible Match {self.match_id} - Child {self.child_full_name} - Tutor {self.tutor_full_name}"
     
     class Meta:
-        db_table = "possiblematches"
+        db_table = "childsmile_app_possiblematches"
 
 class Task_Types(models.Model):
     task_type = models.CharField(max_length=255, unique=True)
@@ -297,7 +294,7 @@ class Task_Types(models.Model):
         return self.task_type
     
     class Meta:
-        db_table = "task_types"
+        db_table = "childsmile_app_task_types"
 
 class Tasks(models.Model):
     task_id = models.AutoField(primary_key=True)
@@ -315,55 +312,4 @@ class Tasks(models.Model):
         return f"Task {self.task_id} - {self.task_type}"
     
     class Meta:
-        db_table = "tasks"
-
-class Tutor_Feedback(models.Model):
-    feedback = models.OneToOneField(Feedback, on_delete=models.CASCADE, primary_key=True)
-    tutee_name = models.CharField(max_length=255)
-    tutor_name = models.CharField(max_length=255)
-    tutor = models.ForeignKey(Tutors, on_delete=models.CASCADE)
-    is_it_your_tutee = models.BooleanField()
-    is_first_visit = models.BooleanField()
-
-    def __str__(self):
-        return f"Tutor Feedback {self.feedback.feedback_id} by {self.tutor_name}"
-    
-    class Meta:
-        db_table = "tutor_feedback"
-
-class MaritalStatus(models.TextChoices):
-    MARRIED = 'נשואים', 'Married'
-    DIVORCED = 'גרושים', 'Divorced'
-    SEPARATED = 'פרודים', 'Separated'
-    NONE = 'אין', 'None'
-
-class TutoringStatus(models.TextChoices):
-    FIND_TUTOR = 'למצוא_חונך', 'Find Tutor'
-    NOT_WANTED = 'לא_רוצים', 'Not Wanted'
-    NOT_RELEVANT = 'לא_רלוונטי', 'Not Relevant'
-    MATURE = 'בוגר', 'Mature'
-    HAS_TUTOR = 'יש_חונך', 'Has Tutor'
-    FIND_TUTOR_NO_AREA = 'למצוא_חונך_אין_באיזור_שלו', 'Find Tutor No Area'
-    FIND_TUTOR_HIGH_PRIORITY = 'למצוא_חונך_בעדיפות_גבוה', 'Find Tutor High Priority'
-    MATCH_QUESTIONABLE = 'שידוך_בסימן_שאלה', 'Match Questionable'
-
-class TutorshipStatus(models.TextChoices):
-    HAS_TUTEE = 'יש_חניך', 'Has Tutee'
-    NO_TUTEE = 'אין_חניך', 'No Tutee'
-    NOT_AVAILABLE = 'לא_זמין_לשיבוץ', 'Not Available for Assignment'
-
-class HasPermission(permissions.BasePermission):
-    def has_permission(self, request, view):
-        user = request.user
-        if not user.is_authenticated:
-            return False
-
-        # Fetch user's role and permissions
-        user_role = user.role.role_name
-        resource = view.__class__.__name__
-        action = request.method
-
-        # Check if the user has the required permission
-        return Permissions.objects.filter(
-            role__role_name=user_role, resource=resource, action=action
-        ).exists()
+        db_table = "childsmile_app_tasks"

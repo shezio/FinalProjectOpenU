@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import axios from 'axios';
+import axios from './axiosConfig';  // Import the configured Axios instance
 import Header from './Header';
 
 const Login = () => {
@@ -9,10 +9,15 @@ const Login = () => {
 
   const handleLogin = async (e) => {
     e.preventDefault();
+    console.log('Form submitted');  // Debugging log
+    console.log('Username:', username);  // Debugging log
+    console.log('Password:', password);  // Debugging log
     try {
       const response = await axios.post('/api/login/', { username, password });
+      console.log('Response:', response);  // Debugging log
       alert(response.data.message);
     } catch (err) {
+      console.log('Error:', err);  // Debugging log
       if (err.response && err.response.data && err.response.data.error) {
         setError(err.response.data.error);
       } else {

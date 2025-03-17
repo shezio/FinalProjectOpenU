@@ -171,7 +171,7 @@ Update the `handleLogin` function in `Login.js` to make a request to the Django 
 #### Login.js (updated)
 ```javascript
 import React, { useState } from 'react';
-import axios from 'axios';
+import axios from 'axiosConfig';
 import logo from '../public/assets/logo.png';
 import amit from '../public/assets/amit.jpg';
 import qrCode from '../public/assets/qr-code.png';
