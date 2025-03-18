@@ -780,6 +780,8 @@ use a select in evert insert to ensure the correct role_id is used.
 
 ```sql
 INSERT INTO childsmile_app_staff (username, password, role_id, email, first_name, last_name, created_at)
+VALUES ('admin', '111', (SELECT id FROM childsmile_app_role WHERE role_name = 'System Administrator'), 'sysadminmini@mail.com', 'admini', 'strator', current_timestamp);
+INSERT INTO childsmile_app_staff (username, password, role_id, email, first_name, last_name, created_at)
 VALUES ('ליאם_אביבי', '1234', (SELECT id FROM childsmile_app_role WHERE role_name = 'System Administrator'), 'sysadmin@mail.com', 'ליאם', 'אביבי', current_timestamp);
 INSERT INTO childsmile_app_staff (username, password, role_id, email, first_name, last_name, created_at)
 VALUES ('אילה_קריץ', '1234', (SELECT id FROM childsmile_app_role WHERE role_name = 'Technical Coordinator'), 'tech@mail.com', 'אילה', 'קריץ', current_timestamp);

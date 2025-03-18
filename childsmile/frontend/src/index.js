@@ -1,7 +1,13 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import Login from './Login';
+import App from './App'; // Import the App component
 import './i18n'; // Import i18n configuration
 import './styles.css';
+import { BrowserRouter as Router } from 'react-router-dom';
 
-ReactDOM.render(<Login />, document.getElementById('root'));
+ReactDOM.render(
+  <Router>
+    <App />
+  </Router>,
+  document.getElementById('root')
+);

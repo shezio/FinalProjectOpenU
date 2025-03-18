@@ -12,9 +12,9 @@ const resources = {
   },
   he: {
     translation: {
-      "Login successful!": "התחברות הצליחה!",
-      "Invalid username": "שם משתמש לא חוקי",
-      "Invalid password": "סיסמה לא חוקית",
+      "Login successful!": "ההתחברות הצליחה!",
+      "Invalid username": "שם משתמש שגוי או לא קיים אנא נסה שוב",
+      "Invalid password": "סיסמה שגויה אנא נסה שוב",
       "An error occurred. Please try again.": "אירעה שגיאה. אנא נסה שוב."
     }
   }
