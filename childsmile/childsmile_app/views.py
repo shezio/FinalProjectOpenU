@@ -1,9 +1,12 @@
 from rest_framework import viewsets, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.decorators import action, api_view
+from rest_framework.decorators import action, api_view, permission_classes
 from django.http import HttpResponse, JsonResponse
 from django.views import View
+from django.db import connection
+from django.contrib.sessions.models import Session
+from django.utils import timezone
 from .models import (
     Permissions,
     Role,
@@ -320,8 +323,43 @@ def login_view(request):
     try:
         user = Staff.objects.get(username=username)
         if user.password == password:
+            # Create a session manually
+            session = Session.objects.create(
+                session_key=request.session.session_key,
+                session_data=request.session.encode(),
+                expire_date=timezone.now() + timezone.timedelta(days=1)
+            )
+            request.session['user_id'] = user.staff_id
+            request.session['username'] = user.username
             return JsonResponse({'message': 'Login successful!'})
         else:
             return JsonResponse({'error': 'Invalid password'}, status=400)
     except Staff.DoesNotExist:
         return JsonResponse({'error': 'Invalid username'}, status=400)
+    
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_permissions(request):
+    username = request.user.username
+    with connection.cursor() as cursor:
+        cursor.execute("""
+            SELECT 
+                p.permission_id, 
+                p.resource, 
+                p.action
+            FROM childsmile_app_staff s
+            JOIN childsmile_app_role r ON s.role_id = r.id
+            JOIN childsmile_app_permissions p ON r.id = p.role_id
+            WHERE s.username = %s
+        """, [username])
+        permissions = cursor.fetchall()
+
+    permissions_data = [
+        {
+            'permission_id': row[0],
+            'resource': row[1],
+            'action': row[2]
+        }
+        for row in permissions
+    ]
+    return JsonResponse({'permissions': permissions_data})

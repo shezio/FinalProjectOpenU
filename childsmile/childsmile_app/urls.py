@@ -25,6 +25,7 @@ from .views import (
     FamilyDistributionByCitiesReportView,
     PotentialTutorshipMatchReportView,
     login_view,
+    get_permissions,
 )
 
 router = DefaultRouter()
@@ -55,4 +56,5 @@ urlpatterns = [
     path('reports/family-distribution-by-cities/', FamilyDistributionByCitiesReportView.as_view(), name='family_distribution_by_cities_report'),
     path('reports/potential-tutorship-match/', PotentialTutorshipMatchReportView.as_view(), name='potential_tutorship_match_report'),
     path('api/login/', login_view, name='login'),
+    path('api/permissions/', get_permissions, name='get_permissions'),
 ]
