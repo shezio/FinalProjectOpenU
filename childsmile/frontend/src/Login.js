@@ -30,7 +30,7 @@ const Login = () => {
     <div className="main-content">
       <Header />
       <div className="login-container">
-        <form onSubmit={handleLogin}>
+        <form noValidate onSubmit={handleLogin}>
           <input
             type="text"
             placeholder="שם משתמש"
