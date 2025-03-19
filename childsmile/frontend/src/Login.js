@@ -6,55 +6,36 @@ import { useNavigate } from 'react-router-dom';  // Use useNavigate instead of u
 
 const Login = () => {
   const { t } = useTranslation();
-  const navigate = useNavigate();  // Use useNavigate instead of useHistory
+  const navigate = useNavigate();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');  // State variable for success message
+  const [success, setSuccess] = useState('');
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    console.log('Form submitted');  // Debugging log
-    console.log('Username:', username);  // Debugging log
-    console.log('Password:', password);  // Debugging log
+    console.log('Form submitted');
+    console.log('Username:', username);
+    console.log('Password:', password);
+
     try {
       const response = await axios.post('/api/login/', { username, password });
-      console.log('Response:', response);  // Debugging log
-      setSuccess(t(response.data.message));  // Set success message
-      setError('');  // Clear error message
+      console.log('Login successful:', response.data);
+      setSuccess(t(response.data.message));
+      setError('');
 
-      // Store session ID in localStorage
-      localStorage.setItem('sessionID', response.data.sessionID);
-      console.log('Session ID stored in localStorage');  // Debugging log
-      console.log('Session ID:', response.data.sessionID);  // Debugging log
-
-      // Fetch permissions after successful login using the stored session ID
-      const permissionsResponse = await axios.get('/api/permissions/', {
-        headers: {
-          Authorization: `Bearer ${response.data.sessionID}`,
-        },
-      });
-      console.log('Permissions response:', permissionsResponse);  // Debugging log
+      // Fetch permissions after successful login
+      const permissionsResponse = await axios.get('/api/permissions/');
+      console.log('Permissions:', permissionsResponse.data);
       localStorage.setItem('permissions', JSON.stringify(permissionsResponse.data.permissions));
-      console.log('Permissions stored in localStorage');  // Debugging log
 
-      // Redirect based on permissions (if needed in the future)
-      // if (permissionsResponse.data.permissions.some(p => p.resource === 'dashboard' && p.action === 'VIEW')) {
-      //   navigate('/dashboard');
-      // } else if (permissionsResponse.data.permissions.some(p => p.resource === 'profile' && p.action === 'VIEW')) {
-      //   navigate('/profile');
-      // } else {
-      //   navigate('/default');
-      // }
+      // Redirect logic
+      navigate('/dashboard');
+
     } catch (err) {
-      console.log('Error:', err);  // Debugging log
-      if (err.response && err.response.data && err.response.data.error) {
-        setError(t(err.response.data.error));
-        setSuccess('');  // Clear success message
-      } else {
-        setError(t('An error occurred. Please try again.'));
-        setSuccess('');  // Clear success message
-      }
+      console.error('Login error:', err);
+      setError(t(err.response?.data?.error || 'An error occurred. Please try again.'));
+      setSuccess('');
     }
   };
 
@@ -82,7 +63,7 @@ const Login = () => {
           <button type="button">{t("הירשם")}</button>
           <button className="google-login">{t("התחבר עם חשבון גוגל")}</button>
           {error && <p className="error">{error}</p>}
-          {success && <p className="success">{success}</p>}  {/* Display success message */}
+          {success && <p className="success">{success}</p>}
         </form>
       </div>
     </div>

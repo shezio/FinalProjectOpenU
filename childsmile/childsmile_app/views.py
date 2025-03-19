@@ -5,6 +5,7 @@ from rest_framework.decorators import action, api_view
 from django.http import HttpResponse, JsonResponse
 from django.views import View
 from django.db import connection
+from django.views.decorators.csrf import csrf_exempt
 from .models import (
     Permissions,
     Role,
@@ -314,23 +315,26 @@ class PotentialTutorshipMatchReportView(View):
     def calculate_distance(self, city1, city2):
         return 10.0
 
+@csrf_exempt  # Disable CSRF (makes things easier)
 @api_view(['POST'])
 def login_view(request):
     username = request.data.get('username')
     password = request.data.get('password')
+
     try:
         user = Staff.objects.get(username=username)
-        if user.password == password:
-            # Create a session manually
-            request.session.create()
+        if user.password == password:  # No hashing, just compare
+            request.session.create()  # Create session
             request.session['user_id'] = user.staff_id
             request.session['username'] = user.username
-            request.session.set_expiry(86400)  # Set session expiry to 1 day
-            print(f"Session created for user: {user.username}")  # Debugging log
-            print(f"Session ID: {request.session.session_key}")  # Debugging log
-            return JsonResponse({'message': 'Login successful!'})
+            request.session.set_expiry(86400)  # 1 day expiry
+
+            response = JsonResponse({'message': 'Login successful!'})
+            response.set_cookie('sessionid', request.session.session_key, httponly=True, samesite='Lax')
+            return response
         else:
             return JsonResponse({'error': 'Invalid password'}, status=400)
+
     except Staff.DoesNotExist:
         return JsonResponse({'error': 'Invalid username'}, status=400)
     
