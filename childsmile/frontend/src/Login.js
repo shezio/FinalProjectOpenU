@@ -11,7 +11,6 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');  // State variable for success message
-  const [permissions, setPermissions] = useState([]);  // State variable for permissions
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -24,10 +23,20 @@ const Login = () => {
       setSuccess(t(response.data.message));  // Set success message
       setError('');  // Clear error message
 
-      // Fetch permissions after successful login
-      const permissionsResponse = await axios.get('/api/permissions/');
-      setPermissions(permissionsResponse.data.permissions);
-      console.log('Permissions:', permissionsResponse.data.permissions);  // Debugging log
+      // Store session ID in localStorage
+      localStorage.setItem('sessionID', response.data.sessionID);
+      console.log('Session ID stored in localStorage');  // Debugging log
+      console.log('Session ID:', response.data.sessionID);  // Debugging log
+
+      // Fetch permissions after successful login using the stored session ID
+      const permissionsResponse = await axios.get('/api/permissions/', {
+        headers: {
+          Authorization: `Bearer ${response.data.sessionID}`,
+        },
+      });
+      console.log('Permissions response:', permissionsResponse);  // Debugging log
+      localStorage.setItem('permissions', JSON.stringify(permissionsResponse.data.permissions));
+      console.log('Permissions stored in localStorage');  // Debugging log
 
       // Redirect based on permissions (if needed in the future)
       // if (permissionsResponse.data.permissions.some(p => p.resource === 'dashboard' && p.action === 'VIEW')) {
