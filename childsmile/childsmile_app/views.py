@@ -1,12 +1,10 @@
 from rest_framework import viewsets, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.decorators import action, api_view, permission_classes
+from rest_framework.decorators import action, api_view
 from django.http import HttpResponse, JsonResponse
 from django.views import View
 from django.db import connection
-from django.contrib.sessions.models import Session
-from django.utils import timezone
 from .models import (
     Permissions,
     Role,
@@ -324,13 +322,12 @@ def login_view(request):
         user = Staff.objects.get(username=username)
         if user.password == password:
             # Create a session manually
-            session = Session.objects.create(
-                session_key=request.session.session_key,
-                session_data=request.session.encode(),
-                expire_date=timezone.now() + timezone.timedelta(days=1)
-            )
+            request.session.create()
             request.session['user_id'] = user.staff_id
             request.session['username'] = user.username
+            request.session.set_expiry(86400)  # Set session expiry to 1 day
+            print(f"Session created for user: {user.username}")  # Debugging log
+            print(f"Session ID: {request.session.session_key}")  # Debugging log
             return JsonResponse({'message': 'Login successful!'})
         else:
             return JsonResponse({'error': 'Invalid password'}, status=400)
@@ -338,9 +335,11 @@ def login_view(request):
         return JsonResponse({'error': 'Invalid username'}, status=400)
     
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
 def get_permissions(request):
-    username = request.user.username
+    user_id = request.session.get('user_id')
+    if not user_id:
+        return JsonResponse({'detail': 'Authentication credentials were not provided.'}, status=403)
+
     with connection.cursor() as cursor:
         cursor.execute("""
             SELECT 
@@ -350,8 +349,8 @@ def get_permissions(request):
             FROM childsmile_app_staff s
             JOIN childsmile_app_role r ON s.role_id = r.id
             JOIN childsmile_app_permissions p ON r.id = p.role_id
-            WHERE s.username = %s
-        """, [username])
+            WHERE s.staff_id = %s
+        """, [user_id])
         permissions = cursor.fetchall()
 
     permissions_data = [
