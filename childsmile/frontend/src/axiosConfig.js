@@ -1,6 +1,11 @@
 import axios from 'axios';
 
-axios.defaults.baseURL = 'http://localhost:8000';
-axios.defaults.headers.post['Content-Type'] = 'application/json';
+const axiosInstance = axios.create({
+  baseURL: 'http://localhost:8000',
+  headers: {
+    'Content-Type': 'application/json',
+  },
+  withCredentials: true,  // Important for session cookies!
+});
 
-export default axios;
+export default axiosInstance;
