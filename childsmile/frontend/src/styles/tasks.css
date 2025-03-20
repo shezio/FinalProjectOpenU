@@ -1,0 +1,98 @@
+/* tasks.css */
+.main-content {
+  flex-grow: 1;
+  padding: 20px;
+  display: flex;
+  flex-direction: row;
+}
+tasks {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+}
+.tasks .task {
+  background-color: #fff;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  margin-bottom: 10px;
+}
+.page-content {
+  margin-top: 160px; /* תלוי בגובה של ההדר + מרווח קטן */
+  padding: 20px; /* קצת רווח פנימי */
+}
+.tasks .task h2 {
+  margin: 0;
+}
+.tasks .task p {
+  margin: 5px 0;
+}
+.tasks .task .actions {
+  margin-top: 10px;
+  display: flex;
+  gap: 10px;
+}
+
+.tasks .task .actions button {
+  background-color: #4CAF50;
+  color: white;
+  padding: 10px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+.tasks .task .actions button:hover {
+  background-color: #45a049;
+}
+.search-bar {
+  margin-bottom: 20px;
+}
+.search-bar input {
+  width: calc(100% - 22px);
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+.filter {
+  margin-bottom: 20px;
+}
+.filter select {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+.create-task {
+  margin-top: 20px;
+}
+.create-task button {
+  background-color: #4CAF50;
+  color: white;
+  padding: 10px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+.create-task button:hover {
+  background-color: #45a049;
+}
+.tasks-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  padding-top: 20px; /* כדי לא להתנגש עם ההדר */
+  justify-content: center;
+}
+
+.tasks-container .task {
+  background-color: #fff;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  width: 300px;
+  cursor: grab;
+}
+
+.tasks-container .task:active {
+  cursor: grabbing;
+}

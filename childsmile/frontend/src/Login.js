@@ -23,14 +23,16 @@ const Login = () => {
       console.log('Login successful:', response.data);
       setSuccess(t(response.data.message));
       setError('');
+      // store the usernname in local storage without the '_' - replace with space
+      localStorage.setItem('username', username.replace(/_/g, ' '));
 
       // Fetch permissions after successful login
       const permissionsResponse = await axios.get('/api/permissions/');
       console.log('Permissions:', permissionsResponse.data);
       localStorage.setItem('permissions', JSON.stringify(permissionsResponse.data.permissions));
 
-      // Redirect logic
-      navigate('/dashboard');
+      // Navigate to tasks page
+      navigate('/tasks');
 
     } catch (err) {
       console.error('Login error:', err);

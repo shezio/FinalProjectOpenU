@@ -1,0 +1,98 @@
+/* === HEADER ירוק עליון === */
+.header {
+    background-color: #4CAF50;
+    color: white;
+    display: flex;
+    align-items: center; /* ✅ ממקם את הלוגו והכותרת במרכז אנכי */
+    justify-content: space-between;
+    padding: 10px 20px;
+    height: 150px; /* אם תשנה, ה-user-actions יזוז בהתאם */
+    position: fixed;
+    top: 0;
+    right: 240px; /* מקום לסרגל צד */
+    left: 0;
+    z-index: 1000;
+}
+
+/* כדי שהתוכן לא יוסתר ע"י ה-Header */
+body {
+    padding-top: 150px; /* תמיד משאיר מקום מתחת ל-header */
+}
+
+/* === צד ימין – הלוגו והכותרת יחד === */
+.right-header {
+    display: flex;
+    align-items: center; /* ✅ יישור אנכי ללוגו ולכותרת */
+    justify-content: flex-end; /* ✅ דוחף את הכל לימין */
+    flex-grow: 1;
+}
+
+.logo {
+    height: 80px; /* ✅ מתאים ללוגו */
+    margin-left: 15px; /* רווח קטן מהכותרת */
+}
+
+.title {
+    font-size: 1.8em;
+    margin: 0;
+}
+
+/* === תמונת עמית, ציטוט ו-QR === */
+.top-left {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.amit-img {
+    width: 80px;
+    height: 150px;
+    border-radius: 50%;
+}
+
+.qr-code {
+    width: 60px;
+    height: 60px;
+}
+
+/* ✅ הציטוט נשאר כמו שהגדרת */
+.quote {
+    font-size: 14px;
+    text-align: right;
+    color: black;
+    background-color: white;
+    padding: 8px;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    width: 200px;
+    line-height: 1.5;
+}
+
+/* === שלום אורח וכפתור יציאה – תמיד מתחת ל-Header === */
+.user-actions {
+    display: flex;
+    align-items: center;
+    justify-content: left;
+    padding: 10px 20px;
+    position: absolute;
+    top: calc(150px + 10px); /* ✅ תמיד מתחת להדר - אם תשנה גובה, זה יתעדכן לבד */
+    left: 10px;
+    gap: 15px;
+}
+
+.welcome {
+    font-size: 1.2em;
+}
+
+.logout-button {
+    background-color: #d9534f;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+.logout-button:hover {
+    background-color: #c9302c;
+}
