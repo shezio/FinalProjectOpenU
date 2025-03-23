@@ -142,3 +142,11 @@ JOIN childsmile_app_permissions p ON r.id = p.role_id
 WHERE s.username = 'admin';
 ```
 
+test login api with curl
+curl -X POST http://localhost:8000/api/login/ -d "username=admin&password=111" -c cookies.txt
+
+test api permissions with curl
+curl -X GET http://localhost:8000/api/permissions/ -b cookies.txt
+
+curl -X POST http://localhost:8000/api/logout/ -d "username=admin&password=111" -c cookies.txt
+

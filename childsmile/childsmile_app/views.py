@@ -375,3 +375,30 @@ def logout_view(request):
         return JsonResponse({'message': 'Logout successful!'})
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=400)
+    
+# GET all tasks from DB assigned to the logged-in user
+@csrf_exempt  # Disable CSRF (makes things easier)
+@api_view(['GET'])
+def get_user_tasks(request):
+    user_id = request.session.get('user_id')
+    if not user_id:
+        return JsonResponse({'detail': 'Authentication credentials were not provided.'}, status=403)
+
+    tasks = Tasks.objects.filter(assigned_to_id=user_id)
+    tasks_data = [
+        {
+            'id': task.task_id,
+            'description': task.description,
+            'due_date': task.due_date,
+            'status': task.status,
+            'created': task.created_at,
+            'updated': task.updated_at,
+            'assignee': task.assigned_to_id,
+            'child': task.related_child_id,
+            'tutor': task.related_tutor_id,
+            'type': task.task_type_id
+
+        }
+        for task in tasks
+    ]
+    return JsonResponse({'tasks': tasks_data})

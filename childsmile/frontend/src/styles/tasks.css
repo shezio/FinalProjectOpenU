@@ -72,6 +72,7 @@
   padding: 10px;
   border: 1px solid #ccc;
   border-radius: 5px;
+  font-size: 2em;
 }
 .create-task {
   margin-top: 20px;
@@ -83,6 +84,7 @@
   border: none;
   border-radius: 5px;
   cursor: pointer;
+  font-size: 2em;
 }
 .create-task button:hover {
   background-color: #45a049;
@@ -106,4 +108,11 @@
 
 .tasks-container .task:active {
   cursor: grabbing;
+}
+
+/* design for no tasks */
+.no-tasks {
+  margin-top: 20px;
+  text-align: center;
+  font: 4em 'Arial';
 }
