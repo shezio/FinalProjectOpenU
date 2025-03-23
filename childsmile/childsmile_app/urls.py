@@ -27,6 +27,7 @@ from .views import (
     login_view,
     get_permissions,
     logout_view,
+    get_user_tasks,
 )
 
 router = DefaultRouter()
@@ -59,4 +60,6 @@ urlpatterns = [
     path('api/login/', login_view, name='login'),
     path('api/permissions/', get_permissions, name='get_permissions'),
     path('api/logout/', logout_view, name='logout'),
+    path('api/tasks/', get_user_tasks, name='get_user_tasks'),
+
 ]
