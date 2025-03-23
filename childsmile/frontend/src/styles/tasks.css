@@ -5,17 +5,23 @@
   display: flex;
   flex-direction: row;
 }
-tasks {
-  margin-top: 20px;
+.tasks {
   display: flex;
-  flex-direction: column;
+  flex-wrap: wrap;
+  gap: 20px;
+  margin-top: 20px;
+  padding-right: 50px; /* Push tasks to the left to avoid sidebar overlap */
+  gap: 20px;
+  justify-content: flex-start; /* Prevents shifting */
 }
 .tasks .task {
+  width: 300px; /* Fixed width for consistency */
   background-color: #fff;
   padding: 20px;
   border-radius: 10px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-  margin-bottom: 10px;
+  cursor: grab;
+  transition: transform 0.2s ease-in-out;
 }
 .page-content {
   margin-top: 160px; /* תלוי בגובה של ההדר + מרווח קטן */
@@ -24,13 +30,18 @@ tasks {
 .tasks .task h2 {
   margin: 0;
 }
+.tasks .task:active {
+  cursor: grabbing;
+}
+.tasks .task.dragging {
+  transform: scale(1.05); /* Slightly enlarge when dragging */
+  opacity: 0.8;
+}
 .tasks .task p {
   margin: 5px 0;
 }
 .tasks .task .actions {
   margin-top: 10px;
-  display: flex;
-  gap: 10px;
 }
 
 .tasks .task .actions button {

@@ -16,7 +16,6 @@ const Header = () => (
     </div>
     <div className="header">
       <img src={logo} alt="חיוך של ילד" />
-      <h1>חיוך של ילד</h1>
     </div>
   </div>
 );
