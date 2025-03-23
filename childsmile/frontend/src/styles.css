@@ -18,7 +18,7 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-bottom: 20px;
+  padding-bottom: 20px;
 }
 
 .header img {
@@ -26,16 +26,13 @@ body {
   margin-bottom: 20px;
 }
 
-.header h1 {
-  margin: 10px 0;
-}
-
 .login-container {
   background-color: #fff;
-  padding: 20px;
+  padding: 40px; /* Increase padding to enlarge the container */
   border-radius: 10px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
   text-align: center;
+  margin-top: 100px; /* Adjust margin-top to center the container */
 }
 
 .login-container h1 {
@@ -50,15 +47,16 @@ body {
 .login-container input[type="text"],
 .login-container input[type="password"] {
   width: 100%;
-  padding: 10px;
+  padding: 15px; /* Increase padding for inputs */
   margin: 10px 0;
   border: 1px solid #ccc;
   border-radius: 5px;
+  box-sizing: border-box;
 }
 
 .login-container button {
   width: 100%;
-  padding: 10px;
+  padding: 15px; /* Increase padding for buttons */
   background-color: #4CAF50;
   color: white;
   border: none;
@@ -99,6 +97,7 @@ body {
   left: 10px;
   display: flex;
   align-items: center;
+  z-index: 1001;
 }
 
 .top-left img.amit {

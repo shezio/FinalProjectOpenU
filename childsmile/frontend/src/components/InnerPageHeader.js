@@ -6,7 +6,8 @@ import logo from "../assets/logo.png";
 import amitImg from "../assets/amit.jpg";
 import qrCode from "../assets/qr-code.png";
 
-const InnerPageHeader = () => {
+// use title prop to set the title of the page
+const InnerPageHeader = ({ title }) => {
   const username = localStorage.getItem("username") || "אורח";
   const navigate = useNavigate();
 
@@ -38,7 +39,7 @@ const InnerPageHeader = () => {
         {/* צד ימין – הלוגו והכותרת יחד */}
         <div className="right-header">
           <img src={logo} alt="חיוך של ילד" className="logo" />
-          <h1 className="title">חיוך של ילד</h1>
+          <h1 className="title">{title}</h1>
         </div>
       </div>
 

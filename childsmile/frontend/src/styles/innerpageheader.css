@@ -3,20 +3,20 @@
     background-color: #4CAF50;
     color: white;
     display: flex;
-    align-items: center; /* ✅ ממקם את הלוגו והכותרת במרכז אנכי */
-    justify-content: space-between;
+    align-items: center;
+    justify-content: space-between; /* Push items to edges */
     padding: 10px 20px;
-    height: 150px; /* אם תשנה, ה-user-actions יזוז בהתאם */
+    height: 150px;
     position: fixed;
     top: 0;
-    right: 240px; /* מקום לסרגל צד */
+    right: 240px; /* Sidebar space */
     left: 0;
     z-index: 1000;
 }
 
 /* כדי שהתוכן לא יוסתר ע"י ה-Header */
 body {
-    padding-top: 150px; /* תמיד משאיר מקום מתחת ל-header */
+    padding-top: 100px; /* תמיד משאיר מקום מתחת ל-header */
 }
 
 /* === צד ימין – הלוגו והכותרת יחד === */
@@ -25,34 +25,47 @@ body {
     align-items: center; /* ✅ יישור אנכי ללוגו ולכותרת */
     justify-content: flex-end; /* ✅ דוחף את הכל לימין */
     flex-grow: 1;
+    /* push logo to the right */
 }
 
 .logo {
-    height: 80px; /* ✅ מתאים ללוגו */
-    margin-left: 15px; /* רווח קטן מהכותרת */
+    width: 150px;
+    margin: 0; /* Remove extra margin */
+    position: absolute;
+    right: 20px; /* Push to right */
+    top: 50%;
+    transform: translateY(-50%);
 }
 
 .title {
-    font-size: 1.8em;
+    font-size: 3em;
     margin: 0;
+    text-align: center; /* Center title horizontally */
+    flex-grow: 1; /* Allow title to grow and take available space */
+    white-space: nowrap; /* Prevent text from wrapping */
 }
 
 /* === תמונת עמית, ציטוט ו-QR === */
 .top-left {
+    position: absolute;
+    top: 10px;
+    left: 200px;
     display: flex;
-    align-items: center;
-    gap: 15px;
+    align-items: center; /* Keep Amit, quote, and QR in line */
+    z-index: 1001;
+    gap: 10px; /* Reduce spacing */
 }
 
 .amit-img {
-    width: 80px;
-    height: 150px;
-    border-radius: 50%;
+    width: 80px !important; /* Adjust the width as needed */
+    height: 150px !important; /* Maintain aspect ratio */
+    object-fit: cover;
 }
 
 .qr-code {
-    width: 60px;
-    height: 60px;
+    width: 80px;
+    height: auto;
+    margin-left: 5px; /* Reduce spacing */
 }
 
 /* ✅ הציטוט נשאר כמו שהגדרת */
@@ -61,11 +74,12 @@ body {
     text-align: right;
     color: black;
     background-color: white;
-    padding: 8px;
+    padding: 8px !important; /* Adjust padding */
     border-radius: 5px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
     width: 200px;
     line-height: 1.5;
+    margin: 0; /* Remove any unnecessary margin */
 }
 
 /* === שלום אורח וכפתור יציאה – תמיד מתחת ל-Header === */
@@ -74,7 +88,7 @@ body {
     align-items: center;
     justify-content: left;
     padding: 10px 20px;
-    position: absolute;
+    position: fixed;
     top: calc(150px + 10px); /* ✅ תמיד מתחת להדר - אם תשנה גובה, זה יתעדכן לבד */
     left: 10px;
     gap: 15px;
