@@ -1,6 +1,6 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import axios from "../axiosConfig";
 import "../styles/innerpageheader.css";
 import logo from "../assets/logo.png";
 import amitImg from "../assets/amit.jpg";
@@ -13,11 +13,17 @@ const InnerPageHeader = ({ title }) => {
 
   const handleLogout = async () => {
     try {
-      await axios.post("/api/logout/");
-      localStorage.removeItem("username");
-      navigate("/login");
+      console.log("Sending logout request...");  // Debugging log
+      const response = await axios.post("/api/logout/");
+      console.log("Logout response:", response);  // Debugging log
+      if (response.status === 200) {
+        localStorage.clear();  // Clear all local storage
+        navigate("/");
+      } else {
+        console.error("Logout 5555 failed", response.data);
+      }
     } catch (error) {
-      console.error("Logout failed", error);
+      console.error("Logout 6666 failed", error);
     }
   };
 
