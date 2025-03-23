@@ -366,3 +366,12 @@ def get_permissions(request):
         for row in permissions
     ]
     return JsonResponse({'permissions': permissions_data})
+
+@csrf_exempt  # Disable CSRF (makes things easier)
+@api_view(['POST'])
+def logout_view(request):
+    try:
+        request.session.flush()  # Clear the session for the logged-in user
+        return JsonResponse({'message': 'Logout successful!'})
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=400)

@@ -26,6 +26,7 @@ from .views import (
     PotentialTutorshipMatchReportView,
     login_view,
     get_permissions,
+    logout_view,
 )
 
 router = DefaultRouter()
@@ -57,4 +58,5 @@ urlpatterns = [
     path('reports/potential-tutorship-match/', PotentialTutorshipMatchReportView.as_view(), name='potential_tutorship_match_report'),
     path('api/login/', login_view, name='login'),
     path('api/permissions/', get_permissions, name='get_permissions'),
+    path('api/logout/', logout_view, name='logout'),
 ]
