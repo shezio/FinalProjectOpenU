@@ -16,9 +16,11 @@ body {
     border: none;
     cursor: pointer;
     text-align: center;
-    font-size: 16px;
+    font-size: 30px;
     width: 100%;
     margin-bottom: 10px;
+    /* make the buttons be a little lower */
+    margin-top: 50px;
 }
 .sidebar button.active {
     background-color: #4CAF50; /* Green background when active */

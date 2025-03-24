@@ -1222,6 +1222,96 @@ VALUES ('סקירת משוב מתנדב כללי', '2021-12-31', 'לא הושל�
 -- יצירת דוח משוב - Feedback Report Generation - task for a coordinator -- טל לנגרמן
 INSERT INTO childsmile_app_tasks (description, due_date, status, created_at, updated_at, assigned_to_id, task_type_id)
 VALUES ('יצירת דוח משוב', '2021-12-31', 'לא הושלמה', current_timestamp, current_timestamp, (SELECT staff_id FROM childsmile_app_staff WHERE first_name = 'טל' AND last_name = 'לנגרמן'), (SELECT id FROM childsmile_app_task_types WHERE task_type = 'יצירת דוח משוב'));
+-- replicate all tasks above for user admin
+-- ראיון מועמד לחונכות - Candidate Interview for Tutoring
+INSERT INTO childsmile_app_tasks (description, due_date, status, created_at, updated_at, assigned_to_id, task_type_id)
+VALUES ('ראיון מועמד לחונכות', '2021-12-31', 'לא הושלמה', current_timestamp, current_timestamp, 
+(SELECT staff_id FROM childsmile_app_staff WHERE username = 'admin'), 
+(SELECT id FROM childsmile_app_task_types WHERE task_type = 'ראיון מועמד לחונכות'));
+
+-- הוספת חונך - Adding a Tutor
+INSERT INTO childsmile_app_tasks (description, due_date, status, created_at, updated_at, assigned_to_id, task_type_id)
+VALUES ('הוספת חונך', '2021-12-31', 'לא הושלמה', current_timestamp, current_timestamp, 
+(SELECT staff_id FROM childsmile_app_staff WHERE username = 'admin'), 
+(SELECT id FROM childsmile_app_task_types WHERE task_type = 'הוספת חונך'));
+
+-- התאמת חניך - Matching a Tutee
+INSERT INTO childsmile_app_tasks (description, due_date, status, created_at, updated_at, assigned_to_id, task_type_id)
+VALUES ('התאמת חניך', '2021-12-31', 'לא הושלמה', current_timestamp, current_timestamp, 
+(SELECT staff_id FROM childsmile_app_staff WHERE username = 'admin'), 
+(SELECT id FROM childsmile_app_task_types WHERE task_type = 'התאמת חניך'));
+
+-- הוספת משפחה - Adding a Family
+INSERT INTO childsmile_app_tasks (description, due_date, status, created_at, updated_at, assigned_to_id, task_type_id)
+VALUES ('הוספת משפחה', '2021-12-31', 'לא הושלמה', current_timestamp, current_timestamp, 
+(SELECT staff_id FROM childsmile_app_staff WHERE username = 'admin'), 
+(SELECT id FROM childsmile_app_task_types WHERE task_type = 'הוספת משפחה'));
+
+-- בדיקת מצב משפחה - Family Status Check
+INSERT INTO childsmile_app_tasks (description, due_date, status, created_at, updated_at, assigned_to_id, task_type_id)
+VALUES ('בדיקת מצב משפחה', '2021-12-31', 'לא הושלמה', current_timestamp, current_timestamp, 
+(SELECT staff_id FROM childsmile_app_staff WHERE username = 'admin'), 
+(SELECT id FROM childsmile_app_task_types WHERE task_type = 'בדיקת מצב משפחה'));
+
+-- עדכון משפחה - Family Update
+INSERT INTO childsmile_app_tasks (description, due_date, status, created_at, updated_at, assigned_to_id, task_type_id)
+VALUES ('עדכון משפחה', '2021-12-31', 'לא הושלמה', current_timestamp, current_timestamp, 
+(SELECT staff_id FROM childsmile_app_staff WHERE username = 'admin'), 
+(SELECT id FROM childsmile_app_task_types WHERE task_type = 'עדכון משפחה'));
+
+-- מחיקת משפחה - Family Deletion
+INSERT INTO childsmile_app_tasks (description, due_date, status, created_at, updated_at, assigned_to_id, task_type_id)
+VALUES ('מחיקת משפחה', '2021-12-31', 'לא הושלמה', current_timestamp, current_timestamp, 
+(SELECT staff_id FROM childsmile_app_staff WHERE username = 'admin'), 
+(SELECT id FROM childsmile_app_task_types WHERE task_type = 'מחיקת משפחה'));
+
+-- הוספת בריא - Adding a Healthy Member
+INSERT INTO childsmile_app_tasks (description, due_date, status, created_at, updated_at, assigned_to_id, task_type_id)
+VALUES ('הוספת בריא', '2021-12-31', 'לא הושלמה', current_timestamp, current_timestamp, 
+(SELECT staff_id FROM childsmile_app_staff WHERE username = 'admin'), 
+(SELECT id FROM childsmile_app_task_types WHERE task_type = 'הוספת בריא'));
+
+-- סקירת בוגר - Reviewing a Mature Individual
+INSERT INTO childsmile_app_tasks (description, due_date, status, created_at, updated_at, assigned_to_id, task_type_id)
+VALUES ('סקירת בוגר', '2021-12-31', 'לא הושלמה', current_timestamp, current_timestamp, 
+(SELECT staff_id FROM childsmile_app_staff WHERE username = 'admin'), 
+(SELECT id FROM childsmile_app_task_types WHERE task_type = 'סקירת בוגר'));
+
+-- חונכות - Tutoring
+INSERT INTO childsmile_app_tasks (description, due_date, status, created_at, updated_at, assigned_to_id, task_type_id)
+VALUES ('חונכות', '2021-12-31', 'לא הושלמה', current_timestamp, current_timestamp, 
+(SELECT staff_id FROM childsmile_app_staff WHERE username = 'admin'), 
+(SELECT id FROM childsmile_app_task_types WHERE task_type = 'חונכות'));
+
+-- משוב חונך - Tutoring Feedback
+INSERT INTO childsmile_app_tasks (description, due_date, status, created_at, updated_at, assigned_to_id, task_type_id)
+VALUES ('משוב חונך', '2021-12-31', 'לא הושלמה', current_timestamp, current_timestamp, 
+(SELECT staff_id FROM childsmile_app_staff WHERE username = 'admin'), 
+(SELECT id FROM childsmile_app_task_types WHERE task_type = 'משוב חונך'));
+
+-- סקירת משוב חונך - Reviewing Tutor Feedback
+INSERT INTO childsmile_app_tasks (description, due_date, status, created_at, updated_at, assigned_to_id, task_type_id)
+VALUES ('סקירת משוב חונך', '2021-12-31', 'לא הושלמה', current_timestamp, current_timestamp, 
+(SELECT staff_id FROM childsmile_app_staff WHERE username = 'admin'), 
+(SELECT id FROM childsmile_app_task_types WHERE task_type = 'סקירת משוב חונך'));
+
+-- משוב מתנדב כללי - General Volunteer Feedback
+INSERT INTO childsmile_app_tasks (description, due_date, status, created_at, updated_at, assigned_to_id, task_type_id)
+VALUES ('משוב מתנדב כללי', '2021-12-31', 'לא הושלמה', current_timestamp, current_timestamp, 
+(SELECT staff_id FROM childsmile_app_staff WHERE username = 'admin'), 
+(SELECT id FROM childsmile_app_task_types WHERE task_type = 'משוב מתנדב כללי'));
+
+-- סקירת משוב מתנדב כללי - Reviewing General Volunteer Feedback
+INSERT INTO childsmile_app_tasks (description, due_date, status, created_at, updated_at, assigned_to_id, task_type_id)
+VALUES ('סקירת משוב מתנדב כללי', '2021-12-31', 'לא הושלמה', current_timestamp, current_timestamp, 
+(SELECT staff_id FROM childsmile_app_staff WHERE username = 'admin'), 
+(SELECT id FROM childsmile_app_task_types WHERE task_type = 'סקירת משוב מתנדב כללי'));
+
+-- יצירת דוח משוב - Feedback Report Generation
+INSERT INTO childsmile_app_tasks (description, due_date, status, created_at, updated_at, assigned_to_id, task_type_id)
+VALUES ('יצירת דוח משוב', '2021-12-31', 'לא הושלמה', current_timestamp, current_timestamp, 
+(SELECT staff_id FROM childsmile_app_staff WHERE username = 'admin'), 
+(SELECT id FROM childsmile_app_task_types WHERE task_type = 'יצירת דוח משוב'));
 ```
 
 ### now we will insert into childsmile_app_children - these are not tutors or volunteers but sick children
