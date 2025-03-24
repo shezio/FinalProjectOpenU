@@ -1,3 +1,4 @@
+from django.core.cache import cache
 from rest_framework import viewsets, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -22,10 +23,23 @@ from .models import (
     Tutor_Feedback,
     General_V_Feedback,
     Tasks,
+    Task_Types,
     PossibleMatches,  # Add this line
 )
 import csv
 import datetime
+import requests
+import urllib3
+
+def get_hebrew_date(date):
+    res = requests.get(
+        f"https://www.hebcal.com/converter?cfg=json&gy={date.year}&gm={date.month}&gd={date.day}&g2h=1",
+        verify=False,
+        timeout=600,
+    )
+    return res.json()["hebrew"]
+
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 class PermissionsViewSet(viewsets.ModelViewSet):
     queryset = Permissions.objects.all()
@@ -376,29 +390,44 @@ def logout_view(request):
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=400)
     
-# GET all tasks from DB assigned to the logged-in user
-@csrf_exempt  # Disable CSRF (makes things easier)
+@csrf_exempt
 @api_view(['GET'])
 def get_user_tasks(request):
     user_id = request.session.get('user_id')
     if not user_id:
         return JsonResponse({'detail': 'Authentication credentials were not provided.'}, status=403)
 
-    tasks = Tasks.objects.filter(assigned_to_id=user_id)
-    tasks_data = [
-        {
-            'id': task.task_id,
-            'description': task.description,
-            'due_date': task.due_date,
-            'status': task.status,
-            'created': task.created_at,
-            'updated': task.updated_at,
-            'assignee': task.assigned_to_id,
-            'child': task.related_child_id,
-            'tutor': task.related_tutor_id,
-            'type': task.task_type_id
+    # שימוש במטמון כדי להימנע מקריאות חוזרות
+    cache_key = f'user_tasks_{user_id}'
+    tasks_data = cache.get(cache_key)
 
-        }
-        for task in tasks
-    ]
-    return JsonResponse({'tasks': tasks_data})
+    if not tasks_data:
+        tasks = Tasks.objects.filter(assigned_to_id=user_id).select_related('task_type', 'assigned_to')
+        tasks_data = [
+            {
+                'id': task.task_id,
+                'description': task.description,
+                'due_date': task.due_date.strftime('%d/%m/%Y'),
+                'due_date_hebrew': get_hebrew_date(task.due_date),
+                'status': task.status,
+                'created': task.created_at.strftime('%d/%m/%Y'),
+                'created_hebrew': get_hebrew_date(task.created_at),
+                'updated': task.updated_at.strftime('%d/%m/%Y'),
+                'updated_hebrew': get_hebrew_date(task.updated_at),
+                'assignee': task.assigned_to.username,  # Fetch the username of the assignee
+                'child': task.related_child_id,
+                'tutor': task.related_tutor_id,
+                'type': task.task_type_id,
+            }
+            for task in tasks
+        ]
+        cache.set(cache_key, tasks_data, timeout=300)  # שמירה במטמון ל-5 דקות
+
+    # שליפת סוגי המשימות רק פעם אחת ולא לכל משימה
+    task_types_data = cache.get('task_types_data')
+    if not task_types_data:
+        task_types = Task_Types.objects.all()
+        task_types_data = [{'id': t.id, 'name': t.task_type} for t in task_types]
+        cache.set('task_types_data', task_types_data, timeout=300)
+
+    return JsonResponse({'tasks': tasks_data, 'task_types': task_types_data})

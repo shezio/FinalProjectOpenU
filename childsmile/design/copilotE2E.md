@@ -37,9 +37,6 @@ If you only have the `npm-packages.txt` or `npm-packages.json` file:
 
 1. Extract package names from `npm-packages.txt` and install them:
 
-   ```sh
-   cat npm-packages.txt | awk '{print $2}' | xargs npm install
-   ```
 
    *(On Windows, open PowerShell and use:)*  
 
@@ -74,8 +71,8 @@ Restore on New PC
 On your new PC, navigate to your project folder and run:
 
 sh
-Copy
-Edit
+bkp pip freeze > requirements.txt
+bkp git remote -v > git-repos.txt
 pip install -r requirements.txt
 
 
