@@ -127,6 +127,10 @@ celerybeat.pid
 env/
 venv/
 childsmile/myenv/
+# Ignore virtual environment
+childsmile/myenv/
+childsmile/myenv/*
+
 **/myenv/*
 myenv/
 childsmile/myenvbkp/
@@ -165,3 +169,11 @@ cython_debug/
 # node_modules should never be committed
 /childsmile/frontend/node_modules
 %bin%/*
+childsmile/myenv/Scripts/normalizer.exe
+childsmile/myenv/Scripts/django-admin.exe
+childsmile/myenv/Scripts/pip.exe
+childsmile/myenv/Scripts/pip3.11.exe
+childsmile/myenv/Scripts/pip3.exe
+childsmile/myenv/Scripts/sqlformat.exe
+childsmile/myenv/Scripts/django-admin.exe
+childsmile/myenv/Scripts/django-admin.exe
