@@ -126,6 +126,11 @@ celerybeat.pid
 .venv
 env/
 venv/
+childsmile/myenv/
+**/myenv/*
+myenv/
+childsmile/myenvbkp/
+childsmile/myenv/Scripts/django-admin.exe
 ENV/
 env.bak/
 venv.bak/
