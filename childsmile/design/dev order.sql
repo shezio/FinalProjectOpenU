@@ -1559,7 +1559,7 @@ SELECT
     child.has_completed_treatments,
     tutor.tutorship_status,
     tutor.preferences,
-    tutor.tutor_email,
+    tutor.tutor_email
 FROM childsmile_app_possiblematches pm
 JOIN childsmile_app_children child ON pm.child_id = child.child_id
 JOIN childsmile_app_tutors tutor ON pm.tutor_id = tutor.id_id;

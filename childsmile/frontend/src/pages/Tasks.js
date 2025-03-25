@@ -14,6 +14,7 @@ const Tasks = () => {
 
 
   useEffect(() => {
+    document.body.style.zoom = "80%"; // Set browser zoom to 67%
     const fetchTasks = async () => {
       try {
         const response = await axios.get('/api/tasks/');
@@ -60,7 +61,8 @@ const Tasks = () => {
   const handleClosePopup = () => {
     setSelectedTask(null);
   };
-
+  /* default zoom 1.5 on this page */
+  
   return (
     <div className="main-content">
       <Sidebar />

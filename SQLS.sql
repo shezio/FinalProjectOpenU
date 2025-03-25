@@ -1,10 +1,13 @@
 -- psql -U postgres
--- CREATE DATABASE child_smile_db;
--- Permissions Table
---CREATE ROLE child_smile_user WITH LOGIN PASSWORD '0192pqowL@!';
---GRANT ALL PRIVILEGES ON DATABASE child_smile_db TO child_smile_user;
---ALTER ROLE child_smile_user SET search_path TO public;
---GRANT ALL PRIVILEGES ON SCHEMA public TO child_smile_user;
+DROP DATABASE IF EXISTS child_smile_db;
+DROP OWNED BY child_smile_user CASCADE;
+DROP ROLE IF EXISTS child_smile_user;
+CREATE ROLE child_smile_user WITH LOGIN PASSWORD '0192pqowL@!';
+CREATE DATABASE child_smile_db OWNER child_smile_user;
+ALTER SCHEMA public OWNER TO child_smile_user;
+GRANT USAGE, CREATE ON SCHEMA public TO child_smile_user;
+ALTER ROLE child_smile_user SET search_path TO public;
+
 CREATE TABLE Permissions (
     permission_id SERIAL PRIMARY KEY,
     role VARCHAR NOT NULL,
