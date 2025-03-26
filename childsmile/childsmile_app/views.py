@@ -431,3 +431,58 @@ def get_user_tasks(request):
         cache.set('task_types_data', task_types_data, timeout=300)
 
     return JsonResponse({'tasks': tasks_data, 'task_types': task_types_data})
+
+@csrf_exempt
+@api_view(['GET'])
+def get_staff(request):
+    '''    
+    Retrieve all staff along with their roles.
+    '''
+    staff = Staff.objects.select_related('role').all()
+    staff_data = [{'id': s.id, 'username': s.username, 'first_name': s.first_name, 'last_name': s.last_name, 'role': s.role.role_name} for s in staff]
+    return JsonResponse({'staff': staff_data})
+
+@csrf_exempt
+@api_view(['GET'])
+def get_children(request):
+    '''    
+    Retrieve all children along with their tutoring status.
+    '''
+    children = Children.objects.all()
+    children_data = [{'id': c.id, 'first_name': c.first_name, 'last_name': c.last_name, 'tutoring_status': c.tutoring_status} for c in children]
+    return JsonResponse({'children': children_data})
+
+@csrf_exempt
+@api_view(['GET'])
+def get_tutors(request):
+    '''
+    Retrieve all tutors along with their tutorship status.'
+    '''
+    tutors = Staff.objects.filter(role_id=(Role.objects.get(role_name='tutor').id))
+    tutors_data = [{'id': t.id, 'first_name': t.first_name, 'last_name': t.last_name, 'tutorship_status': t.tutorship_status} for t in tutors]
+    return JsonResponse({'tutors': tutors_data})
+
+# implem view for post('/api/tasks/create
+@csrf_exempt
+@api_view(['POST'])
+def create_task(request):
+    '''
+    Create a new task.
+    '''
+    user_id = request.session.get('user_id')
+    if not user_id:
+        return JsonResponse({'detail': 'Authentication credentials were not provided.'}, status=403)
+
+    task_data = request.data
+    task = Tasks.objects.create(
+        description=task_data['description'],
+        due_date=task_data['due_date'],
+        status="לא הושלמה",
+        created_at=datetime.now(),
+        updated_at=datetime.now(),
+        assigned_to_id=task_data['assigned_to'],
+        related_child_id=task_data['child'],
+        related_tutor_id=task_data['tutor'],
+        task_type_id=task_data['type'],
+    )
+    return JsonResponse({'task_id': task.id}, status=201)
