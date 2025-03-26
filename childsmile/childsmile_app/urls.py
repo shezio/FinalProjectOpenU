@@ -28,6 +28,11 @@ from .views import (
     get_permissions,
     logout_view,
     get_user_tasks,
+    get_children,
+    get_tutors,
+    get_staff,
+    create_task,
+
 )
 
 router = DefaultRouter()
@@ -61,5 +66,9 @@ urlpatterns = [
     path('api/permissions/', get_permissions, name='get_permissions'),
     path('api/logout/', logout_view, name='logout'),
     path('api/tasks/', get_user_tasks, name='get_user_tasks'),
+    path('api/children/', get_children, name='get_children'),
+    path('api/tutors/', get_tutors, name='get_tutors'),
+    path('api/staff/', get_staff, name='get_staff'),
+    path('api/tasks/create/', create_task, name='create_task'),
 
 ]
