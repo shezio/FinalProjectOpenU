@@ -64,18 +64,19 @@
   border: 1px solid #ccc;
   border-radius: 5px;
 }
-.filter {
+.filter-create-container {
+  display: flex;
+  align-items: center;
+  gap: 20px; /* Space between the filter and create task button */
   margin-bottom: 20px;
-}
-.filter select {
-  width: 100%;
-  padding: 10px;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  font-size: 1em;
+  margin-right: 20px; /* Align with the right side of the page */
+  /*push the content to the a bit lower*/
+  margin-top: 100px; /* Add some space above the filter and create task button */
+  /* never allow the button to be go up more than the margin-top 100px */
+  position: relative; /* For absolute positioning of the button */
 }
 .create-task {
-  margin-top: 20px;
+  margin: 0; /* Remove margin to align properly */
 }
 .create-task button {
   background-color: #4CAF50;
@@ -85,6 +86,17 @@
   border-radius: 5px;
   cursor: pointer;
   font-size: 2em;
+}
+.filter {
+  margin: 0; /* Remove margin to align properly */
+}
+.filter select {
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  font-size: 2em;
+  width: auto; /* Adjust width automatically */
+  min-width: 150px; /* Optional: Set a minimum width for better usability */
 }
 .create-task button:hover {
   background-color: #45a049;

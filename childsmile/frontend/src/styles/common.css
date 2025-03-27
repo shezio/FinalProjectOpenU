@@ -7,7 +7,7 @@ body {
     height: 100vh;
     display: flex;
     flex-direction: row-reverse; /* מסדר את התוכן בצד שמאל והסרגל בצד ימין */
-    overflow: hidden; /* מונע גלילה מיותרת */
+    overflow: auto; /* מונע גלילה מיותרת */
 }
 .sidebar button {
     background-color: #333;
@@ -97,4 +97,9 @@ body {
     display: none;
     margin-top: -5px;
     margin-bottom: 10px;
+}
+.error-text {
+    color: red;
+    font-size: 0.9em;
+    margin-top: 5px;
 }
