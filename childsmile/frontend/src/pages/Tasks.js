@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from '../axiosConfig'; 
+import axios from '../axiosConfig';
 import Sidebar from '../components/Sidebar';
 import InnerPageHeader from '../components/InnerPageHeader';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
@@ -33,8 +33,17 @@ const Tasks = () => {
   const [loading, setLoading] = useState(tasks.length === 0); // Only if no data is loaded from cache
   const [selectedTask, setSelectedTask] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false); // Modal visibility state
+  const [errors, setErrors] = useState({}); // Track validation errors
+  const [selectedFilter, setSelectedFilter] = useState(''); // Default filter is empty (show all)
 
-  const fetchData = async () => {
+  const fetchData = async (forceFetch = false) => {
+    // If not forcing a fetch and tasks already exist in local storage, skip fetching
+    if (!forceFetch && tasks.length > 0) {
+      setLoading(false); // Ensure loading spinner is turned off
+      return;
+    }
+  
+    setLoading(true); // Show loading spinner while fetching data
     try {
       const [tasksResponse, staffOptions, childrenOptions, tutorsOptions] = await Promise.all([
         axios.get('/api/tasks/').catch((error) => {
@@ -54,13 +63,13 @@ const Tasks = () => {
           return [];
         }),
       ]);
-
+  
       setTasks(tasksResponse.data.tasks || []);
       setTaskTypes(tasksResponse.data.task_types || []);
       setStaffOptions(staffOptions);
       setChildrenOptions(childrenOptions);
       setTutorsOptions(tutorsOptions);
-
+  
       // Save tasks and task types to local storage
       localStorage.setItem('tasks', JSON.stringify(tasksResponse.data.tasks || []));
       localStorage.setItem('taskTypes', JSON.stringify(tasksResponse.data.task_types || []));
@@ -75,12 +84,8 @@ const Tasks = () => {
   };
 
   useEffect(() => {
-    if (tasks.length === 0) {
-      fetchData(); // Fetch data only if the cache is empty
-    } else {
-      setLoading(false); // If data exists in cache, no need to load
-    }
-  }, []);
+    fetchData(); // Fetch data only if tasks are not already in local storage
+  }, []); // Empty dependency array ensures this runs only once on page load
 
   const onDragEnd = (result) => {
     if (!result.destination) return;
@@ -106,6 +111,26 @@ const Tasks = () => {
   };
 
   const handleSubmitTask = async () => {
+    const newErrors = {};
+    // Validate required fields
+    if (!selectedTaskType) {
+      newErrors.type = "זהו שדה חובה";
+    }
+    if (!document.getElementById('due_date').value) {
+      newErrors.due_date = "זהו שדה חובה";
+    }
+    if (!selectedStaff) {
+      newErrors.assigned_to = "זהו שדה חובה";
+    }
+  
+    // If there are errors, update the state and stop submission
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
+  
+    // Clear errors if validation passes
+    setErrors({});
     const taskData = {
       due_date: document.getElementById('due_date').value,
       assigned_to: selectedStaff?.value,
@@ -113,19 +138,30 @@ const Tasks = () => {
       tutor: selectedTutor?.value,
       type: selectedTaskType?.value, // Send the task type ID
     };
-
+  
     try {
       const response = await axios.post('/api/tasks/create/', taskData);
       console.log('Task created:', response.data);
-
-      // Reload all tasks after creating a new one
-      await fetchData();
-
-      setIsModalOpen(false); // Close the modal
+      if (response.status === 201) {
+        setIsModalOpen(false); // Close the modal
+        alert('משימה נוצרה בהצלחה!'); // Replace with your toast notification
+        await fetchData(true); // Force fetch to reload tasks
+      }
     } catch (error) {
       console.error('Error creating task:', error);
     }
   };
+
+  // todo: add a function to handle task deletion
+  // const handleDeleteTask = async (taskId) => {
+  //   try {
+  //     await axios.delete(`/api/tasks/${taskId}/`);
+  //     setTasks(tasks.filter((task) => task.id !== taskId)); // Update the local state
+  //     alert('משימה נמחקה בהצלחה!'); // Replace with your toast notification
+  //   } catch (error) {
+  //     console.error('Error deleting task:', error);
+  //   }
+  // };
 
   return (
     <div className="main-content">
@@ -135,50 +171,75 @@ const Tasks = () => {
       {!loading && (
         <>
           <div className="page-content">
-            <div className="filter">
-              <select>
-                <option value="">סנן לפי סוג משימה</option>
-                {taskTypes.map((type) => (
-                  <option key={type.id} value={type.id}>{type.name}</option>
-                ))}
-              </select>
+            <div className="filter-create-container">
+              <div className="create-task">
+                <button onClick={() => setIsModalOpen(true)}>צור משימה חדשה</button>
+              </div>
+              <div className="filter">
+                <select
+                  value={selectedFilter}
+                  onChange={(e) => setSelectedFilter(e.target.value)} // Update the filter state
+                >
+                  <option value="">סנן לפי סוג משימה</option>
+                  {taskTypes.map((type) => (
+                    <option key={type.id} value={type.id}>
+                      {type.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
-          </div>
-          <DragDropContext onDragEnd={onDragEnd}>
-            <Droppable droppableId="tasks" direction="horizontal">
-              {(provided) => (
-                <div className="tasks-container" ref={provided.innerRef} {...provided.droppableProps}>
-                  {tasks.length === 0 ? (
-                    <div className="no-tasks">אין כרגע משימות לביצוע</div>
-                  ) : (
-                    tasks.map((task, index) => (
-                      <Draggable key={task.id} draggableId={task.id.toString()} index={index}>
-                        {(provided) => (
-                          <div className="task"
-                            ref={provided.innerRef}
-                            {...provided.draggableProps}
-                            {...provided.dragHandleProps}>
-                            <h2>{task.description}</h2>
-                            <p>יש לבצע עד: {task.due_date} ({task.due_date_hebrew})</p>
-                            <p>סטטוס: {task.status}</p>
-                            <div className="actions">
-                              <button onClick={() => handleTaskClick(task)}>מידע</button>
-                              <button>ערוך</button>
-                              <button>עדכן</button>
-                              <button>מחק</button>
-                            </div>
-                          </div>
+            <div className="tasks-layout">
+              <div className="tasks-container-wrapper">
+                <DragDropContext onDragEnd={onDragEnd}>
+                  <Droppable droppableId="tasks" direction="horizontal">
+                    {(provided) => (
+                      <div
+                        className="tasks-container"
+                        ref={provided.innerRef}
+                        {...provided.droppableProps}
+                      >
+                        {tasks.length === 0 ? (
+                          <div className="no-tasks">אין כרגע משימות לביצוע</div>
+                        ) : (
+                          tasks
+                            .filter((task) => !selectedFilter || task.type === parseInt(selectedFilter)) // Filter tasks
+                            .map((task, index) => (
+                              <Draggable
+                                key={task.id}
+                                draggableId={task.id.toString()}
+                                index={index}
+                              >
+                                {(provided) => (
+                                  <div
+                                    className="task"
+                                    ref={provided.innerRef}
+                                    {...provided.draggableProps}
+                                    {...provided.dragHandleProps}
+                                  >
+                                    <h2>{task.description}</h2>
+                                    <p>
+                                      יש לבצע עד: {task.due_date} ({task.due_date_hebrew})
+                                    </p>
+                                    <p>סטטוס: {task.status}</p>
+                                    <div className="actions">
+                                      <button onClick={() => handleTaskClick(task)}>מידע</button>
+                                      <button>ערוך</button>
+                                      <button>עדכן</button>
+                                      <button>מחק</button>
+                                    </div>
+                                  </div>
+                                )}
+                              </Draggable>
+                            ))
                         )}
-                      </Draggable>
-                    ))
-                  )}
-                  {provided.placeholder}
-                </div>
-              )}
-            </Droppable>
-          </DragDropContext>
-          <div className="create-task">
-            <button onClick={() => setIsModalOpen(true)}>צור משימה חדשה</button>
+                        {provided.placeholder}
+                      </div>
+                    )}
+                  </Droppable>
+                </DragDropContext>
+              </div>
+            </div>
           </div>
           {isModalOpen && (
             <div className={`modal show`} id="create-task-modal">
@@ -192,10 +253,23 @@ const Tasks = () => {
                   value={selectedTaskType}
                   onChange={setSelectedTaskType}
                   isSearchable
+                  styles={{
+                    control: (base) => ({
+                      ...base,
+                      borderColor: errors.type ? 'red' : base.borderColor,
+                    }),
+                  }}
                 />
+                {errors.type && <p className="error-text">{errors.type}</p>}
                 <label>תאריך סופי לביצוע</label>
-                <input type="date" id="due_date" />
-                <br />
+                <input
+                  type="date"
+                  id="due_date"
+                  style={{
+                    borderColor: errors.due_date ? 'red' : '',
+                  }}
+                />
+                {errors.due_date && <p className="error-text">{errors.due_date}</p>}
                 <label>משוייך ל</label>
                 <Select
                   id="assigned_to"
@@ -203,7 +277,14 @@ const Tasks = () => {
                   value={selectedStaff}
                   onChange={setSelectedStaff}
                   isSearchable
+                  styles={{
+                    control: (base) => ({
+                      ...base,
+                      borderColor: errors.assigned_to ? 'red' : base.borderColor,
+                    }),
+                  }}
                 />
+                {errors.assigned_to && <p className="error-text">{errors.assigned_to}</p>}
                 <label>ילד</label>
                 <Select
                   id="child"
@@ -211,6 +292,7 @@ const Tasks = () => {
                   value={selectedChild}
                   onChange={setSelectedChild}
                   isSearchable
+                  isClearable
                 />
                 <label>חונך</label>
                 <Select
@@ -219,28 +301,29 @@ const Tasks = () => {
                   value={selectedTutor}
                   onChange={setSelectedTutor}
                   isSearchable
+                  isClearable
                 />
                 <button onClick={handleSubmitTask}>צור</button>
               </div>
             </div>
           )}
-                {selectedTask && (
-          <div className="task-popup">
-            <div className="task-popup-content">
-              <h2>{selectedTask.description}</h2>
-              <p>יש לבצע עד: {selectedTask.due_date} ({selectedTask.due_date_hebrew})</p>
-              <p>סטטוס: {selectedTask.status}</p>
-              <p>נוצרה ב: {selectedTask.created} ({selectedTask.created_hebrew})</p>
-              <p>עודכנה ב: {selectedTask.updated} ({selectedTask.updated_hebrew})</p>
-              <p>סוג משימה: {getTaskTypeName(selectedTask.type)}</p>
-              <p>לביצוע על ידי: {selectedTask.assignee}</p>
-              <p>חניך: {selectedTask.child}</p>
-              <p>חונך: {selectedTask.tutor}</p>
-              <button onClick={handleClosePopup}>סגור</button>
+          {selectedTask && (
+            <div className="task-popup">
+              <div className="task-popup-content">
+                <h2>{selectedTask.description}</h2>
+                <p>יש לבצע עד: {selectedTask.due_date} ({selectedTask.due_date_hebrew})</p>
+                <p>סטטוס: {selectedTask.status}</p>
+                <p>נוצרה ב: {selectedTask.created} ({selectedTask.created_hebrew})</p>
+                <p>עודכנה ב: {selectedTask.updated} ({selectedTask.updated_hebrew})</p>
+                <p>סוג משימה: {getTaskTypeName(selectedTask.type)}</p>
+                <p>לביצוע על ידי: {selectedTask.assignee}</p>
+                <p>חניך: {selectedTask.child}</p>
+                <p>חונך: {selectedTask.tutor}</p>
+                <button onClick={handleClosePopup}>סגור</button>
+              </div>
             </div>
-          </div>
-        )}
-      </>
+          )}
+        </>
       )}
     </div>
   );

@@ -397,33 +397,51 @@ def get_user_tasks(request):
     if not user_id:
         return JsonResponse({'detail': 'Authentication credentials were not provided.'}, status=403)
 
-    # שימוש במטמון כדי להימנע מקריאות חוזרות
-    cache_key = f'user_tasks_{user_id}'
+    # Check if the user has the System Administrator role
+    user = Staff.objects.select_related('role').get(staff_id=user_id)
+    is_admin = user.role.role_name == 'System Administrator'
+
+    # Use cache to avoid repeated queries
+    cache_key = f'user_tasks_{user_id}' if not is_admin else 'all_tasks'
     tasks_data = cache.get(cache_key)
 
     if not tasks_data:
-        tasks = Tasks.objects.filter(assigned_to_id=user_id).select_related('task_type', 'assigned_to')
+        # Fetch tasks efficiently
+        tasks = (
+            Tasks.objects.select_related('task_type', 'assigned_to')
+            if is_admin
+            else Tasks.objects.filter(assigned_to_id=user_id).select_related('task_type', 'assigned_to')
+        )
+
+        # Cache Hebrew dates to avoid redundant API calls
+        hebrew_date_cache = {}
+
+        def get_cached_hebrew_date(date):
+            if date not in hebrew_date_cache:
+                hebrew_date_cache[date] = get_hebrew_date(date)
+            return hebrew_date_cache[date]
+
         tasks_data = [
             {
                 'id': task.task_id,
                 'description': task.description,
                 'due_date': task.due_date.strftime('%d/%m/%Y'),
-                'due_date_hebrew': get_hebrew_date(task.due_date),
+                'due_date_hebrew': get_cached_hebrew_date(task.due_date),
                 'status': task.status,
                 'created': task.created_at.strftime('%d/%m/%Y'),
-                'created_hebrew': get_hebrew_date(task.created_at),
+                'created_hebrew': get_cached_hebrew_date(task.created_at),
                 'updated': task.updated_at.strftime('%d/%m/%Y'),
-                'updated_hebrew': get_hebrew_date(task.updated_at),
-                'assignee': task.assigned_to.username,  # Fetch the username of the assignee
+                'updated_hebrew': get_cached_hebrew_date(task.updated_at),
+                'assignee': task.assigned_to.username,
                 'child': task.related_child_id,
                 'tutor': task.related_tutor_id,
                 'type': task.task_type_id,
             }
             for task in tasks
         ]
-        cache.set(cache_key, tasks_data, timeout=300)  # שמירה במטמון ל-5 דקות
+        cache.set(cache_key, tasks_data, timeout=300)  # Cache for 5 minutes
 
-    # שליפת סוגי המשימות רק פעם אחת ולא לכל משימה
+    # Fetch task types only once
     task_types_data = cache.get('task_types_data')
     if not task_types_data:
         task_types = Task_Types.objects.all()
@@ -472,7 +490,6 @@ def get_tutors(request):
     return JsonResponse({'tutors': tutors_data})
 
 
-# implem view for post('/api/tasks/create
 @csrf_exempt
 @api_view(['POST'])
 def create_task(request):
@@ -495,8 +512,8 @@ def create_task(request):
             created_at=datetime.datetime.now(),
             updated_at=datetime.datetime.now(),
             assigned_to_id=task_data['assigned_to'],
-            related_child_id=task_data['child'],
-            related_tutor_id=task_data['tutor'],
+            related_child_id=task_data.get('child'),  # Allow null for child
+            related_tutor_id=task_data.get('tutor'),  # Allow null for tutor
             task_type_id=task_data['type'],
         )
         return JsonResponse({'task_id': task.task_id}, status=201)
