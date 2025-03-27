@@ -439,7 +439,7 @@ def get_staff(request):
     Retrieve all staff along with their roles.
     '''
     staff = Staff.objects.select_related('role').all()
-    staff_data = [{'id': s.id, 'username': s.username, 'first_name': s.first_name, 'last_name': s.last_name, 'role': s.role.role_name} for s in staff]
+    staff_data = [{'id': s.staff_id, 'username': s.username, 'first_name': s.first_name, 'last_name': s.last_name, 'role': s.role.role_name} for s in staff]
     return JsonResponse({'staff': staff_data})
 
 @csrf_exempt
@@ -449,18 +449,28 @@ def get_children(request):
     Retrieve all children along with their tutoring status.
     '''
     children = Children.objects.all()
-    children_data = [{'id': c.id, 'first_name': c.first_name, 'last_name': c.last_name, 'tutoring_status': c.tutoring_status} for c in children]
+    children_data = [{'id': c.child_id, 'first_name': c.childfirstname, 'last_name': c.childsurname, 'tutoring_status': c.tutoring_status} for c in children]
     return JsonResponse({'children': children_data})
 
 @csrf_exempt
 @api_view(['GET'])
 def get_tutors(request):
     '''
-    Retrieve all tutors along with their tutorship status.'
+    Retrieve all tutors along with their tutorship status.
     '''
-    tutors = Staff.objects.filter(role_id=(Role.objects.get(role_name='tutor').id))
-    tutors_data = [{'id': t.id, 'first_name': t.first_name, 'last_name': t.last_name, 'tutorship_status': t.tutorship_status} for t in tutors]
+    tutors = Tutors.objects.select_related('staff').all()
+    tutors_data = [
+        {
+            'id': t.id_id,  # ה-ID של המדריך בטבלת Tutors
+            'first_name': t.staff.first_name,  # נתונים מטבלת Staff
+            'last_name': t.staff.last_name,
+            'tutorship_status': t.tutorship_status
+        } 
+        for t in tutors
+    ]
+    
     return JsonResponse({'tutors': tutors_data})
+
 
 # implem view for post('/api/tasks/create
 @csrf_exempt
@@ -474,15 +484,23 @@ def create_task(request):
         return JsonResponse({'detail': 'Authentication credentials were not provided.'}, status=403)
 
     task_data = request.data
-    task = Tasks.objects.create(
-        description=task_data['description'],
-        due_date=task_data['due_date'],
-        status="לא הושלמה",
-        created_at=datetime.now(),
-        updated_at=datetime.now(),
-        assigned_to_id=task_data['assigned_to'],
-        related_child_id=task_data['child'],
-        related_tutor_id=task_data['tutor'],
-        task_type_id=task_data['type'],
-    )
-    return JsonResponse({'task_id': task.id}, status=201)
+    try:
+        # Fetch the task type to get its name
+        task_type = Task_Types.objects.get(id=task_data['type'])
+
+        task = Tasks.objects.create(
+            description=task_type.task_type,  # Use the task type name as the description
+            due_date=task_data['due_date'],
+            status="לא הושלמה",
+            created_at=datetime.datetime.now(),
+            updated_at=datetime.datetime.now(),
+            assigned_to_id=task_data['assigned_to'],
+            related_child_id=task_data['child'],
+            related_tutor_id=task_data['tutor'],
+            task_type_id=task_data['type'],
+        )
+        return JsonResponse({'task_id': task.task_id}, status=201)
+    except Task_Types.DoesNotExist:
+        return JsonResponse({'detail': 'Invalid task type ID.'}, status=400)
+    except Exception as e:
+        return JsonResponse({'detail': str(e)}, status=500)
