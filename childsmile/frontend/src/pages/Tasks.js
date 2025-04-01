@@ -7,8 +7,15 @@ import { getStaff, getChildren, getTutors } from '../components/task_utils';  //
 import '../styles/common.css';
 import '../styles/tasks.css';
 import Select from 'react-select';  // Import react-select
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+// import i18n from C:\Dev\FinalProjectOpenU\childsmile\frontend\src\i18n.js
+import { showErrorToast } from '../components/toastUtils'; // Import the error toast utility function
+import { useTranslation } from 'react-i18next'; // Import translation hook
+import "../i18n"; // Import i18n configuration
 
 const Tasks = () => {
+  const { t } = useTranslation();
   const [tasks, setTasks] = useState(() => {
     try {
       return JSON.parse(localStorage.getItem('tasks')) || [];
@@ -38,46 +45,72 @@ const Tasks = () => {
 
   const fetchData = async (forceFetch = false) => {
     // If not forcing a fetch and tasks already exist in local storage, skip fetching
-    if (!forceFetch && tasks.length > 0) {
-      setLoading(false); // Ensure loading spinner is turned off
-      return;
-    }
-  
     setLoading(true); // Show loading spinner while fetching data
+
     try {
+      if (forceFetch) {
+        // Clear local storage for the resources being fetched
+        localStorage.removeItem('tasks');
+        localStorage.removeItem('taskTypes');
+        localStorage.removeItem('staffOptions');
+        localStorage.removeItem('childrenOptions');
+        localStorage.removeItem('tutorsOptions');
+      }
       const [tasksResponse, staffOptions, childrenOptions, tutorsOptions] = await Promise.all([
         axios.get('/api/tasks/').catch((error) => {
           console.error('Error fetching tasks:', error);
+          showErrorToast(t,'Error fetching tasks', error); // Use the reusable function
           return { data: { tasks: [], task_types: [] } }; // Fallback response
         }),
         getStaff().catch((error) => {
           console.error('Error fetching staff:', error);
+          showErrorToast(t,'Error fetching staff', error); // Use the reusable function
           return [];
         }),
         getChildren().catch((error) => {
           console.error('Error fetching children:', error);
+          showErrorToast(t,'Error fetching children', error); // Use the reusable function
           return [];
         }),
         getTutors().catch((error) => {
           console.error('Error fetching tutors:', error);
+          showErrorToast(t,'Error fetching tutors', error); // Use the reusable function
           return [];
         }),
       ]);
-  
-      setTasks(tasksResponse.data.tasks || []);
-      setTaskTypes(tasksResponse.data.task_types || []);
+
+      const newTasks = tasksResponse.data.tasks || [];
+      const newTaskTypes = tasksResponse.data.task_types || [];
+
+      // Compare fetched data with local storage data
+      const storedTasks = JSON.parse(localStorage.getItem('tasks')) || [];
+      const storedTaskTypes = JSON.parse(localStorage.getItem('taskTypes')) || [];
+
+      const isTasksDifferent = JSON.stringify(newTasks) !== JSON.stringify(storedTasks);
+      const isTaskTypesDifferent = JSON.stringify(newTaskTypes) !== JSON.stringify(storedTaskTypes);
+
+      // Update state and local storage only if there is a difference
+      if (isTasksDifferent) {
+        setTasks(newTasks);
+        localStorage.setItem('tasks', JSON.stringify(newTasks));
+      }
+
+      if (isTaskTypesDifferent) {
+        setTaskTypes(newTaskTypes);
+        localStorage.setItem('taskTypes', JSON.stringify(newTaskTypes));
+      }
+
+      // Always update staff, children, and tutors options
       setStaffOptions(staffOptions);
       setChildrenOptions(childrenOptions);
       setTutorsOptions(tutorsOptions);
-  
-      // Save tasks and task types to local storage
-      localStorage.setItem('tasks', JSON.stringify(tasksResponse.data.tasks || []));
-      localStorage.setItem('taskTypes', JSON.stringify(tasksResponse.data.task_types || []));
+
       localStorage.setItem('staffOptions', JSON.stringify(staffOptions));
       localStorage.setItem('childrenOptions', JSON.stringify(childrenOptions));
       localStorage.setItem('tutorsOptions', JSON.stringify(tutorsOptions));
     } catch (error) {
       console.error('Error fetching data:', error);
+      showErrorToast(t,'Error fetching data', error); // Use the reusable function
     } finally {
       setLoading(false); // Turn off the spinner after the request is complete
     }
@@ -122,13 +155,13 @@ const Tasks = () => {
     if (!selectedStaff) {
       newErrors.assigned_to = "זהו שדה חובה";
     }
-  
+
     // If there are errors, update the state and stop submission
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return;
     }
-  
+
     // Clear errors if validation passes
     setErrors({});
     const taskData = {
@@ -138,35 +171,49 @@ const Tasks = () => {
       tutor: selectedTutor?.value,
       type: selectedTaskType?.value, // Send the task type ID
     };
-  
+
     try {
       const response = await axios.post('/api/tasks/create/', taskData);
       console.log('Task created:', response.data);
+
       if (response.status === 201) {
         setIsModalOpen(false); // Close the modal
-        alert('משימה נוצרה בהצלחה!'); // Replace with your toast notification
+        toast.success(t('Task created successfully')); // Show success toast
         await fetchData(true); // Force fetch to reload tasks
       }
     } catch (error) {
       console.error('Error creating task:', error);
-    }
+      showErrorToast(t,'Error creating task', error); // Use the reusable function
+      }
   };
 
-  // todo: add a function to handle task deletion
-  // const handleDeleteTask = async (taskId) => {
-  //   try {
-  //     await axios.delete(`/api/tasks/${taskId}/`);
-  //     setTasks(tasks.filter((task) => task.id !== taskId)); // Update the local state
-  //     alert('משימה נמחקה בהצלחה!'); // Replace with your toast notification
-  //   } catch (error) {
-  //     console.error('Error deleting task:', error);
-  //   }
-  // };
+  const handleDeleteTask = async (taskId) => {
+    try {
+      await axios.delete(`/api/tasks/delete/${taskId}/`); // Delete the task from the server
+      setTasks(tasks.filter((task) => task.id !== taskId)); // Update the local state
+      toast.success(t('Task deleted successfully')); // Show success toast
+      await fetchData(true); // Force fetch to reload tasks
+    } catch (error) {
+      console.error('Error deleting task:', error);
+      showErrorToast(t,'Error deleting task', error); // Use the reusable function
+    }
+  };
 
   return (
     <div className="main-content">
       <Sidebar />
       <InnerPageHeader title="לוח משימות" />
+      <ToastContainer
+        position="top-center" // Center the toast
+        autoClose={4000} // Auto-close after 3 seconds
+        hideProgressBar={false} // Show the progress bar
+        closeOnClick
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        className="toast-rtl" // Apply the RTL class to all toasts
+        rtl={true} // Ensure progress bar moves from left to right
+      />
       {loading && <div className="loader">הנתונים בטעינה...</div>} {/* Spinner displayed until data is loaded */}
       {!loading && (
         <>
@@ -187,6 +234,9 @@ const Tasks = () => {
                     </option>
                   ))}
                 </select>
+              </div>
+              <div className="refresh">
+                <button onClick={() => fetchData(true)}>רענן רשימת משימות</button> {/* Force fetch data */}
               </div>
             </div>
             <div className="tasks-layout">
@@ -226,7 +276,7 @@ const Tasks = () => {
                                       <button onClick={() => handleTaskClick(task)}>מידע</button>
                                       <button>ערוך</button>
                                       <button>עדכן</button>
-                                      <button>מחק</button>
+                                      <button onClick={() => handleDeleteTask(task.id)}>מחק</button>
                                     </div>
                                   </div>
                                 )}

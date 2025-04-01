@@ -32,6 +32,7 @@ from .views import (
     get_tutors,
     get_staff,
     create_task,
+    delete_task,
 
 )
 
@@ -70,5 +71,6 @@ urlpatterns = [
     path('api/tutors/', get_tutors, name='get_tutors'),
     path('api/staff/', get_staff, name='get_staff'),
     path('api/tasks/create/', create_task, name='create_task'),
+    path('api/tasks/delete/<int:task_id>/', delete_task, name='delete_task'),
 
 ]
