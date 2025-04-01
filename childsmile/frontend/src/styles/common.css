@@ -6,9 +6,12 @@ body {
     margin: 0;
     height: 100vh;
     display: flex;
-    flex-direction: row-reverse; /* מסדר את התוכן בצד שמאל והסרגל בצד ימין */
-    overflow: auto; /* מונע גלילה מיותרת */
+    flex-direction: row-reverse;
+    /* מסדר את התוכן בצד שמאל והסרגל בצד ימין */
+    overflow: hidden;
+    /* מונע גלילה מיותרת */
 }
+
 .sidebar button {
     background-color: #333;
     color: white;
@@ -22,51 +25,67 @@ body {
     /* make the buttons be a little lower */
     margin-top: 50px;
 }
+
 .sidebar button.active {
-    background-color: #4CAF50; /* Green background when active */
-    color: black; /* Black text when active */
+    background-color: #4CAF50;
+    /* Green background when active */
+    color: black;
+    /* Black text when active */
 }
+
 .sidebar {
     background-color: #333;
     color: white;
     width: 200px;
     height: 100vh;
     padding: 20px;
-    box-shadow: 2px 0 5px rgba(0,0,0,0.1);
-    position: fixed; /* שומר את הסרגל קבוע */
-    right: 0; /* מצמיד לימין */
+    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+    position: fixed;
+    /* שומר את הסרגל קבוע */
+    right: 0;
+    /* מצמיד לימין */
     top: 0;
     display: flex;
     flex-direction: column;
     align-items: center;
 }
+
 .sidebar button:hover {
-    background-color: #ddd; /* Gray background on hover */
-    color: black; /* Black text on hover */
+    background-color: #ddd;
+    /* Gray background on hover */
+    color: black;
+    /* Black text on hover */
 }
 
 .main-content {
-    flex-grow: 1; /* תופס את כל הרוחב הפנוי */
+    flex-grow: 1;
+    /* תופס את כל הרוחב הפנוי */
     padding: 20px;
-    margin-right: 200px; /* שומר מקום לסרגל הצד */
+    margin-right: 200px;
+    /* שומר מקום לסרגל הצד */
     height: 100vh;
-    overflow-y: auto; /* אם יש גלילה פנימית */
+    overflow-y: auto;
+    /* אם יש גלילה פנימית */
     display: flex;
     flex-direction: column;
 }
+
 .form-container {
     background-color: #fff;
     padding: 20px;
     border-radius: 10px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 }
+
 .form-container h2 {
     margin-top: 0;
 }
+
 .form-container label {
     display: block;
     margin-bottom: 5px;
 }
+
 .form-container input,
 .form-container select {
     width: calc(100% - 22px);
@@ -75,6 +94,7 @@ body {
     border: 1px solid #ccc;
     border-radius: 5px;
 }
+
 .form-container button {
     background-color: #4CAF50;
     color: white;
@@ -83,13 +103,16 @@ body {
     border-radius: 5px;
     cursor: pointer;
 }
+
 .form-container button:hover {
     background-color: #45a049;
 }
+
 /* סגנון לשדה טלפון שגוי */
 .form-container input.error {
     border: 2px solid red;
 }
+
 /* הודעת שגיאה מוסתרת כברירת מחדל */
 .error-message {
     color: red;
@@ -98,8 +121,51 @@ body {
     margin-top: -5px;
     margin-bottom: 10px;
 }
+
 .error-text {
     color: red;
     font-size: 0.9em;
     margin-top: 5px;
+}
+
+/* Customize the toast container */
+.Toastify__toast {
+    font-size: 1.5em;
+    /* Increase font size */
+    padding: 20px;
+    /* Add more padding */
+    border-radius: 10px;
+    /* Add rounded corners */
+    text-align: right;
+    /* Center-align text */
+    direction: rtl;
+    /* Prevent text wrapping */
+    width:  600px;
+    /* Set width to auto to fit content */
+    margin-top: /* calc from header height */ calc(50px + 100px);
+}
+
+/* Customize the success toast */
+.Toastify__toast--success {
+    background-color: #4caf50;
+    /* Green background for success */
+    color: white;
+    /* White text */
+}
+
+/* Customize the error toast */
+.Toastify__toast--error {
+    background-color: #f44336;
+    /* Red background for error */
+    color: white;
+    /* White text */
+}
+
+.toast-rtl {
+    direction: rtl;
+    /* Set text direction to Right-to-Left */
+    text-align: right;
+    /* Align text to the right */
+    font-family: Arial, sans-serif;
+    /* Optional: Set a font that supports RTL */
 }
