@@ -17,13 +17,6 @@ from .views import (
     General_V_FeedbackViewSet,
     TaskViewSet,
     PossibleMatchesViewSet,  # Add this line
-    VolunteerFeedbackReportView,
-    TutorToFamilyAssignmentReportView,
-    FamiliesWaitingForTutorsReportView,
-    DepartedFamiliesReportView,
-    NewFamiliesLastMonthReportView,
-    FamilyDistributionByCitiesReportView,
-    PotentialTutorshipMatchReportView,
     login_view,
     get_permissions,
     logout_view,
@@ -35,7 +28,11 @@ from .views import (
     delete_task,
     update_task,
     update_task_status,
-
+    get_families_per_location_report,
+    get_new_families_report,
+    families_waiting_for_tutorship_report,
+    active_tutors_report,
+    possible_tutorship_matches_report,
 )
 
 router = DefaultRouter()
@@ -58,13 +55,6 @@ router.register(r"possible_matches", PossibleMatchesViewSet)  # Add this line
 
 urlpatterns = [
     path("", include(router.urls)),
-    path('reports/volunteer-feedback/', VolunteerFeedbackReportView.as_view(), name='volunteer_feedback_report'),
-    path('reports/tutor-to-family-assignment/', TutorToFamilyAssignmentReportView.as_view(), name='tutor_to_family_assignment_report'),
-    path('reports/families-waiting-for-tutors/', FamiliesWaitingForTutorsReportView.as_view(), name='families_waiting_for_tutors_report'),
-    path('reports/departed-families/', DepartedFamiliesReportView.as_view(), name='departed_families_report'),
-    path('reports/new-families-last-month/', NewFamiliesLastMonthReportView.as_view(), name='new_families_last_month_report'),
-    path('reports/family-distribution-by-cities/', FamilyDistributionByCitiesReportView.as_view(), name='family_distribution_by_cities_report'),
-    path('reports/potential-tutorship-match/', PotentialTutorshipMatchReportView.as_view(), name='potential_tutorship_match_report'),
     path('api/login/', login_view, name='login'),
     path('api/permissions/', get_permissions, name='get_permissions'),
     path('api/logout/', logout_view, name='logout'),
@@ -76,5 +66,10 @@ urlpatterns = [
     path('api/tasks/delete/<int:task_id>/', delete_task, name='delete_task'),
     path('api/tasks/update/<int:task_id>/', update_task, name='update_task'),
     path('api/tasks/update-status/<int:task_id>/', update_task_status, name='update_task_status'),
+    path('api/reports/families-per-location-report/', get_families_per_location_report, name='get_families_per_location_report'),
+    path('api/reports/new-families-report/', get_new_families_report, name='get_new_families_report'),
+    path('api/reports/families-waiting-for-tutorship-report/', families_waiting_for_tutorship_report, name='families_waiting_for_tutorship_report'),
+    path('api/reports/active-tutors-report/', active_tutors_report, name='active_tutors_report'),
+    path('api/reports/possible-tutorship-matches-report/', possible_tutorship_matches_report, name='possible_tutorship_matches_report'),
 
 ]
