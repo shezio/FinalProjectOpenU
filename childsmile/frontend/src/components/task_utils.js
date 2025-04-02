@@ -39,3 +39,17 @@ export const getTutors = async () => {
     return [];
   }
 };
+
+export const getChildFullName = (childId, childrenOptions) => {
+  console.log('getChildFullName called with:', { childId, childrenOptions });
+  const child = childrenOptions.find((child) => child.value === childId);
+  console.log('Found child:', child);
+  return child ? child.label.split(' - ')[0] : '---';
+};
+
+export const getTutorFullName = (tutorId, tutorsOptions) => {
+  console.log('getTutorFullName called with:', { tutorId, tutorsOptions });
+  const tutor = tutorsOptions.find((tutor) => tutor.value === tutorId);
+  console.log('Found tutor:', tutor);
+  return tutor ? tutor.label.split(' - ')[0] : '---';
+};
