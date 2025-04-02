@@ -44,6 +44,7 @@ def delete_task_cache(assigned_to_id=None, is_admin=False):
         user_cache_key = f"user_tasks_{assigned_to_id}"
         cache.delete(user_cache_key)  # Clear the cache for the specific user
 
+
 def get_hebrew_date(date):
     res = requests.get(
         f"https://www.hebcal.com/converter?cfg=json&gy={date.year}&gm={date.month}&gd={date.day}&g2h=1",
@@ -52,18 +53,25 @@ def get_hebrew_date(date):
     )
     return res.json()["hebrew"]
 
+
 def has_permission(request, resource, action):
     """
     Check if the user has the required permission for a specific resource and action.
     """
     permissions = request.session.get("permissions", [])
-    prefixed_resource = f"childsmile_app_{resource}"  # Add the prefix to the resource name
+    prefixed_resource = (
+        f"childsmile_app_{resource}"  # Add the prefix to the resource name
+    )
     # print every delete permission in the session
     for permission in permissions:
         if permission["action"] == "DELETE":
             print(permission)
 
-    return any(permission["resource"] == prefixed_resource and permission["action"] == action for permission in permissions)
+    return any(
+        permission["resource"] == prefixed_resource and permission["action"] == action
+        for permission in permissions
+    )
+
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -472,7 +480,7 @@ def get_user_tasks(request):
     # Check if the user has the System Administrator role
     user = Staff.objects.select_related("role").get(staff_id=user_id)
     is_admin = user.role.role_name == "System Administrator"
-    #print(f"User ID: {user_id}, Role: {user.role.role_name}")
+    # print(f"User ID: {user_id}, Role: {user.role.role_name}")
 
     # Use cache to avoid repeated queries
     cache_key = f"user_tasks_{user_id}" if not is_admin else "all_tasks"
@@ -481,13 +489,19 @@ def get_user_tasks(request):
     if not tasks_data:
         # Fetch tasks efficiently
         if is_admin:
-            tasks = Tasks.objects.all().select_related("task_type", "assigned_to")
-            #print(f"Admin fetching all tasks: {tasks.query}")
-        else:
-            tasks = Tasks.objects.filter(assigned_to_id=user_id).select_related(
-                "task_type", "assigned_to"
+            tasks = (
+                Tasks.objects.all()
+                .select_related("task_type", "assigned_to")
+                .order_by("-updated_at")
             )
-            #print(f"User fetching assigned tasks: {tasks.query}")
+            # print(f"Admin fetching all tasks: {tasks.query}")
+        else:
+            tasks = (
+                Tasks.objects.filter(assigned_to_id=user_id)
+                .select_related("task_type", "assigned_to")
+                .order_by("-updated_at")
+            )
+            # print(f"User fetching assigned tasks: {tasks.query}")
 
         # Cache Hebrew dates to avoid redundant API calls
         hebrew_date_cache = {}
@@ -524,7 +538,7 @@ def get_user_tasks(request):
         task_types_data = [{"id": t.id, "name": t.task_type} for t in task_types]
         cache.set("task_types_data", task_types_data, timeout=300)
 
-    #print(f"Tasks ids returning to frontend: {[task['id'] for task in tasks_data]}")
+    # print(f"Tasks ids returning to frontend: {[task['id'] for task in tasks_data]}")
     return JsonResponse({"tasks": tasks_data, "task_types": task_types_data})
 
 
@@ -665,7 +679,8 @@ def delete_task(request, task_id):
         return JsonResponse({"error": "Task not found."}, status=404)
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
-    
+
+
 # next up - update only task status which is allowed for all users
 @csrf_exempt
 @api_view(["PUT"])
@@ -697,12 +712,15 @@ def update_task_status(request, task_id):
         # Invalidate the cache for tasks
         delete_task_cache(task.assigned_to_id, is_admin=is_admin)
 
-        return JsonResponse({"message": "Task status updated successfully."}, status=200)
+        return JsonResponse(
+            {"message": "Task status updated successfully."}, status=200
+        )
     except Tasks.DoesNotExist:
         return JsonResponse({"error": "Task not found."}, status=404)
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
-    
+
+
 # next up - update task details which is allowed only for all users
 @csrf_exempt
 @api_view(["PUT"])
@@ -724,17 +742,32 @@ def update_task(request, task_id):
 
     try:
         task = Tasks.objects.get(task_id=task_id)
+
+        # Update task fields
         task.description = request.data.get("description", task.description)
         task.due_date = request.data.get("due_date", task.due_date)
         task.status = request.data.get("status", task.status)
         task.updated_at = datetime.datetime.now()
-        task.assigned_to_id = request.data.get("assigned_to", task.assigned_to_id)
-        task.related_child_id = request.data.get(
-            "child", task.related_child_id
-        )  # Allow null for child
-        task.related_tutor_id = request.data.get(
-            "tutor", task.related_tutor_id
-        )  # Allow null for tutor
+
+        # Handle assigned_to (convert username to staff_id)
+        assigned_to_id = request.data.get("assigned_to")
+        if assigned_to_id:
+            try:
+                Staff.objects.get(staff_id=assigned_to_id)  # Validate the staff_id exists
+                task.assigned_to_id = assigned_to_id
+            except Staff.DoesNotExist:
+                return JsonResponse(
+                    {"error": f"Staff member with ID '{assigned_to_id}' not found."},
+                    status=400,
+                )
+
+        # Handle related_child_id
+        task.related_child_id = request.data.get("child", task.related_child_id)
+
+        # Handle related_tutor_id
+        task.related_tutor_id = request.data.get("tutor", task.related_tutor_id)
+
+        # Handle task_type_id
         task.task_type_id = request.data.get("type", task.task_type_id)
 
         # Save the updated task
