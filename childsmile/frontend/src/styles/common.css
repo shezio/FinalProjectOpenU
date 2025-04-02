@@ -20,10 +20,11 @@ body {
     cursor: pointer;
     text-align: center;
     font-size: 30px;
+    font: Arial, sans-serif;
     width: 100%;
-    margin-bottom: 10px;
+    margin-bottom: 1px;
     /* make the buttons be a little lower */
-    margin-top: 50px;
+    margin-top: 30px;
 }
 
 .sidebar button.active {
@@ -48,6 +49,8 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
+    z-index: 1001;
+    padding-top: 150px; /* Adjust this value to move all buttons lower */
 }
 
 .sidebar button:hover {
