@@ -62,10 +62,6 @@ def has_permission(request, resource, action):
     prefixed_resource = (
         f"childsmile_app_{resource}"  # Add the prefix to the resource name
     )
-    # print every delete permission in the session
-    for permission in permissions:
-        if permission["action"] == "DELETE":
-            print(permission)
 
     return any(
         permission["resource"] == prefixed_resource and permission["action"] == action
@@ -327,27 +323,6 @@ class NewFamiliesLastMonthReportView(View):
 
         return response
 
-
-class FamilyDistributionByCitiesReportView(View):
-    permission_classes = [IsAuthenticated]
-
-    def get(self, request):
-        children = Children.objects.all()
-        response = HttpResponse(content_type="text/csv")
-        response["Content-Disposition"] = (
-            'attachment; filename="family_distribution_by_cities_report.csv"'
-        )
-
-        writer = csv.writer(response)
-        writer.writerow(["City", "Child Name"])
-        for child in children:
-            writer.writerow(
-                [child.city, child.childfirstname + " " + child.childsurname]
-            )
-
-        return response
-
-
 class PotentialTutorshipMatchReportView(View):
     permission_classes = [IsAuthenticated]
 
@@ -451,10 +426,6 @@ def get_permissions(request):
 
     # Store permissions in the session
     request.session["permissions"] = permissions_data
-    # print every delete permission in the session
-    for permission in permissions_data:
-        if permission["action"] == "DELETE":
-            print(permission)
     return JsonResponse({"permissions": permissions_data})
 
 
@@ -783,5 +754,226 @@ def update_task(request, task_id):
         return JsonResponse({"message": "Task updated successfully."}, status=200)
     except Tasks.DoesNotExist:
         return JsonResponse({"error": "Task not found."}, status=404)
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
+    
+@csrf_exempt
+@api_view(["GET"])
+def get_families_per_location_report(request):
+    """
+    Retrieve all children along with their city and full name, with permission check.
+    """
+    user_id = request.session.get("user_id")
+    if not user_id:
+        return JsonResponse(
+            {"detail": "Authentication credentials were not provided."}, status=403
+        )
+
+    # Check if the user has VIEW permission on the "children" resource
+    if not has_permission(request, "children", "VIEW"):
+        return JsonResponse(
+            {"error": "You do not have permission to generate this report"}, status=401
+        )
+
+    try:
+        # Fetch all children
+        children = Children.objects.all()
+
+        # Prepare the data
+        children_data = [
+            {
+                "first_name": child.childfirstname,
+                "last_name": child.childsurname,
+                "city": child.city,
+            }
+            for child in children
+        ]
+
+        # Return the data as JSON
+        return JsonResponse({"families_per_location": children_data}, status=200)
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
+    
+@csrf_exempt
+@api_view(["GET"])
+def get_new_families_report(request):
+    """
+    Retrieve a report of new families with child and parent details, filtered by registration date in the last month.
+    """
+    user_id = request.session.get("user_id")
+    if not user_id:
+        return JsonResponse(
+            {"detail": "Authentication credentials were not provided."}, status=403
+        )
+
+    # Check if the user has VIEW permission on the "children" resource
+    if not has_permission(request, "children", "VIEW"):
+        return JsonResponse(
+            {"error": "You do not have permission to generate this report"}, status=401
+        )
+
+    try:
+        # Calculate the date for one month ago
+        from datetime import datetime, timedelta
+        one_month_ago = datetime.now() - timedelta(days=30)
+
+        # Fetch children registered in the last month
+        children = Children.objects.filter(registrationdate__gte=one_month_ago).values(
+            "childfirstname",
+            "childsurname",
+            "father_name",
+            "father_phone",
+            "mother_name",
+            "mother_phone",
+            "registrationdate",
+        )
+
+        # Prepare the data
+        children_data = [
+            {
+                "child_firstname": child["childfirstname"],
+                "child_lastname": child["childsurname"],
+                "father_name": child["father_name"],
+                "father_phone": child["father_phone"],
+                "mother_name": child["mother_name"],
+                "mother_phone": child["mother_phone"],
+                "registration_date": child["registrationdate"].strftime("%d/%m/%Y"),
+            }
+            for child in children
+        ]
+
+        # Return the data as JSON
+        return JsonResponse({"new_families": children_data}, status=200)
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
+
+@csrf_exempt
+@api_view(["GET"])
+def families_waiting_for_tutorship_report(request):
+    """
+    Retrieve a report of families waiting for tutorship, ordered by registration date.
+    """
+    user_id = request.session.get("user_id")
+    if not user_id:
+        return JsonResponse(
+            {"detail": "Authentication credentials were not provided."}, status=403
+        )
+
+    # Check if the user has VIEW permission on the "children" resource
+    if not has_permission(request, "children", "VIEW"):
+        return JsonResponse(
+            {"error": "You do not have permission to generate this report"}, status=401
+        )
+
+    try:
+        # Define the tutoring statuses that indicate waiting for tutorship
+        waiting_statuses = [
+            'למצוא_חונך',
+            'למצוא_חונך_אין_באיזור_שלו',
+            'למצוא_חונך_בעדיפות_גבוה',
+        ]
+
+        # Fetch children with the specified tutoring statuses, ordered by registrationdate
+        children = Children.objects.filter(tutoring_status__in=waiting_statuses).order_by("registrationdate").values(
+            "childfirstname",
+            "childsurname",
+            "father_name",
+            "father_phone",
+            "mother_name",
+            "mother_phone",
+            "tutoring_status",
+            "registrationdate",
+        )
+
+        # Prepare the data
+        children_data = [
+            {
+                "child_firstname": child["childfirstname"],
+                "child_lastname": child["childsurname"],
+                "father_name": child["father_name"],
+                "father_phone": child["father_phone"],
+                "mother_name": child["mother_name"],
+                "mother_phone": child["mother_phone"],
+                "tutoring_status": child["tutoring_status"],
+                "registration_date": child["registrationdate"].strftime("%d/%m/%Y"),
+            }
+            for child in children
+        ]
+
+        # Return the data as JSON
+        return JsonResponse({"families_waiting_for_tutorship": children_data}, status=200)
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
+    
+@csrf_exempt
+@api_view(["GET"])
+def active_tutors_report(request):
+    """
+    Retrieve a report of active tutors with their assigned children.
+    """
+    user_id = request.session.get("user_id")
+    if not user_id:
+        return JsonResponse(
+            {"detail": "Authentication credentials were not provided."}, status=403
+        )
+
+    # Check if the user has VIEW permission on the "tutorships" resource
+    if not has_permission(request, "tutorships", "VIEW"):
+        return JsonResponse(
+            {"error": "You do not have permission to view this report."}, status=401
+        )
+
+    try:
+        # Fetch active tutorships with child and tutor details
+        tutorships = Tutorships.objects.select_related("child", "tutor").values(
+            "child__childfirstname",
+            "child__childsurname",
+            "tutor__tutorfirstname",
+            "tutor__tutorsurname",
+        )
+
+        # Prepare the data
+        active_tutors_data = [
+            {
+                "child_firstname": tutorship["child__childfirstname"],
+                "child_lastname": tutorship["child__childsurname"],
+                "tutor_firstname": tutorship["tutor__tutorfirstname"],
+                "tutor_lastname": tutorship["tutor__tutorsurname"],
+            }
+            for tutorship in tutorships
+        ]
+
+        # Return the data as JSON
+        return JsonResponse({"active_tutors": active_tutors_data}, status=200)
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
+    
+@csrf_exempt
+@api_view(["GET"])
+def possible_tutorship_matches_report(request):
+    """
+    Retrieve a report of all possible tutorship matches.
+    """
+    user_id = request.session.get("user_id")
+    if not user_id:
+        return JsonResponse(
+            {"detail": "Authentication credentials were not provided."}, status=403
+        )
+
+    # Check if the user has VIEW permission on the "possiblematches" resource
+    if not has_permission(request, "possiblematches", "VIEW"):
+        return JsonResponse(
+            {"error": "You do not have permission to view this report."}, status=401
+        )
+
+    try:
+        # Fetch all data from the PossibleMatches table
+        possible_matches = PossibleMatches.objects.all().values()
+
+        # Convert the data to a list of dictionaries
+        possible_matches_data = list(possible_matches)
+
+        # Return the data as JSON
+        return JsonResponse({"possible_tutorship_matches": possible_matches_data}, status=200)
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)

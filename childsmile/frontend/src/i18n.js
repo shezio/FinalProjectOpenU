@@ -45,6 +45,7 @@ const resources = {
       "Child": "Child",
       "Tutor": "Tutor",
       "Update Task": "Update Task",
+      "You do not have permission to generate this report": "You do not have permission to generate this report",
     }
   },
   he: {
@@ -90,6 +91,7 @@ const resources = {
       "Child": "חניך",
       "Tutor": "חונך",
       "Update Task": "עדכן משימה",
+      "You do not have permission to generate this report": "אין לך הרשאה לייצר דוח זה",
     }
   }
 };
