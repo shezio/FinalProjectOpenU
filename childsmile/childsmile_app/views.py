@@ -323,6 +323,7 @@ class NewFamiliesLastMonthReportView(View):
 
         return response
 
+
 class PotentialTutorshipMatchReportView(View):
     permission_classes = [IsAuthenticated]
 
@@ -409,10 +410,9 @@ def get_permissions(request):
                 p.permission_id, 
                 p.resource, 
                 p.action
-            FROM childsmile_app_staff s
-            JOIN childsmile_app_role r ON s.role_id = r.id
-            JOIN childsmile_app_permissions p ON r.id = p.role_id
-            WHERE s.staff_id = %s
+            FROM childsmile_app_staff_roles sr
+            JOIN childsmile_app_permissions p ON sr.role_id = p.role_id
+            WHERE sr.staff_id = %s
             """,
             [user_id],
         )
@@ -449,9 +449,20 @@ def get_user_tasks(request):
         )
 
     # Check if the user has the System Administrator role
-    user = Staff.objects.select_related("role").get(staff_id=user_id)
-    is_admin = user.role.role_name == "System Administrator"
-    # print(f"User ID: {user_id}, Role: {user.role.role_name}")
+    user = Staff.objects.get(staff_id=user_id)
+    with connection.cursor() as cursor:
+        role_ids = list(user.roles.values_list("id", flat=True))  # Convert to a list
+        if not role_ids:
+            role_ids = [-1]  # Use a dummy value to prevent SQL errors if the list is empty
+        cursor.execute(
+            """
+            SELECT 1
+            FROM childsmile_app_role r
+            WHERE r.id = ANY(%s) AND r.role_name = 'System Administrator';
+            """,
+            [role_ids],  # Pass the list directly
+        )
+        is_admin = cursor.fetchone() is not None
 
     # Use cache to avoid repeated queries
     cache_key = f"user_tasks_{user_id}" if not is_admin else "all_tasks"
@@ -465,34 +476,21 @@ def get_user_tasks(request):
                 .select_related("task_type", "assigned_to")
                 .order_by("-updated_at")
             )
-            # print(f"Admin fetching all tasks: {tasks.query}")
         else:
             tasks = (
                 Tasks.objects.filter(assigned_to_id=user_id)
                 .select_related("task_type", "assigned_to")
                 .order_by("-updated_at")
             )
-            # print(f"User fetching assigned tasks: {tasks.query}")
-
-        # Cache Hebrew dates to avoid redundant API calls
-        hebrew_date_cache = {}
-
-        def get_cached_hebrew_date(date):
-            if date not in hebrew_date_cache:
-                hebrew_date_cache[date] = get_hebrew_date(date)
-            return hebrew_date_cache[date]
 
         tasks_data = [
             {
                 "id": task.task_id,
                 "description": task.description,
                 "due_date": task.due_date.strftime("%d/%m/%Y"),
-                "due_date_hebrew": get_cached_hebrew_date(task.due_date),
                 "status": task.status,
                 "created": task.created_at.strftime("%d/%m/%Y"),
-                "created_hebrew": get_cached_hebrew_date(task.created_at),
                 "updated": task.updated_at.strftime("%d/%m/%Y"),
-                "updated_hebrew": get_cached_hebrew_date(task.updated_at),
                 "assignee": task.assigned_to.username,
                 "child": task.related_child_id,
                 "tutor": task.related_tutor_id,
@@ -509,7 +507,6 @@ def get_user_tasks(request):
         task_types_data = [{"id": t.id, "name": t.task_type} for t in task_types]
         cache.set("task_types_data", task_types_data, timeout=300)
 
-    # print(f"Tasks ids returning to frontend: {[task['id'] for task in tasks_data]}")
     return JsonResponse({"tasks": tasks_data, "task_types": task_types_data})
 
 
@@ -519,17 +516,33 @@ def get_staff(request):
     """
     Retrieve all staff along with their roles.
     """
-    staff = Staff.objects.select_related("role").all()
-    staff_data = [
-        {
-            "id": s.staff_id,
-            "username": s.username,
-            "first_name": s.first_name,
-            "last_name": s.last_name,
-            "role": s.role.role_name,
-        }
-        for s in staff
-    ]
+    staff = Staff.objects.all()
+    staff_data = []
+
+    for user in staff:
+        # Fetch role names for each staff member
+        with connection.cursor() as cursor:
+            cursor.execute(
+                """
+                SELECT r.role_name
+                FROM childsmile_app_staff_roles sr
+                JOIN childsmile_app_role r ON sr.role_id = r.id
+                WHERE sr.staff_id = %s
+                """,
+                [user.staff_id],
+            )
+            roles = [row[0] for row in cursor.fetchall()]  # Fetch role names
+
+        staff_data.append(
+            {
+                "id": user.staff_id,
+                "username": user.username,
+                "first_name": user.first_name,
+                "last_name": user.last_name,
+                "roles": roles,  # Include role names instead of IDs
+            }
+        )
+
     return JsonResponse({"staff": staff_data})
 
 
@@ -602,8 +615,24 @@ def create_task(request):
         )
 
         # Check if the logged-in user is an admin
-        user = Staff.objects.select_related("role").get(staff_id=user_id)
-        is_admin = user.role.role_name == "System Administrator"
+        user = Staff.objects.get(staff_id=user_id)
+        with connection.cursor() as cursor:
+            role_ids = list(
+                user.roles.values_list("id", flat=True)
+            )  # Convert to a list
+            if not role_ids:
+                role_ids = [
+                    -1
+                ]  # Use a dummy value to prevent SQL errors if the list is empty
+            cursor.execute(
+                """
+                SELECT 1
+                FROM childsmile_app_role r
+                WHERE r.id = ANY(%s) AND r.role_name = 'System Administrator';
+                """,
+                [role_ids],  # Pass the list directly
+            )
+            is_admin = cursor.fetchone() is not None
 
         # Invalidate the cache for tasks
         delete_task_cache(task.assigned_to_id, is_admin=is_admin)
@@ -612,6 +641,7 @@ def create_task(request):
     except Task_Types.DoesNotExist:
         return JsonResponse({"detail": "Invalid task type ID."}, status=400)
     except Exception as e:
+        print(f"DEBUG: An error occurred: {str(e)}")
         return JsonResponse({"detail": str(e)}, status=500)
 
 
@@ -639,8 +669,24 @@ def delete_task(request, task_id):
         task.delete()
 
         # Check if the logged-in user is an admin
-        user = Staff.objects.select_related("role").get(staff_id=user_id)
-        is_admin = user.role.role_name == "System Administrator"
+        user = Staff.objects.get(staff_id=user_id)
+        with connection.cursor() as cursor:
+            role_ids = list(
+                user.roles.values_list("id", flat=True)
+            )  # Convert to a list
+            if not role_ids:
+                role_ids = [
+                    -1
+                ]  # Use a dummy value to prevent SQL errors if the list is empty
+            cursor.execute(
+                """
+                SELECT 1
+                FROM childsmile_app_role r
+                WHERE r.id = ANY(%s) AND r.role_name = 'System Administrator';
+                """,
+                [role_ids],  # Pass the list directly
+            )
+            is_admin = cursor.fetchone() is not None
 
         # Invalidate the cache for tasks
         delete_task_cache(assigned_to_id, is_admin=is_admin)
@@ -649,10 +695,10 @@ def delete_task(request, task_id):
     except Tasks.DoesNotExist:
         return JsonResponse({"error": "Task not found."}, status=404)
     except Exception as e:
+        print(f"DEBUG: An error occurred: {str(e)}")
         return JsonResponse({"error": str(e)}, status=500)
 
 
-# next up - update only task status which is allowed for all users
 @csrf_exempt
 @api_view(["PUT"])
 def update_task_status(request, task_id):
@@ -677,8 +723,24 @@ def update_task_status(request, task_id):
         task.save()
 
         # Check if the logged-in user is an admin
-        user = Staff.objects.select_related("role").get(staff_id=user_id)
-        is_admin = user.role.role_name == "System Administrator"
+        user = Staff.objects.get(staff_id=user_id)
+        with connection.cursor() as cursor:
+            role_ids = list(
+                user.roles.values_list("id", flat=True)
+            )  # Convert to a list
+            if not role_ids:
+                role_ids = [
+                    -1
+                ]  # Use a dummy value to prevent SQL errors if the list is empty
+            cursor.execute(
+                """
+                SELECT 1
+                FROM childsmile_app_role r
+                WHERE r.id = ANY(%s) AND r.role_name = 'System Administrator';
+                """,
+                [role_ids],  # Pass the list directly
+            )
+            is_admin = cursor.fetchone() is not None
 
         # Invalidate the cache for tasks
         delete_task_cache(task.assigned_to_id, is_admin=is_admin)
@@ -689,10 +751,10 @@ def update_task_status(request, task_id):
     except Tasks.DoesNotExist:
         return JsonResponse({"error": "Task not found."}, status=404)
     except Exception as e:
+        print(f"DEBUG: An error occurred: {str(e)}")
         return JsonResponse({"error": str(e)}, status=500)
 
 
-# next up - update task details which is allowed only for all users
 @csrf_exempt
 @api_view(["PUT"])
 def update_task(request, task_id):
@@ -720,13 +782,18 @@ def update_task(request, task_id):
         task.status = request.data.get("status", task.status)
         task.updated_at = datetime.datetime.now()
 
-        # Handle assigned_to (convert username to staff_id)
+        # Handle assigned_to (convert staff_id directly)
         assigned_to_id = request.data.get("assigned_to")
+        print(f"DEBUG: assigned_to_id = {assigned_to_id}")  # Debug log
         if assigned_to_id:
             try:
-                Staff.objects.get(staff_id=assigned_to_id)  # Validate the staff_id exists
-                task.assigned_to_id = assigned_to_id
+                # Validate the staff_id exists
+                Staff.objects.get(staff_id=assigned_to_id)
+                task.assigned_to_id = assigned_to_id  # Assign the staff_id directly
             except Staff.DoesNotExist:
+                print(
+                    f"DEBUG: Staff member with ID '{assigned_to_id}' not found."
+                )  # Debug log
                 return JsonResponse(
                     {"error": f"Staff member with ID '{assigned_to_id}' not found."},
                     status=400,
@@ -745,8 +812,24 @@ def update_task(request, task_id):
         task.save()
 
         # Check if the logged-in user is an admin
-        user = Staff.objects.select_related("role").get(staff_id=user_id)
-        is_admin = user.role.role_name == "System Administrator"
+        user = Staff.objects.get(staff_id=user_id)
+        with connection.cursor() as cursor:
+            role_ids = list(
+                user.roles.values_list("id", flat=True)
+            )  # Convert to a list
+            if not role_ids:
+                role_ids = [
+                    -1
+                ]  # Use a dummy value to prevent SQL errors if the list is empty
+            cursor.execute(
+                """
+                SELECT 1
+                FROM childsmile_app_role r
+                WHERE r.id = ANY(%s) AND r.role_name = 'System Administrator';
+                """,
+                [role_ids],  # Pass the list directly
+            )
+            is_admin = cursor.fetchone() is not None
 
         # Invalidate the cache for tasks
         delete_task_cache(task.assigned_to_id, is_admin=is_admin)
@@ -755,8 +838,10 @@ def update_task(request, task_id):
     except Tasks.DoesNotExist:
         return JsonResponse({"error": "Task not found."}, status=404)
     except Exception as e:
+        print(f"DEBUG: An error occurred: {str(e)}")
         return JsonResponse({"error": str(e)}, status=500)
-    
+
+
 @csrf_exempt
 @api_view(["GET"])
 def get_families_per_location_report(request):
@@ -793,7 +878,8 @@ def get_families_per_location_report(request):
         return JsonResponse({"families_per_location": children_data}, status=200)
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
-    
+
+
 @csrf_exempt
 @api_view(["GET"])
 def get_new_families_report(request):
@@ -815,6 +901,7 @@ def get_new_families_report(request):
     try:
         # Calculate the date for one month ago
         from datetime import datetime, timedelta
+
         one_month_ago = datetime.now() - timedelta(days=30)
 
         # Fetch children registered in the last month
@@ -847,6 +934,7 @@ def get_new_families_report(request):
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
 
+
 @csrf_exempt
 @api_view(["GET"])
 def families_waiting_for_tutorship_report(request):
@@ -868,21 +956,25 @@ def families_waiting_for_tutorship_report(request):
     try:
         # Define the tutoring statuses that indicate waiting for tutorship
         waiting_statuses = [
-            'למצוא_חונך',
-            'למצוא_חונך_אין_באיזור_שלו',
-            'למצוא_חונך_בעדיפות_גבוה',
+            "למצוא_חונך",
+            "למצוא_חונך_אין_באיזור_שלו",
+            "למצוא_חונך_בעדיפות_גבוה",
         ]
 
         # Fetch children with the specified tutoring statuses, ordered by registrationdate
-        children = Children.objects.filter(tutoring_status__in=waiting_statuses).order_by("registrationdate").values(
-            "childfirstname",
-            "childsurname",
-            "father_name",
-            "father_phone",
-            "mother_name",
-            "mother_phone",
-            "tutoring_status",
-            "registrationdate",
+        children = (
+            Children.objects.filter(tutoring_status__in=waiting_statuses)
+            .order_by("registrationdate")
+            .values(
+                "childfirstname",
+                "childsurname",
+                "father_name",
+                "father_phone",
+                "mother_name",
+                "mother_phone",
+                "tutoring_status",
+                "registrationdate",
+            )
         )
 
         # Prepare the data
@@ -901,10 +993,13 @@ def families_waiting_for_tutorship_report(request):
         ]
 
         # Return the data as JSON
-        return JsonResponse({"families_waiting_for_tutorship": children_data}, status=200)
+        return JsonResponse(
+            {"families_waiting_for_tutorship": children_data}, status=200
+        )
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
-    
+
+
 @csrf_exempt
 @api_view(["GET"])
 def active_tutors_report(request):
@@ -947,7 +1042,8 @@ def active_tutors_report(request):
         return JsonResponse({"active_tutors": active_tutors_data}, status=200)
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
-    
+
+
 @csrf_exempt
 @api_view(["GET"])
 def possible_tutorship_matches_report(request):
@@ -974,6 +1070,8 @@ def possible_tutorship_matches_report(request):
         possible_matches_data = list(possible_matches)
 
         # Return the data as JSON
-        return JsonResponse({"possible_tutorship_matches": possible_matches_data}, status=200)
+        return JsonResponse(
+            {"possible_tutorship_matches": possible_matches_data}, status=200
+        )
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
