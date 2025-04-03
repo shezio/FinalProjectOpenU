@@ -67,7 +67,7 @@ class Staff(models.Model):
     username = models.CharField(max_length=255, unique=True)
     email = models.EmailField(max_length=255, unique=True)
     password = models.CharField(max_length=255)
-    role = models.ForeignKey(Role, on_delete=models.CASCADE)
+    roles = models.ManyToManyField(Role, related_name="staff_members")
     first_name = models.CharField(max_length=255)
     last_name = models.CharField(max_length=255)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -313,3 +313,7 @@ class Tasks(models.Model):
     
     class Meta:
         db_table = "childsmile_app_tasks"
+        indexes = [
+            models.Index(fields=["assigned_to_id"], name="idx_tasks_assigned_to_id"),
+            models.Index(fields=["updated_at"], name="idx_tasks_updated_at"),
+        ]

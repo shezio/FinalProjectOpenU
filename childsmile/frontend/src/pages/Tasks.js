@@ -354,7 +354,7 @@ const Tasks = () => {
                                   >
                                     <h2>{task.description}</h2>
                                     <p>
-                                      יש לבצע עד: {task.due_date} ({task.due_date_hebrew})
+                                      יש לבצע עד: {task.due_date}
                                     </p>
                                     <p>סטטוס: {task.status}</p>
                                     <div className="actions">
@@ -536,10 +536,10 @@ const Tasks = () => {
             <div className="task-popup">
               <div className="task-popup-content">
                 <h2>{selectedTask.description}</h2>
-                <p>יש לבצע עד: {selectedTask.due_date} ({selectedTask.due_date_hebrew})</p>
+                <p>יש לבצע עד: {selectedTask.due_date}</p>
                 <p>סטטוס: {selectedTask.status}</p>
-                <p>נוצרה ב: {selectedTask.created} ({selectedTask.created_hebrew})</p>
-                <p>עודכנה ב: {selectedTask.updated} ({selectedTask.updated_hebrew})</p>
+                <p>נוצרה ב: {selectedTask.created}</p>
+                <p>עודכנה ב: {selectedTask.updated}</p>
                 <p>סוג משימה: {getTaskTypeName(selectedTask.type)}</p>
                 <p>לביצוע על ידי: {selectedTask.assignee}</p>
                 <p>חניך: {getChildFullName(selectedTask.child, childrenOptions)}</p>

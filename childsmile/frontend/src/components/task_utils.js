@@ -9,7 +9,7 @@ export const getStaff = async () => {
     const staff = response.data?.staff || [];
     return staff.map((user) => ({
       value: user.id,
-      label: `${user.first_name} ${user.last_name} - ${i18n.t(user.role)}`, // Translate the role
+      label: `${user.first_name} ${user.last_name} - ${user.roles.map((role) => i18n.t(role)).join(', ')}`, // Translate each role name
     }));
   } catch (error) {
     console.error('Error fetching staff:', error);
