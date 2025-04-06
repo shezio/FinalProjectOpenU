@@ -1,8 +1,9 @@
+
 .reports-page {
     padding: 20px;
     text-align: center;
-  }
-  
+}
+
 /* Parent container for reports */
 .reports-container {
     display: flex;
@@ -13,65 +14,69 @@
     padding-right: 50px;
     /* Avoid sidebar overlap */
     justify-content: flex-start;
+
     /* Align reports to the left */
     max-height: calc(100vh - 400px);
     /* Adjust based on available height */
-  }
-  
-  /* Scrollbar styles for reports-container */
-  .reports-container::-webkit-scrollbar {
+    overflow-y: auto;
+    /* Enable vertical scrolling if needed */
+}
+
+/* Scrollbar styles for reports-container */
+.reports-container::-webkit-scrollbar {
     width: 10px;
     /* Narrower scrollbar */
-  }
-  
-  .reports-container::-webkit-scrollbar-track {
+}
+
+.reports-container::-webkit-scrollbar-track {
     background: transparent;
-  }
-  
-  .reports-container::-webkit-scrollbar-thumb {
+}
+
+.reports-container::-webkit-scrollbar-thumb {
     background-color: rgba(0, 0, 0, 0.5);
     border-radius: 10px;
     transition: background-color 0.3s ease;
-  }
-  
-  .reports-container:hover::-webkit-scrollbar-thumb {
+}
+
+.reports-container:hover::-webkit-scrollbar-thumb {
     background-color: rgba(0, 0, 0, 0.8);
-  }
-  
-  /* Individual report card */
-  .reports-container .report {
+}
+
+/* Individual report card */
+.reports-container .report {
     width: 300px;
     /* Fixed width for consistency */
     background-color: #fff;
     padding: 20px;
     border-radius: 10px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    cursor: pointer; /* Pointer cursor for interactivity */
+    cursor: pointer;
+    /* Pointer cursor for interactivity */
     transition: transform 0.2s ease-in-out;
-  }
-  
-  .reports-container .report:active {
+}
+
+.reports-container .report:active {
     cursor: grabbing;
-  }
-  
-  .reports-container .report.dragging {
+}
+
+.reports-container .report.dragging {
     transform: scale(1.05);
     /* Slightly enlarge when dragging */
     opacity: 0.8;
-  }
-  
-  /* report title */
-  .reports-container .report h2 {
+}
+
+/* report title */
+.reports-container .report h2 {
     margin: 0;
-  }
-  
-  /* report description */
-  .reports-container .report p {
+}
+
+/* report description */
+.reports-container .report p {
     margin: 5px 0;
-  }
-  
-  /* Actions container for buttons */
-  .reports-container .report .actions {
+}
+
+/* Actions container for buttons */
+.reports-container .report .actions {
     margin-top: 10px;
     display: flex;
     /* Use flexbox for button layout */
@@ -81,10 +86,10 @@
     /* Allow buttons to wrap if needed */
     justify-content: flex-start;
     /* Align buttons to the left */
-  }
-  
-  /* Buttons inside actions */
-  .reports-container .report .actions button {
+}
+
+/* Buttons inside actions */
+.reports-container .report .actions button {
     background-color: #4CAF50;
     /* Green background */
     color: white;
@@ -107,17 +112,17 @@
     /* Center text */
     transition: transform 0.2s ease, background-color 0.3s ease;
     /* Smooth hover effect */
-  }
-  
-  /* Hover effect for buttons */
-  .reports-container .report .actions button:hover {
+}
+
+/* Hover effect for buttons */
+.reports-container .report .actions button:hover {
     background-color: #45a049;
     /* Slightly darker green on hover */
     transform: scale(1.05);
     /* Slightly enlarge on hover */
-  }
+}
 
-  .report-card {
+.report-card {
     width: 300px;
     height: 200px;
     background-color: #4CAF50;
@@ -129,76 +134,162 @@
     justify-content: center;
     cursor: pointer;
     transition: transform 0.2s, box-shadow 0.2s;
-  }
-  
-  .report-card:hover {
+}
+
+.report-card:hover {
     transform: scale(1.05);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
     /* hover marker should be arrow */
-  }
-  
-  .report-card h2 {
+}
+
+.report-card h2 {
     font-size: 24px;
     text-align: center;
-  }
-  
-  .no-permission {
+}
+
+.no-permission {
     text-align: center;
     margin-top: 50px;
-  }
-  
-  .no-permission h2 {
+}
+
+.no-permission h2 {
     font-size: 72px;
     color: #ff0000;
-  }
+}
 
-  .data-grid {
-    width: 100%;
+/* Scoped styles for the grid container in ActiveTutorsReport */
+.page-content .grid-container {
+    width: calc(100% - 50px); /* Adjust width to leave space for the sidebar */
+    /* make the grid to the right */
+    margin-left: 1000px; /* Adjust margin to leave space for the sidebar */
+    height: calc(100vh - 300px); /* Adjust height based on available space */
+    padding: 0 20px; /* Add padding inside the grid container */
+    direction: rtl; /* Align the grid container to the right */
+}
+
+/* Style for the data grid */
+.page-content .data-grid {
+    width: 100%; /* Ensure the table takes up the full width of its container */
     border-collapse: collapse;
-    margin-top: 20px;
-  }
-  
-  .data-grid th,
-  .data-grid td {
+    font-size: 30px; /* Increase font size */
+    font-family: Arial, sans-serif; /* Use a sans-serif font for better readability */
+    background-color: #fff; /* White background for the table */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Add a subtle shadow for depth */
+    border-radius: 8px; /* Rounded corners for the table */
+    overflow: hidden; /* Ensure rounded corners are visible */
+    max-height: 80vh; /* Limit height to avoid overflow */
+    overflow-y: auto;
+    direction: rtl; /* Align the grid to the right for right-to-left languages */
+}
+
+.page-content .data-grid th,
+.page-content .data-grid td {
     border: 1px solid #ddd;
-    padding: 8px;
-    text-align: center;
-  }
-  
-  .data-grid th {
-    background-color: #f4f4f4;
+    padding: 12px; /* Increase padding */
+    text-align: right; /* Align text to the right */
+    font-size: 30px; /* Increase font size */
+    white-space: nowrap; /* Prevent text from wrapping */
+    overflow: hidden; /* Hide overflow if the text is too long */
+    text-overflow: ellipsis; /* Add ellipsis for overflowing text */
+}
+
+.page-content .data-grid th {
+    background-color: #4CAF50; /* Green header background */
+    color: white;
     font-weight: bold;
-  }
-  
-  .actions {
+    font-size: 30px;
+}
+
+.page-content .data-grid td {
+    position: relative; /* Ensure the cell does not block interaction */
+    z-index: 0; /* Keep the cell behind the checkbox */
+    color: #333;
+}
+
+.page-content .no-data {
+    text-align: center;
+    font-size: 20px;
+    color: #666;
+    margin-top: 20px;
+}
+
+/* Ensure the checkbox is clickable */
+.page-content .data-grid input[type="checkbox"] {
+    width: 20px; /* Adjust checkbox size */
+    height: 20px; /* Adjust checkbox size */
+    cursor: pointer; /* Pointer cursor for checkboxes */
+    margin-right: 10px; /* Space between checkbox and label */
+    position: relative; /* Ensure the checkbox is positioned correctly */
+    z-index: 1; /* Bring the checkbox to the front */
+}
+
+.page-content .data-grid label {
+    cursor: pointer;
+}
+
+.actions {
     display: flex;
     align-items: center;
     margin-bottom: 20px;
-  }
-  
-  .actions button {
+}
+
+.actions button {
     margin-right: 10px;
     padding: 10px;
     border: none;
     border-radius: 5px;
     cursor: pointer;
-  }
-  
-  .actions .export-button img {
+}
+
+.actions .export-button img {
     width: 50px;
     height: 50px;
-  }
-  
-  .no-data {
-    text-align: center;
-    font-size: 72px;
-    color: #666;
-    margin-top: 20px;
-  }
-  
-  .loader {
+}
+
+.loader {
     text-align: center;
     font-size: 18px;
     color: #333;
     margin-top: 20px;
-  }
+}
+
+/* Style for the date inputs */
+.date-input {
+    padding: 10px;
+    font-size: 16px;
+    margin: 0 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+/* Style for the filter button */
+.filter-button {
+    background-color: #007bff;
+    color: white;
+    padding: 10px 20px;
+    font-size: 16px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-left: 10px;
+}
+
+.filter-button:hover {
+    background-color: #0056b3;
+}
+
+/* Style for the refresh button */
+.refresh-button {
+    background-color: #28a745;
+    color: white;
+    padding: 10px 20px;
+    font-size: 16px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-left: 10px;
+}
+
+.refresh-button:hover {
+    background-color: #218838;
+}

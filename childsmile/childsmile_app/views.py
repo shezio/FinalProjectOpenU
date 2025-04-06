@@ -940,7 +940,7 @@ def families_waiting_for_tutorship_report(request):
 @api_view(["GET"])
 def active_tutors_report(request):
     """
-    Retrieve a report of active tutors with their assigned children.
+    Retrieve a report of active tutors with their assigned children, filtered by date range.
     """
     user_id = request.session.get("user_id")
     if not user_id:
@@ -955,21 +955,33 @@ def active_tutors_report(request):
         )
 
     try:
-        # Fetch active tutorships with child and tutor details
-        tutorships = Tutorships.objects.select_related("child", "tutor").values(
+        # Get date filters from query parameters
+        from_date = request.GET.get("from_date")
+        to_date = request.GET.get("to_date")
+
+        # Base queryset
+        tutorships = Tutorships.objects.select_related("child", "tutor__staff").values(
             "child__childfirstname",
             "child__childsurname",
-            "tutor__tutorfirstname",
-            "tutor__tutorsurname",
+            "tutor__staff__first_name",
+            "tutor__staff__last_name",
+            "created_date",
         )
+
+        # Apply date filters if provided
+        if from_date:
+            tutorships = tutorships.filter(created_date__gte=from_date)
+        if to_date:
+            tutorships = tutorships.filter(created_date__lte=to_date)
 
         # Prepare the data
         active_tutors_data = [
             {
                 "child_firstname": tutorship["child__childfirstname"],
                 "child_lastname": tutorship["child__childsurname"],
-                "tutor_firstname": tutorship["tutor__tutorfirstname"],
-                "tutor_lastname": tutorship["tutor__tutorsurname"],
+                "tutor_firstname": tutorship["tutor__staff__first_name"],
+                "tutor_lastname": tutorship["tutor__staff__last_name"],
+                "created_date": tutorship["created_date"].strftime("%d/%m/%Y"),
             }
             for tutorship in tutorships
         ]

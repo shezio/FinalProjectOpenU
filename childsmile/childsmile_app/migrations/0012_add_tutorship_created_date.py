@@ -1,6 +1,5 @@
-# filepath: c:\Dev\FinalProjectOpenU\childsmile\childsmile_app\migrations\0011_add_indexes_to_tasks.py
 from django.db import migrations, models
-
+import datetime
 
 class Migration(migrations.Migration):
 
@@ -12,7 +11,11 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name="tutorships",
             name="created_date",
-            field=models.DateTimeField(auto_now_add=True),
+            field=models.DateTimeField(auto_now_add=True, null=True),
+        ),
+        migrations.RunSQL(
+            sql="UPDATE childsmile_app_tutorships SET created_date = NOW() WHERE created_date IS NULL;",
+            reverse_sql="UPDATE childsmile_app_tutorships SET created_date = NULL;",
         ),
         migrations.AddIndex(
             model_name="tutorships",
