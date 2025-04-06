@@ -3,7 +3,7 @@ import axios from '../axiosConfig';
 import Sidebar from '../components/Sidebar';
 import InnerPageHeader from '../components/InnerPageHeader';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
-import { getStaff, getChildren, getTutors, getChildFullName, getTutorFullName } from '../components/task_utils';  // Import utility functions for fetching data
+import { getStaff, getChildren, getTutors, getChildFullName, getTutorFullName } from '../components/utils';  // Import utility functions for fetching data
 import '../styles/common.css';
 import '../styles/tasks.css';
 import Select from 'react-select';  // Import react-select

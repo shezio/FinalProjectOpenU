@@ -1,9 +1,9 @@
 import React from 'react';
-import Sidebar from '../components/Sidebar';
-import InnerPageHeader from '../components/InnerPageHeader';
-import '../styles/common.css';
-import '../styles/reports.css'; // Import specific styles for the Reports page
-import { hasViewPermissionForReports } from '../components/utils'; // Import utility functions for fetching data
+import Sidebar from '../../components/Sidebar';
+import InnerPageHeader from '../../components/InnerPageHeader';
+import '../../styles/common.css';
+import '../../styles/reports.css'; // Import specific styles for the Reports page
+import { hasViewPermissionForReports } from '../../components/utils'; // Import utility functions for fetching data
 import { useNavigate } from 'react-router-dom';
 
 const Reports = () => {

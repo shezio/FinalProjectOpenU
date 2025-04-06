@@ -33,6 +33,8 @@ from .views import (
     families_waiting_for_tutorship_report,
     active_tutors_report,
     possible_tutorship_matches_report,
+    volunteer_feedback_report,
+    tutor_feedback_report,
 )
 
 router = DefaultRouter()
@@ -55,21 +57,54 @@ router.register(r"possible_matches", PossibleMatchesViewSet)  # Add this line
 
 urlpatterns = [
     path("", include(router.urls)),
-    path('api/login/', login_view, name='login'),
-    path('api/permissions/', get_permissions, name='get_permissions'),
-    path('api/logout/', logout_view, name='logout'),
-    path('api/tasks/', get_user_tasks, name='get_user_tasks'),
-    path('api/children/', get_children, name='get_children'),
-    path('api/tutors/', get_tutors, name='get_tutors'),
-    path('api/staff/', get_staff, name='get_staff'),
-    path('api/tasks/create/', create_task, name='create_task'),
-    path('api/tasks/delete/<int:task_id>/', delete_task, name='delete_task'),
-    path('api/tasks/update/<int:task_id>/', update_task, name='update_task'),
-    path('api/tasks/update-status/<int:task_id>/', update_task_status, name='update_task_status'),
-    path('api/reports/families-per-location-report/', get_families_per_location_report, name='get_families_per_location_report'),
-    path('api/reports/new-families-report/', get_new_families_report, name='get_new_families_report'),
-    path('api/reports/families-waiting-for-tutorship-report/', families_waiting_for_tutorship_report, name='families_waiting_for_tutorship_report'),
-    path('api/reports/active-tutors-report/', active_tutors_report, name='active_tutors_report'),
-    path('api/reports/possible-tutorship-matches-report/', possible_tutorship_matches_report, name='possible_tutorship_matches_report'),
-
+    path("api/login/", login_view, name="login"),
+    path("api/permissions/", get_permissions, name="get_permissions"),
+    path("api/logout/", logout_view, name="logout"),
+    path("api/tasks/", get_user_tasks, name="get_user_tasks"),
+    path("api/children/", get_children, name="get_children"),
+    path("api/tutors/", get_tutors, name="get_tutors"),
+    path("api/staff/", get_staff, name="get_staff"),
+    path("api/tasks/create/", create_task, name="create_task"),
+    path("api/tasks/delete/<int:task_id>/", delete_task, name="delete_task"),
+    path("api/tasks/update/<int:task_id>/", update_task, name="update_task"),
+    path(
+        "api/tasks/update-status/<int:task_id>/",
+        update_task_status,
+        name="update_task_status",
+    ),
+    path(
+        "api/reports/families-per-location-report/",
+        get_families_per_location_report,
+        name="get_families_per_location_report",
+    ),
+    path(
+        "api/reports/new-families-report/",
+        get_new_families_report,
+        name="get_new_families_report",
+    ),
+    path(
+        "api/reports/families-waiting-for-tutorship-report/",
+        families_waiting_for_tutorship_report,
+        name="families_waiting_for_tutorship_report",
+    ),
+    path(
+        "api/reports/active-tutors-report/",
+        active_tutors_report,
+        name="active_tutors_report",
+    ),
+    path(
+        "api/reports/possible-tutorship-matches-report/",
+        possible_tutorship_matches_report,
+        name="possible_tutorship_matches_report",
+    ),
+    path(
+        "api/reports/volunteer-feedback-report/",
+        volunteer_feedback_report,
+        name="volunteer_feedback_report",
+    ),
+    path(
+        "api/reports/tutor-feedback-report/",
+        tutor_feedback_report,
+        name="tutor_feedback_report",
+    ),
 ]

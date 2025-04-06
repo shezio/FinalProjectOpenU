@@ -1,0 +1,204 @@
+.reports-page {
+    padding: 20px;
+    text-align: center;
+  }
+  
+/* Parent container for reports */
+.reports-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 100px;
+    /* Space between reports */
+    margin-top: 20px;
+    padding-right: 50px;
+    /* Avoid sidebar overlap */
+    justify-content: flex-start;
+    /* Align reports to the left */
+    max-height: calc(100vh - 400px);
+    /* Adjust based on available height */
+  }
+  
+  /* Scrollbar styles for reports-container */
+  .reports-container::-webkit-scrollbar {
+    width: 10px;
+    /* Narrower scrollbar */
+  }
+  
+  .reports-container::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  .reports-container::-webkit-scrollbar-thumb {
+    background-color: rgba(0, 0, 0, 0.5);
+    border-radius: 10px;
+    transition: background-color 0.3s ease;
+  }
+  
+  .reports-container:hover::-webkit-scrollbar-thumb {
+    background-color: rgba(0, 0, 0, 0.8);
+  }
+  
+  /* Individual report card */
+  .reports-container .report {
+    width: 300px;
+    /* Fixed width for consistency */
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    cursor: pointer; /* Pointer cursor for interactivity */
+    transition: transform 0.2s ease-in-out;
+  }
+  
+  .reports-container .report:active {
+    cursor: grabbing;
+  }
+  
+  .reports-container .report.dragging {
+    transform: scale(1.05);
+    /* Slightly enlarge when dragging */
+    opacity: 0.8;
+  }
+  
+  /* report title */
+  .reports-container .report h2 {
+    margin: 0;
+  }
+  
+  /* report description */
+  .reports-container .report p {
+    margin: 5px 0;
+  }
+  
+  /* Actions container for buttons */
+  .reports-container .report .actions {
+    margin-top: 10px;
+    display: flex;
+    /* Use flexbox for button layout */
+    gap: 15px;
+    /* Space between buttons */
+    flex-wrap: wrap;
+    /* Allow buttons to wrap if needed */
+    justify-content: flex-start;
+    /* Align buttons to the left */
+  }
+  
+  /* Buttons inside actions */
+  .reports-container .report .actions button {
+    background-color: #4CAF50;
+    /* Green background */
+    color: white;
+    /* White text */
+    padding: 10px 15px;
+    /* Increase padding for larger buttons */
+    border: none;
+    /* Remove border */
+    border-radius: 8px;
+    /* Rounded corners */
+    cursor: pointer;
+    /* Pointer cursor on hover */
+    font-size: 1em;
+    /* Increase font size */
+    width: auto;
+    /* Allow the button to adjust its width based on content */
+    min-width: 120px;
+    /* Set a minimum width for consistency */
+    text-align: center;
+    /* Center text */
+    transition: transform 0.2s ease, background-color 0.3s ease;
+    /* Smooth hover effect */
+  }
+  
+  /* Hover effect for buttons */
+  .reports-container .report .actions button:hover {
+    background-color: #45a049;
+    /* Slightly darker green on hover */
+    transform: scale(1.05);
+    /* Slightly enlarge on hover */
+  }
+
+  .report-card {
+    width: 300px;
+    height: 200px;
+    background-color: #4CAF50;
+    color: white;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  
+  .report-card:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    /* hover marker should be arrow */
+  }
+  
+  .report-card h2 {
+    font-size: 24px;
+    text-align: center;
+  }
+  
+  .no-permission {
+    text-align: center;
+    margin-top: 50px;
+  }
+  
+  .no-permission h2 {
+    font-size: 72px;
+    color: #ff0000;
+  }
+
+  .data-grid {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+  }
+  
+  .data-grid th,
+  .data-grid td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: center;
+  }
+  
+  .data-grid th {
+    background-color: #f4f4f4;
+    font-weight: bold;
+  }
+  
+  .actions {
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+  
+  .actions button {
+    margin-right: 10px;
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  
+  .actions .export-button img {
+    width: 50px;
+    height: 50px;
+  }
+  
+  .no-data {
+    text-align: center;
+    font-size: 72px;
+    color: #666;
+    margin-top: 20px;
+  }
+  
+  .loader {
+    text-align: center;
+    font-size: 18px;
+    color: #333;
+    margin-top: 20px;
+  }
