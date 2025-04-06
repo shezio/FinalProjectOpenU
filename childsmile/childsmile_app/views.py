@@ -44,14 +44,31 @@ def delete_task_cache(assigned_to_id=None, is_admin=False):
         user_cache_key = f"user_tasks_{assigned_to_id}"
         cache.delete(user_cache_key)  # Clear the cache for the specific user
 
+def is_admin(user):
+    """
+    Check if the given user is an admin.
+    """
+    with connection.cursor() as cursor:
+        role_ids = list(user.roles.values_list("id", flat=True))  # Convert to a list
+        if not role_ids:
+            role_ids = [-1]  # Use a dummy value to prevent SQL errors if the list is empty
+        cursor.execute(
+            """
+            SELECT 1
+            FROM childsmile_app_role r
+            WHERE r.id = ANY(%s) AND r.role_name = 'System Administrator';
+            """,
+            [role_ids],  # Pass the list directly
+        )
+        return cursor.fetchone() is not None
 
-def get_hebrew_date(date):
-    res = requests.get(
-        f"https://www.hebcal.com/converter?cfg=json&gy={date.year}&gm={date.month}&gd={date.day}&g2h=1",
-        verify=False,
-        timeout=600,
-    )
-    return res.json()["hebrew"]
+# def get_hebrew_date(date):
+#     res = requests.get(
+#         f"https://www.hebcal.com/converter?cfg=json&gy={date.year}&gm={date.month}&gd={date.day}&g2h=1",
+#         verify=False,
+#         timeout=600,
+#     )
+#     return res.json()["hebrew"]
 
 
 def has_permission(request, resource, action):
@@ -450,22 +467,9 @@ def get_user_tasks(request):
 
     # Check if the user has the System Administrator role
     user = Staff.objects.get(staff_id=user_id)
-    with connection.cursor() as cursor:
-        role_ids = list(user.roles.values_list("id", flat=True))  # Convert to a list
-        if not role_ids:
-            role_ids = [-1]  # Use a dummy value to prevent SQL errors if the list is empty
-        cursor.execute(
-            """
-            SELECT 1
-            FROM childsmile_app_role r
-            WHERE r.id = ANY(%s) AND r.role_name = 'System Administrator';
-            """,
-            [role_ids],  # Pass the list directly
-        )
-        is_admin = cursor.fetchone() is not None
 
     # Use cache to avoid repeated queries
-    cache_key = f"user_tasks_{user_id}" if not is_admin else "all_tasks"
+    cache_key = f"user_tasks_{user_id}" if not is_admin(user) else "all_tasks"
     tasks_data = cache.get(cache_key)
 
     if not tasks_data:
@@ -616,26 +620,9 @@ def create_task(request):
 
         # Check if the logged-in user is an admin
         user = Staff.objects.get(staff_id=user_id)
-        with connection.cursor() as cursor:
-            role_ids = list(
-                user.roles.values_list("id", flat=True)
-            )  # Convert to a list
-            if not role_ids:
-                role_ids = [
-                    -1
-                ]  # Use a dummy value to prevent SQL errors if the list is empty
-            cursor.execute(
-                """
-                SELECT 1
-                FROM childsmile_app_role r
-                WHERE r.id = ANY(%s) AND r.role_name = 'System Administrator';
-                """,
-                [role_ids],  # Pass the list directly
-            )
-            is_admin = cursor.fetchone() is not None
 
         # Invalidate the cache for tasks
-        delete_task_cache(task.assigned_to_id, is_admin=is_admin)
+        delete_task_cache(task.assigned_to_id, is_admin=is_admin(user))
 
         return JsonResponse({"task_id": task.task_id}, status=201)
     except Task_Types.DoesNotExist:
@@ -670,26 +657,9 @@ def delete_task(request, task_id):
 
         # Check if the logged-in user is an admin
         user = Staff.objects.get(staff_id=user_id)
-        with connection.cursor() as cursor:
-            role_ids = list(
-                user.roles.values_list("id", flat=True)
-            )  # Convert to a list
-            if not role_ids:
-                role_ids = [
-                    -1
-                ]  # Use a dummy value to prevent SQL errors if the list is empty
-            cursor.execute(
-                """
-                SELECT 1
-                FROM childsmile_app_role r
-                WHERE r.id = ANY(%s) AND r.role_name = 'System Administrator';
-                """,
-                [role_ids],  # Pass the list directly
-            )
-            is_admin = cursor.fetchone() is not None
 
         # Invalidate the cache for tasks
-        delete_task_cache(assigned_to_id, is_admin=is_admin)
+        delete_task_cache(assigned_to_id, is_admin=is_admin(user))
 
         return JsonResponse({"message": "Task deleted successfully."}, status=200)
     except Tasks.DoesNotExist:
@@ -724,26 +694,9 @@ def update_task_status(request, task_id):
 
         # Check if the logged-in user is an admin
         user = Staff.objects.get(staff_id=user_id)
-        with connection.cursor() as cursor:
-            role_ids = list(
-                user.roles.values_list("id", flat=True)
-            )  # Convert to a list
-            if not role_ids:
-                role_ids = [
-                    -1
-                ]  # Use a dummy value to prevent SQL errors if the list is empty
-            cursor.execute(
-                """
-                SELECT 1
-                FROM childsmile_app_role r
-                WHERE r.id = ANY(%s) AND r.role_name = 'System Administrator';
-                """,
-                [role_ids],  # Pass the list directly
-            )
-            is_admin = cursor.fetchone() is not None
 
         # Invalidate the cache for tasks
-        delete_task_cache(task.assigned_to_id, is_admin=is_admin)
+        delete_task_cache(task.assigned_to_id, is_admin=is_admin(user))
 
         return JsonResponse(
             {"message": "Task status updated successfully."}, status=200
@@ -813,26 +766,9 @@ def update_task(request, task_id):
 
         # Check if the logged-in user is an admin
         user = Staff.objects.get(staff_id=user_id)
-        with connection.cursor() as cursor:
-            role_ids = list(
-                user.roles.values_list("id", flat=True)
-            )  # Convert to a list
-            if not role_ids:
-                role_ids = [
-                    -1
-                ]  # Use a dummy value to prevent SQL errors if the list is empty
-            cursor.execute(
-                """
-                SELECT 1
-                FROM childsmile_app_role r
-                WHERE r.id = ANY(%s) AND r.role_name = 'System Administrator';
-                """,
-                [role_ids],  # Pass the list directly
-            )
-            is_admin = cursor.fetchone() is not None
 
         # Invalidate the cache for tasks
-        delete_task_cache(task.assigned_to_id, is_admin=is_admin)
+        delete_task_cache(task.assigned_to_id, is_admin=is_admin(user))
 
         return JsonResponse({"message": "Task updated successfully."}, status=200)
     except Tasks.DoesNotExist:
@@ -1072,6 +1008,105 @@ def possible_tutorship_matches_report(request):
         # Return the data as JSON
         return JsonResponse(
             {"possible_tutorship_matches": possible_matches_data}, status=200
+        )
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
+    
+# next report is volunteer feedback report
+@csrf_exempt
+@api_view(["GET"])
+def volunteer_feedback_report(request):
+    """
+    Retrieve a report of all volunteer feedback and all the corresponding feedbacks from the feedback table. 
+    we only have this in volnteer feedback table.
+    feedback_id_id,volunteer_name,volunteer_id
+    we need the volunteer_name from the volunteer feedback table and all the data from the feedback table related to the feedback id_id FK
+    """
+    user_id = request.session.get("user_id")
+    if not user_id:
+        return JsonResponse(
+            {"detail": "Authentication credentials were not provided."}, status=403
+        )
+
+    # Check if the user has VIEW permission on the "general_v_feedback" resource
+    if not has_permission(request, "general_v_feedback", "VIEW"):
+        return JsonResponse(
+            {"error": "You do not have permission to view this report."}, status=401
+        )
+
+    try:
+        feedbacks = General_V_Feedback.objects.select_related("feedback").all()
+        # Convert the data to a list of dictionaries
+        feedbacks_data = [
+            {
+                "volunteer_name": feedback.volunteer_name,
+                "feedback_id": feedback.feedback.feedback_id,
+                "event_date": feedback.feedback.event_date.strftime("%d/%m/%Y"),
+                "feedback filled at": feedback.feedback.timestamp.strftime("%d/%m/%Y"),
+                "description": feedback.feedback.description,
+                "exceptional_events": feedback.feedback.exceptional_events,
+                "anything_else": feedback.feedback.anything_else,
+                "comments": feedback.feedback.comments,
+            }
+            for feedback in feedbacks
+        ]
+
+        # Return the data as JSON
+        return JsonResponse(
+            {"volunteer_feedback": feedbacks_data}, status=200
+        )
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
+    
+# next report is tutor feedback report
+@csrf_exempt
+@api_view(["GET"])
+def tutor_feedback_report(request):
+    """
+    Retrieve a report of all tutor feedback.
+    """
+    user_id = request.session.get("user_id")
+    if not user_id:
+        return JsonResponse(
+            {"detail": "Authentication credentials were not provided."}, status=403
+        )
+
+    # Check if the user has VIEW permission on the "tutor_feedback" resource
+    if not has_permission(request, "tutor_feedback", "VIEW"):
+        return JsonResponse(
+            {"error": "You do not have permission to view this report."}, status=401
+        )
+
+    try:
+        # Fetch all data according this logic
+    # Retrieve a report of all tutor feedback and all the corresponding feedbacks from the feedback table. 
+    # we only have this in tutor feedback table.
+    # feedback_id_id,tutee_name,tutor_name,is_it_your_tutee, is_first_visit
+    # we need the tutor_name from the tutor feedback table and the tutee_name and is_it_your_tutee, and is_first_visit and all the data from the feedback table related to the feedback id_id FK
+
+
+        feedbacks = Tutor_Feedback.objects.select_related("feedback").all()
+        # Convert the data to a list of dictionaries
+        feedbacks_data = [
+            {
+                "tutor_name": feedback.tutor_name,
+                "tutee_name": feedback.tutee_name,
+                "is_it_your_tutee": feedback.is_it_your_tutee,
+                "is_first_visit": feedback.is_first_visit,
+                "feedback_id": feedback.feedback.feedback_id,
+                "event_date": feedback.feedback.event_date.strftime("%d/%m/%Y"),
+                "feedback filled at": feedback.feedback.timestamp.strftime("%d/%m/%Y"),
+                "description": feedback.feedback.description,
+                "exceptional_events": feedback.feedback.exceptional_events,
+                "anything_else": feedback.feedback.anything_else,
+                "comments": feedback.feedback.comments,
+            }
+            for feedback in feedbacks
+        ]
+
+        # Return the data as JSON
+        return JsonResponse(
+            {"tutor_feedback": feedbacks_data}, status=200
         )
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
