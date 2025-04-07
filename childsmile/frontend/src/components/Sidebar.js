@@ -6,41 +6,50 @@ const Sidebar = () => {
   const navigate = useNavigate();
   const location = useLocation(); // Detects page changes
 
-  React.useEffect(() => {
-    const buttons = document.querySelectorAll('.sidebar button');
-
-    buttons.forEach((button) => {
-      button.addEventListener('click', function () {
-        buttons.forEach((btn) => btn.classList.remove('active'));
-        this.classList.add('active');
-      });
-    });
-
-    // Highlight the active page button based on route
-    buttons.forEach((button) => {
-      if (button.dataset.path === location.pathname) {
-        button.classList.add('active');
-      } else {
-        button.classList.remove('active');
-      }
-    });
-
-    return () => {
-      // Cleanup event listeners to prevent duplicates
-      buttons.forEach((button) => {
-        button.replaceWith(button.cloneNode(true));
-      });
-    };
-  }, [location.pathname]); // Runs when the route changes
-
   return (
     <div className="sidebar">
-      <button data-path="/tasks" onClick={() => navigate('/tasks')}>לוח משימות</button>
-      <button data-path="/families" onClick={() => navigate('/families')}>משפחות</button>
-      <button data-path="/volunteers" onClick={() => navigate('/volunteers')}>מתנדבים</button>
-      <button data-path="/tutorships" onClick={() => navigate('/tutorships')}>חונכות</button>
-      <button data-path="/reports" onClick={() => navigate('/reports')}>דוחות</button>
-      <button data-path="/system-management" onClick={() => navigate('/system-management')}>ניהול מערכת</button>
+      <button
+        data-path="/tasks"
+        className={location.pathname.startsWith('/tasks') ? 'active' : ''}
+        onClick={() => navigate('/tasks')}
+      >
+        לוח משימות
+      </button>
+      <button
+        data-path="/families"
+        className={location.pathname.startsWith('/families') ? 'active' : ''}
+        onClick={() => navigate('/families')}
+      >
+        משפחות
+      </button>
+      <button
+        data-path="/volunteers"
+        className={location.pathname.startsWith('/volunteers') ? 'active' : ''}
+        onClick={() => navigate('/volunteers')}
+      >
+        מתנדבים
+      </button>
+      <button
+        data-path="/tutorships"
+        className={location.pathname.startsWith('/tutorships') ? 'active' : ''}
+        onClick={() => navigate('/tutorships')}
+      >
+        חונכות
+      </button>
+      <button
+        data-path="/reports"
+        className={location.pathname.startsWith('/reports') ? 'active' : ''}
+        onClick={() => navigate('/reports')}
+      >
+        דוחות
+      </button>
+      <button
+        data-path="/system-management"
+        className={location.pathname.startsWith('/system-management') ? 'active' : ''}
+        onClick={() => navigate('/system-management')}
+      >
+        ניהול מערכת
+      </button>
     </div>
   );
 };

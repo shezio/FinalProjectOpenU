@@ -7,12 +7,15 @@ import { hasViewPermissionForTable } from '../../components/utils';
 import axios from '../../axiosConfig';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { exportToExcel, exportToPDF } from '../../components/export_utils';
+import { useTranslation } from 'react-i18next'; // Import the translation hook
 
 const ActiveTutorsReport = () => {
   const [tutors, setTutors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
+  const { t } = useTranslation(); // Translation hook
 
   // Check if the user has permission to view the required tables
   const hasPermissionToView =
@@ -35,40 +38,6 @@ const ActiveTutorsReport = () => {
       .finally(() => {
         setLoading(false);
       });
-  };
-
-  const exportToExcel = () => {
-    const selectedTutors = tutors.filter(tutor => tutor.selected);
-    if (selectedTutors.length === 0) {
-      alert('אנא בחר לפחות חונך אחד לייצוא');
-      return;
-    }
-
-    const headers = ['שם חונך', 'שם חניך', 'תאריך יצירה'];
-    const rows = selectedTutors.map(tutor => [
-      `${tutor.tutor_firstname} ${tutor.tutor_lastname}`,
-      `${tutor.child_firstname} ${tutor.child_lastname}`,
-      tutor.created_date,
-    ]);
-
-    const csvContent = [
-      headers.join(','), 
-      ...rows.map(row => row.join(','))
-    ].join('\n');
-
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.setAttribute('download', 'active_tutors_report.csv');
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-
-  const exportToPDF = () => {
-    // Logic to export data to PDF
-    alert('Exporting to PDF...');
   };
 
   const refreshData = () => {
@@ -105,12 +74,29 @@ const ActiveTutorsReport = () => {
       <Sidebar />
       <InnerPageHeader title="דוח חונכים פעילים" />
       <div className="page-content">
+        <ToastContainer
+          position="top-center" // Center the toast
+          autoClose={2000} // Auto-close after 3 seconds
+          hideProgressBar={false} // Show the progress bar
+          closeOnClick
+          pauseOnFocusLoss
+          draggable
+          pauseOnHover
+          className="toast-rtl" // Apply the RTL class to all toasts
+          rtl={true} // Ensure progress bar moves from left to right
+        />
         <div className="filter-create-container">
           <div className="actions">
-            <button className="export-button excel-button" onClick={exportToExcel}>
+            <button
+              className="export-button excel-button"
+              onClick={() => exportToExcel(tutors, t)}
+            >
               <img src="/assets/excel-icon.png" alt="Excel" />
             </button>
-            <button className="export-button pdf-button" onClick={exportToPDF}>
+            <button
+              className="export-button pdf-button"
+              onClick={() => exportToPDF(tutors, t)}
+            >
               <img src="/assets/pdf-icon.png" alt="PDF" />
             </button>
             <label htmlFor="date-from">מתאריך:</label>
@@ -149,7 +135,7 @@ const ActiveTutorsReport = () => {
                   <tr>
                     <th>שם חונך</th>
                     <th>שם חניך</th>
-                    <th>תאריך יצירה</th>
+                    <th>תאריך התאמת חונכות</th>
                     <th>בחר</th>
                   </tr>
                 </thead>

@@ -37,7 +37,7 @@ body {
   text-align: center;
   max-width: 400px; /* Limit the width for better layout */
   width: 100%; /* Ensure it takes up full width on smaller screens */
-  margin: 0 auto; /* Center horizontally */
+  margin-left: 200px; /* Adjust margin-left to avoid sidebar overlap */
 }
 
 .login-container h1 {
