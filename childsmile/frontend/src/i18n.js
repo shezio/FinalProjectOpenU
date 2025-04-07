@@ -74,6 +74,8 @@ const resources = {
       "Export to Excel": "Export to Excel",
       "Export to PDF": "Export to PDF",
       "TEST REPORT NAME": "TEST REPORT NAME",
+      "Filter": "Filter",
+      "Refresh": "Refresh",
     }
   },
   he: {
@@ -147,6 +149,15 @@ const resources = {
       "Export to PDF": "ייצוא לPDF",
       "Please select a date": "אנא בחר תאריך",
       "TEST REPORT NAME": "שם דוח לדוגמה",
+      "Filter": "סנן",
+      "Refresh": "רענן",
+      "Child Full Name":"שם הילד",
+      "City":"עיר",
+      "Loading data...": "הנתונים בטעינה...",
+      "No data to display": "אין נתונים להצגה",
+      "Export Map as Image": "ייצא מפה כתמונה",
+      "Registration Date": "תאריך רישום",
+      "Exporting...": "מייצא...",
     }
   }
 };

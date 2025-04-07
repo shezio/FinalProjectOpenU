@@ -32,8 +32,7 @@ import requests
 import urllib3
 from django.utils import timezone
 from datetime import datetime
-
-
+from geopy.geocoders import Nominatim
 
 def delete_task_cache(assigned_to_id=None, is_admin=False):
     """
@@ -784,38 +783,50 @@ def update_task(request, task_id):
 @csrf_exempt
 @api_view(["GET"])
 def get_families_per_location_report(request):
-    """
-    Retrieve all children along with their city and full name, with permission check.
-    """
+
     user_id = request.session.get("user_id")
     if not user_id:
         return JsonResponse(
             {"detail": "Authentication credentials were not provided."}, status=403
         )
 
-    # Check if the user has VIEW permission on the "children" resource
     if not has_permission(request, "children", "VIEW"):
         return JsonResponse(
             {"error": "You do not have permission to generate this report"}, status=401
         )
 
     try:
-        # Fetch all children
-        children = Children.objects.all()
+        from_date = request.GET.get("from_date")
+        to_date = request.GET.get("to_date")
 
-        # Prepare the data
-        children_data = [
-            {
+        if from_date:
+            from_date = timezone.make_aware(datetime.strptime(from_date, "%Y-%m-%d"))
+        if to_date:
+            to_date = timezone.make_aware(datetime.strptime(to_date, "%Y-%m-%d"))
+
+        children = Children.objects.all()
+        if from_date:
+            children = children.filter(registrationdate__gte=from_date)
+        if to_date:
+            children = children.filter(registrationdate__lte=to_date)
+
+        geolocator = Nominatim(user_agent="childsmile")
+        children_data = []
+        for child in children:
+            location = geolocator.geocode(child.city)
+            children_data.append({
                 "first_name": child.childfirstname,
                 "last_name": child.childsurname,
                 "city": child.city,
-            }
-            for child in children
-        ]
+                "latitude": location.latitude if location else None,
+                "longitude": location.longitude if location else None,
+                # need also the date the child was added to the system
+                "registration_date": child.registrationdate.strftime("%d/%m/%Y"),
+            })
 
-        # Return the data as JSON
         return JsonResponse({"families_per_location": children_data}, status=200)
     except Exception as e:
+        print(f"DEBUG: An error occurred: {str(e)}")  # Log the error for debugging
         return JsonResponse({"error": str(e)}, status=500)
 
 

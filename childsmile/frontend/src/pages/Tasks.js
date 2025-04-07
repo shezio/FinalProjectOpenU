@@ -299,7 +299,8 @@ const Tasks = () => {
         className="toast-rtl" // Apply the RTL class to all toasts
         rtl={true} // Ensure progress bar moves from left to right
       />
-      {loading && <div className="loader">הנתונים בטעינה...</div>} {/* Spinner displayed until data is loaded */}
+      {loading && <div className="loader">{t("Loading data...")}</div>}
+       {/* Spinner displayed until data is loaded */}
       {!loading && (
         <>
           <div className="page-content">
