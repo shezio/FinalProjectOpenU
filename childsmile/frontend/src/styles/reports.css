@@ -1,4 +1,3 @@
-
 .reports-page {
     padding: 20px;
     text-align: center;
@@ -159,61 +158,89 @@
 
 /* Scoped styles for the grid container in ActiveTutorsReport */
 .page-content .grid-container {
-    width: calc(100% - 100px); /* Adjust width to leave space for the sidebar */
-    margin-left: 900px; /* Remove unnecessary left margin */
-    height: calc(100vh - 400px); /* Adjust height based on available space */
-    padding: 20px; /* Add padding inside the grid container */
-    direction: rtl; /* Align the grid container to the right */
-    max-width: 100%; /* Ensure the grid does not exceed the visible area */
+    width: calc(100% - 100px);
+    /* Adjust width to leave space for the sidebar */
+    margin-left: 900px;
+    /* Remove unnecessary left margin */
+    height: calc(100vh - 400px);
+    /* Adjust height based on available space */
+    padding: 20px;
+    /* Add padding inside the grid container */
+    direction: rtl;
+    /* Align the grid container to the right */
+    max-width: 100%;
+    /* Ensure the grid does not exceed the visible area */
 }
 
 /* Styles for medium screens (e.g., laptops) */
 @media (max-width: 1700px) {
     .page-content .grid-container {
-        width: calc(100% - 100px); /* Reduce width for smaller screens */
-        margin-left: 500px; /* Adjust margin for smaller screens */
+        width: calc(100% - 100px);
+        /* Reduce width for smaller screens */
+        margin-left: 500px;
+        /* Adjust margin for smaller screens */
         /* max zoom out should be 0.8 */
-        transform: scale(0.8); /* Zoom out the grid */
-        transform-origin: top right; /* Set the origin for scaling */
+        transform: scale(0.8);
+        /* Zoom out the grid */
+        transform-origin: top right;
+        /* Set the origin for scaling */
     }
 }
 
 /* Style for the data grid */
 .page-content .data-grid {
-    width: 100%; /* Ensure the table takes up the full width of its container */
+    width: 100%;
+    /* Ensure the table takes up the full width of its container */
     border-collapse: collapse;
-    font-size: 30px; /* Increase font size */
-    font-family: Arial, sans-serif; /* Use a sans-serif font for better readability */
-    background-color: #fff; /* White background for the table */
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Add a subtle shadow for depth */
-    border-radius: 8px; /* Rounded corners for the table */
-    overflow: hidden; /* Ensure rounded corners are visible */
-    max-height: 80vh; /* Limit height to avoid overflow */
+    font-size: 30px;
+    /* Increase font size */
+    font-family: Arial, sans-serif;
+    /* Use a sans-serif font for better readability */
+    background-color: #fff;
+    /* White background for the table */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    /* Add a subtle shadow for depth */
+    border-radius: 8px;
+    /* Rounded corners for the table */
+    overflow: hidden;
+    /* Ensure rounded corners are visible */
+    max-height: 80vh;
+    /* Limit height to avoid overflow */
     overflow-y: auto;
-    direction: rtl; /* Align the grid to the right for right-to-left languages */
+    direction: rtl;
+    /* Align the grid to the right for right-to-left languages */
 }
 
 .page-content .data-grid th,
 .page-content .data-grid td {
     border: 1px solid #ddd;
-    padding: 12px; /* Increase padding */
-    text-align: right; /* Align text to the right */
-    font-size: 30px; /* Increase font size */
-    white-space: nowrap; /* Prevent text from wrapping */
-    overflow: hidden; /* Hide overflow if the text is too long */
-    text-overflow: ellipsis; /* Add ellipsis for overflowing text */
+    padding: 12px;
+    /* Increase padding */
+    text-align: right;
+    /* Align text to the right */
+    font-size: 30px;
+    /* Increase font size */
+    white-space: nowrap;
+    /* Prevent text from wrapping */
+    overflow: hidden;
+    /* Hide overflow if the text is too long */
+    text-overflow: ellipsis;
+    /* Add ellipsis for overflowing text */
 }
 
 .page-content .data-grid th {
-    background-color: #4CAF50; /* Green header background */
+    background-color: #4CAF50;
+    /* Green header background */
     color: white;
     font-weight: bold;
     font-size: 30px;
 }
 
 .page-content .data-grid td {
-    position: relative; /* Ensure the cell does not block interaction */
-    z-index: 0; /* Keep the cell behind the checkbox */
+    position: relative;
+    /* Ensure the cell does not block interaction */
+    z-index: 0;
+    /* Keep the cell behind the checkbox */
     color: #333;
 }
 
@@ -226,12 +253,18 @@
 
 /* Ensure the checkbox is clickable */
 .page-content .data-grid input[type="checkbox"] {
-    width: 20px; /* Adjust checkbox size */
-    height: 20px; /* Adjust checkbox size */
-    cursor: pointer; /* Pointer cursor for checkboxes */
-    margin-right: 10px; /* Space between checkbox and label */
-    position: relative; /* Ensure the checkbox is positioned correctly */
-    z-index: 1; /* Bring the checkbox to the front */
+    width: 20px;
+    /* Adjust checkbox size */
+    height: 20px;
+    /* Adjust checkbox size */
+    cursor: pointer;
+    /* Pointer cursor for checkboxes */
+    margin-right: 10px;
+    /* Space between checkbox and label */
+    position: relative;
+    /* Ensure the checkbox is positioned correctly */
+    z-index: 1;
+    /* Bring the checkbox to the front */
 }
 
 .page-content .data-grid label {
@@ -255,6 +288,25 @@
 .actions .export-button img {
     width: 50px;
     height: 50px;
+}
+
+.actions .export-map-button {
+    background-color:
+        /* citron orange*/
+        #f0ad4e;
+    color: white;
+    padding: 10px 20px;
+    font-size: 16px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-left: 10px;
+    transition: background-color 0.3s ease;
+}
+
+.actions .export-map-button:hover {
+    background-color: #e0a800;
+    /* Darker yellow on hover */
 }
 
 .loader {
@@ -303,4 +355,161 @@
 
 .refresh-button:hover {
     background-color: #218838;
+}
+
+/* Container for map and grid */
+.families-report-container {
+    display: flex;
+    height: calc(100vh - 500px);
+    /* Adjust height to fit the viewport minus header and filters */
+    gap: 50px;
+    /* Space between map and grid */
+    direction: rtl;
+    /* Align content for RTL languages */
+    padding: 20px;
+    /* Add padding inside the container */
+    background-color: #f9f9f9;
+    /* Light background for better contrast */
+    border-radius: 8px;
+    /* Rounded corners for the container */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    /* Subtle shadow for depth */
+    overflow: hidden;
+    /* Prevent overflow */
+    width: 1000px;
+}
+
+/* Map section */
+.families-map-container {
+    flex: 1;
+    /* Take up 1 part of the available space */
+    height: 100%;
+    /* Full height of the container */
+    width: 100%;
+    /* Full width of the container */
+    position: relative;
+    /* Position relative for absolute children */
+    border: 1px solid #ddd;
+    /* Optional border for clarity */
+    border-radius: 8px;
+    /* Rounded corners */
+    overflow: hidden;
+    /* Ensure the map doesn't overflow */
+    background-color: #fff;
+    /* White background for the map */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    /* Subtle shadow for depth */
+}
+
+/* Grid section */
+.families-grid-container {
+    flex: 2;
+    /* Take up 2 parts of the available space */
+    overflow-x: auto;
+    /* Allow horizontal scrolling if needed */
+    background-color: #fff;
+    /* White background for the grid */
+    border: 1px solid #ddd;
+    /* Border for clarity */
+    border-radius: 8px;
+    /* Rounded corners */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    /* Subtle shadow for depth */
+    padding: 20px;
+    /* Add padding inside the grid container */
+    max-height: 100%;
+    /* Ensure the grid doesn't overflow vertically */
+    overflow-y: auto;
+    /* Enable vertical scrolling if needed */
+}
+
+/* Families data grid */
+.families-data-grid {
+    width: 100%;
+    /* Full width of the container */
+    border-collapse: collapse;
+    /* Remove gaps between table cells */
+    font-size: 30px;
+    /* Increase font size for readability */
+    font-family: Arial, sans-serif;
+    /* Use a sans-serif font for better readability */
+    background-color: #fff;
+    /* White background for the table */
+    border-radius: 8px;
+    /* Rounded corners for the table */
+    overflow: hidden;
+    /* Ensure rounded corners are visible */
+    direction: rtl;
+    /* Align the grid to the right for RTL languages */
+}
+
+/* Table headers */
+.families-data-grid th {
+    background-color: #4caf50;
+    /* Green header background */
+    color: white;
+    /* White text */
+    font-weight: bold;
+    /* Bold text */
+    font-size: 30px;
+    /* Increase font size */
+    text-align: right;
+    /* Align text to the right */
+    padding: 12px;
+    /* Add padding */
+    border: 1px solid #ddd;
+    /* Border for clarity */
+}
+
+/* Table cells */
+.families-data-grid td {
+    border: 1px solid #ddd;
+    /* Border for clarity */
+    padding: 12px;
+    /* Add padding */
+    text-align: right;
+    /* Align text to the right */
+    font-size: 30px;
+    /* Increase font size */
+    color: #333;
+    /* Dark text color */
+    white-space: nowrap;
+    /* Prevent text from wrapping */
+    overflow: hidden;
+    /* Hide overflow if the text is too long */
+    text-overflow: ellipsis;
+    /* Add ellipsis for overflowing text */
+}
+
+/* No data message */
+.families-grid-container .no-data {
+    text-align: center;
+    font-size: 36px;
+    color: #666;
+    margin-top: 20px;
+}
+
+/* Checkbox styles */
+.families-data-grid input[type="checkbox"] {
+    width: 20px;
+    /* Adjust checkbox size */
+    height: 20px;
+    /* Adjust checkbox size */
+    cursor: pointer;
+    /* Pointer cursor for checkboxes */
+    margin-right: 10px;
+    /* Space between checkbox and label */
+    position: relative;
+    /* Ensure the checkbox is positioned correctly */
+    z-index: 1;
+    /* Bring the checkbox to the front */
+}
+
+.leaflet-container {
+    height: 100%;
+    /* Ensure the Leaflet map fills the container */
+    width: 100%;
+    position: absolute; /* Ensure it stretches within its parent */
+    top: 0;
+    left: 0;
 }

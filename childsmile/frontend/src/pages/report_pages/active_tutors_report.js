@@ -124,11 +124,11 @@ const ActiveTutorsReport = () => {
           </div>
         </div>
         {loading ? (
-          <div className="loader">טוען נתונים...</div>
+          <div className="loader">{t("Loading data...")}</div>
         ) : (
           <div className="grid-container">
             {tutors.length === 0 ? (
-              <div className="no-data">אין נתונים להצגה</div>
+              <div className="no-data">{t("No data to display")}</div>
             ) : (
               <table className="data-grid">
                 <thead>
