@@ -158,6 +158,12 @@ const resources = {
       "Export Map as Image": "ייצא מפה כתמונה",
       "Registration Date": "תאריך רישום",
       "Exporting...": "מייצא...",
+      "Families Waiting for Tutorship Report": "דוח משפחות הממתינות לחונכות",
+      "Father Name": "שם האב",
+      "Father Phone": "טלפון האב",
+      "Mother Name": "שם האם",
+      "Mother Phone": "טלפון האם",
+      "Tutoring Status": "מצב חונכות",
     }
   }
 };

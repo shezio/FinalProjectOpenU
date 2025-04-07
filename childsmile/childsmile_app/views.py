@@ -30,9 +30,10 @@ import csv
 import datetime
 import requests
 import urllib3
-from django.utils import timezone
+from django.utils.timezone import make_aware
 from datetime import datetime
 from geopy.geocoders import Nominatim
+
 
 def delete_task_cache(assigned_to_id=None, is_admin=False):
     """
@@ -46,6 +47,7 @@ def delete_task_cache(assigned_to_id=None, is_admin=False):
         user_cache_key = f"user_tasks_{assigned_to_id}"
         cache.delete(user_cache_key)  # Clear the cache for the specific user
 
+
 def is_admin(user):
     """
     Check if the given user is an admin.
@@ -53,7 +55,9 @@ def is_admin(user):
     with connection.cursor() as cursor:
         role_ids = list(user.roles.values_list("id", flat=True))  # Convert to a list
         if not role_ids:
-            role_ids = [-1]  # Use a dummy value to prevent SQL errors if the list is empty
+            role_ids = [
+                -1
+            ]  # Use a dummy value to prevent SQL errors if the list is empty
         cursor.execute(
             """
             SELECT 1
@@ -63,6 +67,7 @@ def is_admin(user):
             [role_ids],  # Pass the list directly
         )
         return cursor.fetchone() is not None
+
 
 # def get_hebrew_date(date):
 #     res = requests.get(
@@ -800,9 +805,9 @@ def get_families_per_location_report(request):
         to_date = request.GET.get("to_date")
 
         if from_date:
-            from_date = timezone.make_aware(datetime.strptime(from_date, "%Y-%m-%d"))
+            from_date = make_aware(datetime.strptime(from_date, "%Y-%m-%d"))
         if to_date:
-            to_date = timezone.make_aware(datetime.strptime(to_date, "%Y-%m-%d"))
+            to_date = make_aware(datetime.strptime(to_date, "%Y-%m-%d"))
 
         children = Children.objects.all()
         if from_date:
@@ -814,19 +819,100 @@ def get_families_per_location_report(request):
         children_data = []
         for child in children:
             location = geolocator.geocode(child.city)
-            children_data.append({
-                "first_name": child.childfirstname,
-                "last_name": child.childsurname,
-                "city": child.city,
-                "latitude": location.latitude if location else None,
-                "longitude": location.longitude if location else None,
-                # need also the date the child was added to the system
-                "registration_date": child.registrationdate.strftime("%d/%m/%Y"),
-            })
+            children_data.append(
+                {
+                    "first_name": child.childfirstname,
+                    "last_name": child.childsurname,
+                    "city": child.city,
+                    "latitude": location.latitude if location else None,
+                    "longitude": location.longitude if location else None,
+                    "registration_date": child.registrationdate.strftime("%d/%m/%Y"),
+                }
+            )
 
         return JsonResponse({"families_per_location": children_data}, status=200)
     except Exception as e:
         print(f"DEBUG: An error occurred: {str(e)}")  # Log the error for debugging
+        return JsonResponse({"error": str(e)}, status=500)
+
+
+@csrf_exempt
+@api_view(["GET"])
+def families_waiting_for_tutorship_report(request):
+    """
+    Retrieve a report of families waiting for tutorship, ordered by registration date.
+    """
+    user_id = request.session.get("user_id")
+    if not user_id:
+        return JsonResponse(
+            {"detail": "Authentication credentials were not provided."}, status=403
+        )
+
+    # Check if the user has VIEW permission on the "children" resource
+    if not has_permission(request, "children", "VIEW"):
+        return JsonResponse(
+            {"error": "You do not have permission to generate this report"}, status=401
+        )
+
+    try:
+        # Define the tutoring statuses that indicate waiting for tutorship
+        waiting_statuses = [
+            "למצוא_חונך",
+            "למצוא_חונך_אין_באיזור_שלו",
+            "למצוא_חונך_בעדיפות_גבוה",
+        ]
+
+        # Get date filters from query parameters
+        from_date = request.GET.get("from_date")
+        to_date = request.GET.get("to_date")
+
+        # Convert from_date and to_date to timezone-aware datetimes
+        if from_date:
+            from_date = make_aware(datetime.strptime(from_date, "%Y-%m-%d"))
+        if to_date:
+            to_date = make_aware(datetime.strptime(to_date, "%Y-%m-%d"))
+
+        # Fetch children with the specified tutoring statuses, ordered by registration date
+        children = Children.objects.filter(tutoring_status__in=waiting_statuses)
+
+        # Apply date filters if provided
+        if from_date:
+            children = children.filter(registrationdate__gte=from_date)
+        if to_date:
+            children = children.filter(registrationdate__lte=to_date)
+
+        children = children.order_by("registrationdate").values(
+            "childfirstname",
+            "childsurname",
+            "father_name",
+            "father_phone",
+            "mother_name",
+            "mother_phone",
+            "tutoring_status",
+            "registrationdate",
+        )
+
+        # Prepare the data
+        children_data = [
+            {
+                "first_name": child["childfirstname"],  # Access using dictionary keys
+                "last_name": child["childsurname"],
+                "father_name": child["father_name"],
+                "father_phone": child["father_phone"],
+                "mother_name": child["mother_name"],
+                "mother_phone": child["mother_phone"],
+                "tutoring_status": child["tutoring_status"],
+                "registration_date": child["registrationdate"].strftime("%d/%m/%Y"),
+            }
+            for child in children
+        ]
+
+        # Return the data as JSON
+        return JsonResponse(
+            {"families_waiting_for_tutorship": children_data}, status=200
+        )
+    except Exception as e:
+        print(f"DEBUG: An error occurred: {str(e)}")
         return JsonResponse({"error": str(e)}, status=500)
 
 
@@ -887,71 +973,6 @@ def get_new_families_report(request):
 
 @csrf_exempt
 @api_view(["GET"])
-def families_waiting_for_tutorship_report(request):
-    """
-    Retrieve a report of families waiting for tutorship, ordered by registration date.
-    """
-    user_id = request.session.get("user_id")
-    if not user_id:
-        return JsonResponse(
-            {"detail": "Authentication credentials were not provided."}, status=403
-        )
-
-    # Check if the user has VIEW permission on the "children" resource
-    if not has_permission(request, "children", "VIEW"):
-        return JsonResponse(
-            {"error": "You do not have permission to generate this report"}, status=401
-        )
-
-    try:
-        # Define the tutoring statuses that indicate waiting for tutorship
-        waiting_statuses = [
-            "למצוא_חונך",
-            "למצוא_חונך_אין_באיזור_שלו",
-            "למצוא_חונך_בעדיפות_גבוה",
-        ]
-
-        # Fetch children with the specified tutoring statuses, ordered by registrationdate
-        children = (
-            Children.objects.filter(tutoring_status__in=waiting_statuses)
-            .order_by("registrationdate")
-            .values(
-                "childfirstname",
-                "childsurname",
-                "father_name",
-                "father_phone",
-                "mother_name",
-                "mother_phone",
-                "tutoring_status",
-                "registrationdate",
-            )
-        )
-
-        # Prepare the data
-        children_data = [
-            {
-                "child_firstname": child["childfirstname"],
-                "child_lastname": child["childsurname"],
-                "father_name": child["father_name"],
-                "father_phone": child["father_phone"],
-                "mother_name": child["mother_name"],
-                "mother_phone": child["mother_phone"],
-                "tutoring_status": child["tutoring_status"],
-                "registration_date": child["registrationdate"].strftime("%d/%m/%Y"),
-            }
-            for child in children
-        ]
-
-        # Return the data as JSON
-        return JsonResponse(
-            {"families_waiting_for_tutorship": children_data}, status=200
-        )
-    except Exception as e:
-        return JsonResponse({"error": str(e)}, status=500)
-
-
-@csrf_exempt
-@api_view(["GET"])
 def active_tutors_report(request):
     """
     Retrieve a report of active tutors with their assigned children, filtered by date range.
@@ -975,10 +996,9 @@ def active_tutors_report(request):
 
         # Convert from_date and to_date to timezone-aware datetimes
         if from_date:
-            from_date = timezone.make_aware(datetime.strptime(from_date, "%Y-%m-%d"))
+            from_date = make_aware(datetime.strptime(from_date, "%Y-%m-%d"))
         if to_date:
-            to_date = timezone.make_aware(datetime.strptime(to_date, "%Y-%m-%d"))
-
+            to_date = make_aware(datetime.strptime(to_date, "%Y-%m-%d"))
 
         # Base queryset
         tutorships = Tutorships.objects.select_related("child", "tutor__staff").values(
@@ -1044,13 +1064,14 @@ def possible_tutorship_matches_report(request):
         )
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
-    
+
+
 # next report is volunteer feedback report
 @csrf_exempt
 @api_view(["GET"])
 def volunteer_feedback_report(request):
     """
-    Retrieve a report of all volunteer feedback and all the corresponding feedbacks from the feedback table. 
+    Retrieve a report of all volunteer feedback and all the corresponding feedbacks from the feedback table.
     we only have this in volnteer feedback table.
     feedback_id_id,volunteer_name,volunteer_id
     we need the volunteer_name from the volunteer feedback table and all the data from the feedback table related to the feedback id_id FK
@@ -1085,12 +1106,11 @@ def volunteer_feedback_report(request):
         ]
 
         # Return the data as JSON
-        return JsonResponse(
-            {"volunteer_feedback": feedbacks_data}, status=200
-        )
+        return JsonResponse({"volunteer_feedback": feedbacks_data}, status=200)
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
-    
+
+
 # next report is tutor feedback report
 @csrf_exempt
 @api_view(["GET"])
@@ -1112,11 +1132,10 @@ def tutor_feedback_report(request):
 
     try:
         # Fetch all data according this logic
-    # Retrieve a report of all tutor feedback and all the corresponding feedbacks from the feedback table. 
-    # we only have this in tutor feedback table.
-    # feedback_id_id,tutee_name,tutor_name,is_it_your_tutee, is_first_visit
-    # we need the tutor_name from the tutor feedback table and the tutee_name and is_it_your_tutee, and is_first_visit and all the data from the feedback table related to the feedback id_id FK
-
+        # Retrieve a report of all tutor feedback and all the corresponding feedbacks from the feedback table.
+        # we only have this in tutor feedback table.
+        # feedback_id_id,tutee_name,tutor_name,is_it_your_tutee, is_first_visit
+        # we need the tutor_name from the tutor feedback table and the tutee_name and is_it_your_tutee, and is_first_visit and all the data from the feedback table related to the feedback id_id FK
 
         feedbacks = Tutor_Feedback.objects.select_related("feedback").all()
         # Convert the data to a list of dictionaries
@@ -1138,8 +1157,6 @@ def tutor_feedback_report(request):
         ]
 
         # Return the data as JSON
-        return JsonResponse(
-            {"tutor_feedback": feedbacks_data}, status=200
-        )
+        return JsonResponse({"tutor_feedback": feedbacks_data}, status=200)
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
