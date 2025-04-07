@@ -30,6 +30,9 @@ import csv
 import datetime
 import requests
 import urllib3
+from django.utils import timezone
+from datetime import datetime
+
 
 
 def delete_task_cache(assigned_to_id=None, is_admin=False):
@@ -958,6 +961,13 @@ def active_tutors_report(request):
         # Get date filters from query parameters
         from_date = request.GET.get("from_date")
         to_date = request.GET.get("to_date")
+
+        # Convert from_date and to_date to timezone-aware datetimes
+        if from_date:
+            from_date = timezone.make_aware(datetime.strptime(from_date, "%Y-%m-%d"))
+        if to_date:
+            to_date = timezone.make_aware(datetime.strptime(to_date, "%Y-%m-%d"))
+
 
         # Base queryset
         tutorships = Tutorships.objects.select_related("child", "tutor__staff").values(
