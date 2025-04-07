@@ -916,11 +916,14 @@ def families_waiting_for_tutorship_report(request):
         return JsonResponse({"error": str(e)}, status=500)
 
 
+from django.utils.timezone import make_aware
+from datetime import datetime, timedelta
+
 @csrf_exempt
 @api_view(["GET"])
 def get_new_families_report(request):
     """
-    Retrieve a report of new families with child and parent details, filtered by registration date in the last month.
+    Retrieve a report of new families with child and parent details, filtered by registration date.
     """
     user_id = request.session.get("user_id")
     if not user_id:
@@ -936,12 +939,28 @@ def get_new_families_report(request):
 
     try:
         # Calculate the date for one month ago
-        from datetime import datetime, timedelta
+        one_month_ago = make_aware(datetime.now() - timedelta(days=30))
 
-        one_month_ago = datetime.now() - timedelta(days=30)
+        # Get date filters from query parameters
+        from_date = request.GET.get("from_date")
+        to_date = request.GET.get("to_date")
 
-        # Fetch children registered in the last month
-        children = Children.objects.filter(registrationdate__gte=one_month_ago).values(
+        # Convert from_date and to_date to timezone-aware datetimes
+        if from_date:
+            from_date = make_aware(datetime.strptime(from_date, "%Y-%m-%d"))
+            # Ensure from_date is not older than one month ago
+            if from_date < one_month_ago:
+                from_date = one_month_ago
+        else:
+            from_date = one_month_ago  # Default to one month ago if not provided
+
+        if to_date:
+            to_date = make_aware(datetime.strptime(to_date, "%Y-%m-%d"))
+        else:
+            to_date = make_aware(datetime.now())  # Default to the current date
+
+        # Fetch children registered within the specified date range
+        children = Children.objects.filter(registrationdate__gte=from_date, registrationdate__lte=to_date).values(
             "childfirstname",
             "childsurname",
             "father_name",
@@ -968,6 +987,7 @@ def get_new_families_report(request):
         # Return the data as JSON
         return JsonResponse({"new_families": children_data}, status=200)
     except Exception as e:
+        print(f"DEBUG: An error occurred: {str(e)}")
         return JsonResponse({"error": str(e)}, status=500)
 
 
