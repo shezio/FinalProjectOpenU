@@ -1,0 +1,113 @@
+/* Scoped styles for the grid container in ActiveTutorsReport */
+.page-content .tutorship-pending-grid-container {
+    width: calc(100% - 100px);
+    /* Adjust width to leave space for the sidebar */
+    margin-left: 400px;
+    /* Remove unnecessary left margin */
+    height: calc(100vh - 400px);
+    /* Adjust height based on available space */
+    padding: 20px;
+    /* Add padding inside the grid container */
+    direction: rtl;
+    /* Align the grid container to the right */
+    max-width: 100%;
+    /* Ensure the grid does not exceed the visible area */
+}
+
+@media (max-width: 1700px) {
+    .page-content .tutorship-pending-grid-container {
+        padding: 10px; /* Reduce padding */
+        height: calc(100vh - 300px); /* Adjust height */
+        width: calc(100% - 400px); /* Adjust width to leave space for the sidebar */
+        margin-left: 100px; /* Adjust left margin for smaller screens */
+        margin-right: 20px; /* Adjust right margin for smaller screens */
+    }
+
+    .page-content .tutorship-pending-data-grid {
+        font-size: 14px; /* Reduce font size for smaller screens */
+    }
+
+    .page-content .tutorship-pending-data-grid th,
+    .page-content .tutorship-pending-data-grid td {
+        padding: 6px; /* Reduce padding */
+    }
+}
+
+@media (max-width: 768px) {
+    .page-content .tutorship-pending-grid-container {
+        height: auto; /* Allow the grid to grow based on content */
+        width: calc(100% - 300px);
+        /* Adjust width to leave space for the sidebar */
+        margin-left: 400px;
+    }
+
+    .page-content .tutorship-pending-data-grid {
+        font-size: 12px; /* Further reduce font size */
+    }
+
+    .page-content .tutorship-pending-data-grid th,
+    .page-content .tutorship-pending-data-grid td {
+        padding: 4px; /* Further reduce padding */
+    }
+}
+
+/* Style for the data grid */
+.page-content .tutorship-pending-data-grid  {
+    width: 100%; /* Ensure the table takes up the full width of its container */
+    border-collapse: collapse;
+    font-size: 16px; /* Adjust font size for readability */
+    font-family: Arial, sans-serif;
+    background-color: #fff;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    overflow: hidden;
+    direction: rtl; /* Align the grid to the right for right-to-left languages */
+    table-layout: auto; /* Allow columns to adjust based on content */
+}
+
+.page-content .tutorship-pending-data-grid th,
+.page-content .tutorship-pending-data-grid td {
+    border: 1px solid #ddd;
+    padding: 8px; /* Adjust padding for smaller screens */
+    text-align: right;
+    white-space: nowrap; /* Prevent text from wrapping */
+    overflow: hidden;
+    text-overflow: ellipsis; /* Add ellipsis for overflowing text */
+}
+
+.page-content .tutorship-pending-data-grid th {
+    background-color: #4CAF50;
+    color: white;
+    font-weight: bold;
+    font-size: 30px; /* Adjust font size for headers */
+}
+
+.page-content .tutorship-pending-data-grid td {
+    position: relative;
+    /* Ensure the cell does not block interaction */
+    z-index: 0;
+    /* Keep the cell behind the checkbox */
+    color: #333;
+    font-size: 20px; /* Adjust font size for table data */
+    font-weight: normal;
+}
+
+/* Ensure the checkbox is clickable */
+.page-content .tutorship-pending-data-grid input[type="checkbox"] {
+    width: 20px;
+    /* Adjust checkbox size */
+    height: 20px;
+    /* Adjust checkbox size */
+    cursor: pointer;
+    /* Pointer cursor for checkboxes */
+    margin-right: 10px;
+    /* Space between checkbox and label */
+    position: relative;
+    /* Ensure the checkbox is positioned correctly */
+    z-index: 1;
+    /* Bring the checkbox to the front */
+}
+
+.page-content .tutorship-pending-data-grid label {
+    cursor: pointer;
+}

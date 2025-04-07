@@ -245,10 +245,13 @@
 }
 
 .page-content .no-data {
-    text-align: center;
-    font-size: 36px;
-    color: #666;
-    margin-top: 20px;
+    width: 100%; /* Make it span the full width */
+    text-align: center; /* Center the text */
+    font-size: 48px; /* Adjust font size for better visibility */
+    font-weight: bold; /* Make the text bold */
+    color: #555; /* Use a neutral color */
+    /* no wrap */
+    white-space: nowrap;
 }
 
 /* Ensure the checkbox is clickable */
@@ -360,7 +363,7 @@
 /* Container for map and grid */
 .families-report-container {
     display: flex;
-    height: calc(100vh - 500px);
+    height: calc(100vh - 400px);
     /* Adjust height to fit the viewport minus header and filters */
     gap: 50px;
     /* Space between map and grid */
@@ -469,7 +472,7 @@
     /* Add padding */
     text-align: right;
     /* Align text to the right */
-    font-size: 30px;
+    font-size: 20px;
     /* Increase font size */
     color: #333;
     /* Dark text color */
@@ -483,10 +486,11 @@
 
 /* No data message */
 .families-grid-container .no-data {
-    text-align: center;
-    font-size: 36px;
-    color: #666;
-    margin-top: 20px;
+    width: 100%; /* Make it span the full width */
+    text-align: center; /* Center the text */
+    font-size: 48px; /* Adjust font size for better visibility */
+    font-weight: bold; /* Make the text bold */
+    color: #555; /* Use a neutral color */
 }
 
 /* Checkbox styles */
