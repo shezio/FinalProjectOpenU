@@ -151,8 +151,8 @@ const resources = {
       "TEST REPORT NAME": "שם דוח לדוגמה",
       "Filter": "סנן",
       "Refresh": "רענן",
-      "Child Full Name":"שם הילד",
-      "City":"עיר",
+      "Child Full Name": "שם הילד",
+      "City": "עיר",
       "Loading data...": "הנתונים בטעינה...",
       "No data to display": "אין נתונים להצגה",
       "Export Map as Image": "ייצא מפה כתמונה",
@@ -164,6 +164,17 @@ const resources = {
       "Mother Name": "שם האם",
       "Mother Phone": "טלפון האם",
       "Tutoring Status": "מצב חונכות",
+      "Max Distance": "מרחק מקסימלי",
+      "Tutor Full Name": "שם החונך",
+      "Child City": "עיר הילד",
+      "Tutor City": "עיר החונך",
+      "Child Age": "גיל הילד",
+      "Tutor Age": "גיל החונך",
+      "Distance Between Cities (km)": "מרחק בין ערים בק\מ",
+      "Grade": "רמת ההתאמה 1-100",
+      "No data to export": "אין נתונים לייצוא",
+      "Possible Matches Report": "דוח התאמות פוטנציאליות",
+      "Possible Tutorship Matches": "דוח התאמות פוטנציאליות",
     }
   }
 };

@@ -517,3 +517,29 @@
     top: 0;
     left: 0;
 }
+
+.large-slider {
+    width: 400px; /* Increase the width */
+    height: 10px; /* Increase the height */
+    appearance: revert;
+    background: #ddd;
+    border-radius: 5px;
+    outline: none;
+  }
+  
+  .large-slider::-webkit-slider-thumb {
+    appearance: none;
+    width: 20px; /* Increase thumb size */
+    height: 20px;
+    background: #4caf50; /* Green thumb */
+    border-radius: 50%;
+    cursor: pointer;
+  }
+  
+  .large-slider::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    background: #4caf50;
+    border-radius: 50%;
+    cursor: pointer;
+  }
