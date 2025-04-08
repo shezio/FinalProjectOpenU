@@ -1,6 +1,4 @@
 /* utils.js */
-import axios from '../axiosConfig';  // Import the configured Axios instance
-import i18n from '../i18n';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
@@ -12,6 +10,35 @@ import logo from '../assets/logo.png'; // Import the logo image
 // import C:\Dev\FinalProjectOpenU\childsmile\frontend\src\fonts\Alef-Bold.js
 import { AlefBold } from '../fonts/Alef-Bold'; // Import the custom font for PDF generation
 
+// Helper function to reverse the text of each word and then reverse the order of the words
+const reverseTextWords = (text) => {
+  return text
+    .split(' ') // Split the text into words
+    .map(word => word.split('').reverse().join('')) // Reverse each word
+    .join(' '); // Join the words back together
+};
+
+// Helper function to reverse text for proper RTL rendering
+const reverseText = (text) => {
+  return text.split('').reverse().join('');
+};
+
+const formatHebrewTextForPDF = (text, wordsPerLine = 5) => {
+  if (!text) return "";
+
+  const words = text.split(' ').map(word =>
+    word.split('').reverse().join('')
+  );
+
+  const lines = [];
+  for (let i = 0; i < words.length; i += wordsPerLine) {
+    // הפוך את סדר המילים בתוך כל שורה
+    const lineWords = words.slice(i, i + wordsPerLine).reverse();
+    lines.push(lineWords.join(' '));
+  }
+
+  return lines.join('\n');
+};
 
 export const exportToExcel = (tutors, t) => {
   const selectedTutors = tutors.filter(tutor => tutor.selected);
@@ -72,15 +99,16 @@ export const exportToPDF = (tutors, t) => {
 
   // Prepare table data
   const headers = [[
-    reverseText(t('Tutor Name')), 
-    reverseText(t('Child Name')), 
+    reverseText(t('Tutor Name')),
+    reverseText(t('Child Name')),
     reverseText(t('Tutorship Matching Date')) // No reverseText for the date header
-  ]];
+  ].reverse()]; // Reverse the order of headers for RTL
   const rows = selectedTutors.map(tutor => [
     reverseText(`${tutor.tutor_firstname} ${tutor.tutor_lastname}`), // Reverse names
     reverseText(`${tutor.child_firstname} ${tutor.child_lastname}`), // Reverse names
     tutor.created_date // Keep the date as is
-  ]);
+  ]).map(row => row.reverse()); // <-- הפיכת כל שורה
+
 
   // Add table with RTL support
   doc.autoTable({
@@ -101,10 +129,7 @@ export const exportToPDF = (tutors, t) => {
   toast.success(t('Report generated successfully')); // Show success toast
 };
 
-// Helper function to reverse text for proper RTL rendering
-const reverseText = (text) => {
-  return text.split('').reverse().join('');
-};
+
 
 export const exportFamiliesToExcel = (families, t) => {
   const selectedFamilies = families.filter(family => family.selected);
@@ -168,12 +193,13 @@ export const exportFamiliesToPDF = (families, t) => {
     reverseText(t('Child Name')),
     reverseText(t('City')),
     reverseText(t('Registration Date')),
-  ]];
+  ].reverse()]; // Reverse the order of headers for RTL
   const rows = selectedFamilies.map(family => [
     reverseText(`${family.first_name} ${family.last_name}`), // Reverse names
     reverseText(family.city), // Reverse city name
     family.registration_date, // Keep the date as is
-  ]);
+  ]).map(row => row.reverse()); // <-- הפיכת כל שורה
+
 
   // Add table with RTL support
   doc.autoTable({
@@ -272,16 +298,17 @@ export const exportTutorshipPendingToPDF = (families, t) => {
     reverseText(t('Mother Phone')),
     reverseText(t('Tutoring Status')),
     reverseText(t('Registration Date')),
-  ]];
+  ].reverse()]; // Reverse the order of headers for RTL
   const rows = selectedFamilies.map(family => [
-    reverseText(`${family.first_name}`)+ ' ' + reverseText(`${family.last_name}`), // Reverse names
+    reverseText(`${family.first_name}`) + ' ' + reverseText(`${family.last_name}`), // Reverse names
     reverseText(family.father_name), // Reverse father's name
     family.father_phone, // Reverse father's phone
     reverseText(family.mother_name), // Reverse mother's name
     family.mother_phone, // Reverse mother's phone
     reverseText(family.tutoring_status), // Reverse tutoring status
     family.registration_date, // Keep the date as is
-  ]);
+  ]).map(row => row.reverse()); // <-- הפיכת כל שורה
+
 
   // Add table with RTL support
   doc.autoTable({
@@ -399,7 +426,7 @@ export const exportNewFamiliesToPDF = (families, t) => {
       5: { halign: 'right' }, // Align sixth column to the right
     },
   });
-    // Save the PDF
+  // Save the PDF
   doc.save(`${t('new_families_report')}.pdf`);
   toast.success(t('Report generated successfully')); // Show success toast
 }
@@ -465,7 +492,7 @@ export const exportPossibleMatchesToPDF = (matches, t) => {
   }
 
   const doc = new jsPDF('landscape', 'mm', 'a4');
-  
+
   // Register the Alef-Bold font
   doc.addFileToVFS('Alef-Bold.ttf', AlefBold);
   doc.addFont('Alef-Bold.ttf', 'Alef', 'bold');
@@ -488,7 +515,7 @@ export const exportPossibleMatchesToPDF = (matches, t) => {
     t("Tutor Age"),
     t("Distance Between Cities (km)"),
     t("Grade"),
-  ];
+  ].reverse(); // Reverse the order of headers for RTL
   const rows = selectedMatches.map(match => [
     reverseText(match.child_full_name), // Reverse for RTL
     reverseText(match.tutor_full_name), // Reverse for RTL
@@ -498,7 +525,7 @@ export const exportPossibleMatchesToPDF = (matches, t) => {
     match.tutor_age, // Keep numbers as is
     match.distance_between_cities, // Keep numbers as is
     match.grade, // Keep numbers as is
-  ]);
+  ]).map(row => row.reverse()); // <-- הפיכת כל שורה
 
   // Add table with RTL support
   doc.autoTable({
@@ -523,5 +550,125 @@ export const exportPossibleMatchesToPDF = (matches, t) => {
 
   // Save the PDF
   doc.save(`${t("possible_tutorship_matches_report")}.pdf`);
+  toast.success(t("Report generated successfully"));
+};
+
+export const exportVolunteerFeedbackToExcel = (feedbacks, t) => {
+  const selectedFeedbacks = feedbacks.filter(feedback => feedback.selected);
+  if (selectedFeedbacks.length === 0) {
+    showErrorToast(t, '', { message: 'אנא בחר לפחות רשומה אחת ליצירת דוח' });
+    return;
+  }
+
+  const headers = [
+    t("Volunteer Name"),
+    t("Event Date"),
+    t("Feedback Filled At"),
+    t("Description"),
+    t("Exceptional Events"),
+    t("Anything Else"),
+    t("Comments"),
+  ];
+  const rows = selectedFeedbacks.map(feedback => [
+    feedback.volunteer_name,
+    feedback.event_date,
+    feedback["feedback filled at"],
+    feedback.description,
+    feedback.exceptional_events,
+    feedback.anything_else,
+    feedback.comments,
+  ]);
+
+  const worksheetData = [headers, ...rows];
+  const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
+
+  const columnWidths = worksheetData[0].map((_, colIndex) => ({
+    wch: Math.max(
+      ...worksheetData.map(row => (row[colIndex] ? row[colIndex].toString().length : 0))
+    ),
+  }));
+  worksheet["!cols"] = columnWidths;
+
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, t("Volunteer Feedback Report"));
+  XLSX.writeFile(workbook, `${t("volunteer_feedback_report")}.xlsx`);
+  toast.success(t("Report generated successfully"));
+};
+
+export const exportVolunteerFeedbackToPDF = (feedbacks, t) => {
+  const selectedFeedbacks = feedbacks.filter(feedback => feedback.selected);
+  if (selectedFeedbacks.length === 0) {
+    showErrorToast(t, '', { message: 'אנא בחר לפחות רשומה אחת ליצירת דוח' });
+    return;
+  }
+
+  const doc = new jsPDF("landscape", "mm", "a4");
+
+  doc.addFileToVFS("Alef-Bold.ttf", AlefBold);
+  doc.addFont("Alef-Bold.ttf", "Alef", "bold");
+  doc.setFont("Alef", "bold");
+
+  doc.addImage(logo, "PNG", 10, 10, 30, 30);
+
+  doc.setFontSize(18);
+  doc.text(reverseText(t("Volunteer Feedback Report")), doc.internal.pageSize.getWidth() / 2, 20, { align: "center" });
+
+  const headers = [
+    reverseText(t("Volunteer Name")),
+    reverseText(t("Event Date")),
+    reverseText(t("Feedback Filled At")),
+    reverseText(t("Description")),
+    reverseText(t("Exceptional Events")),
+    reverseText(t("Anything Else")),
+    reverseText(t("Comments")),
+  ].reverse(); // <-- הנה השימוש ב-reverse
+
+
+  // Prepare table rows
+  const rows = selectedFeedbacks.map(feedback => [
+    feedback.volunteer_name,
+    feedback.event_date,
+    feedback["feedback_filled_at"],
+    feedback.description || "", // Handle null or undefined values
+    feedback.exceptional_events || "",
+    feedback.anything_else || "",
+    feedback.comments || "",
+  ]).map(row => row.reverse()); // <-- הפיכת כל שורה
+
+  doc.autoTable({
+    head: [headers],
+    body: rows.map(row => row.map((cell, colIndex) => {
+      const header = headers[colIndex]; // נשתמש בזה כדי לדעת מה השדה
+
+      // שמות השדות ש*לא* נעבד (כלומר, נשאיר רגיל)
+      const nonHebrewFields = [
+        reverseText(t("Event Date")),
+        reverseText(t("Feedback Filled At"))
+      ];
+
+      if (typeof cell === 'string' && !nonHebrewFields.includes(header)) {
+        return formatHebrewTextForPDF(cell, 5);
+      }
+
+      return cell;
+    })),
+
+
+
+    startY: 50,
+    styles: { font: "Alef", fontSize: 10, cellPadding: 3, halign: "right" },
+    headStyles: { fillColor: [76, 175, 80], textColor: 255, halign: "right" },
+    columnStyles: {
+      0: { halign: 'right', cellwidth: 40 }, // Align first column to the right
+      1: { halign: 'right' }, // Align second column to the right
+      2: { halign: 'right', cellwidth: 30 }, // Align third column to the right
+      3: { halign: 'right', cellwidth: 20 }, // Align fourth column to the right
+      4: { halign: 'right', cellwidth: 20 }, // Align fifth column to the right
+      5: { halign: 'right' }, // Align sixth column to the right
+      6: { halign: 'right', cellwidth: 30 },
+    },
+  });
+
+  doc.save(`${t("volunteer_feedback_report")}.pdf`);
   toast.success(t("Report generated successfully"));
 };

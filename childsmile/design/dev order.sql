@@ -1696,43 +1696,43 @@ def some_view(request):
         # Handle case where permissions are not found in session
         pass
 */
+-- פידבק עבור חונכים
 INSERT INTO childsmile_app_feedback ("timestamp", event_date, staff_id, description, exceptional_events, anything_else, comments)
-VALUES (current_timestamp, 
--- one week before today
-current_date - interval '7 days',
-%(staff_id)s, 
--- some long text for description -  at least 200 words
-'החונכות הייתה ממש טובה הפעם הרגשתי שלחניך היה ממש טוב', 'היה שמח', 'פעם הבאה גלידה', '');
--- insert tutor feedback
+VALUES 
+(current_timestamp, current_date - interval '7 days', 34, 'המפגש היה מוצלח מאוד. החניך הבין את החומר טוב, והייתה תקשורת טובה לאורך כל הדרך. ניכר שהחונך השקיע מאמץ רב, והחניך הראה שיפור. סיימנו גם פעילות יצירה ועזרנו לילד נוסף שהצטרף. כל הכבוד לחונך!', 'שיחקנו במשחק קבוצתי', 'נביא דפים לציור בפעם הבאה', ''),
+(current_timestamp, current_date - interval '6 days', 35, 'פידבק ארוך נוסף שמתאר כיצד המפגש התנהל עם הרבה התמקדות בלמידה ויצירת קשר אישי עם החניך. דיברנו על נושאים חשובים, סיימנו תרגילים, וכולם הרגישו מעורבים.', '', '', ''),
+(current_timestamp, current_date - interval '5 days', 36, 'היה מפגש עם חיבור יוצא מן הכלל בין החונך לחניך. עשינו סשן למידה, ועזרנו גם לילדים נוספים שנכנסו בהפתעה. החונך לקח יוזמה והפגין יצירתיות.', '', '', '');
+
+-- פידבק עבור מתנדבים כלליים
+INSERT INTO childsmile_app_feedback ("timestamp", event_date, staff_id, description, exceptional_events, anything_else, comments)
+VALUES 
+(current_timestamp, current_date - interval '3 days', 28, 'התנדבתי באירוע מיוחד עם הרבה משתתפים. היה מרגש לראות את הילדים נהנים. עזרתי בארגון שולחנות, משחקים, וסייעתי לחלק אוכל.', 'היה מופע קטן עם מוזיקה חיה', 'להביא מגפיים – היה בוץ', ''),
+(current_timestamp, current_date - interval '2 days', 29, 'התנדבות בפעילות יצירה. עזרתי לילדים להכין ברכות. התחברתי מאוד לצוות ולמתנדבים האחרים. האירוע היה מוצלח מאוד והאווירה חיובית.', '', '', ''),
+(current_timestamp, current_date - interval '1 days', 30, 'התנדבות בשעת סיפור. הקראתי סיפור לילדים ועזרתי להם להבין את העלילה. הילדים היו מרותקים. נהניתי מכל רגע.', '', '', '');
+
+
+-- רק לחונך עם id_id = 9 (staff_id = 36) יש חניך בפועל בטבלת tutorships
 INSERT INTO childsmile_app_tutor_feedback (feedback_id_id, tutee_name, tutor_name, tutor_id, is_it_your_tutee, is_first_visit)
 VALUES (
- (SELECT feedback_id FROM childsmile_app_feedback WHERE staff_id = %(staff_id)s AND "timestamp" = (SELECT MAX("timestamp") FROM childsmile_app_feedback WHERE staff_id = %(staff_id)s)),
--- get the exact tutor since we might have more than one tutor with the same name
--- we will ensure its the tutor that filled up the feedback by using the staff_id from the feedback
- (SELECT CONCAT(childfirstname, ' ', childsurname) FROM childsmile_app_children WHERE child_id = (SELECT child_id FROM childsmile_app_tutorships WHERE tutor_id = (SELECT id_id FROM childsmile_app_tutors WHERE staff_id = %(staff_id)s))),
--- tutor name from childsmile_app_tutors 
-(SELECT CONCAT(first_name, ' ', last_name) FROM childsmile_app_staff WHERE staff_id = %(staff_id)s),
--- tutor id from childsmile_app_tutors
-(SELECT id_id FROM childsmile_app_tutors WHERE staff_id = %(staff_id)s),
--- is it your tutee
-TRUE,
--- is it first visit
-FALSE);
--- now insert feedback from a general volunteer
-INSERT INTO childsmile_app_feedback ("timestamp", event_date, staff_id, description, exceptional_events, anything_else, comments)
-VALUES (current_timestamp,
--- one week before today
-current_date - interval '7 days',
-%(staff_id)s,
--- some long text for description -  at least 200 words
-'היה אירוע מרגש','היה שמח', 'פעם הבאה גלידה', '');
--- insert general volunteer feedback
+  (SELECT feedback_id FROM childsmile_app_feedback WHERE staff_id = 36 ORDER BY "timestamp" DESC LIMIT 1),
+  (SELECT CONCAT(childfirstname, ' ', childsurname) 
+   FROM childsmile_app_children 
+   WHERE child_id = (SELECT child_id FROM childsmile_app_tutorships WHERE tutor_id = 9 LIMIT 1)),
+  (SELECT CONCAT(first_name, ' ', last_name) FROM childsmile_app_staff WHERE staff_id = 36),
+  9,
+  TRUE,
+  FALSE
+);
+
+
 INSERT INTO childsmile_app_general_v_feedback (feedback_id_id, volunteer_name, volunteer_id)
-VALUES (
- (SELECT feedback_id FROM childsmile_app_feedback WHERE staff_id = %(staff_id)s AND "timestamp" = (SELECT MAX("timestamp") FROM childsmile_app_feedback WHERE staff_id = %(staff_id)s)),
--- get the exact volunteer since we might have more than one volunteer with the same name
--- we will ensure its the volunteer that filled up the feedback by using the staff_id from the feedback
- (SELECT CONCAT(first_name, ' ', last_name) FROM childsmile_app_staff WHERE staff_id = %(staff_id)s),
--- volunteer id from childsmile_app_general_volunteer
-(SELECT id_id FROM childsmile_app_general_volunteer WHERE staff_id = %(staff_id)s));
-```
+VALUES 
+((SELECT feedback_id FROM childsmile_app_feedback WHERE staff_id = 28 ORDER BY "timestamp" DESC LIMIT 1),
+ (SELECT CONCAT(first_name, ' ', last_name) FROM childsmile_app_staff WHERE staff_id = 28),
+ 1),
+((SELECT feedback_id FROM childsmile_app_feedback WHERE staff_id = 29 ORDER BY "timestamp" DESC LIMIT 1),
+ (SELECT CONCAT(first_name, ' ', last_name) FROM childsmile_app_staff WHERE staff_id = 29),
+ 2),
+((SELECT feedback_id FROM childsmile_app_feedback WHERE staff_id = 30 ORDER BY "timestamp" DESC LIMIT 1),
+ (SELECT CONCAT(first_name, ' ', last_name) FROM childsmile_app_staff WHERE staff_id = 30),
+ 3);

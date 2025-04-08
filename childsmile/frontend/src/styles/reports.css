@@ -226,6 +226,9 @@
     /* Hide overflow if the text is too long */
     text-overflow: ellipsis;
     /* Add ellipsis for overflowing text */
+    word-wrap: break-word; /* Allow text to wrap within cells */
+    white-space: normal; /* Prevent text from overflowing */
+
 }
 
 .page-content .data-grid th {

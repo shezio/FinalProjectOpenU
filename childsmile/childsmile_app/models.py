@@ -258,7 +258,12 @@ class Tutor_Feedback(models.Model):
         db_table = "childsmile_app_tutor_feedback"
 
 class General_V_Feedback(models.Model):
-    feedback = models.OneToOneField(Feedback, on_delete=models.CASCADE, primary_key=True)
+    feedback = models.OneToOneField(
+        Feedback,
+        on_delete=models.CASCADE,
+        primary_key=True,
+        db_column='feedback_id_id'  # חשוב: זה מורה לדג'אנגו לקרוא לעמודה feedback_id
+    )
     volunteer_name = models.CharField(max_length=255)
     volunteer = models.ForeignKey(General_Volunteer, on_delete=models.CASCADE)
 

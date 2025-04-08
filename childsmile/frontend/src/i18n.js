@@ -175,6 +175,14 @@ const resources = {
       "No data to export": "אין נתונים לייצוא",
       "Possible Matches Report": "דוח התאמות פוטנציאליות",
       "Possible Tutorship Matches": "דוח התאמות פוטנציאליות",
+      "Volunteer Name": "שם המתנדב",
+      "Event Date": "תאריך האירוע",
+      "Feedback Filled At": "מילוי המשוב",
+      "Description": "תיאור",
+      "Exceptional Events": "אירועים חריגים",
+      "Anything Else": "משהו נוסף",
+      "Comments": "הערות",
+      "Please select both From Date and To Date": "אנא בחר טווח תאריכים",
     }
   }
 };
