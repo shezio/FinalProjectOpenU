@@ -1086,15 +1086,11 @@ def possible_tutorship_matches_report(request):
         return JsonResponse({"error": str(e)}, status=500)
 
 
-# next report is volunteer feedback report
-@csrf_exempt
+# next report is volunteer feedback report@csrf_exempt
 @api_view(["GET"])
 def volunteer_feedback_report(request):
     """
     Retrieve a report of all volunteer feedback and all the corresponding feedbacks from the feedback table.
-    we only have this in volnteer feedback table.
-    feedback_id_id,volunteer_name,volunteer_id
-    we need the volunteer_name from the volunteer feedback table and all the data from the feedback table related to the feedback id_id FK
     """
     user_id = request.session.get("user_id")
     if not user_id:
@@ -1109,25 +1105,44 @@ def volunteer_feedback_report(request):
         )
 
     try:
+        from_date = request.GET.get("from_date")
+        to_date = request.GET.get("to_date")
+
+        if from_date:
+            from_date = make_aware(datetime.strptime(from_date, "%Y-%m-%d"))
+        if to_date:
+            to_date = make_aware(datetime.strptime(to_date, "%Y-%m-%d"))
+
+        # Fetch all feedbacks with related feedback data
         feedbacks = General_V_Feedback.objects.select_related("feedback").all()
+
+        # Apply date filters if provided
+        if from_date:
+            feedbacks = feedbacks.filter(feedback__timestamp__gte=from_date)
+        if to_date:
+            feedbacks = feedbacks.filter(feedback__timestamp__lte=to_date)
+            
         # Convert the data to a list of dictionaries
-        feedbacks_data = [
-            {
-                "volunteer_name": feedback.volunteer_name,
-                "feedback_id": feedback.feedback.feedback_id,
-                "event_date": feedback.feedback.event_date.strftime("%d/%m/%Y"),
-                "feedback filled at": feedback.feedback.timestamp.strftime("%d/%m/%Y"),
-                "description": feedback.feedback.description,
-                "exceptional_events": feedback.feedback.exceptional_events,
-                "anything_else": feedback.feedback.anything_else,
-                "comments": feedback.feedback.comments,
-            }
-            for feedback in feedbacks
-        ]
+        feedbacks_data = []
+        for feedback in feedbacks:
+            try:
+                feedbacks_data.append({
+                    "volunteer_name": feedback.volunteer_name,
+                    "feedback_id": feedback.feedback.feedback_id,  # Access the related Feedback table
+                    "event_date": feedback.feedback.event_date.strftime("%d/%m/%Y"),
+                    "feedback_filled_at": feedback.feedback.timestamp.strftime("%d/%m/%Y"),
+                    "description": feedback.feedback.description,
+                    "exceptional_events": feedback.feedback.exceptional_events,
+                    "anything_else": feedback.feedback.anything_else,
+                    "comments": feedback.feedback.comments,
+                })
+            except Exception as e:
+                print(f"DEBUG: Error processing feedback: {feedback}, Error: {str(e)}")
 
         # Return the data as JSON
         return JsonResponse({"volunteer_feedback": feedbacks_data}, status=200)
     except Exception as e:
+        print(f"DEBUG: An error occurred: {str(e)}")  # Log the error for debugging
         return JsonResponse({"error": str(e)}, status=500)
 
 
