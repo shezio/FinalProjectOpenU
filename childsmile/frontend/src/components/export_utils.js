@@ -403,3 +403,125 @@ export const exportNewFamiliesToPDF = (families, t) => {
   doc.save(`${t('new_families_report')}.pdf`);
   toast.success(t('Report generated successfully')); // Show success toast
 }
+
+// Export possible matches to Excel and PDF
+export const exportPossibleMatchesToExcel = (matches, t) => {
+  const selectedMatches = matches.filter(match => match.selected);
+  if (selectedMatches.length === 0) {
+    showErrorToast(t, '', { message: 'אנא בחר לפחות רשומה אחת ליצירת דוח' });
+    return;
+  }
+
+  const headers = [
+    t("Child Full Name"),
+    t("Tutor Full Name"),
+    t("Child City"),
+    t("Tutor City"),
+    t("Child Age"),
+    t("Tutor Age"),
+    t("Distance Between Cities (km)"),
+    t("Grade"),
+  ];
+  const rows = selectedMatches.map(match => [
+    match.child_full_name,
+    match.tutor_full_name,
+    match.child_city,
+    match.tutor_city,
+    match.child_age,
+    match.tutor_age,
+    match.distance_between_cities,
+    match.grade,
+  ]);
+
+  const worksheetData = [headers, ...rows];
+  const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
+
+  // Adjust column widths
+  const columnWidths = worksheetData[0].map((_, colIndex) => ({
+    wch: Math.max(
+      ...worksheetData.map(row => (row[colIndex] ? row[colIndex].toString().length : 0))
+    ),
+  }));
+  worksheet['!cols'] = columnWidths;
+
+  // Set worksheet direction to RTL
+  worksheet['!dir'] = 'rtl';
+
+  const workbook = XLSX.utils.book_new();
+  const sheetName = t('Possible Tutorship Matches'); // Sheet name
+  XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
+  const fileName = t('possible_tutorship_matches_report'); // File name
+  XLSX.writeFile(workbook, `${fileName}.xlsx`);
+  toast.success(t('Report generated successfully')); // Show success toast
+};
+
+// Export possible matches to PDF
+// Note: The PDF generation code is similar to the one used for tutors and families, but with different headers and data.
+export const exportPossibleMatchesToPDF = (matches, t) => {
+  const selectedMatches = matches.filter(match => match.selected);
+  if (selectedMatches.length === 0) {
+    showErrorToast(t, '', { message: 'אנא בחר לפחות רשומה אחת ליצירת דוח' });
+    return;
+  }
+
+  const doc = new jsPDF('landscape', 'mm', 'a4');
+  
+  // Register the Alef-Bold font
+  doc.addFileToVFS('Alef-Bold.ttf', AlefBold);
+  doc.addFont('Alef-Bold.ttf', 'Alef', 'bold');
+  doc.setFont('Alef', 'bold'); // Set the custom font
+
+  // Add logo
+  doc.addImage(logo, 'PNG', 10, 10, 30, 30);
+
+  // Add title
+  doc.setFontSize(18);
+  doc.text(reverseText(t("Possible Tutorship Matches Report")), doc.internal.pageSize.getWidth() / 2, 40, { align: 'center' });
+
+  // Prepare table data
+  const headers = [
+    t("Child Full Name"),
+    t("Tutor Full Name"),
+    t("Child City"),
+    t("Tutor City"),
+    t("Child Age"),
+    t("Tutor Age"),
+    t("Distance Between Cities (km)"),
+    t("Grade"),
+  ];
+  const rows = selectedMatches.map(match => [
+    reverseText(match.child_full_name), // Reverse for RTL
+    reverseText(match.tutor_full_name), // Reverse for RTL
+    reverseText(match.child_city), // Reverse for RTL
+    reverseText(match.tutor_city), // Reverse for RTL
+    match.child_age, // Keep numbers as is
+    match.tutor_age, // Keep numbers as is
+    match.distance_between_cities, // Keep numbers as is
+    match.grade, // Keep numbers as is
+  ]);
+
+  // Add table with RTL support
+  doc.autoTable({
+    head: [headers.map(header => reverseText(header))], // Reverse headers for RTL
+    body: rows,
+    startY: 50, // Position below the title
+    styles: { font: "Alef", fontSize: 10, cellPadding: 3, halign: "right" }, // Align text to the right
+    headStyles: { fillColor: [76, 175, 80], textColor: 255, halign: "right" }, // Align headers to the right
+    columnStyles: {
+      0: { halign: 'right' }, // Align first column to the right
+      1: { halign: 'right' }, // Align second column to the right
+      2: { halign: 'right' }, // Align third column to the right
+      3: { halign: 'right' }, // Align fourth column to the right
+      4: { halign: 'right' }, // Align fifth column to the right
+      5: { halign: 'right' }, // Align sixth column to the right
+      6: { halign: 'right' }, // Align seventh column to the right
+      7: { halign: 'right' }, // Align eighth column to the right
+    },
+    margin: { left: 10, right: 10 }, // Add margins to prevent clipping
+    tableWidth: 'auto', // Automatically adjust table width to fit the page
+  });
+
+  // Save the PDF
+  doc.save(`${t("possible_tutorship_matches_report")}.pdf`);
+  toast.success(t("Report generated successfully"));
+};
