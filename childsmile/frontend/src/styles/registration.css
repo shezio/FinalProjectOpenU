@@ -1,3 +1,4 @@
+/* General container styles */
 .registration-container {
     max-width: 600px;
     margin: 0 auto;
@@ -5,51 +6,121 @@
     background-color: #f9f9f9;
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  }
-  
-  .logo-container {
-    text-align: center;
+}
+
+.logo-container {
+    width: 100%;
+    display: flex;
+    justify-content: center !important;
+    /* force override */
+    align-items: center;
     margin-bottom: 20px;
-  }
-  
-  .logo {
+    direction: ltr;
+    /* force LTR so RTL layout won't mess it */
+}
+
+
+.logo {
     max-width: 150px;
-  }
-  
-  .registration-form h2 {
+    height: auto;
+}
+
+.registration-form h2 {
     text-align: center;
     margin-bottom: 20px;
-  }
-  
-  .registration-form label {
+}
+
+.registration-form label {
     display: block;
     margin-bottom: 5px;
     font-weight: bold;
-  }
-  
-  .registration-form input,
-  .registration-form select,
-  .registration-form textarea {
+}
+
+.registration-form input,
+.registration-form select,
+.registration-form textarea {
     width: 100%;
     padding: 8px;
     margin-bottom: 10px;
     border: 1px solid #ccc;
     border-radius: 4px;
-  }
-  
-  .registration-form input.error,
-  .registration-form select.error,
-  .registration-form textarea.error {
+}
+
+.registration-form textarea.no-resize {
+    resize: none;
+    /* disable manual resizing */
+    max-height: 100px;
+    /* limit the height */
+    overflow-y: auto;
+    /* allow scroll if needed */
+}
+
+.registration-form input.error,
+.registration-form select.error,
+.registration-form textarea.error {
     border-color: red;
-  }
-  
-  .error-message {
+}
+
+.registration-form input[type="range"] {
+    width: 100%;
+    height: 20px;
+    margin-bottom: 10px;
+}
+
+.error-message {
     color: red;
     font-size: 12px;
     margin-bottom: 10px;
-  }
-  
-  .registration-form button {
+}
+
+/* Switch container styles */
+.switch-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 15px;
+}
+
+/* Custom switch styles */
+.switch-container .react-switch {
+    width: 300px;
+    /* Make the switch controller wider */
+    height: 40px;
+    /* Adjust the height for better proportions */
+}
+
+.switch-container .react-switch-handle {
+    width: 50px;
+    /* Adjust the handle size */
+    height: 36px;
+    /* Match the height of the switch */
+}
+
+/* Text inside the switch */
+.switch-container .switch-label {
+    font-size: 18px;
+    font-weight: bold;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    width: 100%;
+    /* Ensure it takes full width */
+    padding: 0 10px;
+    /* Add horizontal padding so text doesn't stick to edges */
+    box-sizing: border-box;
+}
+
+
+/* Remove stickiness */
+.switch-container .react-switch:active .react-switch-handle {
+    box-shadow: none;
+    /* Remove the active shadow */
+}
+
+/* Button styles */
+.registration-form button {
     width: 100%;
     padding: 10px;
     background-color: #4caf50;
@@ -57,8 +128,41 @@
     border: none;
     border-radius: 4px;
     cursor: pointer;
-  }
-  
-  .registration-form button:hover {
+}
+
+.registration-form button:hover {
     background-color: #45a049;
-  }
+}
+
+/* Phone input container */
+.phone-container {
+    display: flex;
+    align-items: center;
+    gap: 5px; /* Add spacing between elements */
+    margin-bottom: 10px;
+}
+
+.phone-container select {
+    width: 80px; /* Make the dropdown smaller */
+    padding: 5px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+.phone-container .dash {
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.phone-container input {
+    flex: 1; /* Make the text field take the remaining space */
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+.phone-container input.error,
+.phone-container select.error {
+    border-color: red;
+}
