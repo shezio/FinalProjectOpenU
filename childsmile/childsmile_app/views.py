@@ -919,6 +919,7 @@ def families_waiting_for_tutorship_report(request):
 from django.utils.timezone import make_aware
 from datetime import datetime, timedelta
 
+
 @csrf_exempt
 @api_view(["GET"])
 def get_new_families_report(request):
@@ -960,7 +961,9 @@ def get_new_families_report(request):
             to_date = make_aware(datetime.now())  # Default to the current date
 
         # Fetch children registered within the specified date range
-        children = Children.objects.filter(registrationdate__gte=from_date, registrationdate__lte=to_date).values(
+        children = Children.objects.filter(
+            registrationdate__gte=from_date, registrationdate__lte=to_date
+        ).values(
             "childfirstname",
             "childsurname",
             "father_name",
@@ -1121,21 +1124,25 @@ def volunteer_feedback_report(request):
             feedbacks = feedbacks.filter(feedback__timestamp__gte=from_date)
         if to_date:
             feedbacks = feedbacks.filter(feedback__timestamp__lte=to_date)
-            
+
         # Convert the data to a list of dictionaries
         feedbacks_data = []
         for feedback in feedbacks:
             try:
-                feedbacks_data.append({
-                    "volunteer_name": feedback.volunteer_name,
-                    "feedback_id": feedback.feedback.feedback_id,  # Access the related Feedback table
-                    "event_date": feedback.feedback.event_date.strftime("%d/%m/%Y"),
-                    "feedback_filled_at": feedback.feedback.timestamp.strftime("%d/%m/%Y"),
-                    "description": feedback.feedback.description,
-                    "exceptional_events": feedback.feedback.exceptional_events,
-                    "anything_else": feedback.feedback.anything_else,
-                    "comments": feedback.feedback.comments,
-                })
+                feedbacks_data.append(
+                    {
+                        "volunteer_name": feedback.volunteer_name,
+                        "feedback_id": feedback.feedback.feedback_id,  # Access the related Feedback table
+                        "event_date": feedback.feedback.event_date.strftime("%d/%m/%Y"),
+                        "feedback_filled_at": feedback.feedback.timestamp.strftime(
+                            "%d/%m/%Y"
+                        ),
+                        "description": feedback.feedback.description,
+                        "exceptional_events": feedback.feedback.exceptional_events,
+                        "anything_else": feedback.feedback.anything_else,
+                        "comments": feedback.feedback.comments,
+                    }
+                )
             except Exception as e:
                 print(f"DEBUG: Error processing feedback: {feedback}, Error: {str(e)}")
 
@@ -1166,32 +1173,49 @@ def tutor_feedback_report(request):
         )
 
     try:
-        # Fetch all data according this logic
-        # Retrieve a report of all tutor feedback and all the corresponding feedbacks from the feedback table.
-        # we only have this in tutor feedback table.
-        # feedback_id_id,tutee_name,tutor_name,is_it_your_tutee, is_first_visit
-        # we need the tutor_name from the tutor feedback table and the tutee_name and is_it_your_tutee, and is_first_visit and all the data from the feedback table related to the feedback id_id FK
+        from_date = request.GET.get("from_date")
+        to_date = request.GET.get("to_date")
 
+        if from_date:
+            from_date = make_aware(datetime.strptime(from_date, "%Y-%m-%d"))
+        if to_date:
+            to_date = make_aware(datetime.strptime(to_date, "%Y-%m-%d"))
+
+        # Fetch all feedbacks with related feedback data
         feedbacks = Tutor_Feedback.objects.select_related("feedback").all()
+
+        # Apply date filters if provided
+        if from_date:
+            feedbacks = feedbacks.filter(feedback__timestamp__gte=from_date)
+        if to_date:
+            feedbacks = feedbacks.filter(feedback__timestamp__lte=to_date)
+
         # Convert the data to a list of dictionaries
-        feedbacks_data = [
-            {
-                "tutor_name": feedback.tutor_name,
-                "tutee_name": feedback.tutee_name,
-                "is_it_your_tutee": feedback.is_it_your_tutee,
-                "is_first_visit": feedback.is_first_visit,
-                "feedback_id": feedback.feedback.feedback_id,
-                "event_date": feedback.feedback.event_date.strftime("%d/%m/%Y"),
-                "feedback filled at": feedback.feedback.timestamp.strftime("%d/%m/%Y"),
-                "description": feedback.feedback.description,
-                "exceptional_events": feedback.feedback.exceptional_events,
-                "anything_else": feedback.feedback.anything_else,
-                "comments": feedback.feedback.comments,
-            }
-            for feedback in feedbacks
-        ]
+        feedbacks_data = []
+        for feedback in feedbacks:
+            try:
+                feedbacks_data.append(
+                    {
+                        "tutor_name": feedback.tutor_name,
+                        "tutee_name": feedback.tutee_name,
+                        "is_it_your_tutee": feedback.is_it_your_tutee,
+                        "is_first_visit": feedback.is_first_visit,
+                        "feedback_id": feedback.feedback.feedback_id,
+                        "event_date": feedback.feedback.event_date.strftime("%d/%m/%Y"),
+                        "feedback_filled_at": feedback.feedback.timestamp.strftime(
+                            "%d/%m/%Y"
+                        ),
+                        "description": feedback.feedback.description,
+                        "exceptional_events": feedback.feedback.exceptional_events,
+                        "anything_else": feedback.feedback.anything_else,
+                        "comments": feedback.feedback.comments,
+                    }
+                )
+            except Exception as e:
+                print(f"DEBUG: Error processing feedback: {feedback}, Error: {str(e)}")
 
         # Return the data as JSON
         return JsonResponse({"tutor_feedback": feedbacks_data}, status=200)
     except Exception as e:
+        print(f"DEBUG: An error occurred: {str(e)}")  # Log the error for debugging
         return JsonResponse({"error": str(e)}, status=500)
