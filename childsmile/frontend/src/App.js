@@ -14,6 +14,7 @@ import FamiliesWaitingForTutorshipReport from './pages/report_pages/families_wai
 import PossibleTutorshipMatchesReport from './pages/report_pages/possible_tutorship_matches_report'; // Import the Possible Tutorship Matches Report component
 import VolunteerFeedbackReport from './pages/report_pages/volunteer_feedback_report'; // Import the Volunteer Feedback Report component
 import TutorFeedbackReport from './pages/report_pages/tutor_feedback_report'; // Import the Tutor Feedback Report component
+import Registration from './pages/Registration'; // Import the Registration component
 
 /*import these routes respectively to .pages
     get_families_per_location_report: { name: 'דוח משפחות לפי מיקום', path: '/reports/families_per_location_report' },
@@ -47,6 +48,7 @@ const App = () => {
       <Route path="/reports/possible_tutorship_matches_report" element={<PossibleTutorshipMatchesReport />} /> {/* Add Possible Tutorship Matches Report route */}
       <Route path="/reports/volunteer-feedback" element={<VolunteerFeedbackReport />} /> {/* Add Volunteer Feedback Report route */}
       <Route path="/reports/tutor-feedback" element={<TutorFeedbackReport />} /> {/* Add Tutor Feedback Report route */}
+      <Route path="/register" element={<Registration />} />
     </Routes>
   );
 };

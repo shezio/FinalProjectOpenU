@@ -64,7 +64,9 @@ const Login = () => {
           />
           <button type="submit">{t("כניסה")}</button>
           <span>{t("או")}</span>
-          <button type="button">{t("הירשם")}</button>
+          <button type="button" onClick={() => navigate("/register")}>
+            {t("הירשם")}
+          </button>
           <button className="google-login">{t("התחבר עם חשבון גוגל")}</button>
           {error && <p className="error">{error}</p>}
           {success && <p className="success">{success}</p>}
