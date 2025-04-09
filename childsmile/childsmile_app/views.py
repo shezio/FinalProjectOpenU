@@ -1230,21 +1230,40 @@ def create_volunteer_or_tutor(request):
     Register a new user as a volunteer or tutor.
     """
     try:
+        print(f"DEBUG: Incoming request data: {request.data}")
         # Extract data from the request
         data = request.data  # Use request.data for JSON payloads
         first_name = data.get("first_name")
         surname = data.get("surname")
         age = int(data.get("age"))
-        gender = data.get("gender")  # Boolean: true/false
-        phone = data.get("phone")
+        # Convert gender to boolean
+        gender = data.get("gender") == "Female"
+        phone_prefix = data.get("phone_prefix")
+        phone_suffix = data.get("phone_suffix")
+        phone = f"{phone_prefix}-{phone_suffix}" if phone_prefix and phone_suffix else None
         city = data.get("city")
         comment = data.get("comment", "")
         email = data.get("email")
-        want_tutor = data.get("want_tutor")  # Boolean: true/false
+        # Convert want_tutor to boolean
+        want_tutor = data.get("want_tutor") == "true"
 
         # Validate required fields
-        if not all([first_name, surname, age, phone, city, email]):
-            raise ValueError("Missing required fields.")
+        missing_fields = []
+        if not first_name:
+            missing_fields.append("first_name")
+        if not surname:
+            missing_fields.append("surname")
+        if not age:
+            missing_fields.append("age")
+        if not phone:
+            missing_fields.append("phone")
+        if not city:
+            missing_fields.append("city")
+        if not email:
+            missing_fields.append("email")
+
+        if missing_fields:
+            raise ValueError(f"Missing required fields: {', '.join(missing_fields)}")
 
         # Check if a user with the same email already exists
         if SignedUp.objects.filter(email=email).exists():
@@ -1306,6 +1325,7 @@ def create_volunteer_or_tutor(request):
 
     except ValueError as ve:
         # Rollback will happen automatically because of @transaction.atomic
+        print(f"DEBUG: ValueError: {str(ve)}")
         return JsonResponse({"error": str(ve)}, status=400)
 
     except Exception as e:

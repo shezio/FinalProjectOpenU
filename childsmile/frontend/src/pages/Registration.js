@@ -8,6 +8,9 @@ import logo from '../assets/logo.png'; // Import the logo image
 import { useNavigate } from "react-router-dom"; // Import useNavigate for navigation
 import "react-toastify/dist/ReactToastify.css"; // Import toast styles
 import settlements from "../components/settlements.json"; // Import the settlements JSON file
+import Switch from "react-switch"; // Import react-switch
+
+
 
 const Registration = () => {
   const { t } = useTranslation();
@@ -19,7 +22,8 @@ const Registration = () => {
     surname: "",
     age: 18,
     gender: "",
-    phone: "",
+    phone_prefix: "050", // Default prefix
+    phone_suffix: "", // Suffix for the phone number
     city: "",
     comment: "",
     email: "",
@@ -35,6 +39,11 @@ const Registration = () => {
   // Handle input changes
   const handleChange = (e) => {
     const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+  };
+
+  // Add this new handler
+  const handleToggleChange = (name, value) => {
     setFormData({ ...formData, [name]: value });
   };
 
@@ -61,10 +70,9 @@ const Registration = () => {
       newErrors.gender = t("Please select a gender.");
     }
 
-    // Validate phone (prefix 050-059, dash, and 7 digits)
-    const phoneRegex = /^05[0-9]-[0-9]{7}$/;
-    if (!phoneRegex.test(formData.phone)) {
-      newErrors.phone = t("Phone number must start with 050-059 and follow the format 05X-XXXXXXX.");
+    // Validate phone (prefix 050-059 and 7 numeric digits)
+    if (!formData.phone_prefix || !formData.phone_suffix || formData.phone_suffix.length !== 7) {
+      newErrors.phone = t("Phone number must start with 050-059 and have exactly 7 digits.");
     }
 
     // Validate city (must be selected)
@@ -88,35 +96,30 @@ const Registration = () => {
   };
 
   const handleSubmit = (e) => {
-    e.preventDefault();
+    e.preventDefault(); // Prevent the default form submission behavior
+
     if (validate()) {
-      // Send data to the backend
       axios
         .post("/api/create_volunteer_or_tutor/", formData)
         .then((response) => {
-          // Show a success message with the username
           toast.success(
             t(
               "Welcome to Child Smile! Please log in with your credentials: Username: {{username}}, Password: 1234"
             ).replace("{{username}}", `${formData.first_name}_${formData.surname}`),
-            { autoClose: 10000 } // 10 seconds
+            { autoClose: 10000 }
           );
-  
-          // Reset the form
           setFormData({
             first_name: "",
             surname: "",
             age: 18,
-            gender: "",
+            gender: "Male",
             phone: "",
             city: "",
             comment: "",
             email: "",
-            want_tutor: "",
+            want_tutor: "false",
           });
-  
-          // Navigate back to the login page
-          navigate("/");
+          navigate("/"); // Redirect to the login page
         })
         .catch((error) => {
           console.error("Error during registration:", error);
@@ -127,9 +130,10 @@ const Registration = () => {
 
   return (
     <div className="registration-container">
-      <div className="logo-container">
+      <div style={{ width: "100%", display: "flex", justifyContent: "center", alignItems: "center", marginBottom: "20px", direction: "ltr" }} className="logo-container">
         <img src={logo} alt="Logo" className="logo" />
       </div>
+
       <form className="registration-form" onSubmit={handleSubmit}>
         <h2>{t("Register")}</h2>
 
@@ -153,50 +157,65 @@ const Registration = () => {
         />
         {errors.surname && <span className="error-message">{errors.surname}</span>}
 
-        <label>{t("Age")}</label>
+        <label>{t("Age")}: {formData.age}</label>
         <input
-          type="number"
+          type="range"
           name="age"
-          value={formData.age}
-          onChange={handleChange}
           min="18"
           max="100"
+          value={formData.age}
+          onChange={handleChange}
         />
         {errors.age && <span className="error-message">{errors.age}</span>}
 
+        {/* Gender Switch */}
         <label>{t("Gender")}</label>
-        <div>
-          <label>
-            <input
-              type="radio"
-              name="gender"
-              value="true"
-              checked={formData.gender === "true"}
-              onChange={handleChange}
-            />
-            {t("Yes")}
-          </label>
-          <label>
-            <input
-              type="radio"
-              name="gender"
-              value="false"
-              checked={formData.gender === "false"}
-              onChange={handleChange}
-            />
-            {t("No")}
-          </label>
+        <div className="switch-container">
+          <Switch
+            onChange={(checked) => handleToggleChange("gender", checked ? "Female" : "Male")}
+            checked={formData.gender === "Female"}
+            className="custom-switch"
+            checkedIcon={<div className="switch-label">{t("Female")}</div>}
+            uncheckedIcon={<div className="switch-label">{t("Male")}</div>}
+            offColor="#ff9aa2"
+            onColor="#86d3ff"
+            handleDiameter={50}
+            height={50}
+            width={200}
+            disableDrag={true}
+          />
         </div>
         {errors.gender && <span className="error-message">{errors.gender}</span>}
 
+        {/* Phone Input */}
         <label>{t("Phone")}</label>
-        <input
-          type="text"
-          name="phone"
-          value={formData.phone}
-          onChange={handleChange}
-          className={errors.phone ? "error" : ""}
-        />
+        <div className="phone-container">
+          <input
+            type="text"
+            name="phone_suffix"
+            value={formData.phone_suffix || ""}
+            onChange={(e) => {
+              // Allow only numeric input
+              const value = e.target.value.replace(/\D/g, ""); // Remove non-numeric characters
+              handleChange({ target: { name: "phone_suffix", value } });
+            }}
+            maxLength="7" // Limit to 7 digits
+            className={errors.phone ? "error" : ""}
+          />
+          <span className="dash">-</span><select
+            name="phone_prefix"
+            value={formData.phone_prefix || "050"} // Default to "050"
+            onChange={(e) => handleChange({ target: { name: "phone_prefix", value: e.target.value } })}
+            className={errors.phone ? "error" : ""}
+          >
+            {["050", "051", "052", "053", "054", "055", "056", "057", "058", "059"].map((prefix) => (
+              <option key={prefix} value={prefix}>
+                {prefix}
+              </option>
+            ))}
+          </select>
+
+        </div>
         {errors.phone && <span className="error-message">{errors.phone}</span>}
 
         <label>{t("City")}</label>
@@ -220,7 +239,8 @@ const Registration = () => {
           name="comment"
           value={formData.comment}
           onChange={handleChange}
-        ></textarea>
+          className="no-resize"
+        />
 
         <label>{t("Email")}</label>
         <input
@@ -232,34 +252,28 @@ const Registration = () => {
         />
         {errors.email && <span className="error-message">{errors.email}</span>}
 
+        {/* Want to be a Tutor Switch */}
         <label>{t("Want to be a Tutor?")}</label>
-        <div>
-          <label>
-            <input
-              type="radio"
-              name="want_tutor"
-              value="true"
-              checked={formData.want_tutor === "true"}
-              onChange={handleChange}
-            />
-            {t("Yes")}
-          </label>
-          <label>
-            <input
-              type="radio"
-              name="want_tutor"
-              value="false"
-              checked={formData.want_tutor === "false"}
-              onChange={handleChange}
-            />
-            {t("No")}
-          </label>
+        <div className="switch-container">
+          <Switch
+            onChange={(checked) => handleToggleChange("want_tutor", checked ? "true" : "false")}
+            checked={formData.want_tutor === "true"}
+            className="custom-switch"
+            checkedIcon={<div className="switch-label">{t("Yes")}</div>}
+            uncheckedIcon={<div className="switch-label">{t("No")}</div>}
+            offColor="#ff9aa2"
+            onColor="#86d3ff"
+            handleDiameter={50}
+            height={50}
+            width={200}
+            disableDrag={true}
+          />
         </div>
         {errors.want_tutor && <span className="error-message">{errors.want_tutor}</span>}
 
         <button type="submit">{t("Register")}</button>
       </form>
-    </div>
+    </div >
   );
 };
 

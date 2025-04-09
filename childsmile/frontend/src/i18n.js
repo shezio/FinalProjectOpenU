@@ -199,6 +199,9 @@ const resources = {
       "Age": "גיל",
       "Gender": "מין",
       "Register": "הרשמה להתנדבות - חיוך של ילד",
+      "Male": "זכר",
+      "Female": "נקבה",
+      "Registration failed. Please try again.": "הרשמה נכשלה. אנא נסה שוב.",
     }
   }  
 };
