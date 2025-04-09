@@ -7,6 +7,8 @@ from django.http import HttpResponse, JsonResponse
 from django.views import View
 from django.db import connection
 from django.views.decorators.csrf import csrf_exempt
+from django.db import transaction
+from django.utils.timezone import now
 from .models import (
     Permissions,
     Role,
@@ -1219,3 +1221,94 @@ def tutor_feedback_report(request):
     except Exception as e:
         print(f"DEBUG: An error occurred: {str(e)}")  # Log the error for debugging
         return JsonResponse({"error": str(e)}, status=500)
+
+@csrf_exempt
+@transaction.atomic
+@api_view(["POST"])
+def create_volunteer_or_tutor(request):
+    """
+    Register a new user as a volunteer or tutor.
+    """
+    try:
+        # Extract data from the request
+        data = request.data  # Use request.data for JSON payloads
+        first_name = data.get("first_name")
+        surname = data.get("surname")
+        age = int(data.get("age"))
+        gender = data.get("gender")  # Boolean: true/false
+        phone = data.get("phone")
+        city = data.get("city")
+        comment = data.get("comment", "")
+        email = data.get("email")
+        want_tutor = data.get("want_tutor")  # Boolean: true/false
+
+        # Validate required fields
+        if not all([first_name, surname, age, phone, city, email]):
+            raise ValueError("Missing required fields.")
+
+        # Check if a user with the same email already exists
+        if SignedUp.objects.filter(email=email).exists():
+            raise ValueError("A user with this email already exists.")
+
+        # Check if a staff member with the same username already exists
+        username = f"{first_name}_{surname}"
+        if Staff.objects.filter(username=username).exists():
+            # new username will get a _1 appended to it
+            username = f"{username}_1"
+
+        # Insert into SignedUp table
+        signedup = SignedUp.objects.create(
+            first_name=first_name,
+            surname=surname,
+            age=age,
+            gender=gender,
+            phone=phone,
+            city=city,
+            comment=comment,
+            email=email,
+            want_tutor=want_tutor,
+        )
+
+        # Determine the role based on want_tutor
+        role_name = "Tutor" if want_tutor else "General Volunteer"
+        try:
+            role = Role.objects.get(role_name=role_name)
+        except Role.DoesNotExist:
+            raise ValueError(f"Role '{role_name}' not found in the database.")
+
+        # Insert into Staff table
+        staff = Staff.objects.create(
+            username=username,
+            password="1234",  # Replace with hashed password in production
+            email=email,
+            first_name=first_name,
+            last_name=surname,
+            created_at=now(),
+        )
+
+        staff.roles.add(role)  # Add the role to the staff member
+
+        # Insert into either General_Volunteer or Pending_Tutor
+        if want_tutor:
+            Pending_Tutor.objects.create(
+                id_id=signedup.id,
+                pending_status="ממתין",  # "Pending" in Hebrew
+            )
+        else:
+            General_Volunteer.objects.create(
+                id_id=signedup.id,
+                staff_id=staff.staff_id,
+                signupdate=now().date(),
+                comments="",
+            )
+
+        return JsonResponse({"message": "User registered successfully."}, status=201)
+
+    except ValueError as ve:
+        # Rollback will happen automatically because of @transaction.atomic
+        return JsonResponse({"error": str(ve)}, status=400)
+
+    except Exception as e:
+        print(f"DEBUG: An error occurred: {str(e)}")
+        return JsonResponse({"error": str(e)}, status=500)
+    

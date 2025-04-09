@@ -35,6 +35,7 @@ from .views import (
     possible_tutorship_matches_report,
     volunteer_feedback_report,
     tutor_feedback_report,
+    create_volunteer_or_tutor,
 )
 
 router = DefaultRouter()
@@ -106,5 +107,10 @@ urlpatterns = [
         "api/reports/tutor-feedback-report/",
         tutor_feedback_report,
         name="tutor_feedback_report",
+    ),
+    path(
+        "api/create_volunteer_or_tutor/",
+        create_volunteer_or_tutor,
+        name="create_volunteer_or_tutor",
     ),
 ]
