@@ -8,19 +8,14 @@
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.logo-container {
-    width: 100%;
-    display: flex;
-    justify-content: center !important;
-    /* force override */
+.registration-logo-container {
     align-items: center;
-    margin-bottom: 20px;
-    direction: ltr;
-    /* force LTR so RTL layout won't mess it */
+    /* Center the logo vertically */
+    display: flex;
 }
 
 
-.logo {
+.regisration-logo {
     max-width: 150px;
     height: auto;
 }
@@ -28,12 +23,29 @@
 .registration-form h2 {
     text-align: center;
     margin-bottom: 20px;
+    font-size: 28px;
+    font-weight: bold;
+    font-family: 'David Libre', sans-serif;
 }
+
+.registration-form button {
+    width: 100%;
+    padding: 10px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 18px;
+    font-weight: bold;
+}
+
 
 .registration-form label {
     display: block;
     margin-bottom: 5px;
     font-weight: bold;
+    font-size: 20px;
 }
 
 .registration-form input,
@@ -69,8 +81,16 @@
 
 .error-message {
     color: red;
-    font-size: 12px;
+    font-size: 14px;
+    margin-top: -5px;    /* מקרב את ההודעה לשדה */
     margin-bottom: 10px;
+    display: block;
+    direction: rtl;      /* חשוב לעברית */
+    font-family: 'David Libre', sans-serif;
+}
+
+.error-message::before {
+    content: "⚠ ";
 }
 
 /* Switch container styles */
@@ -85,15 +105,19 @@
 .switch-container .react-switch {
     width: 300px;
     /* Make the switch controller wider */
-    height: 40px;
+    height: 20px;
     /* Adjust the height for better proportions */
+    border-radius: 7px;
 }
 
 .switch-container .react-switch-handle {
-    width: 50px;
+    width: 20px;
     /* Adjust the handle size */
-    height: 36px;
+    height: 20px;
     /* Match the height of the switch */
+    top: -3px;
+    /* Center the handle vertically */
+    border-radius: 50%;
 }
 
 /* Text inside the switch */
@@ -166,3 +190,48 @@
 .phone-container select.error {
     border-color: red;
 }
+
+/* Responsive styles for smaller screens */
+/* need 67% zoom on smaller screens */
+@media (max-width: 768px) {
+    .registration-container {
+        padding: 10px;
+        width: 90%;
+    }
+
+    .registration-form h2 {
+        font-size: 24px;
+    }
+
+    .registration-form label {
+        font-size: 14px;
+    }
+
+    .registration-form input,
+    .registration-form select,
+    .registration-form textarea {
+        font-size: 14px;
+    }
+
+    .registration-form button {
+        font-size: 16px;
+    }
+}
+
+.form-columns {
+    display: flex;
+    gap: 40px;
+    flex-wrap: wrap;
+  }
+  
+  .column {
+    flex: 1;
+    min-width: 280px;
+  }
+  
+  @media screen and (max-width: 768px) {
+    .form-columns {
+      flex-direction: column;
+    }
+  }
+  
