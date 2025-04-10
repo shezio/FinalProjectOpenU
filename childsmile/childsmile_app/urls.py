@@ -36,6 +36,7 @@ from .views import (
     volunteer_feedback_report,
     tutor_feedback_report,
     create_volunteer_or_tutor,
+    get_pending_tutors,
 )
 
 router = DefaultRouter()
@@ -112,5 +113,10 @@ urlpatterns = [
         "api/create_volunteer_or_tutor/",
         create_volunteer_or_tutor,
         name="create_volunteer_or_tutor",
+    ),
+    path(
+        "api/pending_tutors/",
+        get_pending_tutors,
+        name="get_pending_tutors",
     ),
 ]
