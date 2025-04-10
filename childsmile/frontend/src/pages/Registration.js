@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import "../styles/registration.css"; // Add styles for the registration page
 import axios from "../axiosConfig";
-import { toast } from "react-toastify";
+import { toast, ToastContainer } from "react-toastify";
 import { showErrorToast } from '../components/toastUtils'; // Import the error toast utility function
 import logo from '../assets/logo.png'; // Import the logo image
 import { useNavigate } from "react-router-dom"; // Import useNavigate for navigation
@@ -21,19 +21,18 @@ const Registration = () => {
     first_name: "",
     surname: "",
     age: 18,
-    gender: "",
+    gender: "Male", // Default value for the switch
     phone_prefix: "050", // Default prefix
     phone_suffix: "", // Suffix for the phone number
     city: "",
     comment: "",
     email: "",
-    want_tutor: "",
+    want_tutor: false, // Default value for the switch
   });
 
   // Validation state
   const [errors, setErrors] = useState({});
 
-  // List of cities in Israel
   const cities = settlements.map((city) => city.trim()).filter((city) => city !== "");
 
   // Handle input changes
@@ -44,6 +43,7 @@ const Registration = () => {
 
   // Add this new handler
   const handleToggleChange = (name, value) => {
+    console.log(`DEBUG: ${name} changed to ${value}`); // Log the changes
     setFormData({ ...formData, [name]: value });
   };
 
@@ -66,8 +66,9 @@ const Registration = () => {
     }
 
     // Validate gender (must be selected)
-    if (!formData.gender) {
-      newErrors.gender = t("Please select a gender.");
+    // Validate gender (must be selected)
+    if (!formData.gender || (formData.gender !== "Male" && formData.gender !== "Female")) {
+      newErrors.gender = t("Please select a valid gender.");
     }
 
     // Validate phone (prefix 050-059 and 7 numeric digits)
@@ -87,9 +88,11 @@ const Registration = () => {
     }
 
     // Validate want_tutor (must be selected)
-    if (!formData.want_tutor) {
+    const wantTutorValue = String(formData.want_tutor);
+    if (wantTutorValue !== "true" && wantTutorValue !== "false") {
       newErrors.want_tutor = t("Please select if you want to be a tutor.");
     }
+
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -97,6 +100,7 @@ const Registration = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault(); // Prevent the default form submission behavior
+    console.log("DEBUG: Form data being submitted:", formData); // Log the form data
 
     if (validate()) {
       axios
@@ -108,18 +112,12 @@ const Registration = () => {
             ).replace("{{username}}", `${formData.first_name}_${formData.surname}`),
             { autoClose: 10000 }
           );
-          setFormData({
-            first_name: "",
-            surname: "",
-            age: 18,
-            gender: "Male",
-            phone: "",
-            city: "",
-            comment: "",
-            email: "",
-            want_tutor: "false",
-          });
-          navigate("/"); // Redirect to the login page
+
+          // Delay navigation to allow the toaster to display
+          // Refresh the browser and navigate
+          setTimeout(() => {
+            window.location.replace("/"); // Refresh and navigate to the login page
+          }, 10000); // 10-second delay
         })
         .catch((error) => {
           console.error("Error during registration:", error);
@@ -130,149 +128,163 @@ const Registration = () => {
 
   return (
     <div className="registration-container">
-      <div style={{ width: "100%", display: "flex", justifyContent: "center", alignItems: "center", marginBottom: "20px", direction: "ltr" }} className="logo-container">
-        <img src={logo} alt="Logo" className="logo" />
+      <div style={{ width: "100%", display: "flex", justifyContent: "center", alignItems: "center", marginBottom: "20px", direction: "ltr" }} className="registration-logo-container">
+        <img src={logo} alt="Logo" className="regisration-logo" />
       </div>
 
       <form className="registration-form" onSubmit={handleSubmit}>
         <h2>{t("Register")}</h2>
 
-        <label>{t("First Name")}</label>
-        <input
-          type="text"
-          name="first_name"
-          value={formData.first_name}
-          onChange={handleChange}
-          className={errors.first_name ? "error" : ""}
-        />
-        {errors.first_name && <span className="error-message">{errors.first_name}</span>}
+        <div className="form-columns">
+          {/* עמודה ימנית */}
+          <div className="column">
+            <label>{t("First Name")}</label>
+            <input
+              type="text"
+              name="first_name"
+              value={formData.first_name}
+              onChange={handleChange}
+              className={errors.first_name ? "error" : ""}
+            />
+            {errors.first_name && <span className="error-message">{errors.first_name}</span>}
 
-        <label>{t("Surname")}</label>
-        <input
-          type="text"
-          name="surname"
-          value={formData.surname}
-          onChange={handleChange}
-          className={errors.surname ? "error" : ""}
-        />
-        {errors.surname && <span className="error-message">{errors.surname}</span>}
+            <label>{t("Surname")}</label>
+            <input
+              type="text"
+              name="surname"
+              value={formData.surname}
+              onChange={handleChange}
+              className={errors.surname ? "error" : ""}
+            />
+            {errors.surname && <span className="error-message">{errors.surname}</span>}
 
-        <label>{t("Age")}: {formData.age}</label>
-        <input
-          type="range"
-          name="age"
-          min="18"
-          max="100"
-          value={formData.age}
-          onChange={handleChange}
-        />
-        {errors.age && <span className="error-message">{errors.age}</span>}
+            <label>{t("Age")}: {formData.age}</label>
+            <input
+              type="range"
+              name="age"
+              min="18"
+              max="100"
+              value={formData.age}
+              onChange={handleChange}
+            />
+            {errors.age && <span className="error-message">{errors.age}</span>}
 
-        {/* Gender Switch */}
-        <label>{t("Gender")}</label>
-        <div className="switch-container">
-          <Switch
-            onChange={(checked) => handleToggleChange("gender", checked ? "Female" : "Male")}
-            checked={formData.gender === "Female"}
-            className="custom-switch"
-            checkedIcon={<div className="switch-label">{t("Female")}</div>}
-            uncheckedIcon={<div className="switch-label">{t("Male")}</div>}
-            offColor="#ff9aa2"
-            onColor="#86d3ff"
-            handleDiameter={50}
-            height={50}
-            width={200}
-            disableDrag={true}
-          />
+            {/* Gender Switch */}
+            <label>{t("Gender")}</label>
+            <div className="switch-container">
+              <Switch
+                onChange={(checked) => handleToggleChange("gender", checked ? "Female" : "Male")}
+                checked={formData.gender === "Female"}
+                className="custom-switch"
+                checkedIcon={<div className="switch-label">{t("Female")}</div>}
+                uncheckedIcon={<div className="switch-label">{t("Male")}</div>}
+                offColor="#d9534f" // Deeper red tone
+                onColor="#0275d8" // Deeper blue tone
+                handleDiameter={30}
+                height={30}
+                width={100}
+              />
+            </div>
+            {errors.gender && <span className="error-message">{errors.gender}</span>}
+          </div>
+
+          {/* עמודה שמאלית */}
+          <div className="column">
+            <label>{t("Phone")}</label>
+            <div className="phone-container">
+              <input
+                type="text"
+                name="phone_suffix"
+                value={formData.phone_suffix || ""}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/\D/g, "");
+                  handleChange({ target: { name: "phone_suffix", value } });
+                }}
+                maxLength="7"
+                className={errors.phone ? "error" : ""}
+              />
+              <span className="dash">-</span>
+              <select
+                name="phone_prefix"
+                value={formData.phone_prefix || "050"}
+                onChange={(e) => handleChange({ target: { name: "phone_prefix", value: e.target.value } })}
+                className={errors.phone ? "error" : ""}
+              >
+                {["050", "051", "052", "053", "054", "055", "056", "057", "058", "059"].map((prefix) => (
+                  <option key={prefix} value={prefix}>
+                    {prefix}
+                  </option>
+                ))}
+              </select>
+            </div>
+            {errors.phone && <span className="error-message">{errors.phone}</span>}
+
+            <label>{t("City")}</label>
+            <select
+              name="city"
+              value={formData.city}
+              onChange={handleChange}
+              className={errors.city ? "error" : ""}
+            >
+              <option value="">{t("Select a city")}</option>
+              {cities.map((city, index) => (
+                <option key={index} value={city}>
+                  {city}
+                </option>
+              ))}
+            </select>
+            {errors.city && <span className="error-message">{errors.city}</span>}
+
+            <label>{t("Comment")}</label>
+            <textarea
+              name="comment"
+              value={formData.comment}
+              onChange={handleChange}
+              className="no-resize"
+            />
+
+            <label>{t("Email")}</label>
+            <input
+              type="email"
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
+              className={errors.email ? "error" : ""}
+            />
+            {errors.email && <span className="error-message">{errors.email}</span>}
+
+            {/* Want to be a Tutor Switch */}
+            <label>{t("Want to be a Tutor?")}</label>
+            <div className="switch-container">
+              <Switch
+                onChange={(checked) => handleToggleChange("want_tutor", checked ? "true" : "false")}
+                checked={formData.want_tutor === "true"}
+                className="custom-switch"
+                checkedIcon={<div className="switch-label">{t("Yes")}</div>}
+                uncheckedIcon={<div className="switch-label">{t("No")}</div>}
+                offColor="#d9534f" // Deeper red tone
+                onColor="#0275d8" // Deeper blue tone
+                handleDiameter={30}
+                height={30}
+                width={100}
+              />
+            </div>
+            {errors.want_tutor && <span className="error-message">{errors.want_tutor}</span>}
+          </div>
         </div>
-        {errors.gender && <span className="error-message">{errors.gender}</span>}
-
-        {/* Phone Input */}
-        <label>{t("Phone")}</label>
-        <div className="phone-container">
-          <input
-            type="text"
-            name="phone_suffix"
-            value={formData.phone_suffix || ""}
-            onChange={(e) => {
-              // Allow only numeric input
-              const value = e.target.value.replace(/\D/g, ""); // Remove non-numeric characters
-              handleChange({ target: { name: "phone_suffix", value } });
-            }}
-            maxLength="7" // Limit to 7 digits
-            className={errors.phone ? "error" : ""}
-          />
-          <span className="dash">-</span><select
-            name="phone_prefix"
-            value={formData.phone_prefix || "050"} // Default to "050"
-            onChange={(e) => handleChange({ target: { name: "phone_prefix", value: e.target.value } })}
-            className={errors.phone ? "error" : ""}
-          >
-            {["050", "051", "052", "053", "054", "055", "056", "057", "058", "059"].map((prefix) => (
-              <option key={prefix} value={prefix}>
-                {prefix}
-              </option>
-            ))}
-          </select>
-
-        </div>
-        {errors.phone && <span className="error-message">{errors.phone}</span>}
-
-        <label>{t("City")}</label>
-        <select
-          name="city"
-          value={formData.city}
-          onChange={handleChange}
-          className={errors.city ? "error" : ""}
-        >
-          <option value="">{t("Select a city")}</option>
-          {cities.map((city, index) => (
-            <option key={index} value={city}>
-              {city}
-            </option>
-          ))}
-        </select>
-        {errors.city && <span className="error-message">{errors.city}</span>}
-
-        <label>{t("Comment")}</label>
-        <textarea
-          name="comment"
-          value={formData.comment}
-          onChange={handleChange}
-          className="no-resize"
-        />
-
-        <label>{t("Email")}</label>
-        <input
-          type="email"
-          name="email"
-          value={formData.email}
-          onChange={handleChange}
-          className={errors.email ? "error" : ""}
-        />
-        {errors.email && <span className="error-message">{errors.email}</span>}
-
-        {/* Want to be a Tutor Switch */}
-        <label>{t("Want to be a Tutor?")}</label>
-        <div className="switch-container">
-          <Switch
-            onChange={(checked) => handleToggleChange("want_tutor", checked ? "true" : "false")}
-            checked={formData.want_tutor === "true"}
-            className="custom-switch"
-            checkedIcon={<div className="switch-label">{t("Yes")}</div>}
-            uncheckedIcon={<div className="switch-label">{t("No")}</div>}
-            offColor="#ff9aa2"
-            onColor="#86d3ff"
-            handleDiameter={50}
-            height={50}
-            width={200}
-            disableDrag={true}
-          />
-        </div>
-        {errors.want_tutor && <span className="error-message">{errors.want_tutor}</span>}
 
         <button type="submit">{t("Register")}</button>
       </form>
+
+      <ToastContainer
+        position="top-center"
+        autoClose={20000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={true}
+        pauseOnFocusLoss
+        pauseOnHover />
     </div >
   );
 };

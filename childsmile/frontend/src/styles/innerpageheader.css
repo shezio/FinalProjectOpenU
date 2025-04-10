@@ -4,7 +4,8 @@
     color: white;
     display: flex;
     align-items: center;
-    justify-content: space-between; /* Push items to edges */
+    justify-content: space-between;
+    /* Push items to edges */
     padding: 10px 20px;
     height: 150px;
     position: fixed;
@@ -16,34 +17,47 @@
 
 /* כדי שהתוכן לא יוסתר ע"י ה-Header */
 body {
-    padding-top: 100px; /* תמיד משאיר מקום מתחת ל-header */
+    padding-top: 100px;
+    /* תמיד משאיר מקום מתחת ל-header */
 }
 
 /* === צד ימין – הלוגו והכותרת יחד === */
 .right-header {
     display: flex;
-    align-items: center; /* ✅ יישור אנכי ללוגו ולכותרת */
-    justify-content: flex-end; /* ✅ דוחף את הכל לימין */
+    align-items: center;
+    /* ✅ יישור אנכי ללוגו ולכותרת */
+    justify-content: flex-end;
+    /* ✅ דוחף את הכל לימין */
     flex-grow: 1;
-    right: 240px; /* ✅ דוחף את הכל ימינה */
+    right: 240px;
+    /* ✅ דוחף את הכל ימינה */
     /* push logo to the right */
 }
 
+
 .logo {
     width: 150px;
-    margin: 0; /* Remove extra margin */
-    position: absolute;
-    right: 20px; /* Push to right */
-    top: 50%;
-    transform: translateY(-50%);
+    margin: 0;
+    /* Remove extra margin */
+    position: relative;
+    flex-shrink: 0;
+    /* Prevent the logo from shrinking */
+    margin-right: 200px;
 }
 
 .title {
     font-size: 3em;
     margin: 0;
-    text-align: center; /* Center title horizontally */
-    flex-grow: 1; /* Allow title to grow and take available space */
-    white-space: nowrap; /* Prevent text from wrapping */
+    text-align: center;
+    /* Center title horizontally */
+    position: relative;
+    flex-grow: 1;
+    white-space: nowrap;
+    /* Prevent text from wrapping */
+    padding-right: 1000px;
+    /* Add some space between the logo and title */
+    left: 70%;
+    transform: translateX(-30%);
 }
 
 /* === תמונת עמית, ציטוט ו-QR === */
@@ -52,21 +66,26 @@ body {
     top: 10px;
     left: 200px;
     display: flex;
-    align-items: center; /* Keep Amit, quote, and QR in line */
+    align-items: center;
+    /* Keep Amit, quote, and QR in line */
     z-index: 1001;
-    gap: 10px; /* Reduce spacing */
+    gap: 10px;
+    /* Reduce spacing */
 }
 
 .amit-img {
-    width: 80px !important; /* Adjust the width as needed */
-    height: 150px !important; /* Maintain aspect ratio */
+    width: 80px !important;
+    /* Adjust the width as needed */
+    height: 150px !important;
+    /* Maintain aspect ratio */
     object-fit: cover;
 }
 
 .qr-code {
     width: 80px;
     height: auto;
-    margin-left: 5px; /* Reduce spacing */
+    margin-left: 5px;
+    /* Reduce spacing */
 }
 
 /* ✅ הציטוט נשאר כמו שהגדרת */
@@ -75,12 +94,14 @@ body {
     text-align: right;
     color: black;
     background-color: white;
-    padding: 8px !important; /* Adjust padding */
+    padding: 8px !important;
+    /* Adjust padding */
     border-radius: 5px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
     width: 200px;
     line-height: 1.5;
-    margin: 0; /* Remove any unnecessary margin */
+    margin: 0;
+    /* Remove any unnecessary margin */
 }
 
 /* === שלום אורח וכפתור יציאה – תמיד מתחת ל-Header === */
@@ -90,7 +111,8 @@ body {
     justify-content: left;
     padding: 10px 20px;
     position: fixed;
-    top: calc(150px + 30px); /* ✅ תמיד מתחת להדר - אם תשנה גובה, זה יתעדכן לבד */
+    top: calc(150px + 30px);
+    /* ✅ תמיד מתחת להדר - אם תשנה גובה, זה יתעדכן לבד */
     left: 10px;
     gap: 15px;
 }
@@ -111,4 +133,33 @@ body {
 
 .logout-button:hover {
     background-color: #c9302c;
+}
+
+
+@media (max-width: 2400px) {
+    .logo {
+        width: 150px;
+        margin: 0;
+        /* Remove extra margin */
+        position: relative;
+        flex-shrink: 0;
+        /* Prevent the logo from shrinking */
+        margin-right: 200px;
+        /* Add some space between the logo and title */
+    }
+
+    .title {
+        font-size: 3em;
+        margin: 0;
+        text-align: center;
+        /* Center title horizontally */
+        position: relative;
+        flex-grow: 1;
+        white-space: nowrap;
+        /* Prevent text from wrapping */
+        padding-right: 1000px;
+        /* Add some space between the logo and title */
+        left: 70%;
+        transform: translateX(-30%);
+    }
 }

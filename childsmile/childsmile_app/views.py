@@ -33,7 +33,6 @@ import datetime
 import requests
 import urllib3
 from django.utils.timezone import make_aware
-from datetime import datetime
 from geopy.geocoders import Nominatim
 
 
@@ -85,6 +84,8 @@ def has_permission(request, resource, action):
     Check if the user has the required permission for a specific resource and action.
     """
     permissions = request.session.get("permissions", [])
+    # print the permissions for debugging
+    print(f"DEBUG: Permissions: {permissions}")  # Debug log
     prefixed_resource = (
         f"childsmile_app_{resource}"  # Add the prefix to the resource name
     )
@@ -403,6 +404,20 @@ def login_view(request):
     try:
         user = Staff.objects.get(username=username)
         if user.password == password:  # No hashing, just compare
+            
+            # Parse roles as a Python list
+            user_roles = list(user.roles.all()) if user.roles else []
+            print(f"DEBUG: the user roles for user '{username}' are : {user_roles}")
+
+            # Check if the user has any roles
+            if not user_roles:  # If roles is an empty list
+                print(f"DEBUG: User '{username}' has no roles.")
+                return JsonResponse(
+                    {
+                        "error": "Please wait until you get permissions from your coordinator."
+                    },
+                    status=401,
+                )
             request.session.create()  # Create session
             request.session["user_id"] = user.staff_id
             request.session["username"] = user.username
@@ -604,6 +619,7 @@ def create_task(request):
     """
     Create a new task.
     """
+    print(" create task data: ", request.data)  # Debug log
     user_id = request.session.get("user_id")
     if not user_id:
         return JsonResponse(
@@ -918,10 +934,6 @@ def families_waiting_for_tutorship_report(request):
         return JsonResponse({"error": str(e)}, status=500)
 
 
-from django.utils.timezone import make_aware
-from datetime import datetime, timedelta
-
-
 @csrf_exempt
 @api_view(["GET"])
 def get_new_families_report(request):
@@ -1222,6 +1234,7 @@ def tutor_feedback_report(request):
         print(f"DEBUG: An error occurred: {str(e)}")  # Log the error for debugging
         return JsonResponse({"error": str(e)}, status=500)
 
+
 @csrf_exempt
 @transaction.atomic
 @api_view(["POST"])
@@ -1240,7 +1253,9 @@ def create_volunteer_or_tutor(request):
         gender = data.get("gender") == "Female"
         phone_prefix = data.get("phone_prefix")
         phone_suffix = data.get("phone_suffix")
-        phone = f"{phone_prefix}-{phone_suffix}" if phone_prefix and phone_suffix else None
+        phone = (
+            f"{phone_prefix}-{phone_suffix}" if phone_prefix and phone_suffix else None
+        )
         city = data.get("city")
         comment = data.get("comment", "")
         email = data.get("email")
@@ -1289,7 +1304,7 @@ def create_volunteer_or_tutor(request):
         )
 
         # Determine the role based on want_tutor
-        role_name = "Tutor" if want_tutor else "General Volunteer"
+        role_name = "General Volunteer"
         try:
             role = Role.objects.get(role_name=role_name)
         except Role.DoesNotExist:
@@ -1331,4 +1346,3 @@ def create_volunteer_or_tutor(request):
     except Exception as e:
         print(f"DEBUG: An error occurred: {str(e)}")
         return JsonResponse({"error": str(e)}, status=500)
-    
