@@ -404,7 +404,7 @@ def login_view(request):
     try:
         user = Staff.objects.get(username=username)
         if user.password == password:  # No hashing, just compare
-            
+
             # Parse roles as a Python list
             user_roles = list(user.roles.all()) if user.roles else []
             print(f"DEBUG: the user roles for user '{username}' are : {user_roles}")
@@ -523,6 +523,7 @@ def get_user_tasks(request):
                 "child": task.related_child_id,
                 "tutor": task.related_tutor_id,
                 "type": task.task_type_id,
+                "pending_tutor": task.pending_tutor_id,
             }
             for task in tasks
         ]
@@ -641,6 +642,9 @@ def create_task(request):
             related_child_id=task_data.get("child"),  # Allow null for child
             related_tutor_id=task_data.get("tutor"),  # Allow null for tutor
             task_type_id=task_data["type"],
+            pending_tutor_id=task_data.get(
+                "pending_tutor"
+            ),  # Allow null for pending tutor
         )
 
         # Check if the logged-in user is an admin
@@ -785,6 +789,9 @@ def update_task(request, task_id):
 
         # Handle task_type_id
         task.task_type_id = request.data.get("type", task.task_type_id)
+
+        # Handle pending_tutor_id
+        task.pending_tutor_id = request.data.get("pending_tutor", task.pending_tutor_id)
 
         # Save the updated task
         task.save()
@@ -1324,10 +1331,43 @@ def create_volunteer_or_tutor(request):
 
         # Insert into either General_Volunteer or Pending_Tutor
         if want_tutor:
-            Pending_Tutor.objects.create(
+            pending_tutor = Pending_Tutor.objects.create(
                 id_id=signedup.id,
                 pending_status="ממתין",  # "Pending" in Hebrew
             )
+
+            # Create a task for all Tutor Coordinators using the create_task view
+            tutor_coordinator_role = Role.objects.filter(
+                role_name="Tutor Coordinator"
+            ).first()
+            if tutor_coordinator_role:
+                tutor_coordinators = Staff.objects.filter(roles=tutor_coordinator_role)
+                if not tutor_coordinators.exists():
+                    print("No Tutor Coordinators found in the database.")
+                    return JsonResponse(
+                        {"warning": "No Tutor Coordinators found."}, status=204
+                    )
+                
+                for coordinator in tutor_coordinators:
+                    # Prepare task data
+                    task_data = {
+                        "description": "ראיון מועמד לחונכות",
+                        "due_date": (
+                            now().date() + datetime.timedelta(days=7)
+                        ).strftime(
+                            "%Y-%m-%d"
+                        ),  # Example: 7 days from now
+                        "status": "לא הושלמה",  # "Not Completed" in Hebrew
+                        "assigned_to": coordinator.staff_id,
+                        "pending_tutor": pending_tutor.id,  # Pass the Pending_Tutor ID
+                    }
+
+                    # Call the create_task view programmatically
+                    request_data = (
+                        request._request
+                    )  # Get the original Django request object
+                    request_data.POST = task_data  # Override POST data
+                    create_task(request_data)  # Call the create_task view
         else:
             General_Volunteer.objects.create(
                 id_id=signedup.id,
@@ -1345,4 +1385,28 @@ def create_volunteer_or_tutor(request):
 
     except Exception as e:
         print(f"DEBUG: An error occurred: {str(e)}")
+        return JsonResponse({"error": str(e)}, status=500)
+
+
+@csrf_exempt
+@api_view(["GET"])
+def get_pending_tutors(request):
+    """
+    Retrieve all pending tutors with their full details.
+    """
+    try:
+        pending_tutors = Pending_Tutor.objects.select_related("id").all()  # `id` is the foreign key to SignedUp
+        pending_tutors_data = [
+            {
+                "id": tutor.id_id,  # ID from the SignedUp table
+                "first_name": tutor.id.first_name,
+                "surname": tutor.id.surname,
+                "email": tutor.id.email,
+                "pending_status": tutor.pending_status,
+            }
+            for tutor in pending_tutors
+        ]
+        return JsonResponse({"pending_tutors": pending_tutors_data}, status=200)
+    except Exception as e:
+        print(f"DEBUG: Error fetching pending tutors: {str(e)}")
         return JsonResponse({"error": str(e)}, status=500)
