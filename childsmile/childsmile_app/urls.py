@@ -21,6 +21,7 @@ from .views import (
     tutor_feedback_report,
     create_volunteer_or_tutor,
     get_pending_tutors,
+    get_complete_family_details,
 )
 
 from .unused_views import (
@@ -119,8 +120,13 @@ urlpatterns = [
         name="create_volunteer_or_tutor",
     ),
     path(
-        "api/pending_tutors/",
+        "api/get_pending_tutors/",
         get_pending_tutors,
         name="get_pending_tutors",
+    ),
+    path(
+        "api/get_complete_family_details/",
+        get_complete_family_details,
+        name="get_complete_family_details",
     ),
 ]
