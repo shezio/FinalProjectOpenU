@@ -36,6 +36,31 @@ from django.utils.timezone import make_aware
 from geopy.geocoders import Nominatim
 import threading, time
 
+from .unused_views import (
+    PermissionsViewSet,
+    RoleViewSet,
+    StaffViewSet,
+    SignedUpViewSet,
+    General_VolunteerViewSet,
+    Pending_TutorViewSet,
+    TutorsViewSet,
+    ChildrenViewSet,
+    TutorshipsViewSet,
+    MaturesViewSet,
+    HealthyViewSet,
+    FeedbackViewSet,
+    Tutor_FeedbackViewSet,
+    General_V_FeedbackViewSet,
+    TaskViewSet,
+    PossibleMatchesViewSet,
+    VolunteerFeedbackReportView,
+    TutorToFamilyAssignmentReportView,
+    FamiliesWaitingForTutorsReportView,
+    DepartedFamiliesReportView,
+    NewFamiliesLastMonthReportView,
+    PotentialTutorshipMatchReportView,
+)
+
 
 def create_task_internal(task_data):
     """
@@ -117,7 +142,9 @@ def create_tasks_for_tutor_coordinators(pending_tutor_id, task_type_id):
     """
     try:
         # Fetch the role for Tutors Coordinator
-        tutor_coordinator_role = Role.objects.filter(role_name="Tutors Coordinator").first()
+        tutor_coordinator_role = Role.objects.filter(
+            role_name="Tutors Coordinator"
+        ).first()
         if not tutor_coordinator_role:
             print("DEBUG: Role 'Tutors Coordinator' not found in the database.")
             return
@@ -134,7 +161,9 @@ def create_tasks_for_tutor_coordinators(pending_tutor_id, task_type_id):
         for coordinator in tutor_coordinators:
             task_data = {
                 "description": "ראיון מועמד לחונכות",
-                "due_date": (now().date() + datetime.timedelta(days=7)).strftime("%Y-%m-%d"),
+                "due_date": (now().date() + datetime.timedelta(days=7)).strftime(
+                    "%Y-%m-%d"
+                ),
                 "status": "לא הושלמה",  # "Not Completed" in Hebrew
                 "assigned_to": coordinator.staff_id,
                 "pending_tutor": pending_tutor_id,  # Pass the Pending_Tutor ID
@@ -206,7 +235,7 @@ def has_permission(request, resource, action):
     """
     permissions = request.session.get("permissions", [])
     # print the permissions for debugging
-    #print(f"DEBUG: Permissions: {permissions}")  # Debug log
+    # print(f"DEBUG: Permissions: {permissions}")  # Debug log
     prefixed_resource = (
         f"childsmile_app_{resource}"  # Add the prefix to the resource name
     )
@@ -218,302 +247,6 @@ def has_permission(request, resource, action):
 
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-
-
-class PermissionsViewSet(viewsets.ModelViewSet):
-    queryset = Permissions.objects.all()
-    permission_classes = [IsAuthenticated]
-
-
-class RoleViewSet(viewsets.ModelViewSet):
-    queryset = Role.objects.all()
-    permission_classes = [IsAuthenticated]
-
-
-class StaffViewSet(viewsets.ModelViewSet):
-    queryset = Staff.objects.all()
-    permission_classes = [IsAuthenticated]
-
-
-class SignedUpViewSet(viewsets.ModelViewSet):
-    queryset = SignedUp.objects.all()
-    permission_classes = [IsAuthenticated]
-
-
-class General_VolunteerViewSet(viewsets.ModelViewSet):
-    queryset = General_Volunteer.objects.all()
-    permission_classes = [IsAuthenticated]
-
-
-class Pending_TutorViewSet(viewsets.ModelViewSet):
-    queryset = Pending_Tutor.objects.all()
-    permission_classes = [IsAuthenticated]
-
-
-class TutorsViewSet(viewsets.ModelViewSet):
-    queryset = Tutors.objects.all()
-    permission_classes = [IsAuthenticated]
-
-
-class ChildrenViewSet(viewsets.ModelViewSet):
-    queryset = Children.objects.all()
-    permission_classes = [IsAuthenticated]
-
-
-class TutorshipsViewSet(viewsets.ModelViewSet):
-    queryset = Tutorships.objects.all()
-    permission_classes = [IsAuthenticated]
-
-    @action(detail=False, methods=["post"])
-    def match_tutorship(self, request):
-        tutor_id = request.data.get("tutor_id")
-        child_id = request.data.get("child_id")
-
-        tutor = Tutors.objects.get(id=tutor_id)
-        child = Children.objects.get(child_id=child_id)
-
-        geographic_proximity = self.calculate_geographic_proximity(tutor, child)
-        gender_match = tutor.gender == child.gender
-
-        if geographic_proximity <= 10 and gender_match:
-            tutorship = Tutorships.objects.create(
-                tutor=tutor,
-                child=child,
-                start_date=request.data.get("start_date"),
-                status="Active",
-                geographic_proximity=geographic_proximity,
-                gender_match=gender_match,
-            )
-            return Response(
-                {
-                    "tutorship_id": tutorship.id,
-                    "tutor_id": tutorship.tutor.id,
-                    "child_id": tutorship.child.child_id,
-                    "start_date": tutorship.start_date,
-                    "status": tutorship.status,
-                    "geographic_proximity": tutorship.geographic_proximity,
-                    "gender_match": tutorship.gender_match,
-                },
-                status=status.HTTP_201_CREATED,
-            )
-        else:
-            return Response(
-                {"detail": "No suitable match found."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-    def calculate_geographic_proximity(self, tutor, child):
-        return 5.0
-
-
-class MaturesViewSet(viewsets.ModelViewSet):
-    queryset = Matures.objects.all()
-    permission_classes = [IsAuthenticated]
-
-
-class HealthyViewSet(viewsets.ModelViewSet):
-    queryset = Healthy.objects.all()
-    permission_classes = [IsAuthenticated]
-
-
-class FeedbackViewSet(viewsets.ModelViewSet):
-    queryset = Feedback.objects.all()
-    permission_classes = [IsAuthenticated]
-
-
-class Tutor_FeedbackViewSet(viewsets.ModelViewSet):
-    queryset = Tutor_Feedback.objects.all()
-    permission_classes = [IsAuthenticated]
-
-
-class General_V_FeedbackViewSet(viewsets.ModelViewSet):
-    queryset = General_V_Feedback.objects.all()
-    permission_classes = [IsAuthenticated]
-
-
-class TaskViewSet(viewsets.ModelViewSet):
-    queryset = Tasks.objects.all()
-    permission_classes = [IsAuthenticated]
-
-
-class PossibleMatchesViewSet(viewsets.ModelViewSet):
-    queryset = PossibleMatches.objects.all()
-    permission_classes = [IsAuthenticated]
-
-
-class VolunteerFeedbackReportView(View):
-    permission_classes = [IsAuthenticated]
-
-    def get(self, request):
-        feedbacks = General_V_Feedback.objects.all()
-        response = HttpResponse(content_type="text/csv")
-        response["Content-Disposition"] = (
-            'attachment; filename="volunteer_feedback_report.csv"'
-        )
-
-        writer = csv.writer(response)
-        writer.writerow(["Volunteer Name", "Feedback Date", "Feedback Content"])
-        for feedback in feedbacks:
-            writer.writerow(
-                [
-                    feedback.volunteer_name,
-                    feedback.feedback.event_date,
-                    feedback.feedback.description,
-                ]
-            )
-
-        return response
-
-
-class TutorToFamilyAssignmentReportView(View):
-    permission_classes = [IsAuthenticated]
-
-    def get(self, request):
-        tutorships = Tutorships.objects.filter(status="Active")
-        response = HttpResponse(content_type="text/csv")
-        response["Content-Disposition"] = (
-            'attachment; filename="tutor_to_family_assignment_report.csv"'
-        )
-
-        writer = csv.writer(response)
-        writer.writerow(["Tutor Name", "Tutee Name"])
-        for tutorship in tutorships:
-            writer.writerow(
-                [
-                    tutorship.tutor.staff.username,
-                    tutorship.child.childfirstname + " " + tutorship.child.childsurname,
-                ]
-            )
-
-        return response
-
-
-class FamiliesWaitingForTutorsReportView(View):
-    permission_classes = [IsAuthenticated]
-
-    def get(self, request):
-        children_without_tutors = Children.objects.filter(
-            tutorships__isnull=True
-        ).distinct()
-        response = HttpResponse(content_type="text/csv")
-        response["Content-Disposition"] = (
-            'attachment; filename="families_waiting_for_tutors_report.csv"'
-        )
-
-        writer = csv.writer(response)
-        writer.writerow(["Child Name", "Parents Phone Numbers"])
-        for child in children_without_tutors:
-            writer.writerow(
-                [
-                    child.childfirstname + " " + child.childsurname,
-                    child.child_phone_number,
-                ]
-            )
-
-        return response
-
-
-class DepartedFamiliesReportView(View):
-    permission_classes = [IsAuthenticated]
-
-    def get(self, request):
-        departed_children = Children.objects.filter(tutoring_status="Departed")
-        response = HttpResponse(content_type="text/csv")
-        response["Content-Disposition"] = (
-            'attachment; filename="departed_families_report.csv"'
-        )
-
-        writer = csv.writer(response)
-        writer.writerow(
-            [
-                "Child Name",
-                "Parents Phone Numbers",
-                "Departure Date",
-                "Responsible Person",
-                "Reason for Departure",
-            ]
-        )
-        for child in departed_children:
-            writer.writerow(
-                [
-                    child.childfirstname + " " + child.childsurname,
-                    child.child_phone_number,
-                    child.lastupdateddate,  # Assuming this is the departure date
-                    child.responsible_coordinator,  # Assuming this is the responsible person
-                    child.additional_info,  # Assuming this is the reason for departure
-                ]
-            )
-
-        return response
-
-
-class NewFamiliesLastMonthReportView(View):
-    permission_classes = [IsAuthenticated]
-
-    def get(self, request):
-        last_month = datetime.date.today() - datetime.timedelta(days=30)
-        new_children = Children.objects.filter(registrationdate__gte=last_month)
-        response = HttpResponse(content_type="text/csv")
-        response["Content-Disposition"] = (
-            'attachment; filename="new_families_last_month_report.csv"'
-        )
-
-        writer = csv.writer(response)
-        writer.writerow(["Child Name", "Parents Phone Numbers", "Date of Joining"])
-        for child in new_children:
-            writer.writerow(
-                [
-                    child.childfirstname + " " + child.childsurname,
-                    child.child_phone_number,
-                    child.registrationdate,
-                ]
-            )
-
-        return response
-
-
-class PotentialTutorshipMatchReportView(View):
-    permission_classes = [IsAuthenticated]
-
-    def get(self, request):
-        tutors = Tutors.objects.filter(tutorships__isnull=True)
-        response = HttpResponse(content_type="text/csv")
-        response["Content-Disposition"] = (
-            'attachment; filename="potential_tutorship_match_report.csv"'
-        )
-
-        writer = csv.writer(response)
-        writer.writerow(
-            [
-                "Tutor Name",
-                "Tutee Name",
-                "Tutor Gender",
-                "Tutee Gender",
-                "Tutor City",
-                "Tutee City",
-                "Distance",
-            ]
-        )
-        for tutor in tutors:
-            for child in Children.objects.all():
-                distance = self.calculate_distance(tutor.city, child.city)
-                if distance <= 15:
-                    writer.writerow(
-                        [
-                            tutor.staff.username,
-                            child.childfirstname + " " + child.childsurname,
-                            tutor.gender,
-                            child.gender,
-                            tutor.city,
-                            child.city,
-                            distance,
-                        ]
-                    )
-
-        return response
-
-    def calculate_distance(self, city1, city2):
-        return 10.0
 
 
 @csrf_exempt  # Disable CSRF (makes things easier)
@@ -906,7 +639,9 @@ def update_task(request, task_id):
                     f"DEBUG: Staff member with username or ID '{assigned_to}' not found."
                 )  # Debug log
                 return JsonResponse(
-                    {"error": f"Staff member with username or ID '{assigned_to}' not found."},
+                    {
+                        "error": f"Staff member with username or ID '{assigned_to}' not found."
+                    },
                     status=400,
                 )
 
@@ -1090,7 +825,7 @@ def get_new_families_report(request):
 
     try:
         # Calculate the date for one month ago
-        one_month_ago = make_aware(datetime.now() - timedelta(days=30))
+        one_month_ago = make_aware(datetime.datetime.now() - datetime.timedelta(days=30))
 
         # Get date filters from query parameters
         from_date = request.GET.get("from_date")
@@ -1098,7 +833,7 @@ def get_new_families_report(request):
 
         # Convert from_date and to_date to timezone-aware datetimes
         if from_date:
-            from_date = make_aware(datetime.strptime(from_date, "%Y-%m-%d"))
+            from_date = make_aware(datetime.datetime.strptime(from_date, "%Y-%m-%d"))
             # Ensure from_date is not older than one month ago
             if from_date < one_month_ago:
                 from_date = one_month_ago
@@ -1106,9 +841,9 @@ def get_new_families_report(request):
             from_date = one_month_ago  # Default to one month ago if not provided
 
         if to_date:
-            to_date = make_aware(datetime.strptime(to_date, "%Y-%m-%d"))
+            to_date = make_aware(datetime.datetime.strptime(to_date, "%Y-%m-%d"))
         else:
-            to_date = make_aware(datetime.now())  # Default to the current date
+            to_date = make_aware(datetime.datetime.now())  # Default to the current date
 
         # Fetch children registered within the specified date range
         children = Children.objects.filter(
@@ -1468,7 +1203,9 @@ def create_volunteer_or_tutor(request):
                 id_id=signedup.id,
                 pending_status="ממתין",  # "Pending" in Hebrew
             )
-            pending_tutor_id = pending_tutor.pending_tutor_id  # Get the ID of the new Pending_Tutor
+            pending_tutor_id = (
+                pending_tutor.pending_tutor_id
+            )  # Get the ID of the new Pending_Tutor
             print(f"DEBUG: Pending_Tutor created with ID {pending_tutor_id}")
 
             # Fetch the task type ID dynamically
