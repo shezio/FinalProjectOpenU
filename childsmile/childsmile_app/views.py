@@ -1265,3 +1265,66 @@ def get_pending_tutors(request):
     except Exception as e:
         print(f"DEBUG: Error fetching pending tutors: {str(e)}")
         return JsonResponse({"error": str(e)}, status=500)
+
+
+@csrf_exempt
+@api_view(["GET"])
+def get_complete_family_details(request):
+    '''
+    get all the data from children table after checking if the user has permission to view it.
+    '''
+    user_id = request.session.get("user_id")
+    if not user_id:
+        return JsonResponse(
+            {"detail": "Authentication credentials were not provided."}, status=403
+        )
+    
+    # Check if the user has VIEW permission on the "children" resource
+    if not has_permission(request, "children", "VIEW"):
+        return JsonResponse(
+            {"error": "You do not have permission to view this report."}, status=401
+        )
+    try:
+        families = Children.objects.all()
+        families_data = [
+            {
+                "id": family.child_id,
+                "first_name": family.childfirstname,
+                "last_name": family.childsurname,
+                "address": f"{family.street_and_apartment_number}, {family.city}",
+                "registration_date": family.registrationdate.strftime("%d/%m/%Y"),
+                "last_updated_date": family.lastupdateddate.strftime("%d/%m/%Y"),
+                "gender": family.gender,
+                "responsible_coordinator": family.responsible_coordinator,
+                "child_phone_number": family.child_phone_number,
+                "treating_hospital": family.treating_hospital,
+                "date_of_birth": family.date_of_birth.strftime("%d/%m/%Y"),
+                "medical_diagnosis": family.medical_diagnosis,
+                "diagnosis_date": family.diagnosis_date.strftime("%d/%m/%Y")
+                if family.diagnosis_date
+                else None,
+                "marital_status": family.marital_status,
+                "num_of_siblings": family.num_of_siblings,
+                "details_for_tutoring": family.details_for_tutoring,
+                "additional_info": family.additional_info,
+                "tutoring_status": family.tutoring_status,
+                "current_medical_state": family.current_medical_state,
+                "when_completed_treatments": family.when_completed_treatments.strftime(
+                    "%d/%m/%Y"
+                ) if family.when_completed_treatments else None,
+                "father_name": family.father_name if family.father_name else None,
+                "father_phone": family.father_phone if family.father_phone else None,
+                "mother_name": family.mother_name if family.mother_name else None,
+                "mother_phone": family.mother_phone if family.mother_phone else None,
+                "expected_end_treatment_by_protocol": family.expected_end_treatment_by_protocol.strftime(
+                    "%d/%m/%Y"
+                ) if family.expected_end_treatment_by_protocol else None,
+                "has_completed_treatments": family.has_completed_treatments,                
+                }
+                for family in families
+        ]
+        return JsonResponse({"families": families_data}, status=200)
+    except Exception as e:
+        print(f"DEBUG: An error occurred: {str(e)}")
+        return JsonResponse({"error": str(e)}, status=500)
+
