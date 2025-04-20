@@ -16,6 +16,21 @@ const Families = () => {
   const [families, setFamilies] = useState([]);
   const [selectedFamily, setSelectedFamily] = useState(null);
   const [editFamily, setEditFamily] = useState(null);
+  const [showAddModal, setShowAddModal] = useState(false); // State for Add Family modal
+  const [newFamily, setNewFamily] = useState({
+    childfirstname: '',
+    childsurname: '',
+    gender: '',
+    city: '',
+    child_phone_number: '',
+    treating_hospital: '',
+    date_of_birth: '',
+    marital_status: '',
+    num_of_siblings: '',
+    details_for_tutoring: '',
+    tutoring_status: '',
+    street_and_apartment_number: '',
+  });
 
   const fetchFamilies = async () => {
     setLoading(true);
@@ -34,6 +49,42 @@ const Families = () => {
   useEffect(() => {
     fetchFamilies();
   }, []);
+
+  const handleAddFamilyChange = (e) => {
+    const { name, value } = e.target;
+    setNewFamily((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleAddFamilySubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const response = await axios.post('/api/create_family/', newFamily);
+      toast.success(t('Family added successfully!'));
+      setShowAddModal(false);
+      fetchFamilies(); // Refresh the families list
+    } catch (error) {
+      console.error('Error adding family:', error);
+      showErrorToast(t('Error adding family'), t('Please try again later.'));
+    }
+  };
+
+  const closeAddModal = () => {
+    setShowAddModal(false);
+    setNewFamily({
+      childfirstname: '',
+      childsurname: '',
+      gender: '',
+      city: '',
+      child_phone_number: '',
+      treating_hospital: '',
+      date_of_birth: '',
+      marital_status: '',
+      num_of_siblings: '',
+      details_for_tutoring: '',
+      tutoring_status: '',
+      street_and_apartment_number: '',
+    });
+  };
 
   const showFamilyDetails = (family) => {
     setSelectedFamily(family);
@@ -76,7 +127,7 @@ const Families = () => {
         />
         <div className="filter-create-container">
           <div className="create-task">
-            <button onClick={() => alert(t('Add new family'))}>
+            <button onClick={() => setShowAddModal(true)}>
               {t('Add New Family')}
             </button>
           </div>
@@ -108,7 +159,7 @@ const Families = () => {
                     <td>{family.child_phone_number || '---'}</td>
                     <td>{family.tutoring_status || '---'}</td>
                     <td>
-                    <div className="family-actions">
+                      <div className="family-actions">
                         <button className="info-button" onClick={() => showFamilyDetails(family)}>
                           {t('מידע')}
                         </button>
@@ -149,7 +200,7 @@ const Families = () => {
               <button onClick={closeFamilyDetails}>{t('Close')}</button>
             </div>
           </div>
-        )}  
+        )}
         {editFamily && (
           <div className="modal show">
             <div className="modal-content">
@@ -158,6 +209,115 @@ const Families = () => {
               {/* Add form fields for editing family data */}
               <p>{t('Editing functionality will be implemented later.')}</p>
               <button onClick={closeEditModal}>{t('Close')}</button>
+            </div>
+          </div>
+        )}
+        {/* Add Family Modal */}
+        {showAddModal && (
+          <div className="modal show">
+            <div className="modal-content">
+              <span className="close" onClick={closeAddModal}>&times;</span>
+              <h2>{t('Add New Family')}</h2>
+              <form onSubmit={handleAddFamilySubmit}>
+                <input
+                  type="text"
+                  name="childfirstname"
+                  placeholder={t('First Name')}
+                  value={newFamily.childfirstname}
+                  onChange={handleAddFamilyChange}
+                  required
+                />
+                <input
+                  type="text"
+                  name="childsurname"
+                  placeholder={t('Last Name')}
+                  value={newFamily.childsurname}
+                  onChange={handleAddFamilyChange}
+                  required
+                />
+                <select
+                  name="gender"
+                  value={newFamily.gender}
+                  onChange={handleAddFamilyChange}
+                  required
+                >
+                  <option value="">{t('Select Gender')}</option>
+                  <option value="true">{t('נקבה')}</option>
+                  <option value="false">{t('זכר')}</option>
+                </select>
+                <input
+                  type="text"
+                  name="city"
+                  placeholder={t('City')}
+                  value={newFamily.city}
+                  onChange={handleAddFamilyChange}
+                  required
+                />
+                <input
+                  type="text"
+                  name="child_phone_number"
+                  placeholder={t('Phone Number')}
+                  value={newFamily.child_phone_number}
+                  onChange={handleAddFamilyChange}
+                  required
+                />
+                <input
+                  type="text"
+                  name="treating_hospital"
+                  placeholder={t('Treating Hospital')}
+                  value={newFamily.treating_hospital}
+                  onChange={handleAddFamilyChange}
+                  required
+                />
+                <input
+                  type="date"
+                  name="date_of_birth"
+                  value={newFamily.date_of_birth}
+                  onChange={handleAddFamilyChange}
+                  required
+                />
+                <input
+                  type="text"
+                  name="marital_status"
+                  placeholder={t('Marital Status')}
+                  value={newFamily.marital_status}
+                  onChange={handleAddFamilyChange}
+                  required
+                />
+                <input
+                  type="number"
+                  name="num_of_siblings"
+                  placeholder={t('Number of Siblings')}
+                  value={newFamily.num_of_siblings}
+                  onChange={handleAddFamilyChange}
+                  required
+                />
+                <textarea
+                  name="details_for_tutoring"
+                  placeholder={t('Details for Tutoring')}
+                  value={newFamily.details_for_tutoring}
+                  onChange={handleAddFamilyChange}
+                  required
+                />
+                <input
+                  type="text"
+                  name="tutoring_status"
+                  placeholder={t('Tutoring Status')}
+                  value={newFamily.tutoring_status}
+                  onChange={handleAddFamilyChange}
+                  required
+                />
+                <input
+                  type="text"
+                  name="street_and_apartment_number"
+                  placeholder={t('Street and Apartment Number')}
+                  value={newFamily.street_and_apartment_number}
+                  onChange={handleAddFamilyChange}
+                  required
+                />
+                <button type="submit">{t('Submit')}</button>
+                <button type="button" onClick={closeAddModal}>{t('Cancel')}</button>
+              </form>
             </div>
           </div>
         )}
