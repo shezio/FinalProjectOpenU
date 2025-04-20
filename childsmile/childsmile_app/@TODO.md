@@ -1,11 +1,19 @@
 @TODO
-- verify task is indeed created in BE or do it urself not with the create_task view
-UPDATE Tasks.js , utils.js, tasks.css with the new file
-in create task modal, update task modal,info popup
-see that u have drop down
-need to use axios to get the pending tutors using the get_pending_tutors view (we already have a url for it)
-
-
-check after all this that we can see new field in everything about task - --- if empty
-check all tasks flow is still working
-check for new user we have an autotask created when login with a tutor coordinator role
+create family - BE POST and FE modal
+  add translation for the modal
+  make the fields smaller and on fixed width
+  UI validations lilke the registration form
+  cities - list from settlements.txt imported in the database
+  treating hospital - list of all hospitals in israel - save in a text file one time
+  marital status - list of marital statuses from DB
+  tutoring status - list of tutoring statuses from DB
+  move up the street and house number fields to the top of the form next to city
+  make list of all streets in that city once selected a city - keep a dictionary of all streets
+  of all cities in a text file and load it once
+  make a field for house number
+  combine on submiyt the street and house number into one field
+  make the street and house number fields smaller and on fixed width
+  
+make the buttons in filkter create container bigger
+EDIT family - BE PUT and FE modal
+DELETE family - BE DELETE and FE toast with yes no - and undo option on next toast

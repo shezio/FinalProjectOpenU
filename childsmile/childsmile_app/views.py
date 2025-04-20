@@ -825,7 +825,9 @@ def get_new_families_report(request):
 
     try:
         # Calculate the date for one month ago
-        one_month_ago = make_aware(datetime.datetime.now() - datetime.timedelta(days=30))
+        one_month_ago = make_aware(
+            datetime.datetime.now() - datetime.timedelta(days=30)
+        )
 
         # Get date filters from query parameters
         from_date = request.GET.get("from_date")
@@ -1270,15 +1272,15 @@ def get_pending_tutors(request):
 @csrf_exempt
 @api_view(["GET"])
 def get_complete_family_details(request):
-    '''
+    """
     get all the data from children table after checking if the user has permission to view it.
-    '''
+    """
     user_id = request.session.get("user_id")
     if not user_id:
         return JsonResponse(
             {"detail": "Authentication credentials were not provided."}, status=403
         )
-    
+
     # Check if the user has VIEW permission on the "children" resource
     if not has_permission(request, "children", "VIEW"):
         return JsonResponse(
@@ -1300,31 +1302,126 @@ def get_complete_family_details(request):
                 "treating_hospital": family.treating_hospital,
                 "date_of_birth": family.date_of_birth.strftime("%d/%m/%Y"),
                 "medical_diagnosis": family.medical_diagnosis,
-                "diagnosis_date": family.diagnosis_date.strftime("%d/%m/%Y")
-                if family.diagnosis_date
-                else None,
+                "diagnosis_date": (
+                    family.diagnosis_date.strftime("%d/%m/%Y")
+                    if family.diagnosis_date
+                    else None
+                ),
                 "marital_status": family.marital_status,
                 "num_of_siblings": family.num_of_siblings,
                 "details_for_tutoring": family.details_for_tutoring,
                 "additional_info": family.additional_info,
                 "tutoring_status": family.tutoring_status,
                 "current_medical_state": family.current_medical_state,
-                "when_completed_treatments": family.when_completed_treatments.strftime(
-                    "%d/%m/%Y"
-                ) if family.when_completed_treatments else None,
+                "when_completed_treatments": (
+                    family.when_completed_treatments.strftime("%d/%m/%Y")
+                    if family.when_completed_treatments
+                    else None
+                ),
                 "father_name": family.father_name if family.father_name else None,
                 "father_phone": family.father_phone if family.father_phone else None,
                 "mother_name": family.mother_name if family.mother_name else None,
                 "mother_phone": family.mother_phone if family.mother_phone else None,
-                "expected_end_treatment_by_protocol": family.expected_end_treatment_by_protocol.strftime(
-                    "%d/%m/%Y"
-                ) if family.expected_end_treatment_by_protocol else None,
-                "has_completed_treatments": family.has_completed_treatments,                
-                }
-                for family in families
+                "expected_end_treatment_by_protocol": (
+                    family.expected_end_treatment_by_protocol.strftime("%d/%m/%Y")
+                    if family.expected_end_treatment_by_protocol
+                    else None
+                ),
+                "has_completed_treatments": family.has_completed_treatments,
+            }
+            for family in families
         ]
         return JsonResponse({"families": families_data}, status=200)
     except Exception as e:
         print(f"DEBUG: An error occurred: {str(e)}")
         return JsonResponse({"error": str(e)}, status=500)
 
+
+@csrf_exempt
+@api_view(["POST"])
+def create_family(request):
+    """
+    Create a new family in the children table after checking if the user has permission to create it.
+    """
+    user_id = request.session.get("user_id")
+    if not user_id:
+        return JsonResponse(
+            {"detail": "Authentication credentials were not provided."}, status=403
+        )
+
+    # Check if the user has CREATE permission on the "children" resource
+    if not has_permission(request, "children", "CREATE"):
+        return JsonResponse(
+            {"error": "You do not have permission to create a family."}, status=401
+        )
+
+    try:
+        # Extract data from the request
+        data = request.data  # Use request.data for JSON payloads
+
+        # Validate required fields
+        required_fields = [
+            "childfirstname",
+            "childsurname",
+            "gender",
+            "city",
+            "child_phone_number",
+            "treating_hospital",
+            "date_of_birth",
+            "marital_status",
+            "num_of_siblings",
+            "details_for_tutoring",
+            "marital_status",
+            "tutoring_status",
+            "street_and_apartment_number",
+        ]
+        missing_fields = [field for field in required_fields if field not in data]
+        if missing_fields:
+            return JsonResponse(
+                {"error": f"Missing required fields: {', '.join(missing_fields)}"},
+                status=400,
+            )
+
+        # Create a new family record in the database
+        family = Children.objects.create(
+            childfirstname=data["childfirstname"],
+            childsurname=data["childsurname"],
+            registrationdate= datetime.datetime.now(),
+            lastupdateddate=datetime.datetime.now(),
+            gender=data["gender"],
+            responsible_coordinator=user_id,  # the user who is creating the family - which is a Family Coordinator
+            city=data["city"],
+            child_phone_number=data["child_phone_number"],
+            treating_hospital=data["treating_hospital"],
+            date_of_birth=data["date_of_birth"],
+            medical_diagnosis=data.get("medical_diagnosis"),  # Optional
+            diagnosis_date=data.get("diagnosis_date"),  # Optional
+            marital_status=data["marital_status"],
+            num_of_siblings=data["num_of_siblings"],
+            details_for_tutoring=data["details_for_tutoring"] if data.get("details_for_tutoring") else "לא_רלוונטי",
+            additional_info=data.get("additional_info"),  # Optional
+            tutoring_status=data["tutoring_status"] if data.get("tutoring_status") else "לא_רלוונטי",
+            current_medical_state=data.get("current_medical_state"),  # Optional
+            when_completed_treatments=data.get("when_completed_treatments"),  # Optional
+            father_name=data.get("father_name"),  # Optional
+            father_phone=data.get("father_phone"),  # Optional
+            mother_name=data.get("mother_name"),  # Optional
+            mother_phone=data.get("mother_phone"),  # Optional
+            street_and_apartment_number=data.get(
+                "street_and_apartment_number"
+            ),  # Optional
+            expected_end_treatment_by_protocol=data.get(
+                "expected_end_treatment_by_protocol"
+            ),  # Optional
+            has_completed_treatments=data.get(
+                "has_completed_treatments", False
+            ),  # Default to False
+        )
+
+        return JsonResponse(
+            {"message": "Family created successfully", "family_id": family.child_id},
+            status=201,
+        )
+    except Exception as e:
+        print(f"DEBUG: An error occurred while creating a family: {str(e)}")
+        return JsonResponse({"error": str(e)}, status=500)
