@@ -319,7 +319,7 @@ class Tasks(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     # add pending_tutor_id field need to add a column to tasks table and model thats called new_pending_tutor_id it can be empty but values must be from pending_tutor table
-    pending_tutor_id = models.ForeignKey(Pending_Tutor, on_delete=models.CASCADE, null=True, blank=True)
+    pending_tutor = models.ForeignKey(Pending_Tutor, on_delete=models.SET_NULL, null=True, blank=True, db_column='pending_tutor_id_id')  # Specify the column name in the database
 
     def __str__(self):
         return f"Task {self.task_id} - {self.task_type}"

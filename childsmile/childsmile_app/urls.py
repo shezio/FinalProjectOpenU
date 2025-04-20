@@ -115,7 +115,7 @@ urlpatterns = [
         name="create_volunteer_or_tutor",
     ),
     path(
-        "api/pending_tutors/",
+        "api/get_pending_tutors/",
         get_pending_tutors,
         name="get_pending_tutors",
     ),

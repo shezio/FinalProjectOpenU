@@ -34,6 +34,122 @@ import requests
 import urllib3
 from django.utils.timezone import make_aware
 from geopy.geocoders import Nominatim
+import threading, time
+
+
+def create_task_internal(task_data):
+    """
+    Internal function to create a task.
+    """
+    try:
+        print(f"DEBUG: Received task_data: {task_data}")  # Log the incoming data
+
+        # Validate the pending_tutor ID
+        pending_tutor_id = task_data.get("pending_tutor")
+        if pending_tutor_id:
+            if not Pending_Tutor.objects.filter(
+                pending_tutor_id=pending_tutor_id
+            ).exists():
+                raise ValueError(
+                    f"Pending_Tutor with ID {pending_tutor_id} does not exist."
+                )
+
+        # Fetch the task type to get its name
+        task_type = Task_Types.objects.get(id=task_data["type"])
+        print(f"DEBUG: Task type fetched: {task_type.task_type}")
+
+        task = Tasks.objects.create(
+            description=task_type.task_type,  # Use the task type name as the description
+            due_date=task_data["due_date"],
+            status="לא הושלמה",  # Default status
+            created_at=datetime.datetime.now(),
+            updated_at=datetime.datetime.now(),
+            assigned_to_id=task_data["assigned_to"],
+            related_child_id=task_data.get("child"),  # Allow null for child
+            related_tutor_id=task_data.get("tutor"),  # Allow null for tutor
+            task_type_id=task_data["type"],
+            pending_tutor_id=pending_tutor_id,  # Use the correct Pending_Tutor ID
+        )
+        print(f"DEBUG: Task created successfully: {task}")
+        return task
+    except Task_Types.DoesNotExist:
+        print("DEBUG: Invalid task type ID.")
+        raise ValueError("Invalid task type ID.")
+    except Exception as e:
+        print(f"DEBUG: Error creating task: {str(e)}")
+        raise e
+
+
+def create_tasks_for_tutor_coordinators_async(pending_tutor_id, task_type_id):
+    """
+    Wrapper to run the task creation function asynchronously.
+    """
+
+    def wait_and_create_tasks():
+        max_wait_time = 60  # Maximum wait time in seconds
+        retry_interval = 5  # Retry interval in seconds
+        elapsed_time = 0
+
+        while elapsed_time < max_wait_time:
+            if Pending_Tutor.objects.filter(pending_tutor_id=pending_tutor_id).exists():
+                print(
+                    f"DEBUG: Pending_Tutor with ID {pending_tutor_id} found in the database."
+                )
+                create_tasks_for_tutor_coordinators(pending_tutor_id, task_type_id)
+                return
+            print(
+                f"DEBUG: Pending_Tutor with ID {pending_tutor_id} not found. Retrying in {retry_interval} seconds..."
+            )
+            time.sleep(retry_interval)
+            elapsed_time += retry_interval
+
+        print(
+            f"DEBUG: Pending_Tutor with ID {pending_tutor_id} not found after {max_wait_time} seconds. Aborting task creation."
+        )
+
+    thread = threading.Thread(target=wait_and_create_tasks)
+    thread.start()
+
+
+def create_tasks_for_tutor_coordinators(pending_tutor_id, task_type_id):
+    """
+    Create tasks for all tutor coordinators for the given Pending_Tutor.
+    """
+    try:
+        # Fetch the role for Tutors Coordinator
+        tutor_coordinator_role = Role.objects.filter(role_name="Tutors Coordinator").first()
+        if not tutor_coordinator_role:
+            print("DEBUG: Role 'Tutors Coordinator' not found in the database.")
+            return
+
+        # Fetch all tutor coordinators
+        tutor_coordinators = Staff.objects.filter(roles=tutor_coordinator_role)
+        if not tutor_coordinators.exists():
+            print("DEBUG: No Tutors Coordinators found in the database.")
+            return
+
+        print(f"DEBUG: Found {tutor_coordinators.count()} Tutors Coordinators.")
+
+        # Create tasks for each tutor coordinator
+        for coordinator in tutor_coordinators:
+            task_data = {
+                "description": "ראיון מועמד לחונכות",
+                "due_date": (now().date() + datetime.timedelta(days=7)).strftime("%Y-%m-%d"),
+                "status": "לא הושלמה",  # "Not Completed" in Hebrew
+                "assigned_to": coordinator.staff_id,
+                "pending_tutor": pending_tutor_id,  # Pass the Pending_Tutor ID
+                "type": task_type_id,
+            }
+
+            print(f"DEBUG: Task data being sent to create_task_internal: {task_data}")
+
+            try:
+                task = create_task_internal(task_data)
+                print(f"DEBUG: Task created successfully with ID {task.task_id}")
+            except Exception as e:
+                print(f"DEBUG: Error creating task: {str(e)}")
+    except Exception as e:
+        print(f"DEBUG: An error occurred while creating tasks: {str(e)}")
 
 
 def delete_task_cache(assigned_to_id=None, is_admin=False):
@@ -55,6 +171,7 @@ def is_admin(user):
     """
     with connection.cursor() as cursor:
         role_ids = list(user.roles.values_list("id", flat=True))  # Convert to a list
+        print(f"DEBUG: Role IDs for user '{user.username}': {role_ids}")  # Debug log
         if not role_ids:
             role_ids = [
                 -1
@@ -67,7 +184,11 @@ def is_admin(user):
             """,
             [role_ids],  # Pass the list directly
         )
-        return cursor.fetchone() is not None
+        is_admin_result = cursor.fetchone() is not None
+        print(
+            f"DEBUG: Is user '{user.username}' an admin? {is_admin_result}"
+        )  # Debug log
+        return is_admin_result
 
 
 # def get_hebrew_date(date):
@@ -85,7 +206,7 @@ def has_permission(request, resource, action):
     """
     permissions = request.session.get("permissions", [])
     # print the permissions for debugging
-    print(f"DEBUG: Permissions: {permissions}")  # Debug log
+    #print(f"DEBUG: Permissions: {permissions}")  # Debug log
     prefixed_resource = (
         f"childsmile_app_{resource}"  # Add the prefix to the resource name
     )
@@ -489,25 +610,34 @@ def get_user_tasks(request):
             {"detail": "Authentication credentials were not provided."}, status=403
         )
 
-    # Check if the user has the System Administrator role
+    # Fetch the user
     user = Staff.objects.get(staff_id=user_id)
+    print(f"DEBUG: Logged-in user: {user.username}")  # Debug log
+
+    # Check if the user is an admin
+    user_is_admin = is_admin(user)
+    print(f"DEBUG: Is user '{user.username}' an admin? {user_is_admin}")  # Debug log
 
     # Use cache to avoid repeated queries
-    cache_key = f"user_tasks_{user_id}" if not is_admin(user) else "all_tasks"
+    cache_key = f"user_tasks_{user_id}" if not user_is_admin else "all_tasks"
     tasks_data = cache.get(cache_key)
 
     if not tasks_data:
         # Fetch tasks efficiently
-        if is_admin:
+        if user_is_admin:
+            print("DEBUG: Fetching all tasks for admin user.")  # Debug log
             tasks = (
                 Tasks.objects.all()
-                .select_related("task_type", "assigned_to")
+                .select_related("task_type", "assigned_to", "pending_tutor__id")
                 .order_by("-updated_at")
             )
         else:
+            print(
+                f"DEBUG: Fetching tasks assigned to user '{user.username}'."
+            )  # Debug log
             tasks = (
                 Tasks.objects.filter(assigned_to_id=user_id)
-                .select_related("task_type", "assigned_to")
+                .select_related("task_type", "assigned_to", "pending_tutor__id")
                 .order_by("-updated_at")
             )
 
@@ -523,7 +653,15 @@ def get_user_tasks(request):
                 "child": task.related_child_id,
                 "tutor": task.related_tutor_id,
                 "type": task.task_type_id,
-                "pending_tutor": task.pending_tutor_id,
+                "pending_tutor": (
+                    {
+                        "id": task.pending_tutor.id_id,
+                        "first_name": task.pending_tutor.id.first_name,
+                        "surname": task.pending_tutor.id.surname,
+                    }
+                    if task.pending_tutor
+                    else None
+                ),  # Serialize Pending_Tutor details or set to None
             }
             for task in tasks
         ]
@@ -629,23 +767,8 @@ def create_task(request):
 
     task_data = request.data
     try:
-        # Fetch the task type to get its name
-        task_type = Task_Types.objects.get(id=task_data["type"])
-
-        task = Tasks.objects.create(
-            description=task_type.task_type,  # Use the task type name as the description
-            due_date=task_data["due_date"],
-            status="לא הושלמה",
-            created_at=datetime.datetime.now(),
-            updated_at=datetime.datetime.now(),
-            assigned_to_id=task_data["assigned_to"],
-            related_child_id=task_data.get("child"),  # Allow null for child
-            related_tutor_id=task_data.get("tutor"),  # Allow null for tutor
-            task_type_id=task_data["type"],
-            pending_tutor_id=task_data.get(
-                "pending_tutor"
-            ),  # Allow null for pending tutor
-        )
+        print(f"DEBUG: Task data being sent to create_task_internal: {task_data}")
+        task = create_task_internal(task_data)
 
         # Check if the logged-in user is an admin
         user = Staff.objects.get(staff_id=user_id)
@@ -765,19 +888,25 @@ def update_task(request, task_id):
         task.updated_at = datetime.datetime.now()
 
         # Handle assigned_to (convert staff_id directly)
-        assigned_to_id = request.data.get("assigned_to")
-        print(f"DEBUG: assigned_to_id = {assigned_to_id}")  # Debug log
-        if assigned_to_id:
+        assigned_to = request.data.get("assigned_to")
+        print(f"DEBUG: assigned_to = {assigned_to}")  # Debug log
+        if assigned_to:
             try:
-                # Validate the staff_id exists
-                Staff.objects.get(staff_id=assigned_to_id)
-                task.assigned_to_id = assigned_to_id  # Assign the staff_id directly
+                # Check if assigned_to is a username or staff_id
+                if assigned_to.isdigit():
+                    # If it's a numeric value, treat it as staff_id
+                    staff_member = Staff.objects.get(staff_id=assigned_to)
+                else:
+                    # Otherwise, treat it as a username
+                    staff_member = Staff.objects.get(username=assigned_to)
+
+                task.assigned_to_id = staff_member.staff_id
             except Staff.DoesNotExist:
                 print(
-                    f"DEBUG: Staff member with ID '{assigned_to_id}' not found."
+                    f"DEBUG: Staff member with username or ID '{assigned_to}' not found."
                 )  # Debug log
                 return JsonResponse(
-                    {"error": f"Staff member with ID '{assigned_to_id}' not found."},
+                    {"error": f"Staff member with username or ID '{assigned_to}' not found."},
                     status=400,
                 )
 
@@ -1328,6 +1457,10 @@ def create_volunteer_or_tutor(request):
         )
 
         staff.roles.add(role)  # Add the role to the staff member
+        staff.refresh_from_db()  # Refresh to get the updated staff_id
+        print(
+            f"DEBUG: Staff created with ID {staff.staff_id} with roles {[role.role_name for role in staff.roles.all()]}"
+        )
 
         # Insert into either General_Volunteer or Pending_Tutor
         if want_tutor:
@@ -1335,39 +1468,21 @@ def create_volunteer_or_tutor(request):
                 id_id=signedup.id,
                 pending_status="ממתין",  # "Pending" in Hebrew
             )
+            pending_tutor_id = pending_tutor.pending_tutor_id  # Get the ID of the new Pending_Tutor
+            print(f"DEBUG: Pending_Tutor created with ID {pending_tutor_id}")
 
-            # Create a task for all Tutor Coordinators using the create_task view
-            tutor_coordinator_role = Role.objects.filter(
-                role_name="Tutor Coordinator"
+            # Fetch the task type ID dynamically
+            task_type = Task_Types.objects.filter(
+                task_type="ראיון מועמד לחונכות"
             ).first()
-            if tutor_coordinator_role:
-                tutor_coordinators = Staff.objects.filter(roles=tutor_coordinator_role)
-                if not tutor_coordinators.exists():
-                    print("No Tutor Coordinators found in the database.")
-                    return JsonResponse(
-                        {"warning": "No Tutor Coordinators found."}, status=204
-                    )
-                
-                for coordinator in tutor_coordinators:
-                    # Prepare task data
-                    task_data = {
-                        "description": "ראיון מועמד לחונכות",
-                        "due_date": (
-                            now().date() + datetime.timedelta(days=7)
-                        ).strftime(
-                            "%Y-%m-%d"
-                        ),  # Example: 7 days from now
-                        "status": "לא הושלמה",  # "Not Completed" in Hebrew
-                        "assigned_to": coordinator.staff_id,
-                        "pending_tutor": pending_tutor.id,  # Pass the Pending_Tutor ID
-                    }
+            if not task_type:
+                raise ValueError(
+                    "Task type 'ראיון מועמד לחונכות' not found in the database."
+                )
 
-                    # Call the create_task view programmatically
-                    request_data = (
-                        request._request
-                    )  # Get the original Django request object
-                    request_data.POST = task_data  # Override POST data
-                    create_task(request_data)  # Call the create_task view
+            # Call the task creation function asynchronously
+            create_tasks_for_tutor_coordinators_async(pending_tutor_id, task_type.id)
+
         else:
             General_Volunteer.objects.create(
                 id_id=signedup.id,
@@ -1395,10 +1510,13 @@ def get_pending_tutors(request):
     Retrieve all pending tutors with their full details.
     """
     try:
-        pending_tutors = Pending_Tutor.objects.select_related("id").all()  # `id` is the foreign key to SignedUp
+        pending_tutors = Pending_Tutor.objects.select_related(
+            "id"
+        ).all()  # `id` is the foreign key to SignedUp
         pending_tutors_data = [
             {
-                "id": tutor.id_id,  # ID from the SignedUp table
+                "id": tutor.pending_tutor_id,
+                "signedup_id": tutor.id.id,
                 "first_name": tutor.id.first_name,
                 "surname": tutor.id.surname,
                 "email": tutor.id.email,
