@@ -154,27 +154,25 @@
 
 /* Ensure the container is responsive */
 .filter-create-container {
-  display: ruby;
+  display: flex;
   justify-content: flex-end;
   /* Align all buttons and dropdowns to the right */
   align-items: center;
   /* Vertically align items */
-  gap: 5px;
+  gap: 15px;
   /* Reduce spacing between items */
   position: fixed;
   /* Fix the container in place */
-  top: 0;
+  top: 200px;
   /* Stick to the top of the page */
-  right: 0;
+  right: 250px;
   /* Align to the right side of the page */
-  padding: 10px;
-  /* Add padding for better spacing */
   font-size: 1em;
   /* Ensure all fonts are 2em */
-  margin: 10;
   /* מסיר רווחים פנימיים בין הכפתורים */
-  padding: 200px 250px;
+  padding: 10px 20px;
   /* ניתן להתאים לפי הצורך */
+
 }
 
 /* Style the buttons and dropdowns */

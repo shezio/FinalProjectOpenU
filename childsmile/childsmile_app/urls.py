@@ -1,22 +1,6 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from .views import (
-    PermissionsViewSet,
-    RoleViewSet,
-    StaffViewSet,
-    SignedUpViewSet,
-    General_VolunteerViewSet,
-    Pending_TutorViewSet,
-    TutorsViewSet,
-    ChildrenViewSet,
-    TutorshipsViewSet,
-    MaturesViewSet,
-    HealthyViewSet,
-    FeedbackViewSet,
-    Tutor_FeedbackViewSet,
-    General_V_FeedbackViewSet,
-    TaskViewSet,
-    PossibleMatchesViewSet,  # Add this line
     login_view,
     get_permissions,
     logout_view,
@@ -38,6 +22,26 @@ from .views import (
     create_volunteer_or_tutor,
     get_pending_tutors,
 )
+
+from .unused_views import (
+    PermissionsViewSet,
+    RoleViewSet,
+    StaffViewSet,
+    SignedUpViewSet,
+    General_VolunteerViewSet,
+    Pending_TutorViewSet,
+    TutorsViewSet,
+    ChildrenViewSet,
+    TutorshipsViewSet,
+    MaturesViewSet,
+    HealthyViewSet,
+    FeedbackViewSet,
+    Tutor_FeedbackViewSet,
+    General_V_FeedbackViewSet,
+    TaskViewSet,
+    PossibleMatchesViewSet,  # Add this line
+)
+
 
 router = DefaultRouter()
 router.register(r"permissions", PermissionsViewSet)
@@ -115,7 +119,7 @@ urlpatterns = [
         name="create_volunteer_or_tutor",
     ),
     path(
-        "api/get_pending_tutors/",
+        "api/pending_tutors/",
         get_pending_tutors,
         name="get_pending_tutors",
     ),
