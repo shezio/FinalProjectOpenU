@@ -3,7 +3,7 @@ import axios from '../axiosConfig';
 import Sidebar from '../components/Sidebar';
 import InnerPageHeader from '../components/InnerPageHeader';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
-import { getStaff, getChildren, getTutors, getChildFullName, getTutorFullName } from '../components/utils';  // Import utility functions for fetching data
+import { getStaff, getChildren, getTutors, getChildFullName, getTutorFullName , getPendingTutors, getPendingTutorFullName} from '../components/utils';  // Import utility functions for fetching data
 import '../styles/common.css';
 import '../styles/tasks.css';
 import Select from 'react-select';  // Import react-select
@@ -33,9 +33,11 @@ const Tasks = () => {
   const [staffOptions, setStaffOptions] = useState([]);
   const [childrenOptions, setChildrenOptions] = useState([]);
   const [tutorsOptions, setTutorsOptions] = useState([]);
+  const [pendingTutorsOptions, setPendingTutorsOptions] = useState([]);
   const [selectedStaff, setSelectedStaff] = useState(null);
   const [selectedChild, setSelectedChild] = useState(null);
   const [selectedTutor, setSelectedTutor] = useState(null);
+  const [selectedPendingTutor, setSelectedPendingTutor] = useState(null); // State for selected pending tutor
   const [selectedTaskType, setSelectedTaskType] = useState(null);
   const [loading, setLoading] = useState(tasks.length === 0); // Only if no data is loaded from cache
   const [selectedTask, setSelectedTask] = useState(null);
@@ -61,8 +63,9 @@ const Tasks = () => {
         localStorage.removeItem('staffOptions');
         localStorage.removeItem('childrenOptions');
         localStorage.removeItem('tutorsOptions');
+        localStorage.removeItem('pendingTutorsOptions');
       }
-      const [tasksResponse, staffOptions, childrenOptions, tutorsOptions] = await Promise.all([
+      const [tasksResponse, staffOptions, childrenOptions, tutorsOptions, pendingTutorsOptions] = await Promise.all([
         axios.get('/api/tasks/').catch((error) => {
           console.error('Error fetching tasks:', error);
           showErrorToast(t, 'Error fetching tasks', error); // Use the reusable function
@@ -83,10 +86,16 @@ const Tasks = () => {
           showErrorToast(t, 'Error fetching tutors', error); // Use the reusable function
           return [];
         }),
+        getPendingTutors().catch((error) => {
+          console.error('Error fetching pending tutors:', error);
+          showErrorToast(t, 'Error fetching pending tutors', error); // Use the reusable function
+          return [];
+        }),
       ]);
 
       const newTasks = tasksResponse.data.tasks || [];
       const newTaskTypes = tasksResponse.data.task_types || [];
+      const newPendingTutors = pendingTutorsOptions;
 
       // Compare fetched data with local storage data
       const storedTasks = JSON.parse(localStorage.getItem('tasks')) || [];
@@ -110,10 +119,12 @@ const Tasks = () => {
       setStaffOptions(staffOptions);
       setChildrenOptions(childrenOptions);
       setTutorsOptions(tutorsOptions);
+      setPendingTutorsOptions(newPendingTutors);
 
       localStorage.setItem('staffOptions', JSON.stringify(staffOptions));
       localStorage.setItem('childrenOptions', JSON.stringify(childrenOptions));
       localStorage.setItem('tutorsOptions', JSON.stringify(tutorsOptions));
+      localStorage.setItem('pendingTutorsOptions', JSON.stringify(newPendingTutors));
     } catch (error) {
       console.error('Error fetching data:', error);
       showErrorToast(t, 'Error fetching data', error); // Use the reusable function
@@ -161,13 +172,13 @@ const Tasks = () => {
     if (!selectedStaff) {
       newErrors.assigned_to = "זהו שדה חובה";
     }
-
+  
     // If there are errors, update the state and stop submission
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return;
     }
-
+  
     // Clear errors if validation passes
     setErrors({});
     const taskData = {
@@ -175,13 +186,14 @@ const Tasks = () => {
       assigned_to: selectedStaff?.value,
       child: selectedChild?.value,
       tutor: selectedTutor?.value,
+      pending_tutor: selectedPendingTutor?.value, // Send the correct pending_tutor_id
       type: selectedTaskType?.value, // Send the task type ID
     };
-
+  
     try {
       const response = await axios.post('/api/tasks/create/', taskData);
       console.log('Task created:', response.data);
-
+  
       if (response.status === 201) {
         setIsModalOpen(false); // Close the modal
         toast.success(t('Task created successfully')); // Show success toast
@@ -234,6 +246,7 @@ const Tasks = () => {
     setSelectedStaff({ value: task.assignee, label: task.assignee }); // Pre-fill assigned staff
     setSelectedChild(childrenOptions.find((child) => child.value === task.child) || null); // Pre-fill child
     setSelectedTutor(tutorsOptions.find((tutor) => tutor.value === task.tutor) || null); // Pre-fill tutor
+    setSelectedPendingTutor(pendingTutorsOptions.find((pendingTutor) => pendingTutor.value === task.pending_tutor) || null); // Pre-fill pending tutor
     setDueDate(''); // Clear the due date field
     setIsEditModalOpen(true); // Open the edit modal
   };
@@ -265,6 +278,7 @@ const Tasks = () => {
       assigned_to: selectedStaff?.value,
       child: selectedChild?.value,
       tutor: selectedTutor?.value,
+      pending_tutor: selectedPendingTutor?.value,
       type: selectedTaskType?.value, // Send the task type ID
       status: taskToEdit.status, // Keep the existing status
     };
@@ -463,6 +477,15 @@ const Tasks = () => {
                   isSearchable
                   isClearable
                 />
+                <label>{t('Pending Tutor')}</label>
+                <Select
+                  id="pending_tutor"
+                  options={pendingTutorsOptions}
+                  value={selectedPendingTutor}
+                  onChange={setSelectedPendingTutor}
+                  isSearchable
+                  isClearable
+                />
                 <button onClick={handleUpdateTask}>{t('Update Task')}</button>
               </div>
             </div>
@@ -529,6 +552,15 @@ const Tasks = () => {
                   isSearchable
                   isClearable
                 />
+                <label>מועמד לחונכות</label>
+                <Select
+                  id="pending_tutor"
+                  options={pendingTutorsOptions}
+                  value={selectedPendingTutor}
+                  onChange={setSelectedPendingTutor}
+                  isSearchable
+                  isClearable
+                />
                 <button onClick={handleSubmitTask}>צור</button>
               </div>
             </div>
@@ -545,6 +577,7 @@ const Tasks = () => {
                 <p>לביצוע על ידי: {selectedTask.assignee}</p>
                 <p>חניך: {getChildFullName(selectedTask.child, childrenOptions)}</p>
                 <p>חונך: {getTutorFullName(selectedTask.tutor, tutorsOptions)}</p>
+                <p>מועמד לחונכות: {getPendingTutorFullName(selectedTask.pending_tutor, pendingTutorsOptions)}</p>
                 <button onClick={handleClosePopup}>סגור</button>
               </div>
             </div>

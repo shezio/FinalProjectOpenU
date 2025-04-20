@@ -40,6 +40,22 @@ export const getTutors = async () => {
   }
 };
 
+
+export const getPendingTutors = async () => {
+  try {
+    const response = await axios.get('/api/get_pending_tutors/');
+    console.log('Pending Tutors API response:', response.data); // Log the response for debugging
+    const pendingTutors = response.data.pending_tutors || [];
+    return pendingTutors.map((tutor) => ({
+      value: tutor.id, // Use the primary key of the Pending_Tutor table
+      label: `${tutor.first_name} ${tutor.surname} - ${tutor.pending_status}`,
+    }));
+  } catch (error) {
+    console.error('Error fetching pending tutors:', error);
+    return [];
+  }
+};
+
 export const getChildFullName = (childId, childrenOptions) => {
   console.log('getChildFullName called with:', { childId, childrenOptions });
   const child = childrenOptions.find((child) => child.value === childId);
@@ -53,6 +69,29 @@ export const getTutorFullName = (tutorId, tutorsOptions) => {
   console.log('Found tutor:', tutor);
   return tutor ? tutor.label.split(' - ')[0] : '---';
 };
+
+export const getPendingTutorFullName = (tutorId, pendingTutorsOptions) => {
+  console.log('getPendingTutorFullName called with:', { tutorId, pendingTutorsOptions });
+
+  // Handle null or undefined tutorId
+  if (!tutorId) {
+    console.log('DEBUG: tutorId is null or undefined.');
+    return '---';
+  }
+
+  const fullName = `${tutorId.first_name} ${tutorId.surname}`.trim();
+
+  const tutor = pendingTutorsOptions.find((t) => {
+    const labelName = t.label.split(' - ')[0].trim(); // extract 'first_name surname'
+    return labelName === fullName;
+  });
+
+  console.log('Found pending tutor:', tutor);
+
+  return tutor ? tutor.label.split(' - ')[0] : '---';
+};
+
+
 
 export const hasViewPermissionForReports = () => {
   const permissions = JSON.parse(localStorage.getItem('permissions')) || [];

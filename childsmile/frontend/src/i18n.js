@@ -207,10 +207,12 @@ const resources = {
       "Age must be between 18 and 100.": "גיל חייב להיות בין 18 ל-100.",
       "Please select a valid gender.": "אנא בחר מין תקף.",
       "Phone number must start with 050-059 and have exactly 7 digits.": "מספר טלפון חייב להתחיל ב050-059 ולכלול בדיוק 7 ספרות.",
-      "Please enter a valid email address.": "אנא הכנס כתובת אימייל תקפה.",
+      "Please enter a valid email address.": "אנא הכנס כתובת אימייל תקינה.",
       "Please select if you want to be a tutor.": "אנא בחר אם אתה רוצה להיות חונך.",
-      "Welcome to Child Smile! Please log in with your credentials: Username: {{username}}, Password: 1234": "ברוך הבא לחיוך של ילד! אנא המתן לקבלת הרשאות לשם התחברות: שם משתמש: {{username}}, סיסמה: 1234",
+      "Welcome to Child Smile! Please log in with your credentials: Username: {{username}}, Password: 1234": "ברוך הבא לחיוך של ילד!     פרטי התחברות: שם משתמש: {{username}}, סיסמה: 1234",
       "Please select a city.": "אנא בחר עיר.",
+      "Error fetching pending tutors": "שגיאה בטעינת מועמדים לחונכות",
+      "Pending Tutor": "מועמד לחונכות",
     }
   }
 };
