@@ -823,12 +823,12 @@ Table schema
     want_tutor boolean NOT NULL,
     CONSTRAINT childsmile_app_signedup_pkey PRIMARY KEY (id)
 ```sql
-INSERT INTO childsmile_app_signedup (first_name, surname, age, gender, phone, city, comment, email, want_tutor)
-VALUES ('אביגיל', 'גרינברג', 25, TRUE, '052-1234567', 'תל אביב', '', 'aviga@mail.com', FALSE);
-INSERT INTO childsmile_app_signedup (first_name, surname, age, gender, phone, city, comment, email, want_tutor)
-VALUES ('דוד','מנחם', 30, FALSE, '052-1234567', 'ירושלים', '', 'davim@mail.com', FALSE);
-INSERT INTO childsmile_app_signedup (first_name, surname, age, gender, phone, city, comment, email, want_tutor)
-VALUES ('חוני', 'המעגל', 19, FALSE, '052-1234567', 'חיפה', '', 'circle@mail.com', FALSE);
+INSERT INTO childsmile_app_signedup (id, first_name, surname, age, gender, phone, city, comment, email, want_tutor)
+VALUES (10000002,'אביגיל', 'גרינברג', 25, TRUE, '052-1234567', 'תל אביב', '', 'aviga@mail.com', FALSE);
+INSERT INTO childsmile_app_signedup (id, first_name, surname, age, gender, phone, city, comment, email, want_tutor)
+VALUES (10000003,'דוד','מנחם', 30, FALSE, '052-1234567', 'ירושלים', '', 'davim@mail.com', FALSE);
+INSERT INTO childsmile_app_signedup (id, first_name, surname, age, gender, phone, city, comment, email, want_tutor)
+VALUES (10000004,'חוני', 'המעגל', 19, FALSE, '052-1234567', 'חיפה', '', 'circle@mail.com', FALSE);
 ```
 
 ### insert into staff table respecting the foreign key constraint and using the data from childsmile_app_signedup
@@ -914,12 +914,12 @@ WHERE EXISTS (SELECT 1 FROM childsmile_app_signedup WHERE first_name = 'חוני
 ### this means we will insert into childsmile_app_signedup, childsmile_app_staff, childsmile_app_pending_tutor
 ### we will use the data from childsmile_app_signedup to insert into childsmile_app_staff and childsmile_app_pending_tutor
 ```sql
-INSERT INTO childsmile_app_signedup (first_name, surname, age, gender, phone, city, comment, email, want_tutor)
-VALUES ('אורי', 'כהן', 20, TRUE, '052-1234567', 'תל אביב', '', 'urico@mail.com', TRUE);
-INSERT INTO childsmile_app_signedup (first_name, surname, age, gender, phone, city, comment, email, want_tutor)
-VALUES ('שלהבת', 'רווח', 30, FALSE, '052-9234567', 'ירושלים', '', 'shaler@mail.com', TRUE);
-INSERT INTO childsmile_app_signedup (first_name, surname, age, gender, phone, city, comment, email, want_tutor)
-VALUES ('גיל', 'ורהפטיג', 19, FALSE, '052-8234567', 'חיפה', '', 'gilva@mail.com', TRUE);
+INSERT INTO childsmile_app_signedup (id, first_name, surname, age, gender, phone, city, comment, email, want_tutor)
+VALUES (10000005, 'אורי', 'כהן', 20, TRUE, '052-1234567', 'תל אביב', '', 'urico@mail.com', TRUE);
+INSERT INTO childsmile_app_signedup (id, first_name, surname, age, gender, phone, city, comment, email, want_tutor)
+VALUES (10000006, 'שלהבת', 'רווח', 30, FALSE, '052-9234567', 'ירושלים', '', 'shaler@mail.com', TRUE);
+INSERT INTO childsmile_app_signedup (id, first_name, surname, age, gender, phone, city, comment, email, want_tutor)
+VALUES (10000007, 'גיל', 'ורהפטיג', 19, FALSE, '052-8234567', 'חיפה', '', 'gilva@mail.com', TRUE);
 ```
 ## insert into staff table respecting the foreign key constraint and using the data from childsmile_app_signedup
 ```sql
@@ -1018,8 +1018,8 @@ WHERE EXISTS (SELECT 1 FROM childsmile_app_signedup WHERE first_name = 'גיל' 
 ```sql
 --- Create a new tutor named "נועה רוזנבלום" and approve her
 -- insert signedup
-INSERT INTO childsmile_app_signedup (first_name, surname, age, gender, phone, city, comment, email, want_tutor)
-VALUES ('נועה', 'רוזנבלום', 22, TRUE, '052-1234567', 'חברון', '', 'noar@mail.com', TRUE);
+INSERT INTO childsmile_app_signedup (id, first_name, surname, age, gender, phone, city, comment, email, want_tutor)
+VALUES (10000008, 'נועה', 'רוזנבלום', 22, TRUE, '052-1234567', 'חברון', '', 'noar@mail.com', TRUE);
 -- insert staff
 INSERT INTO childsmile_app_staff (username, password, role_id, email, first_name, last_name, created_at)
 SELECT 
@@ -1066,8 +1066,8 @@ SELECT * FROM childsmile_app_tutors;
 --- Create a new tutor named "אביטל גולדשטיין" and approve her
 -- insert signedup
 ```sql
-INSERT INTO childsmile_app_signedup (first_name, surname, age, gender, phone, city, comment, email, want_tutor)
-VALUES ('אביטל', 'גולדשטיין', 22, TRUE, '053-9876543', 'עכו', '', 'avigold@mail.com', TRUE);
+INSERT INTO childsmile_app_signedup (id, first_name, surname, age, gender, phone, city, comment, email, want_tutor)
+VALUES (10000009, 'אביטל', 'גולדשטיין', 22, TRUE, '053-9876543', 'עכו', '', 'avigold@mail.com', TRUE);
 -- insert staff
 INSERT INTO childsmile_app_staff (username, password, role_id, email, first_name, last_name, created_at)
 SELECT 
@@ -1451,8 +1451,8 @@ AND child_id NOT IN (SELECT child_id FROM childsmile_app_matures);
 ### the order is - insert new signedup, insert new staff, insert new pending tutor, update pending tutor, insert new tutor, delete pending tutor, insert new child that has the appropriate status, insert new tutorship
 ```sql
 -- insert new signedup
-INSERT INTO childsmile_app_signedup (first_name, surname, age, gender, phone, city, comment, email, want_tutor)
-VALUES ('אלעזר', 'בוזגלו', 20, FALSE, '050-3334567', 'עכו', '','elazbu@mail.com', TRUE);
+INSERT INTO childsmile_app_signedup (id, first_name, surname, age, gender, phone, city, comment, email, want_tutor)
+VALUES (100000001, 'אלעזר', 'בוזגלו', 20, FALSE, '050-3334567', 'עכו', '','elazbu@mail.com', TRUE);
 -- insert new staff
 INSERT INTO childsmile_app_staff (username, password, role_id, email, first_name, last_name, created_at)
 SELECT 

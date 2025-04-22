@@ -246,18 +246,13 @@
 }
 
 .loader {
-  border: 10px solid #f3f3f3;
-  /* Thicker border */
-  border-top: 10px solid #3498db;
-  /* Thicker border */
-  border-right: 10px solid #3498db;
-  /* Add border-right to extend the arc */
+  border: 15px solid #f3f3f3; /* Thicker border */
+  border-top: 15px solid #3498db; /* Thicker border */
+  border-right: 15px solid #3498db; /* Extend the arc */
   border-radius: 50%;
-  width: 150px;
-  /* Wider loader */
-  height: 150px;
-  /* Wider loader */
-  animation: spin 1s linear infinite;
+  width: 200px; /* Wider loader */
+  height: 200px; /* Wider loader */
+  animation: spin 1s linear infinite; /* Slower spin for better visibility */
   position: absolute;
   top: 50%;
   left: 50%;
@@ -265,8 +260,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  font-size: 20px;
-  /* Adjust font size as needed */
+  font-size: 20px; /* Adjust font size as needed */
   text-align: center;
 }
 
@@ -364,7 +358,7 @@
   /* Smooth fade-in animation */
   position: relative;
   /* For draggable functionality */
-  cursor: move;
+  /* cursor: move; */
   /* Indicate draggable area */
 }
 

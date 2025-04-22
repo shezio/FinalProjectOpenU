@@ -15,8 +15,9 @@
 
 /* Families grid container */
 .families-grid-container {
-  margin-top: 20px;
-  overflow-x: auto;
+  flex: unset !important;
+  margin-top: 100px;
+  overflow-y: auto;
 }
 
 /* Table styling */
@@ -92,13 +93,22 @@
 
 /* Loader styling */
 .loader {
-  border: 10px solid #f3f3f3;
-  border-top: 10px solid #3498db;
+  border: 15px solid #f3f3f3; /* Thicker border */
+  border-top: 15px solid #3498db; /* Thicker border */
+  border-right: 15px solid #3498db; /* Extend the arc */
   border-radius: 50%;
-  width: 50px;
-  height: 50px;
-  animation: spin 1s linear infinite;
-  margin: 20px auto;
+  width: 200px; /* Wider loader */
+  height: 200px; /* Wider loader */
+  animation: spin 1s linear infinite; /* Slower spin for better visibility */
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 20px; /* Adjust font size as needed */
+  text-align: center;
 }
 
 @keyframes spin {
@@ -128,9 +138,9 @@
 .modal-content {
   background-color: #ffffff;
   border-radius: 10px;
-  padding: 20px;
-  width: 60%;
-  max-width: 800px;
+  padding: 50px;
+  width: 60%; /* Increase the width to make the modal wider */
+  max-width: 1920px; /* Increase the maximum width */
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
   animation: fadeIn 0.3s ease-in-out;
   font-size: 1em;
@@ -186,6 +196,11 @@
 
 .form-column label {
   font-weight: bold;
+  width: 100%;
+  font-size: 1.2em;
+  white-space: nowrap; /* Prevent text from wrapping to a new line */
+  overflow: hidden; /* Hide any overflowing text */
+  text-overflow: ellipsis; /* Add ellipsis (...) if the text overflows */
 }
 
 .form-column input,
@@ -204,6 +219,23 @@
   overflow-y: scroll;
 }
 
+textarea.scrollable-textarea {
+  resize: none; /* Disable resizing */
+  overflow-y: auto; /* Allow vertical scrolling */
+}
+
+input.error,
+select.error,
+textarea.error {
+  border-color: red;
+}
+
+.families-error-message {
+  color: red;
+  font-size: 14px;
+  display: block;
+}
+
 .form-actions {
   margin-top: 20px;
   display: flex;
@@ -211,4 +243,17 @@
   gap: 5px;
   width: 100%; /* Ensure buttons span the full width */
   font-size: 2em;
+}
+
+.family-details-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr); /* Two columns */
+  gap: 10px; /* Space between items */
+  margin-top: 20px;
+}
+
+.family-details-grid p {
+  margin: 0; /* Remove default margin */
+  font-size: 1.5em;
+  line-height: 1.5;
 }
