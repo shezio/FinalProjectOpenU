@@ -270,6 +270,16 @@ const resources = {
       "ID must be 9 digits long.": "תעודת זהות חייבת להיות באורך 9 ספרות.",
       'Select a tutoring status': 'בחר מצב חונכות',
       'Select a marital status': 'בחר מצב משפחתי',
+      "No city available": "לא נמצאה עיר",
+      "No street available": "לא נמצא רחוב",
+      'No hospital available': 'לא נמצא בית חולים',
+      'Family added successfully!': 'המשפחה נוספה בהצלחה!',
+      'Family updated successfully!': 'המשפחה עודכנה בהצלחה!',
+      'Family deleted successfully!': 'המשפחה נמחקה בהצלחה!',
+      'Error adding family': 'שגיאה בהוספת משפחה',
+      'Error updating family': 'שגיאה בעדכון משפחה',
+      'Error deleting family': 'שגיאה במחיקת משפחה',
+      'Error fetching family details': 'שגיאה בטעינת פרטי משפחה',
     }
   }
 };

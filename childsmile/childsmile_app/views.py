@@ -1428,7 +1428,7 @@ def create_family(request):
             childsurname=data["childsurname"],
             registrationdate= datetime.datetime.now(),
             lastupdateddate=datetime.datetime.now(),
-            gender=data["gender"],
+            gender=True if data["gender"] == "נקבה" else False,
             responsible_coordinator=user_id,  # the user who is creating the family - which is a Family Coordinator
             city=data["city"],
             child_phone_number=data["child_phone_number"],
