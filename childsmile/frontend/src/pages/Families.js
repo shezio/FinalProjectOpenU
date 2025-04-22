@@ -10,10 +10,15 @@ import '../styles/families.css'; // Import the CSS file for families
 import "../i18n"; // Import i18n configuration
 import { showErrorToast } from '../components/toastUtils'; // Import the toast utility
 import settlements from "../components/settlements.json"; // Import the settlements JSON file
+import hospitals from "../components/hospitals.json"; // Import the hospitals JSON file
+import settlementsAndStreets from "../components/settlements_n_streets.json";
+import Select from "react-select";
 
 
 const Families = () => {
-  const cities = settlements.map((city) => city.trim()).filter((city) => city !== "");
+  const hospitalsList = hospitals.map((hospital) => hospital.trim()).filter((hospital) => hospital !== "");
+
+  const [streets, setStreets] = useState([]);
   const { t } = useTranslation();
   const [loading, setLoading] = useState(true);
   const [families, setFamilies] = useState([]);
@@ -73,12 +78,49 @@ const Families = () => {
   }, []);
 
   const handleAddFamilyChange = (e) => {
-    const { name, value, type, checked } = e.target;
+    const { name, value } = e.target;
+
     setNewFamily((prev) => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : value,
+      [name]: value,
     }));
+
+    // If the city is selected, update the streets
+    if (name === "city") {
+      const cityKey = value.trim();
+      const cityStreets = processedSettlementsAndStreets[cityKey] || [];
+      console.log("City key:", cityKey);
+      console.log("City streets:", cityStreets);
+      setStreets(cityStreets);
+    }
   };
+
+  const preprocessSettlementsAndStreets = (data) => {
+    if (!data || typeof data !== "object") {
+      console.error("Invalid settlementsAndStreets data:", data);
+      return {}; // Return an empty object if data is invalid
+    }
+
+    const processedData = {};
+    Object.keys(data).forEach((key) => {
+      processedData[key.trim()] = data[key];
+    });
+    return processedData;
+  };
+
+  const processedSettlementsAndStreets = preprocessSettlementsAndStreets(settlementsAndStreets);
+
+  const cityOptions = processedSettlementsAndStreets
+    ? Object.keys(processedSettlementsAndStreets).map((city) => ({
+      value: city.trim(),
+      label: city.trim(),
+    }))
+    : [];
+
+  const streetOptions = streets.map((street) => ({
+    value: street,
+    label: street,
+  }));
 
   // Validation logic
   const validate = () => {
@@ -190,11 +232,87 @@ const Families = () => {
   };
 
   const openEditModal = (family) => {
-    setEditFamily(family);
+    setNewFamily({
+      child_id: family.child_id || '',
+      childfirstname: family.childfirstname || '',
+      childsurname: family.childsurname || '',
+      gender: family.gender || 'נקבה',
+      city: family.city || '',
+      street: family.street || '',
+      apartment_number: family.apartment_number || '',
+      child_phone_number: family.child_phone_number || '',
+      treating_hospital: family.treating_hospital || '',
+      date_of_birth: family.date_of_birth || '',
+      marital_status: family.marital_status || '',
+      num_of_siblings: family.num_of_siblings || '',
+      details_for_tutoring: family.details_for_tutoring || '',
+      tutoring_status: family.tutoring_status || '',
+      medical_diagnosis: family.medical_diagnosis || '',
+      diagnosis_date: family.diagnosis_date || '',
+      additional_info: family.additional_info || '',
+      current_medical_state: family.current_medical_state || '',
+      when_completed_treatments: family.when_completed_treatments || '',
+      father_name: family.father_name || '',
+      father_phone: family.father_phone || '',
+      mother_name: family.mother_name || '',
+      mother_phone: family.mother_phone || '',
+      expected_end_treatment_by_protocol: family.expected_end_treatment_by_protocol || '',
+      has_completed_treatments: family.has_completed_treatments || false,
+    });
+    setEditFamily(family); // Set the family being edited
+  };
+
+  const handleEditFamilySubmit = async (e) => {
+    e.preventDefault();
+    if (!validate()) {
+      return; // Prevent submission if validation fails
+    }
+    const combinedStreetAndApartment = `${newFamily.street} ${newFamily.apartment_number}`;
+    const familyData = {
+      ...newFamily,
+      street_and_apartment_number: combinedStreetAndApartment,
+    };
+    try {
+      const response = await axios.put(`/api/update_family/${editFamily.id}/`, familyData); // Use PUT API
+      toast.success(t('Family updated successfully!'));
+      setEditFamily(null); // Close the edit modal
+      fetchFamilies(); // Refresh the families list
+    } catch (error) {
+      console.error('Error updating family:', error);
+      showErrorToast(t('Error updating family'), t('Please try again later.'));
+    }
   };
 
   const closeEditModal = () => {
     setEditFamily(null);
+    setNewFamily({
+      child_id: '',
+      childfirstname: '',
+      childsurname: '',
+      gender: 'נקבה',
+      city: '',
+      street: '',
+      apartment_number: '',
+      child_phone_number: '',
+      treating_hospital: '',
+      date_of_birth: '',
+      marital_status: '',
+      num_of_siblings: '',
+      details_for_tutoring: '',
+      tutoring_status: '',
+      medical_diagnosis: '',
+      diagnosis_date: '',
+      additional_info: '',
+      current_medical_state: '',
+      when_completed_treatments: '',
+      father_name: '',
+      father_phone: '',
+      mother_name: '',
+      mother_phone: '',
+      expected_end_treatment_by_protocol: '',
+      has_completed_treatments: false,
+    });
+    setErrors({});
   };
 
   const deleteFamily = (familyId) => {
@@ -212,7 +330,7 @@ const Families = () => {
         <InnerPageHeader title={t('Families Management')} />
         <ToastContainer
           position="top-center"
-          autoClose={2000}
+          autoClose={5000}
           hideProgressBar={false}
           closeOnClick
           pauseOnFocusLoss
@@ -316,10 +434,332 @@ const Families = () => {
           <div className="modal show">
             <div className="modal-content">
               <span className="close" onClick={closeEditModal}>&times;</span>
-              <h2>{t('Edit Family')} {editFamily.last_name}</h2>
-              {/* Add form fields for editing family data */}
-              <p>{t('Editing functionality will be implemented later.')}</p>
-              <button onClick={closeEditModal}>{t('Close')}</button>
+              <h2>{t('Edit Family')} {editFamily.childsurname}</h2>
+              <form onSubmit={handleEditFamilySubmit} className="form-grid">
+                <div className="form-column">
+                  <label>{t('First Name')}</label>
+                  <input
+                    type="text"
+                    name="childfirstname"
+                    value={newFamily.childfirstname}
+                    onChange={handleAddFamilyChange}
+                    className={errors.childfirstname ? "error" : ""}
+                  />
+                  {errors.childfirstname && <span className="families-error-message">{errors.childfirstname}</span>}
+
+                  <label>{t('Last Name')}</label>
+                  <input
+                    type="text"
+                    name="childsurname"
+                    value={newFamily.childsurname}
+                    onChange={handleAddFamilyChange}
+                    className={errors.childsurname ? "error" : ""}
+                  />
+                  {errors.childsurname && <span className="families-error-message">{errors.childsurname}</span>}
+
+                  <label>{t("City")}</label>
+                  <Select
+                    options={cityOptions}
+                    value={cityOptions.find((option) => option.value === newFamily.city)}
+                    onChange={(selectedOption) => {
+                      const city = selectedOption ? selectedOption.value : "";
+                      setNewFamily((prev) => ({
+                        ...prev,
+                        city,
+                        street: "", // Reset street when city changes
+                      }));
+                      const cityStreets = processedSettlementsAndStreets[city] || [];
+                      setStreets(cityStreets); // Update streets based on selected city
+                    }}
+                    placeholder={t("Select a city")}
+                    className={errors.city ? "error" : ""}
+                    isClearable
+                    noOptionsMessage={() => t("No city available")}
+                  />
+                  {errors.city && <span className="families-error-message">{errors.city}</span>}
+
+                  <label>{t("Street")}</label>
+                  <Select
+                    options={streetOptions}
+                    value={streetOptions.find((option) => option.value === newFamily.street)}
+                    onChange={(selectedOption) => {
+                      const street = selectedOption ? selectedOption.value : "";
+                      setNewFamily((prev) => ({
+                        ...prev,
+                        street,
+                      }));
+                    }}
+                    placeholder={t("Select a street")}
+                    className={errors.street ? "error" : ""}
+                    isClearable
+                    noOptionsMessage={() => t("No street available")}
+                  />
+                  {errors.street && <span className="families-error-message">{errors.street}</span>}
+                </div>
+
+                <div className="form-column">
+                  <label>{t('Apartment Number')}</label>
+                  <input
+                    type="number"
+                    name="apartment_number"
+                    min="1"
+                    max="50000"
+                    value={newFamily.apartment_number}
+                    onChange={handleAddFamilyChange}
+                    className={errors.apartment_number ? "error" : ""}
+                  />
+                  {errors.apartment_number && <span className="families-error-message">{errors.apartment_number}</span>}
+
+                  <label>{t('Phone Number')}</label>
+                  <input
+                    type="text"
+                    name="child_phone_number"
+                    value={newFamily.child_phone_number}
+                    onChange={handleAddFamilyChange}
+                    className={errors.child_phone_number ? "error" : ""}
+                  />
+                  {errors.child_phone_number && <span className="families-error-message">{errors.child_phone_number}</span>}
+
+                  <label>{t('Treating Hospital')}</label>
+                  <Select
+                    options={hospitalsList.map((hospital) => ({
+                      value: hospital,
+                      label: hospital,
+                    }))}
+                    value={
+                      hospitalsList
+                        .map((hospital) => ({ value: hospital, label: hospital }))
+                        .find((option) => option.value === newFamily.treating_hospital)
+                    }
+                    onChange={(selectedOption) => {
+                      setNewFamily((prev) => ({
+                        ...prev,
+                        treating_hospital: selectedOption ? selectedOption.value : "",
+                      }));
+                    }}
+                    placeholder={t('Select a hospital')}
+                    className={errors.treating_hospital ? "error" : ""}
+                    isClearable
+                    noOptionsMessage={() => t('No hospital available')}
+                  />
+                  {errors.treating_hospital && (
+                    <span className="families-error-message">{errors.treating_hospital}</span>
+                  )}
+
+                  <label>{t('Date of Birth')}</label>
+                  <input
+                    type="date"
+                    name="date_of_birth"
+                    value={newFamily.date_of_birth}
+                    onChange={handleAddFamilyChange}
+                    className={errors.date_of_birth ? "error" : ""}
+                  />
+                  {errors.date_of_birth && <span className="families-error-message">{errors.date_of_birth}</span>}
+                </div>
+
+                <div className="form-column">
+                  <label>{t('Marital Status')}</label>
+                  <select
+                    name="marital_status"
+                    value={newFamily.marital_status}
+                    onChange={handleAddFamilyChange}
+                    className={errors.marital_status ? "error" : ""}
+                  >
+                    <option value="">{t('Select a marital status')}</option>
+                    {maritalStatuses.map((status, index) => (
+                      <option key={index} value={status}>
+                        {status}
+                      </option>
+                    ))}
+                  </select>
+                  {errors.marital_status && <span className="families-error-message">{errors.marital_status}</span>}
+
+                  <label>{t('Number of Siblings')}</label>
+                  <input
+                    type="number"
+                    name="num_of_siblings"
+                    min="0"
+                    value={newFamily.num_of_siblings}
+                    onChange={handleAddFamilyChange}
+                    className={errors.num_of_siblings ? "error" : ""}
+                  />
+                  {errors.num_of_siblings && <span className="families-error-message">{errors.num_of_siblings}</span>}
+
+                  <label>{t('Gender')}</label>
+                  <select
+                    name="gender"
+                    value={newFamily.gender}
+                    onChange={handleAddFamilyChange}
+                    className={errors.gender ? "error" : ""}
+                  >
+                    <option value="נקבה">{t('Female')}</option>
+                    <option value="זכר">{t('Male')}</option>
+                  </select>
+                  {errors.gender && <span className="families-error-message">{errors.gender}</span>}
+
+                  <label>{t('ID')}</label>
+                  <input
+                    type="text"
+                    name="child_id"
+                    value={newFamily.child_id}
+                    onChange={handleAddFamilyChange}
+                    className={errors.child_id ? "error" : ""}
+                  />
+                  {errors.child_id && <span className="families-error-message">{errors.child_id}</span>}
+                </div>
+
+                <div className="form-column">
+                  <label>{t('Medical Diagnosis')}</label>
+                  <input
+                    type="text"
+                    name="medical_diagnosis"
+                    value={newFamily.medical_diagnosis}
+                    onChange={handleAddFamilyChange}
+                    className={errors.medical_diagnosis ? "error" : ""}
+                  />
+                  {errors.medical_diagnosis && <span className="families-error-message">{errors.medical_diagnosis}</span>}
+
+                  <label>{t('Diagnosis Date')}</label>
+                  <input
+                    type="date"
+                    name="diagnosis_date"
+                    value={newFamily.diagnosis_date}
+                    onChange={handleAddFamilyChange}
+                    className={errors.diagnosis_date ? "error" : ""}
+                  />
+                  {errors.diagnosis_date && <span className="families-error-message">{errors.diagnosis_date}</span>}
+
+                  <label>{t('Current Medical State')}</label>
+                  <textarea
+                    name="current_medical_state"
+                    value={newFamily.current_medical_state}
+                    onChange={handleAddFamilyChange}
+                    className={`scrollable-textarea ${errors.current_medical_state ? "error" : ""}`}
+                  />
+                  {errors.current_medical_state && <span className="families-error-message">{errors.current_medical_state}</span>}
+
+                  <label>{t('When Completed Treatments')}</label>
+                  <input
+                    type="date"
+                    name="when_completed_treatments"
+                    value={newFamily.when_completed_treatments}
+                    onChange={handleAddFamilyChange}
+                    className={errors.when_completed_treatments ? "error" : ""}
+                  />
+                  {errors.when_completed_treatments && <span className="families-error-message">{errors.when_completed_treatments}</span>}
+
+                  <label>{t('Additional Info')}</label>
+                  <textarea
+                    name="additional_info"
+                    value={newFamily.additional_info}
+                    onChange={handleAddFamilyChange}
+                    className="scrollable-textarea"
+                  />
+                </div>
+
+                <div className="form-column">
+                  <label>{t('Father Name')}</label>
+                  <input
+                    type="text"
+                    name="father_name"
+                    value={newFamily.father_name}
+                    onChange={handleAddFamilyChange}
+                    className={errors.father_name ? "error" : ""}
+                  />
+                  {errors.father_name && <span className="families-error-message">{errors.father_name}</span>}
+
+                  <label>{t('Father Phone')}</label>
+                  <input
+                    type="text"
+                    name="father_phone"
+                    value={newFamily.father_phone}
+                    onChange={handleAddFamilyChange}
+                    className={errors.father_phone ? "error" : ""}
+                  />
+                  {errors.father_phone && <span className="families-error-message">{errors.father_phone}</span>}
+
+                  <label>{t('Mother Name')}</label>
+                  <input
+                    type="text"
+                    name="mother_name"
+                    value={newFamily.mother_name}
+                    onChange={handleAddFamilyChange}
+                    className={errors.mother_name ? "error" : ""}
+                  />
+                  {errors.mother_name && <span className="families-error-message">{errors.mother_name}</span>}
+
+                  <label>{t('Mother Phone')}</label>
+                  <input
+                    type="text"
+                    name="mother_phone"
+                    value={newFamily.mother_phone}
+                    onChange={handleAddFamilyChange}
+                    className={errors.mother_phone ? "error" : ""}
+                  />
+                  {errors.mother_phone && <span className="families-error-message">{errors.mother_phone}</span>}
+                </div>
+
+                <div className="form-column">
+                  <label>{t('Expected End Treatment by Protocol')}</label>
+                  <input
+                    type="date"
+                    name="expected_end_treatment_by_protocol"
+                    value={newFamily.expected_end_treatment_by_protocol}
+                    onChange={handleAddFamilyChange}
+                    className={errors.expected_end_treatment_by_protocol ? "error" : ""}
+                  />
+                  {errors.expected_end_treatment_by_protocol && <span className="families-error-message">{errors.expected_end_treatment_by_protocol}</span>}
+
+                  <label>{t('Has Completed Treatments')}</label>
+                  <select
+                    name="has_completed_treatments"
+                    value={newFamily.has_completed_treatments ? "Yes" : "No"}
+                    onChange={(e) =>
+                      handleAddFamilyChange({
+                        target: {
+                          name: "has_completed_treatments",
+                          value: e.target.value === "Yes",
+                        },
+                      })
+                    }
+                    className={errors.has_completed_treatments ? "error" : ""}
+                  >
+                    <option value="No">{t('No')}</option>
+                    <option value="Yes">{t('Yes')}</option>
+                  </select>
+                  {errors.has_completed_treatments && <span className="families-error-message">{errors.has_completed_treatments}</span>}
+
+                  <label>{t('Details for Tutoring')}</label>
+                  <textarea
+                    name="details_for_tutoring"
+                    value={newFamily.details_for_tutoring}
+                    onChange={handleAddFamilyChange}
+                    className={`scrollable-textarea ${errors.details_for_tutoring ? "error" : ""}`}
+                  />
+                  {errors.details_for_tutoring && <span className="families-error-message">{errors.details_for_tutoring}</span>}
+
+                  <label>{t('Tutoring Status')}</label>
+                  <select
+                    name="tutoring_status"
+                    value={newFamily.tutoring_status}
+                    onChange={handleAddFamilyChange}
+                    className={errors.tutoring_status ? "error" : ""}
+                  >
+                    <option value="">{t('Select a tutoring status')}</option>
+                    {tutoringStatuses.map((status, index) => (
+                      <option key={index} value={status}>
+                        {status}
+                      </option>
+                    ))}
+                  </select>
+                  {errors.tutoring_status && <span className="families-error-message">{errors.tutoring_status}</span>}
+                </div>
+
+                <div className="form-actions">
+                  <button type="submit">{t('Submit')}</button>
+                  <button type="button" onClick={closeEditModal}>{t('Cancel')}</button>
+                </div>
+              </form>
             </div>
           </div>
         )}
@@ -351,32 +791,43 @@ const Families = () => {
                   />
                   {errors.childsurname && <span className="families-error-message">{errors.childsurname}</span>}
 
-                  <label>{t('City')}</label>
-                  <select
-                    name="city"
-                    value={newFamily.city}
-                    onChange={handleAddFamilyChange}
+                  <label>{t("City")}</label>
+                  <Select
+                    options={cityOptions}
+                    value={cityOptions.find((option) => option.value === newFamily.city)}
+                    onChange={(selectedOption) => {
+                      const city = selectedOption ? selectedOption.value : "";
+                      setNewFamily((prev) => ({
+                        ...prev,
+                        city,
+                        street: "", // Reset street when city changes
+                      }));
+                      const cityStreets = processedSettlementsAndStreets[city] || [];
+                      setStreets(cityStreets); // Update streets based on selected city
+                    }}
+                    placeholder={t("Select a city")}
                     className={errors.city ? "error" : ""}
-                  >
-                    <option value="">{t('Select a city')}</option>
-                    {cities.map((city, index) => (
-                      <option key={index} value={city}>
-                        {city}
-                      </option>
-                    ))}
-                  </select>
+                    isClearable
+                    noOptionsMessage={() => t("No city available")} // Add this line
+                  />
                   {errors.city && <span className="families-error-message">{errors.city}</span>}
 
-                  <label>{t('Street')}</label>
-                  <select
-                    name="street"
-                    value={newFamily.street}
-                    onChange={handleAddFamilyChange}
+                  <label>{t("Street")}</label>
+                  <Select
+                    options={streetOptions}
+                    value={streetOptions.find((option) => option.value === newFamily.street)}
+                    onChange={(selectedOption) => {
+                      const street = selectedOption ? selectedOption.value : "";
+                      setNewFamily((prev) => ({
+                        ...prev,
+                        street,
+                      }));
+                    }}
+                    placeholder={t("Select a street")}
                     className={errors.street ? "error" : ""}
-                  >
-                    <option value="">{t('Select a street')}</option>
-                    {/* Placeholder for future street values */}
-                  </select>
+                    isClearable
+                    noOptionsMessage={() => t("No street available")} // Add this line
+                  />
                   {errors.street && <span className="families-error-message">{errors.street}</span>}
                 </div>
 
@@ -386,7 +837,7 @@ const Families = () => {
                     type="number"
                     name="apartment_number"
                     min="1"
-                    max="500"
+                    max="50000"
                     value={newFamily.apartment_number}
                     onChange={handleAddFamilyChange}
                     className={errors.apartment_number ? "error" : ""}
@@ -404,16 +855,30 @@ const Families = () => {
                   {errors.child_phone_number && <span className="families-error-message">{errors.child_phone_number}</span>}
 
                   <label>{t('Treating Hospital')}</label>
-                  <select
-                    name="treating_hospital"
-                    value={newFamily.treating_hospital}
-                    onChange={handleAddFamilyChange}
+                  <Select
+                    options={hospitalsList.map((hospital) => ({
+                      value: hospital,
+                      label: hospital,
+                    }))}
+                    value={
+                      hospitalsList
+                        .map((hospital) => ({ value: hospital, label: hospital }))
+                        .find((option) => option.value === newFamily.treating_hospital)
+                    }
+                    onChange={(selectedOption) => {
+                      setNewFamily((prev) => ({
+                        ...prev,
+                        treating_hospital: selectedOption ? selectedOption.value : "",
+                      }));
+                    }}
+                    placeholder={t('Select a hospital')}
                     className={errors.treating_hospital ? "error" : ""}
-                  >
-                    <option value="">{t('Select a hospital')}</option>
-                    {/* Placeholder for future hospital values */}
-                  </select>
-                  {errors.treating_hospital && <span className="families-error-message">{errors.treating_hospital}</span>}
+                    isClearable
+                    noOptionsMessage={() => t('No hospital available')}
+                  />
+                  {errors.treating_hospital && (
+                    <span className="families-error-message">{errors.treating_hospital}</span>
+                  )}
 
                   <label>{t('Date of Birth')}</label>
                   <input
@@ -466,10 +931,11 @@ const Families = () => {
                     <option value="זכר">{t('Male')}</option>
                   </select>
                   {errors.gender && <span className="families-error-message">{errors.gender}</span>}
+
                   <label>{t('ID')}</label>
                   <input
                     type="text"
-                    name="id"
+                    name="child_id"
                     value={newFamily.child_id}
                     onChange={handleAddFamilyChange}
                     className={errors.child_id ? "error" : ""}
