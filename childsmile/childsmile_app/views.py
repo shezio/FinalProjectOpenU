@@ -1119,6 +1119,7 @@ def create_volunteer_or_tutor(request):
         print(f"DEBUG: Incoming request data: {request.data}")
         # Extract data from the request
         data = request.data  # Use request.data for JSON payloads
+        user_id = data.get("id")
         first_name = data.get("first_name")
         surname = data.get("surname")
         age = int(data.get("age"))
@@ -1137,6 +1138,8 @@ def create_volunteer_or_tutor(request):
 
         # Validate required fields
         missing_fields = []
+        if not user_id:
+            missing_fields.append("id")
         if not first_name:
             missing_fields.append("first_name")
         if not surname:
@@ -1153,6 +1156,14 @@ def create_volunteer_or_tutor(request):
         if missing_fields:
             raise ValueError(f"Missing required fields: {', '.join(missing_fields)}")
 
+        # validate ID to have 9 digits
+        if not (100000000 <= int(user_id) <= 999999999):
+            raise ValueError("ID must be a 9-digit number.")
+        
+        # validate user_id to be unique
+        if SignedUp.objects.filter(id=user_id).exists():
+            raise ValueError("A user with this ID already exists.")
+
         # Check if a user with the same email already exists
         if SignedUp.objects.filter(email=email).exists():
             raise ValueError("A user with this email already exists.")
@@ -1165,6 +1176,7 @@ def create_volunteer_or_tutor(request):
 
         # Insert into SignedUp table
         signedup = SignedUp.objects.create(
+            id=user_id,
             first_name=first_name,
             surname=surname,
             age=age,
@@ -1331,7 +1343,33 @@ def get_complete_family_details(request):
             }
             for family in families
         ]
-        return JsonResponse({"families": families_data}, status=200)
+
+        # Fetch marital statuses only once
+        marital_statuses_data = cache.get("marital_statuses_data")
+        if not marital_statuses_data:
+            marital_statuses = Children.objects.values_list(
+                "marital_status", flat=True
+            ).distinct()
+            marital_statuses_data = [{"status": status} for status in marital_statuses]
+            cache.set("marital_statuses_data", marital_statuses_data, timeout=300)
+
+        # Fetch tutoring statuses only once
+        tutoring_statuses_data = cache.get("tutoring_statuses_data")
+        if not tutoring_statuses_data:
+            tutoring_statuses = Children.objects.values_list(
+                "tutoring_status", flat=True
+            ).distinct()
+            tutoring_statuses_data = [{"status": status} for status in tutoring_statuses]
+            cache.set("tutoring_statuses_data", tutoring_statuses_data, timeout=300)
+
+        return JsonResponse(
+            {
+                "families": families_data,
+                "marital_statuses": marital_statuses_data,
+                "tutoring_statuses": tutoring_statuses_data,
+            },
+            status=200,
+        )
     except Exception as e:
         print(f"DEBUG: An error occurred: {str(e)}")
         return JsonResponse({"error": str(e)}, status=500)
@@ -1361,6 +1399,7 @@ def create_family(request):
 
         # Validate required fields
         required_fields = [
+            "child_id",
             "childfirstname",
             "childsurname",
             "gender",
@@ -1384,6 +1423,7 @@ def create_family(request):
 
         # Create a new family record in the database
         family = Children.objects.create(
+            child_id=data["child_id"],  # Assuming child_id is provided in the request
             childfirstname=data["childfirstname"],
             childsurname=data["childsurname"],
             registrationdate= datetime.datetime.now(),

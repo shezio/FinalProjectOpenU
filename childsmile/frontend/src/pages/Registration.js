@@ -18,6 +18,7 @@ const Registration = () => {
 
   // Form state
   const [formData, setFormData] = useState({
+    id: '',
     first_name: "",
     surname: "",
     age: 18,
@@ -50,7 +51,9 @@ const Registration = () => {
   // Validate form fields
   const validate = () => {
     const newErrors = {};
-
+    if (!formData.id || isNaN(formData.id) || formData.id.length !== 9) {
+      newErrors.id = t('ID must be 9 digits long.');
+    }
     // Validate first_name and surname (Hebrew only, no spaces, no numbers)
     const hebrewRegex = /^[\u0590-\u05FF]+$/;
     if (!formData.first_name || !hebrewRegex.test(formData.first_name)) {
@@ -186,6 +189,16 @@ const Registration = () => {
               />
             </div>
             {errors.gender && <span className="error-message">{errors.gender}</span>}
+
+            <label>{t('ID')}</label>
+            <input
+              type="text"
+              name="id"
+              value={formData.id}
+              onChange={handleChange}
+              className={errors.id ? 'error' : ''}
+            />
+            {errors.id && <span className="error-message">{errors.id}</span>}
           </div>
 
           {/* עמודה שמאלית */}
