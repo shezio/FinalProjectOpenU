@@ -1465,3 +1465,87 @@ def create_family(request):
     except Exception as e:
         print(f"DEBUG: An error occurred while creating a family: {str(e)}")
         return JsonResponse({"error": str(e)}, status=500)
+
+@csrf_exempt
+@api_view(["PUT"])
+def update_family(request, child_id):
+    """
+    Update an existing family in the children table, including updating the child_id and propagating changes to related tables.
+    """
+    user_id = request.session.get("user_id")
+    if not user_id:
+        return JsonResponse(
+            {"detail": "Authentication credentials were not provided."}, status=403
+        )
+
+    # Check if the user has UPDATE permission on the "children" resource
+    if not has_permission(request, "children", "UPDATE"):
+        return JsonResponse(
+            {"error": "You do not have permission to update this family."}, status=401
+        )
+
+    try:
+        # Fetch the existing family record
+        try:
+            family = Children.objects.get(child_id=child_id)
+        except Children.DoesNotExist:
+            return JsonResponse({"error": "Family not found."}, status=404)
+
+        # Extract data from the request
+        data = request.data  # Use request.data for JSON payloads
+
+        # Handle updating the child_id
+        new_child_id = data.get("child_id")
+        if new_child_id and new_child_id != family.child_id:
+            # Check if the new child_id is unique
+            if Children.objects.filter(child_id=new_child_id).exists():
+                return JsonResponse(
+                    {"error": "A family with this child_id already exists."}, status=400
+                )
+
+            # Update child_id in related tables
+            with transaction.atomic():
+                # Update related tables
+                Tutorships.objects.filter(child_id=child_id).update(child_id=new_child_id)
+                Tasks.objects.filter(related_child_id=child_id).update(related_child_id=new_child_id)
+                # Add more updates for other related tables here...
+
+                # Update the child_id in the Children table
+                family.child_id = new_child_id
+
+        # Update other fields
+        family.childfirstname = data.get("childfirstname", family.childfirstname)
+        family.childsurname = data.get("childsurname", family.childsurname)
+        family.gender = True if data.get("gender") == "נקבה" else False
+        family.city = data.get("city", family.city)
+        family.child_phone_number = data.get("child_phone_number", family.child_phone_number)
+        family.treating_hospital = data.get("treating_hospital", family.treating_hospital)
+        family.date_of_birth = data.get("date_of_birth", family.date_of_birth)
+        family.medical_diagnosis = data.get("medical_diagnosis", family.medical_diagnosis)
+        family.diagnosis_date = data.get("diagnosis_date", family.diagnosis_date)
+        family.marital_status = data.get("marital_status", family.marital_status)
+        family.num_of_siblings = data.get("num_of_siblings", family.num_of_siblings)
+        family.details_for_tutoring = data.get("details_for_tutoring", family.details_for_tutoring)
+        family.additional_info = data.get("additional_info", family.additional_info)
+        family.tutoring_status = data.get("tutoring_status", family.tutoring_status)
+        family.current_medical_state = data.get("current_medical_state", family.current_medical_state)
+        family.when_completed_treatments = data.get("when_completed_treatments", family.when_completed_treatments)
+        family.father_name = data.get("father_name", family.father_name)
+        family.father_phone = data.get("father_phone", family.father_phone)
+        family.mother_name = data.get("mother_name", family.mother_name)
+        family.mother_phone = data.get("mother_phone", family.mother_phone)
+        family.street_and_apartment_number = data.get("street_and_apartment_number", family.street_and_apartment_number)
+        family.expected_end_treatment_by_protocol = data.get("expected_end_treatment_by_protocol", family.expected_end_treatment_by_protocol)
+        family.has_completed_treatments = data.get("has_completed_treatments", family.has_completed_treatments)
+        family.lastupdateddate = datetime.datetime.now()  # Update the last updated date
+
+        # Save the updated family record
+        family.save()
+
+        return JsonResponse(
+            {"message": "Family updated successfully", "family_id": family.child_id},
+            status=200,
+        )
+    except Exception as e:
+        print(f"DEBUG: An error occurred while updating the family: {str(e)}")
+        return JsonResponse({"error": str(e)}, status=500)
