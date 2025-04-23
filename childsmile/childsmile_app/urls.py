@@ -23,6 +23,9 @@ from .views import (
     get_pending_tutors,
     get_complete_family_details,
     create_family,
+    update_family,
+    delete_family,
+
 )
 
 from .unused_views import (
@@ -134,5 +137,15 @@ urlpatterns = [
         "api/create_family/",
         create_family,
         name="create_family",
+    ),
+    path(
+        "api/update_family/<int:child_id>/",
+        update_family,
+        name="update_family",
+    ),
+    path(
+        "api/delete_family/<int:child_id>/",
+        delete_family,
+        name="delete_family",
     ),
 ]
