@@ -1740,3 +1740,80 @@ VALUES
 ((SELECT feedback_id FROM childsmile_app_feedback WHERE staff_id = 30 ORDER BY "timestamp" DESC LIMIT 1),
  (SELECT CONCAT(first_name, ' ', last_name) FROM childsmile_app_staff WHERE staff_id = 30),
  3);
+
+
+--- need inserts that will eventually be used to create a possible matche
+--- insert 20  children that need a tutor
+
+-- Insert a new child into the childsmile_app_children table
+INSERT INTO childsmile_app_children (
+    child_id, 
+    childfirstname, 
+    childsurname, 
+    registrationdate, 
+    lastupdateddate, 
+    gender, 
+    responsible_coordinator, 
+    city, 
+    child_phone_number, 
+    treating_hospital, 
+    date_of_birth, 
+    medical_diagnosis, 
+    diagnosis_date, 
+    marital_status, 
+    num_of_siblings, 
+    details_for_tutoring, 
+    additional_info, 
+    tutoring_status, 
+    current_medical_state, 
+    when_completed_treatments, 
+    father_name, 
+    father_phone, 
+    mother_name, 
+    mother_phone, 
+    street_and_apartment_number, 
+    expected_end_treatment_by_protocol, 
+    has_completed_treatments
+)
+VALUES (
+    (select COALESCE(max(child_id), 0) from childsmile_app_children) + 1, -- Child ID (auto-incremented)
+    'איתי', -- First name
+    'לוי', -- Last name
+    current_timestamp, -- Registration date
+    current_timestamp, -- Last updated date
+    FALSE, -- Gender (TRUE for male, FALSE for female)
+    'ליה צוהר', -- Responsible coordinator
+    'תל אביב - יפו', -- City (must exist in settlements_n_streets.json)
+        '0' || COALESCE(
+            (select max(regexp_replace(child_phone_number, '-', '', 'g')::bigint) from childsmile_app_children where child_phone_number IS NOT NULL and child_phone_number != ''), 
+            0
+        ) + 1, -- Child's phone number
+    'שיבא תל השומר', -- Treating hospital (must exist in hospitals.json)
+    '2015-01-01', -- Date of birth (child is 8 years old)
+    'לוקמיה', -- Medical diagnosis
+    '2021-12-31', -- Diagnosis date
+    'נשואים', -- Marital status of parents
+    2, -- Number of siblings
+    'פרטים לחונכות', -- Details for tutoring
+    'מידע נוסף', -- Additional info
+    'למצוא_חונך', -- Tutoring status
+    'התחיל כימותרפיה', -- Current medical state
+    NULL, -- When completed treatments
+    'דוד', -- Father's name
+   '0' || 
+        COALESCE(
+            (select max(regexp_replace(father_phone, '-', '', 'g')::bigint) from childsmile_app_children where father_phone IS NOT NULL and father_phone != ''), 
+            0
+        ) + 1, -- Father's phone number
+    'שרה', -- Mother's name
+    '0' || 
+        COALESCE(
+            (select max(regexp_replace(mother_phone, '-', '', 'g')::bigint) from childsmile_app_children where mother_phone IS NOT NULL and mother_phone != ''), 
+            0
+        ) + 1, -- Mother's phone number
+    'הרצל 10', -- Street and apartment number (must exist in settlements_n_streets.json)
+    '2023-12-31', -- Expected end of treatment by protocol
+    FALSE -- Has completed treatments
+);
+--- inserts 19 more children with different names and details
+

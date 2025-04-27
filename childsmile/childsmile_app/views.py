@@ -1,3 +1,4 @@
+from django.db import DatabaseError
 from django.core.cache import cache
 from rest_framework import viewsets, status
 from rest_framework.permissions import IsAuthenticated
@@ -61,6 +62,21 @@ from .unused_views import (
     PotentialTutorshipMatchReportView,
 )
 
+
+def parse_date_field(date_value, field_name):
+    """
+    Parse a date field and return a valid date or None if the value is empty or invalid.
+    """
+    if date_value in [None, "", "null"]:
+        print(f"DEBUG: {field_name} is empty or null.")
+        return None
+    try:
+        parsed_date = datetime.datetime.strptime(date_value, "%Y-%m-%d").date()
+        print(f"DEBUG: {field_name} parsed successfully: {parsed_date}")
+        return parsed_date
+    except ValueError:
+        print(f"DEBUG: {field_name} has an invalid date format: {date_value}")
+        return None  # Return None instead of raising an exception
 
 def create_task_internal(task_data):
     """
@@ -1439,9 +1455,9 @@ def create_family(request):
             treating_hospital=data["treating_hospital"],
             date_of_birth=data["date_of_birth"],
             medical_diagnosis=data.get("medical_diagnosis"),  # Optional
-            diagnosis_date=data.get("diagnosis_date") if data.get(
-                "diagnosis_date"
-            ) else None,  # Optional
+            diagnosis_date=(
+                data.get("diagnosis_date") if data.get("diagnosis_date") else None
+            ),  # Optional
             marital_status=data["marital_status"],
             num_of_siblings=data["num_of_siblings"],
             details_for_tutoring=(
@@ -1454,9 +1470,11 @@ def create_family(request):
                 data["tutoring_status"] if data.get("tutoring_status") else "לא_רלוונטי"
             ),
             current_medical_state=data.get("current_medical_state"),  # Optional
-            when_completed_treatments=data.get("when_completed_treatments") if data.get(
-                "when_completed_treatments"
-            ) else None,  # Optional
+            when_completed_treatments=(
+                data.get("when_completed_treatments")
+                if data.get("when_completed_treatments")
+                else None
+            ),  # Optional
             father_name=data.get("father_name"),  # Optional
             father_phone=data.get("father_phone"),  # Optional
             mother_name=data.get("mother_name"),  # Optional
@@ -1464,11 +1482,11 @@ def create_family(request):
             street_and_apartment_number=data.get(
                 "street_and_apartment_number"
             ),  # Optional
-            expected_end_treatment_by_protocol=data.get(
-                "expected_end_treatment_by_protocol"
-            ) if data.get(
-                "expected_end_treatment_by_protocol"
-            ) else None,  # Optional
+            expected_end_treatment_by_protocol=(
+                data.get("expected_end_treatment_by_protocol")
+                if data.get("expected_end_treatment_by_protocol")
+                else None
+            ),  # Optional
             has_completed_treatments=data.get(
                 "has_completed_treatments", False
             ),  # Default to False
@@ -1521,10 +1539,10 @@ def update_family(request, child_id):
                 },
                 status=400,
             )
-        
-        print(f"DEBUG: child_id from request: {request_child_id}")
-        print(f"DEBUG: child_id from URL: {child_id}")
-        print(f"DEBUG: Incoming request data for update: {data}")
+
+        # print(f"DEBUG: child_id from request: {request_child_id}")
+        # print(f"DEBUG: child_id from URL: {child_id}")
+        # print(f"DEBUG: Incoming request data for update: {data}")
 
         required_fields = [
             "child_id",
@@ -1550,52 +1568,108 @@ def update_family(request, child_id):
             )
 
         # Update fields in the Children table
+        #print("DEBUG: Updating childfirstname...")
         family.childfirstname = data.get("childfirstname", family.childfirstname)
+
+        #print("DEBUG: Updating childsurname...")
         family.childsurname = data.get("childsurname", family.childsurname)
+
+        #print("DEBUG: Updating gender...")
         family.gender = True if data.get("gender") == "נקבה" else False
+
+        #print("DEBUG: Updating city...")
         family.city = data.get("city", family.city)
+
+        #print("DEBUG: Updating child_phone_number...")
         family.child_phone_number = data.get(
             "child_phone_number", family.child_phone_number
         )
+
+        #print("DEBUG: Updating treating_hospital...")
         family.treating_hospital = data.get(
             "treating_hospital", family.treating_hospital
         )
-        family.date_of_birth = data.get("date_of_birth", family.date_of_birth)
+
+        #print("DEBUG: Updating date_of_birth...")
+        family.date_of_birth = parse_date_field(
+            data.get("date_of_birth"), "date_of_birth"
+        )
+
+        #print("DEBUG: Updating medical_diagnosis...")
         family.medical_diagnosis = data.get(
             "medical_diagnosis", family.medical_diagnosis
         )
-        family.diagnosis_date = data.get("diagnosis_date", family.diagnosis_date)
+
+        #print("DEBUG: Updating diagnosis_date...")
+        family.diagnosis_date = parse_date_field(
+            data.get("diagnosis_date"), "diagnosis_date"
+        )
+
+        #print("DEBUG: Updating marital_status...")
         family.marital_status = data.get("marital_status", family.marital_status)
+
+        #print("DEBUG: Updating num_of_siblings...")
         family.num_of_siblings = data.get("num_of_siblings", family.num_of_siblings)
+
+        #print("DEBUG: Updating details_for_tutoring...")
         family.details_for_tutoring = data.get(
             "details_for_tutoring", family.details_for_tutoring
         )
+
+        #print("DEBUG: Updating additional_info...")
         family.additional_info = data.get("additional_info", family.additional_info)
+
+        #print("DEBUG: Updating tutoring_status...")
         family.tutoring_status = data.get("tutoring_status", family.tutoring_status)
+
+        #print("DEBUG: Updating current_medical_state...")
         family.current_medical_state = data.get(
             "current_medical_state", family.current_medical_state
         )
-        family.when_completed_treatments = data.get(
-            "when_completed_treatments", family.when_completed_treatments
+
+        #print("DEBUG: Updating when_completed_treatments...")
+        family.when_completed_treatments = parse_date_field(
+            data.get("when_completed_treatments"), "when_completed_treatments"
         )
+
+        #print("DEBUG: Updating father_name...")
         family.father_name = data.get("father_name", family.father_name)
+
+        #print("DEBUG: Updating father_phone...")
         family.father_phone = data.get("father_phone", family.father_phone)
+
+        #print("DEBUG: Updating mother_name...")
         family.mother_name = data.get("mother_name", family.mother_name)
+
+        #print("DEBUG: Updating mother_phone...")
         family.mother_phone = data.get("mother_phone", family.mother_phone)
+
+        #print("DEBUG: Updating street_and_apartment_number...")
         family.street_and_apartment_number = data.get(
             "street_and_apartment_number", family.street_and_apartment_number
         )
-        family.expected_end_treatment_by_protocol = data.get(
+
+        #print("DEBUG: Updating expected_end_treatment_by_protocol...")
+        family.expected_end_treatment_by_protocol = parse_date_field(
+            data.get("expected_end_treatment_by_protocol"),
             "expected_end_treatment_by_protocol",
-            family.expected_end_treatment_by_protocol,
         )
+
+        #print("DEBUG: Updating has_completed_treatments...")
         family.has_completed_treatments = data.get(
             "has_completed_treatments", family.has_completed_treatments
         )
-        family.lastupdateddate = datetime.datetime.now()  # Update the last updated date
+
+        #print("DEBUG: Updating lastupdateddate...")
+        family.lastupdateddate = datetime.datetime.now()
 
         # Save the updated family record
-        family.save()
+        try:
+            family.save()
+            print(f"DEBUG: Family with child_id {child_id} saved successfully.")
+        except DatabaseError as db_error:
+            print(f"DEBUG: Database error while saving family: {str(db_error)}")
+            return JsonResponse({"error": f"Database error: {str(db_error)}"}, status=500)
 
         # Propagate changes to related tables
         # Update childsmile_app_tasks
@@ -1640,8 +1714,8 @@ def update_family(request, child_id):
             current_medical_state=data.get(
                 "current_medical_state", family.current_medical_state
             ),
-            when_completed_treatments=data.get(
-                "when_completed_treatments", family.when_completed_treatments
+            when_completed_treatments=parse_date_field(
+                data.get("when_completed_treatments"), "when_completed_treatments"
             ),
             parent_name=(
                 data.get("father_name", family.father_name)
@@ -1680,6 +1754,7 @@ def update_family(request, child_id):
     except Exception as e:
         print(f"DEBUG: An error occurred while updating the family: {str(e)}")
         return JsonResponse({"error": str(e)}, status=500)
+
 
 @csrf_exempt
 @api_view(["DELETE"])
