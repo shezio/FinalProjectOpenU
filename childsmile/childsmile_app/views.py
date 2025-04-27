@@ -1159,7 +1159,7 @@ def create_volunteer_or_tutor(request):
         # validate ID to have 9 digits
         if not (100000000 <= int(user_id) <= 999999999):
             raise ValueError("ID must be a 9-digit number.")
-        
+
         # validate user_id to be unique
         if SignedUp.objects.filter(id=user_id).exists():
             raise ValueError("A user with this ID already exists.")
@@ -1305,6 +1305,8 @@ def get_complete_family_details(request):
                 "id": family.child_id,
                 "first_name": family.childfirstname,
                 "last_name": family.childsurname,
+                "street_and_apartment_number": family.street_and_apartment_number,
+                "city": family.city,
                 "address": f"{family.street_and_apartment_number}, {family.city}",
                 "registration_date": family.registrationdate.strftime("%d/%m/%Y"),
                 "last_updated_date": family.lastupdateddate.strftime("%d/%m/%Y"),
@@ -1359,7 +1361,9 @@ def get_complete_family_details(request):
             tutoring_statuses = Children.objects.values_list(
                 "tutoring_status", flat=True
             ).distinct()
-            tutoring_statuses_data = [{"status": status} for status in tutoring_statuses]
+            tutoring_statuses_data = [
+                {"status": status} for status in tutoring_statuses
+            ]
             cache.set("tutoring_statuses_data", tutoring_statuses_data, timeout=300)
 
         return JsonResponse(
@@ -1426,7 +1430,7 @@ def create_family(request):
             child_id=data["child_id"],  # Assuming child_id is provided in the request
             childfirstname=data["childfirstname"],
             childsurname=data["childsurname"],
-            registrationdate= datetime.datetime.now(),
+            registrationdate=datetime.datetime.now(),
             lastupdateddate=datetime.datetime.now(),
             gender=True if data["gender"] == "נקבה" else False,
             responsible_coordinator=user_id,  # the user who is creating the family - which is a Family Coordinator
@@ -1435,14 +1439,24 @@ def create_family(request):
             treating_hospital=data["treating_hospital"],
             date_of_birth=data["date_of_birth"],
             medical_diagnosis=data.get("medical_diagnosis"),  # Optional
-            diagnosis_date=data.get("diagnosis_date"),  # Optional
+            diagnosis_date=data.get("diagnosis_date") if data.get(
+                "diagnosis_date"
+            ) else None,  # Optional
             marital_status=data["marital_status"],
             num_of_siblings=data["num_of_siblings"],
-            details_for_tutoring=data["details_for_tutoring"] if data.get("details_for_tutoring") else "לא_רלוונטי",
+            details_for_tutoring=(
+                data["details_for_tutoring"]
+                if data.get("details_for_tutoring")
+                else "לא_רלוונטי"
+            ),
             additional_info=data.get("additional_info"),  # Optional
-            tutoring_status=data["tutoring_status"] if data.get("tutoring_status") else "לא_רלוונטי",
+            tutoring_status=(
+                data["tutoring_status"] if data.get("tutoring_status") else "לא_רלוונטי"
+            ),
             current_medical_state=data.get("current_medical_state"),  # Optional
-            when_completed_treatments=data.get("when_completed_treatments"),  # Optional
+            when_completed_treatments=data.get("when_completed_treatments") if data.get(
+                "when_completed_treatments"
+            ) else None,  # Optional
             father_name=data.get("father_name"),  # Optional
             father_phone=data.get("father_phone"),  # Optional
             mother_name=data.get("mother_name"),  # Optional
@@ -1452,7 +1466,9 @@ def create_family(request):
             ),  # Optional
             expected_end_treatment_by_protocol=data.get(
                 "expected_end_treatment_by_protocol"
-            ),  # Optional
+            ) if data.get(
+                "expected_end_treatment_by_protocol"
+            ) else None,  # Optional
             has_completed_treatments=data.get(
                 "has_completed_treatments", False
             ),  # Default to False
@@ -1466,11 +1482,13 @@ def create_family(request):
         print(f"DEBUG: An error occurred while creating a family: {str(e)}")
         return JsonResponse({"error": str(e)}, status=500)
 
+
 @csrf_exempt
 @api_view(["PUT"])
+@transaction.atomic
 def update_family(request, child_id):
     """
-    Update an existing family in the children table, including updating the child_id and propagating changes to related tables.
+    Update an existing family in the children table and propagate changes to related tables.
     """
     user_id = request.session.get("user_id")
     if not user_id:
@@ -1494,58 +1512,229 @@ def update_family(request, child_id):
         # Extract data from the request
         data = request.data  # Use request.data for JSON payloads
 
-        # Handle updating the child_id
-        new_child_id = data.get("child_id")
-        if new_child_id and new_child_id != family.child_id:
-            # Check if the new child_id is unique
-            if Children.objects.filter(child_id=new_child_id).exists():
-                return JsonResponse(
-                    {"error": "A family with this child_id already exists."}, status=400
-                )
+        # Validate that the child_id in the request matches the existing child_id
+        request_child_id = data.get("child_id")
+        if request_child_id and str(request_child_id) != str(child_id):
+            return JsonResponse(
+                {
+                    "error": "The child_id in the request does not match the existing child_id."
+                },
+                status=400,
+            )
+        
+        print(f"DEBUG: child_id from request: {request_child_id}")
+        print(f"DEBUG: child_id from URL: {child_id}")
+        print(f"DEBUG: Incoming request data for update: {data}")
 
-            # Update child_id in related tables
-            with transaction.atomic():
-                # Update related tables
-                Tutorships.objects.filter(child_id=child_id).update(child_id=new_child_id)
-                Tasks.objects.filter(related_child_id=child_id).update(related_child_id=new_child_id)
-                # Add more updates for other related tables here...
+        required_fields = [
+            "child_id",
+            "childfirstname",
+            "childsurname",
+            "gender",
+            "city",
+            "child_phone_number",
+            "treating_hospital",
+            "date_of_birth",
+            "marital_status",
+            "num_of_siblings",
+            "details_for_tutoring",
+            "marital_status",
+            "tutoring_status",
+            "street_and_apartment_number",
+        ]
+        missing_fields = [field for field in required_fields if field not in data]
+        if missing_fields:
+            return JsonResponse(
+                {"error": f"Missing required fields: {', '.join(missing_fields)}"},
+                status=400,
+            )
 
-                # Update the child_id in the Children table
-                family.child_id = new_child_id
-
-        # Update other fields
+        # Update fields in the Children table
         family.childfirstname = data.get("childfirstname", family.childfirstname)
         family.childsurname = data.get("childsurname", family.childsurname)
         family.gender = True if data.get("gender") == "נקבה" else False
         family.city = data.get("city", family.city)
-        family.child_phone_number = data.get("child_phone_number", family.child_phone_number)
-        family.treating_hospital = data.get("treating_hospital", family.treating_hospital)
+        family.child_phone_number = data.get(
+            "child_phone_number", family.child_phone_number
+        )
+        family.treating_hospital = data.get(
+            "treating_hospital", family.treating_hospital
+        )
         family.date_of_birth = data.get("date_of_birth", family.date_of_birth)
-        family.medical_diagnosis = data.get("medical_diagnosis", family.medical_diagnosis)
+        family.medical_diagnosis = data.get(
+            "medical_diagnosis", family.medical_diagnosis
+        )
         family.diagnosis_date = data.get("diagnosis_date", family.diagnosis_date)
         family.marital_status = data.get("marital_status", family.marital_status)
         family.num_of_siblings = data.get("num_of_siblings", family.num_of_siblings)
-        family.details_for_tutoring = data.get("details_for_tutoring", family.details_for_tutoring)
+        family.details_for_tutoring = data.get(
+            "details_for_tutoring", family.details_for_tutoring
+        )
         family.additional_info = data.get("additional_info", family.additional_info)
         family.tutoring_status = data.get("tutoring_status", family.tutoring_status)
-        family.current_medical_state = data.get("current_medical_state", family.current_medical_state)
-        family.when_completed_treatments = data.get("when_completed_treatments", family.when_completed_treatments)
+        family.current_medical_state = data.get(
+            "current_medical_state", family.current_medical_state
+        )
+        family.when_completed_treatments = data.get(
+            "when_completed_treatments", family.when_completed_treatments
+        )
         family.father_name = data.get("father_name", family.father_name)
         family.father_phone = data.get("father_phone", family.father_phone)
         family.mother_name = data.get("mother_name", family.mother_name)
         family.mother_phone = data.get("mother_phone", family.mother_phone)
-        family.street_and_apartment_number = data.get("street_and_apartment_number", family.street_and_apartment_number)
-        family.expected_end_treatment_by_protocol = data.get("expected_end_treatment_by_protocol", family.expected_end_treatment_by_protocol)
-        family.has_completed_treatments = data.get("has_completed_treatments", family.has_completed_treatments)
+        family.street_and_apartment_number = data.get(
+            "street_and_apartment_number", family.street_and_apartment_number
+        )
+        family.expected_end_treatment_by_protocol = data.get(
+            "expected_end_treatment_by_protocol",
+            family.expected_end_treatment_by_protocol,
+        )
+        family.has_completed_treatments = data.get(
+            "has_completed_treatments", family.has_completed_treatments
+        )
         family.lastupdateddate = datetime.datetime.now()  # Update the last updated date
 
         # Save the updated family record
         family.save()
 
+        # Propagate changes to related tables
+        # Update childsmile_app_tasks
+        Tasks.objects.filter(related_child_id=child_id).update(
+            updated_at=datetime.datetime.now(),
+        )
+
+        # Update childsmile_app_healthy
+        Healthy.objects.filter(child_id=child_id).update(
+            street_and_apartment_number=data.get(
+                "street_and_apartment_number", family.street_and_apartment_number
+            ),
+            father_name=(
+                data.get("father_name", family.father_name)
+                if family.father_name
+                else None
+            ),
+            father_phone=(
+                data.get("father_phone", family.father_phone)
+                if family.father_phone
+                else None
+            ),
+            mother_name=(
+                data.get("mother_name", family.mother_name)
+                if family.mother_name
+                else None
+            ),
+            mother_phone=(
+                data.get("mother_phone", family.mother_phone)
+                if family.mother_phone
+                else None
+            ),
+        )
+
+        # Update childsmile_app_matures
+        Matures.objects.filter(child_id=child_id).update(
+            full_address=data.get(
+                "street_and_apartment_number", family.street_and_apartment_number
+            )
+            + ", "
+            + data.get("city", family.city),
+            current_medical_state=data.get(
+                "current_medical_state", family.current_medical_state
+            ),
+            when_completed_treatments=data.get(
+                "when_completed_treatments", family.when_completed_treatments
+            ),
+            parent_name=(
+                data.get("father_name", family.father_name)
+                if family.father_name
+                else (
+                    data.get("mother_name", family.mother_name)
+                    if family.mother_name
+                    else None
+                )
+            ),
+            parent_phone=(
+                data.get("father_phone", family.father_phone)
+                if family.father_phone
+                else (
+                    data.get("mother_phone", family.mother_phone)
+                    if family.mother_phone
+                    else None
+                )
+            ),
+            additional_info=(
+                data.get("additional_info", family.additional_info)
+                if family.additional_info
+                else None
+            ),
+        )
+
+        print(f"DEBUG: Family with child_id {child_id} updated successfully.")
+
         return JsonResponse(
-            {"message": "Family updated successfully", "family_id": family.child_id},
+            {
+                "message": "Family updated successfully",
+                "family_id": family.child_id,
+            },
             status=200,
         )
     except Exception as e:
         print(f"DEBUG: An error occurred while updating the family: {str(e)}")
+        return JsonResponse({"error": str(e)}, status=500)
+
+@csrf_exempt
+@api_view(["DELETE"])
+def delete_family(request, child_id):
+    """
+    Delete a family from the children table after checking if the user has permission to delete it.
+    """
+    user_id = request.session.get("user_id")
+    if not user_id:
+        return JsonResponse(
+            {"detail": "Authentication credentials were not provided."}, status=403
+        )
+
+    # Check if the user has DELETE permission on the "children" resource
+    if not has_permission(request, "children", "DELETE"):
+        return JsonResponse(
+            {"error": "You do not have permission to delete this family."}, status=401
+        )
+
+    try:
+        # Fetch the existing family record
+        try:
+            family = Children.objects.get(child_id=child_id)
+        except Children.DoesNotExist:
+            return JsonResponse({"error": "Family not found."}, status=404)
+
+        # Delete the family record
+        family.delete()
+
+        # delete related records in childsmile_app_tasks
+        Tasks.objects.filter(related_child_id=child_id).delete()
+
+        print(f"DEBUG: Related tasks for child_id {child_id} deleted.")
+
+        # delete related records in childsmile_app_healthy
+        Healthy.objects.filter(child_id=child_id).delete()
+
+        print(f"DEBUG: Related healthy records for child_id {child_id} deleted.")
+
+        # delete related records in childsmile_app_matures
+        Matures.objects.filter(child_id=child_id).delete()
+
+        print(f"DEBUG: Related maturing records for child_id {child_id} deleted.")
+
+        # delete related records in childsmile_app_tutorships
+        Tutorships.objects.filter(child_id=child_id).delete()
+
+        print(f"DEBUG: Related tutorship records for child_id {child_id} deleted.")
+
+        print(f"DEBUG: Family with child_id {child_id} deleted successfully.")
+
+        return JsonResponse(
+            {"message": "Family deleted successfully", "family_id": child_id},
+            status=200,
+        )
+    except Exception as e:
+        print(f"DEBUG: An error occurred while deleting the family: {str(e)}")
         return JsonResponse({"error": str(e)}, status=500)

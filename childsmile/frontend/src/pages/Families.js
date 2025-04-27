@@ -13,11 +13,13 @@ import settlements from "../components/settlements.json"; // Import the settleme
 import hospitals from "../components/hospitals.json"; // Import the hospitals JSON file
 import settlementsAndStreets from "../components/settlements_n_streets.json";
 import Select from "react-select";
+import Modal from "react-modal";
 
-
+Modal.setAppElement('#root'); // Replace '#root' with the ID of your app's root element
 const Families = () => {
   const hospitalsList = hospitals.map((hospital) => hospital.trim()).filter((hospital) => hospital !== "");
-
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [familyToDelete, setFamilyToDelete] = useState(null);
   const [streets, setStreets] = useState([]);
   const { t } = useTranslation();
   const [loading, setLoading] = useState(true);
@@ -89,8 +91,6 @@ const Families = () => {
     if (name === "city") {
       const cityKey = value.trim();
       const cityStreets = processedSettlementsAndStreets[cityKey] || [];
-      console.log("City key:", cityKey);
-      console.log("City streets:", cityStreets);
       setStreets(cityStreets);
     }
   };
@@ -126,6 +126,8 @@ const Families = () => {
   const validate = () => {
     const newErrors = {};
     // need to verify ID is inserted and is numeric and 9 digits long
+    console.log("new ID:", newFamily.child_id); // Debugging
+    console.log("new ID length:", newFamily.child_id.length); // Debugging
     if (!newFamily.child_id || isNaN(newFamily.child_id) || newFamily.child_id.length !== 9) {
       newErrors.child_id = t("ID must be 9 digits long.");
     }
@@ -144,7 +146,9 @@ const Families = () => {
     if (!newFamily.apartment_number || isNaN(newFamily.apartment_number)) {
       newErrors.apartment_number = t("Apartment number must be a valid number.");
     }
-    if (!newFamily.child_phone_number || newFamily.child_phone_number.length !== 10) {
+    // Validate phone number (10 digits) after removing spaces and dashes
+    const phoneNumber = newFamily.child_phone_number.replace(/\D/g, ''); // Remove non-digit characters
+    if (!newFamily.child_phone_number || phoneNumber.length !== 10) {
       newErrors.child_phone_number = t("Phone number must be 10 digits.");
     }
     if (!newFamily.treating_hospital) {
@@ -163,6 +167,7 @@ const Families = () => {
       newErrors.tutoring_status = t("Tutoring status is required.");
     }
 
+    console.log("Validation errors:", newErrors); // Debugging
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -232,46 +237,72 @@ const Families = () => {
   };
 
   const openEditModal = (family) => {
-    setNewFamily({
-      child_id: family.child_id || '',
-      childfirstname: family.childfirstname || '',
-      childsurname: family.childsurname || '',
-      gender: family.gender || 'נקבה',
+    console.log("Editing family:", family);
+    const streetAndApartment = family.street_and_apartment_number ? family.street_and_apartment_number.split(' ') : ['', ''];
+    const apartmentNumber = streetAndApartment.pop(); // Extract the last part as the apartment number
+    const street = streetAndApartment.join(' '); // Join the remaining parts as the street name
+
+    // Format dates to YYYY-MM-DD for the input fields
+    const formatDate = (date) => {
+      if (!date) return '';
+      const [day, month, year] = date.split('/');
+      return `${year}-${month}-${day}`;
+    };
+
+    const newFamily = {
+      child_id: family.id.toString() || '', // Convert ID to string
+      childfirstname: family.first_name || '',
+      childsurname: family.last_name || '',
+      gender: family.gender ? 'נקבה' : 'זכר',
       city: family.city || '',
-      street: family.street || '',
-      apartment_number: family.apartment_number || '',
+      // Extract street and apartment number
+      street: street || '',
+      apartment_number: apartmentNumber || '',
       child_phone_number: family.child_phone_number || '',
       treating_hospital: family.treating_hospital || '',
-      date_of_birth: family.date_of_birth || '',
+      date_of_birth: formatDate(family.date_of_birth) || '',
       marital_status: family.marital_status || '',
       num_of_siblings: family.num_of_siblings || '',
       details_for_tutoring: family.details_for_tutoring || '',
       tutoring_status: family.tutoring_status || '',
       medical_diagnosis: family.medical_diagnosis || '',
-      diagnosis_date: family.diagnosis_date || '',
+      diagnosis_date: formatDate(family.diagnosis_date) || '',
       additional_info: family.additional_info || '',
       current_medical_state: family.current_medical_state || '',
-      when_completed_treatments: family.when_completed_treatments || '',
+      when_completed_treatments: formatDate(family.when_completed_treatments) || '',
       father_name: family.father_name || '',
       father_phone: family.father_phone || '',
       mother_name: family.mother_name || '',
       mother_phone: family.mother_phone || '',
-      expected_end_treatment_by_protocol: family.expected_end_treatment_by_protocol || '',
+      expected_end_treatment_by_protocol: formatDate(family.expected_end_treatment_by_protocol) || '',
       has_completed_treatments: family.has_completed_treatments || false,
-    });
+    };
+
+    const cityKey = family.city ? family.city.trim() : '';
+    const cityStreets = processedSettlementsAndStreets[cityKey] || [];
+    setStreets(cityStreets);
+
+
+    console.log("New Family State:", newFamily);
+    setNewFamily(newFamily);
     setEditFamily(family); // Set the family being edited
   };
 
+
   const handleEditFamilySubmit = async (e) => {
     e.preventDefault();
+    console.log("handleEditFamilySubmit triggered"); // Debugging
     if (!validate()) {
+      console.log("Validation failed", errors); // Debugging
       return; // Prevent submission if validation fails
     }
+    console.log("Validation passed"); // Debugging
     const combinedStreetAndApartment = `${newFamily.street} ${newFamily.apartment_number}`;
     const familyData = {
       ...newFamily,
       street_and_apartment_number: combinedStreetAndApartment,
     };
+    console.log("Family Data to be sent:", familyData); // Debugging
     try {
       const response = await axios.put(`/api/update_family/${editFamily.id}/`, familyData); // Use PUT API
       toast.success(t('Family updated successfully!'));
@@ -279,7 +310,7 @@ const Families = () => {
       fetchFamilies(); // Refresh the families list
     } catch (error) {
       console.error('Error updating family:', error);
-      showErrorToast(t('Error updating family'), t('Please try again later.'));
+      showErrorToast(t, 'Error updating family', error.message); // Use the toast utility for error messages
     }
   };
 
@@ -315,11 +346,26 @@ const Families = () => {
     setErrors({});
   };
 
-  const deleteFamily = (familyId) => {
-    if (window.confirm(t('Are you sure you want to delete this family?'))) {
-      // Placeholder for DELETE API call
-      toast.success(t('Family deleted successfully'), 'success');
-      setFamilies(families.filter((family) => family.id !== familyId));
+  const openDeleteModal = (familyId) => {
+    setFamilyToDelete(familyId);
+    setIsDeleteModalOpen(true);
+  };
+
+  const closeDeleteModal = () => {
+    setIsDeleteModalOpen(false);
+    setFamilyToDelete(null);
+  };
+
+  const confirmDeleteFamily = async () => {
+    try {
+      await axios.delete(`/api/delete_family/${familyToDelete}/`); // Replace with your DELETE API endpoint
+      toast.success(t('Family deleted successfully!'));
+      setFamilies(families.filter((family) => family.id !== familyToDelete));
+    } catch (error) {
+      console.error('Error deleting family:', error);
+      showErrorToast(t('Error deleting family'), t('Please try again later.'));
+    } finally {
+      closeDeleteModal();
     }
   };
 
@@ -381,7 +427,7 @@ const Families = () => {
                             <button className="edit-button" onClick={() => openEditModal(family)}>
                               {t('ערוך')}
                             </button>
-                            <button className="delete-button" onClick={() => deleteFamily(family.id)}>
+                            <button className="delete-button" onClick={() => openDeleteModal(family.id)}>
                               {t('מחק')}
                             </button>
                           </div>
@@ -417,6 +463,7 @@ const Families = () => {
                 <p>{t('Responsible Coordinator')}: {selectedFamily.responsible_coordinator || '---'}</p>
                 <p>{t('Additional Info')}: {selectedFamily.additional_info || '---'}</p>
                 <p>{t('Current Medical State')}: {selectedFamily.current_medical_state || '---'}</p>
+                <p>{t('Treating Hospital')}: {selectedFamily.treating_hospital || '---'}</p>
                 <p>{t('When Completed Treatments')}: {selectedFamily.when_completed_treatments || '---'}</p>
                 <p>{t('Father Name')}: {selectedFamily.father_name || '---'}</p>
                 <p>{t('Father Phone')}: {selectedFamily.father_phone || '---'}</p>
@@ -434,7 +481,7 @@ const Families = () => {
           <div className="modal show">
             <div className="modal-content">
               <span className="close" onClick={closeEditModal}>&times;</span>
-              <h2>{t('Edit Family')} {editFamily.childsurname}</h2>
+              <h2>{t('Edit Family')} {editFamily.last_name}</h2>
               <form onSubmit={handleEditFamilySubmit} className="form-grid">
                 <div className="form-column">
                   <label>{t('First Name')}</label>
@@ -457,19 +504,22 @@ const Families = () => {
                   />
                   {errors.childsurname && <span className="families-error-message">{errors.childsurname}</span>}
 
+
                   <label>{t("City")}</label>
                   <Select
                     options={cityOptions}
                     value={cityOptions.find((option) => option.value === newFamily.city)}
                     onChange={(selectedOption) => {
                       const city = selectedOption ? selectedOption.value : "";
-                      setNewFamily((prev) => ({
-                        ...prev,
-                        city,
-                        street: "", // Reset street when city changes
-                      }));
-                      const cityStreets = processedSettlementsAndStreets[city] || [];
-                      setStreets(cityStreets); // Update streets based on selected city
+                      setNewFamily((prev) => {
+                        const cityStreets = processedSettlementsAndStreets[city] || [];
+                        setStreets(cityStreets); // Update streets based on selected city
+                        return {
+                          ...prev,
+                          city,
+                          street: prev.street, // Keep the current street when city changes
+                        };
+                      });
                     }}
                     placeholder={t("Select a city")}
                     className={errors.city ? "error" : ""}
@@ -477,6 +527,7 @@ const Families = () => {
                     noOptionsMessage={() => t("No city available")}
                   />
                   {errors.city && <span className="families-error-message">{errors.city}</span>}
+
 
                   <label>{t("Street")}</label>
                   <Select
@@ -495,6 +546,7 @@ const Families = () => {
                     noOptionsMessage={() => t("No street available")}
                   />
                   {errors.street && <span className="families-error-message">{errors.street}</span>}
+
                 </div>
 
                 <div className="form-column">
@@ -601,13 +653,11 @@ const Families = () => {
                   <input
                     type="text"
                     name="child_id"
-                    value={newFamily.child_id}
-                    onChange={handleAddFamilyChange}
-                    className={errors.child_id ? "error" : ""}
+                    value={newFamily.child_id?.toString() || ""}
+                    className=""
+                    disabled
                   />
-                  {errors.child_id && <span className="families-error-message">{errors.child_id}</span>}
                 </div>
-
                 <div className="form-column">
                   <label>{t('Medical Diagnosis')}</label>
                   <input
@@ -756,7 +806,7 @@ const Families = () => {
                 </div>
 
                 <div className="form-actions">
-                  <button type="submit">{t('Submit')}</button>
+                  <button type="submit">{t('Update Family')}</button>
                   <button type="button" onClick={closeEditModal}>{t('Cancel')}</button>
                 </div>
               </form>
@@ -1091,13 +1141,36 @@ const Families = () => {
                 </div>
 
                 <div className="form-actions">
-                  <button type="submit">{t('Submit')}</button>
+                  <button type="submit">{t('Add Family')}</button>
                   <button type="button" onClick={closeAddModal}>{t('Cancel')}</button>
                 </div>
               </form>
             </div>
           </div>
         )}
+        {/* Delete Confirmation Modal */}
+        <Modal
+          isOpen={isDeleteModalOpen}
+          onRequestClose={closeDeleteModal}
+          contentLabel="Delete Confirmation"
+          className="delete-modal"
+          overlayClassName="delete-modal-overlay"
+        >
+          <h2>{t('Are you sure you want to delete this family?')}</h2>
+          <p style={{ color: 'red', fontWeight: 'bold' }}>
+            {t('Deleting a family will remove all associated data')}
+            <br />
+            {t('This action cannot be undone')}
+          </p>
+          <div className="modal-actions">
+            <button onClick={confirmDeleteFamily} className="yes-button">
+              {t('Yes')}
+            </button>
+            <button onClick={closeDeleteModal} className="no-button">
+              {t('No')}
+            </button>
+          </div>
+        </Modal>
       </div>
     </div>
   );
