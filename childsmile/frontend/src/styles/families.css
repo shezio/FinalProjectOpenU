@@ -15,9 +15,22 @@
 
 /* Families grid container */
 .families-grid-container {
-  flex: unset !important;
-  margin-top: 100px;
-  overflow-y: auto;
+  flex: unset !important; /* Prevent flex-grow from affecting the container */
+  margin-top: 250px;
+  overflow-y: auto; /* Enable vertical scrolling */
+  max-height: 70vh; /* Limit the height to 70% of the viewport height */
+  border: 1px solid #ddd; /* Optional: Add a border to visually separate the container */
+  background-color: white; /* Ensure the background matches the table */
+  padding: 0; /* Remove any padding that might add extra space */
+  box-sizing: border-box; /* Ensure padding and border are included in the height calculation */
+  margin-bottom: 200px; /* Add some space at the bottom */
+}
+
+@media (max-width: 2000px) {
+  .families-grid-container {
+    margin-top: 300px; /* Increase margin-top for smaller screens */
+    margin-bottom: 200px; /* Increase margin-bottom for smaller screens */
+  }
 }
 
 /* Table styling */
@@ -36,6 +49,9 @@
 .families-data-grid th {
   background-color: #f4f4f4;
   font-weight: bold;
+  position: sticky !important;
+  top: 0; /* Stick to the top of the container */
+  z-index: 2;
 }
 
 .families-data-grid tr:nth-child(even) {

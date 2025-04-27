@@ -9,7 +9,6 @@ import '../styles/common.css';
 import '../styles/families.css'; // Import the CSS file for families
 import "../i18n"; // Import i18n configuration
 import { showErrorToast } from '../components/toastUtils'; // Import the toast utility
-import settlements from "../components/settlements.json"; // Import the settlements JSON file
 import hospitals from "../components/hospitals.json"; // Import the hospitals JSON file
 import settlementsAndStreets from "../components/settlements_n_streets.json";
 import Select from "react-select";
@@ -195,6 +194,39 @@ const Families = () => {
     }
   };
 
+
+  const openAddModal = () => {
+    setNewFamily({
+      child_id: '',
+      childfirstname: '',
+      childsurname: '',
+      gender: 'נקבה', // Default to נקבה
+      city: '',
+      street: '',
+      apartment_number: '',
+      child_phone_number: '',
+      treating_hospital: '',
+      date_of_birth: '',
+      marital_status: '',
+      num_of_siblings: '',
+      details_for_tutoring: '',
+      tutoring_status: '',
+      medical_diagnosis: '',
+      diagnosis_date: '',
+      additional_info: '',
+      current_medical_state: '',
+      when_completed_treatments: '',
+      father_name: '',
+      father_phone: '',
+      mother_name: '',
+      mother_phone: '',
+      expected_end_treatment_by_protocol: '',
+      has_completed_treatments: false, // Default to false
+    });
+    setErrors({}); // Clear any previous validation errors
+    setShowAddModal(true); // Open the modal
+  };
+  
   const closeAddModal = () => {
     setShowAddModal(false);
     setNewFamily({
@@ -386,7 +418,7 @@ const Families = () => {
         />
         <div className="filter-create-container">
           <div className="create-task">
-            <button onClick={() => setShowAddModal(true)}>
+          <button onClick={openAddModal}>
               {t('Add New Family')}
             </button>
           </div>
