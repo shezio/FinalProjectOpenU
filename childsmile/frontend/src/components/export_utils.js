@@ -454,6 +454,8 @@ export const exportPossibleMatchesToExcel = (matches, t) => {
     t("Tutor City"),
     t("Child Age"),
     t("Tutor Age"),
+    t("Child Gender"),
+    t("Tutor Gender"),
     t("Distance Between Cities (km)"),
     t("Grade"),
   ];
@@ -464,6 +466,8 @@ export const exportPossibleMatchesToExcel = (matches, t) => {
     match.tutor_city,
     match.child_age,
     match.tutor_age,
+    match.child_gender ? t('Female') : t('Male'),
+    match.tutor_gender ? t('Female') : t('Male'),
     match.distance_between_cities,
     match.grade,
   ]);
@@ -521,6 +525,8 @@ export const exportPossibleMatchesToPDF = (matches, t) => {
     t("Tutor City"),
     t("Child Age"),
     t("Tutor Age"),
+    t("Child Gender"),
+    t("Tutor Gender"),
     t("Distance Between Cities (km)"),
     t("Grade"),
   ].reverse(); // Reverse the order of headers for RTL
@@ -531,6 +537,8 @@ export const exportPossibleMatchesToPDF = (matches, t) => {
     reverseText(match.tutor_city), // Reverse for RTL
     match.child_age, // Keep numbers as is
     match.tutor_age, // Keep numbers as is
+    reverseText(match.child_gender ? t('Female') : t('Male')), // Reverse for RTL
+    reverseText(match.tutor_gender ? t('Female') : t('Male')), // Reverse for RTL
     match.distance_between_cities, // Keep numbers as is
     match.grade, // Keep numbers as is
   ]).map(row => row.reverse()); // <-- הפיכת כל שורה
@@ -551,6 +559,9 @@ export const exportPossibleMatchesToPDF = (matches, t) => {
       5: { halign: 'right' }, // Align sixth column to the right
       6: { halign: 'right' }, // Align seventh column to the right
       7: { halign: 'right' }, // Align eighth column to the right
+      8: { halign: 'right' },
+      9: { halign: 'right' },
+      
     },
     margin: { left: 10, right: 10 }, // Add margins to prevent clipping
     tableWidth: 'auto', // Automatically adjust table width to fit the page

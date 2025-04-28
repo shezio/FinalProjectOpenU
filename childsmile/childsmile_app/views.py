@@ -997,6 +997,9 @@ def possible_tutorship_matches_report(request):
 
         # Convert the data to a list of dictionaries
         possible_matches_data = list(possible_matches)
+        print(
+            f"DEBUG: Possible matches data: {possible_matches_data}"
+        )  # Debug log
 
         # Return the data as JSON
         return JsonResponse(

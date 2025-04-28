@@ -288,6 +288,8 @@ class PossibleMatches(models.Model):
     tutor_city = models.CharField(max_length=255)
     child_age = models.IntegerField()
     tutor_age = models.IntegerField()
+    child_gender = models.BooleanField()
+    tutor_gender = models.BooleanField()
     distance_between_cities = models.IntegerField(default=0)
     grade = models.IntegerField()
     is_used = models.BooleanField(default=False)

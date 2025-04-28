@@ -26,6 +26,8 @@ const PossibleTutorshipMatchesReport = () => {
         const normalizedMatches = allMatches.map((match) => ({
           ...match,
           distance_between_cities: parseFloat(match.distance_between_cities), // Convert to number
+          child_gender_label: match.child_gender ? t("Female") : t("Male"), // Pre-compute gender labels
+          tutor_gender_label: match.tutor_gender ? t("Female") : t("Male"), // Pre-compute gender labels
         }));
         console.log("Normalized Matches:", normalizedMatches); // Log normalized data
         setMatches(normalizedMatches);
@@ -113,28 +115,22 @@ const PossibleTutorshipMatchesReport = () => {
                 <table className="tutorship-pending-data-grid">
                   <thead>
                     <tr>
+                      <th>{t("Select")}</th>
                       <th>{t("Child Full Name")}</th>
                       <th>{t("Tutor Full Name")}</th>
                       <th>{t("Child City")}</th>
                       <th>{t("Tutor City")}</th>
                       <th>{t("Child Age")}</th>
                       <th>{t("Tutor Age")}</th>
+                      <th>{t("Child Gender")}</th>
+                      <th>{t("Tutor Gender")}</th>
                       <th>{t("Distance Between Cities (km)")}</th>
                       <th>{t("Grade")}</th>
-                      <th>{t("Select")}</th>
                     </tr>
                   </thead>
                   <tbody>
                     {filteredMatches.map((match, index) => (
                       <tr key={index}>
-                        <td>{match.child_full_name}</td>
-                        <td>{match.tutor_full_name}</td>
-                        <td>{match.child_city}</td>
-                        <td>{match.tutor_city}</td>
-                        <td>{match.child_age}</td>
-                        <td>{match.tutor_age}</td>
-                        <td>{match.distance_between_cities}</td>
-                        <td>{match.grade}</td>
                         <td>
                           <input
                             type="checkbox"
@@ -146,6 +142,16 @@ const PossibleTutorshipMatchesReport = () => {
                             }}
                           />
                         </td>
+                        <td>{match.child_full_name}</td>
+                        <td>{match.tutor_full_name}</td>
+                        <td>{match.child_city}</td>
+                        <td>{match.tutor_city}</td>
+                        <td>{match.child_age}</td>
+                        <td>{match.tutor_age}</td>
+                        <td>{match.child_gender_label}</td>
+                        <td>{match.tutor_gender_label}</td>
+                        <td>{match.distance_between_cities}</td>
+                        <td>{match.grade}</td>
                       </tr>
                     ))}
                   </tbody>
