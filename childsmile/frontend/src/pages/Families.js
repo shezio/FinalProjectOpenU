@@ -68,7 +68,8 @@ const Families = () => {
       setTutoringStatuses(response.data.tutoring_statuses.map((item) => item.status)); // Extract tutoring statuses
     } catch (error) {
       console.error('Error fetching families:', error);
-      showErrorToast(t('Error fetching families data'), t('Please try again later.'));
+      showErrorToast(t, 'Error fetching families data', error); // Use the reusable function
+      
       setFamilies([]); // Fallback to an empty array in case of an error
     } finally {
       setLoading(false);
@@ -190,7 +191,7 @@ const Families = () => {
       fetchFamilies(); // Refresh the families list
     } catch (error) {
       console.error('Error adding family:', error);
-      showErrorToast(t('Error adding family'), t('Please try again later.'));
+      showErrorToast(t, 'Error adding family', error); // Use the toast utility for error messages);
     }
   };
 
@@ -342,7 +343,7 @@ const Families = () => {
       fetchFamilies(); // Refresh the families list
     } catch (error) {
       console.error('Error updating family:', error);
-      showErrorToast(t, 'Error updating family', error.message); // Use the toast utility for error messages
+      showErrorToast(t, 'Error updating family', error); // Use the toast utility for error messages
     }
   };
 
@@ -395,7 +396,7 @@ const Families = () => {
       setFamilies(families.filter((family) => family.id !== familyToDelete));
     } catch (error) {
       console.error('Error deleting family:', error);
-      showErrorToast(t('Error deleting family'), t('Please try again later.'));
+      showErrorToast(t, 'Error deleting family', error); // Use the toast utility for error messages
     } finally {
       closeDeleteModal();
     }

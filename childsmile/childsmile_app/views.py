@@ -34,8 +34,10 @@ import datetime
 import requests
 import urllib3
 from django.utils.timezone import make_aware
+from geopy.exc import GeocoderTimedOut
 from geopy.geocoders import Nominatim
 import threading, time
+from time import sleep
 
 from .unused_views import (
     PermissionsViewSet,
@@ -689,11 +691,9 @@ def update_task(request, task_id):
         print(f"DEBUG: An error occurred: {str(e)}")
         return JsonResponse({"error": str(e)}, status=500)
 
-
 @csrf_exempt
 @api_view(["GET"])
 def get_families_per_location_report(request):
-
     user_id = request.session.get("user_id")
     if not user_id:
         return JsonResponse(
@@ -720,10 +720,24 @@ def get_families_per_location_report(request):
         if to_date:
             children = children.filter(registrationdate__lte=to_date)
 
-        geolocator = Nominatim(user_agent="childsmile")
+        geolocator = Nominatim(user_agent="childsmile", timeout=5)  # Set a higher timeout
         children_data = []
+
+        def geocode_with_retries(city, retries=3, delay=2):
+            """
+            Attempt to geocode a city with retries.
+            """
+            for attempt in range(retries):
+                try:
+                    return geolocator.geocode(city)
+                except GeocoderTimedOut:
+                    print(f"DEBUG: Geocoding timed out for city '{city}', retrying ({attempt + 1}/{retries})...")
+                    sleep(delay)
+            print(f"DEBUG: Failed to geocode city '{city}' after {retries} retries.")
+            return None
+
         for child in children:
-            location = geolocator.geocode(child.city)
+            location = geocode_with_retries(child.city)
             children_data.append(
                 {
                     "first_name": child.childfirstname,
