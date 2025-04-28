@@ -226,8 +226,10 @@
     /* Hide overflow if the text is too long */
     text-overflow: ellipsis;
     /* Add ellipsis for overflowing text */
-    word-wrap: break-word; /* Allow text to wrap within cells */
-    white-space: normal; /* Prevent text from overflowing */
+    word-wrap: break-word;
+    /* Allow text to wrap within cells */
+    white-space: normal;
+    /* Prevent text from overflowing */
 
 }
 
@@ -248,11 +250,16 @@
 }
 
 .page-content .no-data {
-    width: 100%; /* Make it span the full width */
-    text-align: center; /* Center the text */
-    font-size: 48px; /* Adjust font size for better visibility */
-    font-weight: bold; /* Make the text bold */
-    color: #555; /* Use a neutral color */
+    width: 100%;
+    /* Make it span the full width */
+    text-align: center;
+    /* Center the text */
+    font-size: 48px;
+    /* Adjust font size for better visibility */
+    font-weight: bold;
+    /* Make the text bold */
+    color: #555;
+    /* Use a neutral color */
     /* no wrap */
     white-space: nowrap;
 }
@@ -382,7 +389,7 @@
     /* Subtle shadow for depth */
     overflow: hidden;
     /* Prevent overflow */
-    width: 1000px;
+    width: 1500px;
 }
 
 /* Map section */
@@ -409,6 +416,27 @@
 
 /* Grid section */
 .families-grid-container {
+    flex: 2;
+    /* Take up 2 parts of the available space */
+    overflow-x: auto;
+    /* Allow horizontal scrolling if needed */
+    background-color: #fff;
+    /* White background for the grid */
+    border: 1px solid #ddd;
+    /* Border for clarity */
+    border-radius: 8px;
+    /* Rounded corners */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    /* Subtle shadow for depth */
+    padding: 20px;
+    /* Add padding inside the grid container */
+    max-height: 100%;
+    /* Ensure the grid doesn't overflow vertically */
+    overflow-y: auto;
+    /* Enable vertical scrolling if needed */
+}
+
+.families-location-grid-container {
     flex: 2;
     /* Take up 2 parts of the available space */
     overflow-x: auto;
@@ -489,11 +517,16 @@
 
 /* No data message */
 .families-grid-container .no-data {
-    width: 100%; /* Make it span the full width */
-    text-align: center; /* Center the text */
-    font-size: 48px; /* Adjust font size for better visibility */
-    font-weight: bold; /* Make the text bold */
-    color: #555; /* Use a neutral color */
+    width: 100%;
+    /* Make it span the full width */
+    text-align: center;
+    /* Center the text */
+    font-size: 48px;
+    /* Adjust font size for better visibility */
+    font-weight: bold;
+    /* Make the text bold */
+    color: #555;
+    /* Use a neutral color */
 }
 
 /* Checkbox styles */
@@ -516,33 +549,81 @@
     height: 100%;
     /* Ensure the Leaflet map fills the container */
     width: 100%;
-    position: absolute; /* Ensure it stretches within its parent */
+    position: absolute;
+    /* Ensure it stretches within its parent */
     top: 0;
     left: 0;
+    background-color: #e6e6e6;
 }
 
+.leaflet-tile {
+    background-color: transparent; /* Ensure no background color on tiles */
+    border: none; /* Remove any borders */
+    box-shadow: none; /* Remove any shadows */
+  }
+
 .large-slider {
-    width: 400px; /* Increase the width */
-    height: 10px; /* Increase the height */
+    width: 400px;
+    /* Increase the width */
+    height: 10px;
+    /* Increase the height */
     appearance: revert;
     background: #ddd;
     border-radius: 5px;
     outline: none;
-  }
-  
-  .large-slider::-webkit-slider-thumb {
+}
+
+.large-slider::-webkit-slider-thumb {
     appearance: none;
-    width: 20px; /* Increase thumb size */
+    width: 20px;
+    /* Increase thumb size */
     height: 20px;
-    background: #4caf50; /* Green thumb */
+    background: #4caf50;
+    /* Green thumb */
     border-radius: 50%;
     cursor: pointer;
-  }
-  
-  .large-slider::-moz-range-thumb {
+}
+
+.large-slider::-moz-range-thumb {
     width: 20px;
     height: 20px;
     background: #4caf50;
     border-radius: 50%;
     cursor: pointer;
+}
+
+.map-error {
+    text-align: center;
+    color: red;
+    font-size: 2rem;
+    margin-top: 200px;
+}
+
+.map-loader {
+    border: 15px solid #f3f3f3; /* Thicker border */
+    border-top: 15px solid #3498db; /* Thicker border */
+    border-right: 15px solid #3498db; /* Extend the arc */
+    border-radius: 50%;
+    width: 200px; /* Wider loader */
+    height: 200px; /* Wider loader */
+    animation: spin 1s linear infinite; /* Slower spin for better visibility */
+    position: absolute; /* Position relative to the parent container */
+    top: 30%; /* Center vertically */
+    left: 30%; /* Center horizontally */
+    transform: translate(-50%, -50%); /* Adjust for exact centering */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 20px; /* Adjust font size as needed */
+    text-align: center;
+  }
+  
+  @keyframes spin {
+    0% {
+      transform: rotate(0deg);
+    }
+  
+    100% {
+      transform: rotate(360deg);
+    }
   }

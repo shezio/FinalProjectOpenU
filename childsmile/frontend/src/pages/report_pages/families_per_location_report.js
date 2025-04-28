@@ -16,6 +16,7 @@ import "leaflet-easyprint";
 import L from "leaflet";
 import markerIcon from "leaflet/dist/images/marker-icon.png";
 import markerShadow from "leaflet/dist/images/marker-shadow.png";
+import { showErrorToast } from "../../components/toastUtils";
 
 // Fix Leaflet's default icon paths
 delete L.Icon.Default.prototype._getIconUrl;
@@ -29,6 +30,9 @@ L.Icon.Default.mergeOptions({
 const FamiliesPerLocationReport = () => {
   const [families, setFamilies] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [locationsLoading, setLocationsLoading] = useState(false);
+  const [mapError, setMapError] = useState(false);
+  const [mapLoading, setMapLoading] = useState(true);
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
   const { t } = useTranslation();
@@ -36,27 +40,47 @@ const FamiliesPerLocationReport = () => {
 
   const hasPermissionToView = hasViewPermissionForTable("children");
 
-  const fetchData = () => {
+  const fetchData = async () => {
     setLoading(true);
-    axios
-      .get("/api/reports/families-per-location-report/", {
+    setLocationsLoading(true); // Start geocoding process
+    try {
+      const response = await axios.get("/api/reports/families-per-location-report/", {
         params: { from_date: fromDate, to_date: toDate },
-      })
-      .then((response) => {
-        setFamilies(response.data.families_per_location || []);
-      })
-      .catch((error) => {
-        console.error("Error fetching families per location report:", error);
-        toast.error(t("Error fetching data"));
-      })
-      .finally(() => {
-        setLoading(false);
       });
+      const familiesData = response.data.families_per_location || [];
+
+      // Simulate geocoding process
+      const geocodedFamilies = await Promise.all(
+        familiesData.map(async (family) => {
+          if (family.latitude && family.longitude) {
+            return family; // Skip geocoding if already available
+          }
+          // Simulate geocoding delay (replace with actual geocoding logic if needed)
+          await new Promise((resolve) => setTimeout(resolve, 100));
+          return { ...family, latitude: null, longitude: null }; // Default values
+        })
+      );
+
+      setFamilies(geocodedFamilies);
+    } catch (error) {
+      console.error("Error fetching families per location report:", error);
+      showErrorToast(t, 'Error fetching families per location report', error); // Use the 
+    } finally {
+      setLoading(false);
+      setLocationsLoading(false); // Geocoding process complete
+      setMapLoading(false); // Map loading complete
+    }
+  };
+
+  const handleMapError = () => {
+    setMapError(true); // Set mapError to true if the map fails to load
+    setMapLoading(false); // Stop loading state for the map
   };
 
   const refreshData = () => {
     setFromDate("");
     setToDate("");
+    setMapLoading(true);
     fetchData();
   };
 
@@ -66,14 +90,14 @@ const FamiliesPerLocationReport = () => {
       console.error("Report container not found");
       return;
     }
-  
+
     // Show loader on the export button
     const exportButton = document.querySelector(".export-map-button");
     if (exportButton) {
       exportButton.disabled = true;
       exportButton.textContent = t("Exporting...");
     }
-  
+
     // Use html2canvas to capture the entire container
     html2canvas(reportContainer, {
       useCORS: true, // Enables image capture from cross-origin tiles
@@ -99,7 +123,7 @@ const FamiliesPerLocationReport = () => {
         }
       });
   };
-  
+
 
   useEffect(() => {
     if (hasPermissionToView) {
@@ -181,7 +205,7 @@ const FamiliesPerLocationReport = () => {
         </div>
         <div className="families-report-container">
           {/* Grid Section */}
-          <div className="families-grid-container">
+          <div className="families-location-grid-container ">
             {loading ? (
               <div className="loader">{t("Loading data...")}</div>
             ) : families.length === 0 ? (
@@ -221,34 +245,42 @@ const FamiliesPerLocationReport = () => {
           </div>
           {/* Map Section */}
           <div className="families-map-container">
-            <MapContainer
-              center={[31.0461, 34.8516]}
-              zoom={7}
-              style={{ height: "100%", width: "100%" }}
-              whenCreated={(mapInstance) => {
-                mapRef.current = mapInstance; // Store the map instance in the ref
-              }}
-            >
-              <TileLayer
-                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                attribution="" // Remove attribution text
-              />
-              {families.map(
-                (family, index) =>
-                  family.latitude &&
-                  family.longitude && (
-                    <Marker
-                      key={index}
-                      position={[family.latitude, family.longitude]}
-                    >
-                      <Popup>
-                        {`${family.first_name} ${family.last_name}`} -{" "}
-                        {family.city}
-                      </Popup>
-                    </Marker>
-                  )
-              )}
-            </MapContainer>
+            {mapError ? (
+              <div className="map-error">{t("Failed to load the map.")}</div>
+            ) : mapLoading ? (
+              <div className="map-loader">{t("Loading map...")}</div>
+            ) : (
+              <MapContainer
+                center={[31.5, 35.0]} // Adjusted coordinates to show more of the north
+                zoom={8}
+                style={{ height: "100%", width: "100%" }}
+                whenCreated={(mapInstance) => {
+                  mapRef.current = mapInstance; // Store the map instance in the ref
+                }}
+              >
+                <TileLayer
+                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                  attribution="" // Remove attribution text
+                  onError={handleMapError} // Handle tile loading error
+                  bounds={[[90, -180], [-90, 180]]} /* Optional: restrict map bounds */
+                />
+                {families.map(
+                  (family, index) =>
+                    family.latitude &&
+                    family.longitude && (
+                      <Marker
+                        key={index}
+                        position={[family.latitude, family.longitude]}
+                      >
+                        <Popup>
+                          {`${family.first_name} ${family.last_name}`} - {" "}
+                          {family.city}
+                        </Popup>
+                      </Marker>
+                    )
+                )}
+              </MapContainer>
+            )}
           </div>
         </div>
       </div>

@@ -285,6 +285,15 @@ const resources = {
       'Are you sure you want to delete this family?': 'האם אתה בטוח שברצונך למחוק משפחה זו?',
       'Deleting a family will remove all associated data': 'מחיקת משפחה תסיר את כל הנתונים הקשורים אליה',
       'This action cannot be undone': 'פעולה זו אינה ניתנת לביטול!',
+      'Error fetching families per location report': 'שגיאה בטעינת דוח משפחות לפי מיקום',
+      'Error fetching new families report': 'שגיאה בטעינת דוח משפחות חדשות',
+      'Error fetching families waiting for tutorship report': 'שגיאה בטעינת דוח משפחות הממתינות לחונכות',
+      'Error fetching possible tutorship matches report': 'שגיאה בטעינת דוח התאמות חניך חונך פוטנציאליות',
+      'Error fetching volunteer feedback report': 'שגיאה בטעינת דוח משוב מתנדבים',
+      'Error fetching tutor feedback report': 'שגיאה בטעינת דוח משוב חונכים',
+      'Error fetching active tutors report': 'שגיאה בטעינת דוח חונכים פעילים',
+      "Failed to load the map.": "טעינת המפה נכשלה",
+      "Loading map...": "מפה בטעינה...",
     }
   }
 };
