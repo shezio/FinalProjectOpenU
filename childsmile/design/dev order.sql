@@ -1,41 +1,38 @@
-### Development Order
-1. **Roles and Permissions**: These are foundational for managing access control.
-2. **Staff**: Essential for user management.
-3. **SignedUp**: To manage individuals who sign up for the program.
-4. **General_Volunteer** and **Pending_Tutor**: To manage volunteers and tutors.
-5. **Tutors**: To manage tutor-specific details.
-6. **Children**: To manage child-specific details.
-7. **Tutorships**: To manage the relationship between tutors and children.
-8. **Matures** and **Healthy**: To manage mature and healthy children.
-9. **Feedback**: To manage feedback from staff.
-10. **Tasks**: To manage tasks assigned to staff.
-
-### Sample Inserts
-Here are the sample inserts for each table, with texts in Hebrew:
+--- Development Order
+-- **Roles and Permissions**: These are foundational for managing access control.
+-- **Staff**: Essential for user management.
+-- **SignedUp**: To manage individuals who sign up for the program.
+-- **General_Volunteer** and **Pending_Tutor**: To manage volunteers and tutors.
+-- **Tutors**: To manage tutor-specific details.
+-- **Children**: To manage child-specific details.
+-- **Tutorships**: To manage the relationship between tutors and children.
+-- **Matures** and **Healthy**: To manage mature and healthy children.
+-- **Feedback**: To manage feedback from staff.
+-- **Tasks**: To manage tasks assigned to staff.
 
 
-### Table names in db after the django migrations are:
-- childsmile_app_role
-- childsmile_app_permissions
-- childsmile_app_staff
-- childsmile_app_signedup
-- childsmile_app_general_volunteer
-- childsmile_app_pending_tutor
-- childsmile_app_tutors
-- childsmile_app_children
-- childsmile_app_tutorships
-- childsmile_app_matures
-- childsmile_app_healthy
-- childsmile_app_feedback
-- childsmile_app_tutor_feedback
-- childsmile_app_general_v_feedback
-- childsmile_app_tasks
-- childsmile_app_task_types
+--- Table names in db after the django migrations are:
+-- childsmile_app_role
+-- childsmile_app_permissions
+-- childsmile_app_staff
+-- childsmile_app_signedup
+-- childsmile_app_general_volunteer
+-- childsmile_app_pending_tutor
+-- childsmile_app_tutors
+-- childsmile_app_children
+-- childsmile_app_tutorships
+-- childsmile_app_matures
+-- childsmile_app_healthy
+-- childsmile_app_feedback
+-- childsmile_app_tutor_feedback
+-- childsmile_app_general_v_feedback
+-- childsmile_app_tasks
+-- childsmile_app_task_types
 
-#### Role Table -
-### ROLES  רכז מתנדבים ,רכז משפחות,רכז חונכים,רכז בוגרים
-רכז בריאים,רכז טכני ,מנהל מערכתת,מתנדב,חונך
-```sql
+---# Role Table -
+--- ROLES  רכז מתנדבים ,רכז משפחות,רכז חונכים,רכז בוגרים
+--כז בריאים,רכז טכני ,מנהל מערכתת,מתנדב,חונך
+
 INSERT INTO childsmile_app_role (role_name) VALUES ('System Administrator');
 INSERT INTO childsmile_app_role (role_name) VALUES ('Technical Coordinator');
 INSERT INTO childsmile_app_role (role_name) VALUES ('Volunteer Coordinator');
@@ -45,160 +42,153 @@ INSERT INTO childsmile_app_role (role_name) VALUES ('Matures Coordinator');
 INSERT INTO childsmile_app_role (role_name) VALUES ('Healthy Kids Coordinator');
 INSERT INTO childsmile_app_role (role_name) VALUES ('General Volunteer');
 INSERT INTO childsmile_app_role (role_name) VALUES ('Tutor');
-```
 
-#### Permissions Table - columns: role_id, resource, action
-```sql
 
-### System Administrator - has CREATE, UPDATE, DELETE, VIEW permissions for all tables
-## Table: role
-```sql
+-- Permissions Table - columns: role_id, resource, action
+-- System Administrator - has CREATE, UPDATE, DELETE, VIEW permissions for all tables
+-- Table: role
+
 INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='System Administrator'), 'childsmile_app_role', 'CREATE');
 INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='System Administrator'), 'childsmile_app_role', 'UPDATE');
 INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='System Administrator'), 'childsmile_app_role', 'DELETE');
 INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='System Administrator'), 'childsmile_app_role', 'VIEW');
-```
 
-## Table: permissions
-```sql
+-- Table: permissions
 INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='System Administrator'), 'childsmile_app_permissions', 'CREATE');
 INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='System Administrator'), 'childsmile_app_permissions', 'UPDATE');
 INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='System Administrator'), 'childsmile_app_permissions', 'DELETE');
 INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='System Administrator'), 'childsmile_app_permissions', 'VIEW');
-```
 
-## Table: staff
-```sql
+-- Table: staff
 INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='System Administrator'), 'childsmile_app_staff', 'CREATE');
 INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='System Administrator'), 'childsmile_app_staff', 'UPDATE');
 INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='System Administrator'), 'childsmile_app_staff', 'DELETE');
 INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='System Administrator'), 'childsmile_app_staff', 'VIEW');
-```
 
-## Table: signedup
-```sql
+
+-- Table: signedup
 INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='System Administrator'), 'childsmile_app_signedup', 'CREATE');
 INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='System Administrator'), 'childsmile_app_signedup', 'UPDATE');
 INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='System Administrator'), 'childsmile_app_signedup', 'DELETE');
 INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='System Administrator'), 'childsmile_app_signedup', 'VIEW');
-```
 
-## Table: general_volunteer
-```sql
+
+-- Table: general_volunteer
+
 INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='System Administrator'), 'childsmile_app_general_volunteer', 'CREATE');
 INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='System Administrator'), 'childsmile_app_general_volunteer', 'UPDATE');
 INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='System Administrator'), 'childsmile_app_general_volunteer', 'DELETE');
 INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='System Administrator'), 'childsmile_app_general_volunteer', 'VIEW');
-```
 
-## Table: pending_tutor
-```sql
+
+-- Table: pending_tutor
+
 INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='System Administrator'), 'childsmile_app_pending_tutor', 'CREATE');
 INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='System Administrator'), 'childsmile_app_pending_tutor', 'UPDATE');
 INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='System Administrator'), 'childsmile_app_pending_tutor', 'DELETE');
 INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='System Administrator'), 'childsmile_app_pending_tutor', 'VIEW');
-```
 
-## Table: tutors
-```sql
+
+-- Table: tutors
+
 INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='System Administrator'), 'childsmile_app_tutors', 'CREATE');
 INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='System Administrator'), 'childsmile_app_tutors', 'UPDATE');
 INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='System Administrator'), 'childsmile_app_tutors', 'DELETE');
 INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='System Administrator'), 'childsmile_app_tutors', 'VIEW');
-```
 
-## Table: children
-```sql
+
+-- Table: children
+
 INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='System Administrator'), 'childsmile_app_children', 'CREATE');
 INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='System Administrator'), 'childsmile_app_children', 'UPDATE');
 INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='System Administrator'), 'childsmile_app_children', 'DELETE');
 INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='System Administrator'), 'childsmile_app_children', 'VIEW');
-```
 
-## Table: tutorships
-```sql
+
+-- Table: tutorships
+
 INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='System Administrator'), 'childsmile_app_tutorships', 'CREATE');
 INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='System Administrator'), 'childsmile_app_tutorships', 'UPDATE');
 INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='System Administrator'), 'childsmile_app_tutorships', 'DELETE');
 INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='System Administrator'), 'childsmile_app_tutorships', 'VIEW');
-```
 
-## Table: matures
-```sql
+
+-- Table: matures
+
 INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='System Administrator'), 'childsmile_app_matures', 'CREATE');
 INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='System Administrator'), 'childsmile_app_matures', 'UPDATE');
 INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='System Administrator'), 'childsmile_app_matures', 'DELETE');
 INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='System Administrator'), 'childsmile_app_matures', 'VIEW');
-```
 
-## Table: healthy
-```sql
+
+-- Table: healthy
+
 INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='System Administrator'), 'childsmile_app_healthy', 'CREATE');
 INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='System Administrator'), 'childsmile_app_healthy', 'UPDATE');
 INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='System Administrator'), 'childsmile_app_healthy', 'DELETE');
 INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='System Administrator'), 'childsmile_app_healthy', 'VIEW');
-```
 
-## Table: feedback
-```sql
+
+ ---Table: feedback
+
 INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='System Administrator'), 'childsmile_app_feedback', 'CREATE');
 INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='System Administrator'), 'childsmile_app_feedback', 'UPDATE');
 INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='System Administrator'), 'childsmile_app_feedback', 'DELETE');
 INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='System Administrator'), 'childsmile_app_feedback', 'VIEW');
-```
 
-## Table: tasks
-```sql
+
+-- Table: tasks
+
 INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='System Administrator'), 'childsmile_app_tasks', 'CREATE');
 INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='System Administrator'), 'childsmile_app_tasks', 'UPDATE');
 INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='System Administrator'), 'childsmile_app_tasks', 'DELETE');
 INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='System Administrator'), 'childsmile_app_tasks', 'VIEW');
-```
 
-## Table: task_types
-```sql
+
+-- Table: task_types
+
 INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='System Administrator'), 'childsmile_app_task_types', 'CREATE');
 INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='System Administrator'), 'childsmile_app_task_types', 'UPDATE');
 INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='System Administrator'), 'childsmile_app_task_types', 'DELETE');
 INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='System Administrator'), 'childsmile_app_task_types', 'VIEW');
-```
 
-## Table: tutor_feedback
-```sql
+
+-- Table: tutor_feedback
+
 INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='System Administrator'), 'childsmile_app_tutor_feedback', 'CREATE');
 INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='System Administrator'), 'childsmile_app_tutor_feedback', 'UPDATE');
 INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='System Administrator'), 'childsmile_app_tutor_feedback', 'DELETE');
 INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='System Administrator'), 'childsmile_app_tutor_feedback', 'VIEW');
-```
 
-## Table: general_v_feedback
-```sql
+
+-- Table: general_v_feedback
+
 INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='System Administrator'), 'childsmile_app_general_v_feedback', 'CREATE');
 INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='System Administrator'), 'childsmile_app_general_v_feedback', 'UPDATE');
 INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='System Administrator'), 'childsmile_app_general_v_feedback', 'DELETE');
 INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='System Administrator'), 'childsmile_app_general_v_feedback', 'VIEW');
-```
 
-### General Volunteer role: 
-- has permissions as follows:
-- childsmile_app_role: NONE
-- childsmile_app_permissions: NONE
-- childsmile_app_staff: NONE
-- childsmile_app_signedup: CREATE, UPDATE, DELETE, VIEW
-- childsmile_app_general_volunteer: CREATE, UPDATE, DELETE, VIEW
-- childsmile_app_pending_tutor: CREATE, UPDATE, DELETE, VIEW
-- childsmile_app_tutors: VIEW
-- childsmile_app_children: NONE
-- childsmile_app_tutorships: NONE
-- childsmile_app_matures: NONE
-- childsmile_app_healthy: NONE
-- childsmile_app_feedback: CREATE, UPDATE, VIEW
-- childsmile_app_tutor_feedback: NONE
-- childsmile_app_general_v_feedback: CREATE, UPDATE, VIEW
-- childsmile_app_tasks: CREATE, UPDATE, DELETE, VIEW
-- childsmile_app_task_types: VIEW
 
-```sql
+--- General Volunteer role: 
+-- has permissions as follows:
+-- childsmile_app_role: NONE
+-- childsmile_app_permissions: NONE
+-- childsmile_app_staff: NONE
+-- childsmile_app_signedup: CREATE, UPDATE, DELETE, VIEW
+-- childsmile_app_general_volunteer: CREATE, UPDATE, DELETE, VIEW
+-- childsmile_app_pending_tutor: CREATE, UPDATE, DELETE, VIEW
+-- childsmile_app_tutors: VIEW
+-- childsmile_app_children: NONE
+-- childsmile_app_tutorships: NONE
+-- childsmile_app_matures: NONE
+-- childsmile_app_healthy: NONE
+-- childsmile_app_feedback: CREATE, UPDATE, VIEW
+-- childsmile_app_tutor_feedback: NONE
+-- childsmile_app_general_v_feedback: CREATE, UPDATE, VIEW
+-- childsmile_app_tasks: CREATE, UPDATE, DELETE, VIEW
+-- childsmile_app_task_types: VIEW
+
+
 -- childsmile_app_signedup
 INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='General Volunteer'), 'childsmile_app_signedup', 'CREATE');
 INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='General Volunteer'), 'childsmile_app_signedup', 'UPDATE');
@@ -238,27 +228,27 @@ INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELE
 
 -- childsmile_app_task_types
 INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='General Volunteer'), 'childsmile_app_task_types', 'VIEW');
-```
 
-### Tutor role has permissions as follows:
-- childsmile_app_role: NONE
-- childsmile_app_permissions: NONE
-- childsmile_app_staff: NONE
-- childsmile_app_signedup: CREATE, UPDATE, DELETE, VIEW
-- childsmile_app_general_volunteer: VIEW
-- childsmile_app_pending_tutor: CREATE, UPDATE, DELETE, VIEW
-- childsmile_app_tutors: CREATE, UPDATE, DELETE, VIEW
-- childsmile_app_children: UPDATE, VIEW
-- childsmile_app_tutorships: CREATE, UPDATE, DELETE, VIEW
-- childsmile_app_matures: CREATE, UPDATE, DELETE, VIEW
-- childsmile_app_healthy: CREATE, UPDATE, DELETE, VIEW
-- childsmile_app_feedback: CREATE, UPDATE, VIEW
-- childsmile_app_tutor_feedback: CREATE, UPDATE, VIEW
-- childsmile_app_general_v_feedback: NONE
-- childsmile_app_tasks: CREATE, UPDATE, DELETE, VIEW
-- childsmile_app_task_types: VIEW
 
-```sql
+--- Tutor role has permissions as follows:
+-- childsmile_app_role: NONE
+-- childsmile_app_permissions: NONE
+-- childsmile_app_staff: NONE
+-- childsmile_app_signedup: CREATE, UPDATE, DELETE, VIEW
+-- childsmile_app_general_volunteer: VIEW
+-- childsmile_app_pending_tutor: CREATE, UPDATE, DELETE, VIEW
+-- childsmile_app_tutors: CREATE, UPDATE, DELETE, VIEW
+-- childsmile_app_children: UPDATE, VIEW
+-- childsmile_app_tutorships: CREATE, UPDATE, DELETE, VIEW
+-- childsmile_app_matures: CREATE, UPDATE, DELETE, VIEW
+-- childsmile_app_healthy: CREATE, UPDATE, DELETE, VIEW
+-- childsmile_app_feedback: CREATE, UPDATE, VIEW
+-- childsmile_app_tutor_feedback: CREATE, UPDATE, VIEW
+-- childsmile_app_general_v_feedback: NONE
+-- childsmile_app_tasks: CREATE, UPDATE, DELETE, VIEW
+-- childsmile_app_task_types: VIEW
+
+
 -- childsmile_app_signedup
 INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Tutor'), 'childsmile_app_signedup', 'CREATE');
 INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Tutor'), 'childsmile_app_signedup', 'UPDATE');
@@ -320,29 +310,28 @@ INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELE
 
 -- childsmile_app_task_types
 INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Tutor'), 'childsmile_app_task_types', 'VIEW');
-```
 
-### Technical Coordinator role has permissions as follows:
-- childsmile_app_role: NONE
-- childsmile_app_permissions: NONE
-- childsmile_app_staff: CREATE, UPDATE, DELETE, VIEW
-- childsmile_app_signedup: CREATE, UPDATE, DELETE, VIEW
-- childsmile_app_general_volunteer: CREATE, UPDATE, DELETE, VIEW
-- childsmile_app_pending_tutor: CREATE, UPDATE, DELETE, VIEW
-- childsmile_app_tutors: CREATE, UPDATE, DELETE, VIEW
-- childsmile_app_children: CREATE, UPDATE, DELETE, VIEW
-- childsmile_app_tutorships: VIEW
-- childsmile_app_matures: VIEW
-- childsmile_app_healthy: VIEW
-- childsmile_app_feedback: VIEW
-- childsmile_app_tutor_feedback: VIEW
-- childsmile_app_general_v_feedback: VIEW
-- childsmile_app_tasks: CREATE, UPDATE, DELETE, VIEW
-- childsmile_app_task_types: CREATE, UPDATE, DELETE, VIEW
 
-Sure! Here are the SQL insert statements for the `Technical Coordinator` role based on the permissions you provided:
+--- Technical Coordinator role has permissions as follows:
+-- childsmile_app_role: NONE
+-- childsmile_app_permissions: NONE
+-- childsmile_app_staff: CREATE, UPDATE, DELETE, VIEW
+-- childsmile_app_signedup: CREATE, UPDATE, DELETE, VIEW
+-- childsmile_app_general_volunteer: CREATE, UPDATE, DELETE, VIEW
+-- childsmile_app_pending_tutor: CREATE, UPDATE, DELETE, VIEW
+-- childsmile_app_tutors: CREATE, UPDATE, DELETE, VIEW
+-- childsmile_app_children: CREATE, UPDATE, DELETE, VIEW
+-- childsmile_app_tutorships: VIEW
+-- childsmile_app_matures: VIEW
+-- childsmile_app_healthy: VIEW
+-- childsmile_app_feedback: VIEW
+-- childsmile_app_tutor_feedback: VIEW
+-- childsmile_app_general_v_feedback: VIEW
+-- childsmile_app_tasks: CREATE, UPDATE, DELETE, VIEW
+-- childsmile_app_task_types: CREATE, UPDATE, DELETE, VIEW
 
-```sql
+
+
 -- childsmile_app_staff
 INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Technical Coordinator'), 'childsmile_app_staff', 'CREATE');
 INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Technical Coordinator'), 'childsmile_app_staff', 'UPDATE');
@@ -408,29 +397,26 @@ INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELE
 INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Technical Coordinator'), 'childsmile_app_task_types', 'UPDATE');
 INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Technical Coordinator'), 'childsmile_app_task_types', 'DELETE');
 INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Technical Coordinator'), 'childsmile_app_task_types', 'VIEW');
-```
 
-### Volunteer Coordinator role has permissions as follows:
-- childsmile_app_role: NONE
-- childsmile_app_permissions: NONE
-- childsmile_app_staff: CREATE, UPDATE, DELETE, VIEW
-- childsmile_app_signedup: CREATE, UPDATE, DELETE, VIEW
-- childsmile_app_general_volunteer: CREATE, UPDATE, DELETE, VIEW
-- childsmile_app_pending_tutor: VIEW
-- childsmile_app_tutors: VIEW
-- childsmile_app_children: NONE
-- childsmile_app_tutorships: NONE
-- childsmile_app_matures: NONE
-- childsmile_app_healthy: NONE
-- childsmile_app_feedback: CREATE, UPDATE, DELETE, VIEW
-- childsmile_app_tutor_feedback: NONE
-- childsmile_app_general_v_feedback: CREATE, UPDATE, DELETE, VIEW
-- childsmile_app_tasks: CREATE, UPDATE, DELETE, VIEW
-- childsmile_app_task_types: VIEW
 
-Sure! Here are the SQL insert statements for the `Volunteer Coordinator` role based on the permissions you provided:
+--- Volunteer Coordinator role has permissions as follows:
+-- childsmile_app_role: NONE
+-- childsmile_app_permissions: NONE
+-- childsmile_app_staff: CREATE, UPDATE, DELETE, VIEW
+-- childsmile_app_signedup: CREATE, UPDATE, DELETE, VIEW
+-- childsmile_app_general_volunteer: CREATE, UPDATE, DELETE, VIEW
+-- childsmile_app_pending_tutor: VIEW
+-- childsmile_app_tutors: VIEW
+-- childsmile_app_children: NONE
+-- childsmile_app_tutorships: NONE
+-- childsmile_app_matures: NONE
+-- childsmile_app_healthy: NONE
+-- childsmile_app_feedback: CREATE, UPDATE, DELETE, VIEW
+-- childsmile_app_tutor_feedback: NONE
+-- childsmile_app_general_v_feedback: CREATE, UPDATE, DELETE, VIEW
+-- childsmile_app_tasks: CREATE, UPDATE, DELETE, VIEW
+-- childsmile_app_task_types: VIEW
 
-```sql
 -- childsmile_app_staff
 INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Volunteer Coordinator'), 'childsmile_app_staff', 'CREATE');
 INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Volunteer Coordinator'), 'childsmile_app_staff', 'UPDATE');
@@ -475,29 +461,26 @@ INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELE
 
 -- childsmile_app_task_types
 INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Volunteer Coordinator'), 'childsmile_app_task_types', 'VIEW');
-```
 
-### Families Coordinator role has permissions as follows:
-- childsmile_app_role: NONE
-- childsmile_app_permissions: NONE
-- childsmile_app_staff: NONE
-- childsmile_app_signedup: VIEW
-- childsmile_app_general_volunteer: VIEW
-- childsmile_app_pending_tutor: VIEW
-- childsmile_app_tutors: VIEW
-- childsmile_app_children: CREATE, UPDATE, DELETE, VIEW
-- childsmile_app_tutorships: CREATE, UPDATE, DELETE, VIEW
-- childsmile_app_matures: VIEW
-- childsmile_app_healthy: VIEW
-- childsmile_app_feedback: NONE
-- childsmile_app_tutor_feedback: NONE
-- childsmile_app_general_v_feedback: NONE
-- childsmile_app_tasks: CREATE, UPDATE, DELETE, VIEW
-- childsmile_app_task_types: VIEW
 
-Sure! Here are the SQL insert statements for the `Families Coordinator` role based on the permissions you provided:
+--- Families Coordinator role has permissions as follows:
+-- childsmile_app_role: NONE
+-- childsmile_app_permissions: NONE
+-- childsmile_app_staff: NONE
+-- childsmile_app_signedup: VIEW
+-- childsmile_app_general_volunteer: VIEW
+-- childsmile_app_pending_tutor: VIEW
+-- childsmile_app_tutors: VIEW
+-- childsmile_app_children: CREATE, UPDATE, DELETE, VIEW
+-- childsmile_app_tutorships: CREATE, UPDATE, DELETE, VIEW
+-- childsmile_app_matures: VIEW
+-- childsmile_app_healthy: VIEW
+-- childsmile_app_feedback: NONE
+-- childsmile_app_tutor_feedback: NONE
+-- childsmile_app_general_v_feedback: NONE
+-- childsmile_app_tasks: CREATE, UPDATE, DELETE, VIEW
+-- childsmile_app_task_types: VIEW
 
-```sql
 -- childsmile_app_signedup
 INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Families Coordinator'), 'childsmile_app_signedup', 'VIEW');
 
@@ -536,29 +519,26 @@ INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELE
 
 -- childsmile_app_task_types
 INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Families Coordinator'), 'childsmile_app_task_types', 'VIEW');
-```
 
-### Tutors Coordinator role has permissions as follows:
-- childsmile_app_role: NONE
-- childsmile_app_permissions: NONE
-- childsmile_app_staff: CREATE, UPDATE, DELETE, VIEW
-- childsmile_app_signedup: CREATE, UPDATE, DELETE, VIEW
-- childsmile_app_general_volunteer: VIEW
-- childsmile_app_pending_tutor: CREATE, UPDATE, DELETE, VIEW
-- childsmile_app_tutors: CREATE, UPDATE, DELETE, VIEW
-- childsmile_app_children: CREATE, UPDATE, DELETE, VIEW
-- childsmile_app_tutorships: CREATE, UPDATE, DELETE, VIEW
-- childsmile_app_matures: VIEW
-- childsmile_app_healthy: VIEW
-- childsmile_app_feedback: CREATE, UPDATE, DELETE, VIEW
-- childsmile_app_tutor_feedback: CREATE, UPDATE, DELETE, VIEW
-- childsmile_app_general_v_feedback: NONE
-- childsmile_app_tasks: CREATE, UPDATE, DELETE, VIEW
-- childsmile_app_task_types: VIEW
 
-Sure! Here are the SQL insert statements for the `Tutors Coordinator` role based on the permissions you provided:
+--- Tutors Coordinator role has permissions as follows:
+-- childsmile_app_role: NONE
+-- childsmile_app_permissions: NONE
+-- childsmile_app_staff: CREATE, UPDATE, DELETE, VIEW
+-- childsmile_app_signedup: CREATE, UPDATE, DELETE, VIEW
+-- childsmile_app_general_volunteer: VIEW
+-- childsmile_app_pending_tutor: CREATE, UPDATE, DELETE, VIEW
+-- childsmile_app_tutors: CREATE, UPDATE, DELETE, VIEW
+-- childsmile_app_children: CREATE, UPDATE, DELETE, VIEW
+-- childsmile_app_tutorships: CREATE, UPDATE, DELETE, VIEW
+-- childsmile_app_matures: VIEW
+-- childsmile_app_healthy: VIEW
+-- childsmile_app_feedback: CREATE, UPDATE, DELETE, VIEW
+-- childsmile_app_tutor_feedback: CREATE, UPDATE, DELETE, VIEW
+-- childsmile_app_general_v_feedback: NONE
+-- childsmile_app_tasks: CREATE, UPDATE, DELETE, VIEW
+-- childsmile_app_task_types: VIEW
 
-```sql
 -- childsmile_app_staff
 INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Tutors Coordinator'), 'childsmile_app_staff', 'CREATE');
 INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Tutors Coordinator'), 'childsmile_app_staff', 'UPDATE');
@@ -624,29 +604,26 @@ INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELE
 
 -- childsmile_app_task_types
 INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Tutors Coordinator'), 'childsmile_app_task_types', 'VIEW');
-```
 
-### Matures Coordinator role has permissions as follows:
-- childsmile_app_role: NONE
-- childsmile_app_permissions: NONE
-- childsmile_app_staff: NONE
-- childsmile_app_signedup: VIEW
-- childsmile_app_general_volunteer: NONE
-- childsmile_app_pending_tutor: NONE
-- childsmile_app_tutors: VIEW
-- childsmile_app_children: CREATE, UPDATE, DELETE, VIEW
-- childsmile_app_tutorships: VIEW
-- childsmile_app_matures: CREATE, UPDATE, DELETE, VIEW
-- childsmile_app_healthy: NONE
-- childsmile_app_feedback: NONE
-- childsmile_app_tutor_feedback: NONE
-- childsmile_app_general_v_feedback: NONE
-- childsmile_app_tasks: CREATE, UPDATE, DELETE, VIEW
-- childsmile_app_task_types: VIEW
 
-Sure! Here are the SQL insert statements for the `Matures Coordinator` role based on the permissions you provided:
+--- Matures Coordinator role has permissions as follows:
+-- childsmile_app_role: NONE
+-- childsmile_app_permissions: NONE
+-- childsmile_app_staff: NONE
+-- childsmile_app_signedup: VIEW
+-- childsmile_app_general_volunteer: NONE
+-- childsmile_app_pending_tutor: NONE
+-- childsmile_app_tutors: VIEW
+-- childsmile_app_children: CREATE, UPDATE, DELETE, VIEW
+-- childsmile_app_tutorships: VIEW
+-- childsmile_app_matures: CREATE, UPDATE, DELETE, VIEW
+-- childsmile_app_healthy: NONE
+-- childsmile_app_feedback: NONE
+-- childsmile_app_tutor_feedback: NONE
+-- childsmile_app_general_v_feedback: NONE
+-- childsmile_app_tasks: CREATE, UPDATE, DELETE, VIEW
+-- childsmile_app_task_types: VIEW
 
-```sql
 -- childsmile_app_signedup
 INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Matures Coordinator'), 'childsmile_app_signedup', 'VIEW');
 
@@ -676,29 +653,27 @@ INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELE
 
 -- childsmile_app_task_types
 INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Matures Coordinator'), 'childsmile_app_task_types', 'VIEW');
-```
 
-### Healthy Kids Coordinator role has permissions as follows:
-- childsmile_app_role: NONE
-- childsmile_app_permissions: NONE
-- childsmile_app_staff: NONE
-- childsmile_app_signedup: NONE
-- childsmile_app_general_volunteer: NONE
-- childsmile_app_pending_tutor: NONE
-- childsmile_app_tutors: VIEW
-- childsmile_app_children: CREATE, UPDATE, DELETE, VIEW
-- childsmile_app_tutorships: VIEW
-- childsmile_app_matures: NONE
-- childsmile_app_healthy: CREATE, UPDATE, DELETE, VIEW
-- childsmile_app_feedback: NONE
-- childsmile_app_tutor_feedback: NONE
-- childsmile_app_general_v_feedback: NONE
-- childsmile_app_tasks: CREATE, UPDATE, DELETE, VIEW
-- childsmile_app_task_types: VIEW
 
-Sure! Here are the SQL insert statements for the `Healthy Kids Coordinator` role based on the permissions you provided:
+--- Healthy Kids Coordinator role has permissions as follows:
+-- childsmile_app_role: NONE
+-- childsmile_app_permissions: NONE
+-- childsmile_app_staff: NONE
+-- childsmile_app_signedup: NONE
+-- childsmile_app_general_volunteer: NONE
+-- childsmile_app_pending_tutor: NONE
+-- childsmile_app_tutors: VIEW
+-- childsmile_app_children: CREATE, UPDATE, DELETE, VIEW
+-- childsmile_app_tutorships: VIEW
+-- childsmile_app_matures: NONE
+-- childsmile_app_healthy: CREATE, UPDATE, DELETE, VIEW
+-- childsmile_app_feedback: NONE
+-- childsmile_app_tutor_feedback: NONE
+-- childsmile_app_general_v_feedback: NONE
+-- childsmile_app_tasks: CREATE, UPDATE, DELETE, VIEW
+-- childsmile_app_task_types: VIEW
 
-```sql
+
 -- childsmile_app_tutors
 INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Healthy Kids Coordinator'), 'childsmile_app_tutors', 'VIEW');
 
@@ -725,12 +700,12 @@ INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELE
 
 -- childsmile_app_task_types
 INSERT INTO childsmile_app_permissions (role_id, resource, action) VALUES ((SELECT id FROM childsmile_app_role WHERE role_name='Healthy Kids Coordinator'), 'childsmile_app_task_types', 'VIEW');
-```
 
-### now that we created the roles and permissions, i need inserts to all other tables.
-i must keep the order of the tables, because of the foreign keys
 
-### childsmile_app_staff - Insert example of a staff member - 1 record per role
+--- now that we created the roles and permissions, i need inserts to all other tables.
+--i must keep the order of the tables, because of the foreign keys
+
+--- childsmile_app_staff - Insert example of a staff member - 1 record per role
 childsmile_app_staff
 table schema 
     staff_id integer NOT NULL GENERATED BY DEFAULT AS IDENTITY ( INCREMENT 1 START 1 MINVALUE 1 MAXVALUE 2147483647 CACHE 1 ),
@@ -750,9 +725,9 @@ table schema
         ON DELETE NO ACTION
         DEFERRABLE INITIALLY DEFERRED
 
-### name fields, must be in Hebrew,
-### password must be hashed, but i need to know the hashing algorithm so i can test login functionality
-### created_at must be the current timestamp
+--- name fields, must be in Hebrew,
+--- password must be hashed, but i need to know the hashing algorithm so i can test login functionality
+--- created_at must be the current timestamp
 INSERT INTO childsmile_app_role (role_name) VALUES ('System Administrator');
 INSERT INTO childsmile_app_role (role_name) VALUES ('Technical Coordinator');
 INSERT INTO childsmile_app_role (role_name) VALUES ('Volunteer Coordinator');
@@ -763,22 +738,22 @@ INSERT INTO childsmile_app_role (role_name) VALUES ('Healthy Kids Coordinator');
 INSERT INTO childsmile_app_role (role_name) VALUES ('General Volunteer');
 INSERT INTO childsmile_app_role (role_name) VALUES ('Tutor');
 
-i cannot know the IDs of the roles as its created by Django, so i need to use a select in every insert to get the ID of the role.
-the names of each role are for starters, we can change them later if needed.
-insert "ליאם אביבי" as the system administrator
-insert "אילה קריץ" as the technical coordinator
-insert "טל לנגרמן" as the volunteer coordinator
-insert "ליה צוהר" as the families coordinator
-insert "יובל ברגיל" as the tutors coordinator
-insert "נבו גיבלי" as the matures coordinator
-insert "אור גולן" as the healthy kids coordinator
-insert "אביגיל גרינברג" as a general volunteer
-insert "אורי כהן" as a tutor
+--i cannot know the IDs of the roles as its created by Django, so i need to use a select in every insert to get the ID of the role.
+--the names of each role are for starters, we can change them later if needed.
+-- insert "ליאם אביבי" as the system administrator
+-- insert "אילה קריץ" as the technical coordinator
+-- insert "טל לנגרמן" as the volunteer coordinator
+-- insert "ליה צוהר" as the families coordinator
+-- insert "יובל ברגיל" as the tutors coordinator
+-- insert "נבו גיבלי" as the matures coordinator
+-- insert "אור גולן" as the healthy kids coordinator
+-- insert "אביגיל גרינברג" as a general volunteer
+-- insert "אורי כהן" as a tutor
 
-use a select in evert insert to ensure the correct role_id is used.
+-- use a select in evert insert to ensure the correct role_id is used.
 
 
-```sql
+
 INSERT INTO childsmile_app_staff (username, password, role_id, email, first_name, last_name, created_at)
 VALUES ('admin', '111', (SELECT id FROM childsmile_app_role WHERE role_name = 'System Administrator'), 'sysadminmini@mail.com', 'admini', 'strator', current_timestamp);
 INSERT INTO childsmile_app_staff (username, password, role_id, email, first_name, last_name, created_at)
@@ -798,15 +773,15 @@ VALUES ('אור_גולן', '1234', (SELECT id FROM childsmile_app_role WHERE rol
 
 --- select to see results of previous inserts
 SELECT * FROM childsmile_app_staff;
-```
+
 
 ----------------------------TODO: USE CURSOR TO INSERT INTO childsmile_app_staff with an obejct of the whole transaction to be able to use the ID of the signedup table
-when we DEV the code in BE so to refer the correct record in the referred tables--------------------------------------------------------------------
+-- when we DEV the code in BE so to refer the correct record in the referred tables--------------------------------------------------------------------
 
 
 
-### childsmile_app_signedup - Insert example of a signed up volunteer - 3 records - they do not want to be tutors
-## after that need to insert to all the related tables - childsmile_app_general_volunteer, childsmile_app_staff - using the data from the signedup table
+--- childsmile_app_signedup - Insert example of a signed up volunteer - 3 records - they do not want to be tutors
+-- after that need to insert to all the related tables - childsmile_app_general_volunteer, childsmile_app_staff - using the data from the signedup table
 
 INSERT INTO childsmile_app_staff (username, password, role_id, email, first_name, last_name, created_at)
 VALUES ('אורי_כהן', '1234', (SELECT id FROM childsmile_app_role WHERE role_name = 'Tutor'), 'urico@mail.com', 'אורי', 'כהן', current_timestamp);
@@ -822,17 +797,17 @@ Table schema
     email character varying(254) COLLATE pg_catalog."default",
     want_tutor boolean NOT NULL,
     CONSTRAINT childsmile_app_signedup_pkey PRIMARY KEY (id)
-```sql
+
 INSERT INTO childsmile_app_signedup (id, first_name, surname, age, gender, phone, city, comment, email, want_tutor)
 VALUES (10000002,'אביגיל', 'גרינברג', 25, TRUE, '052-1234567', 'תל אביב', '', 'aviga@mail.com', FALSE);
 INSERT INTO childsmile_app_signedup (id, first_name, surname, age, gender, phone, city, comment, email, want_tutor)
 VALUES (10000003,'דוד','מנחם', 30, FALSE, '052-1234567', 'ירושלים', '', 'davim@mail.com', FALSE);
 INSERT INTO childsmile_app_signedup (id, first_name, surname, age, gender, phone, city, comment, email, want_tutor)
 VALUES (10000004,'חוני', 'המעגל', 19, FALSE, '052-1234567', 'חיפה', '', 'circle@mail.com', FALSE);
-```
 
-### insert into staff table respecting the foreign key constraint and using the data from childsmile_app_signedup
-```sql
+
+--- insert into staff table respecting the foreign key constraint and using the data from childsmile_app_signedup
+
 INSERT INTO childsmile_app_staff (username, password, role_id, email, first_name, last_name, created_at)
 SELECT 
     CONCAT(first_name, '_', surname) AS username,
@@ -866,27 +841,27 @@ SELECT
     current_timestamp
 FROM childsmile_app_signedup
 WHERE first_name = 'חוני' AND surname = 'המעגל';
-```
 
 
-### insert to childsmile_app_general_volunteer respecting the foreign key constraint and using the data from childsmile_app_signedup
-### general_volunteer schema
-    id_id integer NOT NULL,
-    staff_id integer NOT NULL,
-    signupdate date NOT NULL,
-    comments text COLLATE pg_catalog."default",
-    CONSTRAINT childsmile_app_general_volunteer_pkey PRIMARY KEY (id_id),
-    CONSTRAINT childsmile_app_gener_id_id_0f1642ef_fk_childsmil FOREIGN KEY (id_id)
-        REFERENCES public.childsmile_app_signedup (id) MATCH SIMPLE
-        ON UPDATE NO ACTION
-        ON DELETE NO ACTION
-        DEFERRABLE INITIALLY DEFERRED,
-    CONSTRAINT childsmile_app_gener_staff_id_ad1c342d_fk_childsmil FOREIGN KEY (staff_id)
-        REFERENCES public.childsmile_app_staff (staff_id) MATCH SIMPLE
-        ON UPDATE NO ACTION
-        ON DELETE NO ACTION
-        DEFERRABLE INITIALLY DEFERRED
-```sql
+
+--- insert to childsmile_app_general_volunteer respecting the foreign key constraint and using the data from childsmile_app_signedup
+--- general_volunteer schema
+    -- id_id integer NOT NULL,
+    -- staff_id integer NOT NULL,
+    -- signupdate date NOT NULL,
+    -- comments text COLLATE pg_catalog."default",
+    -- CONSTRAINT childsmile_app_general_volunteer_pkey PRIMARY KEY (id_id),
+    -- CONSTRAINT childsmile_app_gener_id_id_0f1642ef_fk_childsmil FOREIGN KEY (id_id)
+    --     REFERENCES public.childsmile_app_signedup (id) MATCH SIMPLE
+    --     ON UPDATE NO ACTION
+    --     ON DELETE NO ACTION
+    --     DEFERRABLE INITIALLY DEFERRED,
+    -- CONSTRAINT childsmile_app_gener_staff_id_ad1c342d_fk_childsmil FOREIGN KEY (staff_id)
+    --     REFERENCES public.childsmile_app_staff (staff_id) MATCH SIMPLE
+    --     ON UPDATE NO ACTION
+    --     ON DELETE NO ACTION
+    --     DEFERRABLE INITIALLY DEFERRED
+
 INSERT INTO childsmile_app_general_volunteer (id_id, staff_id, signupdate, comments)
 SELECT 
     (select id from childsmile_app_signedup where first_name = 'אביגיל' AND surname = 'גרינברג') AS id_id,
@@ -908,21 +883,21 @@ SELECT
     current_date AS signupdate,
     '' AS comments
 WHERE EXISTS (SELECT 1 FROM childsmile_app_signedup WHERE first_name = 'חוני' AND surname = 'המעגל');
-```
 
-### now we will insert into pending tutor similar to the way we did with general volunteer
-### this means we will insert into childsmile_app_signedup, childsmile_app_staff, childsmile_app_pending_tutor
-### we will use the data from childsmile_app_signedup to insert into childsmile_app_staff and childsmile_app_pending_tutor
-```sql
+
+--- now we will insert into pending tutor similar to the way we did with general volunteer
+--- this means we will insert into childsmile_app_signedup, childsmile_app_staff, childsmile_app_pending_tutor
+--- we will use the data from childsmile_app_signedup to insert into childsmile_app_staff and childsmile_app_pending_tutor
+
 INSERT INTO childsmile_app_signedup (id, first_name, surname, age, gender, phone, city, comment, email, want_tutor)
 VALUES (10000005, 'אורי', 'כהן', 20, TRUE, '052-1234567', 'תל אביב', '', 'urico@mail.com', TRUE);
 INSERT INTO childsmile_app_signedup (id, first_name, surname, age, gender, phone, city, comment, email, want_tutor)
 VALUES (10000006, 'שלהבת', 'רווח', 30, FALSE, '052-9234567', 'ירושלים', '', 'shaler@mail.com', TRUE);
 INSERT INTO childsmile_app_signedup (id, first_name, surname, age, gender, phone, city, comment, email, want_tutor)
 VALUES (10000007, 'גיל', 'ורהפטיג', 19, FALSE, '052-8234567', 'חיפה', '', 'gilva@mail.com', TRUE);
-```
-## insert into staff table respecting the foreign key constraint and using the data from childsmile_app_signedup
-```sql
+
+-- insert into staff table respecting the foreign key constraint and using the data from childsmile_app_signedup
+
 INSERT INTO childsmile_app_staff (username, password, role_id, email, first_name, last_name, created_at)
 SELECT 
     CONCAT(first_name, '_', surname) AS username,
@@ -956,20 +931,20 @@ SELECT
     current_timestamp
 FROM childsmile_app_signedup
 WHERE first_name = 'גיל' AND surname = 'ורהפטיג';
-```
 
-## insert into childsmile_app_pending_tutor respecting the foreign key constraint and using the data from childsmile_app_signedup
-## table schema
-    pending_tutor_id integer NOT NULL GENERATED BY DEFAULT AS IDENTITY ( INCREMENT 1 START 1 MINVALUE 1 MAXVALUE 2147483647 CACHE 1 ),
-    id_id integer NOT NULL,
-    pending_status character varying(255) COLLATE pg_catalog."default" NOT NULL,
-    CONSTRAINT childsmile_app_pending_tutor_pkey PRIMARY KEY (pending_tutor_id),
-    CONSTRAINT childsmile_app_pendi_id_id_f8d114a6_fk_childsmil FOREIGN KEY (id_id)
-        REFERENCES public.childsmile_app_signedup (id) MATCH SIMPLE
-        ON UPDATE NO ACTION
-        ON DELETE NO ACTION
-        DEFERRABLE INITIALLY DEFERRED
-```sql
+
+-- insert into childsmile_app_pending_tutor respecting the foreign key constraint and using the data from childsmile_app_signedup
+-- table schema
+    -- pending_tutor_id integer NOT NULL GENERATED BY DEFAULT AS IDENTITY ( INCREMENT 1 START 1 MINVALUE 1 MAXVALUE 2147483647 CACHE 1 ),
+    -- id_id integer NOT NULL,
+    -- pending_status character varying(255) COLLATE pg_catalog."default" NOT NULL,
+    -- CONSTRAINT childsmile_app_pending_tutor_pkey PRIMARY KEY (pending_tutor_id),
+    -- CONSTRAINT childsmile_app_pendi_id_id_f8d114a6_fk_childsmil FOREIGN KEY (id_id)
+    --     REFERENCES public.childsmile_app_signedup (id) MATCH SIMPLE
+    --     ON UPDATE NO ACTION
+    --     ON DELETE NO ACTION
+    --     DEFERRABLE INITIALLY DEFERRED
+
 INSERT INTO childsmile_app_pending_tutor (id_id, pending_status)
 SELECT 
     (select id from childsmile_app_signedup where first_name = 'אורי' AND surname = 'כהן') AS id_id,
@@ -985,37 +960,37 @@ SELECT
     (select id from childsmile_app_signedup where first_name = 'גיל' AND surname = 'ורהפטיג') AS id_id,
     'ממתין' AS pending_status
 WHERE EXISTS (SELECT 1 FROM childsmile_app_signedup WHERE first_name = 'גיל' AND surname = 'ורהפטיג');
-```
 
-### just to be clear  - all inserts are used also to brainstorm the process of the application
-### so we can see that we undrestand the process and the data flow
-### which means we now have a general volunteer and a tutor waiting for approval
-### so we need another set of inserts to create pending tutors
-### but then we will need to approve the tutor which means an insert into childsmile_app_tutors
-### with tutoring status from the enum 'אין_חניך'
-### and then delete the pending tutor record
-### so the flow is - insert signedup, insert staff, insert pending tutor, update pending_tutor pending_status, insert tutor, delete pending tutor
-### we will create a new tutor named "נועה רוזנבלום" and approve her
-###  tutors tables schema
-    id_id integer NOT NULL,
-    staff_id integer NOT NULL,
-    tutorship_status character varying(255) COLLATE pg_catalog."default" NOT NULL,
-    preferences text COLLATE pg_catalog."default",
-    tutor_email character varying(254) COLLATE pg_catalog."default",
-    relationship_status character varying(255) COLLATE pg_catalog."default",
-    tutee_wellness character varying(255) COLLATE pg_catalog."default",
-    CONSTRAINT childsmile_app_tutors_pkey PRIMARY KEY (id_id),
-    CONSTRAINT childsmile_app_tutor_id_id_8d3a8a63_fk_childsmil FOREIGN KEY (id_id)
-        REFERENCES public.childsmile_app_signedup (id) MATCH SIMPLE
-        ON UPDATE NO ACTION
-        ON DELETE NO ACTION
-        DEFERRABLE INITIALLY DEFERRED,
-    CONSTRAINT childsmile_app_tutor_staff_id_f4b4ad42_fk_childsmil FOREIGN KEY (staff_id)
-        REFERENCES public.childsmile_app_staff (staff_id) MATCH SIMPLE
-        ON UPDATE NO ACTION
-        ON DELETE NO ACTION
-        DEFERRABLE INITIALLY DEFERRED
-```sql
+
+--- just to be clear  - all inserts are used also to brainstorm the process of the application
+--- so we can see that we undrestand the process and the data flow
+--- which means we now have a general volunteer and a tutor waiting for approval
+--- so we need another set of inserts to create pending tutors
+--- but then we will need to approve the tutor which means an insert into childsmile_app_tutors
+--- with tutoring status from the enum 'אין_חניך'
+--- and then delete the pending tutor record
+--- so the flow is - insert signedup, insert staff, insert pending tutor, update pending_tutor pending_status, insert tutor, delete pending tutor
+--- we will create a new tutor named "נועה רוזנבלום" and approve her
+---  tutors tables schema
+    -- id_id integer NOT NULL,
+    -- staff_id integer NOT NULL,
+    -- tutorship_status character varying(255) COLLATE pg_catalog."default" NOT NULL,
+    -- preferences text COLLATE pg_catalog."default",
+    -- tutor_email character varying(254) COLLATE pg_catalog."default",
+    -- relationship_status character varying(255) COLLATE pg_catalog."default",
+    -- tutee_wellness character varying(255) COLLATE pg_catalog."default",
+    -- CONSTRAINT childsmile_app_tutors_pkey PRIMARY KEY (id_id),
+    -- CONSTRAINT childsmile_app_tutor_id_id_8d3a8a63_fk_childsmil FOREIGN KEY (id_id)
+    --     REFERENCES public.childsmile_app_signedup (id) MATCH SIMPLE
+    --     ON UPDATE NO ACTION
+    --     ON DELETE NO ACTION
+    --     DEFERRABLE INITIALLY DEFERRED,
+    -- CONSTRAINT childsmile_app_tutor_staff_id_f4b4ad42_fk_childsmil FOREIGN KEY (staff_id)
+    --     REFERENCES public.childsmile_app_staff (staff_id) MATCH SIMPLE
+    --     ON UPDATE NO ACTION
+    --     ON DELETE NO ACTION
+    --     DEFERRABLE INITIALLY DEFERRED
+
 --- Create a new tutor named "נועה רוזנבלום" and approve her
 -- insert signedup
 INSERT INTO childsmile_app_signedup (id, first_name, surname, age, gender, phone, city, comment, email, want_tutor)
@@ -1062,10 +1037,10 @@ SELECT * FROM childsmile_app_signedup;
 SELECT * FROM childsmile_app_staff;
 SELECT * FROM childsmile_app_pending_tutor;
 SELECT * FROM childsmile_app_tutors;
-```
+
 --- Create a new tutor named "אביטל גולדשטיין" and approve her
 -- insert signedup
-```sql
+
 INSERT INTO childsmile_app_signedup (id, first_name, surname, age, gender, phone, city, comment, email, want_tutor)
 VALUES (10000009, 'אביטל', 'גולדשטיין', 22, TRUE, '053-9876543', 'עכו', '', 'avigold@mail.com', TRUE);
 -- insert staff
@@ -1104,33 +1079,33 @@ WHERE EXISTS (SELECT 1 FROM childsmile_app_signedup WHERE first_name = 'אביט
 -- delete pending tutor
 DELETE FROM childsmile_app_pending_tutor
 WHERE id_id = (SELECT id FROM childsmile_app_signedup WHERE first_name = 'אביטל' AND surname = 'גולדשטיין');
-```
 
-### now as some 'rest' needed lol, i want to insert data into tasks table but 1st we need to insert into task_types
-### task_types schema
-    id integer NOT NULL GENERATED BY DEFAULT AS IDENTITY ( INCREMENT 1 START 1 MINVALUE 1 MAXVALUE 2147483647 CACHE 1 ),
-    task_type character varying(255) COLLATE pg_catalog."default" NOT NULL,
-    CONSTRAINT childsmile_app_task_types_pkey PRIMARY KEY (id),
-    CONSTRAINT childsmile_app_task_types_task_type_key UNIQUE (task_type)
 
-### These are the 1st task types we will insert
-                    ('Candidate Interview for Tutoring', 'Candidate Interview for Tutoring'),
-                    ('Adding a Tutor', 'Adding a Tutor'),
-                    ('Matching a Tutee', 'Matching a Tutee'),
-                    ('Adding a Family', 'Adding a Family'),
-                    ('Family Status Check', 'Family Status Check'),
-                    ('Family Update', 'Family Update'),
-                    ('Family Deletion', 'Family Deletion'),
-                    ('Adding a Healthy Member', 'Adding a Healthy Member'),
-                    ('Reviewing a Mature Individual', 'Reviewing a Mature Individual'),
-                    ('Tutoring', 'Tutoring'),
-                    ('Tutoring Feedback', 'Tutoring Feedback'),
-                    ('Reviewing Tutor Feedback', 'Reviewing Tutor Feedback'),
-                    ('General Volunteer Feedback', 'General Volunteer Feedback'),
-                    ('Reviewing General Volunteer Feedback', 'Reviewing General Volunteer Feedback'),
-                    ('Feedback Report Generation', 'Feedback Report Generation')
-type should be in Hebrew
-```sql
+--- now as some 'rest' needed lol, i want to insert data into tasks table but 1st we need to insert into task_types
+--- task_types schema
+    -- id integer NOT NULL GENERATED BY DEFAULT AS IDENTITY ( INCREMENT 1 START 1 MINVALUE 1 MAXVALUE 2147483647 CACHE 1 ),
+    -- task_type character varying(255) COLLATE pg_catalog."default" NOT NULL,
+    -- CONSTRAINT childsmile_app_task_types_pkey PRIMARY KEY (id),
+    -- CONSTRAINT childsmile_app_task_types_task_type_key UNIQUE (task_type)
+
+--- These are the 1st task types we will insert
+--                     ('Candidate Interview for Tutoring', 'Candidate Interview for Tutoring'),
+--                     ('Adding a Tutor', 'Adding a Tutor'),
+--                     ('Matching a Tutee', 'Matching a Tutee'),
+--                     ('Adding a Family', 'Adding a Family'),
+--                     ('Family Status Check', 'Family Status Check'),
+--                     ('Family Update', 'Family Update'),
+--                     ('Family Deletion', 'Family Deletion'),
+--                     ('Adding a Healthy Member', 'Adding a Healthy Member'),
+--                     ('Reviewing a Mature Individual', 'Reviewing a Mature Individual'),
+--                     ('Tutoring', 'Tutoring'),
+--                     ('Tutoring Feedback', 'Tutoring Feedback'),
+--                     ('Reviewing Tutor Feedback', 'Reviewing Tutor Feedback'),
+--                     ('General Volunteer Feedback', 'General Volunteer Feedback'),
+--                     ('Reviewing General Volunteer Feedback', 'Reviewing General Volunteer Feedback'),
+--                     ('Feedback Report Generation', 'Feedback Report Generation')
+-- type should be in Hebrew
+
 INSERT INTO childsmile_app_task_types (task_type) VALUES ('ראיון מועמד לחונכות');
 INSERT INTO childsmile_app_task_types (task_type) VALUES ('הוספת חונך');
 INSERT INTO childsmile_app_task_types (task_type) VALUES ('התאמת חניך');
@@ -1146,40 +1121,40 @@ INSERT INTO childsmile_app_task_types (task_type) VALUES ('סקירת משוב �
 INSERT INTO childsmile_app_task_types (task_type) VALUES ('משוב מתנדב כללי');
 INSERT INTO childsmile_app_task_types (task_type) VALUES ('סקירת משוב מתנדב כללי');
 INSERT INTO childsmile_app_task_types (task_type) VALUES ('יצירת דוח משוב');
-```
-### now we can insert into tasks table
-    task_id integer NOT NULL GENERATED BY DEFAULT AS IDENTITY ( INCREMENT 1 START 1 MINVALUE 1 MAXVALUE 2147483647 CACHE 1 ),
-    description text COLLATE pg_catalog."default" NOT NULL,
-    due_date date NOT NULL,
-    status character varying(255) COLLATE pg_catalog."default" NOT NULL,
-    created_at timestamp with time zone NOT NULL,
-    updated_at timestamp with time zone NOT NULL,
-    assigned_to_id integer NOT NULL,
-    related_child_id integer,
-    related_tutor_id integer,
-    task_type_id integer NOT NULL,
-    CONSTRAINT childsmile_app_tasks_pkey PRIMARY KEY (task_id),
-    CONSTRAINT childsmile_app_tasks_assigned_to_id_f6c2927f_fk_childsmil FOREIGN KEY (assigned_to_id)
-        REFERENCES public.childsmile_app_staff (staff_id) MATCH SIMPLE
-        ON UPDATE NO ACTION
-        ON DELETE NO ACTION
-        DEFERRABLE INITIALLY DEFERRED,
-    CONSTRAINT childsmile_app_tasks_related_child_id_4b83f3da_fk_childsmil FOREIGN KEY (related_child_id)
-        REFERENCES public.childsmile_app_children (child_id) MATCH SIMPLE
-        ON UPDATE NO ACTION
-        ON DELETE NO ACTION
-        DEFERRABLE INITIALLY DEFERRED,
-    CONSTRAINT childsmile_app_tasks_related_tutor_id_b1f0f8a1_fk_childsmil FOREIGN KEY (related_tutor_id)
-        REFERENCES public.childsmile_app_tutors (id_id) MATCH SIMPLE
-        ON UPDATE NO ACTION
-        ON DELETE NO ACTION
-        DEFERRABLE INITIALLY DEFERRED,
-    CONSTRAINT childsmile_app_tasks_task_type_id_6488db31_fk_childsmil FOREIGN KEY (task_type_id)
-        REFERENCES public.childsmile_app_task_types (id) MATCH SIMPLE
-        ON UPDATE NO ACTION
-        ON DELETE NO ACTION
-        DEFERRABLE INITIALLY DEFERRED
-```sql
+
+--- now we can insert into tasks table
+    -- task_id integer NOT NULL GENERATED BY DEFAULT AS IDENTITY ( INCREMENT 1 START 1 MINVALUE 1 MAXVALUE 2147483647 CACHE 1 ),
+    -- description text COLLATE pg_catalog."default" NOT NULL,
+    -- due_date date NOT NULL,
+    -- status character varying(255) COLLATE pg_catalog."default" NOT NULL,
+    -- created_at timestamp with time zone NOT NULL,
+    -- updated_at timestamp with time zone NOT NULL,
+    -- assigned_to_id integer NOT NULL,
+    -- related_child_id integer,
+    -- related_tutor_id integer,
+    -- task_type_id integer NOT NULL,
+    -- CONSTRAINT childsmile_app_tasks_pkey PRIMARY KEY (task_id),
+    -- CONSTRAINT childsmile_app_tasks_assigned_to_id_f6c2927f_fk_childsmil FOREIGN KEY (assigned_to_id)
+    --     REFERENCES public.childsmile_app_staff (staff_id) MATCH SIMPLE
+    --     ON UPDATE NO ACTION
+    --     ON DELETE NO ACTION
+    --     DEFERRABLE INITIALLY DEFERRED,
+    -- CONSTRAINT childsmile_app_tasks_related_child_id_4b83f3da_fk_childsmil FOREIGN KEY (related_child_id)
+    --     REFERENCES public.childsmile_app_children (child_id) MATCH SIMPLE
+    --     ON UPDATE NO ACTION
+    --     ON DELETE NO ACTION
+    --     DEFERRABLE INITIALLY DEFERRED,
+    -- CONSTRAINT childsmile_app_tasks_related_tutor_id_b1f0f8a1_fk_childsmil FOREIGN KEY (related_tutor_id)
+    --     REFERENCES public.childsmile_app_tutors (id_id) MATCH SIMPLE
+    --     ON UPDATE NO ACTION
+    --     ON DELETE NO ACTION
+    --     DEFERRABLE INITIALLY DEFERRED,
+    -- CONSTRAINT childsmile_app_tasks_task_type_id_6488db31_fk_childsmil FOREIGN KEY (task_type_id)
+    --     REFERENCES public.childsmile_app_task_types (id) MATCH SIMPLE
+    --     ON UPDATE NO ACTION
+    --     ON DELETE NO ACTION
+    --     DEFERRABLE INITIALLY DEFERRED
+
 INSERT INTO childsmile_app_tasks (description, due_date, status, created_at, updated_at, assigned_to_id, task_type_id)
 VALUES ('ראיון מועמד לחונכות', '2021-12-31', 'לא הושלמה', current_timestamp, current_timestamp, (SELECT staff_id FROM childsmile_app_staff WHERE first_name = 'יובל' AND last_name = 'ברגיל'), (SELECT id FROM childsmile_app_task_types WHERE task_type = 'ראיון מועמד לחונכות'));
 INSERT INTO childsmile_app_tasks (description, due_date, status, created_at, updated_at, assigned_to_id, task_type_id)
@@ -1312,41 +1287,41 @@ INSERT INTO childsmile_app_tasks (description, due_date, status, created_at, upd
 VALUES ('יצירת דוח משוב', '2021-12-31', 'לא הושלמה', current_timestamp, current_timestamp, 
 (SELECT staff_id FROM childsmile_app_staff WHERE username = 'admin'), 
 (SELECT id FROM childsmile_app_task_types WHERE task_type = 'יצירת דוח משוב'));
-```
 
-### now we will insert into childsmile_app_children - these are not tutors or volunteers but sick children
-### must not use any names we used already
-### we will insert 9 children - 3 unhealthy ages 10,11,12, 3 healthy ages 12,13,14, 3 mature individuals ages 18,19,20
-### table schema  childsmile_app_children
-    child_id integer NOT NULL,
-    childfirstname character varying(255) COLLATE pg_catalog."default" NOT NULL,
-    childsurname character varying(255) COLLATE pg_catalog."default" NOT NULL,
-    registrationdate date NOT NULL,
-    lastupdateddate date NOT NULL,
-    gender boolean NOT NULL,
-    responsible_coordinator character varying(255) COLLATE pg_catalog."default" NOT NULL,
-    city character varying(255) COLLATE pg_catalog."default" NOT NULL,
-    child_phone_number character varying(20) COLLATE pg_catalog."default" NOT NULL,
-    treating_hospital character varying(255) COLLATE pg_catalog."default" NOT NULL,
-    date_of_birth date NOT NULL,
-    medical_diagnosis character varying(255) COLLATE pg_catalog."default",
-    diagnosis_date date,
-    marital_status character varying(50) COLLATE pg_catalog."default" NOT NULL,
-    num_of_siblings integer NOT NULL,
-    details_for_tutoring text COLLATE pg_catalog."default" NOT NULL,
-    additional_info text COLLATE pg_catalog."default",
-    tutoring_status character varying(50) COLLATE pg_catalog."default" NOT NULL,
-    current_medical_state character varying(255) COLLATE pg_catalog."default",
-    when_completed_treatments date,
-    father_name character varying(255) COLLATE pg_catalog."default",
-    father_phone character varying(20) COLLATE pg_catalog."default",
-    mother_name character varying(255) COLLATE pg_catalog."default",
-    mother_phone character varying(20) COLLATE pg_catalog."default",
-    street_and_apartment_number character varying(255) COLLATE pg_catalog."default",
-    expected_end_treatment_by_protocol date,
-    has_completed_treatments boolean,
-    CONSTRAINT childsmile_app_children_pkey PRIMARY KEY (child_id)
-```sql
+
+--- now we will insert into childsmile_app_children - these are not tutors or volunteers but sick children
+--- must not use any names we used already
+--- we will insert 9 children - 3 unhealthy ages 10,11,12, 3 healthy ages 12,13,14, 3 mature individuals ages 18,19,20
+--- table schema  childsmile_app_children
+    -- child_id integer NOT NULL,
+    -- childfirstname character varying(255) COLLATE pg_catalog."default" NOT NULL,
+    -- childsurname character varying(255) COLLATE pg_catalog."default" NOT NULL,
+    -- registrationdate date NOT NULL,
+    -- lastupdateddate date NOT NULL,
+    -- gender boolean NOT NULL,
+    -- responsible_coordinator character varying(255) COLLATE pg_catalog."default" NOT NULL,
+    -- city character varying(255) COLLATE pg_catalog."default" NOT NULL,
+    -- child_phone_number character varying(20) COLLATE pg_catalog."default" NOT NULL,
+    -- treating_hospital character varying(255) COLLATE pg_catalog."default" NOT NULL,
+    -- date_of_birth date NOT NULL,
+    -- medical_diagnosis character varying(255) COLLATE pg_catalog."default",
+    -- diagnosis_date date,
+    -- marital_status character varying(50) COLLATE pg_catalog."default" NOT NULL,
+    -- num_of_siblings integer NOT NULL,
+    -- details_for_tutoring text COLLATE pg_catalog."default" NOT NULL,
+    -- additional_info text COLLATE pg_catalog."default",
+    -- tutoring_status character varying(50) COLLATE pg_catalog."default" NOT NULL,
+    -- current_medical_state character varying(255) COLLATE pg_catalog."default",
+    -- when_completed_treatments date,
+    -- father_name character varying(255) COLLATE pg_catalog."default",
+    -- father_phone character varying(20) COLLATE pg_catalog."default",
+    -- mother_name character varying(255) COLLATE pg_catalog."default",
+    -- mother_phone character varying(20) COLLATE pg_catalog."default",
+    -- street_and_apartment_number character varying(255) COLLATE pg_catalog."default",
+    -- expected_end_treatment_by_protocol date,
+    -- has_completed_treatments boolean,
+    -- CONSTRAINT childsmile_app_children_pkey PRIMARY KEY (child_id)
+
 INSERT INTO childsmile_app_children (child_id, childfirstname, childsurname, registrationdate, lastupdateddate, gender, responsible_coordinator, city, child_phone_number, treating_hospital, date_of_birth, medical_diagnosis, diagnosis_date, marital_status, num_of_siblings, details_for_tutoring, additional_info, tutoring_status, current_medical_state, when_completed_treatments, father_name, father_phone, mother_name, mother_phone, street_and_apartment_number, expected_end_treatment_by_protocol, has_completed_treatments) 
 VALUES ( 352233211, 'אביגיל', 'גולדשטיין', current_timestamp, current_timestamp, TRUE, 'ליה צוהר', 'עכו', '050-3334567', 'רמבם', '2015-01-01', 'לוקמיה', '2021-12-31', 'נשואים', 2, 'פרטים לחונכות', 'מידע נוסף', 'למצוא_חונך', 'התחיל כימותרפיה', NULL, 'אהרון', '050-1234567', 'צילה', '050-7654321', 'יוסף גדיש 12', '2023-12-31', FALSE);
 -- now insert 2 more sick children
@@ -1441,15 +1416,15 @@ SELECT
 FROM childsmile_app_children
 WHERE EXTRACT(YEAR FROM AGE(current_date, date_of_birth))::int >= 16 
 AND child_id NOT IN (SELECT child_id FROM childsmile_app_matures);
-```
-@todo - create tutorships, then create feedbacks, then create feedback reports - then we will be able to start DEVING the app from front to back
-### now we will insert into childsmile_app_tutorships
-### for that we need a match - a tutor and a child - with same gender, same city or up to 15 KM away
-### we need a tutor with אין_חניך status and a child with למצוא_חונך status or למצוא_חונך_בעדיפות_גבוה status or למצוא_חונך_אין_באיזור_שלו status
-### we will insert 3 tutorships
-### need to make sure to insert into all the related tables in the correct order and update where needed
-### the order is - insert new signedup, insert new staff, insert new pending tutor, update pending tutor, insert new tutor, delete pending tutor, insert new child that has the appropriate status, insert new tutorship
-```sql
+
+-- @todo - create tutorships, then create feedbacks, then create feedback reports - then we will be able to start DEVING the app from front to back
+--- now we will insert into childsmile_app_tutorships
+--- for that we need a match - a tutor and a child - with same gender, same city or up to 15 KM away
+--- we need a tutor with אין_חניך status and a child with למצוא_חונך status or למצוא_חונך_בעדיפות_גבוה status or למצוא_חונך_אין_באיזור_שלו status
+--- we will insert 3 tutorships
+--- need to make sure to insert into all the related tables in the correct order and update where needed
+--- the order is - insert new signedup, insert new staff, insert new pending tutor, update pending tutor, insert new tutor, delete pending tutor, insert new child that has the appropriate status, insert new tutorship
+
 -- insert new signedup
 INSERT INTO childsmile_app_signedup (id, first_name, surname, age, gender, phone, city, comment, email, want_tutor)
 VALUES (100000001, 'אלעזר', 'בוזגלו', 20, FALSE, '050-3334567', 'עכו', '','elazbu@mail.com', TRUE);
@@ -1605,12 +1580,12 @@ SET tutorship_status = 'יש_חניך',
     relationship_status = (SELECT marital_status FROM childsmile_app_children WHERE child_id = 3522332129),
     tutee_wellness = (SELECT current_medical_state FROM childsmile_app_children WHERE child_id = 3522332129)
 WHERE id_id = (SELECT id_id FROM childsmile_app_tutors WHERE id_id = (SELECT id FROM childsmile_app_signedup WHERE first_name = 'אלעזר' AND surname = 'בוזגלו'));
-```
-### now we need feedback from a tutor and feedback from a general volunteer
-### we will insert 2 feedbacks each
-### we will insert 2 feedback reports of a tutor so insert feedback table and tutorfeedback table
-### we will insert 1 feedback report of a general volunteer so insert feedback table and generalvolunteerfeedback table
-```sql
+
+--- now we need feedback from a tutor and feedback from a general volunteer
+--- we will insert 2 feedbacks each
+--- we will insert 2 feedback reports of a tutor so insert feedback table and tutorfeedback table
+--- we will insert 1 feedback report of a general volunteer so insert feedback table and generalvolunteerfeedback table
+
 -- insert feedback from a tutor
 /* table schemes
 CREATE TABLE IF NOT EXISTS public.childsmile_app_feedback
@@ -1816,4 +1791,169 @@ VALUES (
     FALSE -- Has completed treatments
 );
 --- inserts 19 more children with different names and details
+INSERT INTO childsmile_app_children (
+    child_id, 
+    childfirstname, 
+    childsurname, 
+    registrationdate, 
+    lastupdateddate, 
+    gender, 
+    responsible_coordinator, 
+    city, 
+    child_phone_number, 
+    treating_hospital, 
+    date_of_birth, 
+    medical_diagnosis, 
+    diagnosis_date, 
+    marital_status, 
+    num_of_siblings, 
+    details_for_tutoring, 
+    additional_info, 
+    tutoring_status, 
+    current_medical_state, 
+    when_completed_treatments, 
+    father_name, 
+    father_phone, 
+    mother_name, 
+    mother_phone, 
+    street_and_apartment_number, 
+    expected_end_treatment_by_protocol, 
+    has_completed_treatments
+)
+VALUES (
+    (select COALESCE(max(child_id), 0) from childsmile_app_children) + 1, -- Child ID (auto-incremented)
+    'ששון', -- First name
+    'לואי', -- Last name
+    current_timestamp, -- Registration date
+    current_timestamp, -- Last updated date
+    FALSE, -- Gender (TRUE for male, FALSE for female)
+    'ליה צוהר', -- Responsible coordinator
+    'תל אביב - יפו', -- City (must exist in settlements_n_streets.json)
+        '0' || COALESCE(
+            (select max(regexp_replace(child_phone_number, '-', '', 'g')::bigint) from childsmile_app_children where child_phone_number IS NOT NULL and child_phone_number != ''), 
+            0
+        ) + 1, -- Child's phone number
+    'שיבא תל השומר', -- Treating hospital (must exist in hospitals.json)
+    '2015-01-01', -- Date of birth (child is 8 years old)
+    'לוקמיה', -- Medical diagnosis
+    '2021-12-31', -- Diagnosis date
+    'נשואים', -- Marital status of parents
+    2, -- Number of siblings
+    'פרטים לחונכות', -- Details for tutoring
+    'מידע נוסף', -- Additional info
+    'למצוא_חונך', -- Tutoring status
+    'התחיל כימותרפיה', -- Current medical state
+    NULL, -- When completed treatments
+    'דוד', -- Father's name
+   '0' || 
+        COALESCE(
+            (select max(regexp_replace(father_phone, '-', '', 'g')::bigint) from childsmile_app_children where father_phone IS NOT NULL and father_phone != ''), 
+            0
+        ) + 1, -- Father's phone number
+    'שרה', -- Mother's name
+    '0' || 
+        COALESCE(
+            (select max(regexp_replace(mother_phone, '-', '', 'g')::bigint) from childsmile_app_children where mother_phone IS NOT NULL and mother_phone != ''), 
+            0
+        ) + 1, -- Mother's phone number
+    'הרצל 10', -- Street and apartment number (must exist in settlements_n_streets.json)
+    '2023-12-31', -- Expected end of treatment by protocol
+    FALSE -- Has completed treatments
+);
 
+INSERT INTO childsmile_app_children (
+    child_id, childfirstname, childsurname, registrationdate, lastupdateddate, gender, responsible_coordinator, city,
+    child_phone_number, treating_hospital, date_of_birth, medical_diagnosis, diagnosis_date, marital_status,
+    num_of_siblings, details_for_tutoring, additional_info, tutoring_status, current_medical_state,
+    when_completed_treatments, father_name, father_phone, mother_name, mother_phone, street_and_apartment_number,
+    expected_end_treatment_by_protocol, has_completed_treatments
+) VALUES
+(
+    (select COALESCE(max(child_id), 0) from childsmile_app_children) + 1,
+    'מאיה', 'כהן', current_timestamp, current_timestamp, TRUE, 'ליה צוהר', 'חיפה',
+    '0' || COALESCE((select max(regexp_replace(child_phone_number, '-', '', 'g')::bigint) from childsmile_app_children where child_phone_number IS NOT NULL and child_phone_number != ''),0)+1,
+    'רמבם חיפה', '2016-06-15', 'סוכרת נעורים', '2023-05-12', 'נשואים', 1, 'מעוניינת בחונכת תומכת', 'מידע נוסף', 'למצוא_חונך', 'מאוזנת בטיפול', NULL,
+    'אורי', '0' || COALESCE((select max(regexp_replace(father_phone, '-', '', 'g')::bigint) from childsmile_app_children where father_phone IS NOT NULL and father_phone != ''),0)+1,
+    'טליה', '0' || COALESCE((select max(regexp_replace(mother_phone, '-', '', 'g')::bigint) from childsmile_app_children where mother_phone IS NOT NULL and mother_phone != ''),0)+1,
+    'בן יהודה 12', '2024-12-31', FALSE
+),
+
+(
+    (select COALESCE(max(child_id), 0) from childsmile_app_children) + 2,
+    'אורי', 'לוי', current_timestamp, current_timestamp, FALSE, 'ליה צוהר', 'באר שבע',
+    '0' || COALESCE((select max(regexp_replace(child_phone_number, '-', '', 'g')::bigint) from childsmile_app_children where child_phone_number IS NOT NULL and child_phone_number != ''),0)+1,
+    'סורוקה באר שבע', '2014-03-20', 'אסתמה חמורה', '2022-09-10', 'גרושים', 3, 'זקוק לעזרה בלימודים', 'מידע נוסף', 'פעיל', 'בטיפול תרופתי', NULL,
+    'יוסי', '0' || COALESCE((select max(regexp_replace(father_phone, '-', '', 'g')::bigint) from childsmile_app_children where father_phone IS NOT NULL and father_phone != ''),0)+1,
+    'רונית', '0' || COALESCE((select max(regexp_replace(mother_phone, '-', '', 'g')::bigint) from childsmile_app_children where mother_phone IS NOT NULL and mother_phone != ''),0)+1,
+    'דרך חברון 45', '2025-06-30', FALSE
+),
+
+(
+    (select COALESCE(max(child_id), 0) from childsmile_app_children) + 3,
+    'דנה', 'פרץ', current_timestamp, current_timestamp, TRUE, 'ליה צוהר', 'נתניה',
+    '0' || COALESCE((select max(regexp_replace(child_phone_number, '-', '', 'g')::bigint) from childsmile_app_children where child_phone_number IS NOT NULL and child_phone_number != ''),0)+1,
+    'לניאדו נתניה', '2017-11-01', 'צליאק', '2023-01-15', 'נשואים', 2, 'פרטים לחונכות', 'מידע נוסף', 'למצוא_חונך', 'דיאטה קפדנית', NULL,
+    'יואב', '0' || COALESCE((select max(regexp_replace(father_phone, '-', '', 'g')::bigint) from childsmile_app_children where father_phone IS NOT NULL and father_phone != ''),0)+1,
+    'נועה', '0' || COALESCE((select max(regexp_replace(mother_phone, '-', '', 'g')::bigint) from childsmile_app_children where mother_phone IS NOT NULL and mother_phone != ''),0)+1,
+    'שמואל הנגיד 3', '2024-08-31', FALSE
+),
+
+(
+    (select COALESCE(max(child_id), 0) from childsmile_app_children) + 4,
+    'אדם', 'רוזן', current_timestamp, current_timestamp, FALSE, 'ליה צוהר', 'ירושלים',
+    '0' || COALESCE((select max(regexp_replace(child_phone_number, '-', '', 'g')::bigint) from childsmile_app_children where child_phone_number IS NOT NULL and child_phone_number != ''),0)+1,
+    'הדסה עין כרם ירושלים', '2015-12-10', 'אפילפסיה', '2021-04-20', 'פרודים', 0, 'פרטים לחונכות', 'מידע נוסף', 'פעיל', 'בטיפול תרופתי', NULL,
+    'גדי', '0' || COALESCE((select max(regexp_replace(father_phone, '-', '', 'g')::bigint) from childsmile_app_children where father_phone IS NOT NULL and father_phone != ''),0)+1,
+    'רונית', '0' || COALESCE((select max(regexp_replace(mother_phone, '-', '', 'g')::bigint) from childsmile_app_children where mother_phone IS NOT NULL and mother_phone != ''),0)+1,
+    'רחוב יפו 210', '2025-01-31', FALSE
+),
+
+(
+    (select COALESCE(max(child_id), 0) from childsmile_app_children) + 5,
+    'תמר', 'גל', current_timestamp, current_timestamp, TRUE, 'ליה צוהר', 'חולון',
+    '0' || COALESCE((select max(regexp_replace(child_phone_number, '-', '', 'g')::bigint) from childsmile_app_children where child_phone_number IS NOT NULL and child_phone_number != ''),0)+1,
+    'וולפסון חולון', '2013-08-04', 'מום לבבי', '2020-11-18', 'נשואים', 4, 'פרטים לחונכות', 'מידע נוסף', 'מחפש_חונך', 'מעקב רפואי', NULL,
+    'רועי', '0' || COALESCE((select max(regexp_replace(father_phone, '-', '', 'g')::bigint) from childsmile_app_children where father_phone IS NOT NULL and father_phone != ''),0)+1,
+    'שירה', '0' || COALESCE((select max(regexp_replace(mother_phone, '-', '', 'g')::bigint) from childsmile_app_children where mother_phone IS NOT NULL and mother_phone != ''),0)+1,
+    'סוקולוב 89', '2025-03-31', FALSE
+),
+
+(
+    (select COALESCE(max(child_id), 0) from childsmile_app_children) + 6,
+    'אביתר', 'שמואלי', current_timestamp, current_timestamp, FALSE, 'ליה צוהר', 'אשדוד',
+    '0' || COALESCE((select max(regexp_replace(child_phone_number, '-', '', 'g')::bigint) from childsmile_app_children where child_phone_number IS NOT NULL and child_phone_number != ''),0)+1,
+    'אסותא אשדוד', '2014-05-25', 'לוקמיה', '2021-07-30', 'נשואים', 1, 'זקוק לחונך ללמידה', 'מידע נוסף', 'פעיל', 'מטופל אינטנסיבי', NULL,
+    'מאור', '0' || COALESCE((select max(regexp_replace(father_phone, '-', '', 'g')::bigint) from childsmile_app_children where father_phone IS NOT NULL and father_phone != ''),0)+1,
+    'אורלי', '0' || COALESCE((select max(regexp_replace(mother_phone, '-', '', 'g')::bigint) from childsmile_app_children where mother_phone IS NOT NULL and mother_phone != ''),0)+1,
+    'הפלמ"ח 2', '2024-10-31', FALSE
+),
+
+(
+    (select COALESCE(max(child_id), 0) from childsmile_app_children) + 7,
+    'נועה', 'ברק', current_timestamp, current_timestamp, TRUE, 'ליה צוהר', 'רעננה',
+    '0' || COALESCE((select max(regexp_replace(child_phone_number, '-', '', 'g')::bigint) from childsmile_app_children where child_phone_number IS NOT NULL and child_phone_number != ''),0)+1,
+    'מרכז לוינשטיין רעננה', '2017-02-12', 'CP קל', '2023-08-01', 'גרושים', 2, 'פרטים לחונכות', 'מידע נוסף', 'למצוא_חונך', 'שיקום פיזיוטרפי', NULL,
+    'חיים', '0' || COALESCE((select max(regexp_replace(father_phone, '-', '', 'g')::bigint) from childsmile_app_children where father_phone IS NOT NULL and father_phone != ''),0)+1,
+    'דנה', '0' || COALESCE((select max(regexp_replace(mother_phone, '-', '', 'g')::bigint) from childsmile_app_children where mother_phone IS NOT NULL and mother_phone != ''),0)+1,
+    'המעפילים 8', '2025-05-31', FALSE
+),
+
+(
+    (select COALESCE(max(child_id), 0) from childsmile_app_children) + 8,
+    'עמית', 'זרחיה', current_timestamp, current_timestamp, FALSE, 'ליה צוהר', 'אילת',
+    '0' || COALESCE((select max(regexp_replace(child_phone_number, '-', '', 'g')::bigint) from childsmile_app_children where child_phone_number IS NOT NULL and child_phone_number != ''),0)+1,
+    'יוספטל אילת', '2016-01-30', 'בעיית נשימה', '2022-03-10', 'נשואים', 3, 'מעוניין בתמיכה בלימודים', 'מידע נוסף', 'למצוא_חונך', 'מעקב נשימתי', NULL,
+    'יעקב', '0' || COALESCE((select max(regexp_replace(father_phone, '-', '', 'g')::bigint) from childsmile_app_children where father_phone IS NOT NULL and father_phone != ''),0)+1,
+    'ורד', '0' || COALESCE((select max(regexp_replace(mother_phone, '-', '', 'g')::bigint) from childsmile_app_children where mother_phone IS NOT NULL and mother_phone != ''),0)+1,
+    'בן גוריון 50', '2025-09-30', FALSE
+),
+
+(
+    (select COALESCE(max(child_id), 0) from childsmile_app_children) + 9,
+    'ליאן', 'בן חמו', current_timestamp, current_timestamp, TRUE, 'ליה צוהר', 'כפר סבא',
+    '0' || COALESCE((select max(regexp_replace(child_phone_number, '-', '', 'g')::bigint) from childsmile_app_children where child_phone_number IS NOT NULL and child_phone_number != ''),0)+1,
+    'מאיר כפר סבא', '2013-10-05', 'סכרת נעורים', '2020-02-25', 'נשואים', 1, 'מעוניינת בליווי לימודי', 'מידע נוסף', 'למצוא_חונך', 'מאוזנת', NULL,
+    'רונן', '0' || COALESCE((select max(regexp_replace(father_phone, '-', '', 'g')::bigint) from childsmile_app_children where father_phone IS NOT NULL and father_phone != ''),0)+1,
+    'יעל', '0' || COALESCE((select max(regexp_replace(mother_phone, '-', '', 'g')::bigint) from childsmile_app_children where mother_phone IS NOT NULL and mother_phone != ''),0)+1,
+    'ויצמן 18', '2025-12-31', FALSE
+);
