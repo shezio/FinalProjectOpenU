@@ -294,6 +294,8 @@ const resources = {
       'Error fetching active tutors report': 'שגיאה בטעינת דוח חונכים פעילים',
       "Failed to load the map.": "טעינת המפה נכשלה",
       "Loading map...": "מפה בטעינה...",
+      "Child Gender": "מין הילד",
+      "Tutor Gender": "מין החונך",
     }
   }
 };
