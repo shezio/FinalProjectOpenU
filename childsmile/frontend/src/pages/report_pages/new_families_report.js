@@ -129,24 +129,30 @@ const NewFamiliesReport = () => {
               <table className="tutorship-pending-data-grid">
                 <thead>
                   <tr>
+                    <th>
+                      <input
+                        type="checkbox"
+                        onChange={(e) => {
+                          const isChecked = e.target.checked;
+                          const updatedFamilies = families.map((family) => ({
+                            ...family,
+                            selected: isChecked,
+                          }));
+                          setFamilies(updatedFamilies);
+                        }}
+                      />
+                    </th>
                     <th>{t("Child Full Name")}</th>
                     <th>{t("Father Name")}</th>
                     <th>{t("Father Phone")}</th>
                     <th>{t("Mother Name")}</th>
                     <th>{t("Mother Phone")}</th>
                     <th>{t("Registration Date")}</th>
-                    <th>{t("Select")}</th>
                   </tr>
                 </thead>
                 <tbody>
                   {families.map((family, index) => (
                     <tr key={index}>
-                      <td>{family.child_firstname} {family.child_lastname}</td>
-                      <td>{family.father_name}</td>
-                      <td>{family.father_phone}</td>
-                      <td>{family.mother_name}</td>
-                      <td>{family.mother_phone}</td>
-                      <td>{family.registration_date}</td>
                       <td>
                         <input
                           type="checkbox"
@@ -158,6 +164,12 @@ const NewFamiliesReport = () => {
                           }}
                         />
                       </td>
+                      <td>{family.child_firstname} {family.child_lastname}</td>
+                      <td>{family.father_name}</td>
+                      <td>{family.father_phone}</td>
+                      <td>{family.mother_name}</td>
+                      <td>{family.mother_phone}</td>
+                      <td>{family.registration_date}</td>
                     </tr>
                   ))}
                 </tbody>

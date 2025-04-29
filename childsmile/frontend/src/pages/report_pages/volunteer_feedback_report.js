@@ -121,6 +121,19 @@ const VolunteerFeedbackReport = () => {
                 <table className="data-grid">
                   <thead>
                     <tr>
+                    <th>
+                        <input
+                          type="checkbox"
+                          onChange={(e) => {
+                            const isChecked = e.target.checked;
+                            const updatedFeedbacks = filteredFeedbacks.map((feedback) => ({
+                              ...feedback,
+                              selected: isChecked,
+                            }));
+                            setFilteredFeedbacks(updatedFeedbacks);
+                          }}
+                        />
+                      </th>
                       <th>{t("Volunteer Name")}</th>
                       <th>{t("Event Date")}</th>
                       <th>{t("Feedback Filled At")}</th>
@@ -128,19 +141,11 @@ const VolunteerFeedbackReport = () => {
                       <th>{t("Exceptional Events")}</th>
                       <th>{t("Anything Else")}</th>
                       <th>{t("Comments")}</th>
-                      <th>{t("Select")}</th>
                     </tr>
                   </thead>
                   <tbody>
                     {filteredFeedbacks.map((feedback, index) => (
                       <tr key={index}>
-                        <td>{feedback.volunteer_name}</td>
-                        <td>{feedback.event_date}</td>
-                        <td>{feedback["feedback_filled_at"]}</td>
-                        <td>{feedback.description}</td>
-                        <td>{feedback.exceptional_events}</td>
-                        <td>{feedback.anything_else}</td>
-                        <td>{feedback.comments}</td>
                         <td>
                           <input
                             type="checkbox"
@@ -152,6 +157,13 @@ const VolunteerFeedbackReport = () => {
                             }}
                           />
                         </td>
+                        <td>{feedback.volunteer_name}</td>
+                        <td>{feedback.event_date}</td>
+                        <td>{feedback["feedback_filled_at"]}</td>
+                        <td>{feedback.description}</td>
+                        <td>{feedback.exceptional_events}</td>
+                        <td>{feedback.anything_else}</td>
+                        <td>{feedback.comments}</td>
                       </tr>
                     ))}
                   </tbody>

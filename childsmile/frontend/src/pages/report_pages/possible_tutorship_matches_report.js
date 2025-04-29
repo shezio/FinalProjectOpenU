@@ -115,7 +115,19 @@ const PossibleTutorshipMatchesReport = () => {
                 <table className="tutorship-pending-data-grid">
                   <thead>
                     <tr>
-                      <th>{t("Select")}</th>
+                      <th>
+                        <input
+                          type="checkbox"
+                          onChange={(e) => {
+                            const isChecked = e.target.checked;
+                            const updatedMatches = filteredMatches.map((match) => ({
+                              ...match,
+                              selected: isChecked,
+                            }));
+                            setFilteredMatches(updatedMatches);
+                          }}
+                        />
+                      </th>
                       <th>{t("Child Full Name")}</th>
                       <th>{t("Tutor Full Name")}</th>
                       <th>{t("Child City")}</th>

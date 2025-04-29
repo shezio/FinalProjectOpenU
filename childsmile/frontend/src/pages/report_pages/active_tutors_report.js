@@ -133,18 +133,27 @@ const ActiveTutorsReport = () => {
               <table className="data-grid">
                 <thead>
                   <tr>
+                  <th>
+                      <input
+                        type="checkbox"
+                        onChange={(e) => {
+                          const isChecked = e.target.checked;
+                          const updatedTutors = tutors.map((tutor) => ({
+                            ...tutor,
+                            selected: isChecked,
+                          }));
+                          setTutors(updatedTutors);
+                        }}
+                      />
+                    </th>
                     <th>שם חונך</th>
                     <th>שם חניך</th>
                     <th>תאריך התאמת חונכות</th>
-                    <th>בחר</th>
                   </tr>
                 </thead>
                 <tbody>
                   {tutors.map((tutor, index) => (
                     <tr key={index}>
-                      <td>{tutor.tutor_firstname} {tutor.tutor_lastname}</td>
-                      <td>{tutor.child_firstname} {tutor.child_lastname}</td>
-                      <td>{tutor.created_date}</td>
                       <td>
                         <input
                           type="checkbox"
@@ -156,6 +165,9 @@ const ActiveTutorsReport = () => {
                           }}
                         />
                       </td>
+                      <td>{tutor.tutor_firstname} {tutor.tutor_lastname}</td>
+                      <td>{tutor.child_firstname} {tutor.child_lastname}</td>
+                      <td>{tutor.created_date}</td>
                     </tr>
                   ))}
                 </tbody>

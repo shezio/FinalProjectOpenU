@@ -121,6 +121,19 @@ const TutorFeedbackReport = () => {
                 <table className="data-grid">
                   <thead>
                     <tr>
+                      <th>
+                        <input
+                          type="checkbox"
+                          onChange={(e) => {
+                            const isChecked = e.target.checked;
+                            const updatedFeedbacks = filteredFeedbacks.map((feedback) => ({
+                              ...feedback,
+                              selected: isChecked,
+                            }));
+                            setFilteredFeedbacks(updatedFeedbacks);
+                          }}
+                        />
+                      </th>
                       <th>{t("Tutor Name")}</th>
                       <th>{t("Tutee Name")}</th>
                       <th>{t("Is It Your Tutee?")}</th>
@@ -131,22 +144,11 @@ const TutorFeedbackReport = () => {
                       <th>{t("Exceptional Events")}</th>
                       <th>{t("Anything Else")}</th>
                       <th>{t("Comments")}</th>
-                      <th>{t("Select")}</th>
                     </tr>
                   </thead>
                   <tbody>
                     {filteredFeedbacks.map((feedback, index) => (
                       <tr key={index}>
-                        <td>{feedback.tutor_name}</td>
-                        <td>{feedback.tutee_name}</td>
-                        <td>{feedback.is_it_your_tutee ? t("Yes") : t("No")}</td>
-                        <td>{feedback.is_first_visit ? t("Yes") : t("No")}</td>
-                        <td>{feedback.event_date}</td>
-                        <td>{feedback["feedback_filled_at"]}</td>
-                        <td>{feedback.description}</td>
-                        <td>{feedback.exceptional_events}</td>
-                        <td>{feedback.anything_else}</td>
-                        <td>{feedback.comments}</td>
                         <td>
                           <input
                             type="checkbox"
@@ -158,6 +160,16 @@ const TutorFeedbackReport = () => {
                             }}
                           />
                         </td>
+                        <td>{feedback.tutor_name}</td>
+                        <td>{feedback.tutee_name}</td>
+                        <td>{feedback.is_it_your_tutee ? t("Yes") : t("No")}</td>
+                        <td>{feedback.is_first_visit ? t("Yes") : t("No")}</td>
+                        <td>{feedback.event_date}</td>
+                        <td>{feedback["feedback_filled_at"]}</td>
+                        <td>{feedback.description}</td>
+                        <td>{feedback.exceptional_events}</td>
+                        <td>{feedback.anything_else}</td>
+                        <td>{feedback.comments}</td>
                       </tr>
                     ))}
                   </tbody>
