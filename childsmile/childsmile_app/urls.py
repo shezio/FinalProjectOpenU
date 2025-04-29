@@ -25,7 +25,7 @@ from .views import (
     create_family,
     update_family,
     delete_family,
-
+    calculate_possible_matches,
 )
 
 from .unused_views import (
@@ -147,5 +147,10 @@ urlpatterns = [
         "api/delete_family/<int:child_id>/",
         delete_family,
         name="delete_family",
+    ),
+    path(
+        "api/calculate_possible_matches/",
+        calculate_possible_matches,
+        name="calculate_possible_matches",
     ),
 ]

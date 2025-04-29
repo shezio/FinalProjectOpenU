@@ -214,18 +214,27 @@ const FamiliesPerLocationReport = () => {
               <table className="families-data-grid">
                 <thead>
                   <tr>
+                    <th>
+                      <input
+                        type="checkbox"
+                        onChange={(e) => {
+                          const isChecked = e.target.checked;
+                          const updatedFamilies = families.map((family) => ({
+                            ...family,
+                            selected: isChecked,
+                          }));
+                          setFamilies(updatedFamilies);
+                        }}
+                      />
+                    </th>
                     <th>{t("Child Full Name")}</th>
                     <th>{t("City")}</th>
                     <th>{t("Registration Date")}</th>
-                    <th>{t("Select")}</th>
                   </tr>
                 </thead>
                 <tbody>
                   {families.map((family, index) => (
                     <tr key={index}>
-                      <td>{`${family.first_name} ${family.last_name}`}</td>
-                      <td>{family.city}</td>
-                      <td>{family.registration_date}</td>
                       <td>
                         <input
                           type="checkbox"
@@ -237,6 +246,9 @@ const FamiliesPerLocationReport = () => {
                           }}
                         />
                       </td>
+                      <td>{`${family.first_name} ${family.last_name}`}</td>
+                      <td>{family.city}</td>
+                      <td>{family.registration_date}</td>
                     </tr>
                   ))}
                 </tbody>

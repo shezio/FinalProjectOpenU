@@ -12,6 +12,7 @@
     /* Align the grid container to the right */
     max-width: 100%;
     /* Ensure the grid does not exceed the visible area */
+    overflow-y: auto;
 }
 
 @media (max-width: 2400px) {
@@ -21,6 +22,7 @@
         width: calc(100% - 550px); /* Adjust width to leave space for the sidebar */
         margin-left: 100px; /* Adjust left margin for smaller screens */
         margin-right: 30px; /* Adjust right margin for smaller screens */
+        overflow-y: auto;
     }
 
     .page-content .tutorship-pending-data-grid {

@@ -147,3 +147,8 @@ curl -X GET http://localhost:8000/api/permissions/ -b cookies.txt
 
 curl -X POST http://localhost:8000/api/logout/ -d "username=admin&password=111" -c cookies.txt
 
+
+test matches api with curl
+curl -X POST http://localhost:8000/api/login/ -d "username=admin&password=111" -c cookies.txt
+curl -X GET http://localhost:8000/api/permissions/ -b cookies.txt
+curl -X POST http://localhost:8000/api/calculate_possible_matches/ -b cookies.txt -d "username=admin&password=111" -c cookies.txt

@@ -1,15 +1,3 @@
-from django.db import DatabaseError
-from django.core.cache import cache
-from rest_framework import viewsets, status
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.response import Response
-from rest_framework.decorators import action, api_view
-from django.http import HttpResponse, JsonResponse
-from django.views import View
-from django.db import connection
-from django.views.decorators.csrf import csrf_exempt
-from django.db import transaction
-from django.utils.timezone import now
 from .models import (
     Permissions,
     Role,
@@ -29,16 +17,6 @@ from .models import (
     Task_Types,
     PossibleMatches,  # Add this line
 )
-import csv
-import datetime
-import requests
-import urllib3
-from django.utils.timezone import make_aware
-from geopy.exc import GeocoderTimedOut
-from geopy.geocoders import Nominatim
-import threading, time
-from time import sleep
-
 from .unused_views import (
     PermissionsViewSet,
     RoleViewSet,
@@ -63,6 +41,291 @@ from .unused_views import (
     NewFamiliesLastMonthReportView,
     PotentialTutorshipMatchReportView,
 )
+from django.db import DatabaseError
+from django.core.cache import cache
+from rest_framework import viewsets, status
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.decorators import action, api_view
+from django.http import HttpResponse, JsonResponse
+from django.views import View
+from django.db import connection
+from django.views.decorators.csrf import csrf_exempt
+from django.db import transaction
+from django.utils.timezone import now
+import datetime
+import urllib3
+from django.utils.timezone import make_aware
+from geopy.exc import GeocoderTimedOut
+from geopy.geocoders import Nominatim
+import threading, time
+from time import sleep
+from math import sin, cos, sqrt, atan2, radians, ceil
+import json
+import os
+
+DISTANCES_FILE = os.path.join(os.path.dirname(__file__), "distances.json")
+
+def check_matches_permissions(request, required_permissions):
+    """
+    Check if the user has the required permissions for possible matches.
+    :param request: The HTTP request object.
+    :param required_permissions: List of required permissions.
+    :raises PermissionError: If the user does not have the required permissions.
+    """
+    user_id = request.session.get("user_id")
+    if not user_id:
+        raise PermissionError("Authentication credentials were not provided.")
+
+    for permission in required_permissions:
+        if not has_permission(request, "possiblematches", permission):
+            raise PermissionError(f"You do not have {permission} permission.")
+
+def fetch_possible_matches():
+    """
+    Fetch possible matches from the database.
+    """
+    query = """
+    SELECT
+        child.child_id,
+        tutor.id_id AS tutor_id,
+        CONCAT(child.childfirstname, ' ', child.childsurname) AS child_full_name,
+        CONCAT(signedup.first_name, ' ', signedup.surname) AS tutor_full_name,
+        child.city AS child_city,
+        signedup.city AS tutor_city,
+        EXTRACT(YEAR FROM AGE(current_date, child.date_of_birth))::int AS child_age,
+        signedup.age AS tutor_age,
+        child.gender AS child_gender,
+        signedup.gender AS tutor_gender,
+        0 AS distance_between_cities,
+        100 AS grade,
+        FALSE AS is_used
+    FROM childsmile_app_children child
+    JOIN childsmile_app_signedup signedup
+        ON child.gender = signedup.gender
+    JOIN childsmile_app_tutors tutor
+        ON signedup.id = tutor.id_id
+    WHERE NOT EXISTS (
+        SELECT 1
+        FROM childsmile_app_tutorships tutorship
+        WHERE tutorship.child_id = child.child_id or tutorship.tutor_id = tutor.id_id
+    );
+    """
+    with connection.cursor() as cursor:
+        cursor.execute(query)
+        return [
+            {
+                "child_id": row[0],
+                "tutor_id": row[1],
+                "child_full_name": row[2],
+                "tutor_full_name": row[3],
+                "child_city": row[4],
+                "tutor_city": row[5],
+                "child_age": row[6],
+                "tutor_age": row[7],
+                "child_gender": row[8],
+                "tutor_gender": row[9],
+                "distance_between_cities": row[10],
+                "grade": row[11],
+                "is_used": row[12],
+            }
+            for row in cursor.fetchall()
+        ]
+
+def clear_possible_matches():
+    """
+    Clear the possible matches table.
+    This function deletes all records from the PossibleMatches table.
+    """
+    PossibleMatches.objects.all().delete()
+    print("DEBUG: Emptied the possiblematches table.")
+
+def insert_new_matches(matches):
+    """
+    Insert new matches into the PossibleMatches table.
+    :param matches: List of match objects to be inserted.
+    """
+    new_matches = [
+        PossibleMatches(
+            child_id=match["child_id"],
+            tutor_id=match["tutor_id"],
+            child_full_name=match["child_full_name"],
+            tutor_full_name=match["tutor_full_name"],
+            child_city=match["child_city"],
+            tutor_city=match["tutor_city"],
+            child_age=match["child_age"],
+            tutor_age=match["tutor_age"],
+            child_gender=match["child_gender"],
+            tutor_gender=match["tutor_gender"],
+            distance_between_cities=match["distance_between_cities"],
+            grade=match["grade"],
+            is_used=match["is_used"],
+        )
+        for match in matches
+    ]
+    PossibleMatches.objects.bulk_create(new_matches)
+    print(f"DEBUG: Inserted {len(new_matches)} new records into possiblematches.")
+
+def calculate_distances(matches):
+    """
+    Calculate distances between child and tutor cities in the matches.
+    :param matches: List of match objects, each containing child_city and tutor_city.
+    :return: List of matches with calculated distances.
+    """
+    debug_index = 0  # Initialize debug index
+    for match in matches:
+        distance = calculate_distance_between_cities(
+            match["child_city"], match["tutor_city"]
+        )
+        match["distance_between_cities"] = distance if distance is not None else 0
+        # print the distance for debugging and the index of the match
+        # print(
+        #     f"DEBUG: Match #{debug_index} Calculated distance between {match['child_city']} and {match['tutor_city']}: {match['distance']} km"
+        # )
+        #debug_index += 1  # Increment debug index for the next match
+    return matches
+
+# helper function to calculate distance between 2 cities in Israel
+# cities come in hebrew names, we need to return the distance in km
+def calculate_distance_between_cities(city1, city2):
+    """
+    Calculate the distance between two cities in kilometers.
+    First, check the distances.json file for the distance.
+    If not found, calculate the distance, add it to the file, and return it.
+    """
+    # Ensure the file exists and is properly formatted
+    if not os.path.exists(DISTANCES_FILE):
+        with open(DISTANCES_FILE, "w", encoding="utf-8") as file:
+            json.dump({}, file, ensure_ascii=False, indent=4)
+
+    # Load distances from the JSON file
+    with open(DISTANCES_FILE, "r", encoding="utf-8") as file:
+        try:
+            distances = json.load(file)
+        except json.JSONDecodeError:
+            distances = {}
+
+    # Check if the distance is already in the file
+    if city1 in distances and city2 in distances[city1]:
+        print(f"DEBUG: Found distance for {city1} and {city2} in file: {distances[city1][city2]} km")
+        return distances[city1][city2]
+    elif city2 in distances and city1 in distances[city2]:
+        print(f"DEBUG: Found distance for {city2} and {city1} in file: {distances[city2][city1]} km")
+        return distances[city2][city1]
+
+    # If not found, calculate the distance
+    geolocator = Nominatim(user_agent="childsmile", timeout=5)
+    location1 = geolocator.geocode(city1)
+    location2 = geolocator.geocode(city2)
+
+    if location1 and location2:
+        lat1, lon1 = location1.latitude, location1.longitude
+        lat2, lon2 = location2.latitude, location2.longitude
+
+        # Haversine formula
+        R = 6371  # Radius of the Earth in kilometers
+        dlat = radians(lat2 - lat1)
+        dlon = radians(lon2 - lon1)
+        a = (sin(dlat / 2) ** 2) + cos(radians(lat1)) * cos(radians(lat2)) * (sin(dlon / 2) ** 2)
+        c = 2 * atan2(sqrt(a), sqrt(1 - a))
+        distance = ceil(R * c)  # Round up to the nearest whole number
+
+        # Add the calculated distance to the file
+        if city1 not in distances:
+            distances[city1] = {}
+        if city2 not in distances:
+            distances[city2] = {}
+
+        distances[city1][city2] = distance
+        distances[city2][city1] = distance  # Ensure symmetry
+
+        with open(DISTANCES_FILE, "w", encoding="utf-8") as file:
+            json.dump(distances, file, ensure_ascii=False, indent=4)
+
+        print(f"DEBUG: Calculated and saved distance for {city1} and {city2}: {distance} km")
+        return distance
+    else:
+        print(f"DEBUG: Could not calculate distance for {city1} and {city2}")
+        return None
+
+
+# helper function to calculate the grade of possible matche according the distance between the two cities and the ages of the child and the tutor
+# params: list of possible matches
+# logic is:
+# spread 100 linearly by the number of possible matches we will get out of same gender of tutor and child
+# for example if we have 5 possible matches, we will get grades from 0 to 100 which means 1 match will get 0, 1 will get 25, 1 will get 50, 1 will get 75 and the last one will get 100
+# then we will check the ages of the child and the tutor, if the gap between the ages is less than 5 years we will add 20 to the grade, if the gap is less than 10 years we will add 10 to the grade, if the gap is less than 15 years we will add 5 to the grade
+# then if the distance between the two cities is less than 10 km we will add 20 to the grade, if the distance is less than 20 km we will add 10 to the grade, if the distance is less than 30 km we will add 5 to the grade
+# if the distance is more than 30 km we will give 0 grade
+# if the distance is more than 50 km we will give -5 grade
+# max grade is 100, min grade is -5
+# if the grade is more than 100 we will set it to 100, if the grade is less than -5 we will set it to -5
+
+
+def calculate_grades(possible_matches):
+    """
+    Calculate the grade of a possible match based on distance and age differences.
+    :param possible_matches: List of possible match objects, each containing child_age, tutor_age, and distance.
+    :return: List of matches with calculated grades.
+    """
+    # Define constants for grade calculation
+    max_grade = 100
+    max_age_bonus = 20
+    mid_age_bonus = 10
+    low_age_bonus = 5
+    low_age_difference = 5
+    mid_age_difference = 10
+    high_age_difference = 15
+    max_distance_bonus = 20
+    mid_distance_bonus = 10
+    low_distance_bonus = 5
+    low_distance_diff = 10
+    mid_distance_diff = 20
+    high_distance_diff = 30
+    penalty_distance_diff = 50
+    high_distance_penalty = -5
+
+    total_matches = len(possible_matches)  # Total number of matches
+
+    # Iterate through the matches and calculate grades
+    for index, match in enumerate(possible_matches):
+        # Start with a base grade spread linearly across matches
+        base_grade = (
+            (index / (total_matches - 1)) * max_grade
+            if total_matches > 1
+            else max_grade
+        )
+
+        # Adjust grade based on age difference
+        child_age = match.get("child_age")
+        tutor_age = match.get("tutor_age")
+        age_difference = abs(child_age - tutor_age)
+        if age_difference < low_age_difference:
+            base_grade += max_age_bonus
+        elif age_difference < mid_age_difference:
+            base_grade += mid_age_bonus
+        elif age_difference < high_age_difference:
+            base_grade += low_age_bonus
+
+        # Adjust grade based on distance
+        distance = match.get("distance_between_cities")
+        if distance < low_distance_diff:
+            base_grade += max_distance_bonus
+        elif distance < mid_distance_diff:
+            base_grade += mid_distance_bonus
+        elif distance < high_distance_diff:
+            base_grade += low_distance_bonus
+        elif distance > penalty_distance_diff:
+            base_grade = high_distance_penalty
+
+        # Ensure the grade is within the allowed range and if its not fix it
+        # if its less than -5 we will set it to -5, if its more than 100 we will set it to 100
+        base_grade = max(high_distance_penalty, min(base_grade, max_grade))
+
+        # Add the calculated grade to the match object - rounded up to the nearest whole number
+        match["grade"] = ceil(base_grade)
+
+    return possible_matches
 
 
 def parse_date_field(date_value, field_name):
@@ -79,6 +342,7 @@ def parse_date_field(date_value, field_name):
     except ValueError:
         print(f"DEBUG: {field_name} has an invalid date format: {date_value}")
         return None  # Return None instead of raising an exception
+
 
 def create_task_internal(task_data):
     """
@@ -236,17 +500,6 @@ def is_admin(user):
             f"DEBUG: Is user '{user.username}' an admin? {is_admin_result}"
         )  # Debug log
         return is_admin_result
-
-
-# def get_hebrew_date(date):
-#     res = requests.get(
-#         f"https://www.hebcal.com/converter?cfg=json&gy={date.year}&gm={date.month}&gd={date.day}&g2h=1",
-#         verify=False,
-#         timeout=600,
-#     )
-#     return res.json()["hebrew"]
-
-
 def has_permission(request, resource, action):
     """
     Check if the user has the required permission for a specific resource and action.
@@ -691,6 +944,7 @@ def update_task(request, task_id):
         print(f"DEBUG: An error occurred: {str(e)}")
         return JsonResponse({"error": str(e)}, status=500)
 
+
 @csrf_exempt
 @api_view(["GET"])
 def get_families_per_location_report(request):
@@ -720,7 +974,9 @@ def get_families_per_location_report(request):
         if to_date:
             children = children.filter(registrationdate__lte=to_date)
 
-        geolocator = Nominatim(user_agent="childsmile", timeout=5)  # Set a higher timeout
+        geolocator = Nominatim(
+            user_agent="childsmile", timeout=5
+        )  # Set a higher timeout
         children_data = []
 
         def geocode_with_retries(city, retries=3, delay=2):
@@ -731,7 +987,9 @@ def get_families_per_location_report(request):
                 try:
                     return geolocator.geocode(city)
                 except GeocoderTimedOut:
-                    print(f"DEBUG: Geocoding timed out for city '{city}', retrying ({attempt + 1}/{retries})...")
+                    print(
+                        f"DEBUG: Geocoding timed out for city '{city}', retrying ({attempt + 1}/{retries})..."
+                    )
                     sleep(delay)
             print(f"DEBUG: Failed to geocode city '{city}' after {retries} retries.")
             return None
@@ -997,9 +1255,7 @@ def possible_tutorship_matches_report(request):
 
         # Convert the data to a list of dictionaries
         possible_matches_data = list(possible_matches)
-        print(
-            f"DEBUG: Possible matches data: {possible_matches_data}"
-        )  # Debug log
+        print(f"DEBUG: Possible matches data: {possible_matches_data}")  # Debug log
 
         # Return the data as JSON
         return JsonResponse(
@@ -1585,99 +1841,99 @@ def update_family(request, child_id):
             )
 
         # Update fields in the Children table
-        #print("DEBUG: Updating childfirstname...")
+        # print("DEBUG: Updating childfirstname...")
         family.childfirstname = data.get("childfirstname", family.childfirstname)
 
-        #print("DEBUG: Updating childsurname...")
+        # print("DEBUG: Updating childsurname...")
         family.childsurname = data.get("childsurname", family.childsurname)
 
-        #print("DEBUG: Updating gender...")
+        # print("DEBUG: Updating gender...")
         family.gender = True if data.get("gender") == "נקבה" else False
 
-        #print("DEBUG: Updating city...")
+        # print("DEBUG: Updating city...")
         family.city = data.get("city", family.city)
 
-        #print("DEBUG: Updating child_phone_number...")
+        # print("DEBUG: Updating child_phone_number...")
         family.child_phone_number = data.get(
             "child_phone_number", family.child_phone_number
         )
 
-        #print("DEBUG: Updating treating_hospital...")
+        # print("DEBUG: Updating treating_hospital...")
         family.treating_hospital = data.get(
             "treating_hospital", family.treating_hospital
         )
 
-        #print("DEBUG: Updating date_of_birth...")
+        # print("DEBUG: Updating date_of_birth...")
         family.date_of_birth = parse_date_field(
             data.get("date_of_birth"), "date_of_birth"
         )
 
-        #print("DEBUG: Updating medical_diagnosis...")
+        # print("DEBUG: Updating medical_diagnosis...")
         family.medical_diagnosis = data.get(
             "medical_diagnosis", family.medical_diagnosis
         )
 
-        #print("DEBUG: Updating diagnosis_date...")
+        # print("DEBUG: Updating diagnosis_date...")
         family.diagnosis_date = parse_date_field(
             data.get("diagnosis_date"), "diagnosis_date"
         )
 
-        #print("DEBUG: Updating marital_status...")
+        # print("DEBUG: Updating marital_status...")
         family.marital_status = data.get("marital_status", family.marital_status)
 
-        #print("DEBUG: Updating num_of_siblings...")
+        # print("DEBUG: Updating num_of_siblings...")
         family.num_of_siblings = data.get("num_of_siblings", family.num_of_siblings)
 
-        #print("DEBUG: Updating details_for_tutoring...")
+        # print("DEBUG: Updating details_for_tutoring...")
         family.details_for_tutoring = data.get(
             "details_for_tutoring", family.details_for_tutoring
         )
 
-        #print("DEBUG: Updating additional_info...")
+        # print("DEBUG: Updating additional_info...")
         family.additional_info = data.get("additional_info", family.additional_info)
 
-        #print("DEBUG: Updating tutoring_status...")
+        # print("DEBUG: Updating tutoring_status...")
         family.tutoring_status = data.get("tutoring_status", family.tutoring_status)
 
-        #print("DEBUG: Updating current_medical_state...")
+        # print("DEBUG: Updating current_medical_state...")
         family.current_medical_state = data.get(
             "current_medical_state", family.current_medical_state
         )
 
-        #print("DEBUG: Updating when_completed_treatments...")
+        # print("DEBUG: Updating when_completed_treatments...")
         family.when_completed_treatments = parse_date_field(
             data.get("when_completed_treatments"), "when_completed_treatments"
         )
 
-        #print("DEBUG: Updating father_name...")
+        # print("DEBUG: Updating father_name...")
         family.father_name = data.get("father_name", family.father_name)
 
-        #print("DEBUG: Updating father_phone...")
+        # print("DEBUG: Updating father_phone...")
         family.father_phone = data.get("father_phone", family.father_phone)
 
-        #print("DEBUG: Updating mother_name...")
+        # print("DEBUG: Updating mother_name...")
         family.mother_name = data.get("mother_name", family.mother_name)
 
-        #print("DEBUG: Updating mother_phone...")
+        # print("DEBUG: Updating mother_phone...")
         family.mother_phone = data.get("mother_phone", family.mother_phone)
 
-        #print("DEBUG: Updating street_and_apartment_number...")
+        # print("DEBUG: Updating street_and_apartment_number...")
         family.street_and_apartment_number = data.get(
             "street_and_apartment_number", family.street_and_apartment_number
         )
 
-        #print("DEBUG: Updating expected_end_treatment_by_protocol...")
+        # print("DEBUG: Updating expected_end_treatment_by_protocol...")
         family.expected_end_treatment_by_protocol = parse_date_field(
             data.get("expected_end_treatment_by_protocol"),
             "expected_end_treatment_by_protocol",
         )
 
-        #print("DEBUG: Updating has_completed_treatments...")
+        # print("DEBUG: Updating has_completed_treatments...")
         family.has_completed_treatments = data.get(
             "has_completed_treatments", family.has_completed_treatments
         )
 
-        #print("DEBUG: Updating lastupdateddate...")
+        # print("DEBUG: Updating lastupdateddate...")
         family.lastupdateddate = datetime.datetime.now()
 
         # Save the updated family record
@@ -1686,7 +1942,9 @@ def update_family(request, child_id):
             print(f"DEBUG: Family with child_id {child_id} saved successfully.")
         except DatabaseError as db_error:
             print(f"DEBUG: Database error while saving family: {str(db_error)}")
-            return JsonResponse({"error": f"Database error: {str(db_error)}"}, status=500)
+            return JsonResponse(
+                {"error": f"Database error: {str(db_error)}"}, status=500
+            )
 
         # Propagate changes to related tables
         # Update childsmile_app_tasks
@@ -1829,4 +2087,97 @@ def delete_family(request, child_id):
         )
     except Exception as e:
         print(f"DEBUG: An error occurred while deleting the family: {str(e)}")
+        return JsonResponse({"error": str(e)}, status=500)
+
+
+@csrf_exempt
+@api_view(["POST"])
+def calculate_possible_matches(request):
+    """
+        Calculate possible matches for families based on certain criteria.
+        based on this Query in concept:
+        SELECT
+        child.child_id,
+        tutor.id_id,
+        CONCAT(child.childfirstname, ' ', child.childsurname) AS child_full_name,
+        CONCAT(signedup.first_name, ' ', signedup.surname) AS tutor_full_name,
+        child.city AS child_city,
+        signedup.city AS tutor_city,
+        EXTRACT(YEAR FROM AGE(current_date, child.date_of_birth))::int AS child_age, -- Calculate child age
+        signedup.age AS tutor_age, -- Tutor age from signedup table
+        child.gender AS child_gender, -- Child gender
+        signedup.gender AS tutor_gender, -- Tutor gender
+        0 AS distance_between_cities, -- Placeholder for distance
+        100 AS grade, -- Default grade
+        FALSE AS is_used -- Default is_used
+    FROM childsmile_app_children child
+    JOIN childsmile_app_signedup signedup
+        ON child.gender = signedup.gender
+    JOIN childsmile_app_tutors tutor
+        ON signedup.id = tutor.id_id
+    WHERE NOT EXISTS (
+        SELECT 1
+        FROM childsmile_app_possiblematches pm
+        WHERE pm.child_id = child.child_id AND pm.tutor_id = tutor.id_id
+    )
+    AND NOT EXISTS (
+        SELECT 1
+        FROM childsmile_app_tutorships tutorship
+        WHERE tutorship.child_id = child.child_id AND tutorship.tutor_id = tutor.id_id
+    );
+
+    BUT: it will only gather the records that are not already in the possiblematches table as the query above
+    and also will check if there is a tutorship with the same child_id and tutor_id in the tutorships table and if there is it will not insert the record into the possiblematches table.
+    it will not overrule records if the cities are not the same
+    then it will calcualte distance between the cities and update the objects in the possiblematches table with the distance
+    the distance should be calculated using the helper function calculate_distance_between_cities
+    then it will send the objects to the helper function calculate_grade
+    so it will calculate the grade for each object 
+    and only after we have distance and grade we will empty the entire possiblematches table and insert the new records into the possiblematches table with the distance and grade.
+
+    we must have a debug print on every step of the way
+    evry call to helper functions
+    every response we get from it
+    ofc we need to check the permission of the user doing the calculation
+    if it has the permission to CREATE and UPDATE the DELETE - all 3 or we will not allow him to do the calculation
+    """
+    try:
+        # Step 1: Check user permissions
+        check_matches_permissions(request, ["CREATE", "UPDATE", "DELETE"])
+        print("DEBUG: User has all required permissions.")
+
+        # Step 2: Fetch possible matches
+        possible_matches = fetch_possible_matches()
+        print(f"DEBUG: Fetched {len(possible_matches)} possible matches.")
+
+        # Step 3: Calculate distances
+        possible_matches = calculate_distances(possible_matches)
+        print("DEBUG: Calculated distances for possible matches.")
+
+        # Step 4: Calculate grades
+        graded_matches = calculate_grades(possible_matches)
+        print(f"DEBUG: Calculated grades for matches.")
+
+        # Step 5: Clear the possiblematches table
+        print("DEBUG: Clearing possible matches table.")
+        clear_possible_matches()
+
+        # Step 6: Insert new matches
+        # print all the matches that are going to be inserted
+        print(f"DEBUG: Inserting {len(graded_matches)} new matches into the database.")
+        insert_new_matches(graded_matches)
+
+        print("DEBUG: New matches inserted successfully.")
+        print("DEBUG: Possible matches calculation completed.")
+
+        return JsonResponse(
+            {"message": "Possible matches calculated successfully."}, status=200
+        )
+
+    except PermissionError as e:
+        print(f"DEBUG: Permission error: {str(e)}")
+        return JsonResponse({"error": str(e)}, status=403)
+
+    except Exception as e:
+        print(f"DEBUG: An error occurred: {str(e)}")
         return JsonResponse({"error": str(e)}, status=500)
