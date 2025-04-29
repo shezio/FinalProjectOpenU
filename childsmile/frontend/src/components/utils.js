@@ -124,3 +124,15 @@ export const hasViewPermissionForTable = (tableName) => {
       permission.action === 'VIEW'
   );
 };
+
+  // Check if the user has all required permissions - get an array of resource and action as parameter
+export const hasAllPermissions = (requiredPermissions) => {
+    const permissions = JSON.parse(localStorage.getItem('permissions')) || [];
+    return requiredPermissions.every((required) =>
+      permissions.some(
+        (permission) =>
+          permission.resource === required.resource &&
+          permission.action === required.action
+      )
+    );
+  };

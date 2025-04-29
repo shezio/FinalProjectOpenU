@@ -2181,3 +2181,47 @@ def calculate_possible_matches(request):
     except Exception as e:
         print(f"DEBUG: An error occurred: {str(e)}")
         return JsonResponse({"error": str(e)}, status=500)
+    
+@csrf_exempt
+@api_view(["GET"])
+def get_tutorships(request):
+    """
+    Retrieve all tutorships with their full details.
+    """
+    user_id = request.session.get("user_id")
+    if not user_id:
+        return JsonResponse(
+            {"detail": "Authentication credentials were not provided."}, status=403
+        )
+
+    # Check if the user has VIEW permission on the "tutorships" resource
+    if not has_permission(request, "tutorships", "VIEW"):
+        return JsonResponse(
+            {"error": "You do not have permission to view this page."}, status=401
+        )
+
+    try:
+        tutorships = Tutorships.objects.select_related("child", "tutor__staff").values(
+            "child__childfirstname",
+            "child__childsurname",
+            "tutor__staff__first_name",
+            "tutor__staff__last_name",
+            "created_date",
+        )
+
+        # Prepare the data
+        tutorships_data = [
+            {
+                "child_firstname": tutorship["child__childfirstname"],
+                "child_lastname": tutorship["child__childsurname"],
+                "tutor_firstname": tutorship["tutor__staff__first_name"],
+                "tutor_lastname": tutorship["tutor__staff__last_name"],
+                "created_date": tutorship["created_date"].strftime("%d/%m/%Y")
+            }
+            for tutorship in tutorships
+        ]
+        return JsonResponse({"tutorships": tutorships_data}, status=200)
+    except Exception as e:
+        print(f"DEBUG: Error fetching tutorships: {str(e)}")
+        return JsonResponse({"error": str(e)}, status=500)
+    
