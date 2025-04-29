@@ -89,7 +89,7 @@ const Tutorships = () => {
     return (
       <div className="main-content">
         <Sidebar />
-        <InnerPageHeader title="חונכות" />
+        <InnerPageHeader title="ניהול חונכויות" />
         <div className="page-content">
           <div className="no-permission">
             <h2>אין לך הרשאה לצפות בדף זה</h2>
@@ -102,7 +102,7 @@ const Tutorships = () => {
   return (
     <div className="main-content">
       <Sidebar />
-      <InnerPageHeader title="חונכות" />
+      <InnerPageHeader title="ניהול חונכויות" />
       <div className="page-content">
         <ToastContainer />
         <div className="actions">
@@ -126,14 +126,19 @@ const Tutorships = () => {
                     <th>שם חונך</th>
                     <th>שם חניך</th>
                     <th>תאריך יצירת חונכות</th>
+                    <th>פעולות</th>
                   </tr>
                 </thead>
                 <tbody>
                   {tutorships.map((tutorship, index) => (
                     <tr key={index}>
-                      <td>{tutorship.tutor_first_name} {tutorship.tutor_last_name}</td>
-                      <td>{tutorship.child_first_name} {tutorship.child_last_name}</td>
+                      <td>{tutorship.tutor_firstname} {tutorship.tutor_lastname}</td>
+                      <td>{tutorship.child_firstname} {tutorship.child_lastname}</td>
                       <td>{tutorship.created_date}</td>
+                      <td>
+                        <button className="info-button">פרטים</button>
+                        <button className="delete-button">מחק</button>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
