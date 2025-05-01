@@ -3,12 +3,14 @@ import Sidebar from '../components/Sidebar';
 import InnerPageHeader from '../components/InnerPageHeader';
 import '../styles/common.css';
 import '../styles/reports.css';
+import '../styles/tutorships.css';
 import axios from '../axiosConfig';
 import Modal from 'react-modal';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { hasAllPermissions } from '../components/utils';
 import { useTranslation } from 'react-i18next'; // Import the translation hook
+import { showErrorToast } from '../components/toastUtils'; // Import the toast utility
 
 
 const Tutorships = () => {
@@ -18,6 +20,9 @@ const Tutorships = () => {
   const [matches, setMatches] = useState([]);
   const [selectedMatch, setSelectedMatch] = useState(null);
   const [mapLoading, setMapLoading] = useState(false);
+  const [tutorshipToDelete, setTutorshipToDelete] = useState(null);
+  const [isTutorshipDeleteModalOpen, setIsTutorshipDeleteModalOpen] = useState(false);
+  const { t } = useTranslation(); // Initialize the translation hook
 
   // Permissions required to access the page
   const requiredPermissions = [
@@ -29,6 +34,14 @@ const Tutorships = () => {
 
   const hasPermissionOnTutorships = hasAllPermissions(requiredPermissions);
 
+  const openAddWizardModal = () => {
+    setIsModalOpen(true);
+  };
+
+  const openTutorshipDeleteModal = (tutorshipId) => {
+    setTutorshipToDelete(tutorshipId);
+    setIsTutorshipDeleteModalOpen(true);
+  };
 
   const fetchTutorships = () => {
     setLoading(true);
@@ -39,7 +52,7 @@ const Tutorships = () => {
       })
       .catch((error) => {
         console.error('Error fetching tutorships:', error);
-        toast.error('Failed to fetch tutorships.');
+        showErrorToast(t, 'Failed to fetch tutorships.', error); // Use the toast utility for error handling
       })
       .finally(() => {
         setLoading(false);
@@ -55,7 +68,7 @@ const Tutorships = () => {
       })
       .catch((error) => {
         console.error('Error calculating matches:', error);
-        toast.error('Failed to calculate matches.');
+        showErrorToast(t, 'Failed to calculate matches.', error);
       })
       .finally(() => {
         setMapLoading(false);
@@ -73,7 +86,7 @@ const Tutorships = () => {
       })
       .catch((error) => {
         console.error('Error creating tutorship:', error);
-        toast.error('Failed to create tutorship.');
+        showErrorToast(t, 'Failed to create tutorship.', error);
       });
   };
 
@@ -104,23 +117,36 @@ const Tutorships = () => {
       <Sidebar />
       <InnerPageHeader title="ניהול חונכויות" />
       <div className="page-content">
-        <ToastContainer />
-        <div className="actions">
-          <button className="refresh-button" onClick={fetchTutorships}>
-            רענן
-          </button>
-          <button className="open-modal-button" onClick={() => setIsModalOpen(true)}>
-            פתח אשף התאמות
-          </button>
+        <ToastContainer
+          position="top-center"
+          autoClose={5000}
+          hideProgressBar={false}
+          closeOnClick
+          pauseOnFocusLoss
+          draggable
+          pauseOnHover
+          rtl={true}
+        />
+        <div className="filter-create-container">
+          <div className="create-task">
+            <button onClick={openAddWizardModal}>
+              {t('Open Matching Wizard')}
+            </button>
+          </div>
+          <div className="refresh">
+            <button onClick={fetchTutorships}>
+              {t('Refresh Tutorships')}
+            </button>
+          </div>
         </div>
         {loading ? (
-          <div className="loader">טוען נתונים...</div>
+          <div className="loader">{t('Loading data...')}</div>
         ) : (
-          <div className="grid-container">
+          <div className="tutorship-matching-grid-container">
             {tutorships.length === 0 ? (
               <div className="no-data">אין נתונים להצגה</div>
             ) : (
-              <table className="data-grid">
+              <table className="tutorship-matching-data-grid">
                 <thead>
                   <tr>
                     <th>שם חונך</th>
@@ -130,14 +156,17 @@ const Tutorships = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {tutorships.map((tutorship, index) => (
-                    <tr key={index}>
+                  {tutorships.map((tutorship) => (
+                    <tr key={tutorship.id}>
                       <td>{tutorship.tutor_firstname} {tutorship.tutor_lastname}</td>
                       <td>{tutorship.child_firstname} {tutorship.child_lastname}</td>
                       <td>{tutorship.created_date}</td>
                       <td>
-                        <button className="info-button">פרטים</button>
-                        <button className="delete-button">מחק</button>
+                        <div className="tutorship-actions">
+                          <button className="delete-button" onClick={() => openTutorshipDeleteModal(tutorship.id)}>
+                            {t('מחק')}
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -149,9 +178,6 @@ const Tutorships = () => {
         <Modal isOpen={isModalOpen} onRequestClose={() => setIsModalOpen(false)} className="matches-modal">
           <h2>אשף התאמות</h2>
           <div className="modal-content">
-            <div className="map-container">
-              {mapLoading ? <div className="loader">טוען מפה...</div> : <div>מפה כאן</div>}
-            </div>
             <div className="grid-container">
               {mapLoading ? (
                 <div className="loader">טוען נתונים...</div>
@@ -182,6 +208,9 @@ const Tutorships = () => {
                 </table>
               )}
             </div>
+            <div className="map-container">
+              {mapLoading ? <div className="loader">טוען מפה...</div> : <div>מפה כאן</div>}
+            </div>
           </div>
           <div className="modal-actions">
             <button onClick={calculateMatches}>חשב התאמות</button>
@@ -194,5 +223,4 @@ const Tutorships = () => {
     </div>
   );
 };
-
 export default Tutorships;

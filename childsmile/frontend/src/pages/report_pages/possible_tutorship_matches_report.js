@@ -136,8 +136,8 @@ const PossibleTutorshipMatchesReport = () => {
                       <th>{t("Tutor Age")}</th>
                       <th>{t("Child Gender")}</th>
                       <th>{t("Tutor Gender")}</th>
-                      <th>{t("Distance Between Cities (km)")}</th>
-                      <th>{t("Grade")}</th>
+                      <th>{t("Distance Between")}<br/>{t("Cities (km)")}</th>
+                      <th>{t("Matching")}<br/>{t("Grades")}</th>
                     </tr>
                   </thead>
                   <tbody>

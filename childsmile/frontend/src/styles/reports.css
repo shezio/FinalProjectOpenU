@@ -9,7 +9,6 @@
     flex-wrap: wrap;
     gap: 100px;
     /* Space between reports */
-    margin-top: 20px;
     padding-right: 50px;
     /* Avoid sidebar overlap */
     justify-content: space-between;
