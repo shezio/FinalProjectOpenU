@@ -302,6 +302,11 @@ const resources = {
       "Tutor Gender": "מין החונך",
       'Open Matching Wizard': 'פתח אשף התאמה',
       'Refresh Tutorships': 'רענן חונכויות',
+      "Matching Wizard": "אשף התאמת חונכות",
+      "Select a child": "בחר חניך",
+      "Calculate Matches": "רענן התאמות",
+      "Create Tutorship": "צור חונכות",
+      "Filter by Minimum Grade": "סנן לפי רמת התאמה מינימלית",
     }
   }
 };

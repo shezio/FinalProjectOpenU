@@ -27,6 +27,7 @@ from .views import (
     delete_family,
     calculate_possible_matches,
     get_tutorships,
+    create_tutorship,
 )
 
 from .unused_views import (
@@ -158,5 +159,10 @@ urlpatterns = [
         "api/get_tutorships/",
         get_tutorships,
         name="get_tutorships",
+    ),
+    path(
+        "api/create_tutorship/",
+        create_tutorship,
+        name="create_tutorship",
     ),
 ]

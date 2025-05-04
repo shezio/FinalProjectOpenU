@@ -1,29 +1,70 @@
 .matches-modal {
-    background: white;
-    padding: 2rem;
-    border-radius: 8px;
-    max-width: 900px;
-    margin-top: 200px;
-    margin-right: 600px;
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-  }
-  
-  .modal-content {
-    display: flex;
-    gap: 1rem;
-  }
-  
-  .map-container {
-    flex: 1;
-    height: 400px;
-    background-color: #f0f0f0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  /* Scoped styles for the grid container in ActiveTutorsReport */
+  background: white;
+  padding: 2rem;
+  border-radius: 8px;
+  width: 1400px;
+  /* Limit the modal width */
+  height: 550px;
+  margin: auto;
+  /* Center the modal horizontally */
+  margin-top: 200px;
+  /* Center the modal vertically */
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  /* Add a shadow for better visibility */
+  overflow: hidden;
+  /* Prevent content overflow */
+  position: relative;
+}
+
+.matches-modal h2 {
+  font-size: 32px;
+  /* green color */
+  color: #4CAF50;
+  /* Adjust font size for the title */
+  margin-bottom: 1rem;
+  /* Add space below the title */
+  text-align: center;
+  /* Center the title */
+}
+
+.match-modal-content {
+  display: flex;
+  flex-wrap: wrap;
+  /* Allow wrapping on smaller screens */
+  gap: 1rem;
+  width: 100%;
+  height: 70%;
+}
+
+.map-match-container {
+  flex: 1;
+  width: 100%; /* Ensure the container takes the full width */
+  height: 300px; /* Set a fixed height for the map container */
+  background-color: #f0f0f0; /* Optional: Background color for the container */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative; /* Ensure the map is positioned relative to this container */
+  overflow: hidden; /* Prevent overflow issues */
+}
+
+.grid-container {
+  flex: 1;
+  min-width: 300px;
+  /* Ensure the grid has a minimum width */
+  max-width: 100%;
+  /* Limit the grid width to half the modal */
+  overflow-y: auto;
+  /* Add vertical scrolling if needed */
+  height: 90%;
+}
+
+
+
+/* Scoped styles for the grid container in ActiveTutorsReport */
 .page-content .tutorship-matching-grid-container {
   width: calc(100% - 50px);
   /* Adjust width to leave space for the sidebar */
@@ -43,73 +84,92 @@
 
 @media (max-width: 1920px) {
   .page-content .tutorship-matching-grid-container {
-      padding: 10px; /* Reduce padding */
-      height: calc(100vh - 300px); /* Adjust height */
-      width: calc(100% - 150px); /* Adjust width to leave space for the sidebar */
-      margin-left: 100px; /* Adjust left margin for smaller screens */
-      margin-right: 80px; /* Adjust right margin for smaller screens */
-      overflow-y: auto;
-      top: auto;
+    padding: 10px;
+    /* Reduce padding */
+    height: calc(100vh - 300px);
+    /* Adjust height */
+    width: calc(100% - 150px);
+    /* Adjust width to leave space for the sidebar */
+    margin-left: 100px;
+    /* Adjust left margin for smaller screens */
+    margin-right: 80px;
+    /* Adjust right margin for smaller screens */
+    overflow-y: auto;
+    top: auto;
   }
 
   .page-content .tutorship-matching-data-grid {
-      font-size: 10px; /* Reduce font size */
+    font-size: 10px;
+    /* Reduce font size */
   }
 
   .page-content .tutorship-matching-data-grid th,
   .page-content .tutorship-matching-data-grid td {
-      padding: 6px; /* Reduce padding */
-      font-size: 10px; /* Reduce font size */
+    padding: 6px;
+    /* Reduce padding */
+    font-size: 10px;
+    /* Reduce font size */
   }
 }
 
 @media (max-width: 768px) {
   .page-content .tutorship-matching-grid-container {
-      height: auto; /* Allow the grid to grow based on content */
-      width: calc(100% - 300px);
-      /* Adjust width to leave space for the sidebar */
-      margin-left: 400px;
+    height: auto;
+    /* Allow the grid to grow based on content */
+    width: calc(100% - 300px);
+    /* Adjust width to leave space for the sidebar */
+    margin-left: 400px;
   }
 
   .page-content .tutorship-matching-data-grid {
-      font-size: 12px; /* Further reduce font size */
+    font-size: 12px;
+    /* Further reduce font size */
   }
 
   .page-content .tutorship-matching-data-grid th,
   .page-content .tutorship-matching-data-grid td {
-      padding: 4px; /* Further reduce padding */
+    padding: 4px;
+    /* Further reduce padding */
   }
 }
 
 /* Style for the data grid */
-.page-content .tutorship-matching-data-grid  {
-  width: 100%; /* Ensure the table takes up the full width of its container */
+.page-content .tutorship-matching-data-grid {
+  width: 100%;
+  /* Ensure the table takes up the full width of its container */
   border-collapse: collapse;
-  font-size: 16px; /* Adjust font size for readability */
+  font-size: 16px;
+  /* Adjust font size for readability */
   font-family: Arial, sans-serif;
   background-color: #fff;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
   border-radius: 8px;
   overflow: hidden;
-  direction: rtl; /* Align the grid to the right for right-to-left languages */
-  table-layout: auto; /* Allow columns to adjust based on content */
+  direction: rtl;
+  /* Align the grid to the right for right-to-left languages */
+  table-layout: auto;
+  /* Allow columns to adjust based on content */
 }
 
 .page-content .tutorship-matching-data-grid th,
 .page-content .tutorship-matching-data-grid td {
   border: 1px solid #ddd;
-  padding: 8px; /* Adjust padding for smaller screens */
+  padding: 8px;
+  /* Adjust padding for smaller screens */
   text-align: right;
-  white-space: nowrap; /* Prevent text from wrapping */
+  white-space: nowrap;
+  /* Prevent text from wrapping */
   overflow: hidden;
-  text-overflow: ellipsis; /* Add ellipsis for overflowing text */
+  text-overflow: ellipsis;
+  /* Add ellipsis for overflowing text */
 }
 
 .page-content .tutorship-matching-data-grid th {
   background-color: #4CAF50;
   color: white;
   font-weight: bold;
-  font-size: 30px; /* Adjust font size for headers */
+  font-size: 30px;
+  /* Adjust font size for headers */
 }
 
 .page-content .tutorship-matching-data-grid td {
@@ -118,7 +178,8 @@
   z-index: 0;
   /* Keep the cell behind the checkbox */
   color: #333;
-  font-size: 20px; /* Adjust font size for table data */
+  font-size: 20px;
+  /* Adjust font size for table data */
   font-weight: normal;
 }
 
@@ -141,6 +202,7 @@
 .page-content .tutorship-matching-data-grid label {
   cursor: pointer;
 }
+
 /* Actions container for buttons */
 .tutorship-actions {
   display: flex;
@@ -150,7 +212,8 @@
 
 /* Button styles */
 .tutorship-actions button {
-  background-color: #4CAF50; /* Green */
+  background-color: #4CAF50;
+  /* Green */
   color: white;
   padding: 10px 15px;
   border: none;
@@ -161,27 +224,253 @@
 }
 
 .tutorship-actions button:hover {
-  background-color: #45a049; /* Darker green */
+  background-color: #45a049;
+  /* Darker green */
   transform: scale(1.05);
 }
 
-/* Specific button styles */
-.tutorship-actions .info-button {
-  background-color: #4CAF50; /* Green */
-}
-
-.tutorship-actions .edit-button {
-  background-color: #007bff; /* Blue */
-}
-
 .tutorship-actions .delete-button {
-  background-color: #ff4d4d; /* Red */
-}
-
-.tutorship-actions .edit-button:hover {
-  background-color: #0056b3; /* Darker blue */
+  background-color: #ff4d4d;
+  /* Red */
 }
 
 .tutorship-actions .delete-button:hover {
-  background-color: #d11a2a; /* Darker red */
+  background-color: #d11a2a;
+  /* Darker red */
+}
+
+
+/* Modal grid */
+.match-modal-content .data-grid {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  font-family: Arial, sans-serif;
+  background-color: #fff;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  overflow: hidden;
+  direction: rtl;
+  table-layout: auto;
+}
+
+.match-modal-content .data-grid th,
+.match-modal-content .data-grid td {
+  border: 1px solid #ddd;
+  padding: 6px;
+  text-align: right;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.match-modal-content .data-grid th {
+  background-color: #007bff;
+  color: white;
+  font-weight: bold;
+  font-size: 20px;
+}
+
+.match-modal-content .data-grid td{
+  font-size: 18px;
+}
+
+
+.match-modal-content .data-grid tr {
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.match-modal-content .data-grid tr:hover {
+  background-color: #f0f8ff; /* Light blue background on hover */
+  color: #000; /* Darker text color on hover */
+}
+
+.match-modal-content .data-grid tr:active {
+  background-color: #add8e6; /* Slightly darker blue on click */
+  color: #000; /* Keep text color consistent */
+}
+
+.match-modal-content .data-grid tr.selected {
+  background-color: #add8e6; /* Same as active state */
+  color: #000; /* Keep text color consistent */
+}
+
+@media (max-width: 768px) {
+  .match-modal-content {
+    flex-direction: column;
+    /* Stack grid and map vertically */
+  }
+
+  .grid-container,
+  .map-container {
+    max-width: 100%;
+    /* Allow full width for smaller screens */
+    min-width: 100%;
+    /* Ensure full width for smaller screens */
+  }
+
+  .page-content .tutorship-matching-grid-container {
+    margin-left: 0;
+    /* Remove left margin for smaller screens */
+    width: 100%;
+    /* Use full width */
+  }
+
+  .page-content .tutorship-matching-data-grid th,
+  .page-content .tutorship-matching-data-grid td {
+    font-size: 12px;
+    /* Reduce font size */
+    padding: 4px;
+    /* Reduce padding */
+  }
+}
+
+.loader {
+  text-align: center;
+  font-size: 1.2rem;
+  color: #555;
+  margin: 20px 0;
+}
+
+.map-match-loader {
+  border: 15px solid #f3f3f3; /* Thicker border */
+  border-top: 15px solid #3498db; /* Thicker border */
+  border-right: 15px solid #3498db; /* Extend the arc */
+  border-radius: 50%;
+  width: 100px; /* Wider loader */
+  height: 100px; /* Wider loader */
+  animation: spin 1s linear infinite; /* Slower spin for better visibility */
+  position: absolute; /* Position relative to the parent container */
+  top: 30%; /* Center vertically */
+  left: 20%; /* Center horizontally */
+  transform: translate(-50%, -50%); /* Adjust for exact centering */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 20px; /* Adjust font size as needed */
+  text-align: center;
+}
+
+.grid-loader {
+  border: 15px solid #f3f3f3; /* Thicker border */
+  border-top: 15px solid #3498db; /* Thicker border */
+  border-right: 15px solid #3498db; /* Extend the arc */
+  border-radius: 50%;
+  width: 200px; /* Wider loader */
+  height: 200px; /* Wider loader */
+  animation: spin 1s linear infinite; /* Slower spin for better visibility */
+  position: absolute; /* Position relative to the parent container */
+  top: 30%; /* Center vertically */
+  left: 70%; /* Center horizontally */
+  transform: translate(-50%, -50%); /* Adjust for exact centering */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 20px; /* Adjust font size as needed */
+  text-align: center;
+}
+
+.modal-actions .calc-match-button {
+  background-color: /* blue */ #007bff;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 2em;
+}
+
+.modal-actions .create-tutorship-button {
+  background-color: /* green */ #4CAF50;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 2em;
+}
+
+.modal-actions .create-tutorship-button:hover {
+  background-color: /* dark green */ #45a049;
+}
+
+.modal-actions .calc-match-button:hover {
+  background-color: /* dark blue */ #0056b3;
+}
+
+.close-matches-modal-button {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #333;
+  cursor: pointer;
+}
+
+.close-matches-modal-button:hover {
+  color: #ff0000;
+}
+
+@keyframes flicker {
+  0% {
+    stroke-dasharray: 5, 10;
+  }
+  50% {
+    stroke-dasharray: 10, 5;
+  }
+  100% {
+    stroke-dasharray: 5, 10;
+  }
+}
+
+.leaflet-interactive {
+  animation: flicker 1s infinite;
+}
+
+.custom-pin {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid black;
+}
+
+.custom-pin.red {
+  background-color: red; /* Red for distance > 100 km */
+}
+
+.custom-pin.yellow {
+  background-color: yellow; /* Yellow for distance between 50 and 100 km */
+}
+
+.custom-pin.green {
+  background-color: green; /* Green for distance < 50 km */
+}
+
+.sort-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  margin-left: 5px;
+}
+
+.filter-container {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 5px;
+}
+
+.filter-container label {
+  font-size: 12px;
+  color: #555;
+}
+
+.filter-input {
+  padding: 3px;
+  width: 60px;
+  font-size: 12px;
 }
