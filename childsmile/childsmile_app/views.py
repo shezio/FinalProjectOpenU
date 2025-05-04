@@ -113,6 +113,9 @@ def fetch_possible_matches():
     """
     with connection.cursor() as cursor:
         cursor.execute(query)
+        rows = cursor.fetchall()
+        if not rows:
+            return []  # Ensure it returns a list
         return [
             {
                 "child_id": row[0],
@@ -129,7 +132,7 @@ def fetch_possible_matches():
                 "grade": row[11],
                 "is_used": row[12],
             }
-            for row in cursor.fetchall()
+            for row in rows
         ]
 
 def clear_possible_matches():
@@ -168,31 +171,43 @@ def insert_new_matches(matches):
 
 def calculate_distances(matches):
     """
-    Calculate distances between child and tutor cities in the matches.
+    Calculate distances and coordinates between child and tutor cities in the matches.
     :param matches: List of match objects, each containing child_city and tutor_city.
-    :return: List of matches with calculated distances.
+    :return: List of matches with calculated distances and coordinates.
     """
-    debug_index = 0  # Initialize debug index
     for match in matches:
-        distance = calculate_distance_between_cities(
-            match["child_city"], match["tutor_city"]
-        )
-        match["distance_between_cities"] = distance if distance is not None else 0
-        # print the distance for debugging and the index of the match
-        # print(
-        #     f"DEBUG: Match #{debug_index} Calculated distance between {match['child_city']} and {match['tutor_city']}: {match['distance']} km"
-        # )
-        #debug_index += 1  # Increment debug index for the next match
+        print(f"DEBUG: Processing match: {match}")  # Log the match being processed
+        result = calculate_distance_between_cities(match["child_city"], match["tutor_city"])
+        print(f"DEBUG: Result from calculate_distance_between_cities: {result}")  # Log the result
+
+        if result:
+            try:
+                match["distance_between_cities"] = result["distance"]
+                match["child_latitude"] = result["city1_latitude"]
+                match["child_longitude"] = result["city1_longitude"]
+                match["tutor_latitude"] = result["city2_latitude"]
+                match["tutor_longitude"] = result["city2_longitude"]
+            except KeyError as e:
+                print(f"DEBUG: KeyError while accessing result: {e}")
+                raise
+        else:
+            match["distance_between_cities"] = 0
+            match["child_latitude"] = None
+            match["child_longitude"] = None
+            match["tutor_latitude"] = None
+            match["tutor_longitude"] = None
     return matches
 
 # helper function to calculate distance between 2 cities in Israel
 # cities come in hebrew names, we need to return the distance in km
 def calculate_distance_between_cities(city1, city2):
     """
-    Calculate the distance between two cities in kilometers.
-    First, check the distances.json file for the distance.
+    Calculate the distance between two cities in kilometers and return their coordinates.
+    First, check the distances.json file for the distance and coordinates.
     If not found, calculate the distance, add it to the file, and return it.
     """
+    print(f"DEBUG: Calculating distance between {city1} and {city2}")
+
     # Ensure the file exists and is properly formatted
     if not os.path.exists(DISTANCES_FILE):
         with open(DISTANCES_FILE, "w", encoding="utf-8") as file:
@@ -205,21 +220,45 @@ def calculate_distance_between_cities(city1, city2):
         except json.JSONDecodeError:
             distances = {}
 
-    # Check if the distance is already in the file
-    if city1 in distances and city2 in distances[city1]:
-        print(f"DEBUG: Found distance for {city1} and {city2} in file: {distances[city1][city2]} km")
-        return distances[city1][city2]
-    elif city2 in distances and city1 in distances[city2]:
-        print(f"DEBUG: Found distance for {city2} and {city1} in file: {distances[city2][city1]} km")
-        return distances[city2][city1]
+    # Check if city1 exists in the file
+    if city1 in distances:
+        city1_data = distances[city1]
+        # Check if city2 exists under city1
+        if city2 in city1_data:
+            print(f"DEBUG: Found distance for {city1} and {city2}: {city1_data[city2]['distance']} km")
+            return {
+                "distance": city1_data[city2]["distance"],
+                "city1_latitude": distances[city1]["city_latitude"],
+                "city1_longitude": distances[city1]["city_longitude"],
+                "city2_latitude": city1_data[city2]["city2_latitude"],
+                "city2_longitude": city1_data[city2]["city2_longitude"],
+            }
+    else:
+        # Initialize city1 data if not present
+        distances[city1] = {}
 
-    # If not found, calculate the distance
+    # Geocode city1 if its coordinates are not already stored
+    if "city_latitude" not in distances[city1] or "city_longitude" not in distances[city1]:
+        geolocator = Nominatim(user_agent="childsmile", timeout=5)
+        location1 = geolocator.geocode(city1)
+        if location1:
+            distances[city1]["city_latitude"] = location1.latitude
+            distances[city1]["city_longitude"] = location1.longitude
+        else:
+            print(f"DEBUG: Could not geocode {city1}")
+            return {
+                "distance": 0,
+                "city1_latitude": None,
+                "city1_longitude": None,
+                "city2_latitude": None,
+                "city2_longitude": None,
+            }
+
+    # Geocode city2
     geolocator = Nominatim(user_agent="childsmile", timeout=5)
-    location1 = geolocator.geocode(city1)
     location2 = geolocator.geocode(city2)
-
-    if location1 and location2:
-        lat1, lon1 = location1.latitude, location1.longitude
+    if location2:
+        lat1, lon1 = distances[city1]["city_latitude"], distances[city1]["city_longitude"]
         lat2, lon2 = location2.latitude, location2.longitude
 
         # Haversine formula
@@ -230,24 +269,34 @@ def calculate_distance_between_cities(city1, city2):
         c = 2 * atan2(sqrt(a), sqrt(1 - a))
         distance = ceil(R * c)  # Round up to the nearest whole number
 
-        # Add the calculated distance to the file
-        if city1 not in distances:
-            distances[city1] = {}
-        if city2 not in distances:
-            distances[city2] = {}
+        # Save city2 data under city1
+        distances[city1][city2] = {
+            "distance": distance,
+            "city2_latitude": lat2,
+            "city2_longitude": lon2,
+        }
 
-        distances[city1][city2] = distance
-        distances[city2][city1] = distance  # Ensure symmetry
-
+        # Save the updated distances to the file
         with open(DISTANCES_FILE, "w", encoding="utf-8") as file:
             json.dump(distances, file, ensure_ascii=False, indent=4)
 
         print(f"DEBUG: Calculated and saved distance for {city1} and {city2}: {distance} km")
-        return distance
+        return {
+            "distance": distance,
+            "city1_latitude": lat1,
+            "city1_longitude": lon1,
+            "city2_latitude": lat2,
+            "city2_longitude": lon2,
+        }
     else:
-        print(f"DEBUG: Could not calculate distance for {city1} and {city2}")
-        return None
-
+        print(f"DEBUG: Could not geocode {city2}")
+        return {
+            "distance": 0,
+            "city1_latitude": distances[city1]["city_latitude"],
+            "city1_longitude": distances[city1]["city_longitude"],
+            "city2_latitude": None,
+            "city2_longitude": None,
+        }
 
 # helper function to calculate the grade of possible matche according the distance between the two cities and the ages of the child and the tutor
 # params: list of possible matches
@@ -397,7 +446,7 @@ def create_tasks_for_tutor_coordinators_async(pending_tutor_id, task_type_id):
         retry_interval = 5  # Retry interval in seconds
         elapsed_time = 0
 
-        while elapsed_time < max_wait_time:
+        while (elapsed_time < max_wait_time):
             if Pending_Tutor.objects.filter(pending_tutor_id=pending_tutor_id).exists():
                 print(
                     f"DEBUG: Pending_Tutor with ID {pending_tutor_id} found in the database."
@@ -2093,54 +2142,6 @@ def delete_family(request, child_id):
 @csrf_exempt
 @api_view(["POST"])
 def calculate_possible_matches(request):
-    """
-        Calculate possible matches for families based on certain criteria.
-        based on this Query in concept:
-        SELECT
-        child.child_id,
-        tutor.id_id,
-        CONCAT(child.childfirstname, ' ', child.childsurname) AS child_full_name,
-        CONCAT(signedup.first_name, ' ', signedup.surname) AS tutor_full_name,
-        child.city AS child_city,
-        signedup.city AS tutor_city,
-        EXTRACT(YEAR FROM AGE(current_date, child.date_of_birth))::int AS child_age, -- Calculate child age
-        signedup.age AS tutor_age, -- Tutor age from signedup table
-        child.gender AS child_gender, -- Child gender
-        signedup.gender AS tutor_gender, -- Tutor gender
-        0 AS distance_between_cities, -- Placeholder for distance
-        100 AS grade, -- Default grade
-        FALSE AS is_used -- Default is_used
-    FROM childsmile_app_children child
-    JOIN childsmile_app_signedup signedup
-        ON child.gender = signedup.gender
-    JOIN childsmile_app_tutors tutor
-        ON signedup.id = tutor.id_id
-    WHERE NOT EXISTS (
-        SELECT 1
-        FROM childsmile_app_possiblematches pm
-        WHERE pm.child_id = child.child_id AND pm.tutor_id = tutor.id_id
-    )
-    AND NOT EXISTS (
-        SELECT 1
-        FROM childsmile_app_tutorships tutorship
-        WHERE tutorship.child_id = child.child_id AND tutorship.tutor_id = tutor.id_id
-    );
-
-    BUT: it will only gather the records that are not already in the possiblematches table as the query above
-    and also will check if there is a tutorship with the same child_id and tutor_id in the tutorships table and if there is it will not insert the record into the possiblematches table.
-    it will not overrule records if the cities are not the same
-    then it will calcualte distance between the cities and update the objects in the possiblematches table with the distance
-    the distance should be calculated using the helper function calculate_distance_between_cities
-    then it will send the objects to the helper function calculate_grade
-    so it will calculate the grade for each object 
-    and only after we have distance and grade we will empty the entire possiblematches table and insert the new records into the possiblematches table with the distance and grade.
-
-    we must have a debug print on every step of the way
-    evry call to helper functions
-    every response we get from it
-    ofc we need to check the permission of the user doing the calculation
-    if it has the permission to CREATE and UPDATE the DELETE - all 3 or we will not allow him to do the calculation
-    """
     try:
         # Step 1: Check user permissions
         check_matches_permissions(request, ["CREATE", "UPDATE", "DELETE"])
@@ -2150,9 +2151,9 @@ def calculate_possible_matches(request):
         possible_matches = fetch_possible_matches()
         print(f"DEBUG: Fetched {len(possible_matches)} possible matches.")
 
-        # Step 3: Calculate distances
+        # Step 3: Calculate distances and coordinates
         possible_matches = calculate_distances(possible_matches)
-        print("DEBUG: Calculated distances for possible matches.")
+        print("DEBUG: Calculated distances and coordinates for possible matches.")
 
         # Step 4: Calculate grades
         graded_matches = calculate_grades(possible_matches)
@@ -2163,7 +2164,6 @@ def calculate_possible_matches(request):
         clear_possible_matches()
 
         # Step 6: Insert new matches
-        # print all the matches that are going to be inserted
         print(f"DEBUG: Inserting {len(graded_matches)} new matches into the database.")
         insert_new_matches(graded_matches)
 
@@ -2171,7 +2171,8 @@ def calculate_possible_matches(request):
         print("DEBUG: Possible matches calculation completed.")
 
         return JsonResponse(
-            {"message": "Possible matches calculated successfully."}, status=200
+            {"message": "Possible matches calculated successfully.", "matches": graded_matches},
+            status=200
         )
 
     except PermissionError as e:
@@ -2224,4 +2225,48 @@ def get_tutorships(request):
     except Exception as e:
         print(f"DEBUG: Error fetching tutorships: {str(e)}")
         return JsonResponse({"error": str(e)}, status=500)
-    
+
+@csrf_exempt
+@api_view(["POST"])
+def create_tutorship(request):
+    """
+    Create a new tutorship record.
+    """
+    user_id = request.session.get("user_id")
+    if not user_id:
+        return JsonResponse(
+            {"detail": "Authentication credentials were not provided."}, status=403
+        )
+
+    # Check if the user has CREATE permission on the "tutorships" resource
+    if not has_permission(request, "tutorships", "CREATE"):
+        return JsonResponse(
+            {"error": "You do not have permission to create a tutorship."}, status=401
+        )
+
+    try:
+        data = request.data  # Use request.data for JSON payloads
+
+        # Validate required fields
+        required_fields = ["child_id", "tutor_id"]
+        missing_fields = [field for field in required_fields if field not in data]
+        if missing_fields:
+            return JsonResponse(
+                {"error": f"Missing required fields: {', '.join(missing_fields)}"},
+                status=400,
+            )
+
+        # Create a new tutorship record in the database
+        tutorship = Tutorships.objects.create(
+            child_id=data["child_id"],
+            tutor_id=data["tutor_id"],
+            created_date=datetime.datetime.now(),
+        )
+
+        return JsonResponse(
+            {"message": "Tutorship created successfully", "tutorship_id": tutorship.tutorship_id},
+            status=201,
+        )
+    except Exception as e:
+        print(f"DEBUG: An error occurred while creating a tutorship: {str(e)}")
+        return JsonResponse({"error": str(e)}, status=500)
