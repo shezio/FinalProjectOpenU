@@ -203,6 +203,16 @@ const FamiliesPerLocationReport = () => {
             </button>
           </div>
         </div>
+        {!loading && (
+          <div className="back-to-reports">
+            <button
+              className="back-button"
+              onClick={() => (window.location.href = '/reports')}
+            >
+              → {t('Click to return to Report page')}
+            </button>
+          </div>
+        )}
         <div className="families-report-container">
           {/* Grid Section */}
           <div className="families-location-grid-container ">

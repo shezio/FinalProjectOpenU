@@ -28,6 +28,9 @@ const Families = () => {
   const [showAddModal, setShowAddModal] = useState(false); // State for Add Family modal
   const [maritalStatuses, setMaritalStatuses] = useState([]);
   const [tutoringStatuses, setTutoringStatuses] = useState([]);
+  const [page, setPage] = useState(1);
+  const [pageSize] = useState(10); // Number of families per page
+  const [totalCount, setTotalCount] = useState(0);
   const [newFamily, setNewFamily] = useState({
     child_id: '',
     childfirstname: '',
@@ -64,17 +67,21 @@ const Families = () => {
     try {
       const response = await axios.get('/api/get_complete_family_details/');
       setFamilies(response.data.families); // Use the "families" key from the API response
+      setTotalCount(response.data.families.length); // Set the total count for pagination
       setMaritalStatuses(response.data.marital_statuses.map((item) => item.status)); // Extract marital statuses
       setTutoringStatuses(response.data.tutoring_statuses.map((item) => item.status)); // Extract tutoring statuses
     } catch (error) {
       console.error('Error fetching families:', error);
       showErrorToast(t, 'Error fetching families data', error); // Use the reusable function
-      
       setFamilies([]); // Fallback to an empty array in case of an error
     } finally {
       setLoading(false);
     }
   };
+
+
+  const paginatedFamilies = families.slice((page - 1) * pageSize, page * pageSize);
+
   useEffect(() => {
     fetchFamilies();
   }, []);
@@ -227,7 +234,7 @@ const Families = () => {
     setErrors({}); // Clear any previous validation errors
     setShowAddModal(true); // Open the modal
   };
-  
+
   const closeAddModal = () => {
     setShowAddModal(false);
     setNewFamily({
@@ -419,7 +426,7 @@ const Families = () => {
         />
         <div className="filter-create-container">
           <div className="create-task">
-          <button onClick={openAddModal}>
+            <button onClick={openAddModal}>
               {t('Add New Family')}
             </button>
           </div>
@@ -435,40 +442,88 @@ const Families = () => {
           ) : (
             <div className="families-grid-container">
               {families.length > 0 ? (
-                <table className="families-data-grid">
-                  <thead>
-                    <tr>
-                      <th>{t('Last Name')}</th>
-                      <th>{t('Address')}</th>
-                      <th>{t('Phone')}</th>
-                      <th>{t('Status')}</th>
-                      <th>{t('Actions')}</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {families.map((family) => (
-                      <tr key={family.id}>
-                        <td>{family.last_name}</td>
-                        <td>{family.address}</td>
-                        <td>{family.child_phone_number || '---'}</td>
-                        <td>{family.tutoring_status || '---'}</td>
-                        <td>
-                          <div className="family-actions">
-                            <button className="info-button" onClick={() => showFamilyDetails(family)}>
-                              {t('מידע')}
-                            </button>
-                            <button className="edit-button" onClick={() => openEditModal(family)}>
-                              {t('ערוך')}
-                            </button>
-                            <button className="delete-button" onClick={() => openDeleteModal(family.id)}>
-                              {t('מחק')}
-                            </button>
-                          </div>
-                        </td>
+                <>
+                  <table className="families-data-grid">
+                    <thead>
+                      <tr>
+                        <th>{t('Last Name')}</th>
+                        <th>{t('Address')}</th>
+                        <th>{t('Phone')}</th>
+                        <th>{t('Status')}</th>
+                        <th>{t('Actions')}</th>
                       </tr>
+                    </thead>
+                    <tbody>
+                      {paginatedFamilies.map((family) => (
+                        <tr key={family.id}>
+                          <td>{family.last_name}</td>
+                          <td>{family.address}</td>
+                          <td>{family.child_phone_number || '---'}</td>
+                          <td>{family.tutoring_status || '---'}</td>
+                          <td>
+                            <div className="family-actions">
+                              <button className="info-button" onClick={() => showFamilyDetails(family)}>
+                                {t('מידע')}
+                              </button>
+                              <button className="edit-button" onClick={() => openEditModal(family)}>
+                                {t('ערוך')}
+                              </button>
+                              <button className="delete-button" onClick={() => openDeleteModal(family.id)}>
+                                {t('מחק')}
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+
+                  {/* Pagination Controls */}
+                  <div className="pagination">
+                    {/* Left Arrows */}
+                    <button
+                      onClick={() => setPage(1)} // Go to the first page
+                      disabled={page === 1}
+                      className="pagination-arrow"
+                    >
+                      &laquo; {/* Double left arrow */}
+                    </button>
+                    <button
+                      onClick={() => setPage(page - 1)} // Go to the previous page
+                      disabled={page === 1}
+                      className="pagination-arrow"
+                    >
+                      &lsaquo; {/* Single left arrow */}
+                    </button>
+
+                    {/* Page Numbers */}
+                    {Array.from({ length: Math.ceil(totalCount / pageSize) }, (_, i) => (
+                      <button
+                        key={i + 1}
+                        onClick={() => setPage(i + 1)}
+                        className={page === i + 1 ? 'active' : ''}
+                      >
+                        {i + 1}
+                      </button>
                     ))}
-                  </tbody>
-                </table>
+
+                    {/* Right Arrows */}
+                    <button
+                      onClick={() => setPage(page + 1)} // Go to the next page
+                      disabled={page === Math.ceil(totalCount / pageSize)}
+                      className="pagination-arrow"
+                    >
+                      &rsaquo; {/* Single right arrow */}
+                    </button>
+                    <button
+                      onClick={() => setPage(Math.ceil(totalCount / pageSize))} // Go to the last page
+                      disabled={page === Math.ceil(totalCount / pageSize)}
+                      className="pagination-arrow"
+                    >
+                      &raquo; {/* Double right arrow */}
+                    </button>
+                  </div>
+                </>
               ) : (
                 <div className="no-data">{t('No families to display')}</div>
               )}

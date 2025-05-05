@@ -119,6 +119,16 @@ const NewFamiliesReport = () => {
             </button>
           </div>
         </div>
+        {!loading && (
+          <div className="back-to-reports">
+            <button
+              className="back-button"
+              onClick={() => (window.location.href = '/reports')}
+            >
+              → {t('Click to return to Report page')}
+            </button>
+          </div>
+        )}
         {loading ? (
           <div className="loader">{t("Loading data...")}</div>
         ) : (

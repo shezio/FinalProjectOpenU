@@ -123,6 +123,16 @@ const ActiveTutorsReport = () => {
             </button>
           </div>
         </div>
+        {!loading && (
+          <div className="back-to-reports">
+            <button
+              className="back-button"
+              onClick={() => (window.location.href = '/reports')}
+            >
+              → {t('Click to return to Report page')}
+            </button>
+          </div>
+        )}
         {loading ? (
           <div className="loader">{t("Loading data...")}</div>
         ) : (
@@ -133,7 +143,7 @@ const ActiveTutorsReport = () => {
               <table className="data-grid">
                 <thead>
                   <tr>
-                  <th>
+                    <th>
                       <input
                         type="checkbox"
                         onChange={(e) => {
