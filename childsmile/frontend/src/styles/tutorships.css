@@ -41,14 +41,19 @@
 
 .map-match-container {
   flex: 1;
-  width: 100%; /* Ensure the container takes the full width */
-  height: 300px; /* Set a fixed height for the map container */
-  background-color: #f0f0f0; /* Optional: Background color for the container */
+  width: 100%;
+  /* Ensure the container takes the full width */
+  height: 300px;
+  /* Set a fixed height for the map container */
+  background-color: #f0f0f0;
+  /* Optional: Background color for the container */
   display: flex;
   align-items: center;
   justify-content: center;
-  position: relative; /* Ensure the map is positioned relative to this container */
-  overflow: hidden; /* Prevent overflow issues */
+  position: relative;
+  /* Ensure the map is positioned relative to this container */
+  overflow: hidden;
+  /* Prevent overflow issues */
 }
 
 .grid-container {
@@ -271,7 +276,7 @@
   font-size: 20px;
 }
 
-.match-modal-content .data-grid td{
+.match-modal-content .data-grid td {
   font-size: 18px;
 }
 
@@ -281,18 +286,24 @@
 }
 
 .match-modal-content .data-grid tr:hover {
-  background-color: #f0f8ff; /* Light blue background on hover */
-  color: #000; /* Darker text color on hover */
+  background-color: #f0f8ff;
+  /* Light blue background on hover */
+  color: #000;
+  /* Darker text color on hover */
 }
 
 .match-modal-content .data-grid tr:active {
-  background-color: #add8e6; /* Slightly darker blue on click */
-  color: #000; /* Keep text color consistent */
+  background-color: #add8e6;
+  /* Slightly darker blue on click */
+  color: #000;
+  /* Keep text color consistent */
 }
 
 .match-modal-content .data-grid tr.selected {
-  background-color: #add8e6; /* Same as active state */
-  color: #000; /* Keep text color consistent */
+  background-color: #add8e6;
+  /* Same as active state */
+  color: #000;
+  /* Keep text color consistent */
 }
 
 @media (max-width: 768px) {
@@ -333,45 +344,109 @@
 }
 
 .map-match-loader {
-  border: 15px solid #f3f3f3; /* Thicker border */
-  border-top: 15px solid #3498db; /* Thicker border */
-  border-right: 15px solid #3498db; /* Extend the arc */
+  border: 15px solid #f3f3f3;
+  /* Thicker border */
+  border-top: 15px solid #3498db;
+  /* Thicker border */
+  border-right: 15px solid #3498db;
+  /* Extend the arc */
   border-radius: 50%;
-  width: 100px; /* Wider loader */
-  height: 100px; /* Wider loader */
-  animation: spin 1s linear infinite; /* Slower spin for better visibility */
-  position: absolute; /* Position relative to the parent container */
-  top: 30%; /* Center vertically */
-  left: 20%; /* Center horizontally */
-  transform: translate(-50%, -50%); /* Adjust for exact centering */
+  width: 100px;
+  /* Wider loader */
+  height: 100px;
+  /* Wider loader */
+  animation: spin 1s linear infinite;
+  /* Slower spin for better visibility */
+  position: absolute;
+  /* Position relative to the parent container */
+  top: 30%;
+  /* Center vertically */
+  left: 20%;
+  /* Center horizontally */
+  transform: translate(-50%, -50%);
+  /* Adjust for exact centering */
   display: flex;
   justify-content: center;
   align-items: center;
-  font-size: 20px; /* Adjust font size as needed */
+  font-size: 20px;
+  /* Adjust font size as needed */
   text-align: center;
 }
 
 .grid-loader {
-  border: 15px solid #f3f3f3; /* Thicker border */
-  border-top: 15px solid #3498db; /* Thicker border */
-  border-right: 15px solid #3498db; /* Extend the arc */
+  border: 15px solid #f3f3f3;
+  /* Thicker border */
+  border-top: 15px solid #3498db;
+  /* Thicker border */
+  border-right: 15px solid #3498db;
+  /* Extend the arc */
   border-radius: 50%;
-  width: 200px; /* Wider loader */
-  height: 200px; /* Wider loader */
-  animation: spin 1s linear infinite; /* Slower spin for better visibility */
-  position: absolute; /* Position relative to the parent container */
-  top: 30%; /* Center vertically */
-  left: 70%; /* Center horizontally */
-  transform: translate(-50%, -50%); /* Adjust for exact centering */
+  width: 200px;
+  /* Wider loader */
+  height: 200px;
+  /* Wider loader */
+  animation: spin 1s linear infinite;
+  /* Slower spin for better visibility */
+  position: absolute;
+  /* Position relative to the parent container */
+  top: 30%;
+  /* Center vertically */
+  left: 70%;
+  /* Center horizontally */
+  transform: translate(-50%, -50%);
+  /* Adjust for exact centering */
   display: flex;
   justify-content: center;
   align-items: center;
-  font-size: 20px; /* Adjust font size as needed */
+  font-size: 20px;
+  /* Adjust font size as needed */
   text-align: center;
 }
 
+.info-icon-container {
+  position: relative;
+  display: inline-block;
+  cursor: pointer;
+}
+
+.info-icon {
+  font-size: 16px;
+  color: #007bff;
+  border: 1px solid #007bff;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tooltip {
+  visibility: hidden;
+  background-color: #555;
+  color: #fff;
+  text-align: center;
+  border-radius: 5px;
+  padding: 5px;
+  position: absolute;
+  z-index: 1;
+  bottom: 125%;
+  /* Position above the icon */
+  left: 50%;
+  transform: translateX(-50%);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.info-icon-container:hover .tooltip {
+  visibility: visible;
+  opacity: 1;
+}
+
 .modal-actions .calc-match-button {
-  background-color: /* blue */ #007bff;
+  background-color:
+    /* blue */
+    #007bff;
   color: white;
   padding: 10px 20px;
   border: none;
@@ -381,7 +456,21 @@
 }
 
 .modal-actions .create-tutorship-button {
-  background-color: /* green */ #4CAF50;
+  background-color:
+    /* green */
+    #4CAF50;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 2em;
+}
+
+.modal-actions .close-info-button {
+  background-color:
+    /* green */
+    #4CAF50;
   color: white;
   padding: 10px 20px;
   border: none;
@@ -391,11 +480,40 @@
 }
 
 .modal-actions .create-tutorship-button:hover {
-  background-color: /* dark green */ #45a049;
+  background-color:
+    /* dark green */
+    #45a049;
 }
 
 .modal-actions .calc-match-button:hover {
-  background-color: /* dark blue */ #0056b3;
+  background-color:
+    /* dark blue */
+    #0056b3;
+}
+
+.modal-content .close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  font-size: 24px;
+  cursor: pointer;
+}
+
+.info-columns {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.info-column {
+  flex: 1;
+  border-right: 1px solid #ddd;
+  padding-right: 20px;
+}
+
+.info-column:last-child {
+  border-right: none;
+  padding-right: 0;
 }
 
 .close-matches-modal-button {
@@ -418,9 +536,11 @@
   0% {
     stroke-dasharray: 5, 10;
   }
+
   50% {
     stroke-dasharray: 10, 5;
   }
+
   100% {
     stroke-dasharray: 5, 10;
   }
@@ -438,15 +558,18 @@
 }
 
 .custom-pin.red {
-  background-color: red; /* Red for distance > 100 km */
+  background-color: red;
+  /* Red for distance > 100 km */
 }
 
 .custom-pin.yellow {
-  background-color: yellow; /* Yellow for distance between 50 and 100 km */
+  background-color: yellow;
+  /* Yellow for distance between 50 and 100 km */
 }
 
 .custom-pin.green {
-  background-color: green; /* Green for distance < 50 km */
+  background-color: green;
+  /* Green for distance < 50 km */
 }
 
 .sort-button {
@@ -469,8 +592,82 @@
   color: #555;
 }
 
-.filter-input {
-  padding: 3px;
-  width: 60px;
-  font-size: 12px;
+.filter-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+  margin-top: 5px;
+}
+
+.filter-controls label {
+  font-size: 14px;
+  color: #555;
+}
+
+.custom-slider {
+  width: 200px;
+  height: 5px;
+  background: #ddd;
+  border-radius: 5px;
+  position: relative;
+}
+
+.custom-slider-track {
+  background:
+    /* light gray */
+    #ccc;
+  height: 100%;
+  border-radius: 5px;
+}
+
+.custom-slider-thumb {
+  height: 20px;
+  width: 20px;
+  background: #007bff;
+  /* Blue thumb */
+  border-radius: 0%;
+  cursor: pointer;
+  position: relative;
+  top: -8px;
+}
+
+.filter-value {
+  font-size: 14px;
+  color: #333;
+  font-weight: bold;
+}
+
+.info-column {
+  align-items: right;
+}
+
+.info-column p {
+  margin: 0;
+  margin-bottom: 5px;
+  font-size: 18px;
+  color: #333;
+  font-weight: normal;
+  text-align: center;
+}
+
+.info-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.info-table td {
+  padding: 8px;
+  border: 1px solid #ddd;
+}
+
+.info-table td:first-child {
+  font-weight: bold;
+  width: 40%;
+  /* Adjust column width as needed */
+}
+
+.info-table td:last-child .info-table td:first-child {
+
+  text-align: center;
 }

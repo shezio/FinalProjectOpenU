@@ -141,7 +141,7 @@ def clear_possible_matches():
     This function deletes all records from the PossibleMatches table.
     """
     PossibleMatches.objects.all().delete()
-    print("DEBUG: Emptied the possiblematches table.")
+    #print("DEBUG: Emptied the possiblematches table.")
 
 def insert_new_matches(matches):
     """
@@ -678,7 +678,7 @@ def get_user_tasks(request):
     if not tasks_data:
         # Fetch tasks efficiently
         if user_is_admin:
-            print("DEBUG: Fetching all tasks for admin user.")  # Debug log
+            #print("DEBUG: Fetching all tasks for admin user.")  # Debug log
             tasks = (
                 Tasks.objects.all()
                 .select_related("task_type", "assigned_to", "pending_tutor__id")
@@ -2145,7 +2145,7 @@ def calculate_possible_matches(request):
     try:
         # Step 1: Check user permissions
         check_matches_permissions(request, ["CREATE", "UPDATE", "DELETE"])
-        print("DEBUG: User has all required permissions.")
+        #print("DEBUG: User has all required permissions.")
 
         # Step 2: Fetch possible matches
         possible_matches = fetch_possible_matches()
@@ -2153,22 +2153,22 @@ def calculate_possible_matches(request):
 
         # Step 3: Calculate distances and coordinates
         possible_matches = calculate_distances(possible_matches)
-        print("DEBUG: Calculated distances and coordinates for possible matches.")
+        #print("DEBUG: Calculated distances and coordinates for possible matches.")
 
         # Step 4: Calculate grades
         graded_matches = calculate_grades(possible_matches)
         print(f"DEBUG: Calculated grades for matches.")
 
         # Step 5: Clear the possiblematches table
-        print("DEBUG: Clearing possible matches table.")
+        #print("DEBUG: Clearing possible matches table.")
         clear_possible_matches()
 
         # Step 6: Insert new matches
         print(f"DEBUG: Inserting {len(graded_matches)} new matches into the database.")
         insert_new_matches(graded_matches)
 
-        print("DEBUG: New matches inserted successfully.")
-        print("DEBUG: Possible matches calculation completed.")
+        #print("DEBUG: New matches inserted successfully.")
+        #print("DEBUG: Possible matches calculation completed.")
 
         return JsonResponse(
             {"message": "Possible matches calculated successfully.", "matches": graded_matches},
@@ -2203,6 +2203,7 @@ def get_tutorships(request):
 
     try:
         tutorships = Tutorships.objects.select_related("child", "tutor__staff").values(
+            "id",
             "child__childfirstname",
             "child__childsurname",
             "tutor__staff__first_name",
@@ -2213,6 +2214,7 @@ def get_tutorships(request):
         # Prepare the data
         tutorships_data = [
             {
+                "id": tutorship["id"],
                 "child_firstname": tutorship["child__childfirstname"],
                 "child_lastname": tutorship["child__childsurname"],
                 "tutor_firstname": tutorship["tutor__staff__first_name"],
@@ -2246,11 +2248,17 @@ def create_tutorship(request):
 
     try:
         data = request.data  # Use request.data for JSON payloads
+        print(f"DEBUG: Incoming request data: {data}")  # Log the incoming data
+
+        # Handle nested "match" object
+        if "match" in data:
+            data = data["match"]
 
         # Validate required fields
         required_fields = ["child_id", "tutor_id"]
         missing_fields = [field for field in required_fields if field not in data]
         if missing_fields:
+            print(f"DEBUG: Missing fields: {missing_fields}")  # Log missing fields
             return JsonResponse(
                 {"error": f"Missing required fields: {', '.join(missing_fields)}"},
                 status=400,
@@ -2263,10 +2271,88 @@ def create_tutorship(request):
             created_date=datetime.datetime.now(),
         )
 
+        print(f"DEBUG: Tutorship created successfully with ID {tutorship.id}")
         return JsonResponse(
-            {"message": "Tutorship created successfully", "tutorship_id": tutorship.tutorship_id},
+            {"message": "Tutorship created successfully", "tutorship_id": tutorship.id},
             status=201,
         )
     except Exception as e:
         print(f"DEBUG: An error occurred while creating a tutorship: {str(e)}")
+        return JsonResponse({"error": str(e)}, status=500)
+    
+@csrf_exempt
+@api_view(["GET"])
+def get_signedup(request):
+    """
+    Retrieve all signed-up users.
+    """
+    user_id = request.session.get("user_id")
+    if not user_id:
+        return JsonResponse(
+            {"detail": "Authentication credentials were not provided."}, status=403
+        )
+
+    # Check if the user has VIEW permission on the "signedup" resource
+    if not has_permission(request, "signedup", "VIEW"):
+        return JsonResponse(
+            {"error": "You do not have permission to view this page."}, status=401
+        )
+
+    try:
+        signedup_users = SignedUp.objects.all()
+        signedup_data = [
+            {
+                "id": user.id,
+                "first_name": user.first_name,
+                "surname": user.surname,
+                "age": user.age,
+                "gender": user.gender,
+                "phone": user.phone,
+                "city": user.city,
+                "comment": user.comment,
+                "email": user.email,
+                "want_tutor": user.want_tutor,
+            }
+            for user in signedup_users
+        ]
+        return JsonResponse({"signedup_users": signedup_data}, status=200)
+    except Exception as e:
+        print(f"DEBUG: Error fetching signed-up users: {str(e)}")
+        return JsonResponse({"error": str(e)}, status=500)
+    
+@csrf_exempt
+@api_view(["DELETE"])
+def delete_tutorship(request, tutorship_id):
+    """
+    Delete a tutorship record.
+    """
+    user_id = request.session.get("user_id")
+    if not user_id:
+        return JsonResponse(
+            {"detail": "Authentication credentials were not provided."}, status=403
+        )
+
+    # Check if the user has DELETE permission on the "tutorships" resource
+    if not has_permission(request, "tutorships", "DELETE"):
+        return JsonResponse(
+            {"error": "You do not have permission to delete this tutorship."}, status=401
+        )
+
+    try:
+        # Fetch the existing tutorship record
+        try:
+            tutorship = Tutorships.objects.get(id=tutorship_id)
+        except Tutorships.DoesNotExist:
+            return JsonResponse({"error": "Tutorship not found."}, status=404)
+
+        # Delete the tutorship record
+        tutorship.delete()
+
+        print(f"DEBUG: Tutorship with ID {tutorship_id} deleted successfully.")
+        return JsonResponse(
+            {"message": "Tutorship deleted successfully", "tutorship_id": tutorship_id},
+            status=200,
+        )
+    except Exception as e:
+        print(f"DEBUG: An error occurred while deleting the tutorship: {str(e)}")
         return JsonResponse({"error": str(e)}, status=500)

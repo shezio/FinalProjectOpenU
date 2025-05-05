@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import ReactSlider from 'react-slider';
 import Sidebar from '../components/Sidebar';
 import InnerPageHeader from '../components/InnerPageHeader';
 import '../styles/common.css';
@@ -8,7 +9,7 @@ import axios from '../axiosConfig';
 import Modal from 'react-modal';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { hasAllPermissions } from '../components/utils';
+import { hasAllPermissions, getTutors } from '../components/utils';
 import { useTranslation } from 'react-i18next'; // Import the translation hook
 import { showErrorToast } from '../components/toastUtils'; // Import the toast utility
 import { MapContainer, TileLayer, Marker, Popup, Polyline } from 'react-leaflet';
@@ -31,6 +32,8 @@ L.Icon.Default.mergeOptions({
 
 const Tutorships = () => {
   const [tutorships, setTutorships] = useState([]);
+  const [families, setFamilies] = useState([]);
+  const [tutors, setTutors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [matches, setMatches] = useState([]);
@@ -39,9 +42,11 @@ const Tutorships = () => {
   const [gridLoading, setGridLoading] = useState(true);
   const [mapError, setMapError] = useState(false);
   const [filterThreshold, setFilterThreshold] = useState(50); // Default filter threshold
-  const [sortOrder, setSortOrder] = useState('asc'); // Default sort order
+  const [sortOrder, setSortOrder] = useState('desc'); // Default sort order
   const [tutorshipToDelete, setTutorshipToDelete] = useState(null);
   const [isTutorshipDeleteModalOpen, setIsTutorshipDeleteModalOpen] = useState(false);
+  const [isInfoModalOpen, setIsInfoModalOpen] = useState(false);
+  const [selectedMatchForInfo, setSelectedMatchForInfo] = useState(null);
   const { t } = useTranslation(); // Initialize the translation hook
   const mapRef = useRef();
 
@@ -83,10 +88,33 @@ const Tutorships = () => {
   };
 
   const openTutorshipDeleteModal = (tutorshipId) => {
+    console.log('DEBUG: Opening delete modal for tutorship ID:', tutorshipId); // Add debug log
     setTutorshipToDelete(tutorshipId);
     setIsTutorshipDeleteModalOpen(true);
   };
 
+  const closeTutorshipDeleteModal = () => {
+    setIsTutorshipDeleteModalOpen(false);
+    setTutorshipToDelete(null);
+  };
+
+  const confirmDeleteTutorship = async () => {
+    if (!tutorshipToDelete) {
+      console.error('No tutorship ID provided for deletion.'); // Add error log
+      return;
+    }
+    try {
+      await axios.delete(`/api/delete_tutorship/${tutorshipToDelete}/`); // Use the DELETE API endpoint
+      toast.success(t('Tutorship deleted successfully!'));
+      // Optionally, update the state to remove the deleted tutorship from the list
+      setTutorships(tutorships.filter((tutorship) => tutorship.id !== tutorshipToDelete));
+    } catch (error) {
+      console.error('Error deleting tutorship:', error);
+      showErrorToast(t, 'Error deleting tutorship', error); // Use the toast utility for error messages
+    } finally {
+      closeTutorshipDeleteModal();
+    }
+  };
 
   const sortedAndFilteredMatches = matches
     .filter((match) => match.grade >= filterThreshold) // Filter matches based on the threshold
@@ -114,13 +142,88 @@ const Tutorships = () => {
       });
   };
 
+
+  const openInfoModal = (match) => {
+
+    // Find the family and tutor data for the selected match
+    const family = families.find((f) => f.id === match.child_id) || {}; // Match by child_id
+    const tutor = tutors.find((t) => t.id === match.tutor_id) || {}; // Match by tutor_id
+
+    //console.log('Found Family:', family); // Log the found family
+    //console.log('Found Tutor:', tutor); // Log the found tutor
+
+    // Combine match, family, and tutor data
+    const combinedData = {
+      ...match,
+      ...family,
+      ...tutor,
+    };
+
+    //console.log('Combined Data for Info Modal:', combinedData); // Log the combined data for debugging
+
+    setSelectedMatchForInfo(combinedData);
+    setIsInfoModalOpen(true);
+  };
+
+  const closeInfoModal = () => {
+    setIsInfoModalOpen(false);
+    setSelectedMatchForInfo(null);
+  };
+
   const fetchMatches = async () => {
     setGridLoading(true);
     setMapLoading(true);
     try {
-      const response = await axios.post('/api/calculate_possible_matches/');
-      const matchesData = response.data.matches || [];
-      setMatches(matchesData); // Directly set matches without geocoding
+      const [matchesResponse, familiesResponse, tutorsResponse, signedUpResponse] = await Promise.all([
+        axios.post('/api/calculate_possible_matches/'),
+        axios.get('/api/get_complete_family_details/'),
+        getTutors(), // Use the imported getTutors function
+        axios.get('/api/get_signedup/'), // Fetch all signed-up data
+      ]);
+
+
+      const matchesData = matchesResponse.data.matches || [];
+      const familiesData = familiesResponse.data.families || [];
+      const signedUpData = signedUpResponse.data.signedup_users || [];
+
+      // Map signed-up data by tutor ID for quick lookup
+      const signedUpById = signedUpData.reduce((acc, signedUp) => {
+        acc[signedUp.id] = signedUp;
+        return acc;
+      }, {});
+
+      // Combine tutor data with signed-up data
+      const tutorsWithDetails = tutorsResponse.map((tutor) => {
+        const signedUpDetails = signedUpById[tutor.value] || {}; // Match by tutor.value (ID)
+        const combinedTutor = {
+          id: tutor.value,
+          tutorship_status: tutor.label.split(' - ')[1], // Extract status from label
+          phone: signedUpDetails.phone || '', // Add phone from signed-up data
+          email: signedUpDetails.email || '', // Add email from signed-up data
+          want_tutor: signedUpDetails.want_tutor || false, // Add want_tutor from signed-up data
+          comment: signedUpDetails.comment || '', // Add comment from signed-up data
+        };
+        return combinedTutor;
+      });
+
+
+      // Combine match data with family and tutor details
+      const matchesWithDetails = matchesData.map((match) => {
+        const family = familiesData.find((f) => f.id === match.child_id) || {}; // Match by child_id
+        const tutor = tutorsWithDetails.find((t) => t.id === match.tutor_id) || {}; // Match by tutor_id
+
+        const combinedMatch = {
+          ...match,
+          ...family,
+          ...tutor,
+        };
+        return combinedMatch;
+      });
+
+
+      setMatches(matchesWithDetails);
+      setFamilies(familiesData);
+      setTutors(tutorsWithDetails); // Save the combined tutor data
     } catch (error) {
       console.error('Error fetching matches:', error);
       showErrorToast(t, 'Failed to fetch matches.', error);
@@ -136,8 +239,26 @@ const Tutorships = () => {
   };
 
   const handleRowClick = (match) => {
-    console.log('Selected Match:', match);
+    //console.log('Selected Match:', match);
     setSelectedMatch(match);
+
+    // Check if the map instance is available
+    if (
+      mapRef.current &&
+      match.child_latitude &&
+      match.child_longitude &&
+      match.tutor_latitude &&
+      match.tutor_longitude
+    ) {
+      // Define the bounds to include both child and tutor locations
+      const bounds = [
+        [match.child_latitude, match.child_longitude], // Child's location
+        [match.tutor_latitude, match.tutor_longitude], // Tutor's location
+      ];
+
+      // Fit the map to the bounds
+      mapRef.current.fitBounds(bounds, { padding: [50, 50] }); // Add padding for better visibility
+    }
   };
 
   const createTutorship = () => {
@@ -145,9 +266,11 @@ const Tutorships = () => {
     axios
       .post('/api/create_tutorship/', { match: selectedMatch })
       .then(() => {
-        toast.success('Tutorship created successfully!');
-        setIsModalOpen(false);
-        fetchTutorships(); // Refresh tutorships after creation
+        toast.success(t('Tutorship created successfully!'));
+        setSelectedMatch(null); // Clear the selected match after creation
+        setSelectedMatchForInfo(null); // Clear the selected match for info
+        setIsInfoModalOpen(false); // Close the info modal
+        fetchMatches(); // Refresh the matches after creation
       })
       .catch((error) => {
         console.error('Error creating tutorship:', error);
@@ -240,6 +363,104 @@ const Tutorships = () => {
             )}
           </div>
         )}
+        {isInfoModalOpen && selectedMatchForInfo && (
+          <div className="modal show">
+            <div className="modal-content">
+              <span className="close" onClick={closeInfoModal}>&times;</span>
+              <div className="info-columns">
+                {/* Child Info */}
+                <div className="info-column">
+                  <h2>{t('Child Information')}</h2>
+                  <table className="info-table">
+                    <tbody>
+                      <tr>
+                        <td>{t('ID')}</td>
+                        <td>{selectedMatchForInfo.child_id}</td>
+                      </tr>
+                      <tr>
+                        <td>{t('Full Name')}</td>
+                        <td>{selectedMatchForInfo.child_full_name}</td>
+                      </tr>
+                      <tr>
+                        <td>{t('Address')}</td>
+                        <td> {selectedMatchForInfo.address}</td>
+                      </tr>
+                      <tr>
+                        <td>{t('Phone')}</td><td> {selectedMatchForInfo.child_phone_number}</td></tr>
+                      <tr><td>{t('Gender')}</td><td> {selectedMatchForInfo.gender ? t('Female') : t('Male')}</td></tr>
+                      <tr><td>{t('Medical Diagnosis')}</td><td> {selectedMatchForInfo.medical_diagnosis}</td></tr>
+                      <tr><td>{t('Diagnosis Date')}</td><td> {selectedMatchForInfo.diagnosis_date}</td></tr>
+                      <tr><td>{t('Marital Status')}</td><td> {selectedMatchForInfo.marital_status}</td></tr>
+                      <tr><td>{t('Number of Siblings')}</td><td> {selectedMatchForInfo.num_of_siblings}</td></tr>
+                      <tr><td>{t('Tutoring Status')}</td><td> {selectedMatchForInfo.tutoring_status}</td></tr>
+                      <tr><td>{t('Responsible Coordinator')}</td><td> {selectedMatchForInfo.responsible_coordinator}</td></tr>
+                      <tr><td>{t('Additional Info')}</td><td> {selectedMatchForInfo.additional_info}</td></tr>
+                      <tr><td>{t('Current Medical State')}</td><td> {selectedMatchForInfo.current_medical_state}</td></tr>
+                      <tr><td>{t('Treating Hospital')}</td><td> {selectedMatchForInfo.treating_hospital}</td></tr>
+                      <tr><td>{t('When Completed Treatments')}</td><td> {selectedMatchForInfo.when_completed_treatments}</td></tr>
+                      <tr><td>{t('Father Name')}</td><td> {selectedMatchForInfo.father_name || '---'}</td></tr>
+                      <tr><td>{t('Father Phone')}</td><td> {selectedMatchForInfo.father_phone || '---'}</td></tr>
+                      <tr><td>{t('Mother Name')}</td><td> {selectedMatchForInfo.mother_name || '---'}</td></tr>
+                      <tr><td>{t('Mother Phone')}</td><td> {selectedMatchForInfo.mother_phone || '---'}</td></tr>
+                      <tr><td>{t('Expected End Treatment by Protocol')}</td><td> {selectedMatchForInfo.expected_end_treatment_by_protocol || '---'}</td></tr>
+                      <tr><td>{t('Has Completed Treatments')}</td><td> {selectedMatchForInfo.has_completed_treatments ? t('Yes') : t('No')}</td></tr>
+                      <tr><td>{t('Details for Tutoring')}</td><td> {selectedMatchForInfo.details_for_tutoring || '---'}</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Tutor Info */}
+                <div className="info-column">
+                  <h2>{t('Tutor Information')}</h2>
+                  <table className="info-table">
+                    <tbody>
+                      <tr><td>{t('ID')}</td><td> {selectedMatchForInfo.tutor_id}</td></tr>
+                      <tr><td>{t('Full Name')}</td><td> {selectedMatchForInfo.tutor_full_name}</td></tr>
+                      <tr><td>{t('City')}</td><td> {selectedMatchForInfo.tutor_city}</td></tr>
+                      <tr><td>{t('Age')}</td><td> {selectedMatchForInfo.tutor_age}</td></tr>
+                      <tr><td>{t('Gender')}</td><td> {selectedMatchForInfo.tutor_gender ? t('Female') : t('Male')}</td></tr>
+                      <tr><td>{t('Phone')}</td><td> {selectedMatchForInfo.phone}</td></tr>
+                      <tr><td>{t('Email')}</td><td> {selectedMatchForInfo.email}</td></tr>
+                      <tr><td>{t('Want to Tutor')}</td><td> {selectedMatchForInfo.want_tutor ? t('Yes') : t('No')}</td></tr>
+                      <tr><td>{t('Comment')}</td><td> {selectedMatchForInfo.comment}</td></tr>
+                      <tr><td>{t('Tutorship status')}</td><td> {selectedMatchForInfo.tutorship_status}</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <div className="modal-actions">
+                <button className="create-tutorship-button" onClick={createTutorship}>
+                  {t('Create Tutorship')}
+                </button>
+                <button className="close-info-button" onClick={closeInfoModal}>
+                  {t('Close')}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+        <Modal
+          isOpen={isTutorshipDeleteModalOpen}
+          onRequestClose={closeTutorshipDeleteModal}
+          contentLabel="Delete Confirmation"
+          className="delete-modal"
+          overlayClassName="delete-modal-overlay"
+        >
+          <h2>{t('Are you sure you want to delete this tutorship?')}</h2>
+          <p style={{ color: 'red', fontWeight: 'bold' }}>
+            {t('Deleting a tutorship will remove all associated data')}
+            <br />
+            {t('This action cannot be undone')}
+          </p>
+          <div className="modal-actions">
+            <button onClick={confirmDeleteTutorship} className="yes-button">
+              {t('Yes')}
+            </button>
+            <button onClick={closeTutorshipDeleteModal} className="no-button">
+              {t('No')}
+            </button>
+          </div>
+        </Modal>
         <Modal isOpen={isModalOpen} onRequestClose={() => setIsModalOpen(false)} className="matches-modal">
           <div className="matches-modal-header">
             <h2>{t('Matching Wizard')}</h2>
@@ -250,16 +471,18 @@ const Tutorships = () => {
           <div className="match-modal-content">
             <div className="grid-container">
               <div className="filter-controls">
-                <label htmlFor="filter-input">{t('Filter by Minimum Grade')}:  </label>
-                <input
-                  id="filter-input"
-                  type="number"
-                  min="0"
+                <label htmlFor="filter-slider">{t('Filter by Minimum Grade')}:</label>
+                <ReactSlider
+                  id="filter-slider"
+                  className="custom-slider"
+                  thumbClassName="custom-slider-thumb"
+                  trackClassName="custom-slider-track"
+                  min={0}
+                  max={100}
                   value={filterThreshold}
-                  onChange={(e) => setFilterThreshold(Number(e.target.value))}
-                  placeholder={t('Enter Grade')}
-                  className="filter-input"
+                  onChange={(value) => setFilterThreshold(value)}
                 />
+                <span className="filter-value">{filterThreshold}</span>
               </div>
               {gridLoading ? (
                 <div className="grid-loader">{t("Loading data...")}</div>
@@ -267,6 +490,7 @@ const Tutorships = () => {
                 <table className="data-grid">
                   <thead>
                     <tr>
+                      <th>{t('מידע')}</th>
                       <th>{t('Child Name')}</th>
                       <th>{t('Tutor Name')}</th>
                       <th>{t('Child City')}</th>
@@ -285,10 +509,17 @@ const Tutorships = () => {
                   <tbody>
                     {sortedAndFilteredMatches.map((match, index) => (
                       <tr
-                        key={match.id || index}
+                        key={`${match.child_id}-${match.tutor_id}-${index}`} // Ensure the key is unique by appending the index
+
                         onClick={() => handleRowClick(match)}
                         className={selectedMatch === match ? 'selected' : ''}
                       >
+                        <td>
+                          <div className="info-icon-container" onClick={() => openInfoModal(match)}>
+                            <i className="info-icon">i</i>
+                            <span className="tooltip">{t('Press to see full info')}</span>
+                          </div>
+                        </td>
                         <td>{match.child_full_name}</td>
                         <td>{match.tutor_full_name}</td>
                         <td>{match.child_city}</td>

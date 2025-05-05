@@ -170,6 +170,9 @@ const resources = {
       "Tutor Full Name": "שם החונך",
       "Tutor Name": "שם החונך",
       "Tutoring Status": "מצב חונכות",
+      "Tutoring status": "מצב חונכות",
+      "Tutorship Status": "מצב חונכות",
+      "Tutorship status": "מצב חונכות",
       "Tutors Coordinator": "רכז חונכים",
       "Tutorship Matching Date": "תאריך התאמת חונכות",
       "Tutee Name": "שם החניך",
@@ -307,6 +310,15 @@ const resources = {
       "Calculate Matches": "רענן התאמות",
       "Create Tutorship": "צור חונכות",
       "Filter by Minimum Grade": "סנן לפי רמת התאמה מינימלית",
+      "Full Name": "שם מלא",
+      'Failed to fetch tutor details.': 'שגיאה בטעינת פרטי חונך',
+      "Child Information": "פרטי חניך",
+      "Tutor Information": "פרטי חונך",
+      "Want to Tutor": "רוצה להיות חונך?",
+      "Tutorship created successfully!": "חונכות נוצרה בהצלחה!",
+      "Deleting a tutorship will remove all associated data": "מחיקת חונכות תסיר את כל הנתונים הקשורים אליה",
+      "Are you sure you want to delete this tutorship?": "האם אתה בטוח שברצונך למחוק חונכות זו?",
+      'Tutorship deleted successfully!': 'חונכות נמחקה בהצלחה!',
     }
   }
 };

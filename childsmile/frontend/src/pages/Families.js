@@ -482,8 +482,7 @@ const Families = () => {
               <h2>{t('Family Details')} {selectedFamily.last_name}</h2>
               <div className="family-details-grid">
                 <p>{t('ID')}: {selectedFamily.id}</p>
-                <p>{t('First Name')}: {selectedFamily.first_name}</p>
-                <p>{t('Last Name')}: {selectedFamily.last_name}</p>
+                <p>{t('Full Name')}: {selectedFamily.first_name} {selectedFamily.last_name}</p>
                 <p>{t('Address')}: {selectedFamily.address}</p>
                 <p>{t('Phone')}: {selectedFamily.child_phone_number || '---'}</p>
                 <p>{t('Gender')}: {selectedFamily.gender ? t('נקבה') : t('זכר')}</p>
