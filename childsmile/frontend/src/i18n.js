@@ -352,6 +352,7 @@ const resources = {
       'Error deleting staff member.': 'שגיאה במחיקת משתמש',
       'Error fetching staff member details.': 'שגיאה בטעינת פרטי משתמש',
       'Select Roles': 'לחץ כדי לבחור תפקידים',
+      'Click to return to Report page': 'לחץ כדי לחזור למסך דוחות',
       }
   }
 };

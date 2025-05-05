@@ -845,6 +845,26 @@ def create_task(request):
 
     task_data = request.data
     try:
+        # Handle `assigned_to` field
+        assigned_to = task_data.get("assigned_to")
+        if assigned_to:
+            try:
+                # Check if `assigned_to` is a numeric ID or a username
+                if str(assigned_to).isdigit():
+                    # If it's numeric, treat it as `staff_id`
+                    assigned_to_staff = Staff.objects.get(staff_id=assigned_to)
+                else:
+                    # Otherwise, treat it as a `username`
+                    assigned_to_staff = Staff.objects.get(username=assigned_to)
+
+                # Replace `assigned_to` with the `staff_id`
+                task_data["assigned_to"] = assigned_to_staff.staff_id
+            except Staff.DoesNotExist:
+                return JsonResponse(
+                    {"detail": f"Staff member with ID or username '{assigned_to}' not found."},
+                    status=400,
+                )
+
         print(f"DEBUG: Task data being sent to create_task_internal: {task_data}")
         task = create_task_internal(task_data)
 

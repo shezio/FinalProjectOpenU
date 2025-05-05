@@ -108,6 +108,16 @@ const PossibleTutorshipMatchesReport = () => {
                 </button>
               </div>
             </div>
+            {!loading && (
+              <div className="back-to-reports">
+                <button
+                  className="back-button"
+                  onClick={() => (window.location.href = '/reports')}
+                >
+                  → {t('Click to return to Report page')}
+                </button>
+              </div>
+            )}
             <div className="tutorship-pending-grid-container">
               {filteredMatches.length === 0 ? (
                 <div className="no-data">{t("No data to display")}</div>
@@ -136,8 +146,8 @@ const PossibleTutorshipMatchesReport = () => {
                       <th>{t("Tutor Age")}</th>
                       <th>{t("Child Gender")}</th>
                       <th>{t("Tutor Gender")}</th>
-                      <th>{t("Distance Between")}<br/>{t("Cities (km)")}</th>
-                      <th>{t("Matching")}<br/>{t("Grades")}</th>
+                      <th>{t("Distance Between")}<br />{t("Cities (km)")}</th>
+                      <th>{t("Matching")}<br />{t("Grades")}</th>
                     </tr>
                   </thead>
                   <tbody>
