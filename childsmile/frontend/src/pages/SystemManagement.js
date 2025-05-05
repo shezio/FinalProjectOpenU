@@ -195,77 +195,123 @@ const SystemManagement = () => {
           pauseOnHover
           rtl={true}
         />
-        <div className="controls">
-          <input
-            type="text"
-            placeholder={t('Search by name or email')}
-            value={searchQuery}
-            onChange={handleSearch}
-            className="search-bar"
-          />
-          <button onClick={() => openAddStaffModal('add')} className="add-button">
-            {t('Add New Staff')}
-          </button>
-          <button onClick={handleRefresh} className="refresh-button">
-            {t('Refresh')}
-          </button>
-        </div>
+        {loading ? (
+          // Loader displayed above everything
+          <div className="loader-container">
+            <div className="loader">{t('Loading data...')}</div>
+          </div>
+        ) : (
+          <>
+            <div className="controls">
+              <input
+                type="text"
+                placeholder={t('Search by name or email')}
+                value={searchQuery}
+                onChange={handleSearch}
+                className="search-bar"
+              />
+              <button onClick={() => openAddStaffModal('add')} className="add-button">
+                {t('Add New Staff')}
+              </button>
+              <button onClick={handleRefresh} className="refresh-button">
+                {t('Refresh')}
+              </button>
+            </div>
 
-        {/* Loader outside the grid */}
-        {loading && <div className="loader">{t('Loading data...')}</div>}
+            <div className="staff-grid-container">
+              {filteredStaff.length === 0 ? (
+                <div className="no-data">{t('No staff members to display')}</div>
+              ) : (
+                <table className="staff-data-grid">
+                  <thead>
+                    <tr>
+                      <th>{t('Username')}</th>
+                      <th>{t('Password')}</th>
+                      <th>{t('Email')}</th>
+                      <th>{t('First Name')}</th>
+                      <th>{t('Last Name')}</th>
+                      <th>{t('Created At')}</th>
+                      <th>{t('Roles')}</th>
+                      <th>{t('Actions')}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {paginatedStaff.map((user) => (
+                      <tr key={user.id}>
+                        <td>{user.username}</td>
+                        <td>*******</td> {/* Passwords should not be displayed */}
+                        <td>{user.email}</td>
+                        <td>{user.first_name}</td>
+                        <td>{user.last_name}</td>
+                        <td>{user.created_at}</td>
+                        <td>{user.roles.map((role) => t(role)).join(', ')}</td>
+                        <td>
+                          <button
+                            onClick={() => openAddStaffModal('edit', user)}
+                            className="edit-button"
+                          >
+                            {t('Edit')}
+                          </button>
+                          <button
+                            onClick={() => openDeleteModal(user.id)}
+                            className="delete-button"
+                          >
+                            {t('Delete')}
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
 
-        <div className="staff-grid-container">
-          {!loading && filteredStaff.length === 0 ? (
-            <div className="no-data">{t('No staff members to display')}</div>
-          ) : (
-            <table className="staff-data-grid">
-              <thead>
-                <tr>
-                  <th>{t('Username')}</th>
-                  <th>{t('Password')}</th>
-                  <th>{t('Email')}</th>
-                  <th>{t('First Name')}</th>
-                  <th>{t('Last Name')}</th>
-                  <th>{t('Created At')}</th>
-                  <th>{t('Roles')}</th>
-                  <th>{t('Actions')}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {paginatedStaff.map((user) => (
-                  <tr key={user.id}>
-                    <td>{user.username}</td>
-                    <td>*******</td> {/* Passwords should not be displayed */}
-                    <td>{user.email}</td>
-                    <td>{user.first_name}</td>
-                    <td>{user.last_name}</td>
-                    <td>{user.created_at}</td>
-                    <td>{user.roles.map((role) => t(role)).join(', ')}</td>
-                    <td>
-                      <button onClick={() => openAddStaffModal('edit', user)} className="edit-button">
-                        {t('Edit')}
-                      </button>
-                      <button onClick={() => openDeleteModal(user.id)} className="delete-button">
-                        {t('Delete')}
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </div>
-        <div className="pagination">
-          {Array.from({ length: Math.ceil(totalCount / pageSize) }, (_, i) => (
-            <button
-              key={i + 1}
-              onClick={() => handlePageChange(i + 1)}
-              className={page === i + 1 ? 'active' : ''}
-            >
-              {i + 1}
-            </button>
-          ))}
-        </div>
+            <div className="pagination">
+              {/* Left Arrows */}
+              <button
+                onClick={() => handlePageChange(1)} // Go to the first page
+                disabled={page === 1}
+                className="pagination-arrow"
+              >
+                &laquo; {/* Double left arrow */}
+              </button>
+              <button
+                onClick={() => handlePageChange(page - 1)} // Go to the previous page
+                disabled={page === 1}
+                className="pagination-arrow"
+              >
+                &lsaquo; {/* Single left arrow */}
+              </button>
+
+              {/* Page Numbers */}
+              {Array.from({ length: Math.ceil(totalCount / pageSize) }, (_, i) => (
+                <button
+                  key={i + 1}
+                  onClick={() => handlePageChange(i + 1)}
+                  className={page === i + 1 ? 'active' : ''}
+                >
+                  {i + 1}
+                </button>
+              ))}
+
+              {/* Right Arrows */}
+              <button
+                onClick={() => handlePageChange(page + 1)} // Go to the next page
+                disabled={page === Math.ceil(totalCount / pageSize)}
+                className="pagination-arrow"
+              >
+                &rsaquo; {/* Single right arrow */}
+              </button>
+              <button
+                onClick={() => handlePageChange(Math.ceil(totalCount / pageSize))} // Go to the last page
+                disabled={page === Math.ceil(totalCount / pageSize)}
+                className="pagination-arrow"
+              >
+                &raquo; {/* Double right arrow */}
+              </button>
+            </div>
+          </>
+        )}
       </div>
 
       {/* Modal for Add/Edit */}
