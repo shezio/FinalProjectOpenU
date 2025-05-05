@@ -1,24 +1,10 @@
 @TODO
 implement the following features:
-- [ ] Matching wizard appearaence
-    - [V]  a grid container and a map container side by side
-  - show grid container of possible matches but only the following columns:
-    - [V] Tutor full name
-    - [V] Child full name
-    - [V] Tutor city
-    - [V] Child city
-    - [ ] Matching grade -which will be sortable and filterable - by default it will be sorted by the matching grade in descending order
-    - the grid container should be scrollable and have a fixed height
-    - [ ] Add actions column to the grid container:
-        - [ ] A button to open a modal that will show all the information of the tutor and child
-        in 2 columns from children and tutors tables
-        - [ ] inside the modal there should be a button to create a tutorship
-        - [ ] The button to create a tutorship will be shown also on the wizard outside the modal next to the info button
-    - [ ] Add a filter in the matching grade th with default to show only matches above a certain score (e.g. 1)
-  - [V] The map container should show the following:
-    - [V] A map of Israel with similar features to the one in the app in families by location
-    - [V] 2 pins will be shown only if a match was highlighted in the grid container - otherwise the map will be empty
-      - [V] Pins should be color coded based on the matching score - red for score below 25,yellow for score between 25 and 50, green for score above 50.
-    - [V] a button in the wizard above the containers will be used to calculate the matches
-    - [V] a loader per container will be shown while the matches are being calculated
-    - [V] a button to close the wizard and return to the main page of the app
+Users page
+- Grid to show all data from staff table
+- Add button to add new staff member - this should open a modal with a form to add a new staff member
+- Edit button to edit existing staff member - this should open a modal with a form to edit the staff member
+- Delete button to delete existing staff member - this should open a modal to confirm deletion
+- Search bar to filter staff members by name or email
+- Pagination to show a limited number of staff members per page
+- Sort by name or email

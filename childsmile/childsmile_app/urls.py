@@ -30,6 +30,11 @@ from .views import (
     create_tutorship,
     delete_tutorship,
     get_signedup,
+    get_all_staff,
+    update_staff_member,
+    delete_staff_member,
+    get_roles,
+    create_staff_member,
 )
 
 from .unused_views import (
@@ -176,5 +181,30 @@ urlpatterns = [
         "api/delete_tutorship/<int:tutorship_id>/",
         delete_tutorship,
         name="delete_tutorship",
+    ),
+    path(
+        "api/get_all_staff/",
+        get_all_staff,
+        name="get_all_staff",
+    ),
+    path(
+        "api/update_staff_member/<int:staff_id>/",
+        update_staff_member,
+        name="update_staff_member",
+    ),
+    path(
+        "api/delete_staff_member/<int:staff_id>/",
+        delete_staff_member,
+        name="delete_staff_member",
+    ),
+    path(
+        "api/get_roles/",
+        get_roles,
+        name="get_roles",
+    ),
+    path(
+        "api/create_staff_member/",
+        create_staff_member,
+        name="create_staff_member",
     ),
 ]

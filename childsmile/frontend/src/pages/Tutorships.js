@@ -261,6 +261,28 @@ const Tutorships = () => {
     }
   };
 
+  const calculateAgeFromDate = (dateString) => {
+    console.log('DEBUG: Calculating age from date:', dateString); // Add debug log
+  
+    // Parse the date string in DD/MM/YYYY format
+    const [day, month, year] = dateString.split('/'); // Split the string into day, month, and year
+    const birthDate = new Date(`${year}-${month}-${day}`); // Rearrange into YYYY-MM-DD format
+  
+    if (isNaN(birthDate)) {
+      console.error('Invalid date format:', dateString); // Log an error if the date is invalid
+      return 'Invalid date';
+    }
+  
+    const today = new Date(); // Get the current date
+    const age = today.getFullYear() - birthDate.getFullYear(); // Calculate the age in years
+    const monthDifference = today.getMonth() - birthDate.getMonth(); // Calculate the month difference
+  
+    if (monthDifference < 0 || (monthDifference === 0 && today.getDate() < birthDate.getDate())) {
+      return age - 1;
+    }
+    return age;
+  };
+
   const createTutorship = () => {
     if (!selectedMatch) return;
     axios
@@ -386,7 +408,13 @@ const Tutorships = () => {
                         <td> {selectedMatchForInfo.address}</td>
                       </tr>
                       <tr>
-                        <td>{t('Phone')}</td><td> {selectedMatchForInfo.child_phone_number}</td></tr>
+                        <td>{t('Phone')}</td><td> {selectedMatchForInfo.child_phone_number}
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>{t('Age')}</td>
+                        <td> {calculateAgeFromDate(selectedMatchForInfo.date_of_birth)}</td>
+                      </tr>
                       <tr><td>{t('Gender')}</td><td> {selectedMatchForInfo.gender ? t('Female') : t('Male')}</td></tr>
                       <tr><td>{t('Medical Diagnosis')}</td><td> {selectedMatchForInfo.medical_diagnosis}</td></tr>
                       <tr><td>{t('Diagnosis Date')}</td><td> {selectedMatchForInfo.diagnosis_date}</td></tr>

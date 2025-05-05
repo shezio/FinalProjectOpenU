@@ -43,13 +43,13 @@ const Sidebar = () => {
       >
         דוחות
       </button>
-      {/* <button
+      <button
         data-path="/system-management"
         className={location.pathname.startsWith('/system-management') ? 'active' : ''}
         onClick={() => navigate('/system-management')}
       >
         ניהול מערכת
-      </button> */}
+      </button>
     </div>
   );
 };
