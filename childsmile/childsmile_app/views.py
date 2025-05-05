@@ -66,6 +66,7 @@ import os
 
 DISTANCES_FILE = os.path.join(os.path.dirname(__file__), "distances.json")
 
+
 def check_matches_permissions(request, required_permissions):
     """
     Check if the user has the required permissions for possible matches.
@@ -80,6 +81,7 @@ def check_matches_permissions(request, required_permissions):
     for permission in required_permissions:
         if not has_permission(request, "possiblematches", permission):
             raise PermissionError(f"You do not have {permission} permission.")
+
 
 def fetch_possible_matches():
     """
@@ -135,13 +137,15 @@ def fetch_possible_matches():
             for row in rows
         ]
 
+
 def clear_possible_matches():
     """
     Clear the possible matches table.
     This function deletes all records from the PossibleMatches table.
     """
     PossibleMatches.objects.all().delete()
-    #print("DEBUG: Emptied the possiblematches table.")
+    # print("DEBUG: Emptied the possiblematches table.")
+
 
 def insert_new_matches(matches):
     """
@@ -169,6 +173,7 @@ def insert_new_matches(matches):
     PossibleMatches.objects.bulk_create(new_matches)
     print(f"DEBUG: Inserted {len(new_matches)} new records into possiblematches.")
 
+
 def calculate_distances(matches):
     """
     Calculate distances and coordinates between child and tutor cities in the matches.
@@ -177,8 +182,12 @@ def calculate_distances(matches):
     """
     for match in matches:
         print(f"DEBUG: Processing match: {match}")  # Log the match being processed
-        result = calculate_distance_between_cities(match["child_city"], match["tutor_city"])
-        print(f"DEBUG: Result from calculate_distance_between_cities: {result}")  # Log the result
+        result = calculate_distance_between_cities(
+            match["child_city"], match["tutor_city"]
+        )
+        print(
+            f"DEBUG: Result from calculate_distance_between_cities: {result}"
+        )  # Log the result
 
         if result:
             try:
@@ -197,6 +206,7 @@ def calculate_distances(matches):
             match["tutor_latitude"] = None
             match["tutor_longitude"] = None
     return matches
+
 
 # helper function to calculate distance between 2 cities in Israel
 # cities come in hebrew names, we need to return the distance in km
@@ -225,7 +235,9 @@ def calculate_distance_between_cities(city1, city2):
         city1_data = distances[city1]
         # Check if city2 exists under city1
         if city2 in city1_data:
-            print(f"DEBUG: Found distance for {city1} and {city2}: {city1_data[city2]['distance']} km")
+            print(
+                f"DEBUG: Found distance for {city1} and {city2}: {city1_data[city2]['distance']} km"
+            )
             return {
                 "distance": city1_data[city2]["distance"],
                 "city1_latitude": distances[city1]["city_latitude"],
@@ -238,7 +250,10 @@ def calculate_distance_between_cities(city1, city2):
         distances[city1] = {}
 
     # Geocode city1 if its coordinates are not already stored
-    if "city_latitude" not in distances[city1] or "city_longitude" not in distances[city1]:
+    if (
+        "city_latitude" not in distances[city1]
+        or "city_longitude" not in distances[city1]
+    ):
         geolocator = Nominatim(user_agent="childsmile", timeout=5)
         location1 = geolocator.geocode(city1)
         if location1:
@@ -258,14 +273,19 @@ def calculate_distance_between_cities(city1, city2):
     geolocator = Nominatim(user_agent="childsmile", timeout=5)
     location2 = geolocator.geocode(city2)
     if location2:
-        lat1, lon1 = distances[city1]["city_latitude"], distances[city1]["city_longitude"]
+        lat1, lon1 = (
+            distances[city1]["city_latitude"],
+            distances[city1]["city_longitude"],
+        )
         lat2, lon2 = location2.latitude, location2.longitude
 
         # Haversine formula
         R = 6371  # Radius of the Earth in kilometers
         dlat = radians(lat2 - lat1)
         dlon = radians(lon2 - lon1)
-        a = (sin(dlat / 2) ** 2) + cos(radians(lat1)) * cos(radians(lat2)) * (sin(dlon / 2) ** 2)
+        a = (sin(dlat / 2) ** 2) + cos(radians(lat1)) * cos(radians(lat2)) * (
+            sin(dlon / 2) ** 2
+        )
         c = 2 * atan2(sqrt(a), sqrt(1 - a))
         distance = ceil(R * c)  # Round up to the nearest whole number
 
@@ -280,7 +300,9 @@ def calculate_distance_between_cities(city1, city2):
         with open(DISTANCES_FILE, "w", encoding="utf-8") as file:
             json.dump(distances, file, ensure_ascii=False, indent=4)
 
-        print(f"DEBUG: Calculated and saved distance for {city1} and {city2}: {distance} km")
+        print(
+            f"DEBUG: Calculated and saved distance for {city1} and {city2}: {distance} km"
+        )
         return {
             "distance": distance,
             "city1_latitude": lat1,
@@ -297,6 +319,7 @@ def calculate_distance_between_cities(city1, city2):
             "city2_latitude": None,
             "city2_longitude": None,
         }
+
 
 # helper function to calculate the grade of possible matche according the distance between the two cities and the ages of the child and the tutor
 # params: list of possible matches
@@ -446,7 +469,7 @@ def create_tasks_for_tutor_coordinators_async(pending_tutor_id, task_type_id):
         retry_interval = 5  # Retry interval in seconds
         elapsed_time = 0
 
-        while (elapsed_time < max_wait_time):
+        while elapsed_time < max_wait_time:
             if Pending_Tutor.objects.filter(pending_tutor_id=pending_tutor_id).exists():
                 print(
                     f"DEBUG: Pending_Tutor with ID {pending_tutor_id} found in the database."
@@ -549,6 +572,8 @@ def is_admin(user):
             f"DEBUG: Is user '{user.username}' an admin? {is_admin_result}"
         )  # Debug log
         return is_admin_result
+
+
 def has_permission(request, resource, action):
     """
     Check if the user has the required permission for a specific resource and action.
@@ -678,7 +703,7 @@ def get_user_tasks(request):
     if not tasks_data:
         # Fetch tasks efficiently
         if user_is_admin:
-            #print("DEBUG: Fetching all tasks for admin user.")  # Debug log
+            # print("DEBUG: Fetching all tasks for admin user.")  # Debug log
             tasks = (
                 Tasks.objects.all()
                 .select_related("task_type", "assigned_to", "pending_tutor__id")
@@ -2145,7 +2170,7 @@ def calculate_possible_matches(request):
     try:
         # Step 1: Check user permissions
         check_matches_permissions(request, ["CREATE", "UPDATE", "DELETE"])
-        #print("DEBUG: User has all required permissions.")
+        # print("DEBUG: User has all required permissions.")
 
         # Step 2: Fetch possible matches
         possible_matches = fetch_possible_matches()
@@ -2153,26 +2178,29 @@ def calculate_possible_matches(request):
 
         # Step 3: Calculate distances and coordinates
         possible_matches = calculate_distances(possible_matches)
-        #print("DEBUG: Calculated distances and coordinates for possible matches.")
+        # print("DEBUG: Calculated distances and coordinates for possible matches.")
 
         # Step 4: Calculate grades
         graded_matches = calculate_grades(possible_matches)
         print(f"DEBUG: Calculated grades for matches.")
 
         # Step 5: Clear the possiblematches table
-        #print("DEBUG: Clearing possible matches table.")
+        # print("DEBUG: Clearing possible matches table.")
         clear_possible_matches()
 
         # Step 6: Insert new matches
         print(f"DEBUG: Inserting {len(graded_matches)} new matches into the database.")
         insert_new_matches(graded_matches)
 
-        #print("DEBUG: New matches inserted successfully.")
-        #print("DEBUG: Possible matches calculation completed.")
+        # print("DEBUG: New matches inserted successfully.")
+        # print("DEBUG: Possible matches calculation completed.")
 
         return JsonResponse(
-            {"message": "Possible matches calculated successfully.", "matches": graded_matches},
-            status=200
+            {
+                "message": "Possible matches calculated successfully.",
+                "matches": graded_matches,
+            },
+            status=200,
         )
 
     except PermissionError as e:
@@ -2182,7 +2210,8 @@ def calculate_possible_matches(request):
     except Exception as e:
         print(f"DEBUG: An error occurred: {str(e)}")
         return JsonResponse({"error": str(e)}, status=500)
-    
+
+
 @csrf_exempt
 @api_view(["GET"])
 def get_tutorships(request):
@@ -2219,7 +2248,7 @@ def get_tutorships(request):
                 "child_lastname": tutorship["child__childsurname"],
                 "tutor_firstname": tutorship["tutor__staff__first_name"],
                 "tutor_lastname": tutorship["tutor__staff__last_name"],
-                "created_date": tutorship["created_date"].strftime("%d/%m/%Y")
+                "created_date": tutorship["created_date"].strftime("%d/%m/%Y"),
             }
             for tutorship in tutorships
         ]
@@ -2227,6 +2256,7 @@ def get_tutorships(request):
     except Exception as e:
         print(f"DEBUG: Error fetching tutorships: {str(e)}")
         return JsonResponse({"error": str(e)}, status=500)
+
 
 @csrf_exempt
 @api_view(["POST"])
@@ -2279,7 +2309,8 @@ def create_tutorship(request):
     except Exception as e:
         print(f"DEBUG: An error occurred while creating a tutorship: {str(e)}")
         return JsonResponse({"error": str(e)}, status=500)
-    
+
+
 @csrf_exempt
 @api_view(["GET"])
 def get_signedup(request):
@@ -2319,7 +2350,8 @@ def get_signedup(request):
     except Exception as e:
         print(f"DEBUG: Error fetching signed-up users: {str(e)}")
         return JsonResponse({"error": str(e)}, status=500)
-    
+
+
 @csrf_exempt
 @api_view(["DELETE"])
 def delete_tutorship(request, tutorship_id):
@@ -2335,7 +2367,8 @@ def delete_tutorship(request, tutorship_id):
     # Check if the user has DELETE permission on the "tutorships" resource
     if not has_permission(request, "tutorships", "DELETE"):
         return JsonResponse(
-            {"error": "You do not have permission to delete this tutorship."}, status=401
+            {"error": "You do not have permission to delete this tutorship."},
+            status=401,
         )
 
     try:
@@ -2355,4 +2388,316 @@ def delete_tutorship(request, tutorship_id):
         )
     except Exception as e:
         print(f"DEBUG: An error occurred while deleting the tutorship: {str(e)}")
+        return JsonResponse({"error": str(e)}, status=500)
+
+
+@csrf_exempt
+@api_view(["GET"])
+def get_all_staff(request):
+    """
+    Retrieve all staff along with their roles, with pagination and search.
+    """
+    user_id = request.session.get("user_id")
+    if not user_id:
+        return JsonResponse(
+            {"detail": "Authentication credentials were not provided."}, status=403
+        )
+
+    # Check if the user is an admin
+    user = Staff.objects.get(staff_id=user_id)
+    if not is_admin(user):
+        return JsonResponse(
+            {"error": "You do not have permission to view this page."}, status=401
+        )
+
+    # Get query parameters for search and pagination
+    search_query = request.GET.get("search", "").strip()
+    page = int(request.GET.get("page", 1))
+    page_size = int(request.GET.get("page_size", 10))
+
+    # Filter staff by search query
+    staff = Staff.objects.all()
+    if search_query:
+        staff = staff.filter(
+            models.Q(first_name__icontains=search_query)
+            | models.Q(last_name__icontains=search_query)
+            | models.Q(email__icontains=search_query)
+        )
+
+    # Paginate the results
+    total_count = staff.count()
+    staff = staff[(page - 1) * page_size : page * page_size]
+
+    staff_data = []
+    for user in staff:
+        roles = list(user.roles.values_list("role_name", flat=True))
+        staff_data.append(
+            {
+                "id": user.staff_id,
+                "username": user.username,
+                "email": user.email,
+                "first_name": user.first_name,
+                "last_name": user.last_name,
+                "created_at": user.created_at.strftime("%d/%m/%Y"),
+                "roles": roles,
+            }
+        )
+
+    return JsonResponse(
+        {"staff": staff_data, "total_count": total_count, "page": page, "page_size": page_size},
+        status=200,
+    )
+
+
+@csrf_exempt
+@api_view(["PUT"])
+def update_staff_member(request, staff_id):
+    """
+    Update a staff member's details and propagate changes to related tables.
+    """
+    user_id = request.session.get("user_id")
+    if not user_id:
+        return JsonResponse(
+            {"detail": "Authentication credentials were not provided."}, status=403
+        )
+
+    # Check if the user is an admin
+    user = Staff.objects.get(staff_id=user_id)
+    if not is_admin(user):
+        return JsonResponse(
+            {"error": "You do not have permission to update this staff member."},
+            status=401,
+        )
+
+    try:
+        # Fetch the existing staff record
+        try:
+            staff_member = Staff.objects.get(staff_id=staff_id)
+        except Staff.DoesNotExist:
+            return JsonResponse({"error": "Staff member not found."}, status=404)
+
+        # Extract data from the request
+        data = request.data  # Use request.data for JSON payloads
+
+        # Validate required fields
+        required_fields = ["username", "email", "first_name", "last_name"]
+        missing_fields = [field for field in required_fields if field not in data]
+        if missing_fields:
+            return JsonResponse(
+                {"error": f"Missing required fields: {', '.join(missing_fields)}"},
+                status=400,
+            )
+
+        # Update fields in the Staff table
+        old_email = staff_member.email  # Store the old email for reference
+        staff_member.username = data.get("username", staff_member.username)
+        staff_member.email = data.get("email", staff_member.email)
+        staff_member.first_name = data.get("first_name", staff_member.first_name)
+        staff_member.last_name = data.get("last_name", staff_member.last_name)
+        # update password if provided
+        staff_member.password = data["password"] if "password" in data else staff_member.password
+        # Update roles if provided
+        if "roles" in data:
+            roles = data["roles"]
+            print(f"DEBUG: Roles provided: {roles}")  # Log the roles provided
+            if isinstance(roles, list):
+                staff_member.roles.clear()
+                for role_name in roles:  # Expecting role names instead of IDs
+                    try:
+                        role = Role.objects.get(role_name=role_name)  # Fetch by role_name
+                        staff_member.roles.add(role)
+                    except Role.DoesNotExist:
+                        return JsonResponse(
+                            {"error": f"Role with name '{role_name}' does not exist."},
+                            status=400,
+                        )
+            else:
+                return JsonResponse(
+                    {"error": "Roles should be provided as a list of role names."}, status=400
+                )
+        # Save the updated staff record
+        try:
+            staff_member.save()
+            print(f"DEBUG: Staff member with ID {staff_id} saved successfully.")
+        except DatabaseError as db_error:
+            print(f"DEBUG: Database error while saving staff member: {str(db_error)}")
+            return JsonResponse(
+                {"error": f"Database error: {str(db_error)}"}, status=500
+            )
+
+        # Propagate email changes to related tables
+        if old_email != staff_member.email:
+            SignedUp.objects.filter(email=old_email).update(email=staff_member.email)
+            Pending_Tutor.objects.filter(id__email=old_email).update(
+                id__email=staff_member.email
+            )
+
+        print(f"DEBUG: Staff member with ID {staff_id} updated successfully.")
+        return JsonResponse(
+            {
+                "message": "Staff member updated successfully",
+                "staff_id": staff_member.staff_id,
+            },
+            status=200,
+        )
+    except Exception as e:
+        print(f"DEBUG: An error occurred while updating the staff member: {e}")
+        return JsonResponse({"error": str(e)}, status=500)
+
+
+@csrf_exempt
+@api_view(["DELETE"])
+def delete_staff_member(request, staff_id):
+    """
+    Delete a staff member and all related data from the database.
+    """
+    user_id = request.session.get("user_id")
+    if not user_id:
+        return JsonResponse(
+            {"detail": "Authentication credentials were not provided."}, status=403
+        )
+
+    # Check if the user is an admin
+    user = Staff.objects.get(staff_id=user_id)
+    if not is_admin(user):
+        return JsonResponse(
+            {"error": "You do not have permission to delete this staff member."},
+            status=401,
+        )
+
+    try:
+        # Fetch the existing staff record
+        try:
+            staff_member = Staff.objects.get(staff_id=staff_id)
+        except Staff.DoesNotExist:
+            return JsonResponse({"error": "Staff member not found."}, status=404)
+
+        # Delete related data
+        # 1. Delete SignedUp record if it exists
+        SignedUp.objects.filter(email=staff_member.email).delete()
+
+        # 2. Delete General_Volunteer record if it exists
+        General_Volunteer.objects.filter(staff=staff_member).delete()
+
+        # 3. Delete Pending_Tutor record if it exists
+        Pending_Tutor.objects.filter(id__email=staff_member.email).delete()
+
+        # 4. Delete Tutors record if it exists
+        Tutors.objects.filter(staff=staff_member).delete()
+
+        # 5. Delete Tutorships related to the Tutors record
+        Tutorships.objects.filter(tutor__staff=staff_member).delete()
+
+        # 6. Delete Tasks assigned to the staff member
+        Tasks.objects.filter(assigned_to=staff_member).delete()
+
+        # Finally, delete the staff record
+        staff_member.delete()
+
+        print(f"DEBUG: Staff member with ID {staff_id} and related data deleted successfully.")
+        return JsonResponse(
+            {"message": "Staff member and related data deleted successfully", "staff_id": staff_id},
+            status=200,
+        )
+    except Exception as e:
+        print(f"DEBUG: An error occurred while deleting the staff member: {e}")
+        return JsonResponse({"error": str(e)}, status=500)
+    
+@csrf_exempt
+@api_view(["GET"])
+def get_roles(request):
+    """
+    Retrieve all roles from the database.
+    """
+    user_id = request.session.get("user_id")
+    if not user_id:
+        return JsonResponse(
+            {"detail": "Authentication credentials were not provided."}, status=403
+        )
+
+    # Check if the user is an admin
+    user = Staff.objects.get(staff_id=user_id)
+    if not is_admin(user):
+        return JsonResponse(
+            {"error": "You do not have permission to view this page."}, status=401
+        )
+
+    try:
+        roles = Role.objects.all()
+        roles_data = [{"id": role.id, "role_name": role.role_name} for role in roles]
+        return JsonResponse({"roles": roles_data}, status=200)
+    except Exception as e:
+        print(f"DEBUG: Error fetching roles: {str(e)}")
+        return JsonResponse({"error": str(e)}, status=500)
+    
+@csrf_exempt
+@api_view(["POST"])
+def create_staff_member(request):
+    """
+    Create a new staff member and assign roles.
+    """
+    user_id = request.session.get("user_id")
+    if not user_id:
+        return JsonResponse(
+            {"detail": "Authentication credentials were not provided."}, status=403
+        )
+
+    # Check if the user is an admin
+    user = Staff.objects.get(staff_id=user_id)
+    if not is_admin(user):
+        return JsonResponse(
+            {"error": "You do not have permission to create a staff member."},
+            status=401,
+        )
+
+    try:
+        data = request.data  # Use request.data for JSON payloads
+
+        # Validate required fields
+        required_fields = ["username", "email", "first_name", "last_name", "roles"]
+        missing_fields = [field for field in required_fields if field not in data]
+        if missing_fields:
+            return JsonResponse(
+                {"error": f"Missing required fields: {', '.join(missing_fields)}"},
+                status=400,
+            )
+
+        # Create a new staff record in the database
+        staff_member = Staff.objects.create(
+            username=data["username"],
+            password=data["password"],  # Assuming password is provided in the request
+            email=data["email"],
+            first_name=data["first_name"],
+            last_name=data["last_name"],
+            created_at=datetime.datetime.now(),
+        )
+
+        # Assign roles to the staff member
+        roles = data["roles"]
+        print(f"DEBUG: Roles provided: {roles}")  # Log the roles provided
+        if isinstance(roles, list):
+            staff_member.roles.clear()
+            for role_name in roles:  # Expecting role names instead of IDs
+                try:
+                    role = Role.objects.get(role_name=role_name)  # Fetch by role_name
+                    staff_member.roles.add(role)
+                except Role.DoesNotExist:
+                    return JsonResponse(
+                        {"error": f"Role with name '{role_name}' does not exist."},
+                        status=400,
+                    )
+        else:
+            return JsonResponse(
+                {"error": "Roles should be provided as a list of role names."}, status=400
+            )
+        print(f"DEBUG: Staff member created successfully with ID {staff_member.staff_id}")
+        return JsonResponse(
+            {
+                "message": "Staff member created successfully",
+                "staff_id": staff_member.staff_id,
+            },
+            status=201,
+        )
+    except Exception as e:
+        print(f"DEBUG: An error occurred while creating a staff member: {str(e)}")
         return JsonResponse({"error": str(e)}, status=500)
