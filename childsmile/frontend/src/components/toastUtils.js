@@ -12,3 +12,20 @@ export const showErrorToast = (t, key, error) => {
   const messageToShow = key ? `${t(key)} - ${errorMessage}` : errorMessage;
   toast.error(messageToShow);
 };
+
+export const showErrorApprovalToast = (t, error, roleName) => {
+  console.log('showErrorApprovalToast called with:', t, error, roleName); // Debug log
+
+  // Extract the error message from the response or fallback to a generic error message
+  const errorMessage = error.response?.data?.error || error.message;
+
+  // Check if the error message matches the specific case
+  if (errorMessage === "This role has already approved this tutorship") {
+    // Show a yellow toast with the role name included
+    const translatedMessage = t('A user with Role: {{roleName}} has already approved this tutorship', { roleName });
+    toast.warn(translatedMessage); // Use `warn` for a yellow toast
+  } else {
+    // Show a red toast for other errors
+    toast.error(t(errorMessage)); // Use `error` for a red toast
+  }
+};

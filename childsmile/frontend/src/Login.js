@@ -25,6 +25,7 @@ const Login = () => {
       setError('');
       // store the usernname in local storage without the '_' - replace with space
       localStorage.setItem('username', username.replace(/_/g, ' '));
+      localStorage.setItem('origUsername', username); // Store the original username
 
       // Fetch permissions after successful login
       const permissionsResponse = await axios.get('/api/permissions/');

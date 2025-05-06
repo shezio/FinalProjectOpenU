@@ -4,7 +4,7 @@
   border-radius: 8px;
   width: 1400px;
   /* Limit the modal width */
-  height: 550px;
+  height: 750px;
   margin: auto;
   /* Center the modal horizontally */
   margin-top: 200px;
@@ -670,4 +670,68 @@
 .info-table td:last-child .info-table td:first-child {
 
   text-align: center;
+}
+
+.approval-modal {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  width: 1000px;
+  text-align: center;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.approval-modal-overlay {
+  background-color: rgba(0, 0, 0, 0.75);
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.approval-modal h2 {
+  font-size: 36px;
+  margin-bottom: 15px;
+}
+
+.approval-modal p {
+  font-size: 20px;
+  margin-bottom: 20px;
+}
+
+.approval-modal yes-button{
+  background-color: #4CAF50;
+  /* Green */
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.approval-modal no-button{
+  background-color: #ff4d4d;
+  /* Red */
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+/* Style for disabled buttons */
+button:disabled {
+  background-color: /* light green */ #e0e0e0; /* Light gray background */
+  color: #666; /* Dark gray text */
+  cursor: not-allowed; /* Show "not allowed" cursor */
+  opacity: 0.6; /* Make it slightly transparent */
+  border: 1px solid #aaa; /* Optional: Add a border */
+  transition: background-color 0.3s ease;
 }

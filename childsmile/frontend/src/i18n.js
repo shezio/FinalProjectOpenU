@@ -353,7 +353,13 @@ const resources = {
       'Error fetching staff member details.': 'שגיאה בטעינת פרטי משתמש',
       'Select Roles': 'לחץ כדי לבחור תפקידים',
       'Click to return to Report page': 'לחץ כדי לחזור למסך דוחות',
-      }
+      "Final Approval": "אישור סופי",
+      "Are you sure you want to approve this tutorship?": "האם אתה בטוח שברצונך לאשר חונכות זו?",
+      "Discuss with a coordinator": "שוחח עם {{roleName}} טרם האישור",
+      'Approve': 'אשר',
+      "A user with Role: {{roleName}} has already approved this tutorship": "משתמש עם התפקיד -  {{roleName}} כבר אישר חונכות זו",
+      'Tutorship approved successfully!': 'החונכות אושרה בהצלחה!',
+    }
   }
 };
 
