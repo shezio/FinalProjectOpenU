@@ -23,11 +23,11 @@ const Sidebar = () => {
         משפחות
       </button>
       {/* <button
-        data-path="/volunteers"
-        className={location.pathname.startsWith('/volunteers') ? 'active' : ''}
-        onClick={() => navigate('/volunteers')}
+        data-path="/feedbacks"
+        className={location.pathname.startsWith('/feedbacks') ? 'active' : ''}
+        onClick={() => navigate('/feedbacks')}
       >
-        מתנדבים
+        משובים
       </button> */}
       <button
         data-path="/tutorships"

@@ -3,7 +3,7 @@ import { Routes, Route } from 'react-router-dom';
 import Login from './Login';
 import Tasks from './pages/Tasks'; // Import the Tasks component
 import Families from './pages/Families'; // Import the Families component
-import Volunteers from './pages/Volunteers'; // Import the Volunteers component
+import Feedbacks from './pages/Feedbacks'; // Import the Feedbacks component
 import Tutorships from './pages/Tutorships';  // Import the Tutorships component
 import Reports from './pages/Reports'; // Import the Reports component
 import SystemManagement from './pages/SystemManagement'; // Import the System Management component
@@ -36,8 +36,7 @@ const App = () => {
       <Route path="/" element={<Login />} />
       <Route path="/tasks" element={<Tasks />} />
       <Route path="/families" element={<Families />} />
-      <Route path="/families" element={<Families />} />
-      <Route path="/volunteers" element={<Volunteers />} />
+      <Route path="/feedbacks" element={<Feedbacks />} />
       <Route path="/tutorships" element={<Tutorships />} />
       <Route path="/reports" element={<Reports />} />
       <Route path="/system-management" element={<SystemManagement />} />
