@@ -35,6 +35,7 @@ from .views import (
     delete_staff_member,
     get_roles,
     create_staff_member,
+    update_tutorship,
 )
 
 from .unused_views import (
@@ -206,5 +207,10 @@ urlpatterns = [
         "api/create_staff_member/",
         create_staff_member,
         name="create_staff_member",
+    ),
+    path(
+        "api/update_tutorship/<int:tutorship_id>/",
+        update_tutorship,
+        name="update_tutorship",
     ),
 ]

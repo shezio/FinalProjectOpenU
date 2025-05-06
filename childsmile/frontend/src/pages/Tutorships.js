@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { use, useEffect, useState } from 'react';
 import ReactSlider from 'react-slider';
 import Sidebar from '../components/Sidebar';
 import InnerPageHeader from '../components/InnerPageHeader';
@@ -11,7 +11,7 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { hasAllPermissions, getTutors } from '../components/utils';
 import { useTranslation } from 'react-i18next'; // Import the translation hook
-import { showErrorToast } from '../components/toastUtils'; // Import the toast utility
+import { showErrorToast, showErrorApprovalToast } from '../components/toastUtils'; // Import the toast utility
 import { MapContainer, TileLayer, Marker, Popup, Polyline } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
@@ -47,9 +47,86 @@ const Tutorships = () => {
   const [isTutorshipDeleteModalOpen, setIsTutorshipDeleteModalOpen] = useState(false);
   const [isInfoModalOpen, setIsInfoModalOpen] = useState(false);
   const [selectedMatchForInfo, setSelectedMatchForInfo] = useState(null);
+  const [selectedTutorship, setSelectedTutorship] = useState(null);
+  const [isApprovalModalOpen, setIsApprovalModalOpen] = useState(false);
   const { t } = useTranslation(); // Initialize the translation hook
   const mapRef = useRef();
+  const [staff, setStaff] = useState([]);
+  const [roles, setRoles] = useState([]);
+  const [currentUserRoleId, setCurrentUserRoleId] = useState(null);
+  const [placeholderRoleName, setPlaceholderRoleName] = useState('');
+  const [currentRoleName, setCurrentRoleName] = useState('');
 
+  const fetchStaffAndRoles = async () => {
+    console.log('DEBUG: Fetching staff and roles data...'); // Add debug log
+    try {
+      const [staffResponse, rolesResponse] = await Promise.all([
+        axios.get('/api/staff/'), // Fetch staff data
+        axios.get('/api/get_roles/'), // Fetch roles data
+      ]);
+
+      const staffData = staffResponse.data.staff || [];
+      const rolesData = rolesResponse.data.roles || [];
+
+      setStaff(staffData);
+      setRoles(rolesData);
+
+      // Get the current user's username from localStorage
+      const currentUsername = localStorage.getItem('origUsername');
+      console.log('DEBUG: Current Username from localStorage:', currentUsername); // Add debug log
+
+      // Find the current user in the staff data
+      const currentUser = staffData.find((user) => user.username === currentUsername);
+      console.log('DEBUG: Current User:', currentUser); // Add debug log
+
+      if (currentUser) {
+        // Map the user's roles to role IDs
+        const userRoleIds = currentUser.roles.map((roleName) => {
+          const role = rolesData.find((r) => r.role_name === roleName);
+          return role ? role.id : null;
+        }).filter((id) => id !== null);
+
+        if (userRoleIds.length > 0) {
+          setCurrentUserRoleId(userRoleIds[0]); // Use the first role ID
+          console.log('DEBUG: Current User Role ID:', userRoleIds[0]); // Add debug log
+        } else {
+          console.error('No matching role ID found for the current user.');
+          showErrorToast(t, 'No matching role ID found. Please contact support.');
+        }
+
+        // Get the current role name
+        const currentRole = rolesData.find((role) => role.id === userRoleIds[0]);
+        if (currentRole) {
+          const currentRoleName = currentRole.role_name; // Create the currentRoleName variable
+          setCurrentRoleName(currentRoleName); // Set the current role name
+          console.log('DEBUG: Current Role Name:', currentRoleName); // Add debug log
+        }
+        else {
+          console.error('No matching role ID found for the current user.');
+          showErrorToast(t, 'No matching role ID found. Please contact support.');
+        }
+
+        // Determine the placeholder role name
+        const placeholderRole = rolesData.find(
+          (role) =>
+            !userRoleIds.includes(role.id) && // Exclude the current user's roles
+            (role.role_name === 'Tutors Coordinator' || role.role_name === 'Families Coordinator')
+        );
+        if (placeholderRole) {
+          setPlaceholderRoleName(placeholderRole.role_name); // Set the placeholder role name
+          console.log('DEBUG: Placeholder Role Name:', placeholderRole.role_name); // Add debug log
+        }
+      } else {
+        console.error('Current user not found in staff data.');
+        showErrorToast(t, 'Current user not found. Please contact support.');
+      }
+    } catch (error) {
+      console.error('Error fetching staff or roles:', error);
+      showErrorToast(t, 'Failed to fetch staff or roles.', error);
+    }
+  };
+
+  const translatedRoleName = t(placeholderRoleName); // Translate the role name
   // Permissions required to access the page
   const requiredPermissions = [
     { resource: 'childsmile_app_tutorships', action: 'CREATE' },
@@ -98,6 +175,33 @@ const Tutorships = () => {
     setTutorshipToDelete(null);
   };
 
+  const openApprovalModal = (tutorship) => {
+    setSelectedTutorship(tutorship); // Set the selected tutorship
+    setIsApprovalModalOpen(true); // Open the approval modal
+  };
+
+  const closeApprovalModal = () => {
+    setSelectedTutorship(null); // Clear the selected tutorship
+    setIsApprovalModalOpen(false); // Close the approval modal
+  };
+
+  const confirmApproval = async () => {
+    if (!selectedTutorship || !currentUserRoleId) return;
+
+    try {
+      const response = await axios.post(`/api/update_tutorship/${selectedTutorship.id}/`, {
+        staff_role_id: currentUserRoleId, // Use dynamically fetched role ID
+      });
+      toast.success(t('Tutorship approved successfully!'));
+      fetchTutorships(); // Refresh the tutorships list
+      closeApprovalModal();
+    } catch (error) {
+      console.error('Error approving tutorship:', error);
+      const userRoleName = t(currentRoleName); // Translate the user's role name
+      showErrorApprovalToast(t, error, userRoleName); // Pass the role name
+    }
+  };
+
   const confirmDeleteTutorship = async () => {
     if (!tutorshipToDelete) {
       console.error('No tutorship ID provided for deletion.'); // Add error log
@@ -132,6 +236,7 @@ const Tutorships = () => {
       .get('/api/get_tutorships/')
       .then((response) => {
         setTutorships(response.data.tutorships || []);
+        fetchStaffAndRoles(); // Fetch staff and roles data
       })
       .catch((error) => {
         console.error('Error fetching tutorships:', error);
@@ -263,20 +368,20 @@ const Tutorships = () => {
 
   const calculateAgeFromDate = (dateString) => {
     console.log('DEBUG: Calculating age from date:', dateString); // Add debug log
-  
+
     // Parse the date string in DD/MM/YYYY format
     const [day, month, year] = dateString.split('/'); // Split the string into day, month, and year
     const birthDate = new Date(`${year}-${month}-${day}`); // Rearrange into YYYY-MM-DD format
-  
+
     if (isNaN(birthDate)) {
       console.error('Invalid date format:', dateString); // Log an error if the date is invalid
       return 'Invalid date';
     }
-  
+
     const today = new Date(); // Get the current date
     const age = today.getFullYear() - birthDate.getFullYear(); // Calculate the age in years
     const monthDifference = today.getMonth() - birthDate.getMonth(); // Calculate the month difference
-  
+
     if (monthDifference < 0 || (monthDifference === 0 && today.getDate() < birthDate.getDate())) {
       return age - 1;
     }
@@ -284,9 +389,15 @@ const Tutorships = () => {
   };
 
   const createTutorship = () => {
-    if (!selectedMatch) return;
+    console.log('DEBUG: Creating tutorship with selected match:', selectedMatch); // Add debug log
+    console.log('DEBUG: Current user role ID:', currentUserRoleId); // Add debug log
+    if (!selectedMatch || !currentUserRoleId) return;
+
     axios
-      .post('/api/create_tutorship/', { match: selectedMatch })
+      .post('/api/create_tutorship/', {
+        match: selectedMatch,
+        staff_role_id: currentUserRoleId, // Use dynamically fetched role ID
+      })
       .then(() => {
         toast.success(t('Tutorship created successfully!'));
         setSelectedMatch(null); // Clear the selected match after creation
@@ -373,6 +484,13 @@ const Tutorships = () => {
                       <td>{tutorship.created_date}</td>
                       <td>
                         <div className="tutorship-actions">
+                          <button
+                            className="approve-button"
+                            disabled={tutorship.approval_counter >= 2}
+                            onClick={() => openApprovalModal(tutorship)}
+                          >
+                            {t('Final Approval')}
+                          </button>
                           <button className="delete-button" onClick={() => openTutorshipDeleteModal(tutorship.id)}>
                             {t('מחק')}
                           </button>
@@ -384,6 +502,29 @@ const Tutorships = () => {
               </table>
             )}
           </div>
+        )}
+        {isApprovalModalOpen && selectedTutorship && (
+          <Modal
+            isOpen={isApprovalModalOpen}
+            onRequestClose={closeApprovalModal}
+            className="approval-modal"
+            overlayClassName="approval-modal-overlay"
+          >
+            <h2>{t('Are you sure you want to approve this tutorship?')}</h2>
+            <p>
+              <p>
+                {t('Discuss with a coordinator', { roleName: translatedRoleName })}
+              </p>
+            </p>
+            <div className="modal-actions">
+              <button onClick={confirmApproval} className="yes-button">
+                {t('Approve')}
+              </button>
+              <button onClick={closeApprovalModal} className="no-button">
+                {t('Cancel')}
+              </button>
+            </div>
+          </Modal>
         )}
         {isInfoModalOpen && selectedMatchForInfo && (
           <div className="modal show">
@@ -496,22 +637,22 @@ const Tutorships = () => {
               &times;
             </button>
           </div>
+          <div className="filter-controls">
+            <label htmlFor="filter-slider">{t('Filter by Minimum Grade')}:</label>
+            <ReactSlider
+              id="filter-slider"
+              className="custom-slider"
+              thumbClassName="custom-slider-thumb"
+              trackClassName="custom-slider-track"
+              min={0}
+              max={100}
+              value={filterThreshold}
+              onChange={(value) => setFilterThreshold(value)}
+            />
+            <span className="filter-value">{filterThreshold}</span>
+          </div>
           <div className="match-modal-content">
             <div className="grid-container">
-              <div className="filter-controls">
-                <label htmlFor="filter-slider">{t('Filter by Minimum Grade')}:</label>
-                <ReactSlider
-                  id="filter-slider"
-                  className="custom-slider"
-                  thumbClassName="custom-slider-thumb"
-                  trackClassName="custom-slider-track"
-                  min={0}
-                  max={100}
-                  value={filterThreshold}
-                  onChange={(value) => setFilterThreshold(value)}
-                />
-                <span className="filter-value">{filterThreshold}</span>
-              </div>
               {gridLoading ? (
                 <div className="grid-loader">{t("Loading data...")}</div>
               ) : (

@@ -646,5 +646,29 @@
             "city2_latitude": 31.528902,
             "city2_longitude": 35.0944873
         }
+    },
+    "שבי ציון": {
+        "city_latitude": 32.980597,
+        "city_longitude": 35.0832938,
+        "באר שבע": {
+            "distance": 195,
+            "city2_latitude": 31.2457442,
+            "city2_longitude": 34.7925181
+        },
+        "חולון": {
+            "distance": 111,
+            "city2_latitude": 32.0193121,
+            "city2_longitude": 34.7804076
+        },
+        "תל אביב": {
+            "distance": 104,
+            "city2_latitude": 32.0852997,
+            "city2_longitude": 34.7818064
+        },
+        "חברון": {
+            "distance": 162,
+            "city2_latitude": 31.528902,
+            "city2_longitude": 35.0944873
+        }
     }
 }

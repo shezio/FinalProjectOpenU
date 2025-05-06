@@ -2258,6 +2258,9 @@ def get_tutorships(request):
             "tutor__staff__first_name",
             "tutor__staff__last_name",
             "created_date",
+            "updated_at",
+            "approval_counter",
+            "last_approver",
         )
 
         # Prepare the data
@@ -2269,6 +2272,9 @@ def get_tutorships(request):
                 "tutor_firstname": tutorship["tutor__staff__first_name"],
                 "tutor_lastname": tutorship["tutor__staff__last_name"],
                 "created_date": tutorship["created_date"].strftime("%d/%m/%Y"),
+                "updated_at": tutorship["updated_at"],
+                "approval_counter": tutorship["approval_counter"],
+                "last_approver": tutorship["last_approver"],
             }
             for tutorship in tutorships
         ]
@@ -2302,10 +2308,12 @@ def create_tutorship(request):
 
         # Handle nested "match" object
         if "match" in data:
-            data = data["match"]
+            match_data = data["match"]
+            # Merge match data with the root-level fields
+            data.update(match_data)
 
         # Validate required fields
-        required_fields = ["child_id", "tutor_id"]
+        required_fields = ["child_id", "tutor_id", "staff_role_id"]
         missing_fields = [field for field in required_fields if field not in data]
         if missing_fields:
             print(f"DEBUG: Missing fields: {missing_fields}")  # Log missing fields
@@ -2314,11 +2322,22 @@ def create_tutorship(request):
                 status=400,
             )
 
+        # Retrieve and validate the staff role ID
+        staff_role_id = data.get("staff_role_id")
+        if not isinstance(staff_role_id, int):
+            print(f"DEBUG: Invalid staff_role_id: {staff_role_id}")
+            return JsonResponse(
+                {"error": "Invalid staff_role_id. It must be an integer."}, status=400
+            )
+
         # Create a new tutorship record in the database
         tutorship = Tutorships.objects.create(
             child_id=data["child_id"],
             tutor_id=data["tutor_id"],
             created_date=datetime.datetime.now(),
+            updated_at=datetime.datetime.now(),
+            last_approver=[staff_role_id],  # Initialize with the creator's role ID
+            approval_counter=1,  # Start with 1 approver
         )
 
         print(f"DEBUG: Tutorship created successfully with ID {tutorship.id}")
@@ -2326,10 +2345,61 @@ def create_tutorship(request):
             {"message": "Tutorship created successfully", "tutorship_id": tutorship.id},
             status=201,
         )
+    except KeyError as e:
+        print(f"DEBUG: Missing key in request data: {str(e)}")
+        return JsonResponse({"error": f"Missing key: {str(e)}"}, status=400)
     except Exception as e:
         print(f"DEBUG: An error occurred while creating a tutorship: {str(e)}")
         return JsonResponse({"error": str(e)}, status=500)
 
+
+@csrf_exempt
+@api_view(["POST"])
+def update_tutorship(request, tutorship_id):
+    """
+    Update an existing tutorship record.
+    """
+    print(f"DEBUG: Received request to update tutorship with ID {tutorship_id}")
+    user_id = request.session.get("user_id")
+    if not user_id:
+        return JsonResponse(
+            {"detail": "Authentication credentials were not provided."}, status=403
+        )
+
+    # Check if the user has UPDATE permission on the "tutorships" resource
+    if not has_permission(request, "tutorships", "UPDATE"):
+        return JsonResponse(
+            {"error": "You do not have permission to update this tutorship."},
+            status=401,
+        )
+
+    data = request.data
+    print(f"DEBUG: Incoming request data for update: {data}")  # Log the incoming data
+    staff_role_id = data.get("staff_role_id")
+    if not staff_role_id:
+        return JsonResponse({"error": "Staff role ID is required"}, status=500)
+
+    try:
+        tutorship = Tutorships.objects.get(id=tutorship_id)
+    except Tutorships.DoesNotExist:
+        return JsonResponse({"error": "Tutorship not found"}, status=404)
+
+    if staff_role_id in tutorship.last_approver:
+        return JsonResponse({"error": "This role has already approved this tutorship"}, status=400)
+    try:
+        tutorship.last_approver.append(staff_role_id)
+        if tutorship.approval_counter <= 2:
+            tutorship.approval_counter = len(tutorship.last_approver)
+        else:
+            raise ValueError("Approval counter cannot exceed 2")
+        tutorship.updated_at = datetime.datetime.now()  # Updated to use datetime now()
+        tutorship.save()
+
+        return JsonResponse({"message": "Tutorship updated successfully", "approval_counter": 
+        tutorship.approval_counter}, status=200)
+    except Exception as e:
+        print(f"DEBUG: An error occurred while updating the tutorship: {str(e)}")
+        return JsonResponse({"error": str(e)}, status=500)
 
 @csrf_exempt
 @api_view(["GET"])
@@ -2636,8 +2706,7 @@ def get_roles(request):
         )
 
     # Check if the user is an admin
-    user = Staff.objects.get(staff_id=user_id)
-    if not is_admin(user):
+    if not has_permission(request, "role", "VIEW"):
         return JsonResponse(
             {"error": "You do not have permission to view this page."}, status=401
         )

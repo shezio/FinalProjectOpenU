@@ -187,6 +187,9 @@ class Tutorships(models.Model):
     child = models.ForeignKey(Children, on_delete=models.CASCADE)
     tutor = models.ForeignKey(Tutors, on_delete=models.CASCADE)
     created_date = models.DateTimeField(auto_now_add=True, null=True)
+    updated_at = models.DateTimeField(auto_now=True, null=True)
+    approval_counter = models.SmallIntegerField(default=0)
+    last_approver = models.JSONField(default=list)  # Store role IDs as a list
 
     def __str__(self):
         return (
