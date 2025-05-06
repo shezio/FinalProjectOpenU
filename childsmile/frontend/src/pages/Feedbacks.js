@@ -4,16 +4,16 @@ import Sidebar from '../components/Sidebar';
 import InnerPageHeader from '../components/InnerPageHeader';
 import '../styles/common.css';
 
-const Volunteers = () => {
+const Feedbacks = () => {
   return (
     <div className="main-content">
       <Sidebar />
-      <InnerPageHeader title="מתנדבים" />
+      <InnerPageHeader title="משובים" />
       <div className="page-content">
-        <p>כאן יופיע תוכן עבור דף מתנדבים</p>
+        <p>כאן יופיע תוכן עבור דף משובים</p>
       </div>
     </div>
   );
 };
 
-export default Volunteers;
+export default Feedbacks;
