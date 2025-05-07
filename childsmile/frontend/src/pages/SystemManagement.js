@@ -226,7 +226,6 @@ const SystemManagement = () => {
                   <thead>
                     <tr>
                       <th>{t('Username')}</th>
-                      <th>{t('Password')}</th>
                       <th>{t('Email')}</th>
                       <th>{t('First Name')}</th>
                       <th>{t('Last Name')}</th>
@@ -239,7 +238,6 @@ const SystemManagement = () => {
                     {paginatedStaff.map((user) => (
                       <tr key={user.id}>
                         <td>{user.username}</td>
-                        <td>*******</td> {/* Passwords should not be displayed */}
                         <td>{user.email}</td>
                         <td>{user.first_name}</td>
                         <td>{user.last_name}</td>
