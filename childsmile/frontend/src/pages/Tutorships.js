@@ -421,7 +421,7 @@ const Tutorships = () => {
 
   if (!hasPermissionOnTutorships) {
     return (
-      <div className="main-content">
+      <div className="tutorships-main-content">
         <Sidebar />
         <InnerPageHeader title="ניהול חונכויות" />
         <div className="page-content">
@@ -434,7 +434,7 @@ const Tutorships = () => {
   }
 
   return (
-    <div className="main-content">
+    <div className="tutorships-main-content">
       <Sidebar />
       <InnerPageHeader title="ניהול חונכויות" />
       <div className="page-content">

@@ -62,7 +62,7 @@ const PossibleTutorshipMatchesReport = () => {
   }, []);
 
   return (
-    <div className="main-content">
+    <div className="possible-matches-report-main-content">
       <Sidebar />
       <InnerPageHeader title={t("Possible Tutorship Matches Report")} />
       <div className="page-content">

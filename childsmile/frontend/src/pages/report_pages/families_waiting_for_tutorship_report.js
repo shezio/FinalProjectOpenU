@@ -54,7 +54,7 @@ const FamiliesWaitingForTutorshipReport = () => {
 
   if (!hasPermissionToView) {
     return (
-      <div className="main-content">
+      <div className="families-waiting-report-main-content">
         <Sidebar />
         <InnerPageHeader title={t("Families Waiting for Tutorship Report")} />
         <div className="page-content">
@@ -67,7 +67,7 @@ const FamiliesWaitingForTutorshipReport = () => {
   }
 
   return (
-    <div className="main-content">
+    <div className="families-waiting-report-main-content">
       <Sidebar />
       <InnerPageHeader title={t("Families Waiting for Tutorship Report")} />
       <div className="page-content">

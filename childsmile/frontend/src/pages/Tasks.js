@@ -299,7 +299,7 @@ const Tasks = () => {
   };
 
   return (
-    <div className="main-content">
+    <div className="tasks-main-content">
       <Sidebar />
       <InnerPageHeader title="לוח משימות" />
       <ToastContainer
@@ -317,7 +317,7 @@ const Tasks = () => {
        {/* Spinner displayed until data is loaded */}
       {!loading && (
         <>
-          <div className="page-content">
+          <div className="tasks-page-content">
             <div className="filter-create-container">
               <div className="create-task">
                 <button onClick={() => setIsModalOpen(true)}>צור משימה חדשה</button>

@@ -62,7 +62,7 @@ const TutorFeedbackReport = () => {
   }, []);
 
   return (
-    <div className="main-content">
+    <div className="tutor-feedback-report-main-content">
       <Sidebar />
       <InnerPageHeader title={t("Tutor Feedback Report")} />
       <div className="page-content">

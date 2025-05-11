@@ -57,7 +57,7 @@ const ActiveTutorsReport = () => {
 
   if (!hasPermissionToView) {
     return (
-      <div className="main-content">
+      <div className="active-tutors-report-main-content">
         <Sidebar />
         <InnerPageHeader title="דוח חונכים פעילים" />
         <div className="page-content">
@@ -70,7 +70,7 @@ const ActiveTutorsReport = () => {
   }
 
   return (
-    <div className="main-content">
+    <div className="active-tutors-report-main-content">
       <Sidebar />
       <InnerPageHeader title="דוח חונכים פעילים" />
       <div className="page-content">

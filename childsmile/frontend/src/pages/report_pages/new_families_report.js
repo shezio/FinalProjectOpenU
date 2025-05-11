@@ -54,7 +54,7 @@ const NewFamiliesReport = () => {
 
   if (!hasPermissionToView) {
     return (
-      <div className="main-content">
+      <div className="new-families-report-main-content">
         <Sidebar />
         <InnerPageHeader title={t("New Families Report")} />
         <div className="page-content">
@@ -67,7 +67,7 @@ const NewFamiliesReport = () => {
   }
 
   return (
-    <div className="main-content">
+    <div className="new-families-report-main-content">
       <Sidebar />
       <InnerPageHeader title={t("New Families Report")} />
       <div className="page-content">
