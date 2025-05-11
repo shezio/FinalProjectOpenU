@@ -361,6 +361,7 @@ const resources = {
       'Tutorship approved successfully!': 'החונכות אושרה בהצלחה!',
       "Min Grade": "רמת התאמה מינימלית",
       'This page is allowed for system administrator only': 'הכניסה לדף זה מותרת  למנהל מערכת בלבד',
+      "Tutorship create date": "תאריך יצירת חונכות",
     }
   }
 };

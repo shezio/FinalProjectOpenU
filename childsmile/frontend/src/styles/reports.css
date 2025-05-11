@@ -127,8 +127,6 @@
 
     /* Align reports to the left */
     max-height: calc(100vh - 400px);
-    /* Adjust based on available height */
-    overflow-y: auto;
     /* Enable vertical scrolling if needed */
     overflow-x: hidden;
 }
@@ -270,7 +268,7 @@
 }
 
 .report-card h2 {
-    font-size: 24px;
+    font-size: 30px;
     text-align: center;
 }
 
@@ -313,6 +311,12 @@
         /* Zoom out the grid */
         transform-origin: top right;
         /* Set the origin for scaling */
+    }
+}
+
+@media (max-width: 2400px) {
+    .reports-container {
+        gap: 50px;
     }
 }
 

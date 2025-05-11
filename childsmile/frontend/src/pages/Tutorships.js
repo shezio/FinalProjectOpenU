@@ -56,6 +56,9 @@ const Tutorships = () => {
   const [currentUserRoleId, setCurrentUserRoleId] = useState(null);
   const [placeholderRoleName, setPlaceholderRoleName] = useState('');
   const [currentRoleName, setCurrentRoleName] = useState('');
+  const [page, setPage] = useState(1); // Current page
+  const [pageSize] = useState(5); // Number of tutorships per page
+  const [totalCount, setTotalCount] = useState(0); // Total number of tutorships
 
   const fetchStaffAndRoles = async () => {
     console.log('DEBUG: Fetching staff and roles data...'); // Add debug log
@@ -233,9 +236,15 @@ const Tutorships = () => {
   const fetchTutorships = () => {
     setLoading(true);
     axios
-      .get('/api/get_tutorships/')
+      .get('/api/get_tutorships/', {
+        params: {
+          page: page, // Current page
+          page_size: pageSize, // Page size
+        },
+      })
       .then((response) => {
         setTutorships(response.data.tutorships || []);
+        setTotalCount(response.data.total_count || 0); // Set the total number of tutorships
         fetchStaffAndRoles(); // Fetch staff and roles data
       })
       .catch((error) => {
@@ -463,17 +472,17 @@ const Tutorships = () => {
         {loading ? (
           <div className="loader">{t('Loading data...')}</div>
         ) : (
-          <div className="tutorship-matching-grid-container">
+          <>
             {tutorships.length === 0 ? (
-              <div className="no-data">אין נתונים להצגה</div>
+              <div className="no-data">{t('No tutorships to display')}</div>
             ) : (
               <table className="tutorship-matching-data-grid">
                 <thead>
                   <tr>
-                    <th>שם חונך</th>
-                    <th>שם חניך</th>
-                    <th>תאריך יצירת חונכות</th>
-                    <th>פעולות</th>
+                    <th>{t('Tutor Name')}</th>
+                    <th>{t('Child Name')}</th>
+                    <th>{t('Tutorship create date')}</th>
+                    <th>{t('Actions')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -491,8 +500,11 @@ const Tutorships = () => {
                           >
                             {t('Final Approval')}
                           </button>
-                          <button className="delete-button" onClick={() => openTutorshipDeleteModal(tutorship.id)}>
-                            {t('מחק')}
+                          <button
+                            className="delete-button"
+                            onClick={() => openTutorshipDeleteModal(tutorship.id)}
+                          >
+                            {t('Delete')}
                           </button>
                         </div>
                       </td>
@@ -501,7 +513,55 @@ const Tutorships = () => {
                 </tbody>
               </table>
             )}
-          </div>
+            <div className="pagination">
+              {/* Left Arrows */}
+              <button
+                onClick={() => setPage(1)} // Go to the first page
+                disabled={page === 1}
+                className="pagination-arrow"
+              >
+                &laquo; {/* Double left arrow */}
+              </button>
+              <button
+                onClick={() => setPage(page - 1)} // Go to the previous page
+                disabled={page === 1}
+                className="pagination-arrow"
+              >
+                &lsaquo; {/* Single left arrow */}
+              </button>
+
+              {/* Page Numbers */}
+              {totalCount <= pageSize ? (
+                <button className="active">1</button> // Display only "1" if there's only one page
+              ) : (
+                Array.from({ length: Math.ceil(totalCount / pageSize) }, (_, i) => (
+                  <button
+                    key={i + 1}
+                    onClick={() => setPage(i + 1)}
+                    className={page === i + 1 ? 'active' : ''}
+                  >
+                    {i + 1}
+                  </button>
+                ))
+              )}
+
+              {/* Right Arrows */}
+              <button
+                onClick={() => setPage(page + 1)} // Go to the next page
+                disabled={page === Math.ceil(totalCount / pageSize) || totalCount <= 1}
+                className="pagination-arrow"
+              >
+                &rsaquo; {/* Single right arrow */}
+              </button>
+              <button
+                onClick={() => setPage(Math.ceil(totalCount / pageSize))} // Go to the last page
+                disabled={page === Math.ceil(totalCount / pageSize) || totalCount <= 1}
+                className="pagination-arrow"
+              >
+                &raquo; {/* Double right arrow */}
+              </button>
+            </div>
+          </>
         )}
         {isApprovalModalOpen && selectedTutorship && (
           <Modal
