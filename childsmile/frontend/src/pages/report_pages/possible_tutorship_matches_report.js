@@ -104,7 +104,7 @@ const PossibleTutorshipMatchesReport = () => {
                   onChange={(e) => applyDistanceFilter(e.target.value)}
                   className="distance-slider large-slider"
                 />
-                <span>{maxDistance} km</span>
+                <span>{maxDistance} קמ</span>
                 <div className="min-grade-container">
                   <label htmlFor="min-grade-slider">{t("Min Grade")}:</label>
                   <input

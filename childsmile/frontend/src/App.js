@@ -21,7 +21,7 @@ import Registration from './pages/Registration'; // Import the Registration comp
     new_families_report: { name: 'דוח משפחות חדשות', path: '/reports/new-families-report' },
     families_waiting_for_tutorship_report: { name: 'דוח משפחות הממתינות לחונכות', path: '/reports/families_waiting_for_tutorship_report' },
     active_tutors_report: { name: 'דוח חונכים פעילים', path: '/reports/active_tutors_report' },
-    possible_tutorship_matches_report: { name: 'דוח התאמות חניך חונך פוטנציאליות', path: '/reports/possible_tutorship_matches_report' },
+    possible_tutorship_matches_report: { name: 'דוח התאמות חניך חונך אפשריות', path: '/reports/possible_tutorship_matches_report' },
     volunteer_feedback_report: { name: 'דוח משוב מתנדבים', path: '/reports/volunteer-feedback' },
     tutor_feedback_report: { name: 'דוח משוב חונכים', path: '/reports/tutor-feedback' },
 */

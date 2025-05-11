@@ -320,7 +320,7 @@
         #f0ad4e;
     color: white;
     padding: 10px 20px;
-    font-size: 16px;
+    font-size: 24px;
     border: none;
     border-radius: 5px;
     cursor: pointer;
@@ -359,6 +359,7 @@
     border-radius: 5px;
     cursor: pointer;
     margin-left: 10px;
+    font-size: 24px;
 }
 
 .filter-button:hover {
@@ -375,6 +376,7 @@
     border-radius: 5px;
     cursor: pointer;
     margin-left: 10px;
+    font-size: 24px;
 }
 
 .refresh-button:hover {

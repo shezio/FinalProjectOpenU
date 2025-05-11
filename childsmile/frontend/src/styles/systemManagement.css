@@ -87,7 +87,7 @@
   background: #fff;
   padding: 20px;
   border-radius: 8px;
-  width: 400px;
+  width: 600px;
   max-width: 90%;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   position: relative;
@@ -96,8 +96,13 @@
 .staff-modal-content h2 {
   margin: 0;
   color: #4caf50;
-  font-size: 24px;
+  font-size: 36px;
   text-align: center;
+  margin-bottom: 20px;
+}
+
+.staff-modal-content p {
+  font-size: 24px;
   margin-bottom: 20px;
 }
 
@@ -126,6 +131,7 @@
   border: none;
   border-radius: 4px;
   cursor: pointer;
+  font-size: 24px;
 }
 
 .staff-form-actions button:first-child {
@@ -296,6 +302,13 @@
   gap: 10px;
 }
 
+.staff-form-row label,
+.staff-form-row input,
+.staff-form-row select {
+  font-size: 24px;
+  color: #333;
+}
+
 /* Dropdown Container */
 .roles-dropdown-container {
   position: relative;
@@ -312,6 +325,11 @@
   text-align: right;
 }
 
+.roles-dropdown-button,
+.roles-dropdown-item {
+  font-size: 24px;
+}
+
 /* Dropdown Menu */
 .roles-dropdown {
   position: absolute;
@@ -325,10 +343,12 @@
   overflow-y: auto;
   z-index: 1000;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  font-size: 24px;
 }
 
 /* Dropdown Item */
 .roles-dropdown-item {
+  font-size: 24px;
   display: flex;
   align-items: center;
   padding: 5px 10px;
