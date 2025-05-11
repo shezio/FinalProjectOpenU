@@ -366,7 +366,7 @@ textarea.error {
   background-color: #fff;
   border-radius: 4px;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 20px;
 }
 
 .pagination button.active {

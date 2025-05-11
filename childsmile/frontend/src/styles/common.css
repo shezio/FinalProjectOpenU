@@ -73,6 +73,29 @@ body {
     flex-direction: column;
 }
 
+.login-main-content {
+    flex-grow: 1;
+    /* תופס את כל הרוחב הפנוי */
+    padding: 20px;
+    margin-right: 700px;
+    margin-top: 300px;
+    /* שומר מקום לסרגל הצד */
+    height: 100vh;
+    overflow-y: auto;
+    /* אם יש גלילה פנימית */
+    display: flex;
+    flex-direction: column;
+  }
+
+@media (max-width: 2400px) {
+    .login-main-content {
+        margin-right: 500px;
+    }
+    .reports-container {
+        gap: 20px;
+    }
+}
+
 .form-container {
     background-color: #fff;
     padding: 20px;
