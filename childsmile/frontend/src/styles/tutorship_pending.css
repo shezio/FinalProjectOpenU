@@ -38,13 +38,19 @@
     }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 2400px) {
     .page-content .tutorship-pending-grid-container {
-        height: auto; /* Allow the grid to grow based on content */
+        height: 500px; /* Allow the grid to grow based on content */
         width: calc(100% - 300px);
         /* Adjust width to leave space for the sidebar */
-        margin-left: 400px;
+        margin-right: 150px;
     }
+    .new-families-report-main-content .page-content .tutorship-pending-grid-container {
+      height: 500px; /* Allow the grid to grow based on content */
+      width: calc(100% - 100px);
+      /* Adjust width to leave space for the sidebar */
+      margin-right: 50px;
+  }
 
     .page-content .tutorship-pending-data-grid {
         font-size: 12px; /* Further reduce font size */
@@ -54,6 +60,9 @@
     .page-content .tutorship-pending-data-grid td {
         padding: 4px; /* Further reduce padding */
     }
+    .reports-container {
+      gap: 30px;
+  }
 }
 
 /* Style for the data grid */

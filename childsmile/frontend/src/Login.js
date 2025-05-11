@@ -45,7 +45,7 @@ const Login = () => {
   /* default zoom level for the page */
   document.body.style.zoom = "125%"; // Set browser zoom to 125%
   return (
-    <div className="main-content">
+    <div className="login-main-content">
       <Header />
       <div className="login-container">
         <form onSubmit={handleLogin}>
