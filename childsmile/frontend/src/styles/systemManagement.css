@@ -19,6 +19,7 @@
   border: 1px solid #ddd;
   padding: 8px;
   text-align: left;
+  font-size: 24px;
 }
 
 .staff-data-grid th {
@@ -148,15 +149,17 @@
   width: 300px;
   border: 1px solid #ddd;
   border-radius: 4px;
+  font-size: 24px;
 }
 
 .add-button {
-  padding: 8px 16px;
+  padding: 8px 8px;
   background-color: #4caf50;
   color: white;
   border: none;
   border-radius: 4px;
   cursor: pointer;
+  font-size: 24px;
 }
 
 .add-button:hover {
@@ -170,6 +173,7 @@
   border: none;
   border-radius: 4px;
   cursor: pointer;
+  font-size: 24px;
 }
 
 .edit-button {
@@ -232,6 +236,7 @@
   border-radius: 4px;
   cursor: pointer;
   margin-left: 10px;
+  font-size: 24px;
 }
 
 .refresh-button:hover {

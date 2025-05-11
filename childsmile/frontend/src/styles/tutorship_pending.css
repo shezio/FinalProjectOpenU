@@ -116,3 +116,64 @@
 .page-content .tutorship-pending-data-grid label {
     cursor: pointer;
 }
+
+.min-grade-container {
+    display: flex;
+    flex-direction: column; /* Stack the label, slider, and value vertically */
+    gap: 8px; /* Add spacing between elements */
+    margin-left: 20px; /* Add spacing to the left of the container */
+    margin-top: 16px; /* Add spacing above the container */
+  }
+  
+  .min-grade-slider {
+    width: 100%;
+    max-width: 200px; /* Limit the width for better alignment */
+    appearance: none; /* Remove default browser styles */
+    height: 8px;
+    background: #ddd;
+    border-radius: 4px;
+    outline: none;
+    transition: background 0.3s ease;
+  }
+  
+  .min-grade-slider:hover {
+    background: #ccc; /* Change background on hover */
+  }
+  
+  .min-grade-slider::-webkit-slider-thumb {
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    background: #4caf50; /* Green thumb */
+    border-radius: 50%;
+    cursor: pointer;
+    transition: background 0.3s ease;
+  }
+  
+  .min-grade-slider::-webkit-slider-thumb:hover {
+    background: #45a049; /* Darker green on hover */
+  }
+  
+  .min-grade-slider::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    background: #4caf50;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: background 0.3s ease;
+  }
+  
+  .min-grade-slider::-moz-range-thumb:hover {
+    background: #45a049;
+  }
+  
+  .actions {
+    display: flex;
+    flex-wrap: wrap; /* Ensure buttons and sliders wrap if needed */
+    gap: 16px; /* Add spacing between elements */
+    padding-left: 20px; /* Add padding to separate the "Refresh" button */
+  }
+
+  .distance-slider + span {
+    margin-left: 20px; /* Add spacing after the slider's span */
+  }

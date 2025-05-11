@@ -8,12 +8,22 @@ import axios from '../axiosConfig';
 import Modal from 'react-modal';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { hasAllPermissions } from '../components/utils';
 import { useTranslation } from 'react-i18next'; // Translation hook
 import { showErrorToast } from '../components/toastUtils'; // Toast utility
 import { FaEye, FaEyeSlash } from 'react-icons/fa'; // Or your preferred icon lib
 
+const requiredPermissions = [
+  { resource: 'childsmile_app_staff', action: 'CREATE' },
+  { resource: 'childsmile_app_staff', action: 'UPDATE' },
+  { resource: 'childsmile_app_staff', action: 'DELETE' },
+  { resource: 'childsmile_app_staff', action: 'VIEW' },
+];
+
+
 const SystemManagement = () => {
   const { t } = useTranslation(); // Initialize translation
+  const hasPermissionOnSystemManagement = hasAllPermissions(requiredPermissions);
   const [staff, setStaff] = useState([]);
   const [filteredStaff, setFilteredStaff] = useState([]); // For UI filtering
   const [searchQuery, setSearchQuery] = useState('');
@@ -38,8 +48,13 @@ const SystemManagement = () => {
   });
 
   useEffect(() => {
-    fetchAllStaff();
-  }, []);
+    if (hasPermissionOnSystemManagement) {
+      fetchAllStaff();
+    }
+    else {
+      setLoading(false);
+    }
+  }, [hasPermissionOnSystemManagement]);
 
   const fetchAllStaff = async () => {
     setLoading(true);
@@ -180,6 +195,18 @@ const SystemManagement = () => {
     setStaffData((prev) => ({ ...prev, [field]: value }));
   };
 
+  if (!hasPermissionOnSystemManagement) {
+    return (
+      <div className="main-content">
+        <Sidebar />
+        <InnerPageHeader title={t('System Management')} />
+        <div className="no-permission">
+          <h2>{t('This page is allowed for system administrator only')}</h2>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="main-content">
       <Sidebar />
@@ -226,7 +253,6 @@ const SystemManagement = () => {
                   <thead>
                     <tr>
                       <th>{t('Username')}</th>
-                      <th>{t('Password')}</th>
                       <th>{t('Email')}</th>
                       <th>{t('First Name')}</th>
                       <th>{t('Last Name')}</th>
@@ -239,7 +265,6 @@ const SystemManagement = () => {
                     {paginatedStaff.map((user) => (
                       <tr key={user.id}>
                         <td>{user.username}</td>
-                        <td>*******</td> {/* Passwords should not be displayed */}
                         <td>{user.email}</td>
                         <td>{user.first_name}</td>
                         <td>{user.last_name}</td>

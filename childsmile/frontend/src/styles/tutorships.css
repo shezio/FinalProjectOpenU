@@ -43,7 +43,7 @@
   flex: 1;
   width: 100%;
   /* Ensure the container takes the full width */
-  height: 300px;
+  height: 400px;
   /* Set a fixed height for the map container */
   background-color: #f0f0f0;
   /* Optional: Background color for the container */
@@ -64,7 +64,7 @@
   /* Limit the grid width to half the modal */
   overflow-y: auto;
   /* Add vertical scrolling if needed */
-  height: 90%;
+  height: 100%;
 }
 
 

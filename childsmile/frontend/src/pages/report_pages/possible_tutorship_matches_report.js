@@ -14,7 +14,9 @@ const PossibleTutorshipMatchesReport = () => {
   const [loading, setLoading] = useState(true);
   const [matches, setMatches] = useState([]);
   const [filteredMatches, setFilteredMatches] = useState([]);
-  const [maxDistance, setMaxDistance] = useState(100); // Default max distance for slider
+  const [maxDistance, setMaxDistance] = useState(100); // Default max distance for 
+  // slider
+  const [minGrade, setMinGrade] = useState(-5); // Initialize minGrade with a default value of 0
   const { t } = useTranslation();
 
   const fetchData = () => {
@@ -97,12 +99,30 @@ const PossibleTutorshipMatchesReport = () => {
                   type="range"
                   id="distance-slider"
                   min="0"
-                  max="15"
+                  max="100"
                   value={maxDistance}
                   onChange={(e) => applyDistanceFilter(e.target.value)}
                   className="distance-slider large-slider"
                 />
                 <span>{maxDistance} km</span>
+                <div className="min-grade-container">
+                  <label htmlFor="min-grade-slider">{t("Min Grade")}:</label>
+                  <input
+                    type="range"
+                    id="min-grade-slider"
+                    min="-5" // Allow grades as low as -5
+                    max="100"
+                    value={minGrade}
+                    onChange={(e) => {
+                      const grade = parseFloat(e.target.value);
+                      setMinGrade(grade);
+                      const filtered = matches.filter((match) => match.grade >= grade);
+                      setFilteredMatches(filtered);
+                    }}
+                    className="min-grade-slider"
+                  />
+                  <span>{minGrade}</span> {/* Display the current value of the slider */}
+                </div>
                 <button className="refresh-button" onClick={refreshData}>
                   רענן
                 </button>

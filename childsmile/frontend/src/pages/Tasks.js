@@ -304,7 +304,7 @@ const Tasks = () => {
       <InnerPageHeader title="לוח משימות" />
       <ToastContainer
         position="top-center" // Center the toast
-        autoClose={4000} // Auto-close after 3 seconds
+        autoClose={2000} // Auto-close after 3 seconds
         hideProgressBar={false} // Show the progress bar
         closeOnClick
         pauseOnFocusLoss

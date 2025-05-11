@@ -17,7 +17,7 @@
 .families-grid-container {
   flex: unset !important; /* Prevent flex-grow from affecting the container */
   margin-top: 250px;
-  overflow-y: auto; /* Enable vertical scrolling */
+  /* overflow-y: auto; */
   max-height: 70vh; /* Limit the height to 70% of the viewport height */
   border: 1px solid #ddd; /* Optional: Add a border to visually separate the container */
   background-color: white; /* Ensure the background matches the table */

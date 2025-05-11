@@ -274,7 +274,7 @@ const FamiliesPerLocationReport = () => {
             ) : (
               <MapContainer
                 center={[31.5, 35.0]} // Adjusted coordinates to show more of the north
-                zoom={8}
+                zoom={7}
                 style={{ height: "100%", width: "100%" }}
                 whenCreated={(mapInstance) => {
                   mapRef.current = mapInstance; // Store the map instance in the ref

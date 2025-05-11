@@ -113,14 +113,14 @@ const Registration = () => {
             t(
               "Welcome to Child Smile! Please log in with your credentials: Username: {{username}}, Password: 1234"
             ).replace("{{username}}", `${formData.first_name}_${formData.surname}`),
-            { autoClose: 10000 }
+            { autoClose: 5000 }
           );
 
           // Delay navigation to allow the toaster to display
           // Refresh the browser and navigate
           setTimeout(() => {
             window.location.replace("/"); // Refresh and navigate to the login page
-          }, 10000); // 10-second delay
+          }, 5000); // 5-second delay
         })
         .catch((error) => {
           console.error("Error during registration:", error);
@@ -291,7 +291,7 @@ const Registration = () => {
 
       <ToastContainer
         position="top-center"
-        autoClose={20000}
+        autoClose={10000}
         hideProgressBar={false}
         newestOnTop={false}
         closeOnClick
