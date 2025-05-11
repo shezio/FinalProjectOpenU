@@ -295,41 +295,45 @@ const SystemManagement = () => {
               {/* Left Arrows */}
               <button
                 onClick={() => handlePageChange(1)} // Go to the first page
-                disabled={page === 1}
+                disabled={page === 1 || totalCount <= 1} // Disable if on the first page or only one page exists
                 className="pagination-arrow"
               >
                 &laquo; {/* Double left arrow */}
               </button>
               <button
                 onClick={() => handlePageChange(page - 1)} // Go to the previous page
-                disabled={page === 1}
+                disabled={page === 1 || totalCount <= 1} // Disable if on the first page or only one page exists
                 className="pagination-arrow"
               >
                 &lsaquo; {/* Single left arrow */}
               </button>
 
               {/* Page Numbers */}
-              {Array.from({ length: Math.ceil(totalCount / pageSize) }, (_, i) => (
-                <button
-                  key={i + 1}
-                  onClick={() => handlePageChange(i + 1)}
-                  className={page === i + 1 ? 'active' : ''}
-                >
-                  {i + 1}
-                </button>
-              ))}
+              {totalCount <= pageSize ? (
+                <button className="active">1</button> // Display only "1" if there's only one page
+              ) : (
+                Array.from({ length: Math.ceil(totalCount / pageSize) }, (_, i) => (
+                  <button
+                    key={i + 1}
+                    onClick={() => handlePageChange(i + 1)}
+                    className={page === i + 1 ? 'active' : ''}
+                  >
+                    {i + 1}
+                  </button>
+                ))
+              )}
 
               {/* Right Arrows */}
               <button
                 onClick={() => handlePageChange(page + 1)} // Go to the next page
-                disabled={page === Math.ceil(totalCount / pageSize)}
+                disabled={page === Math.ceil(totalCount / pageSize) || totalCount <= 1} // Disable if on the last page or only one page exists
                 className="pagination-arrow"
               >
                 &rsaquo; {/* Single right arrow */}
               </button>
               <button
                 onClick={() => handlePageChange(Math.ceil(totalCount / pageSize))} // Go to the last page
-                disabled={page === Math.ceil(totalCount / pageSize)}
+                disabled={page === Math.ceil(totalCount / pageSize) || totalCount <= 1} // Disable if on the last page or only one page exists
                 className="pagination-arrow"
               >
                 &raquo; {/* Double right arrow */}

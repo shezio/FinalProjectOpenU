@@ -496,27 +496,31 @@ const Families = () => {
                   </button>
 
                   {/* Page Numbers */}
-                  {Array.from({ length: Math.ceil(totalCount / pageSize) }, (_, i) => (
-                    <button
-                      key={i + 1}
-                      onClick={() => setPage(i + 1)}
-                      className={page === i + 1 ? 'active' : ''}
-                    >
-                      {i + 1}
-                    </button>
-                  ))}
+                  {totalCount <= pageSize ? (
+                    <button className="active">1</button> // Display only "1" if there's only one page
+                  ) : (
+                    Array.from({ length: Math.ceil(totalCount / pageSize) }, (_, i) => (
+                      <button
+                        key={i + 1}
+                        onClick={() => setPage(i + 1)}
+                        className={page === i + 1 ? 'active' : ''}
+                      >
+                        {i + 1}
+                      </button>
+                    ))
+                  )}
 
                   {/* Right Arrows */}
                   <button
                     onClick={() => setPage(page + 1)} // Go to the next page
-                    disabled={page === Math.ceil(totalCount / pageSize)}
+                    disabled={page === Math.ceil(totalCount / pageSize) || totalCount <= 1  }
                     className="pagination-arrow"
                   >
                     &rsaquo; {/* Single right arrow */}
                   </button>
                   <button
                     onClick={() => setPage(Math.ceil(totalCount / pageSize))} // Go to the last page
-                    disabled={page === Math.ceil(totalCount / pageSize)}
+                    disabled={page === Math.ceil(totalCount / pageSize) || totalCount <= 1}
                     className="pagination-arrow"
                   >
                     &raquo; {/* Double right arrow */}
