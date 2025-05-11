@@ -14,6 +14,24 @@
   /* קצת רווח פנימי */
 }
 
+
+
+.tasks-main-content {
+  flex-grow: 1;
+  padding: 20px;
+  display: flex;
+  flex-direction: row;
+  overflow: hidden;
+  margin-top: 250px;
+  padding-right: 250px;
+}
+
+.tasks-page-content {
+  /* תלוי בגובה של ההדר + מרווח קטן */
+  padding: 20px;
+  /* קצת רווח פנימי */
+}
+
 /* Parent container for tasks */
 .tasks-container {
   display: flex;

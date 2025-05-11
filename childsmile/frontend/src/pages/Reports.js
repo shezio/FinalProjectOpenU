@@ -21,7 +21,7 @@ const Reports = () => {
   };
 
   return (
-    <div className="main-content">
+    <div className="reports-main-content">
       <Sidebar />
       <InnerPageHeader title="דוחות" />
       <div className="page-content">

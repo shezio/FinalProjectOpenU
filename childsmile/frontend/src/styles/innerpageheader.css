@@ -74,7 +74,7 @@ body {
 }
 
 .amit-img {
-    width: 80px !important;
+    width: 100px !important;
     /* Adjust the width as needed */
     height: 150px !important;
     /* Maintain aspect ratio */
@@ -82,7 +82,7 @@ body {
 }
 
 .qr-code {
-    width: 80px;
+    width: 90px;
     height: auto;
     margin-left: 5px;
     /* Reduce spacing */
@@ -90,7 +90,7 @@ body {
 
 /* ✅ הציטוט נשאר כמו שהגדרת */
 .quote {
-    font-size: 14px;
+    font-size: 24px;
     text-align: right;
     color: black;
     background-color: white;

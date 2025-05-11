@@ -62,7 +62,7 @@ const VolunteerFeedbackReport = () => {
   }, []);
 
   return (
-    <div className="main-content">
+    <div className="volunteer-feedback-report-main-content">
       <Sidebar />
       <InnerPageHeader title={t("Volunteer Feedback Report")} />
       <div className="page-content">

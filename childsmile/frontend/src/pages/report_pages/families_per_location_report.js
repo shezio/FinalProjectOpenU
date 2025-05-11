@@ -135,7 +135,7 @@ const FamiliesPerLocationReport = () => {
 
   if (!hasPermissionToView) {
     return (
-      <div className="main-content">
+      <div className="loc-report-main-content">
         <Sidebar />
         <InnerPageHeader title={t("Families Per Location Report")} />
         <div className="page-content">
@@ -148,7 +148,7 @@ const FamiliesPerLocationReport = () => {
   }
 
   return (
-    <div className="main-content">
+    <div className="loc-report-main-content">
       <Sidebar />
       <InnerPageHeader title={t("Families Per Location Report")} />
       <div className="page-content">

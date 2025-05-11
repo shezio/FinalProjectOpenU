@@ -29,7 +29,7 @@ const Families = () => {
   const [maritalStatuses, setMaritalStatuses] = useState([]);
   const [tutoringStatuses, setTutoringStatuses] = useState([]);
   const [page, setPage] = useState(1);
-  const [pageSize] = useState(10); // Number of families per page
+  const [pageSize] = useState(5); // Number of families per page
   const [totalCount, setTotalCount] = useState(0);
   const [newFamily, setNewFamily] = useState({
     child_id: '',
@@ -410,7 +410,7 @@ const Families = () => {
   };
 
   return (
-    <div className="main-content">
+    <div className="families-main-content">
       <Sidebar />
       <div className="content">
         <InnerPageHeader title={t('Families Management')} />

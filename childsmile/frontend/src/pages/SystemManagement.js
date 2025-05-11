@@ -197,7 +197,7 @@ const SystemManagement = () => {
 
   if (!hasPermissionOnSystemManagement) {
     return (
-      <div className="main-content">
+      <div className="sys-mgmt-main-content">
         <Sidebar />
         <InnerPageHeader title={t('System Management')} />
         <div className="no-permission">
@@ -208,7 +208,7 @@ const SystemManagement = () => {
   }
 
   return (
-    <div className="main-content">
+    <div className="sys-mgmt-main-content">
       <Sidebar />
       <InnerPageHeader title={t('System Management')} />
       <div className="staff-page-content">

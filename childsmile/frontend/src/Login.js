@@ -63,12 +63,12 @@ const Login = () => {
             onChange={(e) => setPassword(e.target.value)}
             required
           />
-          <button type="submit">{t("כניסה")}</button>
+          <button type="submit">{t("התחבר")}</button>
           <span>{t("או")}</span>
           <button type="button" onClick={() => navigate("/register")}>
             {t("הירשם")}
           </button>
-          <button className="google-login">{t("התחבר עם חשבון גוגל")}</button>
+          {/* <button className="google-login">{t("התחבר עם חשבון גוגל")}</button> */}
           {error && <p className="error">{error}</p>}
           {success && <p className="success">{success}</p>}
         </form>
