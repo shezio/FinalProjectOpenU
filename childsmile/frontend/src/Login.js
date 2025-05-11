@@ -54,14 +54,12 @@ const Login = () => {
             placeholder={t("שם משתמש")}
             value={username}
             onChange={(e) => setUsername(e.target.value)}
-            required
           />
           <input
             type="password"
             placeholder={t("סיסמה")}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            required
           />
           <button type="submit">{t("התחבר")}</button>
           <span>{t("או")}</span>
