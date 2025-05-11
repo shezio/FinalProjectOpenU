@@ -384,7 +384,7 @@
 /* Container for map and grid */
 .families-report-container {
     display: flex;
-    height: calc(100vh - 400px);
+    height: calc(100vh - 500px);
     /* Adjust height to fit the viewport minus header and filters */
     gap: 50px;
     /* Space between map and grid */
@@ -443,7 +443,7 @@
     /* Add padding inside the grid container */
     max-height: 100%;
     /* Ensure the grid doesn't overflow vertically */
-    overflow-y: auto;
+    /* overflow-y: auto; */
     /* Enable vertical scrolling if needed */
 }
 

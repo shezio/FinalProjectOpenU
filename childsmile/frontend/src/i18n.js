@@ -359,6 +359,8 @@ const resources = {
       'Approve': 'אשר',
       "A user with Role: {{roleName}} has already approved this tutorship": "משתמש עם התפקיד -  {{roleName}} כבר אישר חונכות זו",
       'Tutorship approved successfully!': 'החונכות אושרה בהצלחה!',
+      "Min Grade": "רמת התאמה מינימלית",
+      'This page is allowed for system administrator only': 'הכניסה לדף זה מותרת  למנהל מערכת בלבד',
     }
   }
 };

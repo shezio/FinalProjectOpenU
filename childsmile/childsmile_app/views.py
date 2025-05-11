@@ -65,7 +65,47 @@ import json
 import os
 
 DISTANCES_FILE = os.path.join(os.path.dirname(__file__), "distances.json")
+LOCATIONS_FILE = os.path.join(os.path.dirname(__file__), "locations.json")
 
+def get_or_update_city_location(city, retries=3, delay=2):
+    """
+    Retrieve the latitude and longitude of a city from the LOCATIONS_FILE.
+    If the city is not found, geocode it and update the file.
+    """
+    # Ensure the file exists and is properly formatted
+    if not os.path.exists(LOCATIONS_FILE):
+        with open(LOCATIONS_FILE, "w", encoding="utf-8") as file:
+            json.dump({}, file, ensure_ascii=False, indent=4)
+
+    # Load locations from the JSON file
+    with open(LOCATIONS_FILE, "r", encoding="utf-8") as file:
+        try:
+            locations = json.load(file)
+        except json.JSONDecodeError:
+            locations = {}
+
+    # Check if the city is already in the file
+    if city in locations:
+        return locations[city]  # Return cached location
+
+    # Geocode the city if not found in the file
+    geolocator = Nominatim(user_agent="childsmile", timeout=5)
+    for attempt in range(retries):
+        try:
+            location = geolocator.geocode(city)
+            if location:
+                # Save the geocoded location to the file
+                locations[city] = {"latitude": location.latitude, "longitude": location.longitude}
+                with open(LOCATIONS_FILE, "w", encoding="utf-8") as file:
+                    json.dump(locations, file, ensure_ascii=False, indent=4)
+                return locations[city]
+        except GeocoderTimedOut:
+            print(f"DEBUG: Geocoding timed out for city '{city}', retrying ({attempt + 1}/{retries})...")
+            sleep(delay)
+
+    # If geocoding fails, return None
+    print(f"DEBUG: Failed to geocode city '{city}' after {retries} retries.")
+    return {"latitude": None, "longitude": None}
 
 def check_matches_permissions(request, required_permissions):
     """
@@ -1058,9 +1098,9 @@ def get_families_per_location_report(request):
         to_date = request.GET.get("to_date")
 
         if from_date:
-            from_date = make_aware(datetime.strptime(from_date, "%Y-%m-%d"))
+            from_date = make_aware(datetime.datetime.strptime(from_date, "%Y-%m-%d"))
         if to_date:
-            to_date = make_aware(datetime.strptime(to_date, "%Y-%m-%d"))
+            to_date = make_aware(datetime.datetime.strptime(to_date, "%Y-%m-%d"))
 
         children = Children.objects.all()
         if from_date:
@@ -1068,35 +1108,16 @@ def get_families_per_location_report(request):
         if to_date:
             children = children.filter(registrationdate__lte=to_date)
 
-        geolocator = Nominatim(
-            user_agent="childsmile", timeout=5
-        )  # Set a higher timeout
         children_data = []
-
-        def geocode_with_retries(city, retries=3, delay=2):
-            """
-            Attempt to geocode a city with retries.
-            """
-            for attempt in range(retries):
-                try:
-                    return geolocator.geocode(city)
-                except GeocoderTimedOut:
-                    print(
-                        f"DEBUG: Geocoding timed out for city '{city}', retrying ({attempt + 1}/{retries})..."
-                    )
-                    sleep(delay)
-            print(f"DEBUG: Failed to geocode city '{city}' after {retries} retries.")
-            return None
-
         for child in children:
-            location = geocode_with_retries(child.city)
+            location = get_or_update_city_location(child.city)  # Use the helper function
             children_data.append(
                 {
                     "first_name": child.childfirstname,
                     "last_name": child.childsurname,
                     "city": child.city,
-                    "latitude": location.latitude if location else None,
-                    "longitude": location.longitude if location else None,
+                    "latitude": location["latitude"],
+                    "longitude": location["longitude"],
                     "registration_date": child.registrationdate.strftime("%d/%m/%Y"),
                 }
             )
@@ -1105,7 +1126,6 @@ def get_families_per_location_report(request):
     except Exception as e:
         print(f"DEBUG: An error occurred: {str(e)}")  # Log the error for debugging
         return JsonResponse({"error": str(e)}, status=500)
-
 
 @csrf_exempt
 @api_view(["GET"])
