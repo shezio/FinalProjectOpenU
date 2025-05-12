@@ -9,7 +9,7 @@ export const showErrorToast = (t, key, error) => {
 
   // Combine the translated error message with the context
   // if the key is empty - use the error message directly
-  const messageToShow = key ? `${t(key)} - ${errorMessage}` : errorMessage;
+  const messageToShow = key ? `${t(key)} - ${t(errorMessage)}` : t(errorMessage);
   toast.error(messageToShow);
 };
 

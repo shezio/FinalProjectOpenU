@@ -912,6 +912,7 @@ const Families = () => {
               <form onSubmit={handleAddFamilySubmit} className="form-grid">
                 <div className="form-column">
                   <label>{t('First Name')}</label>
+                  <span className="families-mandatory-span">{t("*This is a mandatory field")}</span>
                   <input
                     type="text"
                     name="childfirstname"
@@ -922,6 +923,7 @@ const Families = () => {
                   {errors.childfirstname && <span className="families-error-message">{errors.childfirstname}</span>}
 
                   <label>{t('Last Name')}</label>
+                  <span className="families-mandatory-span">{t("*This is a mandatory field")}</span>
                   <input
                     type="text"
                     name="childsurname"
@@ -932,6 +934,7 @@ const Families = () => {
                   {errors.childsurname && <span className="families-error-message">{errors.childsurname}</span>}
 
                   <label>{t("City")}</label>
+                  <span className="families-mandatory-span">{t("*This is a mandatory field")}</span>
                   <Select
                     options={cityOptions}
                     value={cityOptions.find((option) => option.value === newFamily.city)}
@@ -953,6 +956,7 @@ const Families = () => {
                   {errors.city && <span className="families-error-message">{errors.city}</span>}
 
                   <label>{t("Street")}</label>
+                  <span className="families-mandatory-span">{t("*This is a mandatory field")}</span>
                   <Select
                     options={streetOptions}
                     value={streetOptions.find((option) => option.value === newFamily.street)}
@@ -973,6 +977,7 @@ const Families = () => {
 
                 <div className="form-column">
                   <label>{t('Apartment Number')}</label>
+                  <span className="families-mandatory-span">{t("*This is a mandatory field")}</span>
                   <input
                     type="number"
                     name="apartment_number"
@@ -985,6 +990,7 @@ const Families = () => {
                   {errors.apartment_number && <span className="families-error-message">{errors.apartment_number}</span>}
 
                   <label>{t('Phone Number')}</label>
+                  <span className="families-mandatory-span">{t("*This is a mandatory field")}</span>
                   <input
                     type="text"
                     name="child_phone_number"
@@ -995,6 +1001,7 @@ const Families = () => {
                   {errors.child_phone_number && <span className="families-error-message">{errors.child_phone_number}</span>}
 
                   <label>{t('Treating Hospital')}</label>
+                  <span className="families-mandatory-span">{t("*This is a mandatory field")}</span>
                   <Select
                     options={hospitalsList.map((hospital) => ({
                       value: hospital,
@@ -1021,6 +1028,7 @@ const Families = () => {
                   )}
 
                   <label>{t('Date of Birth')}</label>
+                  <span className="families-mandatory-span">{t("*This is a mandatory field")}</span>
                   <input
                     type="date"
                     name="date_of_birth"
@@ -1033,6 +1041,7 @@ const Families = () => {
 
                 <div className="form-column">
                   <label>{t('Marital Status')}</label>
+                  <span className="families-mandatory-span">{t("*This is a mandatory field")}</span>
                   <select
                     name="marital_status"
                     value={newFamily.marital_status}
@@ -1050,6 +1059,7 @@ const Families = () => {
 
 
                   <label>{t('Number of Siblings')}</label>
+                  <span className="families-mandatory-span">{t("*This is a mandatory field")}</span>
                   <input
                     type="number"
                     name="num_of_siblings"
@@ -1073,6 +1083,7 @@ const Families = () => {
                   {errors.gender && <span className="families-error-message">{errors.gender}</span>}
 
                   <label>{t('ID')}</label>
+                  <span className="families-mandatory-span">{t("*This is a mandatory field")}</span>
                   <input
                     type="text"
                     name="child_id"
@@ -1214,6 +1225,7 @@ const Families = () => {
                   {errors.details_for_tutoring && <span className="families-error-message">{errors.details_for_tutoring}</span>}
 
                   <label>{t('Tutoring Status')}</label>
+                  <span className="families-mandatory-span">{t("*This is a mandatory field")}</span>
                   <select
                     name="tutoring_status"
                     value={newFamily.tutoring_status}

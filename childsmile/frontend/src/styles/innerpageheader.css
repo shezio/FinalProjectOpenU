@@ -144,7 +144,7 @@ body {
         position: relative;
         flex-shrink: 0;
         /* Prevent the logo from shrinking */
-        margin-right: 200px;
+        margin-right: 300px;
         /* Add some space between the logo and title */
     }
 

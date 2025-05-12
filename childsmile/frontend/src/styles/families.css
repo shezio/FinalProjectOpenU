@@ -163,11 +163,12 @@
   background-color: #ffffff;
   border-radius: 10px;
   padding: 50px;
-  width: 60%; /* Increase the width to make the modal wider */
+  width: 70%; /* Increase the width to make the modal wider */
   max-width: 1920px; /* Increase the maximum width */
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
   animation: fadeIn 0.3s ease-in-out;
   font-size: 1em;
+  margin-right: 30px; /* Add some space on the right */
 }
 
 .modal-content h2 {
@@ -215,7 +216,7 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 15px;
+  gap: 1px;
 }
 
 .form-column label {
@@ -227,11 +228,18 @@
   text-overflow: ellipsis; /* Add ellipsis (...) if the text overflows */
 }
 
-.form-column input,
+
 .form-column select,
 .form-column textarea {
   width: 100%;
   padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  font-size: 1em;
+}
+
+.form-column input {
+  width: 100%;
   border: 1px solid #ccc;
   border-radius: 5px;
   font-size: 1em;
@@ -255,6 +263,12 @@ textarea.error {
 }
 
 .families-error-message {
+  color: red;
+  font-size: 14px;
+  display: block;
+}
+
+.families-mandatory-span {
   color: red;
   font-size: 14px;
   display: block;

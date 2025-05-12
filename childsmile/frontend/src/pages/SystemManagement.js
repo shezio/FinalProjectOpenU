@@ -38,6 +38,7 @@ const SystemManagement = () => {
   const [roles, setRoles] = useState([]); // For roles dropdown
   const [showRolesDropdown, setShowRolesDropdown] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [errors, setErrors] = useState({}); // For form validation errors
   const [staffData, setStaffData] = useState({
     username: '',
     password: '',
@@ -55,6 +56,33 @@ const SystemManagement = () => {
       setLoading(false);
     }
   }, [hasPermissionOnSystemManagement]);
+
+
+  // Validation logic
+  const validate = () => {
+    const newErrors = {};
+    if (!staffData.username.trim()) {
+      newErrors.username = t("Username is required.");
+    }
+    if (!staffData.password.trim() && modalType === 'add') {
+      newErrors.password = t("Password is required.");
+    }
+    if (!staffData.email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(staffData.email)) {
+      newErrors.email = t("A valid email is required.");
+    }
+    if (!staffData.first_name.trim()) {
+      newErrors.first_name = t("First name is required.");
+    }
+    if (!staffData.last_name.trim()) {
+      newErrors.last_name = t("Last name is required.");
+    }
+    if (!staffData.roles || staffData.roles.length === 0) {
+      newErrors.roles = t("At least one role must be selected.");
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const fetchAllStaff = async () => {
     setLoading(true);
@@ -152,8 +180,26 @@ const SystemManagement = () => {
     }
   };
 
+  useEffect(() => {
+    const handleOutsideClick = (event) => {
+      if (
+        showRolesDropdown &&
+        !event.target.closest('.roles-dropdown-container') // Check if the click is outside the dropdown
+      ) {
+        setShowRolesDropdown(false); // Close the dropdown
+      }
+    };
+  
+    document.addEventListener('mousedown', handleOutsideClick);
+  
+    return () => {
+      document.removeEventListener('mousedown', handleOutsideClick);
+    };
+  }, [showRolesDropdown]);
+
   const closeAddStaffModal = () => {
     setShowAddStaffModal(false);
+    setShowRolesDropdown(false);
     setStaffData({
       username: '',
       password: '',
@@ -352,6 +398,10 @@ const SystemManagement = () => {
             <form
               onSubmit={(e) => {
                 e.preventDefault();
+                if (!validate()) {
+                  return;
+                }
+
                 if (modalType === 'add') {
                   handleAddStaffSubmit();
                 } else {
@@ -360,13 +410,16 @@ const SystemManagement = () => {
               }}
               className="staff-form-grid"
             >
+              <span className="sys-mgmt-mandatory-span">{t("*All fields are mandatory")}</span>
               <div className="staff-form-row">
                 <label>{t('Username')}</label>
                 <input
                   type="text"
                   value={staffData.username || ''}
                   onChange={(e) => updateStaffData('username', e.target.value)}
-                />
+                  className={errors.username ? "error" : ""}
+                  />
+                  {errors.username && <span className="staff-error-message">{errors.username}</span>}
               </div>
 
               <div className="staff-form-row">
@@ -377,7 +430,8 @@ const SystemManagement = () => {
                     value={staffData.password || ''}
                     onClick={() => updateStaffData('password', '')}
                     onChange={(e) => updateStaffData('password', e.target.value)}
-                    className="password-input"
+                    className={`password-input ${errors.password ? 'error' : ''}`}
+                    placeholder={modalType === 'add' ? t('Enter Password') : t('Leave blank to keep current password')}
                   />
                   <span
                     className={`eye-icon ${showPassword ? 'open' : ''}`}
@@ -386,6 +440,7 @@ const SystemManagement = () => {
                     {showPassword ? <FaEyeSlash /> : <FaEye />}
                   </span>
                 </div>
+                {errors.password && <span className="staff-error-message">{errors.password}</span>}
               </div>
 
               <div className="staff-form-row">
@@ -394,7 +449,9 @@ const SystemManagement = () => {
                   type="email"
                   value={staffData.email || ''}
                   onChange={(e) => updateStaffData('email', e.target.value)}
+                  className={errors.email ? "error" : ""}
                 />
+                {errors.email && <span className="staff-error-message">{errors.email}</span>}
               </div>
 
               <div className="staff-form-row">
@@ -403,7 +460,9 @@ const SystemManagement = () => {
                   type="text"
                   value={staffData.first_name || ''}
                   onChange={(e) => updateStaffData('first_name', e.target.value)}
+                  className={errors.first_name ? "error" : ""}
                 />
+                {errors.first_name && <span className="staff-error-message">{errors.first_name}</span>}
               </div>
 
               <div className="staff-form-row">
@@ -412,7 +471,9 @@ const SystemManagement = () => {
                   type="text"
                   value={staffData.last_name || ''}
                   onChange={(e) => updateStaffData('last_name', e.target.value)}
+                  className={errors.last_name ? "error" : ""}
                 />
+                {errors.last_name && <span className="staff-error-message">{errors.last_name}</span>}
               </div>
 
               <div className="staff-form-row">
@@ -420,10 +481,12 @@ const SystemManagement = () => {
                 <div className="roles-dropdown-container">
                   <button
                     type="button"
-                    className="roles-dropdown-button"
+                    className={`roles-dropdown-button ${errors.roles ? 'error' : ''}`}
                     onClick={() => setShowRolesDropdown((prev) => !prev)}
                   >
-                    {t('Select Roles')}
+                    {staffData.roles.length > 0
+                      ? staffData.roles.map((role) => t(role)).join(', ')
+                      : t('Select Roles')}
                   </button>
                   {showRolesDropdown && (
                     <div className="roles-dropdown">
@@ -446,6 +509,7 @@ const SystemManagement = () => {
                     </div>
                   )}
                 </div>
+                {errors.roles && <span className="staff-error-message">{errors.roles}</span>}
               </div>
 
               <div className="staff-form-actions">

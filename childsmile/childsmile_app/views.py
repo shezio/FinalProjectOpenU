@@ -2591,11 +2591,13 @@ def update_staff_member(request, staff_id):
 
         # Validate required fields
         required_fields = ["username", "email", "first_name", "last_name"]
-        missing_fields = [field for field in required_fields if field not in data]
+        missing_fields = [
+            field for field in required_fields if not data.get(field, "").strip()
+        ]
         if missing_fields:
             return JsonResponse(
-                {"error": f"Missing required fields: {', '.join(missing_fields)}"},
-                status=400,
+            {"error": f"Missing or empty required fields: {', '.join(missing_fields)}"},
+            status=400,
             )
 
         # Update fields in the Staff table
@@ -2605,7 +2607,8 @@ def update_staff_member(request, staff_id):
         staff_member.first_name = data.get("first_name", staff_member.first_name)
         staff_member.last_name = data.get("last_name", staff_member.last_name)
         # update password if provided
-        staff_member.password = data["password"] if "password" in data else staff_member.password
+        if "password" in data and data["password"].strip():
+            staff_member.password = data["password"]
         # Update roles if provided
         if "roles" in data:
             roles = data["roles"]
@@ -2638,9 +2641,7 @@ def update_staff_member(request, staff_id):
         # Propagate email changes to related tables
         if old_email != staff_member.email:
             SignedUp.objects.filter(email=old_email).update(email=staff_member.email)
-            Pending_Tutor.objects.filter(id__email=old_email).update(
-                id__email=staff_member.email
-            )
+            Tutors.objects.filter(tutor_email=old_email).update(tutor_email=staff_member.email)
 
         print(f"DEBUG: Staff member with ID {staff_id} updated successfully.")
         return JsonResponse(
@@ -2763,12 +2764,14 @@ def create_staff_member(request):
         data = request.data  # Use request.data for JSON payloads
 
         # Validate required fields
-        required_fields = ["username", "email", "first_name", "last_name", "roles"]
-        missing_fields = [field for field in required_fields if field not in data]
+        required_fields = ["username", "password", "email", "first_name", "last_name"]
+        missing_fields = [
+            field for field in required_fields if not data.get(field, "").strip()
+        ]
         if missing_fields:
             return JsonResponse(
-                {"error": f"Missing required fields: {', '.join(missing_fields)}"},
-                status=400,
+            {"error": f"Missing or empty required fields: {', '.join(missing_fields)}"},
+            status=400,
             )
 
         # Create a new staff record in the database
