@@ -3,7 +3,7 @@ import axios from '../axiosConfig';
 import Sidebar from '../components/Sidebar';
 import InnerPageHeader from '../components/InnerPageHeader';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
-import { getStaff, getChildren, getTutors, getChildFullName, getTutorFullName , getPendingTutors, getPendingTutorFullName} from '../components/utils';  // Import utility functions for fetching data
+import { getStaff, getChildren, getTutors, getChildFullName, getTutorFullName, getPendingTutors, getPendingTutorFullName } from '../components/utils';  // Import utility functions for fetching data
 import '../styles/common.css';
 import '../styles/tasks.css';
 import Select from 'react-select';  // Import react-select
@@ -30,6 +30,8 @@ const Tasks = () => {
       return [];
     }
   });
+  const [filteredTaskTypes, setFilteredTaskTypes] = useState([]); // Filtered task types for the dropdown
+  const [permissions, setPermissions] = useState([]); // User permissions
   const [staffOptions, setStaffOptions] = useState([]);
   const [childrenOptions, setChildrenOptions] = useState([]);
   const [tutorsOptions, setTutorsOptions] = useState([]);
@@ -95,7 +97,24 @@ const Tasks = () => {
 
       const newTasks = tasksResponse.data.tasks || [];
       const newTaskTypes = tasksResponse.data.task_types || [];
+      const cachedPermissions = JSON.parse(localStorage.getItem('permissions')) || [];
       const newPendingTutors = pendingTutorsOptions;
+
+      // Always update staff, children, and tutors options
+      setStaffOptions(staffOptions);
+      setChildrenOptions(childrenOptions);
+      setTutorsOptions(tutorsOptions);
+      setPendingTutorsOptions(newPendingTutors);
+      setPermissions(cachedPermissions);
+
+      const filteredTypes = newTaskTypes.filter((taskType) =>
+        cachedPermissions.some(
+          (permission) =>
+            permission.resource === taskType.resource &&
+            permission.action === taskType.action
+        )
+      );
+      setFilteredTaskTypes(filteredTypes);
 
       // Compare fetched data with local storage data
       const storedTasks = JSON.parse(localStorage.getItem('tasks')) || [];
@@ -114,12 +133,6 @@ const Tasks = () => {
         setTaskTypes(newTaskTypes);
         localStorage.setItem('taskTypes', JSON.stringify(newTaskTypes));
       }
-
-      // Always update staff, children, and tutors options
-      setStaffOptions(staffOptions);
-      setChildrenOptions(childrenOptions);
-      setTutorsOptions(tutorsOptions);
-      setPendingTutorsOptions(newPendingTutors);
 
       localStorage.setItem('staffOptions', JSON.stringify(staffOptions));
       localStorage.setItem('childrenOptions', JSON.stringify(childrenOptions));
@@ -172,13 +185,13 @@ const Tasks = () => {
     if (!selectedStaff) {
       newErrors.assigned_to = "זהו שדה חובה";
     }
-  
+
     // If there are errors, update the state and stop submission
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return;
     }
-  
+
     // Clear errors if validation passes
     setErrors({});
     const taskData = {
@@ -189,11 +202,11 @@ const Tasks = () => {
       pending_tutor: selectedPendingTutor?.value, // Send the correct pending_tutor_id
       type: selectedTaskType?.value, // Send the task type ID
     };
-  
+
     try {
       const response = await axios.post('/api/tasks/create/', taskData);
       console.log('Task created:', response.data);
-  
+
       if (response.status === 201) {
         setIsModalOpen(false); // Close the modal
         toast.success(t('Task created successfully')); // Show success toast
@@ -314,7 +327,7 @@ const Tasks = () => {
         rtl={true} // Ensure progress bar moves from left to right
       />
       {loading && <div className="loader">{t("Loading data...")}</div>}
-       {/* Spinner displayed until data is loaded */}
+      {/* Spinner displayed until data is loaded */}
       {!loading && (
         <>
           <div className="tasks-page-content">
@@ -328,7 +341,7 @@ const Tasks = () => {
                   onChange={(e) => setSelectedFilter(e.target.value)} // Update the filter state
                 >
                   <option value="">סנן לפי סוג משימה</option>
-                  {taskTypes.map((type) => (
+                  {filteredTaskTypes.map((type) => (
                     <option key={type.id} value={type.id}>
                       {type.name}
                     </option>
@@ -422,7 +435,7 @@ const Tasks = () => {
                 <label>{t('Task Type')}</label>
                 <Select
                   id="type"
-                  options={taskTypes.map((type) => ({ value: type.id, label: type.name }))}
+                  options={filteredTaskTypes.map((type) => ({ value: type.id, label: type.name }))}
                   value={selectedTaskType}
                   onChange={setSelectedTaskType}
                   isSearchable
@@ -499,7 +512,7 @@ const Tasks = () => {
                 <label>סוג משימה</label>
                 <Select
                   id="type"
-                  options={taskTypes.map((type) => ({ value: type.id, label: type.name }))}
+                  options={filteredTaskTypes.map((type) => ({ value: type.id, label: type.name }))}
                   value={selectedTaskType}
                   onChange={setSelectedTaskType}
                   isSearchable

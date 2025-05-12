@@ -305,7 +305,9 @@ class PossibleMatches(models.Model):
 
 class Task_Types(models.Model):
     task_type = models.CharField(max_length=255, unique=True)
-
+    resource = models.CharField(max_length=255, null=True)  # New field
+    action = models.CharField(max_length=50, null=True)  # New field
+    
     def __str__(self):
         return self.task_type
     
