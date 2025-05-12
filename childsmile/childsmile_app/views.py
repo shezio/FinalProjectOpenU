@@ -67,6 +67,7 @@ import os
 DISTANCES_FILE = os.path.join(os.path.dirname(__file__), "distances.json")
 LOCATIONS_FILE = os.path.join(os.path.dirname(__file__), "locations.json")
 
+
 def get_or_update_city_location(city, retries=3, delay=2):
     """
     Retrieve the latitude and longitude of a city from the LOCATIONS_FILE.
@@ -95,17 +96,23 @@ def get_or_update_city_location(city, retries=3, delay=2):
             location = geolocator.geocode(city)
             if location:
                 # Save the geocoded location to the file
-                locations[city] = {"latitude": location.latitude, "longitude": location.longitude}
+                locations[city] = {
+                    "latitude": location.latitude,
+                    "longitude": location.longitude,
+                }
                 with open(LOCATIONS_FILE, "w", encoding="utf-8") as file:
                     json.dump(locations, file, ensure_ascii=False, indent=4)
                 return locations[city]
         except GeocoderTimedOut:
-            print(f"DEBUG: Geocoding timed out for city '{city}', retrying ({attempt + 1}/{retries})...")
+            print(
+                f"DEBUG: Geocoding timed out for city '{city}', retrying ({attempt + 1}/{retries})..."
+            )
             sleep(delay)
 
     # If geocoding fails, return None
     print(f"DEBUG: Failed to geocode city '{city}' after {retries} retries.")
     return {"latitude": None, "longitude": None}
+
 
 def check_matches_permissions(request, required_permissions):
     """
@@ -743,7 +750,7 @@ def get_user_tasks(request):
     if not tasks_data:
         # Fetch tasks efficiently
         if user_is_admin:
-            # print("DEBUG: Fetching all tasks for admin user.")  # Debug log
+            print("DEBUG: Fetching all tasks for admin user.")  # Debug log
             tasks = (
                 Tasks.objects.all()
                 .select_related("task_type", "assigned_to", "pending_tutor__id")
@@ -785,11 +792,19 @@ def get_user_tasks(request):
         ]
         cache.set(cache_key, tasks_data, timeout=300)  # Cache for 5 minutes
 
-    # Fetch task types only once
+    # Fetch all task types (no filtering)
     task_types_data = cache.get("task_types_data")
     if not task_types_data:
         task_types = Task_Types.objects.all()
-        task_types_data = [{"id": t.id, "name": t.task_type} for t in task_types]
+        task_types_data = [
+            {
+                "id": t.id,
+                "name": t.task_type,
+                "resource": t.resource,
+                "action": t.action,
+            }
+            for t in task_types
+        ]
         cache.set("task_types_data", task_types_data, timeout=300)
 
     return JsonResponse({"tasks": tasks_data, "task_types": task_types_data})
@@ -901,7 +916,9 @@ def create_task(request):
                 task_data["assigned_to"] = assigned_to_staff.staff_id
             except Staff.DoesNotExist:
                 return JsonResponse(
-                    {"detail": f"Staff member with ID or username '{assigned_to}' not found."},
+                    {
+                        "detail": f"Staff member with ID or username '{assigned_to}' not found."
+                    },
                     status=400,
                 )
 
@@ -1110,7 +1127,9 @@ def get_families_per_location_report(request):
 
         children_data = []
         for child in children:
-            location = get_or_update_city_location(child.city)  # Use the helper function
+            location = get_or_update_city_location(
+                child.city
+            )  # Use the helper function
             children_data.append(
                 {
                     "first_name": child.childfirstname,
@@ -1126,6 +1145,7 @@ def get_families_per_location_report(request):
     except Exception as e:
         print(f"DEBUG: An error occurred: {str(e)}")  # Log the error for debugging
         return JsonResponse({"error": str(e)}, status=500)
+
 
 @csrf_exempt
 @api_view(["GET"])
@@ -2405,7 +2425,9 @@ def update_tutorship(request, tutorship_id):
         return JsonResponse({"error": "Tutorship not found"}, status=404)
 
     if staff_role_id in tutorship.last_approver:
-        return JsonResponse({"error": "This role has already approved this tutorship"}, status=400)
+        return JsonResponse(
+            {"error": "This role has already approved this tutorship"}, status=400
+        )
     try:
         tutorship.last_approver.append(staff_role_id)
         if tutorship.approval_counter <= 2:
@@ -2415,11 +2437,17 @@ def update_tutorship(request, tutorship_id):
         tutorship.updated_at = datetime.datetime.now()  # Updated to use datetime now()
         tutorship.save()
 
-        return JsonResponse({"message": "Tutorship updated successfully", "approval_counter": 
-        tutorship.approval_counter}, status=200)
+        return JsonResponse(
+            {
+                "message": "Tutorship updated successfully",
+                "approval_counter": tutorship.approval_counter,
+            },
+            status=200,
+        )
     except Exception as e:
         print(f"DEBUG: An error occurred while updating the tutorship: {str(e)}")
         return JsonResponse({"error": str(e)}, status=500)
+
 
 @csrf_exempt
 @api_view(["GET"])
@@ -2554,7 +2582,12 @@ def get_all_staff(request):
         )
 
     return JsonResponse(
-        {"staff": staff_data, "total_count": total_count, "page": page, "page_size": page_size},
+        {
+            "staff": staff_data,
+            "total_count": total_count,
+            "page": page,
+            "page_size": page_size,
+        },
         status=200,
     )
 
@@ -2596,8 +2629,10 @@ def update_staff_member(request, staff_id):
         ]
         if missing_fields:
             return JsonResponse(
-            {"error": f"Missing or empty required fields: {', '.join(missing_fields)}"},
-            status=400,
+                {
+                    "error": f"Missing or empty required fields: {', '.join(missing_fields)}"
+                },
+                status=400,
             )
 
         # Update fields in the Staff table
@@ -2617,7 +2652,9 @@ def update_staff_member(request, staff_id):
                 staff_member.roles.clear()
                 for role_name in roles:  # Expecting role names instead of IDs
                     try:
-                        role = Role.objects.get(role_name=role_name)  # Fetch by role_name
+                        role = Role.objects.get(
+                            role_name=role_name
+                        )  # Fetch by role_name
                         staff_member.roles.add(role)
                     except Role.DoesNotExist:
                         return JsonResponse(
@@ -2626,7 +2663,8 @@ def update_staff_member(request, staff_id):
                         )
             else:
                 return JsonResponse(
-                    {"error": "Roles should be provided as a list of role names."}, status=400
+                    {"error": "Roles should be provided as a list of role names."},
+                    status=400,
                 )
         # Save the updated staff record
         try:
@@ -2641,7 +2679,9 @@ def update_staff_member(request, staff_id):
         # Propagate email changes to related tables
         if old_email != staff_member.email:
             SignedUp.objects.filter(email=old_email).update(email=staff_member.email)
-            Tutors.objects.filter(tutor_email=old_email).update(tutor_email=staff_member.email)
+            Tutors.objects.filter(tutor_email=old_email).update(
+                tutor_email=staff_member.email
+            )
 
         print(f"DEBUG: Staff member with ID {staff_id} updated successfully.")
         return JsonResponse(
@@ -2705,15 +2745,21 @@ def delete_staff_member(request, staff_id):
         # Finally, delete the staff record
         staff_member.delete()
 
-        print(f"DEBUG: Staff member with ID {staff_id} and related data deleted successfully.")
+        print(
+            f"DEBUG: Staff member with ID {staff_id} and related data deleted successfully."
+        )
         return JsonResponse(
-            {"message": "Staff member and related data deleted successfully", "staff_id": staff_id},
+            {
+                "message": "Staff member and related data deleted successfully",
+                "staff_id": staff_id,
+            },
             status=200,
         )
     except Exception as e:
         print(f"DEBUG: An error occurred while deleting the staff member: {e}")
         return JsonResponse({"error": str(e)}, status=500)
-    
+
+
 @csrf_exempt
 @api_view(["GET"])
 def get_roles(request):
@@ -2739,7 +2785,8 @@ def get_roles(request):
     except Exception as e:
         print(f"DEBUG: Error fetching roles: {str(e)}")
         return JsonResponse({"error": str(e)}, status=500)
-    
+
+
 @csrf_exempt
 @api_view(["POST"])
 def create_staff_member(request):
@@ -2770,8 +2817,10 @@ def create_staff_member(request):
         ]
         if missing_fields:
             return JsonResponse(
-            {"error": f"Missing or empty required fields: {', '.join(missing_fields)}"},
-            status=400,
+                {
+                    "error": f"Missing or empty required fields: {', '.join(missing_fields)}"
+                },
+                status=400,
             )
 
         # Create a new staff record in the database
@@ -2800,9 +2849,12 @@ def create_staff_member(request):
                     )
         else:
             return JsonResponse(
-                {"error": "Roles should be provided as a list of role names."}, status=400
+                {"error": "Roles should be provided as a list of role names."},
+                status=400,
             )
-        print(f"DEBUG: Staff member created successfully with ID {staff_member.staff_id}")
+        print(
+            f"DEBUG: Staff member created successfully with ID {staff_member.staff_id}"
+        )
         return JsonResponse(
             {
                 "message": "Staff member created successfully",
