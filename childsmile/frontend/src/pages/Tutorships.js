@@ -54,7 +54,6 @@ const Tutorships = () => {
   const [staff, setStaff] = useState([]);
   const [roles, setRoles] = useState([]);
   const [currentUserRoleId, setCurrentUserRoleId] = useState(null);
-  const [placeholderRoleName, setPlaceholderRoleName] = useState('');
   const [currentRoleName, setCurrentRoleName] = useState('');
   const [page, setPage] = useState(1); // Current page
   const [pageSize] = useState(5); // Number of tutorships per page
@@ -109,16 +108,6 @@ const Tutorships = () => {
           showErrorToast(t, 'No matching role ID found. Please contact support.');
         }
 
-        // Determine the placeholder role name
-        const placeholderRole = rolesData.find(
-          (role) =>
-            !userRoleIds.includes(role.id) && // Exclude the current user's roles
-            (role.role_name === 'Tutors Coordinator' || role.role_name === 'Families Coordinator')
-        );
-        if (placeholderRole) {
-          setPlaceholderRoleName(placeholderRole.role_name); // Set the placeholder role name
-          console.log('DEBUG: Placeholder Role Name:', placeholderRole.role_name); // Add debug log
-        }
       } else {
         console.error('Current user not found in staff data.');
         showErrorToast(t, 'Current user not found. Please contact support.');
@@ -129,7 +118,20 @@ const Tutorships = () => {
     }
   };
 
-  const translatedRoleName = t(placeholderRoleName); // Translate the role name
+  const determinePendingCoordinator = (tutorship, rolesData) => {
+    // Extract the IDs of the roles that have already approved
+    const approvedRoleIds = tutorship.last_approver || [];
+  
+    // Find the coordinator whose role ID is NOT in the approvedRoleIds list
+    const pendingRole = rolesData.find(
+      (role) =>
+        !approvedRoleIds.includes(role.id) && // Role ID is not in the approved list
+        (role.role_name === 'Tutors Coordinator' || role.role_name === 'Families Coordinator') // Must be a coordinator role
+    );
+  
+    return pendingRole ? pendingRole.role_name : null; // Return the role name if found
+  };
+
   // Permissions required to access the page
   const requiredPermissions = [
     { resource: 'childsmile_app_tutorships', action: 'CREATE' },
@@ -236,15 +238,11 @@ const Tutorships = () => {
   const fetchTutorships = () => {
     setLoading(true);
     axios
-      .get('/api/get_tutorships/', {
-        params: {
-          page: page, // Current page
-          page_size: pageSize, // Page size
-        },
-      })
+      .get('/api/get_tutorships/')
       .then((response) => {
-        setTutorships(response.data.tutorships || []);
-        setTotalCount(response.data.total_count || 0); // Set the total number of tutorships
+        const fetchedTutorships = response.data.tutorships || [];
+        setTutorships(fetchedTutorships);
+        setTotalCount(fetchedTutorships.length); // 
         fetchStaffAndRoles(); // Fetch staff and roles data
       })
       .catch((error) => {
@@ -256,7 +254,7 @@ const Tutorships = () => {
       });
   };
 
-
+  const paginatedTutorships = tutorships.slice((page - 1) * pageSize, page * pageSize);
   const openInfoModal = (match) => {
 
     // Find the family and tutor data for the selected match
@@ -479,17 +477,17 @@ const Tutorships = () => {
               <table className="tutorship-matching-data-grid">
                 <thead>
                   <tr>
-                    <th>{t('Tutor Name')}</th>
                     <th>{t('Child Name')}</th>
+                    <th>{t('Tutor Name')}</th>
                     <th>{t('Tutorship create date')}</th>
                     <th>{t('Actions')}</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {tutorships.map((tutorship, index) => (
+                  {paginatedTutorships.map((tutorship, index) => (
                     <tr key={tutorship.id || index}>
-                      <td>{`${tutorship.tutor_firstname} ${tutorship.tutor_lastname}`}</td>
                       <td>{`${tutorship.child_firstname} ${tutorship.child_lastname}`}</td>
+                      <td>{`${tutorship.tutor_firstname} ${tutorship.tutor_lastname}`}</td>
                       <td>{tutorship.created_date}</td>
                       <td>
                         <div className="tutorship-actions">
@@ -507,6 +505,15 @@ const Tutorships = () => {
                             {t('Delete')}
                           </button>
                         </div>
+                        {tutorship.approval_counter >= 2 ? (
+                          <span className="approval-span">
+                            {t('Approved by Families and Tutors coordinators')}
+                          </span>
+                        ) : (
+                          <span className="approval-span">
+                            {t('Pending approval of', {roleName: t(determinePendingCoordinator(tutorship, roles))})}
+                          </span>
+                        )}
                       </td>
                     </tr>
                   ))}
@@ -573,7 +580,7 @@ const Tutorships = () => {
             <h2>{t('Are you sure you want to approve this tutorship?')}</h2>
             <p>
               <p>
-                {t('Discuss with a coordinator', { roleName: translatedRoleName })}
+                {t('Discuss with a coordinator', { roleName: t(determinePendingCoordinator(selectedTutorship, roles))})}
               </p>
             </p>
             <div className="modal-actions">

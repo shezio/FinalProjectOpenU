@@ -2,9 +2,12 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center; /* Center the content vertically */
-  flex-grow: 1; /* Allow it to take up available space */
-  margin-top: 100px; /* Add some spacing below the fixed header */
+  justify-content: center;
+  /* Center the content vertically */
+  flex-grow: 1;
+  /* Allow it to take up available space */
+  margin-top: 100px;
+  /* Add some spacing below the fixed header */
 }
 
 .matches-modal {
@@ -224,6 +227,12 @@
   justify-content: flex-start;
 }
 
+.approval-span {
+  font-size: 20px;
+  color: /* light gray */ #999;
+  margin-top: 20px;
+  text-align: center;
+}
 /* Button styles */
 .tutorship-actions button {
   background-color: #4CAF50;
@@ -712,7 +721,7 @@
   margin-bottom: 20px;
 }
 
-.approval-modal yes-button{
+.approval-modal yes-button {
   background-color: #4CAF50;
   /* Green */
   color: white;
@@ -723,7 +732,7 @@
   font-size: 16px;
 }
 
-.approval-modal no-button{
+.approval-modal no-button {
   background-color: #ff4d4d;
   /* Red */
   color: white;
@@ -736,11 +745,18 @@
 
 /* Style for disabled buttons */
 button:disabled {
-  background-color: /* light green */ #e0e0e0; /* Light gray background */
-  color: #666; /* Dark gray text */
-  cursor: not-allowed; /* Show "not allowed" cursor */
-  opacity: 0.6; /* Make it slightly transparent */
-  border: 1px solid #aaa; /* Optional: Add a border */
+  background-color:
+    /* light green */
+    #e0e0e0;
+  /* Light gray background */
+  color: #666;
+  /* Dark gray text */
+  cursor: not-allowed;
+  /* Show "not allowed" cursor */
+  opacity: 0.6;
+  /* Make it slightly transparent */
+  border: 1px solid #aaa;
+  /* Optional: Add a border */
   transition: background-color 0.3s ease;
 }
 
