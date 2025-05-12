@@ -14,7 +14,7 @@
   background: white;
   padding: 2rem;
   border-radius: 8px;
-  width: 1400px;
+  width: 1600px;
   /* Limit the modal width */
   height: 750px;
   margin: auto;
@@ -32,7 +32,7 @@
 }
 
 .matches-modal h2 {
-  font-size: 32px;
+  font-size: 52px;
   /* green color */
   color: #4CAF50;
   /* Adjust font size for the title */
@@ -99,6 +99,12 @@
   top: auto;
 }
 
+@media (max-width: 2400px) {
+  .matches-modal {
+    margin-right: 300px;
+  }
+}
+
 @media (max-width: 1920px) {
   .page-content .tutorship-matching-grid-container {
     padding: 10px;
@@ -124,7 +130,7 @@
   .page-content .tutorship-matching-data-grid td {
     padding: 6px;
     /* Reduce padding */
-    font-size: 10px;
+    font-size: 66px;
     /* Reduce font size */
   }
 }
@@ -178,6 +184,7 @@
   /* Prevent text from wrapping */
   overflow: hidden;
   text-overflow: ellipsis;
+  font-size: 66px;
   /* Add ellipsis for overflowing text */
 }
 
@@ -291,11 +298,11 @@
   background-color: #007bff;
   color: white;
   font-weight: bold;
-  font-size: 20px;
+  font-size: 24px;
 }
 
 .match-modal-content .data-grid td {
-  font-size: 18px;
+  font-size: 24px;
 }
 
 
@@ -347,7 +354,7 @@
 
   .page-content .tutorship-matching-data-grid th,
   .page-content .tutorship-matching-data-grid td {
-    font-size: 12px;
+    font-size: 66px;
     /* Reduce font size */
     padding: 4px;
     /* Reduce padding */
@@ -594,8 +601,10 @@
   background: none;
   border: none;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 24px;
   margin-left: 5px;
+  margin-right: 10px;
+  color: /*white*/ #fdfbfb;
 }
 
 .filter-container {

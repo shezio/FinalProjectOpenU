@@ -196,3 +196,13 @@ body {
     /* Optional: Set a font that supports RTL */
 }
 
+.sort-button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 24px;
+    margin-left: 5px;
+    margin-right: 10px;
+    color: /*white*/ #fdfbfb;
+  }
+  

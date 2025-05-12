@@ -5,16 +5,20 @@ body {
   padding: 0;
   height: 100vh;
   display: flex;
-  flex-direction: column; /* Stack elements vertically */
+  flex-direction: column;
+  /* Stack elements vertically */
 }
 
 .main-content {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center; /* Center the content vertically */
-  flex-grow: 1; /* Allow it to take up available space */
-  margin-top: 300px; /* Add some spacing below the fixed header */
+  justify-content: center;
+  /* Center the content vertically */
+  flex-grow: 1;
+  /* Allow it to take up available space */
+  margin-top: 300px;
+  /* Add some spacing below the fixed header */
 }
 
 .header {
@@ -33,8 +37,8 @@ body {
   flex-grow: 1;
   /* תופס את כל הרוחב הפנוי */
   padding: 20px;
-  margin-right: 650px;
-  margin-top: 400px;
+  margin-right: 680px;
+  margin-top: 200px;
   /* שומר מקום לסרגל הצד */
   height: 100vh;
   overflow-y: auto;
@@ -45,24 +49,70 @@ body {
 
 .login-container {
   background-color: #fff;
-  padding: 40px; /* Increase padding to enlarge the container */
+  padding: 40px;
+  /* Increase padding to enlarge the container */
   border-radius: 10px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); /* Add a subtle shadow */
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  /* Add a subtle shadow */
   text-align: center;
-  max-width: 500px; /* Limit the width for better layout */
-  width: 100%; /* Ensure it takes up full width on smaller screens */
-  margin-top: 650px; /* Adjust margin to center the container */
+  max-width: 500px;
+  /* Limit the width for better layout */
+  width: 100%;
+  /* Ensure it takes up full width on smaller screens */
+  margin-top: 100px;
+  /* Adjust margin to center the container */
+  transition: all 0.3s ease;
 }
+
+@font-face {
+  font-family: 'Rubik';
+  src: url('./fonts/Rubik-VariableFont_wght.ttf') format('truetype');
+  font-weight: 400;
+  /* Adjust weight if needed */
+  font-style: normal;
+  /* Adjust style if needed */
+}
+
+.login-container .amit-title {
+  display: inline-block;
+  /* Ensures it behaves like a block element */
+  transform: rotateX(-15deg);
+  transform-origin: center top;
+  letter-spacing: 3px;
+  text-align: center;
+  /* Centers the text horizontally */
+  font-size: 72px;
+  /* Adjust font size as needed */
+  font-weight: bold;
+  /* Make the text bold */
+  margin-bottom: 72px;
+  /* Add spacing below the title */
+  color: #1da821;
+  /* Adjust text color */
+  font-family: 'Rubik', sans-serif;
+  /* Use the specified font */
+}
+
+.login-container .curved-text {
+  font-size: 48px;
+  fill: #1da821;
+  font-family: 'Rubik', sans-serif;
+  font-weight: bold;
+}
+
 
 @media (max-width: 2400px) {
   .login-container {
-    margin-top: 150px; /* Adjust margin for smaller screens */
+    margin-top: 100px;
+    /* Adjust margin for smaller screens */
   }
+
   .login-main-content {
     flex-grow: 1;
     /* תופס את כל הרוחב הפנוי */
     margin-right: 500px;
-    margin-top: 250px;
+    margin-top: 100px;
+    /* Adjust this value to move all buttons lower */
   }
 }
 
@@ -78,7 +128,8 @@ body {
 .login-container input[type="text"],
 .login-container input[type="password"] {
   width: 100%;
-  padding: 15px; /* Increase padding for inputs */
+  padding: 15px;
+  /* Increase padding for inputs */
   margin: 10px 0;
   border: 1px solid #ccc;
   border-radius: 5px;
@@ -87,7 +138,8 @@ body {
 
 .login-container button {
   width: 100%;
-  padding: 15px; /* Increase padding for buttons */
+  padding: 15px;
+  /* Increase padding for buttons */
   background-color: #4CAF50;
   color: white;
   border: none;
@@ -115,46 +167,59 @@ body {
 .error {
   color: red;
   margin-top: 10px;
+  font-size: 24px;
 }
 
 .success {
   color: green;
   margin-top: 10px;
+  font-size: 24px;
 }
 
 .top-left {
-  position: fixed; /* Keeps the element always visible in the top-left corner */
-  top: 10px; /* Distance from the top of the viewport */
-  left: 10px; /* Distance from the left of the viewport */
+  position: fixed;
+  /* Keeps the element always visible in the top-left corner */
+  top: 10px;
+  /* Distance from the top of the viewport */
+  left: 10px;
+  /* Distance from the left of the viewport */
   display: flex;
   align-items: center;
-  z-index: 1001; /* Ensure it appears above other elements */
-  padding: 5px; /* Optional: Add padding for better spacing */
-  border-radius: 5px; /* Optional: Add rounded corners */
+  z-index: 1001;
+  /* Ensure it appears above other elements */
+  padding: 5px;
+  /* Optional: Add padding for better spacing */
+  border-radius: 5px;
+  /* Optional: Add rounded corners */
 }
 
 .top-left img.amit {
-  width: 100px; /* Adjust the width as needed */
-  height: 150px; /* Maintain aspect ratio */
+  width: 100px;
+  /* Adjust the width as needed */
+  height: 150px;
+  /* Maintain aspect ratio */
   object-fit: cover;
 
 }
 
 .top-left .quote {
-  font-size: 18px; /* Adjust the font size as needed */
+  font-size: 18px;
+  /* Adjust the font size as needed */
   margin-right: 10px;
 }
 
 .top-left img.qr-code {
-  width: 90px; /* Adjust the width as needed */
-  height: auto; /* Maintain aspect ratio */
+  width: 90px;
+  /* Adjust the width as needed */
+  height: auto;
+  /* Maintain aspect ratio */
 }
 
 .login-container input[type="text"],
-.login-container input[type="password"] ,
+.login-container input[type="password"],
 .login-container submit,
 .login-container span,
 .login-container button {
-  font-size: 24px; /* Increase font size for better readability */
+  font-size: 24px;
+  /* Increase font size for better readability */
 }
-

@@ -89,7 +89,7 @@
     }
 
     .reports-container {
-        gap: 20px;
+        gap: 90px;
         margin-right: 200px;
     }
 }
@@ -832,4 +832,15 @@
 .back-button:hover {
     background-color: #0056b3;
     /* Darker blue on hover */
+}
+
+.wide-column {
+    width: 300px;
+    /* Adjust width as needed */
+}
+
+.date-input {
+    width: 200px;
+    font-size: 20px;
+    /* Adjust width as needed */
 }

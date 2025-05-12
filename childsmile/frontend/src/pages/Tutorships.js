@@ -121,14 +121,14 @@ const Tutorships = () => {
   const determinePendingCoordinator = (tutorship, rolesData) => {
     // Extract the IDs of the roles that have already approved
     const approvedRoleIds = tutorship.last_approver || [];
-  
+
     // Find the coordinator whose role ID is NOT in the approvedRoleIds list
     const pendingRole = rolesData.find(
       (role) =>
         !approvedRoleIds.includes(role.id) && // Role ID is not in the approved list
         (role.role_name === 'Tutors Coordinator' || role.role_name === 'Families Coordinator') // Must be a coordinator role
     );
-  
+
     return pendingRole ? pendingRole.role_name : null; // Return the role name if found
   };
 
@@ -254,7 +254,25 @@ const Tutorships = () => {
       });
   };
 
-  const paginatedTutorships = tutorships.slice((page - 1) * pageSize, page * pageSize);
+  const sortedTutorships = [...tutorships].sort((a, b) => {
+    const dateA = new Date(a.created_date);
+    const dateB = new Date(b.created_date);
+
+    if (sortOrder === 'asc') {
+      return dateA - dateB; // Ascending order
+    } else {
+      return dateB - dateA; // Descending order
+    }
+  });
+
+  // Paginate the sorted tutorships
+  const paginatedTutorships = sortedTutorships.slice((page - 1) * pageSize, page * pageSize);
+
+  // Function to toggle the sorting order
+  const toggleSortOrder = () => {
+    setSortOrder((prevOrder) => (prevOrder === 'asc' ? 'desc' : 'asc'));
+  };
+
   const openInfoModal = (match) => {
 
     // Find the family and tutor data for the selected match
@@ -479,7 +497,15 @@ const Tutorships = () => {
                   <tr>
                     <th>{t('Child Name')}</th>
                     <th>{t('Tutor Name')}</th>
-                    <th>{t('Tutorship create date')}</th>
+                    <th>
+                      {t('Tutorship create date')}
+                      <button
+                        className="sort-button"
+                        onClick={toggleSortOrder} // Toggle the sort order
+                      >
+                        {sortOrder === 'asc' ? '▲' : '▼'} {/* Show the sort direction */}
+                      </button>
+                    </th>
                     <th>{t('Actions')}</th>
                   </tr>
                 </thead>
@@ -511,7 +537,7 @@ const Tutorships = () => {
                           </span>
                         ) : (
                           <span className="approval-span">
-                            {t('Pending approval of', {roleName: t(determinePendingCoordinator(tutorship, roles))})}
+                            {t('Pending approval of', { roleName: t(determinePendingCoordinator(tutorship, roles)) })}
                           </span>
                         )}
                       </td>
@@ -580,7 +606,7 @@ const Tutorships = () => {
             <h2>{t('Are you sure you want to approve this tutorship?')}</h2>
             <p>
               <p>
-                {t('Discuss with a coordinator', { roleName: t(determinePendingCoordinator(selectedTutorship, roles))})}
+                {t('Discuss with a coordinator', { roleName: t(determinePendingCoordinator(selectedTutorship, roles)) })}
               </p>
             </p>
             <div className="modal-actions">
@@ -650,16 +676,46 @@ const Tutorships = () => {
                   <h2>{t('Tutor Information')}</h2>
                   <table className="info-table">
                     <tbody>
-                      <tr><td>{t('ID')}</td><td> {selectedMatchForInfo.tutor_id}</td></tr>
-                      <tr><td>{t('Full Name')}</td><td> {selectedMatchForInfo.tutor_full_name}</td></tr>
-                      <tr><td>{t('City')}</td><td> {selectedMatchForInfo.tutor_city}</td></tr>
-                      <tr><td>{t('Age')}</td><td> {selectedMatchForInfo.tutor_age}</td></tr>
-                      <tr><td>{t('Gender')}</td><td> {selectedMatchForInfo.tutor_gender ? t('Female') : t('Male')}</td></tr>
-                      <tr><td>{t('Phone')}</td><td> {selectedMatchForInfo.phone}</td></tr>
-                      <tr><td>{t('Email')}</td><td> {selectedMatchForInfo.email}</td></tr>
-                      <tr><td>{t('Want to Tutor')}</td><td> {selectedMatchForInfo.want_tutor ? t('Yes') : t('No')}</td></tr>
-                      <tr><td>{t('Comment')}</td><td> {selectedMatchForInfo.comment}</td></tr>
-                      <tr><td>{t('Tutorship status')}</td><td> {selectedMatchForInfo.tutorship_status}</td></tr>
+                      <tr>
+                        <td>{t('ID')}</td>
+                        <td> {selectedMatchForInfo.tutor_id}</td>
+                      </tr>
+                      <tr>
+                        <td>{t('Full Name')}</td>
+                        <td> {selectedMatchForInfo.tutor_full_name}</td>
+                      </tr>
+                      <tr>
+                        <td>{t('City')}</td>
+                        <td> {selectedMatchForInfo.tutor_city}</td>
+                      </tr>
+                      <tr>
+                        <td>{t('Age')}</td>
+                        <td> {selectedMatchForInfo.tutor_age}</td>
+                      </tr>
+                      <tr>
+                        <td>{t('Gender')}</td>
+                        <td> {selectedMatchForInfo.tutor_gender ? t('Female') : t('Male')}</td>
+                      </tr>
+                      <tr>
+                        <td>{t('Phone')}</td>
+                        <td> {selectedMatchForInfo.phone}</td>
+                      </tr>
+                      <tr>
+                        <td>{t('Email')}</td>
+                        <td> {selectedMatchForInfo.email}</td>
+                      </tr>
+                      <tr>
+                        <td>{t('Want to Tutor')}</td>
+                        <td> {selectedMatchForInfo.want_tutor ? t('Yes') : t('No')}</td>
+                      </tr>
+                      <tr>
+                        <td>{t('Comment')}</td>
+                        <td> {selectedMatchForInfo.comment}</td>
+                      </tr>
+                      <tr>
+                        <td>{t('Tutorship status')}</td>
+                        <td> {selectedMatchForInfo.tutorship_status}</td>
+                      </tr>
                     </tbody>
                   </table>
                 </div>
@@ -752,8 +808,7 @@ const Tutorships = () => {
                       >
                         <td>
                           <div className="info-icon-container" onClick={() => openInfoModal(match)}>
-                            <i className="info-icon">i</i>
-                            <span className="tooltip">{t('Press to see full info')}</span>
+                            <i className="info-icon" title={t('Press to see full info')}>i</i>
                           </div>
                         </td>
                         <td>{match.child_full_name}</td>

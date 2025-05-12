@@ -56,7 +56,7 @@ body {
     /* Prevent text from wrapping */
     padding-right: 1000px;
     /* Add some space between the logo and title */
-    left: 70%;
+    left: 60%;
     transform: translateX(-30%);
 }
 
@@ -139,12 +139,12 @@ body {
 @media (max-width: 2400px) {
     .logo {
         width: 150px;
-        margin: 0;
+        
         /* Remove extra margin */
         position: relative;
-        flex-shrink: 0;
+        flex-shrink: 1;
         /* Prevent the logo from shrinking */
-        margin-right: 300px;
+        margin-left: 200px;
         /* Add some space between the logo and title */
     }
 
@@ -157,9 +157,9 @@ body {
         flex-grow: 1;
         white-space: nowrap;
         /* Prevent text from wrapping */
-        padding-right: 1000px;
+        padding-right: 500px;
         /* Add some space between the logo and title */
-        left: 70%;
+        left: 50%;
         transform: translateX(-30%);
     }
 }

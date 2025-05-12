@@ -13,11 +13,60 @@ const TutorFeedbackReport = () => {
   const [loading, setLoading] = useState(true);
   const [feedbacks, setFeedbacks] = useState([]);
   const [filteredFeedbacks, setFilteredFeedbacks] = useState([]);
+  const [sortOrderEventDate, setSortOrderEventDate] = useState('asc'); // Default to ascending
+  const [sortOrderFeedbackDate, setSortOrderFeedbackDate] = useState('asc'); // Default to ascending
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
   const { t } = useTranslation();
 
+  const parseDate = (dateString) => {
+    if (!dateString) return new Date(0); // Handle missing dates
+    const [day, month, year] = dateString.split('/');
+    return new Date(`${year}-${month}-${day}`);
+  };
+
+  const toggleSortOrderEventDate = () => {
+    setSortOrderEventDate((prevOrder) => (prevOrder === 'asc' ? 'desc' : 'asc'));
+    const sorted = [...filteredFeedbacks].sort((a, b) => {
+      const dateA = parseDate(a.event_date);
+      const dateB = parseDate(b.event_date);
+      return sortOrderEventDate === 'asc' ? dateB - dateA : dateA - dateB; // Reverse the logic
+    });
+    setFilteredFeedbacks(sorted);
+  };
+
+  const toggleSortOrderFeedbackDate = () => {
+    setSortOrderFeedbackDate((prevOrder) => (prevOrder === 'asc' ? 'desc' : 'asc'));
+    const sorted = [...filteredFeedbacks].sort((a, b) => {
+      const dateA = parseDate(a.feedback_filled_at);
+      const dateB = parseDate(b.feedback_filled_at);
+      return sortOrderFeedbackDate === 'asc' ? dateB - dateA : dateA - dateB; // Reverse the logic
+    });
+    setFilteredFeedbacks(sorted);
+  };
+
+  // Checkbox logic
+  const handleCheckboxChange = (index) => {
+    const updatedFeedbacks = filteredFeedbacks.map((feedback, i) => {
+      if (i === index) {
+        return { ...feedback, selected: !feedback.selected };
+      }
+      return feedback;
+    });
+    setFilteredFeedbacks(updatedFeedbacks);
+  };
+
+  const handleSelectAllCheckbox = (isChecked) => {
+    const updatedFeedbacks = filteredFeedbacks.map((feedback) => ({
+      ...feedback,
+      selected: isChecked,
+    }));
+    setFilteredFeedbacks(updatedFeedbacks);
+  };
+
   const fetchData = () => {
+    setSortOrderFeedbackDate('desc')
+    setSortOrderEventDate('desc')
     setLoading(true);
     axios
       .get("/api/reports/tutor-feedback-report/")
@@ -99,12 +148,14 @@ const TutorFeedbackReport = () => {
                   type="date"
                   value={fromDate}
                   onChange={(e) => setFromDate(e.target.value)}
+                  className="date-input"
                 />
                 <label>{t("To Date")}:</label>
                 <input
                   type="date"
                   value={toDate}
                   onChange={(e) => setToDate(e.target.value)}
+                  className="date-input"
                 />
                 <button className="filter-button" onClick={applyDateFilter}>
                   {t("Filter")}
@@ -134,22 +185,31 @@ const TutorFeedbackReport = () => {
                       <th>
                         <input
                           type="checkbox"
-                          onChange={(e) => {
-                            const isChecked = e.target.checked;
-                            const updatedFeedbacks = filteredFeedbacks.map((feedback) => ({
-                              ...feedback,
-                              selected: isChecked,
-                            }));
-                            setFilteredFeedbacks(updatedFeedbacks);
-                          }}
+                          onChange={(e) => handleSelectAllCheckbox(e.target.checked)}
                         />
                       </th>
                       <th>{t("Tutor Name")}</th>
                       <th>{t("Tutee Name")}</th>
                       <th>{t("Is It Your Tutee?")}</th>
                       <th>{t("Is First Visit?")}</th>
-                      <th>{t("Event Date")}</th>
-                      <th>{t("Feedback Filled At")}</th>
+                      <th className="wide-column">
+                        {t("Event Date")}
+                        <button
+                          className="sort-button"
+                          onClick={toggleSortOrderEventDate}
+                        >
+                          {sortOrderEventDate === 'asc' ? '▲' : '▼'}
+                        </button>
+                      </th>
+                      <th className="wide-column">
+                        {t("Feedback Filled At")}
+                        <button
+                          className="sort-button"
+                          onClick={toggleSortOrderFeedbackDate}
+                        >
+                          {sortOrderFeedbackDate === 'asc' ? '▲' : '▼'}
+                        </button>
+                      </th>
                       <th>{t("Description")}</th>
                       <th>{t("Exceptional Events")}</th>
                       <th>{t("Anything Else")}</th>
@@ -163,11 +223,7 @@ const TutorFeedbackReport = () => {
                           <input
                             type="checkbox"
                             checked={feedback.selected || false}
-                            onChange={() => {
-                              const updatedFeedbacks = [...filteredFeedbacks];
-                              updatedFeedbacks[index].selected = !filteredFeedbacks[index].selected;
-                              setFilteredFeedbacks(updatedFeedbacks);
-                            }}
+                            onChange={() => handleCheckboxChange(index)}
                           />
                         </td>
                         <td>{feedback.tutor_name}</td>

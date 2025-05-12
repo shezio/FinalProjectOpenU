@@ -48,6 +48,26 @@ const Login = () => {
     <div className="login-main-content">
       <Header />
       <div className="login-container">
+        {/* <svg width="600" height="200" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <path
+              id="smilePath"
+              d="M 100 80 Q 400 250 600 60"
+              fill="transparent"
+            />
+          </defs>
+          <text fontSize="72" fill="#1da821" fontFamily="Rubik" fontWeight="bold" letterSpacing={5}>
+            <textPath
+              href="#smilePath"
+              startOffset="50%"
+              textAnchor="middle"
+              direction="rtl"
+            >
+              {t("Amit's Smile")}
+            </textPath>
+          </text>
+        </svg> */}
+        <span className="amit-title">{t("Amit's Smile")}</span>
         <form onSubmit={handleLogin}>
           <input
             type="text"
@@ -66,7 +86,6 @@ const Login = () => {
           <button type="button" onClick={() => navigate("/register")}>
             {t("הירשם")}
           </button>
-          {/* <button className="google-login">{t("התחבר עם חשבון גוגל")}</button> */}
           {error && <p className="error">{error}</p>}
           {success && <p className="success">{success}</p>}
         </form>

@@ -1159,9 +1159,9 @@ def families_waiting_for_tutorship_report(request):
 
         # Convert from_date and to_date to timezone-aware datetimes
         if from_date:
-            from_date = make_aware(datetime.strptime(from_date, "%Y-%m-%d"))
+            from_date = make_aware(datetime.datetime.strptime(from_date, "%Y-%m-%d"))
         if to_date:
-            to_date = make_aware(datetime.strptime(to_date, "%Y-%m-%d"))
+            to_date = make_aware(datetime.datetime.strptime(to_date, "%Y-%m-%d"))
 
         # Fetch children with the specified tutoring statuses, ordered by registration date
         children = Children.objects.filter(tutoring_status__in=waiting_statuses)
