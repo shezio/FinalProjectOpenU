@@ -803,3 +803,32 @@ button:disabled {
   font-size: 16px;
   font-weight: bold;
 }
+
+/* Default text style */
+.info-columns td {
+  transition: transform 0.2s ease, font-size 0.2s ease;
+}
+
+/* Magnify effect when active */
+.magnify-active td:hover {
+  transform: scale(3.2); /* Enlarge the text and adjust position */
+  transform-origin: right; /* Adjust origin for scaling */
+  cursor: zoom-in; /* Change cursor to indicate zoom */
+  position: relative; /* Ensure positioning works */
+  z-index: 10; /* Bring the text to the front */
+  transition: transform 0.2s ease;
+}
+
+.modal-content .magnify-button {
+  background-color: #4CAF50;
+  color: white;
+  padding: 10px 15px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 24px;
+  transition: background-color 0.3s ease;
+}
+.info-column .info-table td {
+  font-size: 1.5em; /* Default font size */
+}

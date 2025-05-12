@@ -380,6 +380,8 @@ const resources = {
       'Pending approval of': "ממתין לאישור {{roleName}}",
       "Amit's Smile": "החיוך של עמית",
       'Press to see full info': 'לחץ כדי לראות פרטים נוספים',
+      'Disable Magnify' : 'השבת הגדלה',
+      'Enable Magnify'  : 'הפעל הגדלה',
     }
   }
 };

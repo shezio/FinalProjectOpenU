@@ -58,6 +58,11 @@ const Tutorships = () => {
   const [page, setPage] = useState(1); // Current page
   const [pageSize] = useState(5); // Number of tutorships per page
   const [totalCount, setTotalCount] = useState(0); // Total number of tutorships
+  const [isMagnifyActive, setIsMagnifyActive] = useState(false);
+
+  const toggleMagnify = () => {
+    setIsMagnifyActive((prevState) => !prevState);
+  };
 
   const fetchStaffAndRoles = async () => {
     console.log('DEBUG: Fetching staff and roles data...'); // Add debug log
@@ -623,7 +628,10 @@ const Tutorships = () => {
           <div className="modal show">
             <div className="modal-content">
               <span className="close" onClick={closeInfoModal}>&times;</span>
-              <div className="info-columns">
+              <button className="magnify-button" onClick={toggleMagnify}>
+                🔍 {isMagnifyActive ? t('Disable Magnify') : t('Enable Magnify')}
+              </button>
+              <div className={`info-columns ${isMagnifyActive ? 'magnify-active' : ''}`}>
                 {/* Child Info */}
                 <div className="info-column">
                   <h2>{t('Child Information')}</h2>
@@ -718,15 +726,15 @@ const Tutorships = () => {
                       </tr>
                     </tbody>
                   </table>
+                  <div className="modal-actions">
+                    <button className="create-tutorship-button" onClick={createTutorship}>
+                      {t('Create Tutorship')}
+                    </button>
+                    <button className="close-info-button" onClick={closeInfoModal}>
+                      {t('Close')}
+                    </button>
+                  </div>
                 </div>
-              </div>
-              <div className="modal-actions">
-                <button className="create-tutorship-button" onClick={createTutorship}>
-                  {t('Create Tutorship')}
-                </button>
-                <button className="close-info-button" onClick={closeInfoModal}>
-                  {t('Close')}
-                </button>
               </div>
             </div>
           </div>
