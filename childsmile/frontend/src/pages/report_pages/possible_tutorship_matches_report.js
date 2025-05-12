@@ -18,9 +18,39 @@ const PossibleTutorshipMatchesReport = () => {
   // slider
   const [minGrade, setMinGrade] = useState(-5); // Initialize minGrade with a default value of 0
   const { t } = useTranslation();
+  const [sortOrder, setSortOrder] = useState('desc'); // Default sort order
+
+  const toggleSortOrder = () => {
+    setSortOrder((prevOrder) => (prevOrder === 'asc' ? 'desc' : 'asc'));
+    const sorted = [...filteredMatches].sort((a, b) => {
+      const gradeA = parseFloat(a.grade);
+      const gradeB = parseFloat(b.grade);
+      return sortOrder === 'asc' ? gradeB - gradeA : gradeA - gradeB;
+    });
+    setFilteredMatches(sorted);
+  };
+
+  const handleCheckboxChange = (index) => {
+    const updatedMatches = filteredMatches.map((match, i) => {
+      if (i === index) {
+        return { ...match, selected: !match.selected };
+      }
+      return match;
+    });
+    setFilteredMatches(updatedMatches);
+  };
+
+  const handleSelectAllCheckbox = (isChecked) => {
+    const updatedMatches = filteredMatches.map((match) => ({
+      ...match,
+      selected: isChecked,
+    }));
+    setFilteredMatches(updatedMatches);
+  };
 
   const fetchData = () => {
     setLoading(true);
+    setSortOrder('asc'); // Reset sort order to descending when fetching data
     axios
       .get("/api/reports/possible-tutorship-matches-report/")
       .then((response) => {
@@ -148,14 +178,7 @@ const PossibleTutorshipMatchesReport = () => {
                       <th>
                         <input
                           type="checkbox"
-                          onChange={(e) => {
-                            const isChecked = e.target.checked;
-                            const updatedMatches = filteredMatches.map((match) => ({
-                              ...match,
-                              selected: isChecked,
-                            }));
-                            setFilteredMatches(updatedMatches);
-                          }}
+                          onChange={(e) => handleSelectAllCheckbox(e.target.checked)}
                         />
                       </th>
                       <th>{t("Child Full Name")}</th>
@@ -167,7 +190,15 @@ const PossibleTutorshipMatchesReport = () => {
                       <th>{t("Child Gender")}</th>
                       <th>{t("Tutor Gender")}</th>
                       <th>{t("Distance Between")}<br />{t("Cities (km)")}</th>
-                      <th>{t("Matching")}<br />{t("Grades")}</th>
+                      <th>
+                        {t('Matching')} <br /> {t('Grades')}
+                        <button
+                          className="sort-button"
+                          onClick={toggleSortOrder} // Toggle the sort order
+                        >
+                          {sortOrder === 'asc' ? '▲' : '▼'}
+                        </button>
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
@@ -177,11 +208,7 @@ const PossibleTutorshipMatchesReport = () => {
                           <input
                             type="checkbox"
                             checked={match.selected || false} // Ensure `selected` is false if undefined
-                            onChange={() => {
-                              const updatedMatches = [...filteredMatches];
-                              updatedMatches[index].selected = !filteredMatches[index].selected;
-                              setFilteredMatches(updatedMatches); // Update the state with the new selection
-                            }}
+                            onChange={() => handleCheckboxChange(index)}
                           />
                         </td>
                         <td>{match.child_full_name}</td>

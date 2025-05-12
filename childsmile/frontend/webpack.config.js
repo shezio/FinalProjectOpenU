@@ -36,7 +36,14 @@ module.exports = {
             }
           }
         ]
-      }
+      },
+      {
+        test: /\.(ttf|woff|woff2|eot|otf)$/,
+        type: 'asset/resource',
+        generator: {
+          filename: 'fonts/[name][ext]', // Output fonts to the 'fonts' folder
+        },
+      },
     ]
   },
   plugins: [

@@ -77,7 +77,7 @@ export const exportToExcel = (tutors, t) => {
   worksheet['!dir'] = 'rtl';
 
   const workbook = XLSX.utils.book_new();
-  const sheetName = 'דוח חונכים פעילים'; // Hebrew sheet name
+  const sheetName = 'דוח חונכויות פעילות'; // Hebrew sheet name
   XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
   const fileName = t('active_tutors_report'); // Use translation for file name
   XLSX.writeFile(workbook, `${fileName}.xlsx`);

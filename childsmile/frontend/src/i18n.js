@@ -75,8 +75,8 @@ const resources = {
   },
   he: {
     translation: {
-      "Active Tutors Report": "דוח חונכים פעילים",
-      "active_tutors_report": "דוח חונכים פעילים",
+      "Active Tutors Report": "דוח חונכויות פעילות",
+      "active_tutors_report": "דוח חונכויות פעילות",
       "families_per_location_report": "דוח משפחות לפי מיקום",
       "new_families_report": "דוח משפחות חדשות מהחודש האחרון",
       "families_waiting_for_tutorship_report": "דוח משפחות הממתינות לחונכות",
@@ -302,7 +302,7 @@ const resources = {
       'Error fetching possible tutorship matches report': 'שגיאה בטעינת דוח התאמות חניך אפשריות',
       'Error fetching volunteer feedback report': 'שגיאה בטעינת דוח משוב מתנדבים',
       'Error fetching tutor feedback report': 'שגיאה בטעינת דוח משוב חונכים',
-      'Error fetching active tutors report': 'שגיאה בטעינת דוח חונכים פעילים',
+      'Error fetching active tutors report': 'שגיאה בטעינת דוח חונכויות פעילות',
       "Failed to load the map.": "טעינת המפה נכשלה",
       "Loading map...": "מפה בטעינה...",
       "Child Gender": "מין הילד",
@@ -378,6 +378,8 @@ const resources = {
       "At least one role must be selected.": 'חובה לבחור לפחות תפקיד אחד.',
       'Approved by Families and Tutors coordinators': 'אושר על ידי רכז משפחות ורכז חונכים',
       'Pending approval of': "ממתין לאישור {{roleName}}",
+      "Amit's Smile": "החיוך של עמית",
+      'Press to see full info': 'לחץ כדי לראות פרטים נוספים',
     }
   }
 };

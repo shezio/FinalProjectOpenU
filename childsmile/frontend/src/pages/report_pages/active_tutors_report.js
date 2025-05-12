@@ -23,8 +23,44 @@ const ActiveTutorsReport = () => {
     hasViewPermissionForTable('children') &&
     hasViewPermissionForTable('tutors');
 
+  const [sortOrderTutorshipCreationDate, setSortOrderTutorshipCreationDate] = useState('desc'); // Default to ascending
+
+  const parseDate = (dateString) => {
+    if (!dateString) return new Date(0); // Handle missing dates
+    const [day, month, year] = dateString.split('/');
+    return new Date(`${year}-${month}-${day}`);
+  };
+
+  const toggleSortOrderTutorshipCreationDate = () => {
+    setSortOrderTutorshipCreationDate((prevOrder) => (prevOrder === 'asc' ? 'desc' : 'asc'));
+    const sorted = [...tutors].sort((a, b) => {
+      const dateA = parseDate(a.created_date);
+      const dateB = parseDate(b.created_date);
+      return sortOrderTutorshipCreationDate === 'asc' ? dateB - dateA : dateA - dateB; // Reverse the logic
+    });
+    setTutors(sorted);
+  };
+
+  const handleCheckboxChange = (index) => {
+    const updatedTutors = tutors.map((tutor, i) => {
+      if (i === index) {
+        return { ...tutor, selected: !tutor.selected };
+      }
+      return tutor;
+    });
+    setTutors(updatedTutors);
+  };
+
+  const handleSelectAllCheckbox = (isChecked) => {
+    const updatedTutors = tutors.map((tutor) => ({
+      ...tutor,
+      selected: isChecked,
+    }));
+    setTutors(updatedTutors);
+  };
   const fetchData = () => {
     setLoading(true);
+    setSortOrderTutorshipCreationDate('desc'); // Reset sort order when fetching new data
     axios
       .get('/api/reports/active-tutors-report/', {
         params: { from_date: fromDate, to_date: toDate },
@@ -59,7 +95,7 @@ const ActiveTutorsReport = () => {
     return (
       <div className="active-tutors-report-main-content">
         <Sidebar />
-        <InnerPageHeader title="דוח חונכים פעילים" />
+        <InnerPageHeader title="דוח חונכויות פעילות" />
         <div className="page-content">
           <div className="no-permission">
             <h2>אין לך הרשאה לצפות בדף זה</h2>
@@ -72,7 +108,7 @@ const ActiveTutorsReport = () => {
   return (
     <div className="active-tutors-report-main-content">
       <Sidebar />
-      <InnerPageHeader title="דוח חונכים פעילים" />
+      <InnerPageHeader title="דוח חונכויות פעילות" />
       <div className="page-content">
         <ToastContainer
           position="top-center" // Center the toast
@@ -146,19 +182,20 @@ const ActiveTutorsReport = () => {
                     <th>
                       <input
                         type="checkbox"
-                        onChange={(e) => {
-                          const isChecked = e.target.checked;
-                          const updatedTutors = tutors.map((tutor) => ({
-                            ...tutor,
-                            selected: isChecked,
-                          }));
-                          setTutors(updatedTutors);
-                        }}
+                        onChange={(e) => handleSelectAllCheckbox(e.target.checked)}
                       />
                     </th>
-                    <th>שם חונך</th>
-                    <th>שם חניך</th>
-                    <th>תאריך התאמת חונכות</th>
+                    <th>{t('Child Name')}</th>
+                    <th>{t('Tutor Name')}</th>
+                    <th className="wide-column">
+                      {t('Tutorship create date')}
+                      <button
+                        className="sort-button"
+                        onClick={toggleSortOrderTutorshipCreationDate}
+                      >
+                        {sortOrderTutorshipCreationDate === 'asc' ? '▲' : '▼'}
+                      </button>
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -168,15 +205,11 @@ const ActiveTutorsReport = () => {
                         <input
                           type="checkbox"
                           checked={tutor.selected || false}
-                          onChange={() => {
-                            const updatedTutors = [...tutors];
-                            updatedTutors[index].selected = !tutors[index].selected;
-                            setTutors(updatedTutors);
-                          }}
+                          onChange={() => handleCheckboxChange(index)}
                         />
                       </td>
-                      <td>{tutor.tutor_firstname} {tutor.tutor_lastname}</td>
                       <td>{tutor.child_firstname} {tutor.child_lastname}</td>
+                      <td>{tutor.tutor_firstname} {tutor.tutor_lastname}</td>
                       <td>{tutor.created_date}</td>
                     </tr>
                   ))}

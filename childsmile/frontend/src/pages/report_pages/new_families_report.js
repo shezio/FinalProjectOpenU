@@ -17,11 +17,46 @@ const NewFamiliesReport = () => {
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
   const { t } = useTranslation();
-
   const hasPermissionToView = hasViewPermissionForTable("children");
+  const [sortOrderRegistrationDate, setSortOrderRegistrationDate] = useState('asc'); // Default to ascending
+
+  const parseDate = (dateString) => {
+    if (!dateString) return new Date(0); // Handle missing dates
+    const [day, month, year] = dateString.split('/');
+    return new Date(`${year}-${month}-${day}`);
+  };
+
+  const toggleSortOrderRegistrationDate = () => {
+    setSortOrderRegistrationDate((prevOrder) => (prevOrder === 'asc' ? 'desc' : 'asc'));
+    const sorted = [...families].sort((a, b) => {
+      const dateA = parseDate(a.registration_date);
+      const dateB = parseDate(b.registration_date);
+      return sortOrderRegistrationDate === 'asc' ? dateB - dateA : dateA - dateB; // Reverse the logic
+    });
+    setFamilies(sorted);
+  };
+
+  const handleCheckboxChange = (index) => {
+    const updatedFamilies = families.map((family, i) => {
+      if (i === index) {
+        return { ...family, selected: !family.selected };
+      }
+      return family;
+    });
+    setFamilies(updatedFamilies);
+  };
+
+  const handleSelectAllCheckbox = (isChecked) => {
+    const updatedFamilies = families.map((family) => ({
+      ...family,
+      selected: isChecked,
+    }));
+    setFamilies(updatedFamilies);
+  };
 
   const fetchData = () => {
     setLoading(true);
+    setSortOrderRegistrationDate('desc')
     axios
       .get("/api/reports/new-families-report/", {
         params: { from_date: fromDate, to_date: toDate },
@@ -142,14 +177,7 @@ const NewFamiliesReport = () => {
                     <th>
                       <input
                         type="checkbox"
-                        onChange={(e) => {
-                          const isChecked = e.target.checked;
-                          const updatedFamilies = families.map((family) => ({
-                            ...family,
-                            selected: isChecked,
-                          }));
-                          setFamilies(updatedFamilies);
-                        }}
+                        onChange={(e) => handleSelectAllCheckbox(e.target.checked)}
                       />
                     </th>
                     <th>{t("Child Full Name")}</th>
@@ -157,7 +185,15 @@ const NewFamiliesReport = () => {
                     <th>{t("Father Phone")}</th>
                     <th>{t("Mother Name")}</th>
                     <th>{t("Mother Phone")}</th>
-                    <th>{t("Registration Date")}</th>
+                    <th className="wide-column">
+                      {t("Registration Date")}
+                      <button
+                        className="sort-button"
+                        onClick={toggleSortOrderRegistrationDate}
+                      >
+                        {sortOrderRegistrationDate === 'asc' ? '▲' : '▼'}
+                      </button>
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -167,11 +203,7 @@ const NewFamiliesReport = () => {
                         <input
                           type="checkbox"
                           checked={family.selected || false}
-                          onChange={() => {
-                            const updatedFamilies = [...families];
-                            updatedFamilies[index].selected = !updatedFamilies[index].selected;
-                            setFamilies(updatedFamilies);
-                          }}
+                          onChange={() => handleCheckboxChange(index)}
                         />
                       </td>
                       <td>{family.child_firstname} {family.child_lastname}</td>

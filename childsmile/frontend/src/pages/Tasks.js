@@ -372,6 +372,7 @@ const Tasks = () => {
                                       יש לבצע עד: {task.due_date}
                                     </p>
                                     <p>סטטוס: {task.status}</p>
+                                    <p>לביצוע על ידי: {task.assignee}</p>
                                     <div className="actions">
                                       <button onClick={() => handleTaskClick(task)}>מידע</button>
                                       <button onClick={() => handleEditTask(task)}>ערוך</button>                                      <button onClick={() => handleUpdateStatus(task)}>עדכן סטטוס</button>
