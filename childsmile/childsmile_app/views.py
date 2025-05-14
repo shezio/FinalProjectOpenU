@@ -1593,9 +1593,11 @@ def create_volunteer_or_tutor(request):
 
         # Check if a staff member with the same username already exists
         username = f"{first_name}_{surname}"
-        if Staff.objects.filter(username=username).exists():
-            # new username will get a _1 appended to it
-            username = f"{username}_1"
+        index = 1
+        original_username = username
+        while Staff.objects.filter(username=username).exists():
+            username = f"{original_username}_{index}"
+            index += 1
 
         # Insert into SignedUp table
         signedup = SignedUp.objects.create(
@@ -1665,7 +1667,13 @@ def create_volunteer_or_tutor(request):
                 comments="",
             )
 
-        return JsonResponse({"message": "User registered successfully."}, status=201)
+        return JsonResponse(
+            {
+            "message": "User registered successfully.",
+            "username": username,
+            },
+            status=201,
+        )
 
     except ValueError as ve:
         # Rollback will happen automatically because of @transaction.atomic
@@ -2635,6 +2643,18 @@ def update_staff_member(request, staff_id):
                 status=400,
             )
 
+                # Check if username already exists
+        if Staff.objects.filter(username=data["username"]).exclude(staff_id=staff_id).exists():
+            return JsonResponse(
+            {"error": f"Username '{data['username']}' already exists."}, status=400
+            )
+
+        # Check if email already exists
+        if Staff.objects.filter(email=data["email"]).exclude(staff_id=staff_id).exists():
+            return JsonResponse(
+            {"error": f"Email '{data['email']}' already exists."}, status=400
+            )
+        
         # Update fields in the Staff table
         old_email = staff_member.email  # Store the old email for reference
         staff_member.username = data.get("username", staff_member.username)
@@ -2821,6 +2841,18 @@ def create_staff_member(request):
                     "error": f"Missing or empty required fields: {', '.join(missing_fields)}"
                 },
                 status=400,
+            )
+
+        # Check if username already exists
+        if Staff.objects.filter(username=data["username"]).exists():
+            return JsonResponse(
+            {"error": f"Username '{data['username']}' already exists."}, status=400
+            )
+
+        # Check if email already exists
+        if Staff.objects.filter(email=data["email"]).exists():
+            return JsonResponse(
+            {"error": f"Email '{data['email']}' already exists."}, status=400
             )
 
         # Create a new staff record in the database

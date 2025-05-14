@@ -189,9 +189,9 @@ const SystemManagement = () => {
         setShowRolesDropdown(false); // Close the dropdown
       }
     };
-  
+
     document.addEventListener('mousedown', handleOutsideClick);
-  
+
     return () => {
       document.removeEventListener('mousedown', handleOutsideClick);
     };
@@ -208,6 +208,7 @@ const SystemManagement = () => {
       last_name: '',
       roles: [],
     });
+    setErrors({}); // Reset errors when closing the modal
   };
 
   const handleAddStaffSubmit = async () => {
@@ -218,7 +219,28 @@ const SystemManagement = () => {
       closeAddStaffModal();
     } catch (error) {
       console.error('Error adding staff member:', error);
-      showErrorToast(t, 'Failed to add staff member.', error);
+      if (error.response && error.response.data && error.response.data.error) {
+        const errorMessage = error.response.data.error;
+
+        if (errorMessage.includes('Username')) {
+          // Extract the username
+          const match = errorMessage.match(/Username '(.+?)' already exists\./);
+          const username = match ? match[1] : '';
+          const translatedMessage = t("Username '{{username}}' already exists.", { username });
+          toast.warn(translatedMessage);
+        } else if (errorMessage.includes('Email')) {
+          // Extract the email
+          const match = errorMessage.match(/Email '(.+?)' already exists\./);
+          const email = match ? match[1] : '';
+          const translatedMessage = t("Email '{{email}}' already exists.", { email });
+          toast.warn(translatedMessage);
+        } else {
+          // Fallback for other errors
+          toast.warn(t(errorMessage));
+        }
+      } else {
+        showErrorToast(t, 'Failed to add staff member.', error);
+      }
     }
   };
 
@@ -233,7 +255,28 @@ const SystemManagement = () => {
       closeAddStaffModal();
     } catch (error) {
       console.error('Error updating staff member:', error);
-      showErrorToast(t, 'Failed to update staff member.', error);
+      if (error.response && error.response.data && error.response.data.error) {
+        const errorMessage = error.response.data.error;
+
+        if (errorMessage.includes('Username')) {
+          // Extract the username
+          const match = errorMessage.match(/Username '(.+?)' already exists\./);
+          const username = match ? match[1] : '';
+          const translatedMessage = t("Username '{{username}}' already exists.", { username });
+          toast.warn(translatedMessage);
+        } else if (errorMessage.includes('Email')) {
+          // Extract the email
+          const match = errorMessage.match(/Email '(.+?)' already exists\./);
+          const email = match ? match[1] : '';
+          const translatedMessage = t("Email '{{email}}' already exists.", { email });
+          toast.warn(translatedMessage);
+        } else {
+          // Fallback for other errors
+          toast.warn(t(errorMessage));
+        }
+      } else {
+        showErrorToast(t, 'Failed to update staff member.', error);
+      }
     }
   };
 
@@ -418,8 +461,8 @@ const SystemManagement = () => {
                   value={staffData.username || ''}
                   onChange={(e) => updateStaffData('username', e.target.value)}
                   className={errors.username ? "error" : ""}
-                  />
-                  {errors.username && <span className="staff-error-message">{errors.username}</span>}
+                />
+                {errors.username && <span className="staff-error-message">{errors.username}</span>}
               </div>
 
               <div className="staff-form-row">
@@ -445,12 +488,15 @@ const SystemManagement = () => {
 
               <div className="staff-form-row">
                 <label>{t('Email')}</label>
-                <input
-                  type="email"
-                  value={staffData.email || ''}
-                  onChange={(e) => updateStaffData('email', e.target.value)}
-                  className={errors.email ? "error" : ""}
-                />
+                <form noValidate>
+                  <input
+                    type="email"
+                    value={staffData.email || ''}
+                    onChange={(e) => updateStaffData('email', e.target.value)}
+                    className={errors.email ? "error" : ""}
+                    title=''
+                  />
+                </form>
                 {errors.email && <span className="staff-error-message">{errors.email}</span>}
               </div>
 
