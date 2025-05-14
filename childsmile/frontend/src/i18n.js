@@ -382,6 +382,8 @@ const resources = {
       'Press to see full info': 'לחץ כדי לראות פרטים נוספים',
       'Disable Magnify' : 'השבת הגדלה',
       'Enable Magnify'  : 'הפעל הגדלה',
+      "Username '{{username}}' already exists.": 'שם המשתמש {{username}} כבר קיים.',
+      "Email '{{email}}' already exists.": 'כתובת האימייל {{email}} כבר קיימת.',
     }
   }
 };

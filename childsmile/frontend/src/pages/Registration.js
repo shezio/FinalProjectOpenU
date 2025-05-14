@@ -109,12 +109,13 @@ const Registration = () => {
       axios
         .post("/api/create_volunteer_or_tutor/", formData)
         .then((response) => {
-          toast.success(
+            const username = response.data.username; // Extract the username from the response
+            toast.success(
             t(
               "Welcome to Child Smile! Please log in with your credentials: Username: {{username}}, Password: 1234"
-            ).replace("{{username}}", `${formData.first_name}_${formData.surname}`),
+            ).replace("{{username}}", username),
             { autoClose: 5000 }
-          );
+            );
 
           // Delay navigation to allow the toaster to display
           // Refresh the browser and navigate
