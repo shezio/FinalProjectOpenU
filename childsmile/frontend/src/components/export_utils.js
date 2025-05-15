@@ -9,6 +9,7 @@ import { showErrorToast } from './toastUtils'; // Import the error toast utility
 import logo from '../assets/logo.png'; // Import the logo image
 // import C:\Dev\FinalProjectOpenU\childsmile\frontend\src\fonts\Alef-Bold.js
 import { AlefBold } from '../fonts/Alef-Bold'; // Import the custom font for PDF generation
+import { Cell } from 'jspdf-autotable';
 
 // Helper function to reverse text for proper RTL rendering
 const reverseText = (text) => {
@@ -283,7 +284,7 @@ export const exportTutorshipPendingToPDF = (families, t) => {
     return;
   }
 
-  const doc = new jsPDF('portrait', 'mm', 'a4');
+  const doc = new jsPDF('portrait', 'mm', 'a3');
 
   // Register the Alef-Bold font
   doc.addFileToVFS('Alef-Bold.ttf', AlefBold);
@@ -326,13 +327,13 @@ export const exportTutorshipPendingToPDF = (families, t) => {
     styles: { font: 'Alef', fontSize: 10, cellPadding: 3, halign: 'right' }, // Align text to the right
     headStyles: { fillColor: [76, 175, 80], textColor: 255, halign: 'right' }, // Align headers to the right
     columnStyles: {
-      0: { halign: 'right' }, // Align first column to the right
-      1: { halign: 'right' }, // Align second column to the right
-      2: { halign: 'right' }, // Align third column to the right
-      3: { halign: 'right' }, // Align fourth column to the right
-      4: { halign: 'right' }, // Align fifth column to the right
-      5: { halign: 'right' }, // Align sixth column to the right
-      6: { halign: 'right' }, // Align seventh column to the right
+      0: { halign: 'right' ,cellWidth: 30}, // Align first column to the right
+      1: { halign: 'right' ,cellWidth: 60}, // Align second column to the right
+      2: { halign: 'right' ,cellWidth: 40}, // Align third column to the right
+      3: { halign: 'right' ,cellWidth: 30}, // Align fourth column to the right
+      4: { halign: 'right' ,cellWidth: 40}, // Align fifth column to the right
+      5: { halign: 'right' ,cellWidth: 30}, // Align sixth column to the right
+      6: { halign: 'right' ,cellWidth: 30}, // Align seventh column to the right
     },
   });
 

@@ -12,7 +12,7 @@ const Reports = () => {
 
   const reportDetails = {
     get_families_per_location_report: { name: 'דוח משפחות לפי מיקום', path: '/reports/families_per_location_report' },
-    new_families_report: { name: 'דוח משפחות חדשות', path: '/reports/new-families-report' },
+    new_families_report: { name: 'דוח משפחות חדשות מהחודש האחרון', path: '/reports/new-families-report' },
     families_waiting_for_tutorship_report: { name: 'דוח משפחות הממתינות לחונכות', path: '/reports/families_waiting_for_tutorship_report' },
     active_tutors_report: { name: 'דוח חונכויות פעילות', path: '/reports/active_tutors_report' },
     possible_tutorship_matches_report: { name: 'דוח התאמות חניך חונך אפשריות', path: '/reports/possible_tutorship_matches_report' },

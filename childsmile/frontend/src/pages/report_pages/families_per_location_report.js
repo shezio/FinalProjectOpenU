@@ -326,9 +326,8 @@ const FamiliesPerLocationReport = () => {
                         key={index}
                         position={[family.latitude, family.longitude]}
                       >
-                        <Popup>
-                          {`${family.first_name} ${family.last_name}`} - {" "}
-                          {family.city}
+                        <Popup className="popup-text">
+                          {`${family.first_name} ${family.last_name}`} -   {family.city}
                         </Popup>
                       </Marker>
                     )
