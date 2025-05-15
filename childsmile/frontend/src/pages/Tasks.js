@@ -171,6 +171,13 @@ const Tasks = () => {
 
   const handleClosePopup = () => {
     setSelectedTask(null);
+    setSelectedTaskType(null);
+    setSelectedStaff(null);
+    setSelectedChild(null);
+    setSelectedTutor(null);
+    setSelectedPendingTutor(null);
+    setDueDate('');
+    setErrors({});
   };
 
   const handleSubmitTask = async () => {
@@ -333,7 +340,14 @@ const Tasks = () => {
           <div className="tasks-page-content">
             <div className="filter-create-container">
               <div className="create-task">
-                <button onClick={() => setIsModalOpen(true)}>צור משימה חדשה</button>
+                <button
+                  onClick={() => {
+                    handleClosePopup(); // Clear all fields before opening the modal
+                    setIsModalOpen(true);
+                  }}
+                >
+                  צור משימה חדשה
+                </button>
               </div>
               <div className="filter">
                 <select
@@ -479,6 +493,7 @@ const Tasks = () => {
                   options={childrenOptions}
                   value={selectedChild}
                   onChange={setSelectedChild}
+                  placeholder={t('Select Child')} // Add the translated placeholder
                   isSearchable
                   isClearable
                 />
@@ -488,6 +503,7 @@ const Tasks = () => {
                   options={tutorsOptions}
                   value={selectedTutor}
                   onChange={setSelectedTutor}
+                  placeholder={t('Select Tutor')} // Add the translated placeholder
                   isSearchable
                   isClearable
                 />
@@ -497,6 +513,7 @@ const Tasks = () => {
                   options={pendingTutorsOptions}
                   value={selectedPendingTutor}
                   onChange={setSelectedPendingTutor}
+                  placeholder={t('Select Pending Tutor')} // Add the translated placeholder
                   isSearchable
                   isClearable
                 />
@@ -516,6 +533,7 @@ const Tasks = () => {
                   value={selectedTaskType}
                   onChange={setSelectedTaskType}
                   isSearchable
+                  placeholder={t('Select Task Type')} // Add the translated placeholder
                   styles={{
                     control: (base) => ({
                       ...base,
@@ -539,6 +557,7 @@ const Tasks = () => {
                   options={staffOptions}
                   value={selectedStaff}
                   onChange={setSelectedStaff}
+                  placeholder={t('Select Assignee')} // Add the translated placeholder
                   isSearchable
                   styles={{
                     control: (base) => ({
@@ -554,6 +573,7 @@ const Tasks = () => {
                   options={childrenOptions}
                   value={selectedChild}
                   onChange={setSelectedChild}
+                  placeholder={t('Select Child')} // Add the translated placeholder
                   isSearchable
                   isClearable
                 />
@@ -563,6 +583,7 @@ const Tasks = () => {
                   options={tutorsOptions}
                   value={selectedTutor}
                   onChange={setSelectedTutor}
+                  placeholder={t('Select Tutor')} // Add the translated placeholder
                   isSearchable
                   isClearable
                 />
@@ -572,6 +593,7 @@ const Tasks = () => {
                   options={pendingTutorsOptions}
                   value={selectedPendingTutor}
                   onChange={setSelectedPendingTutor}
+                  placeholder={t('Select Pending Tutor')} // Add the translated placeholder
                   isSearchable
                   isClearable
                 />
