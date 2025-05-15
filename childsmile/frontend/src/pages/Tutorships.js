@@ -259,15 +259,17 @@ const Tutorships = () => {
       });
   };
 
-  const sortedTutorships = [...tutorships].sort((a, b) => {
-    const dateA = new Date(a.created_date);
-    const dateB = new Date(b.created_date);
+  const parseDate = (dateString) => {
+    if (!dateString) return new Date(0); // Handle missing dates
+    const [day, month, year] = dateString.split('/'); // Split the date string
+    return new Date(`${year}-${month}-${day}`); // Convert to a valid Date object
+  };
 
-    if (sortOrder === 'asc') {
-      return dateA - dateB; // Ascending order
-    } else {
-      return dateB - dateA; // Descending order
-    }
+  // Sort the tutorships by created_date
+  const sortedTutorships = [...tutorships].sort((a, b) => {
+    const dateA = parseDate(a.created_date); // Parse the date
+    const dateB = parseDate(b.created_date); // Parse the date
+    return sortOrder === 'asc' ? dateA - dateB : dateB - dateA; // Ascending or descending order
   });
 
   // Paginate the sorted tutorships
