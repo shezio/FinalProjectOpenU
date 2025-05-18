@@ -83,7 +83,8 @@ export const exportFamiliesTutorshipChartToPDF = async (chartRef, stats, t) => {
   ];
 
 
-  const legendX = canvas.width + 40;
+  const legendX = canvas.width - 5;
+  // have a legendX lefter for percent
   let legendY = 80;
   pdf.setFontSize(24);
 
@@ -106,6 +107,7 @@ export const exportFamiliesTutorshipChartToPDF = async (chartRef, stats, t) => {
       legendY -= 20; // remove 20 from Y before
       pdf.text(item.percent, legendX, legendY);
       legendY += 40; // extra space after each item
+      // move a bit left
     }
   });
 
@@ -199,7 +201,7 @@ export const exportPendingTutorsChartToPDF = async (chartRef, stats, t) => {
     }
   ];
 
-  const legendX = canvas.width + 40;
+  const legendX = canvas.width - 5;
   let legendY = 80;
   pdf.setFontSize(24);
 
