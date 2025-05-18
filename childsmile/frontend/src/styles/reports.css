@@ -648,7 +648,7 @@
     /* Add padding */
     text-align: right;
     /* Align text to the right */
-    font-size: 20px;
+    font-size: 24px;
     /* Increase font size */
     color: #333;
     /* Dark text color */
@@ -843,4 +843,8 @@
     width: 200px;
     font-size: 20px;
     /* Adjust width as needed */
+}
+
+.popup-text {
+  font-size: 24px; /* Adjust the size as needed */
 }

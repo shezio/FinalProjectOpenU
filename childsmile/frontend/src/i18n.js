@@ -150,6 +150,7 @@ const resources = {
       "Refresh": "רענן",
       "Registration Date": "תאריך רישום",
       "Report generated successfully": "הדוח נוצר בהצלחה",
+      "Request failed with status code 406": "אינך יכול למחוק את המשתמש שלך",
       "Request failed with status code 400" : "נתונים לא תקינים בביצוע הפעולה - בדוק את הנתונים שהוזנו",
       "Request failed with status code 401": "אין לך הרשאות לביצוע פעולה זו",
       "Request failed with status code 403": "לא סופקו הרשאות לביצוע פעולה זו",
@@ -390,6 +391,7 @@ const resources = {
       'Select Tutor': 'בחר חונך',
       'Select Assignee': 'בחר למי להקצות את המשימה',
       'Select Pending Tutor': 'בחר מועמד לחונכות',
+      "Failed to delete staff member.": 'שגיאה במחיקת משתמש',
     }
   }
 };
