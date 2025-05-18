@@ -2903,3 +2903,35 @@ def create_staff_member(request):
     except Exception as e:
         print(f"DEBUG: An error occurred while creating a staff member: {str(e)}")
         return JsonResponse({"error": str(e)}, status=500)
+
+@csrf_exempt
+@api_view(["GET"])
+def families_tutorships_stats(request):
+    """
+    Get statistics about families with tutorships and those waiting for one.
+    """
+    user_id = request.session.get("user_id")
+    if not user_id:
+        return JsonResponse(
+            {"detail": "Authentication credentials were not provided."}, status=403
+        )
+
+    # Check if the user has VIEW permission on the "children" resource
+    if not has_permission(request, "children", "VIEW"):
+        return JsonResponse(
+            {"error": "You do not have permission to view this report."}, status=401
+        )
+
+    # Families with tutorship
+    with_tutorship = Children.objects.filter(tutorships__isnull=False).distinct().count()
+    # Families waiting (adjust status as needed)
+    waiting_statuses = [
+        "למצוא_חונך",
+        "למצוא_חונך_אין_באיזור_שלו",
+        "למצוא_חונך_בעדיפות_גבוה",
+    ]
+    waiting = Children.objects.filter(tutoring_status__in=waiting_statuses).count()
+    return JsonResponse({
+        "with_tutorship": with_tutorship,
+        "waiting": waiting,
+    })
