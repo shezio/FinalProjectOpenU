@@ -592,7 +592,7 @@ export const exportVolunteerFeedbackToExcel = (feedbacks, t) => {
   const rows = selectedFeedbacks.map(feedback => [
     feedback.volunteer_name,
     feedback.event_date,
-    feedback["feedback filled at"],
+    feedback.feedback_filled_at,
     feedback.description,
     feedback.exceptional_events,
     feedback.anything_else,
@@ -648,7 +648,7 @@ export const exportVolunteerFeedbackToPDF = (feedbacks, t) => {
   const rows = selectedFeedbacks.map(feedback => [
     feedback.volunteer_name,
     feedback.event_date,
-    feedback["feedback_filled_at"],
+    feedback.feedback_filled_at,
     feedback.description || "", // Handle null or undefined values
     feedback.exceptional_events || "",
     feedback.anything_else || "",
@@ -716,7 +716,7 @@ export const exportTutorFeedbackToExcel = (feedbacks, t) => {
     feedback.is_it_your_tutee ? t("Yes") : t("No"),
     feedback.is_first_visit ? t("Yes") : t("No"),
     feedback.event_date,
-    feedback["feedback_filled_at"],
+    feedback.feedback_filled_at,
     feedback.description,
     feedback.exceptional_events,
     feedback.anything_else,
@@ -792,7 +792,7 @@ export const exportTutorFeedbackToPDF = (feedbacks, t) => {
     feedback.anything_else || "",
     feedback.exceptional_events || "",
     feedback.description || "",
-    reverseText(feedback["feedback_filled_at"]),
+    reverseText(feedback.feedback_filled_at),
     reverseText(feedback.event_date),
     feedback.is_first_visit ? t("Yes") : t("No"),
     feedback.is_it_your_tutee ? t("Yes") : t("No"),

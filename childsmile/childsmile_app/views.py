@@ -2736,6 +2736,12 @@ def delete_staff_member(request, staff_id):
             status=401,
         )
 
+    # check if the user tries to delete himself
+    if staff_id == user_id:
+        return JsonResponse(
+            {"error": "You cannot delete yourself."},
+            status=406,
+        )
     try:
         # Fetch the existing staff record
         try:
