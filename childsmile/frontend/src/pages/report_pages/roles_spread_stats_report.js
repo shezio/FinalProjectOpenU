@@ -125,7 +125,7 @@ const RolesSpreadReport = () => {
           <div className="roles-spread-graph-container" ref={chartRef}>
             <Pie
               data={chartData}
-              width={600}
+              width={1000}
               height={600}
               options={{
                 maintainAspectRatio: false,
@@ -135,7 +135,7 @@ const RolesSpreadReport = () => {
                     position: "bottom",
                     labels: {
                       font: {
-                        size: 20,
+                        size: 24,
                         family: "Rubik",
                         weight: "bold",
                       },
@@ -143,7 +143,7 @@ const RolesSpreadReport = () => {
                   },
                   tooltip: {
                     bodyFont: {
-                      size: 18,
+                      size: 24,
                       family: "Rubik",
                       weight: "bold",
                     },
