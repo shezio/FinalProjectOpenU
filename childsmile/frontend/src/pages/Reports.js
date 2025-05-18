@@ -18,6 +18,7 @@ const Reports = () => {
     possible_tutorship_matches_report: { name: 'דוח התאמות חניך חונך אפשריות', path: '/reports/possible_tutorship_matches_report' },
     volunteer_feedback_report: { name: 'דוח משוב מתנדבים', path: '/reports/volunteer-feedback' },
     tutor_feedback_report: { name: 'דוח משוב חונכים', path: '/reports/tutor-feedback' },
+    families_tutorship_stats_report: { name: 'דוח התפלגות משפחות ממתינות לחונכות מכלל המשפחות', path: '/reports/families_tutorship_stats_report' },
   };
 
   return (

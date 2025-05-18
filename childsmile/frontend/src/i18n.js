@@ -392,6 +392,16 @@ const resources = {
       'Select Assignee': 'בחר למי להקצות את המשימה',
       'Select Pending Tutor': 'בחר מועמד לחונכות',
       "Failed to delete staff member.": 'שגיאה במחיקת משתמש',
+      "Failed to update staff member.": 'שגיאה בעדכון משתמש',     "Distribution of Families (Tutorship vs Waiting) Report": "דוח התפלגות משפחות ממתינות לחונכות מכלל המשפחות",
+      "Waiting": "ממתינות",
+      "With Tutorship": "עם חונכות פעילה",
+      "Families Tutorship Stats Report":"דוח התפלגות משפחות ממתינות לחונכות מכלל המשפחות",
+      "families_tutorship_stats_chart.pdf": "דוח התפלגות משפחות ממתינות לחונכות מכלל המשפחות.pdf",
+      "Tooltip Details": "פרטי טולטיפ",
+      "Percentage out of total families: ": "אחוז מתוך כלל המשפחות: ",
+      "total: ": "סך הכל: ",
+      "Total Number of Families: ": "מספר משפחות כולל: ",
+
     }
   }
 };
