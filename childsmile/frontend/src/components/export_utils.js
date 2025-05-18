@@ -42,7 +42,7 @@ export const exportFamiliesTutorshipChartToPDF = async (chartRef, stats, t) => {
   // Title
   const title = reverseText(t("Distribution of Families (Tutorship vs Waiting) Report"));
   const isHebrew = /[\u0590-\u05FF]/.test(title);
-  pdf.setFontSize(18);
+  pdf.setFontSize(24);
   pdf.setTextColor(0, 0, 0);
   if (isHebrew) {
     pdf.text(title, canvas.width - 40, 30, { align: "right" });
@@ -72,7 +72,7 @@ export const exportFamiliesTutorshipChartToPDF = async (chartRef, stats, t) => {
       color: "#4caf50",
       label: reverseText(t("With Tutorship")),
       value: reverseText(stats.with_tutorship.toString()) + reverseText(t("total: ")),
-      percent: "%" + reverseText(((stats.with_tutorship / total) * 100).toFixed(1)) +  reverseText(t("Percentage out of total families: "))
+      percent: "%" + reverseText(((stats.with_tutorship / total) * 100).toFixed(1)) + reverseText(t("Percentage out of total families: "))
     },
     {
       color: "#f44336",
@@ -85,7 +85,7 @@ export const exportFamiliesTutorshipChartToPDF = async (chartRef, stats, t) => {
 
   const legendX = canvas.width + 40;
   let legendY = 80;
-  pdf.setFontSize(14);
+  pdf.setFontSize(24);
 
   legendItems.forEach((item, idx) => {
     const [r, g, b] = hexToRgb(item.color);
@@ -112,7 +112,7 @@ export const exportFamiliesTutorshipChartToPDF = async (chartRef, stats, t) => {
   // Tooltips (if provided)
   if (stats.tooltips && stats.tooltips.length > 0) {
     pdf.setTextColor(0, 0, 0);
-    pdf.setFontSize(14);
+    pdf.setFontSize(24);
     const tooltipTitle = isHebrew ? reverseText(t("Tooltip Details")) : t("Tooltip Details");
     pdf.text(tooltipTitle, 40, canvas.height + 80);
 
@@ -126,7 +126,166 @@ export const exportFamiliesTutorshipChartToPDF = async (chartRef, stats, t) => {
   pdf.save(t("families_tutorship_stats_chart.pdf"));
 };
 
+/**
+ * Exports the pending tutors chart to PDF, with a custom legend.
+ * @param {object} chartRef - React ref to the chart container DOM node
+ * @param {object} stats - { pending_tutors, total_tutors }
+ * @param {function} t - translation function
+ */
+export const exportPendingTutorsChartToPDF = async (chartRef, stats, t) => {
+  if (!chartRef.current) return;
 
+  const canvas = await html2canvas(chartRef.current, { backgroundColor: "#fff" });
+  const imgData = canvas.toDataURL("image/png");
+
+  const pdf = new jsPDF({
+    orientation: "landscape",
+    unit: "px",
+    format: [canvas.width + 250, canvas.height + 180]
+  });
+
+  // Register font
+  pdf.addFileToVFS('Alef-Bold.ttf', AlefBold);
+  pdf.addFont('Alef-Bold.ttf', 'Alef', 'bold');
+  pdf.setFont('Alef', 'bold');
+
+  // Add logo
+  pdf.addImage(logo, 'PNG', 20, 5, 80, 60);
+
+  // Title
+  const title = reverseText(t("Pending Tutors vs All Tutors Report"));
+  const isHebrew = /[\u0590-\u05FF]/.test(title);
+  pdf.setFontSize(24);
+  pdf.setTextColor(0, 0, 0);
+  if (isHebrew) {
+    pdf.text(title, canvas.width - 40, 30, { align: "right" });
+  } else {
+    pdf.text(title, 100, 30);
+  }
+
+  // Chart image
+  const scale = 0.7;
+  const chartWidth = canvas.width * scale;
+  const chartHeight = canvas.height * scale;
+  const chartX = 0;
+  const chartY = 60;
+
+  pdf.addImage(imgData, "PNG", chartX, chartY, chartWidth, chartHeight);
+
+  const total = parseInt(stats.pending_tutors) + parseInt(stats.total_tutors);
+  console.log("Total: ", total);
+  console.log("Pending Tutors: ", stats.pending_tutors);
+  console.log("Active Tutors: ", stats.total_tutors);
+
+  // Legend on the right
+  const legendItems = [
+    {
+      color: "#2196f3",
+      label: "",
+      value: reverseText(total.toString()) + reverseText(t("Total Number of Tutors: ")),
+      percent: ""
+    },
+    {
+      color: "#f44336",
+      label: reverseText(t("Pending Tutors")),
+      value: reverseText(stats.pending_tutors.toString()) + reverseText(t("total: ")),
+      percent: "%" + reverseText(((stats.pending_tutors / total) * 100).toFixed(1)) + reverseText(t(" Percentage of all tutors: "))
+    },
+    {
+      color: "#4caf50",
+      label: reverseText(t("Active Tutors")),
+      value: reverseText((stats.total_tutors).toString()) + reverseText(t("total: ")),
+      percent: "%" + reverseText(((stats.total_tutors / total) * 100).toFixed(1)) + reverseText(t(" Percentage of all tutors: "))
+    }
+  ];
+
+  const legendX = canvas.width + 40;
+  let legendY = 80;
+  pdf.setFontSize(24);
+
+  legendItems.forEach((item) => {
+    const [r, g, b] = hexToRgb(item.color);
+    pdf.setTextColor(r, g, b);
+    pdf.text(item.label, legendX, legendY);
+    legendY += 20;
+    pdf.text(item.value, legendX, legendY);
+    legendY += 20;
+    pdf.text(item.percent, legendX, legendY);
+    legendY += 40;
+  });
+
+  pdf.save(t("pending_tutors_stats_chart.pdf"));
+};
+
+/**
+ * Exports the roles spread chart to PDF, with a custom legend.
+ * @param {object} chartRef - React ref to the chart container DOM node
+ * @param {array} roles - [{name, count}]
+ * @param {function} t - translation function
+ */
+export const exportRolesSpreadChartToPDF = async (chartRef, roles, t) => {
+  if (!chartRef.current) return;
+
+  const chartColors = [
+    "#1f77b4", // Blue
+    "#ff7f0e", // Orange
+    "#2ca02c", // Green
+    "#d62728", // Red
+    "#9467bd", // Purple
+    "#8c564b", // Brown
+    "#e377c2", // Pink
+    "#7f7f7f", // Gray
+    "#bcbd22", // Olive
+    "#17becf"  // Teal
+  ];
+
+  const canvas = await html2canvas(chartRef.current, { backgroundColor: "#fff" });
+  const imgData = canvas.toDataURL("image/png");
+
+  const pdf = new jsPDF({
+    orientation: "landscape",
+    unit: "px",
+    format: [canvas.width + 250, canvas.height + 180]
+  });
+
+  pdf.addFileToVFS('Alef-Bold.ttf', AlefBold);
+  pdf.addFont('Alef-Bold.ttf', 'Alef', 'bold');
+  pdf.setFont('Alef', 'bold');
+  pdf.addImage(logo, 'PNG', 20, 5, 80, 60);
+
+  const title = reverseText(t("Roles Spread Report"));
+  const isHebrew = /[\u0590-\u05FF]/.test(title);
+  pdf.setFontSize(32);
+  pdf.setTextColor(0, 0, 0);
+  if (isHebrew) {
+    pdf.text(title, canvas.width - 40, 30, { align: "right" });
+  } else {
+    pdf.text(title, 100, 30);
+  }
+
+  const scale = 0.7;
+  const chartWidth = canvas.width * scale;
+  const chartHeight = canvas.height * scale;
+  const chartX = 0;
+  const chartY = 60;
+
+  pdf.addImage(imgData, "PNG", chartX, chartY, chartWidth, chartHeight);
+
+  let legendX = canvas.width + 40;
+  let legendY = 80;
+  pdf.setFontSize(24);
+
+  roles.forEach((role, idx) => {
+    const [r, g, b] = hexToRgb(chartColors[idx % chartColors.length]);
+    pdf.setTextColor(r, g, b);
+    const label = isHebrew ? reverseText(t(role.name)) : t(role.name);
+    const value = reverseText(role.count.toString())
+    pdf.text(`${value}: ${label}`, legendX, legendY);
+    legendY += 30;
+  });
+
+  pdf.save(t("roles_spread_stats_chart.pdf"));
+};
 // Helper: convert hex color to RGB
 function hexToRgb(hex) {
   const bigint = parseInt(hex.slice(1), 16);

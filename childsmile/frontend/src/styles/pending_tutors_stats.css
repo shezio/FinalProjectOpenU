@@ -1,5 +1,4 @@
-/* Main container for the report */
-.families-waiting-report-main-content {
+.pending-tutors-report-main-content {
   min-height: 100vh;
   background: #f7f7fa;
   display: flex;
@@ -7,9 +6,9 @@
 }
 
 /* Page content area */
-.families-tutorship-stats-page-content {
+.pending-tutors-stats-page-content {
   flex: 1;
-  padding-top: 100px;
+  padding-top: 300px;
 }
 
 /* Container for the filter and actions */
@@ -32,7 +31,7 @@
 }
 
 /* Back to reports button container */
-.families-tutorship-stats-back-to-reports {
+.pending-tutors-stats-back-to-reports {
     display: flex;
     justify-content: flex-start;
     /* Align to the right */
@@ -42,7 +41,7 @@
     /* Slightly move it to the left from the edge */
 }
 
-.families-tutorship-stats-back-button {
+.pending-tutors-stats-back-button {
     background-color: #007bff;
     /* Blue background */
     color: white;
@@ -59,14 +58,14 @@
     /* Ensure proper alignment in RTL */
 }
 
-.families-tutorship-stats-back-button:hover {
+.pending-tutors-stats-back-button:hover {
     background-color: #0056b3;
     /* Darker blue on hover */
 }
 
 
 /* Graph container */
-.families-stats-graph-container {
+.pending-tutors-stats-graph-container {
   max-width: 600px;
   margin: 32px auto 0 auto;
   background: #fff;
@@ -76,7 +75,7 @@
   text-align: center;
 }
 
-.families-stats-graph-container h3 {
+.pending-tutors-stats-graph-container h3 {
   margin-bottom: 24px;
   font-size: 1.25rem;
   color: #333;

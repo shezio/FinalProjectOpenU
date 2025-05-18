@@ -63,6 +63,7 @@ from time import sleep
 from math import sin, cos, sqrt, atan2, radians, ceil
 import json
 import os
+from django.db.models import Count,F
 
 DISTANCES_FILE = os.path.join(os.path.dirname(__file__), "distances.json")
 LOCATIONS_FILE = os.path.join(os.path.dirname(__file__), "locations.json")
@@ -2935,3 +2936,63 @@ def families_tutorships_stats(request):
         "with_tutorship": with_tutorship,
         "waiting": waiting,
     })
+
+@csrf_exempt
+@api_view(["GET"])
+def pending_tutors_stats(request):
+    """
+    Get statistics about pending tutors vs all tutors.
+    """
+    user_id = request.session.get("user_id")
+    if not user_id:
+        return JsonResponse(
+            {"detail": "Authentication credentials were not provided."}, status=403
+        )
+
+    # Check if the user has VIEW permission on the "tutors" resource
+    if not has_permission(request, "tutors", "VIEW") or not has_permission(request, "pending_tutor", "VIEW"):
+        return JsonResponse(
+            {"error": "You do not have permission to view this report."}, status=401
+        )
+
+    total_tutors = Tutors.objects.count()
+    pending_tutors = Pending_Tutor.objects.count()
+
+    percent_pending = (
+        (pending_tutors / total_tutors * 100) if total_tutors > 0 else 0
+    )
+
+    return JsonResponse({
+        "total_tutors": total_tutors,
+        "pending_tutors": pending_tutors,
+        "percent_pending": round(percent_pending, 2),
+    })
+
+
+
+@csrf_exempt
+@api_view(["GET"])
+def roles_spread_stats(request):
+    """
+    Get count of staff members per role.
+    """
+    user_id = request.session.get("user_id")
+    if not user_id:
+        return JsonResponse(
+            {"detail": "Authentication credentials were not provided."}, status=403
+        )
+
+    # Allow only if user is admin
+    user = Staff.objects.get(staff_id=user_id)
+    if not is_admin(user):
+        return JsonResponse(
+            {"error": "You do not have permission to view this report."}, status=401
+        )
+
+    # Count staff per role using the correct related_name 'staff_members'
+    role_counts = (
+        Role.objects.annotate(count=Count('staff_members'))
+        .values(name=F('role_name'), count=F('count'))
+    )
+
+    return JsonResponse({"roles": list(role_counts)})
