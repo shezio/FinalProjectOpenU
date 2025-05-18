@@ -5,6 +5,7 @@ import '../styles/common.css';
 import '../styles/reports.css'; // Import specific styles for the Reports page
 import { hasViewPermissionForReports } from '../components/utils'; // Import utility functions for fetching data
 import { useNavigate } from 'react-router-dom';
+import RolesSpreadReport from './report_pages/roles_spread_stats_report';
 
 const Reports = () => {
   const navigate = useNavigate();
@@ -18,7 +19,9 @@ const Reports = () => {
     possible_tutorship_matches_report: { name: 'דוח התאמות חניך חונך אפשריות', path: '/reports/possible_tutorship_matches_report' },
     volunteer_feedback_report: { name: 'דוח משוב מתנדבים', path: '/reports/volunteer-feedback' },
     tutor_feedback_report: { name: 'דוח משוב חונכים', path: '/reports/tutor-feedback' },
-    families_tutorship_stats_report: { name: 'דוח התפלגות משפחות ממתינות לחונכות מכלל המשפחות', path: '/reports/families_tutorship_stats_report' },
+    families_tutorship_stats_report: { name: 'דוח התפלגות משפחות ממתינות לחונכות', path: '/reports/families_tutorship_stats_report' },
+    pending_tutors_stats_report: { name: 'דוח התפלגות חונכים ממתינים לראיון', path: '/reports/pending_tutors_stats_report' },
+    roles_spread_stats_report: { name: 'דוח התפלגות הרשאות', path: '/reports/roles_spread_stats_report' },
   };
 
   return (

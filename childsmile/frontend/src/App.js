@@ -15,6 +15,8 @@ import PossibleTutorshipMatchesReport from './pages/report_pages/possible_tutors
 import VolunteerFeedbackReport from './pages/report_pages/volunteer_feedback_report'; // Import the Volunteer Feedback Report component
 import TutorFeedbackReport from './pages/report_pages/tutor_feedback_report'; // Import the Tutor Feedback Report component
 import FamiliesTutorshipStatsReport from './pages/report_pages/families_tutorship_stats_report'; // Import the Families Tutorship Stats Report component
+import PendingTutorsStatsReport from './pages/report_pages/pending_tutors_stats_report'; // Import the Pending Tutors Stats Report component
+import RolesSpreadStatsReport from './pages/report_pages/roles_spread_stats_report'; // Import the Roles Spread Stats Report component
 import Registration from './pages/Registration'; // Import the Registration component
 
 /*import these routes respectively to .pages
@@ -49,8 +51,9 @@ const App = () => {
       <Route path="/reports/volunteer-feedback" element={<VolunteerFeedbackReport />} /> {/* Add Volunteer Feedback Report route */}
       <Route path="/reports/tutor-feedback" element={<TutorFeedbackReport />} /> {/* Add Tutor Feedback Report route */}
       <Route path="/reports/families_tutorship_stats_report" element={<FamiliesTutorshipStatsReport />} /> {/* Add Families Tutorship Stats Report route */}
-      {/* Add other routes as needed */}
-      {/* Registration route */}
+      <Route path="/reports/pending_tutors_stats_report" element={<PendingTutorsStatsReport />} /> {/* Add Pending Tutors Stats Report route */}
+      <Route path="/reports/roles_spread_stats_report" element={<RolesSpreadStatsReport />} /> {/* Add Roles Spread Stats Report route */}
+      {/* Add the Registration route */}
       <Route path="/register" element={<Registration />} />
     </Routes>
   );

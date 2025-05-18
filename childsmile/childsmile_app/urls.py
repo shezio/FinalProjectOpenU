@@ -37,6 +37,8 @@ from .views import (
     create_staff_member,
     update_tutorship,
     families_tutorships_stats,
+    pending_tutors_stats,
+    roles_spread_stats,
 )
 
 from .unused_views import (
@@ -218,5 +220,15 @@ urlpatterns = [
         "api/families_tutorships_stats/",
         families_tutorships_stats,
         name="families_tutorships_stats",
+    ),
+    path(
+        "api/pending_tutors_stats/",
+        pending_tutors_stats,
+        name="pending_tutors_stats",
+    ),
+    path(
+        "api/roles_spread_stats/",
+        roles_spread_stats,
+        name="roles_spread_stats",
     ),
 ]

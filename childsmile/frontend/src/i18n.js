@@ -395,12 +395,21 @@ const resources = {
       "Failed to update staff member.": 'שגיאה בעדכון משתמש',     "Distribution of Families (Tutorship vs Waiting) Report": "דוח התפלגות משפחות ממתינות לחונכות מכלל המשפחות",
       "Waiting": "ממתינות",
       "With Tutorship": "עם חונכות פעילה",
-      "Families Tutorship Stats Report":"דוח התפלגות משפחות ממתינות לחונכות מכלל המשפחות",
-      "families_tutorship_stats_chart.pdf": "דוח התפלגות משפחות ממתינות לחונכות מכלל המשפחות.pdf",
+      "Families Tutorship Stats Report":"דוח התפלגות משפחות ממתינות לחונכות",
+      "families_tutorship_stats_chart.pdf": "דוח התפלגות משפחות ממתינות לחונכות.pdf",
       "Tooltip Details": "פרטי טולטיפ",
-      "Percentage out of total families: ": "אחוז מתוך כלל המשפחות: ",
+      "Percentage out of total families: ": "אחוז מתוך כלל המשפחות:",
       "total: ": "סך הכל: ",
-      "Total Number of Families: ": "מספר משפחות כולל: ",
+      "Total Number of Families: ": "מספר משפחות כולל:",
+      "Pending Tutors Stats Report": "דוח התפלגות ממתינים לראיון",
+      "Pending Tutors vs All Tutors Report": "דוח התפלגות ממתינים לראיון",
+      " Percentage of all tutors: ": "אחוז מכלל החונכים:",
+      "Total Number of Tutors: ": "מספר חונכים כולל:",
+      "pending_tutors_stats_chart.pdf": "דוח התפלגות ממתינים לראיון מכלל החונכים.pdf",
+      "Active Tutors": "חונכים פעילים",
+      "Pending Tutors": "חונכים ממתינים לראיון",
+      "Roles Spread Report": "דוח התפלגות הרשאות",
+      "roles_spread_stats_chart.pdf": "דוח התפלגות הרשאות.pdf"
 
     }
   }
