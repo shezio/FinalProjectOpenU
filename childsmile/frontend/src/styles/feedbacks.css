@@ -1,0 +1,843 @@
+/* Feedbacks.css */
+.feedbacks-main-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    /* Center the content vertically */
+    flex-grow: 1;
+    /* Allow it to take up available space */
+    margin-top: 100px;
+    /* Add some spacing below the fixed header */
+}
+
+
+@media (max-width: 2400px) {
+
+    .feedbacks-container {
+        gap: 90px;
+        margin-right: 200px;
+    }
+}
+
+.tutor-feedbacks-main-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    /* Center the content vertically */
+    flex-grow: 1;
+    /* Allow it to take up available space */
+    margin-top: 100px;
+    /* Add some spacing below the fixed header */
+    width: 90%;
+    padding-right: 250px;
+}
+
+.volunteer-feedbacks-main-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    /* Center the content vertically */
+    flex-grow: 1;
+    /* Allow it to take up available space */
+    margin-top: 100px;
+    /* Add some spacing below the fixed header */
+    width: 90%;
+    padding-right: 250px;
+}
+
+.feedbacks-page {
+    padding: 20px;
+    text-align: center;
+}
+
+.feedback-card {
+    width: 800px;
+    height: 300px;
+    background-color: #4CAF50;
+    color: white;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    flex: 1 1 calc(25% - 1rem);
+    /* Ensure cards take up 25% of the row width */
+    max-width: 25%;
+    /* Prevent cards from exceeding 25% of the row width */
+    box-sizing: border-box;
+    /* Include padding and border in width calculation */
+}
+
+.feedback-card:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    /* hover marker should be arrow */
+}
+
+.feedbacks-row {
+    display: flex;
+    justify-content: flex-start;
+    /* Align items to the left */
+    gap: 1rem;
+    /* Add spacing between cards */
+    margin-bottom: 1.5rem;
+    /* Add spacing between rows */
+}
+
+.feedback-card h2 {
+    font-size: 56px;
+    text-align: center;
+}
+
+/* Parent container for reports */
+.feedbacks-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 300px;
+    /* Space between reports */
+    padding-right: 50px;
+    /* Avoid sidebar overlap */
+    justify-content: space-between;
+
+    /* Align reports to the left */
+    /* Enable vertical scrolling if needed */
+    width: 1500px;
+}
+
+/* Scrollbar styles for feedbacks-container */
+.feedbacks-container::-webkit-scrollbar {
+    width: 0px;
+    /* Narrower scrollbar */
+}
+
+.feedbacks-container::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.feedbacks-container::-webkit-scrollbar-thumb {
+    background-color: rgba(0, 0, 0, 0.5);
+    border-radius: 10px;
+    transition: background-color 0.3s ease;
+}
+
+.feedbacks-container:hover::-webkit-scrollbar-thumb {
+    background-color: rgba(0, 0, 0, 0.8);
+}
+
+/* Individual feedback card */
+.feedbacks-container .feedback {
+    width: 300px;
+    /* Fixed width for consistency */
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    cursor: pointer;
+    /* Pointer cursor for interactivity */
+    transition: transform 0.2s ease-in-out;
+}
+
+.feedbacks-container .feedback:active {
+    cursor: grabbing;
+}
+
+.feedbacks-container .feedback.dragging {
+    transform: scale(1.05);
+    /* Slightly enlarge when dragging */
+    opacity: 0.8;
+}
+
+/* feedback title */
+.feedbacks-container .feedback h2 {
+    margin: 0;
+}
+
+/* feedback description */
+.feedbacks-container .feedback p {
+    margin: 5px 0;
+}
+
+/* Actions container for buttons */
+.feedbacks-container .feedback .actions {
+    margin-top: 10px;
+    display: flex;
+    /* Use flexbox for button layout */
+    gap: 15px;
+    /* Space between buttons */
+    flex-wrap: wrap;
+    /* Allow buttons to wrap if needed */
+    justify-content: flex-start;
+    /* Align buttons to the left */
+}
+
+/* Buttons inside actions */
+.feedbacks-container .feedback .actions button {
+    background-color: #4CAF50;
+    /* Green background */
+    color: white;
+    /* White text */
+    padding: 10px 15px;
+    /* Increase padding for larger buttons */
+    border: none;
+    /* Remove border */
+    border-radius: 8px;
+    /* Rounded corners */
+    cursor: pointer;
+    /* Pointer cursor on hover */
+    font-size: 1em;
+    /* Increase font size */
+    width: auto;
+    /* Allow the button to adjust its width based on content */
+    min-width: 120px;
+    /* Set a minimum width for consistency */
+    text-align: center;
+    /* Center text */
+    transition: transform 0.2s ease, background-color 0.3s ease;
+    /* Smooth hover effect */
+}
+
+/* Hover effect for buttons */
+.feedbacks-container .feedback .actions button:hover {
+    background-color: #45a049;
+    /* Slightly darker green on hover */
+    transform: scale(1.05);
+    /* Slightly enlarge on hover */
+}
+
+.no-permission {
+    text-align: center;
+    margin-top: 500px;
+}
+
+.no-permission h2 {
+    font-size: 72px;
+    color: #ff0000;
+}
+
+.feedbacks-page-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    /* Center the content vertically */
+    flex-grow: 1;
+    /* Allow it to take up available space */
+    margin-top: 300px;
+    /* Add some spacing below the fixed header */
+    width: 100%;
+}
+
+/* Scoped styles for the grid container in ActiveTutorsReport */
+.feedbacks-page-content .feedbacks-grid-container {
+    width: calc(100% - 100px);
+    /* Adjust width to leave space for the sidebar */
+    margin-left: 900px;
+    /* Remove unnecessary left margin */
+    height: calc(100vh - 400px);
+    top: 50px;
+    /* Adjust height based on available space */
+    padding: 20px;
+    /* Add padding inside the grid container */
+    direction: rtl;
+    /* Align the grid container to the right */
+    max-width: 100%;
+    /* Ensure the grid does not exceed the visible area */
+}
+
+/* Styles for medium screens (e.g., laptops) */
+@media (max-width: 2400px) {
+    .feedbacks-page-content .feedbacks-grid-container {
+        width: calc(100% - 10px);
+        /* Reduce width for smaller screens */
+        margin-left: 200px;
+        /* Adjust margin for smaller screens */
+        /* max zoom out should be 0.8 */
+        transform: scale(0.95);
+        /* Zoom out the grid */
+        transform-origin: top right;
+        /* Set the origin for scaling */
+    }
+}
+
+/* Style for the data grid */
+.feedbacks-page-content .feedbacks-data-grid {
+    width: 100%;
+    /* Ensure the table takes up the full width of its container */
+    border-collapse: collapse;
+    font-size: 30px;
+    /* Increase font size */
+    font-family: Arial, sans-serif;
+    /* Use a sans-serif font for better readability */
+    background-color: #fff;
+    /* White background for the table */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    /* Add a subtle shadow for depth */
+    border-radius: 8px;
+    /* Rounded corners for the table */
+    overflow: hidden;
+    /* Ensure rounded corners are visible */
+    max-height: 80vh;
+    /* Limit height to avoid overflow */
+    overflow-y: auto;
+    direction: rtl;
+    /* Align the grid to the right for right-to-left languages */
+}
+
+.feedbacks-page-content .feedbacks-data-grid th,
+.feedbacks-page-content .feedbacks-data-grid td {
+    border: 1px solid #ddd;
+    padding: 12px;
+    /* Increase padding */
+    text-align: right;
+    /* Align text to the right */
+    font-size: 30px;
+    /* Increase font size */
+    white-space: nowrap;
+    /* Prevent text from wrapping */
+    overflow: hidden;
+    /* Hide overflow if the text is too long */
+    text-overflow: ellipsis;
+    /* Add ellipsis for overflowing text */
+    word-wrap: break-word;
+    /* Allow text to wrap within cells */
+    white-space: normal;
+    /* Prevent text from overflowing */
+
+}
+
+.feedbacks-page-content .feedbacks-data-grid th {
+    background-color: #4CAF50;
+    /* Green header background */
+    color: white;
+    font-weight: bold;
+    font-size: 30px;
+}
+
+.feedbacks-page-content .feedbacks-data-grid td {
+    position: relative;
+    /* Ensure the cell does not block interaction */
+    z-index: 0;
+    /* Keep the cell behind the checkbox */
+    color: #333;
+}
+
+.feedbacks-page-content .no-data {
+    width: 100%;
+    /* Make it span the full width */
+    text-align: center;
+    /* Center the text */
+    font-size: 48px;
+    /* Adjust font size for better visibility */
+    font-weight: bold;
+    /* Make the text bold */
+    color: #555;
+    /* Use a neutral color */
+    /* no wrap */
+    white-space: nowrap;
+}
+
+/* Ensure the checkbox is clickable */
+.feedbacks-page-content .feedbacks-data-grid input[type="checkbox"] {
+    width: 20px;
+    /* Adjust checkbox size */
+    height: 20px;
+    /* Adjust checkbox size */
+    cursor: pointer;
+    /* Pointer cursor for checkboxes */
+    margin-right: 10px;
+    /* Space between checkbox and label */
+    position: relative;
+    /* Ensure the checkbox is positioned correctly */
+    z-index: 1;
+    /* Bring the checkbox to the front */
+}
+
+.feedbacks-page-content .feedbacks-data-grid label {
+    cursor: pointer;
+}
+
+.feedbacks-actions {
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.feedbacks-actions button {
+    margin-right: 10px;
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+
+.loader {
+    text-align: center;
+    font-size: 18px;
+    color: #333;
+    margin-top: 20px;
+}
+
+/* Style for the date inputs */
+.feedbacks-date-input {
+    padding: 10px;
+    font-size: 16px;
+    margin: 0 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+/* Style for the filter button */
+.feedbacks-filter-button {
+    background-color: #007bff;
+    color: white;
+    padding: 10px 20px;
+    font-size: 16px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-left: 10px;
+    font-size: 24px;
+}
+
+.feedbacks-filter-button:hover {
+    background-color: #0056b3;
+}
+
+/* Style for the refresh button */
+.feedbacks-refresh-button {
+    background-color:
+        /* light blue */
+        #2196f3;
+    color: white;
+    padding: 10px 20px;
+    font-size: 16px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-left: 30px;
+    font-size: 24px;
+}
+
+.feedbacks-refresh-button:hover {
+    background-color:
+        /* a darker blue */
+        #0b7dda;
+}
+
+
+/* Grid section */
+.feedbacks-grid-container {
+    flex: 2;
+    /* Take up 2 parts of the available space */
+    overflow-x: auto;
+    /* Allow horizontal scrolling if needed */
+    background-color: #fff;
+    /* White background for the grid */
+    border: 1px solid #ddd;
+    /* Border for clarity */
+    border-radius: 8px;
+    /* Rounded corners */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    /* Subtle shadow for depth */
+    padding: 20px;
+    /* Add padding inside the grid container */
+    max-height: 100%;
+    /* Ensure the grid doesn't overflow vertically */
+    /* overflow-y: auto; */
+    /* Enable vertical scrolling if needed */
+}
+
+
+
+/* Feedbacks data grid */
+.feedbacks-data-grid {
+    width: 100%;
+    /* Full width of the container */
+    border-collapse: collapse;
+    /* Remove gaps between table cells */
+    font-size: 30px;
+    /* Increase font size for readability */
+    font-family: Arial, sans-serif;
+    /* Use a sans-serif font for better readability */
+    background-color: #fff;
+    /* White background for the table */
+    border-radius: 8px;
+    /* Rounded corners for the table */
+    overflow: hidden;
+    /* Ensure rounded corners are visible */
+    direction: rtl;
+    /* Align the grid to the right for RTL languages */
+}
+
+/* Table headers */
+.feedbacks-data-grid th {
+    background-color: #4caf50;
+    /* Green header background */
+    color: white;
+    /* White text */
+    font-weight: bold;
+    /* Bold text */
+    font-size: 30px;
+    /* Increase font size */
+    text-align: right;
+    /* Align text to the right */
+    padding: 12px;
+    /* Add padding */
+    border: 1px solid #ddd;
+    /* Border for clarity */
+}
+
+/* Table cells */
+.feedbacks-data-grid td {
+    border: 1px solid #ddd;
+    /* Border for clarity */
+    padding: 12px;
+    /* Add padding */
+    text-align: right;
+    /* Align text to the right */
+    font-size: 24px;
+    /* Increase font size */
+    color: #333;
+    /* Dark text color */
+    white-space: nowrap;
+    /* Prevent text from wrapping */
+    overflow: hidden;
+    /* Hide overflow if the text is too long */
+    text-overflow: ellipsis;
+    /* Add ellipsis for overflowing text */
+}
+
+/* No data message */
+.feedbacks-grid-container .no-data {
+    width: 100%;
+    /* Make it span the full width */
+    text-align: center;
+    /* Center the text */
+    font-size: 48px;
+    /* Adjust font size for better visibility */
+    font-weight: bold;
+    /* Make the text bold */
+    color: #555;
+    /* Use a neutral color */
+}
+
+/* Checkbox styles */
+.feedbacks-data-grid input[type="checkbox"] {
+    width: 20px;
+    /* Adjust checkbox size */
+    height: 20px;
+    /* Adjust checkbox size */
+    cursor: pointer;
+    /* Pointer cursor for checkboxes */
+    margin-right: 10px;
+    /* Space between checkbox and label */
+    position: relative;
+    /* Ensure the checkbox is positioned correctly */
+    z-index: 1;
+    /* Bring the checkbox to the front */
+}
+
+.large-slider {
+    width: 400px;
+    /* Increase the width */
+    height: 10px;
+    /* Increase the height */
+    appearance: revert;
+    background: #ddd;
+    border-radius: 5px;
+    outline: none;
+}
+
+.large-slider::-webkit-slider-thumb {
+    appearance: none;
+    width: 20px;
+    /* Increase thumb size */
+    height: 20px;
+    background: #4caf50;
+    /* Green thumb */
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+.large-slider::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    background: #4caf50;
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+.back-to-feedbacks {
+    display: flex;
+    justify-content: flex-start;
+    /* Align to the right */
+    margin-right: 2px;
+    /* Slightly move it to the left from the edge */
+    margin-bottom: 20px;
+}
+
+@media (max-width: 2400px) {
+
+    .tutor-feedbacks-main-content .back-to-feedbacks,
+    .volunteer-feedbacks-main-content .back-to-feedbacks {
+        display: flex;
+        justify-content: flex-start;
+        /* Align to the right */
+        margin-top: 10px;
+        /* Add some spacing above */
+        margin-right: 172px;
+        /* Slightly move it to the left from the edge */
+    }
+}
+
+
+.feedbacks-back-button {
+    background-color: #007bff;
+    /* Blue background */
+    color: white;
+    /* White text */
+    border: none;
+    padding: 8px 16px;
+    border-radius: 5px;
+    font-size: 20px;
+    /* Increase font size */
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    direction: rtl;
+    z-index: 2;
+    /* Ensure proper alignment in RTL */
+}
+
+.feedbacks-back-button:hover {
+    background-color: #0056b3;
+    /* Darker blue on hover */
+}
+
+.feedbacks-wide-column {
+    width: 300px;
+    /* Adjust width as needed */
+}
+
+
+.feedbacks-filter-create-container {
+    display: flex;
+    justify-content: flex-end;
+    /* Align all buttons and dropdowns to the right */
+    align-items: center;
+    /* Vertically align items */
+    gap: 15px;
+    /* Reduce spacing between items */
+    position: fixed;
+    /* Fix the container in place */
+    top: 200px;
+    /* Stick to the top of the page */
+    right: 250px;
+    /* Align to the right side of the page */
+    font-size: 1em;
+    /* Ensure all fonts are 2em */
+    /* מסיר רווחים פנימיים בין הכפתורים */
+    padding: 10px 20px;
+    /* ניתן להתאים לפי הצורך */
+
+}
+
+/* Style the buttons and dropdowns */
+.feedbacks-actions .create-feedback button {
+    background-color: #4CAF50;
+    /* Green background */
+    color: white;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 24px;
+    /* Ensure font size is 2em */
+    margin-right: 20px;
+    /* Add space between the "Create Task" button and the others */
+}
+
+.feedbacks-actions .create-feedback button:hover {
+    background-color: #45a049;
+    /* Slightly darker green on hover */
+}
+
+
+.feedbacks-edit-button,
+.feedbacks-delete-button {
+    padding: 6px 12px;
+    margin-right: 5px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 24px;
+    margin-bottom: 12px;
+}
+
+.feedbacks-edit-button {
+    background-color: #2196f3;
+    color: white;
+}
+
+.feedbacks-edit-button:hover {
+    background-color: #0b7dda;
+}
+
+.feedbacks-delete-button {
+    background-color: #f44336;
+    color: white;
+}
+
+.feedbacks-delete-button:hover {
+    background-color: #da190b;
+}
+
+.feedbacks-modal {
+    background: white;
+    padding: 2rem;
+    border-radius: 8px;
+    width: 600px;
+    margin: auto;
+    margin-top: 200px;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    position: relative;
+    z-index: 1000;
+}
+
+/* Modal overlay */
+.feedbacks-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.feedbacks-modal-content {
+    background: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    width: 900px;
+    max-width: 90%;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    position: relative;
+    height: 85%;
+}
+
+.feedbacks-modal-content h2 {
+    margin: 0;
+    color: #4caf50;
+    font-size: 52px;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.feedbacks-modal-content p {
+    font-size: 24px;
+    margin-bottom: 20px;
+}
+
+.feedbacks-close {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: 24px;
+    cursor: pointer;
+}
+
+.feedbacks-textarea {
+    width: 90%;
+    height: 120px;
+    padding: 10px;
+    font-size: 24px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    resize: none;
+}
+
+.feedbacks-textarea-shrink {
+  height: 20px !important;
+}
+
+.feedbacks-modal-content-shrink {
+    height: 70% !important;
+}
+.feedbacks-form-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.feedbacks-form-actions {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+}
+
+.feedbacks-form-actions button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 24px;
+}
+
+.feedbacks-form-actions button:first-child {
+    background-color: #4caf50;
+    color: white;
+}
+
+.feedbacks-form-actions button:last-child {
+    background-color: #f44336;
+    color: white;
+}
+
+/* Form Row for Two-Column Layout */
+.feedbacks-form-row {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    align-items: center;
+    gap: 10px;
+}
+
+.feedbacks-form-row label,
+.feedbacks-form-row input,
+.feedbacks-form-row select {
+    font-size: 24px;
+    color: #333;
+}
+
+.feedbacks-filter-pair {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 10px;
+}
+
+.feedbacks-filter-pairs {
+    flex-direction: column;
+}

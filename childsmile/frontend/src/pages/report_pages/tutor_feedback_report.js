@@ -233,28 +233,28 @@ const TutorFeedbackReport = () => {
                         <td>{feedback.event_date}</td>
                         <td>{feedback["feedback_filled_at"]}</td>
                         <td>
-                          {feedback.description.split(" ").map((word, i) => (
+                          {(feedback.description || "").split(" ").map((word, i) => (
                             <React.Fragment key={i}>
                               {word} {(i + 1) % 3 === 0 && <br />}
                             </React.Fragment>
                           ))}
                         </td>
                         <td>
-                          {feedback.exceptional_events.split(" ").map((word, i) => (
+                          {(feedback.exceptional_events || "").split(" ").map((word, i) => (
                             <React.Fragment key={i}>
                               {word} {(i + 1) % 5 === 0 && <br />}
                             </React.Fragment>
                           ))}
                         </td>
                         <td>
-                          {feedback.anything_else.split(" ").map((word, i) => (
+                          {(feedback.anything_else || "").split(" ").map((word, i) => (
                             <React.Fragment key={i}>
                               {word} {(i + 1) % 5 === 0 && <br />}
                             </React.Fragment>
                           ))}
                         </td>
                         <td>
-                          {feedback.comments.split(" ").map((word, i) => (
+                          {(feedback.comments || "").split(" ").map((word, i) => (
                             <React.Fragment key={i}>
                               {word} {(i + 1) % 5 === 0 && <br />}
                             </React.Fragment>

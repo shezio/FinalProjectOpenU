@@ -156,6 +156,7 @@ const resources = {
       "Request failed with status code 403": "לא סופקו הרשאות לביצוע פעולה זו",
       "Request failed with status code 500": "שגיאה פנימית בשרת - אנא פנה לתמיכה",
       "Request failed with status code 404": "המשאב לא נמצא - אנא פנה לתמיכה",
+      "Current user was not found in active tutors, cannot create feedback": "המשתמש הנוכחי לא נמצא בחונכים פעילים, לא ניתן לייצר משוב",
       "Select": "בחר",
       "Select a date": "בחר תאריך",
       "Select a new status for the task": "בחר סטטוס חדש למשימה",
@@ -410,8 +411,27 @@ const resources = {
       "Active Tutors": "חונכים פעילים",
       "Pending Tutors": "חונכים ממתינים לראיון",
       "Roles Spread Report": "דוח התפלגות הרשאות",
-      "roles_spread_stats_chart.pdf": "דוח התפלגות הרשאות.pdf"
-
+      "roles_spread_stats_chart.pdf": "דוח התפלגות הרשאות.pdf",
+      "Feedbacks": "משובים",
+      "Tutor Feedbacks": "משובי חונכים",
+      "Volunteer Feedbacks": "משובי מתנדבים",
+      "Event Date From": "מתאריך אירוע",
+      "Event Date To": "עד תאריך אירוע",
+      "Feedback Fill Date From": "מתאריך מילוי משוב",
+      "Feedback Fill Date To": "עד תאריך מילוי משוב",
+      "Create Feedback": "צור משוב",
+      "Back to Feedbacks": "חזור למסך משובים",
+      "Select Tutee": "בחר חניך",
+      "Save Feedback": "שמור משוב",
+      "Tutor Name is required": "חובה למלא שם חונך",
+      "Tutee Name is required": "חובה למלא שם חניך",
+      "Event Date is required": "חובה למלא תאריך אירוע",
+      "Description is required": "חובה למלא תיאור",
+      "You do not have permission to view this page": "אין לך הרשאה לצפות בדף זה",
+      "Feedback created successfully": "המשוב נוצר בהצלחה",
+      "Feedback updated successfully": "המשוב עודכן בהצלחה",
+      "Feedback deleted successfully": "המשוב נמחק בהצלחה",
+      "Edit Feedback": "ערוך משוב"
     }
   }
 };

@@ -13,6 +13,22 @@ export const showErrorToast = (t, key, error) => {
   toast.error(messageToShow);
 };
 
+export const feedbackShowErrorToast = (t, key, error) => {
+  console.log('feedbackShowErrorToast called with:', t, key, error); // Debug log
+
+  // Extract the error message from the response or fallback to a generic error message
+  const errorMessage = error.response?.data?.detail || error.message;
+  // Special case: if the error is about the current user not being an active tutor, show only that message
+  if (key.includes("not found in active tutors") && key.includes("cannot create feedback")) {
+    toast.error(t(key));
+    return;
+  }
+
+  // Otherwise, show the combined message as before
+  const messageToShow = key ? `${t(key)} - ${t(errorMessage)}` : t(errorMessage);
+  toast.error(messageToShow);
+};
+
 export const showErrorApprovalToast = (t, error, roleName) => {
   console.log('showErrorApprovalToast called with:', t, error, roleName); // Debug log
 
