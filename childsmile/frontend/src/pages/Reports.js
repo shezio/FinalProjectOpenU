@@ -5,7 +5,6 @@ import '../styles/common.css';
 import '../styles/reports.css'; // Import specific styles for the Reports page
 import { hasViewPermissionForReports } from '../components/utils'; // Import utility functions for fetching data
 import { useNavigate } from 'react-router-dom';
-import RolesSpreadReport from './report_pages/roles_spread_stats_report';
 
 const Reports = () => {
   const navigate = useNavigate();

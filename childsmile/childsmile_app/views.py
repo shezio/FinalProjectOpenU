@@ -1580,9 +1580,9 @@ def create_volunteer_or_tutor(request):
         if missing_fields:
             raise ValueError(f"Missing required fields: {', '.join(missing_fields)}")
 
-        # validate ID to have 9 digits
-        if not (100000000 <= int(user_id) <= 999999999):
-            raise ValueError("ID must be a 9-digit number.")
+        # validate ID to have exactly 9 digits (including leading zeros)
+        if not (isinstance(user_id, str) and user_id.isdigit() and len(user_id) == 9):
+            raise ValueError("ID must be a 9-digit number (can include leading zeros).")
 
         # validate user_id to be unique
         if SignedUp.objects.filter(id=user_id).exists():
@@ -2025,7 +2025,7 @@ def update_family(request, child_id):
         family.marital_status = data.get("marital_status", family.marital_status)
 
         # print("DEBUG: Updating num_of_siblings...")
-        family.num_of_siblings = data.get("num_of_siblings", family.num_of_siblings)
+        family.num_of_siblings = data.get("num_of_siblings", family.num_ofsiblings)
 
         # print("DEBUG: Updating details_for_tutoring...")
         family.details_for_tutoring = data.get(
@@ -2304,6 +2304,7 @@ def get_tutorships(request):
             "id",
             "child__childfirstname",
             "child__childsurname",
+            "tutor__staff__staff_id",
             "tutor__staff__first_name",
             "tutor__staff__last_name",
             "created_date",
@@ -2318,6 +2319,7 @@ def get_tutorships(request):
                 "id": tutorship["id"],
                 "child_firstname": tutorship["child__childfirstname"],
                 "child_lastname": tutorship["child__childsurname"],
+                "tutor_staff_id": tutorship["tutor__staff__staff_id"],
                 "tutor_firstname": tutorship["tutor__staff__first_name"],
                 "tutor_lastname": tutorship["tutor__staff__last_name"],
                 "created_date": tutorship["created_date"].strftime("%d/%m/%Y"),
@@ -2446,6 +2448,21 @@ def update_tutorship(request, tutorship_id):
         tutorship.updated_at = datetime.datetime.now()  # Updated to use datetime now()
         tutorship.save()
 
+        # --- Add Tutor role if approval_counter becomes 2 ---
+        if tutorship.approval_counter == 2:
+            tutor_id = tutorship.tutor_id  # This is the id_id from Tutors (and SignedUp)
+            # Find the Tutors record
+            tutor = Tutors.objects.filter(id_id=tutor_id).first()
+            if tutor:
+                staff_member = tutor.staff  # ForeignKey to Staff
+                # Check if staff_member already has the Tutor role
+                tutor_role = Role.objects.filter(role_name="Tutor").first()
+                if tutor_role and tutor_role not in staff_member.roles.all():
+                    staff_member.roles.add(tutor_role)
+                    staff_member.save()
+                    print(f"DEBUG: Added 'Tutor' role to staff {staff_member.username}")
+
+
         return JsonResponse(
             {
                 "message": "Tutorship updated successfully",
@@ -2523,7 +2540,7 @@ def delete_tutorship(request, tutorship_id):
         try:
             tutorship = Tutorships.objects.get(id=tutorship_id)
         except Tutorships.DoesNotExist:
-            return JsonResponse({"error": "Tutorship not found."}, status=404)
+            return JsonResponse({"error": "Tutorship not found"}, status=404)
 
         # Delete the tutorship record
         tutorship.delete()
@@ -2996,3 +3013,221 @@ def roles_spread_stats(request):
     )
 
     return JsonResponse({"roles": list(role_counts)})
+
+@csrf_exempt
+@api_view(["POST"])
+def create_tutor_feedback(request):
+    """
+    Create a new tutor feedback record.
+    """
+    user_id = request.session.get("user_id")
+    if not user_id:
+        return JsonResponse(
+            {"detail": "Authentication credentials were not provided."}, status=403
+        )
+
+    # Check if the user has CREATE permission on the "tutor_feedback" resource
+    if not has_permission(request, "tutor_feedback", "CREATE"):
+        return JsonResponse(
+            {"error": "You do not have permission to create a tutor feedback."},
+            status=401,
+        )
+
+    try:
+        data = request.data  # Use request.data for JSON payloads
+
+        # Validate required fields
+        required_fields = ["event_date", "description", "tutee_name", "tutor_name"]
+        missing_fields = [
+            field for field in required_fields if not data.get(field, "").strip()
+        ]
+        if missing_fields:
+            return JsonResponse(
+                {
+                    "error": f"Missing or empty required fields: {', '.join(missing_fields)}"
+                },
+                status=400,
+            )
+
+        staff_filling_id = data.get("staff_id")
+        # Create a new tutor feedback record in the database
+        feedback = Feedback.objects.create(
+            timestamp=data.get("feedback_filled_at"),
+            event_date=make_aware(datetime.datetime.strptime(data.get("event_date"), "%Y-%m-%d")),
+            staff_id=staff_filling_id,
+            description=data.get("description"),
+            exceptional_events=data.get("exceptional_events") if data.get("exceptional_events") else None,
+            anything_else=data.get("anything_else") if data.get("anything_else") else None,
+            comments=data.get("comments") if data.get("comments") else None,
+        )
+
+        # Get the tutor's id_id from Tutors using the user_id (which is staff_id in Tutors)
+        print(f"DEBUG: User ID: {user_id}")  # Log the user ID
+        tutor = Tutors.objects.filter(staff_id=staff_filling_id).first()
+        print(f"DEBUG: Tutor found: {tutor}")  # Log the tutor found
+        if not tutor:
+            print(f"DEBUG: No tutor found for staff ID {staff_filling_id}")
+            return JsonResponse(
+                {"error": "No tutor found for the provided staff ID."}, status=404
+            )
+        
+        tutor_id_id = tutor.id_id
+
+        tutor_feedback = Tutor_Feedback.objects.create(
+            feedback=feedback,
+            tutee_name=data.get("tutee_name"),
+            tutor_name=data.get("tutor_name"),
+            tutor_id=tutor_id_id,
+            is_it_your_tutee=data.get("is_it_your_tutee"),
+            is_first_visit=data.get("is_first_visit"),
+        )
+
+        print(f"DEBUG: Tutor feedback created successfully with ID {feedback.feedback_id}")
+        return JsonResponse(
+            {
+                "message": "Tutor feedback created successfully",
+                "feedback_id": feedback.feedback_id,
+                "tutor_feedback_id": tutor_feedback.feedback_id,
+            },
+            status=201,
+        )
+    except Exception as e:
+        print(f"DEBUG: An error occurred while creating tutor feedback: {str(e)}")
+        return JsonResponse({"error": str(e)}, status=500)
+    
+@csrf_exempt
+@api_view(["PUT"])
+def update_tutor_feedback(request, feedback_id):
+    """
+    Update an existing tutor feedback record.
+    """
+    user_id = request.session.get("user_id")
+    if not user_id:
+        return JsonResponse(
+            {"detail": "Authentication credentials were not provided."}, status=403
+        )
+
+    # Check if the user has UPDATE permission on the "tutor_feedback" resource
+    if not has_permission(request, "tutor_feedback", "UPDATE"):
+        return JsonResponse(
+            {"error": "You do not have permission to update a tutor feedback."},
+            status=401,
+        )
+
+    try:
+        data = request.data  # Use request.data for JSON payloads
+
+        # Validate required fields
+        required_fields = ["event_date", "description", "tutee_name", "tutor_name"]
+        missing_fields = [
+            field for field in required_fields if not data.get(field, "").strip()
+        ]
+        if missing_fields:
+            return JsonResponse(
+                {
+                    "error": f"Missing or empty required fields: {', '.join(missing_fields)}"
+                },
+                status=400,
+            )
+
+        # Update the existing tutor feedback record in the database
+        feedback = Feedback.objects.filter(feedback_id=feedback_id).first()
+        if not feedback:
+            return JsonResponse(
+                {"error": "Tutor feedback not found."},
+                status=404,
+            )
+        staff_filling_id = data.get("staff_id")
+        feedback.timestamp = data.get("feedback_filled_at")
+        feedback.event_date = make_aware(datetime.datetime.strptime(data.get("event_date"), "%Y-%m-%d"))
+        feedback.staff_id = staff_filling_id
+        feedback.description = data.get("description")
+        feedback.exceptional_events = data.get("exceptional_events") if data.get("exceptional_events") else None
+        feedback.anything_else = data.get("anything_else") if data.get("anything_else") else None
+        feedback.comments = data.get("comments") if data.get("comments") else None
+        feedback.save()
+
+        # Get the tutor's id_id from Tutors using the user_id (which is staff_id in Tutors)
+        tutor = Tutors.objects.filter(staff_id=staff_filling_id).first()
+        print(f"DEBUG: Tutor found: {tutor}")  # Log the tutor found
+        if not tutor:
+            print(f"DEBUG: No tutor found for staff ID {staff_filling_id}")
+            return JsonResponse(
+                {"error": "No tutor found for the provided staff ID."}, status=404
+            )
+        tutor_id_id = tutor.id_id
+
+        tutor_feedback = Tutor_Feedback.objects.filter(feedback=feedback).first()
+        if not tutor_feedback:
+            return JsonResponse(
+                {"error": "Tutor feedback not found."},
+                status=404,
+            )
+        
+        tutor_feedback.tutee_name = data.get("tutee_name")
+        tutor_feedback.tutor_name = data.get("tutor_name")
+        tutor_feedback.tutor_id = tutor_id_id
+        tutor_feedback.is_it_your_tutee = data.get("is_it_your_tutee")
+        tutor_feedback.is_first_visit = data.get("is_first_visit")
+        tutor_feedback.save()
+
+        print(f"DEBUG: Tutor feedback updated successfully with ID {feedback.feedback_id}")
+        return JsonResponse(
+            {
+                "message": "Tutor feedback updated successfully",
+                "feedback_id": feedback.feedback_id,
+                "tutor_feedback_id": tutor_feedback.feedback_id,
+            },
+            status=200,
+        )
+    except Exception as e:
+        print(f"DEBUG: An error occurred while updating tutor feedback: {str(e)}")
+        return JsonResponse({"error": str(e)}, status=500)
+    
+@csrf_exempt
+@api_view(["DELETE"])
+def delete_tutor_feedback(request, feedback_id):
+    """
+    Delete a tutor feedback record.
+    """
+    user_id = request.session.get("user_id")
+    if not user_id:
+        return JsonResponse(
+            {"detail": "Authentication credentials were not provided."}, status=403
+        )
+
+    # Check if the user has DELETE permission on the "tutor_feedback" resource
+    if not has_permission(request, "tutor_feedback", "DELETE"):
+        return JsonResponse(
+            {"error": "You do not have permission to delete a tutor feedback."},
+            status=401,
+        )
+
+    try:
+        # Fetch the existing tutor feedback record
+        feedback = Feedback.objects.filter(feedback_id=feedback_id).first()
+        if not feedback:
+            return JsonResponse({"error": "Tutor feedback not found."}, status=404)
+
+        # Fetch the related Tutor_Feedback record BEFORE deleting feedback
+        tutor_feedback = Tutor_Feedback.objects.filter(feedback=feedback).first()
+        if not tutor_feedback:
+            return JsonResponse({"error": "Tutor feedback not found."}, status=404)
+
+        # Delete the related Tutor_Feedback record first
+        tutor_feedback.delete()
+
+        # Now delete the tutor feedback record
+        feedback.delete()
+
+        print(f"DEBUG: Tutor feedback with ID {feedback_id} deleted successfully.")
+        return JsonResponse(
+            {
+                "message": "Tutor feedback deleted successfully",
+                "feedback_id": feedback_id,
+            },
+            status=200,
+        )
+    except Exception as e:
+        print(f"DEBUG: An error occurred while deleting the tutor feedback: {str(e)}")
+        return JsonResponse({"error": str(e)}, status=500)

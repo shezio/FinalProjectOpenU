@@ -39,6 +39,9 @@ from .views import (
     families_tutorships_stats,
     pending_tutors_stats,
     roles_spread_stats,
+    create_tutor_feedback,
+    update_tutor_feedback,
+    delete_tutor_feedback,
 )
 
 from .unused_views import (
@@ -230,5 +233,20 @@ urlpatterns = [
         "api/roles_spread_stats/",
         roles_spread_stats,
         name="roles_spread_stats",
+    ),
+    path(
+        "api/create_tutor_feedback/",
+        create_tutor_feedback,
+        name="create_tutor_feedback",
+    ),
+    path(
+        "api/update_tutor_feedback/<int:feedback_id>/",
+        update_tutor_feedback,
+        name="update_tutor_feedback",
+    ),
+    path(
+        "api/delete_tutor_feedback/<int:feedback_id>/",
+        delete_tutor_feedback,
+        name="delete_tutor_feedback",
     ),
 ]
