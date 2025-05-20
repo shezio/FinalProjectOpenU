@@ -556,6 +556,7 @@ const TutorFeedbacks = () => {
                       getOptionValue={option => option.id}
                       placeholder={t("Select Tutor")}
                       isClearable
+                      classNamePrefix={"feedbacks-select"}
                     />
                   )}
                   {modalErrors.tutor_name && <div className="error">{modalErrors.tutor_name}</div>}
@@ -578,6 +579,7 @@ const TutorFeedbacks = () => {
                       getOptionValue={option => option.id}
                       placeholder={t("Select Tutee")}
                       isClearable
+                      classNamePrefix={"feedbacks-select"}
                     />
                   )}
                   {modalErrors.tutee_name && <div className="error">{modalErrors.tutee_name}</div>}
@@ -593,10 +595,11 @@ const TutorFeedbacks = () => {
                     ]}
                     placeholder={t("Select")}
                     isClearable
+                    classNamePrefix={"feedbacks-select"}
                   />
                 </div>
                 <div className="feedbacks-form-row">
-                  <label>{t("Is First Visit?")}</label>
+                  <label>{t("Is It Your First Visit?")}</label>
                   <Select
                     value={modalData.is_first_visit ? { value: true, label: t("Yes") } : { value: false, label: t("No") }}
                     onChange={option => setModalData({ ...modalData, is_first_visit: option.value })}
@@ -606,6 +609,7 @@ const TutorFeedbacks = () => {
                     ]}
                     placeholder={t("Select")}
                     isClearable
+                    classNamePrefix={"feedbacks-select"}
                   />
                 </div>
                 <div className="feedbacks-form-row">
@@ -619,7 +623,7 @@ const TutorFeedbacks = () => {
                   {modalErrors.event_date && <div className="error">{modalErrors.event_date}</div>}
                 </div>
                 <div className="feedbacks-form-row">
-                  <label>{t("Description")}</label>
+                  <label>{t("Meeting Description")}</label>
                   <textarea
                     className={`feedbacks-textarea${shouldShrinkTextareas ? " feedbacks-textarea-shrink" : ""}`}
                     value={modalData.description || ""}
@@ -629,7 +633,7 @@ const TutorFeedbacks = () => {
                   {modalErrors.description && <div className="error">{modalErrors.description}</div>}
                 </div>
                 <div className="feedbacks-form-row">
-                  <label>{t("Exceptional Events")}</label>
+                  <label>{t("Were there any exceptional events?")}</label>
                   <textarea
                     className={`feedbacks-textarea${shouldShrinkTextareas ? " feedbacks-textarea-shrink" : ""}`}
                     value={modalData.exceptional_events || ""}
@@ -638,7 +642,7 @@ const TutorFeedbacks = () => {
                   />
                 </div>
                 <div className="feedbacks-form-row">
-                  <label>{t("Anything Else")}</label>
+                  <label>{t("Anything Else?")}</label>
                   <textarea
                     className={`feedbacks-textarea${shouldShrinkTextareas ? " feedbacks-textarea-shrink" : ""}`}
                     value={modalData.anything_else || ""}

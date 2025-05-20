@@ -12,9 +12,9 @@ const Feedbacks = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
 
-  const hasPermissionToAnyFeedback =  hasViewPermissionForTable("tutor_feedback") || hasViewPermissionForTable("general_v_feedback");
+  const hasPermissionToAnyFeedback = hasViewPermissionForTable("tutor_feedback") || hasViewPermissionForTable("general_v_feedback");
 
-    const feedbackDetails = {
+  const feedbackDetails = {
     tutor_feedback: { name: t("Tutor Feedbacks"), path: "/feedbacks/TutorFeedbacks" },
     volunteer_feedback: { name: t("Volunteer Feedbacks"), path: "/feedbacks/VolunteerFeedbacks" },
   };
@@ -38,26 +38,21 @@ const Feedbacks = () => {
       <Sidebar />
       <InnerPageHeader title={t("Feedbacks")} />
       <div className="feedbacks-page-content">
-        <div className="feedbacks-layout">
-          <div className="feedbacks-container-wrapper">
-            <div className="feedbacks-container">
-              {Object.keys(feedbackDetails).map((key) => {
-                const feedback = feedbackDetails[key];
-                return (
-                  <div
-                    key={key}
-                    className="feedback-card"
-                    onClick={() => navigate(feedback.path)}
-                  >
-                    <h2>{feedback.name}</h2>
-                  </div>
-                );
-              })}
+        {Object.keys(feedbackDetails).map((key) => {
+          const feedback = feedbackDetails[key];
+          return (
+            <div
+              key={key}
+              className="feedback-card"
+              onClick={() => navigate(feedback.path)}
+            >
+              <h2>{feedback.name}</h2>
             </div>
-          </div>
-        </div>
+          );
+        })}
       </div>
     </div>
+
   );
 };
 

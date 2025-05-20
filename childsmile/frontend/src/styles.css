@@ -33,20 +33,6 @@ body {
   margin-bottom: 20px;
 }
 
-.login-main-content {
-  flex-grow: 1;
-  /* תופס את כל הרוחב הפנוי */
-  padding: 20px;
-  margin-right: 680px;
-  margin-top: 200px;
-  /* שומר מקום לסרגל הצד */
-  height: 100vh;
-  overflow-y: auto;
-  /* אם יש גלילה פנימית */
-  display: flex;
-  flex-direction: column;
-}
-
 .login-container {
   background-color: #fff;
   padding: 40px;
@@ -73,7 +59,7 @@ body {
   /* Adjust style if needed */
 }
 
-.login-container .amit-title {
+.login-main-content .amit-title {
   display: inline-block;
   /* Ensures it behaves like a block element */
   transform: rotateX(-15deg);
@@ -93,7 +79,7 @@ body {
   /* Use the specified font */
 }
 
-.login-container .curved-text {
+.login-main-content .curved-text {
   font-size: 48px;
   fill: #1da821;
   font-family: 'Rubik', sans-serif;
@@ -116,17 +102,17 @@ body {
   }
 }
 
-.login-container h1 {
+.login-main-content h1 {
   margin-bottom: 20px;
 }
 
-.login-container img {
+.login-main-content img {
   width: 150px;
   margin-bottom: 20px;
 }
 
-.login-container input[type="text"],
-.login-container input[type="password"] {
+.login-main-content input[type="text"],
+.login-main-content input[type="password"] {
   width: 100%;
   padding: 15px;
   /* Increase padding for inputs */
@@ -136,7 +122,7 @@ body {
   box-sizing: border-box;
 }
 
-.login-container button {
+.login-main-content button {
   width: 100%;
   padding: 15px;
   /* Increase padding for buttons */
@@ -147,33 +133,16 @@ body {
   cursor: pointer;
 }
 
-.login-container button:hover {
+.login-main-content button:hover {
   background-color: #45a049;
 }
 
-.login-container .google-login {
+.login-main-content .google-login {
   background-color: #dd4b39;
 }
 
-.login-container .google-login:hover {
+.login-main-content .google-login:hover {
   background-color: #c23321;
-}
-
-.login-container span {
-  display: block;
-  margin: 10px 0;
-}
-
-.error {
-  color: red;
-  margin-top: 10px;
-  font-size: 24px;
-}
-
-.success {
-  color: green;
-  margin-top: 10px;
-  font-size: 24px;
 }
 
 .top-left {
@@ -215,11 +184,52 @@ body {
   /* Maintain aspect ratio */
 }
 
-.login-container input[type="text"],
-.login-container input[type="password"],
-.login-container submit,
-.login-container span,
-.login-container button {
+.login-main-content input[type="text"],
+.login-main-content input[type="password"],
+.login-main-content submit,
+.login-main-content span,
+.login-main-content button {
   font-size: 24px;
   /* Increase font size for better readability */
+}
+
+.login-main-content span,
+.login-main-content .login-error,
+.login-main-content .login-success {
+  font-family: Rubik, sans-serif;
+  align-items: center;
+  text-align: center;
+  display: block;
+  margin: 10px 0;
+  /* Increase font size for better readability */
+}
+
+
+.login-main-content {
+  align-items: center;
+  margin-right: 0;
+}
+
+.error {
+  color: red;
+  margin-top: 10px;
+  font-size: 24px;
+}
+
+.success {
+  color: green;
+  margin-top: 10px;
+  font-size: 24px;
+}
+
+.login-error {
+  color: red;
+  margin-top: 10px;
+  font-size: 24px;
+}
+
+.login-success {
+  color: green;
+  margin-top: 10px;
+  font-size: 24px;
 }

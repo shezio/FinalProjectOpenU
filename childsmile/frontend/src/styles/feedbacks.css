@@ -71,6 +71,7 @@
     /* Prevent cards from exceeding 25% of the row width */
     box-sizing: border-box;
     /* Include padding and border in width calculation */
+    margin-bottom: 20px;
 }
 
 .feedback-card:hover {
@@ -747,6 +748,9 @@
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     position: relative;
     height: 85%;
+    display: flex;
+    max-height: fit-content;
+    flex-direction: column;
 }
 
 .feedbacks-modal-content h2 {
@@ -772,7 +776,7 @@
 
 .feedbacks-textarea {
     width: 90%;
-    height: 120px;
+    height: 60px;
     padding: 10px;
     font-size: 24px;
     border: 1px solid #ccc;
@@ -796,7 +800,20 @@
 .feedbacks-form-actions {
     display: flex;
     justify-content: space-between;
-    margin-top: 20px;
+    padding-top: 50px;
+    position: relative;
+    bottom: 20px;
+    left: 0;
+    width: 100%;
+
+}
+
+.feedbacks-select__control,
+.feedbacks-select__menu,
+.feedbacks-select__option,
+.feedbacks-select__single-value,
+.feedbacks-select__input input {
+  font-size: 22px !important;
 }
 
 .feedbacks-form-actions button {
