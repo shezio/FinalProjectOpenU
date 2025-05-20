@@ -1520,6 +1520,8 @@ def tutor_feedback_report(request):
                         "exceptional_events": feedback.feedback.exceptional_events,
                         "anything_else": feedback.feedback.anything_else,
                         "comments": feedback.feedback.comments,
+                        "feedback_type": feedback.feedback.feedback_type,
+                        "hospital_name": feedback.feedback.hospital_name,
                     }
                 )
             except Exception as e:
@@ -3037,7 +3039,12 @@ def create_tutor_feedback(request):
         data = request.data  # Use request.data for JSON payloads
 
         # Validate required fields
-        required_fields = ["event_date", "description", "tutee_name", "tutor_name"]
+        required_fields = ["event_date", "description", "tutee_name", "tutor_name", "feedback_type"]
+        # Check if we hospital_name is empty if the feedback_type is general_volunteer_hospital_visit - add them to the required fields
+        if data.get("feedback_type") == "general_volunteer_hospital_visit":
+            required_fields.extend(["hospital_name"])
+            # remove tutee name from the required fields
+            required_fields.remove("tutee_name")
         missing_fields = [
             field for field in required_fields if not data.get(field, "").strip()
         ]
@@ -3059,6 +3066,8 @@ def create_tutor_feedback(request):
             exceptional_events=data.get("exceptional_events") if data.get("exceptional_events") else None,
             anything_else=data.get("anything_else") if data.get("anything_else") else None,
             comments=data.get("comments") if data.get("comments") else None,
+            feedback_type=data.get("feedback_type"),
+            hospital_name=data.get("hospital_name") if data.get("hospital_name") else None
         )
 
         # Get the tutor's id_id from Tutors using the user_id (which is staff_id in Tutors)
@@ -3075,7 +3084,7 @@ def create_tutor_feedback(request):
 
         tutor_feedback = Tutor_Feedback.objects.create(
             feedback=feedback,
-            tutee_name=data.get("tutee_name"),
+            tutee_name=data.get("tutee_name") if data.get("tutee_name") else "ביקור בבית חולים " + feedback.hospital_name,
             tutor_name=data.get("tutor_name"),
             tutor_id=tutor_id_id,
             is_it_your_tutee=data.get("is_it_your_tutee"),
@@ -3118,7 +3127,12 @@ def update_tutor_feedback(request, feedback_id):
         data = request.data  # Use request.data for JSON payloads
 
         # Validate required fields
-        required_fields = ["event_date", "description", "tutee_name", "tutor_name"]
+        required_fields = ["event_date", "description", "tutee_name", "tutor_name", "feedback_type"]
+        # Check if we hospital_name is empty if the feedback_type is general_volunteer_hospital_visit - add them to the required fields
+        if data.get("feedback_type") == "general_volunteer_hospital_visit":
+            required_fields.extend(["hospital_name"])
+            # remove tutee name from the required fields
+            required_fields.remove("tutee_name")
         missing_fields = [
             field for field in required_fields if not data.get(field, "").strip()
         ]
@@ -3145,6 +3159,7 @@ def update_tutor_feedback(request, feedback_id):
         feedback.exceptional_events = data.get("exceptional_events") if data.get("exceptional_events") else None
         feedback.anything_else = data.get("anything_else") if data.get("anything_else") else None
         feedback.comments = data.get("comments") if data.get("comments") else None
+        feedback.hospital_name = data.get("hospital_name") if data.get("hospital_name") else None
         feedback.save()
 
         # Get the tutor's id_id from Tutors using the user_id (which is staff_id in Tutors)
@@ -3163,8 +3178,8 @@ def update_tutor_feedback(request, feedback_id):
                 {"error": "Tutor feedback not found."},
                 status=404,
             )
-        
-        tutor_feedback.tutee_name = data.get("tutee_name")
+
+        tutor_feedback.tutee_name = data.get("tutee_name") if data.get("tutee_name") else "ביקור בבית חולים " + feedback.hospital_name
         tutor_feedback.tutor_name = data.get("tutor_name")
         tutor_feedback.tutor_id = tutor_id_id
         tutor_feedback.is_it_your_tutee = data.get("is_it_your_tutee")
