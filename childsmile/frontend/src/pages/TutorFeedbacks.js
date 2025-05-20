@@ -13,17 +13,7 @@ import { hasAllPermissions, hasViewPermissionForTable } from '../components/util
 import { feedbackShowErrorToast } from "../components/toastUtils";
 
 const PAGE_SIZE = 2;
-const CheckboxOption = (props) => (
-  <components.Option {...props}>
-    <input
-      type="checkbox"
-      checked={props.isSelected}
-      onChange={() => null}
-      style={{ marginRight: 8 }}
-    />
-    <label>{props.label}</label>
-  </components.Option>
-);
+
 const hasTutorFeedbacksViewPermission = hasViewPermissionForTable("tutor_feedback");
 
 const TutorFeedbacks = () => {
