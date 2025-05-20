@@ -1522,6 +1522,7 @@ def tutor_feedback_report(request):
                         "comments": feedback.feedback.comments,
                         "feedback_type": feedback.feedback.feedback_type,
                         "hospital_name": feedback.feedback.hospital_name,
+                        "additional_volunteers": feedback.feedback.additional_volunteers,
                     }
                 )
             except Exception as e:
@@ -3067,7 +3068,8 @@ def create_tutor_feedback(request):
             anything_else=data.get("anything_else") if data.get("anything_else") else None,
             comments=data.get("comments") if data.get("comments") else None,
             feedback_type=data.get("feedback_type"),
-            hospital_name=data.get("hospital_name") if data.get("hospital_name") else None
+            hospital_name=data.get("hospital_name") if data.get("hospital_name") else None,
+            additional_volunteers=data.get("additional_volunteers") if data.get("additional_volunteers") else None,
         )
 
         # Get the tutor's id_id from Tutors using the user_id (which is staff_id in Tutors)
@@ -3160,6 +3162,7 @@ def update_tutor_feedback(request, feedback_id):
         feedback.anything_else = data.get("anything_else") if data.get("anything_else") else None
         feedback.comments = data.get("comments") if data.get("comments") else None
         feedback.hospital_name = data.get("hospital_name") if data.get("hospital_name") else None
+        feedback.additional_volunteers = data.get("additional_volunteers") if data.get("additional_volunteers") else None
         feedback.save()
 
         # Get the tutor's id_id from Tutors using the user_id (which is staff_id in Tutors)

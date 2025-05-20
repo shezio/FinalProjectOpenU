@@ -12,8 +12,18 @@ import axios from "../axiosConfig";
 import { hasAllPermissions, hasViewPermissionForTable } from '../components/utils';
 import { feedbackShowErrorToast } from "../components/toastUtils";
 
-const PAGE_SIZE = 5;
-
+const PAGE_SIZE = 2;
+const CheckboxOption = (props) => (
+  <components.Option {...props}>
+    <input
+      type="checkbox"
+      checked={props.isSelected}
+      onChange={() => null}
+      style={{ marginRight: 8 }}
+    />
+    <label>{props.label}</label>
+  </components.Option>
+);
 const hasTutorFeedbacksViewPermission = hasViewPermissionForTable("tutor_feedback");
 
 const TutorFeedbacks = () => {
@@ -41,10 +51,12 @@ const TutorFeedbacks = () => {
   const [modalErrors, setModalErrors] = useState({});
   // Add at the top with other useState hooks
   const [infoModalData, setInfoModalData] = useState(null);
+  const [showAdditionalVolunteersDropdown, setShowAdditionalVolunteersDropdown] = useState(false);
 
   // data fetching
   const [tutors, setTutors] = useState([]);
   const [tutees, setTutees] = useState([]);
+  const [additionalVolunteers, setAdditionalVolunteers] = useState([]);
 
   const [staffOptions, setStaffOptions] = useState([]);
   const currentUser = localStorage.getItem('username')?.replace(/ /g, '_');
@@ -73,9 +85,19 @@ const TutorFeedbacks = () => {
           id: s.id,
           username: s.username,
           roles: s.roles || [],
+          first_name: s.first_name,
+          last_name: s.last_name,
         }));
         setStaffOptions(staffs);
 
+        //  additionalVolunteers contains the list of first names and last names of all staff members
+        // that have at least one role of "General Volunteer" or "Tutor"
+        const additionalStaffInHospitalVisit = staffs.filter(s => {
+          const hasRole = s.roles.some(role => role === "General Volunteer" || role === "Tutor");
+          return hasRole;
+        }).map(s => `${s.first_name} ${s.last_name}`);
+
+        setAdditionalVolunteers(additionalStaffInHospitalVisit);
 
         const currentStaff = staffs.find(s => s.username === currentUser);
 
@@ -190,9 +212,15 @@ const TutorFeedbacks = () => {
       modalInit.tutee_id = tutee ? tutee.id : feedback.tutee_id || "";
       modalInit.hospital_name = feedback.hospital_name || "";
       modalInit.feedback_type = feedback.feedback_type;
+      modalInit.additional_volunteers = feedback.additional_volunteers
+        ? typeof feedback.additional_volunteers === "string"
+          ? feedback.additional_volunteers.split(",").map(s => s.trim()).filter(Boolean)
+          : feedback.additional_volunteers
+        : [];
     } else {
       modalInit.feedback_type = "tutor_fun_day";
       modalInit.hospital_name = feedback.hospital_name || "";
+      modalInit.additional_volunteers = [];
     }
     if (feedback.event_date && feedback.event_date.includes("/")) {
       // Convert from DD/MM/YYYY to YYYY-MM-DD
@@ -271,6 +299,9 @@ const TutorFeedbacks = () => {
       feedback_filled_at: feedback_filled_date,
       feedback_type: modalData.feedback_type,
       hospital_name: modalData.hospital_name,
+      additional_volunteers: Array.isArray(modalData.additional_volunteers)
+        ? modalData.additional_volunteers.join(",")
+        : "",
     };
 
     console.log("Data to be sent:", data);
@@ -282,8 +313,7 @@ const TutorFeedbacks = () => {
       .catch((error) => {
         if (error.response && error.response.status === 404) {
           feedbackShowErrorToast(t, "Current user was not found in active tutors, cannot create feedback", error);
-        }
-        else {
+        } else {
           feedbackShowErrorToast(t, "Error creating feedback", error);
         }
         console.error("Error creating feedback:", error);
@@ -311,6 +341,9 @@ const TutorFeedbacks = () => {
       feedback_filled_at: feedback_filled_date,
       feedback_type: modalData.feedback_type,
       hospital_name: modalData.hospital_name,
+      additional_volunteers: Array.isArray(modalData.additional_volunteers)
+        ? modalData.additional_volunteers.join(",")
+        : "",
     };
     console.log("Update Data to be sent:", data);
     axios.put(`/api/update_tutor_feedback/${modalData.id}/`, data)
@@ -461,9 +494,6 @@ const TutorFeedbacks = () => {
                       </button>
                     </th>
                     <th>{t("Description")}</th>
-                    {/* <th>{t("Exceptional Events")}</th>
-                    <th>{t("Anything Else")}</th>
-                    <th>{t("Comments")}</th> */}
                     <th>{t("Feedback Type")}</th>
                     <th>{t("Actions")}</th>
                   </tr>
@@ -478,9 +508,6 @@ const TutorFeedbacks = () => {
                       <td>{feedback.event_date}</td>
                       <td>{feedback.feedback_filled_at}</td>
                       <td>{feedback.description}</td>
-                      {/* <td>{feedback.exceptional_events}</td>
-                      <td>{feedback.anything_else}</td>
-                      <td>{feedback.comments}</td> */}
                       <td>{t(feedback.feedback_type)}</td>
                       <td>
                         <button
@@ -577,6 +604,13 @@ const TutorFeedbacks = () => {
                 <p>{t("Anything Else")}:{infoModalData.anything_else}</p>
                 <p>{t("Comments")}:{infoModalData.comments}</p>
                 <p>{t("Feedback Type")}:{t(infoModalData.feedback_type)}</p>
+                <p>
+                  {t("Additional Volunteers")}: {
+                    Array.isArray(infoModalData.additional_volunteers)
+                      ? infoModalData.additional_volunteers.join(", ")
+                      : infoModalData.additional_volunteers
+                  }
+                </p>
               </div>
               <div className="feedbacks-form-actions">
                 <button onClick={() => setInfoModalData(null)}>{t("Close")}</button>
@@ -586,7 +620,13 @@ const TutorFeedbacks = () => {
         )}
         {showModal && (
           <div className="feedbacks-modal-overlay">
-            <div className={`feedbacks-modal-content${shouldShrinkTextareas ? " feedbacks-modal-content-shrink" : ""}`}>
+            <div
+              className={
+                "feedbacks-modal-content" +
+                (shouldShrinkTextareas ? " feedbacks-modal-content-shrink" : "") +
+                (modalData.feedback_type === "general_volunteer_hospital_visit" ? " feedbacks-modal-content-tall" : "")
+              }
+            >
               <span className="feedbacks-close" onClick={closeModal}>&times;</span>
               <h2>{modalData.id ? t("Edit Feedback") : t("Create Feedback")}</h2>
               <form
@@ -761,6 +801,44 @@ const TutorFeedbacks = () => {
                     value={modalData.comments || ""}
                     onChange={e => setModalData({ ...modalData, comments: e.target.value })}
                   />
+                </div>
+                <div className="feedbacks-form-row">
+                  {modalData.feedback_type === "general_volunteer_hospital_visit" && (
+                    <>
+                      <label>{t("Additional Volunteers")}</label>
+                      <div className="additional-volunteers-dropdown-container">
+                        <button
+                          type="button"
+                          className={`additional-volunteers-dropdown-button`}
+                          onClick={() => setShowAdditionalVolunteersDropdown(prev => !prev)}
+                        >
+                          {modalData.additional_volunteers && modalData.additional_volunteers.length > 0
+                            ? modalData.additional_volunteers.join(', ')
+                            : t('Select Additional Volunteers')}
+                        </button>
+                        {showAdditionalVolunteersDropdown && (
+                          <div className="additional-volunteers-dropdown">
+                            {additionalVolunteers.map((vol, idx) => (
+                              <div key={idx} className="additional-volunteers-dropdown-item">
+                                <input
+                                  type="checkbox"
+                                  id={`vol-${idx}`}
+                                  checked={modalData.additional_volunteers.includes(vol)}
+                                  onChange={e => {
+                                    const updated = e.target.checked
+                                      ? [...modalData.additional_volunteers, vol]
+                                      : modalData.additional_volunteers.filter(v => v !== vol);
+                                    setModalData({ ...modalData, additional_volunteers: updated });
+                                  }}
+                                />
+                                <label htmlFor={`vol-${idx}`}>{vol}</label>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </>
+                  )}
                 </div>
               </form>
               {/* Add more fields and validation as needed, each in its own row */}

@@ -363,6 +363,14 @@
   margin-right: 10px;
 }
 
+.roles-dropdown-item input[type="checkbox"] {
+    width: 28px;
+    height: 28px;
+    accent-color: #4caf50; /* Optional: makes the checkbox green in supported browsers */
+    margin-right: 10px;
+    vertical-align: middle;
+}
+
 .password-input-container {
   position: relative;
   display: flex;
