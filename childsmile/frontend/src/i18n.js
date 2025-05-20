@@ -472,6 +472,8 @@ const resources = {
       "Tutee Name / Hospital Name": "שם חניך / שם בית חולים",
       "Info": "מידע",
       "Feedback Details": "פרטי משוב",
+      "Additional Volunteers": "מתנדבים נוספים",
+      "Select Additional Volunteers": "בחר מתנדבים נוספים",
     }
   }
 };

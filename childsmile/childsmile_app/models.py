@@ -250,6 +250,7 @@ class Feedback(models.Model):
         default="tutorship",
     )
     hospital_name = models.CharField(max_length=50, null=True, blank=True)  # New field
+    additional_volunteers = models.TextField(null=True, blank=True)  # New field
     def __str__(self):
         return f"Feedback {self.feedback_id} by {self.staff.username}"
 
