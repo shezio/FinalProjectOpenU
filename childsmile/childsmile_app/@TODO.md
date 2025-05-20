@@ -205,7 +205,8 @@ def update_task(request, task_id):
         print(f"DEBUG: An error occurred: {str(e)}")
         return JsonResponse({"error": str(e)}, status=500)
 if the task type is "ראיון מועמד לחונכות" and the new status is "הושלמה"
-add remove the id of the role of General Volunteer from roles field in staff table of the user that was pending an interview
+add remove the id of the role of General Volunteer from roles field in staff table of the user that was pending an interview -       pending_tutor: selectedPendingTutor?.value, // Send the correct pending_tutor_id
+
 and in staff table give it a Tutor role id
 then insert a new line in tutors table:
 id_id= id_id value it has in the pending tutor table
@@ -594,3 +595,7 @@ def update_family(request, child_id):
 
 
 
+add search by name in the matching wizard modal
+change the questions in the feedback
+add more feedback types
+fix the feedback modal sizing with the buttons
