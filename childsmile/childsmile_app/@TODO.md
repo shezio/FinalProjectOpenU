@@ -596,6 +596,4 @@ def update_family(request, child_id):
 
 
 add search by name in the matching wizard modal
-change the questions in the feedback
 add more feedback types
-fix the feedback modal sizing with the buttons
