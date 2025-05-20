@@ -5,10 +5,16 @@ import "../styles/innerpageheader.css";
 import logo from "../assets/logo.png";
 import amitImg from "../assets/amit.jpg";
 import qrCode from "../assets/qr-code.png";
+import { useTranslation } from "react-i18next";
 
 // use title prop to set the title of the page
 const InnerPageHeader = ({ title }) => {
+  const { t } = useTranslation();
   const username = localStorage.getItem("username") || "אורח";
+  const origUsername = localStorage.getItem("origUsername") || "";
+  const staff = JSON.parse(localStorage.getItem("staff") || "[]");
+  const currentStaff = staff.find(s => s.username === origUsername);
+  const roles = currentStaff?.roles || [];
   const navigate = useNavigate();
 
   const handleLogout = async () => {
@@ -35,7 +41,7 @@ const InnerPageHeader = ({ title }) => {
         <div className="top-left">
           <img src={amitImg} alt="Amit" className="amit-img" />
           <div className="quote">
-            הרבה אנשים אומרים שהם רוצים להצליח אבל לא כולם מוכנים לשלם את המחיר  
+            הרבה אנשים אומרים שהם רוצים להצליח אבל לא כולם מוכנים לשלם את המחיר
             <br />
             שצריך כדי להצליח
           </div>
@@ -51,7 +57,16 @@ const InnerPageHeader = ({ title }) => {
 
       {/* שלום משתמש וכפתור יציאה – מתחת להדר */}
       <div className="user-actions">
-        <div className="welcome">שלום, {username}</div>
+        <div className="welcome">
+          שלום, {username}
+          {roles.length > 0 && (
+            <div className="user-roles-list">
+              {roles.map((role, idx) => (
+                <div key={idx} className="user-role">{t(role)}</div>
+              ))}
+            </div>
+          )}
+        </div>
         <button className="logout-button" onClick={handleLogout}>
           יציאה
         </button>
