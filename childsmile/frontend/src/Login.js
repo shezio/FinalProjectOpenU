@@ -32,7 +32,15 @@ const Login = () => {
       console.log('Permissions:', permissionsResponse.data);
       localStorage.setItem('permissions', JSON.stringify(permissionsResponse.data.permissions));
 
-      // Navigate to tasks page
+      // Fetch staff options
+      const staffResponse = await axios.get('/api/staff/');
+      console.log('Staff options:', staffResponse.data);
+      const staffs = (staffResponse.data.staff || []).map(s => ({
+        id: s.id,
+        username: s.username,
+        roles: s.roles || [],
+      }));
+      localStorage.setItem('staff', JSON.stringify(staffs));      // Navigate to tasks page
       navigate('/tasks');
 
     } catch (err) {
@@ -48,29 +56,29 @@ const Login = () => {
     <div className="login-main-content">
       <Header />
       {/* <div className="login-container"> */}
-        <span className="amit-title">{t("Amit's Smile")}</span>
-        <form onSubmit={handleLogin}>
-          <input
-            type="text"
-            placeholder={t("שם משתמש")}
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-          />
-          <input
-            type="password"
-            placeholder={t("סיסמה")}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-          <button type="submit">{t("התחבר")}</button>
-          <span>{t("או")}</span>
-          <button type="button" onClick={() => navigate("/register")}>
-            {t("הירשם")}
-          </button>
-          {error && <p className="login-error">{error}</p>}
-          {success && <p className="login-success">{success}</p>}
-        </form>
-      </div>
+      <span className="amit-title">{t("Amit's Smile")}</span>
+      <form onSubmit={handleLogin}>
+        <input
+          type="text"
+          placeholder={t("שם משתמש")}
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+        />
+        <input
+          type="password"
+          placeholder={t("סיסמה")}
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+        />
+        <button type="submit">{t("התחבר")}</button>
+        <span>{t("או")}</span>
+        <button type="button" onClick={() => navigate("/register")}>
+          {t("הירשם")}
+        </button>
+        {error && <p className="login-error">{error}</p>}
+        {success && <p className="login-success">{success}</p>}
+      </form>
+    </div>
     // </div>
   );
 };

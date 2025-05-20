@@ -9,12 +9,12 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useTranslation } from "react-i18next";
 import axios from "../axiosConfig";
-import { hasAllPermissions, hasViewPermissionForReports, hasViewPermissionForTable } from '../components/utils';
+import { hasAllPermissions,  hasViewPermissionForTable } from '../components/utils';
 import { feedbackShowErrorToast } from "../components/toastUtils";
 
 const PAGE_SIZE = 5;
 
-const hasTutorFeedbacksViewPermission = hasViewPermissionForReports("tutor_feedback");
+const hasTutorFeedbacksViewPermission = hasViewPermissionForTable("tutor_feedback");
 
 const TutorFeedbacks = () => {
   const { t } = useTranslation();

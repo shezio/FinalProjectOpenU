@@ -832,3 +832,108 @@ button:disabled {
 .info-column .info-table td {
   font-size: 1.5em; /* Default font size */
 }
+
+.grade-tooltip-container {
+  position: relative;
+  display: inline-block;
+  margin-left: 8px;
+  vertical-align: middle;
+  z-index: 3;
+}
+
+.grade-tooltip-icon {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  background: #e0e0e0;
+  color: #333;
+  border-radius: 50%;
+  text-align: center;
+  line-height: 18px;
+  font-weight: bold;
+  font-size: 14px;
+  cursor: pointer;
+  border: 1px solid #bbb;
+  margin-left: 2px;
+  transition: background 0.2s;
+}
+
+.grade-tooltip-icon:hover,
+.grade-tooltip-icon:focus {
+  background: #d0d0d0;
+}
+
+.grade-tooltip-text {
+  visibility: hidden;
+  opacity: 0;
+  width: 500px;
+  background-color: #fff;
+  color: #222;
+  text-align: right;
+  border-radius: 8px;
+  border: 1px solid #bbb;
+  padding: 12px;
+  position: fixed; /* <-- changed from absolute */
+  z-index: 9999;   /* <-- very high z-index */
+  top: 200px;       /* <-- adjust as needed */
+  left: 70%;
+  transform: translateX(-50%);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  font-size: 24px;
+  font-family: Rubik;
+  white-space: pre-line;
+  pointer-events: none;
+  transition: opacity 0.2s;
+}
+.grade-tooltip-container:hover .grade-tooltip-text,
+.grade-tooltip-icon:focus + .grade-tooltip-text {
+  visibility: visible;
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.map-legend {
+  display: flex;
+  gap: 18px;
+  margin: 12px 0 0 0;
+  align-items: center;
+  font-size: 15px;
+  font-weight: 500;
+  background: #fff;
+  border-radius: 8px;
+  padding: 8px 16px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  width: fit-content;
+  z-index: 1000;
+  margin-top: 350px;
+}
+
+.legend-dot {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  margin-left: 5px;
+  border: 1px solid #bbb;
+  vertical-align: middle;
+}
+
+.legend-dot-green {
+  background: #3bb143;
+}
+
+.legend-dot-yellow {
+  background: #ffe066;
+  border-color: #e6c200;
+}
+
+.legend-dot-red {
+  background: #e74c3c;
+}
+
+.matches-search-bar {
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 24px;
+}

@@ -59,6 +59,7 @@ const Tutorships = () => {
   const [pageSize] = useState(5); // Number of tutorships per page
   const [totalCount, setTotalCount] = useState(0); // Total number of tutorships
   const [isMagnifyActive, setIsMagnifyActive] = useState(false);
+  const [matchSearchQuery, setMatchSearchQuery] = useState('');
 
   const toggleMagnify = () => {
     setIsMagnifyActive((prevState) => !prevState);
@@ -231,12 +232,20 @@ const Tutorships = () => {
   };
 
   const sortedAndFilteredMatches = matches
-    .filter((match) => match.grade >= filterThreshold) // Filter matches based on the threshold
+    .filter((match) => match.grade >= filterThreshold)
+    .filter((match) => {
+      if (!matchSearchQuery.trim()) return true;
+      const query = matchSearchQuery.toLowerCase();
+      return (
+        (match.child_full_name && match.child_full_name.toLowerCase().includes(query)) ||
+        (match.tutor_full_name && match.tutor_full_name.toLowerCase().includes(query))
+      );
+    })
     .sort((a, b) => {
       if (sortOrder === 'asc') {
-        return a.grade - b.grade; // Ascending order
+        return a.grade - b.grade;
       } else {
-        return b.grade - a.grade; // Descending order
+        return b.grade - a.grade;
       }
     });
 
@@ -771,6 +780,14 @@ const Tutorships = () => {
             </button>
           </div>
           <div className="filter-controls">
+            <input
+              type="text"
+              className="matches-search-bar"
+              placeholder={t('Search by tutor or tutee name')}
+              value={matchSearchQuery}
+              onChange={e => setMatchSearchQuery(e.target.value)}
+              style={{ marginLeft: 16, minWidth: 220 }}
+            />
             <label htmlFor="filter-slider">{t('Filter by Minimum Grade')}:</label>
             <ReactSlider
               id="filter-slider"
@@ -805,6 +822,28 @@ const Tutorships = () => {
                         >
                           {sortOrder === 'asc' ? '▲' : '▼'}
                         </button>
+                        <span className="grade-tooltip-container">
+                          <span className="grade-tooltip-icon">?</span>
+                          <span className="grade-tooltip-text">
+                            {t(`Each tutor-child match receives a grade based on:`)}<br /><br />
+                            <b><u>{t('Base Score')}</u>:</b> {t('Starts from 0 to 100 depending on the match\'s position in the list.')}<br />
+                            <b>{t('with a base grade spreading linearly across matches')}.</b><br /><br />
+                            <b>{t('Then, the grade is adjusted based on:')}</b><br />
+                            <b><u>{t('Age Difference Bonus')}</u>:</b><br />
+                            {t('Less than 5 years')} ← 20+ {t('points')}<br />
+                            5–10 {t('years')} ← 10+ {t('points')}<br />
+                            10–15 {t('years')} ← 5+ {t('points')}<br /><br />
+                            <b><u>{t('Distance Bonus (based on how close they live)')}</u>:</b><br />
+                            {t('Less than 10 km')} ← 20+ {t('points')}<br />
+                            10–20 {t('km')} ← 10+ {t('points')}<br />
+                            20–30 {t('km')} ← 5+ {t('points')}<br /><br />
+                            <b><u>{t('Distance Penalty')}</u>:</b><br />
+                            {t('More than 50 km')} → {t('Grade set to')} 5-<br /><br />
+                            <b><u>{t('Final Grade')}</u>:</b><br />
+                            {t('Rounded up to the nearest whole number')}<br />
+                            {t('Always kept between -5 and 100')}
+                          </span>
+                        </span>
                       </th>
                     </tr>
                   </thead>
@@ -894,7 +933,7 @@ const Tutorships = () => {
                                 (selectedMatch.child_longitude + selectedMatch.tutor_longitude) / 2,
                               ]}
                             >
-                              {`${selectedMatch.distance_between_cities} km`}
+                              {`${selectedMatch.distance_between_cities} ק"מ`}
                             </Popup>
                           </>
                         )}
@@ -902,6 +941,20 @@ const Tutorships = () => {
                   )}
                 </MapContainer>
               )}
+              <div className="map-legend">
+                <span>
+                  <span className="legend-dot legend-dot-green"></span>
+                  {t('Grade above 50 ')}
+                </span>
+                <span>
+                  <span className="legend-dot legend-dot-yellow"></span>
+                  {t('Grade between 25 and 50 ')}
+                </span>
+                <span>
+                  <span className="legend-dot legend-dot-red"></span>
+                  {t('Grade below 25 ')}
+                </span>
+              </div>
             </div>
           </div>
           <div className="modal-actions">
