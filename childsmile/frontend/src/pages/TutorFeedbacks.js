@@ -9,7 +9,7 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useTranslation } from "react-i18next";
 import axios from "../axiosConfig";
-import { hasAllPermissions,  hasViewPermissionForTable } from '../components/utils';
+import { hasAllPermissions, hasViewPermissionForTable } from '../components/utils';
 import { feedbackShowErrorToast } from "../components/toastUtils";
 
 const PAGE_SIZE = 5;
@@ -24,6 +24,7 @@ const TutorFeedbacks = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [canDelete, setCanDelete] = useState(false);
 
+
   // Filters
   const [eventFrom, setEventFrom] = useState("");
   const [eventTo, setEventTo] = useState("");
@@ -31,13 +32,15 @@ const TutorFeedbacks = () => {
   const [feedbackTo, setFeedbackTo] = useState("");
 
   // Sorting
-  const [sortOrderEventDate, setSortOrderEventDate] = useState('asc');
-  const [sortOrderFeedbackDate, setSortOrderFeedbackDate] = useState('asc');
+  const [sortOrderEventDate, setSortOrderEventDate] = useState('desc');
+  const [sortOrderFeedbackDate, setSortOrderFeedbackDate] = useState('desc');
 
   // Modal
   const [showModal, setShowModal] = useState(false);
   const [modalData, setModalData] = useState({});
   const [modalErrors, setModalErrors] = useState({});
+  // Add at the top with other useState hooks
+  const [infoModalData, setInfoModalData] = useState(null);
 
   // data fetching
   const [tutors, setTutors] = useState([]);
@@ -185,6 +188,11 @@ const TutorFeedbacks = () => {
       const tutee = tutees.find(t => t.name === feedback.tutee_name);
       modalInit.tutor_id = tutor ? tutor.id : feedback.tutor_id || "";
       modalInit.tutee_id = tutee ? tutee.id : feedback.tutee_id || "";
+      modalInit.hospital_name = feedback.hospital_name || "";
+      modalInit.feedback_type = feedback.feedback_type;
+    } else {
+      modalInit.feedback_type = "tutor_fun_day";
+      modalInit.hospital_name = feedback.hospital_name || "";
     }
     if (feedback.event_date && feedback.event_date.includes("/")) {
       // Convert from DD/MM/YYYY to YYYY-MM-DD
@@ -212,9 +220,12 @@ const TutorFeedbacks = () => {
   const validateModal = () => {
     const errors = {};
     if (!modalData.tutor_id) errors.tutor_name = t("Tutor Name is required");
-    if (!modalData.tutee_id) errors.tutee_name = t("Tutee Name is required");
+    if (!modalData.tutee_id && modalData.feedback_type !== "general_volunteer_hospital_visit") errors.tutee_name = t("Tutee Name is required");
     if (!modalData.event_date) errors.event_date = t("Event Date is required");
     if (!modalData.description) errors.description = t("Description is required");
+    if (modalData.feedback_type === "general_volunteer_hospital_visit") {
+      if (!modalData.hospital_name) errors.hospital_name = t("Hospital Name is required");
+    }
     // Add more validation as needed
     setModalErrors(errors);
     return Object.keys(errors).length === 0;
@@ -243,11 +254,7 @@ const TutorFeedbacks = () => {
     // Prepare data as the DB expects: use tutor_id and tutee_id, not names
     const now = new Date();
     const feedback_filled_date = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-
-    console.log("Feedback filled date:", feedback_filled_date);
-    console.log("staffOptions:", staffOptions);
-    console.log("currentUser:", currentUser);
-    console.log("currentStaffid:", currentStaffid);
+    console.log("Feedback type:", modalData.feedback_type);
     const data = {
       tutor_id: modalData.tutor_id,
       tutee_id: modalData.tutee_id,
@@ -261,7 +268,9 @@ const TutorFeedbacks = () => {
       comments: modalData.comments || "",
       is_it_your_tutee: modalData.is_it_your_tutee || false,
       is_first_visit: modalData.is_first_visit || false,
-      feedback_filled_at: feedback_filled_date
+      feedback_filled_at: feedback_filled_date,
+      feedback_type: modalData.feedback_type,
+      hospital_name: modalData.hospital_name,
     };
 
     console.log("Data to be sent:", data);
@@ -285,11 +294,6 @@ const TutorFeedbacks = () => {
     const now = new Date();
     const feedback_filled_date = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 
-    console.log("Feedback filled date:", feedback_filled_date);
-    console.log("staffOptions:", staffOptions);
-    console.log("currentUser:", currentUser);
-    console.log("currentStaffid:", currentStaffid);
-
     const data = {
       id: modalData.id,
       tutor_id: modalData.tutor_id,
@@ -304,7 +308,9 @@ const TutorFeedbacks = () => {
       comments: modalData.comments || "",
       is_it_your_tutee: modalData.is_it_your_tutee || false,
       is_first_visit: modalData.is_first_visit || false,
-      feedback_filled_at: feedback_filled_date
+      feedback_filled_at: feedback_filled_date,
+      feedback_type: modalData.feedback_type,
+      hospital_name: modalData.hospital_name,
     };
     console.log("Update Data to be sent:", data);
     axios.put(`/api/update_tutor_feedback/${modalData.id}/`, data)
@@ -376,6 +382,30 @@ const TutorFeedbacks = () => {
             <button className="feedbacks-refresh-button" onClick={fetchData}>
               {t("Refresh")}
             </button>
+            <div className="feedbacks-filter-row">
+              <label>{t("Feedback Type")}:</label>
+              <select
+                value={modalData.feedback_type || ""}
+                onChange={e => {
+                  const selectedType = e.target.value;
+                  setModalData({ ...modalData, feedback_type: selectedType });
+                  if (selectedType) {
+                    setFilteredFeedbacks(feedbacks.filter(fb => fb.feedback_type === selectedType));
+                    setCurrentPage(1);
+                  } else {
+                    setFilteredFeedbacks(feedbacks);
+                    setCurrentPage(1);
+                  }
+                }}
+                className="feedbacks-type-filter"
+              >
+                <option value="">{t("All Feedbacks Types")}</option>
+                <option value="tutor_fun_day">{t("tutor_fun_day")}</option>
+                <option value="general_volunteer_fun_day">{t("general_volunteer_fun_day")}</option>
+                <option value="general_volunteer_hospital_visit">{t("general_volunteer_hospital_visit")}</option>
+                <option value="tutorship">{t("tutorship")}</option>
+              </select>
+            </div>
             <div className="feedbacks-filter-pairs">
               <div className="feedbacks-filter-pair">
                 <div className="feedbacks-filter-row">
@@ -415,7 +445,7 @@ const TutorFeedbacks = () => {
                 <thead>
                   <tr>
                     <th>{t("Tutor Name")}</th>
-                    <th>{t("Tutee Name")}</th>
+                    <th>{t("Tutee Name / Hospital Name")}</th>
                     <th>{t("Is It Your Tutee?")}</th>
                     <th>{t("Is First Visit?")}</th>
                     <th className="feedbacks-wide-column">
@@ -431,9 +461,10 @@ const TutorFeedbacks = () => {
                       </button>
                     </th>
                     <th>{t("Description")}</th>
-                    <th>{t("Exceptional Events")}</th>
+                    {/* <th>{t("Exceptional Events")}</th>
                     <th>{t("Anything Else")}</th>
-                    <th>{t("Comments")}</th>
+                    <th>{t("Comments")}</th> */}
+                    <th>{t("Feedback Type")}</th>
                     <th>{t("Actions")}</th>
                   </tr>
                 </thead>
@@ -447,10 +478,17 @@ const TutorFeedbacks = () => {
                       <td>{feedback.event_date}</td>
                       <td>{feedback.feedback_filled_at}</td>
                       <td>{feedback.description}</td>
-                      <td>{feedback.exceptional_events}</td>
+                      {/* <td>{feedback.exceptional_events}</td>
                       <td>{feedback.anything_else}</td>
-                      <td>{feedback.comments}</td>
+                      <td>{feedback.comments}</td> */}
+                      <td>{t(feedback.feedback_type)}</td>
                       <td>
+                        <button
+                          className="feedbacks-info-button"
+                          onClick={() => setInfoModalData(feedback)}
+                        >
+                          {t("Info")}
+                        </button>
                         <button
                           className="feedbacks-edit-button"
                           onClick={() => openModal(feedback)}
@@ -522,6 +560,30 @@ const TutorFeedbacks = () => {
           </button>
         </div>
         {/* Modal for create/edit */}
+        {infoModalData && (
+          <div className="feedbacks-modal-overlay">
+            <div className="feedbacks-modal-content">
+              <span className="feedbacks-close" onClick={() => setInfoModalData(null)}>&times;</span>
+              <h2>{t("Feedback Details")}</h2>
+              <div className="feedbacks-info-grid">
+                <p>{t("Tutor Name")}: {infoModalData.tutor_name}</p>
+                <p>{t("Tutee Name / Hospital Name")}:{infoModalData.tutee_name || infoModalData.hospital_name}</p>
+                <p>{t("Is It Your Tutee?")}:{infoModalData.is_it_your_tutee ? t("Yes") : t("No")}</p>
+                <p>{t("Is First Visit?")}:{infoModalData.is_first_visit ? t("Yes") : t("No")}</p>
+                <p>{t("Event Date")}:{infoModalData.event_date}</p>
+                <p>{t("Feedback Filled At")}:{infoModalData.feedback_filled_at}</p>
+                <p>{t("Description")}:{infoModalData.description}</p>
+                <p>{t("Exceptional Events")}:{infoModalData.exceptional_events}</p>
+                <p>{t("Anything Else")}:{infoModalData.anything_else}</p>
+                <p>{t("Comments")}:{infoModalData.comments}</p>
+                <p>{t("Feedback Type")}:{t(infoModalData.feedback_type)}</p>
+              </div>
+              <div className="feedbacks-form-actions">
+                <button onClick={() => setInfoModalData(null)}>{t("Close")}</button>
+              </div>
+            </div>
+          </div>
+        )}
         {showModal && (
           <div className="feedbacks-modal-overlay">
             <div className={`feedbacks-modal-content${shouldShrinkTextareas ? " feedbacks-modal-content-shrink" : ""}`}>
@@ -536,6 +598,43 @@ const TutorFeedbacks = () => {
                 }}
                 className="feedbacks-form-grid"
               >
+                <div className="feedbacks-form-row">
+                  <label>{t("Feedback Type")}</label>
+                  {modalData.id ? (
+                    <input
+                      type="text"
+                      value={t(modalData.feedback_type)}
+                      disabled
+                      className="feedbacks-readonly-input"
+                    />
+                  ) : (
+                    <select
+                      value={modalData.feedback_type}
+                      onChange={e => setModalData({ ...modalData, feedback_type: e.target.value })}
+                      required
+                    >
+                      <option value="tutor_fun_day">{t("tutor_fun_day")}</option>
+                      <option value="general_volunteer_fun_day">{t("general_volunteer_fun_day")}</option>
+                      <option value="general_volunteer_hospital_visit">{t("general_volunteer_hospital_visit")}</option>
+                      <option value="tutorship">{t("tutorship")}</option>
+                    </select>
+                  )}
+                </div>
+                {modalData.feedback_type === "general_volunteer_hospital_visit" && (
+                  <>
+                    <div className="feedbacks-form-row">
+                      <label hidden={!!modalData.id}>{t("Hospital Name")}</label>
+                      <input
+                        type="text"
+                        value={modalData.hospital_name || ""}
+                        onChange={e => setModalData({ ...modalData, hospital_name: e.target.value })}
+                        required
+                        hidden={!!modalData.id}
+                      />
+                      {modalErrors.hospital_name && <div className="error">{modalErrors.hospital_name}</div>}
+                    </div>
+                  </>
+                )}
                 <div className="feedbacks-form-row">
                   <label>{t("Tutor Name")}</label>
                   {modalData.id ? (
@@ -562,56 +661,64 @@ const TutorFeedbacks = () => {
                   {modalErrors.tutor_name && <div className="error">{modalErrors.tutor_name}</div>}
                 </div>
                 <div className="feedbacks-form-row">
-                  <label>{t("Tutee Name")}</label>
-                  {modalData.id ? (
-                    <input
-                      type="text"
-                      value={tutees.find(t => t.id === modalData.tutee_id)?.name || modalData.tutee_name || ""}
-                      disabled
-                      className="feedbacks-readonly-input"
-                    />
-                  ) : (
-                    <Select
-                      value={tutees.find(t => t.id === modalData.tutee_id) || null}
-                      onChange={option => setModalData({ ...modalData, tutee_id: option ? option.id : "" })}
-                      options={tutees}
-                      getOptionLabel={option => option.name}
-                      getOptionValue={option => option.id}
-                      placeholder={t("Select Tutee")}
-                      isClearable
-                      classNamePrefix={"feedbacks-select"}
-                    />
+                  {modalData.feedback_type !== "general_volunteer_hospital_visit" && (
+                    <>
+                      <label>{t("Tutee Name")}</label>
+                      {modalData.id ? (
+                        <input
+                          type="text"
+                          value={tutees.find(t => t.id === modalData.tutee_id)?.name || modalData.tutee_name || ""}
+                          disabled
+                          className="feedbacks-readonly-input"
+                        />
+                      ) : (
+                        <Select
+                          value={tutees.find(t => t.id === modalData.tutee_id) || null}
+                          onChange={option => setModalData({ ...modalData, tutee_id: option ? option.id : "" })}
+                          options={tutees}
+                          getOptionLabel={option => option.name}
+                          getOptionValue={option => option.id}
+                          placeholder={t("Select Tutee")}
+                          isClearable
+                          classNamePrefix={"feedbacks-select"}
+                        />
+                      )}
+                      {modalErrors.tutee_name && <div className="error">{modalErrors.tutee_name}</div>}
+                    </>
                   )}
-                  {modalErrors.tutee_name && <div className="error">{modalErrors.tutee_name}</div>}
                 </div>
-                <div className="feedbacks-form-row">
-                  <label>{t("Is It Your Tutee?")}</label>
-                  <Select
-                    value={modalData.is_it_your_tutee ? { value: true, label: t("Yes") } : { value: false, label: t("No"), default: true }}
-                    onChange={option => setModalData({ ...modalData, is_it_your_tutee: option.value })}
-                    options={[
-                      { value: true, label: t("Yes") },
-                      { value: false, label: t("No") }
-                    ]}
-                    placeholder={t("Select")}
-                    isClearable
-                    classNamePrefix={"feedbacks-select"}
-                  />
-                </div>
-                <div className="feedbacks-form-row">
-                  <label>{t("Is It Your First Visit?")}</label>
-                  <Select
-                    value={modalData.is_first_visit ? { value: true, label: t("Yes") } : { value: false, label: t("No") }}
-                    onChange={option => setModalData({ ...modalData, is_first_visit: option.value })}
-                    options={[
-                      { value: true, label: t("Yes") },
-                      { value: false, label: t("No") }
-                    ]}
-                    placeholder={t("Select")}
-                    isClearable
-                    classNamePrefix={"feedbacks-select"}
-                  />
-                </div>
+                {modalData.feedback_type !== "general_volunteer_hospital_visit" && (
+                  <>
+                    <div className="feedbacks-form-row">
+                      <label>{t("Is It Your Tutee?")}</label>
+                      <Select
+                        value={modalData.is_it_your_tutee ? { value: true, label: t("Yes") } : { value: false, label: t("No"), default: true }}
+                        onChange={option => setModalData({ ...modalData, is_it_your_tutee: option.value })}
+                        options={[
+                          { value: true, label: t("Yes") },
+                          { value: false, label: t("No") }
+                        ]}
+                        placeholder={t("Select")}
+                        isClearable
+                        classNamePrefix={"feedbacks-select"}
+                      />
+                    </div>
+                    <div className="feedbacks-form-row">
+                      <label>{t("Is It Your First Visit?")}</label>
+                      <Select
+                        value={modalData.is_first_visit ? { value: true, label: t("Yes") } : { value: false, label: t("No") }}
+                        onChange={option => setModalData({ ...modalData, is_first_visit: option.value })}
+                        options={[
+                          { value: true, label: t("Yes") },
+                          { value: false, label: t("No") }
+                        ]}
+                        placeholder={t("Select")}
+                        isClearable
+                        classNamePrefix={"feedbacks-select"}
+                      />
+                    </div>
+                  </>
+                )}
                 <div className="feedbacks-form-row">
                   <label>{t("Event Date")}</label>
                   <input
@@ -628,7 +735,6 @@ const TutorFeedbacks = () => {
                     className={`feedbacks-textarea${shouldShrinkTextareas ? " feedbacks-textarea-shrink" : ""}`}
                     value={modalData.description || ""}
                     onChange={e => setModalData({ ...modalData, description: e.target.value })}
-                    scrollable
                   />
                   {modalErrors.description && <div className="error">{modalErrors.description}</div>}
                 </div>
@@ -638,7 +744,6 @@ const TutorFeedbacks = () => {
                     className={`feedbacks-textarea${shouldShrinkTextareas ? " feedbacks-textarea-shrink" : ""}`}
                     value={modalData.exceptional_events || ""}
                     onChange={e => setModalData({ ...modalData, exceptional_events: e.target.value })}
-                    scrollable
                   />
                 </div>
                 <div className="feedbacks-form-row">
@@ -647,7 +752,6 @@ const TutorFeedbacks = () => {
                     className={`feedbacks-textarea${shouldShrinkTextareas ? " feedbacks-textarea-shrink" : ""}`}
                     value={modalData.anything_else || ""}
                     onChange={e => setModalData({ ...modalData, anything_else: e.target.value })}
-                    scrollable
                   />
                 </div>
                 <div className="feedbacks-form-row">
@@ -656,7 +760,6 @@ const TutorFeedbacks = () => {
                     className={`feedbacks-textarea${shouldShrinkTextareas ? " feedbacks-textarea-shrink" : ""}`}
                     value={modalData.comments || ""}
                     onChange={e => setModalData({ ...modalData, comments: e.target.value })}
-                    scrollable
                   />
                 </div>
               </form>

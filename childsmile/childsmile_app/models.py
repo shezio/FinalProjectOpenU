@@ -239,7 +239,17 @@ class Feedback(models.Model):
     exceptional_events = models.TextField(null=True, blank=True)
     anything_else = models.TextField(null=True, blank=True)
     comments = models.TextField(null=True, blank=True)
-
+    feedback_type = models.CharField(
+        max_length=50,
+        choices=[
+            ("tutor_fun_day", "Tutor Fun Day"),
+            ("general_volunteer_fun_day", "General Volunteer Fun Day"),
+            ("general_volunteer_hospital_visit", "General Volunteer Hospital Visit"),
+            ("tutorship", "Tutorship"),
+        ],
+        default="tutorship",
+    )
+    hospital_name = models.CharField(max_length=50, null=True, blank=True)  # New field
     def __str__(self):
         return f"Feedback {self.feedback_id} by {self.staff.username}"
 

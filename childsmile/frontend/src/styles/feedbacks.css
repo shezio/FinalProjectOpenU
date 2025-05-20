@@ -682,7 +682,8 @@
 
 
 .feedbacks-edit-button,
-.feedbacks-delete-button {
+.feedbacks-delete-button,
+.feedbacks-info-button {
     padding: 6px 12px;
     margin-right: 5px;
     border: none;
@@ -708,6 +709,15 @@
 
 .feedbacks-delete-button:hover {
     background-color: #da190b;
+}
+
+.feedbacks-info-button {
+    background-color: /* green */ #4CAF50;
+    color: white;
+}
+
+.feedbacks-info-button:hover {
+    background-color: #45a049;
 }
 
 .feedbacks-modal {
@@ -857,4 +867,30 @@
 
 .feedbacks-filter-pairs {
     flex-direction: column;
+}
+
+.feedbacks-filter-row {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 10px;
+    font-size: 24px;
+}
+.feedbacks-type-filter {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 10px;
+    font-size: 24px;
+}
+
+.feedbacks-info-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr); /* Two columns */
+  gap: 10px; /* Space between items */
+  margin-top: 20px;
+}
+
+.feedbacks-info-grid p {
+  margin: 0; /* Remove default margin */
+  font-size: 1.5em;
+  line-height: 1.5;
 }

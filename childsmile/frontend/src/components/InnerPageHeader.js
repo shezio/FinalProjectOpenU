@@ -58,7 +58,7 @@ const InnerPageHeader = ({ title }) => {
       {/* שלום משתמש וכפתור יציאה – מתחת להדר */}
       <div className="user-actions">
         <div className="welcome">
-          שלום, {username}
+          שלום,{username}
           {roles.length > 0 && (
             <div className="user-roles-list">
               {roles.map((role, idx) => (

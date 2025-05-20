@@ -592,8 +592,3 @@ def update_family(request, child_id):
 
   update to marital_status of the child - update the relationship_status of the tutor to the marital_status of the child
     update to current_medical_state of the child - update the tutee_wellness to the current_medical_state of the child
-
-
-
-add more feedback types
-add roles under user actions
