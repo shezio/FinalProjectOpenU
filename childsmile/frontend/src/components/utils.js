@@ -125,10 +125,50 @@ export const hasViewPermissionForTable = (tableName) => {
   );
 };
 
-  // Check if the user has all required permissions - get an array of resource and action as parameter
+export const hasCreatePermissionForTable = (tableName) => {
+  const permissions = JSON.parse(localStorage.getItem('permissions')) || [];
+  return permissions.some(
+    (permission) =>
+      permission.resource === `childsmile_app_${tableName}` &&
+      permission.action === 'CREATE'
+  );
+};
+
+export const hasUpdatePermissionForTable = (tableName) => {
+  const permissions = JSON.parse(localStorage.getItem('permissions')) || [];
+  return permissions.some(
+    (permission) =>
+      permission.resource === `childsmile_app_${tableName}` &&
+      permission.action === 'UPDATE'
+  );
+};
+
+export const hasDeletePermissionForTable = (tableName) => {
+  const permissions = JSON.parse(localStorage.getItem('permissions')) || [];
+  return permissions.some(
+    (permission) =>
+      permission.resource === `childsmile_app_${tableName}` &&
+      permission.action === 'DELETE'
+  );
+};
+
+// Check if the user has all required permissions - get an array of resource and action as parameter
 export const hasAllPermissions = (requiredPermissions) => {
     const permissions = JSON.parse(localStorage.getItem('permissions')) || [];
     return requiredPermissions.every((required) =>
+      permissions.some(
+        (permission) =>
+          permission.resource === required.resource &&
+          permission.action === required.action
+      )
+    );
+  };
+
+
+  // Check if the user has all required permissions - get an array of resource and action as parameter
+export const hasSomePermissions = (requiredPermissions) => {
+    const permissions = JSON.parse(localStorage.getItem('permissions')) || [];
+    return requiredPermissions.some((required) =>
       permissions.some(
         (permission) =>
           permission.resource === required.resource &&

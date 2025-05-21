@@ -44,6 +44,12 @@ const Login = () => {
       navigate('/tasks');
 
     } catch (err) {
+      // if the username or password has spaces - show error message about it
+      if (username.includes(' ') || password.includes(' ')) {
+        setError(t("שם משתמש או סיסמה לא יכולים להכיל רווחים"));
+        setSuccess('');
+        return;
+      }
       console.error('Login error:', err);
       setError(t(err.response?.data?.error || 'An error occurred. Please try again.'));
       setSuccess('');

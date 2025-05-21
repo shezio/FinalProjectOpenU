@@ -670,5 +670,29 @@
             "city2_latitude": 31.528902,
             "city2_longitude": 35.0944873
         }
+    },
+    "אחוזת ברק": {
+        "city_latitude": 32.6418437,
+        "city_longitude": 35.3387534,
+        "באר שבע": {
+            "distance": 164,
+            "city2_latitude": 31.2457442,
+            "city2_longitude": 34.7925181
+        },
+        "הרצליה": {
+            "distance": 71,
+            "city2_latitude": 32.1656255,
+            "city2_longitude": 34.8469023
+        },
+        "חולון": {
+            "distance": 88,
+            "city2_latitude": 32.0132246,
+            "city2_longitude": 34.7871278
+        },
+        "חברון": {
+            "distance": 127,
+            "city2_latitude": 31.5303092,
+            "city2_longitude": 35.0763328
+        }
     }
 }
