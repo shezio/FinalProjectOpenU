@@ -476,7 +476,9 @@ const resources = {
       "Select Additional Volunteers": "בחר מתנדבים נוספים",
       "Refresh Task List": "רענן רשימת משימות",
       "All Tasks - Click to filter by type": "כלל המשימות מוצגות - לחץ לסינון לפי סוג",
+      "Filter by Status": "סנן לפי סטטוס משימה",
       'Create New Task': 'צור משימה חדשה',
+      "All Statuses - Click to filter by status": "כל הסטטוסים מוצגים - לחץ לסינון לפי סטטוס",
     }
   }
 };

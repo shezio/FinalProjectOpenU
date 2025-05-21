@@ -390,6 +390,17 @@ const Tasks = () => {
                   ))}
                 </select>
               </div>
+              <div className="filter">
+                <select
+                  value={selectedStatus}
+                  onChange={(e) => setSelectedStatus(e.target.value)}
+                >
+                  <option value="">{t("All Statuses - Click to filter by status")}</option>
+                  <option value="לא הושלמה">{t("לא הושלמה")}</option>
+                  <option value="בביצוע">{t("בביצוע")}</option>
+                  <option value="הושלמה">{t("הושלמה")}</option>
+                </select>
+              </div>
               <div className="refresh">
                 <button onClick={() => fetchData(true)}>{t("Refresh Task List")}</button> {/* Force fetch data */}
               </div>
@@ -408,7 +419,11 @@ const Tasks = () => {
                           <div className="no-tasks">אין כרגע משימות לביצוע</div>
                         ) : (
                           tasks
-                            .filter((task) => !selectedFilter || task.type === parseInt(selectedFilter)) // Filter tasks
+                            .filter(
+                              (task) =>
+                                (!selectedFilter || task.type === parseInt(selectedFilter)) &&
+                                (!selectedStatus || task.status === selectedStatus)
+                            )
                             .map((task, index) => (
                               <Draggable
                                 key={task.id}
