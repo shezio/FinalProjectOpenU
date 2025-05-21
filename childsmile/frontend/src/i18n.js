@@ -474,6 +474,9 @@ const resources = {
       "Feedback Details": "פרטי משוב",
       "Additional Volunteers": "מתנדבים נוספים",
       "Select Additional Volunteers": "בחר מתנדבים נוספים",
+      "Refresh Task List": "רענן רשימת משימות",
+      "All Tasks - Click to filter by type": "כלל המשימות מוצגות - לחץ לסינון לפי סוג",
+      'Create New Task': 'צור משימה חדשה',
     }
   }
 };

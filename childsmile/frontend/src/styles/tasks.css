@@ -49,6 +49,15 @@
   /* Adjust based on available height */
 }
 
+.strong-p {
+  font-weight: bold;
+  /* Make text bold */
+  font-size: 22px;
+  /* Increase font size */
+  color: #333;
+  /* Darker color for better readability */
+  /* background-color: #008fb3; */
+}
 /* Scrollbar styles for tasks-container */
 .tasks-container::-webkit-scrollbar {
   width: 10px;

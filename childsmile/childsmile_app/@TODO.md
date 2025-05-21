@@ -593,5 +593,57 @@ def update_family(request, child_id):
   update to marital_status of the child - update the relationship_status of the tutor to the marital_status of the child
     update to current_medical_state of the child - update the tutee_wellness to the current_medical_state of the child
 
+Tutorships:
+[] add the info button that we have in the matching wizard to every line in the tutorship grid in tutorships.js
 
-# create , update delete for general volunteer feedback and also make sure the volunter_feedback_report which is the GET here  - gives us all the fields tutor feedback report gives on the feedback object
+
+Volunteer Feedback:
+[] create , update delete for general volunteer feedback and also make sure the volunter_feedback_report which is the GET here  - gives us all the fields tutor feedback report gives on the feedback object
+
+Initial Family Data:
+create new migration file that
+[] adds a new DB table in the system called "inital_family_data" with the following fields:
+- Name - text up to 50 characters - not null
+- Phone - text up to 50 characters - not null
+- Other information - text up to 500 characters - nullable
+- Created at - date time - will always be the time of creation - not null
+- Updated at - date time - not null
+
+[V] create a model for this table 
+class InitialFamilyData(models.Model):
+    name = models.CharField(max_length=50, null=False)
+    phone = models.CharField(max_length=50, null=False)
+    other_information = models.TextField(max_length=500, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+[] create create, update, delete and get views for this table
+[] create urls for each of the views
+
+in volunteers feedback and tutor feedback screens - on general_volunteer_hospital_visit feedback type ONLY
+[] add a <h2> called initial family data with 3 fields: name, phone, and other information
+[] once the feedback is submitted - only on create not edit - POST only
+[] add the data to the initial family data table
+[] create automatically a task to all Technical Coordinators to add a family
+
+
+Permissions:
+[] give view permission to all the roles in the system
+[] give create permission to technical coordinator, system administrator, tutor, and general volunteer, and their coordinators, and family coordinator
+[] give update permission to technical coordinator, system administrator, tutor, and general volunteer, and their coordinators, and family coordinator
+[] give delete permission to technical coordinator, system administrator and family coordinator
+
+UI:
+[] create a new page under families called "initial_family_data" that will show all the data in the table
+[] add in App.js a new page called "InitialFamilyData" that will show all the data in the table
+[] add a new button in the families page that will open the initial family data page and navigate to it
+[] in the new page show all the data in a table with the following columns:
+[] Name, Phone, Other information, created_at, updated_at, actions
+[] in the actions column add a button that will open a modal with a form to update the initial family data
+[] in the actions column add a button that will delete the initial family data
+
+[] the table will be a data grid in a grid container under families-main-content
+[] above it there will be the filter-create-container with a button to create a new initial family data, a button to refresh the data, and date range filter buttons to filter the data by created_at
+[] the data grid will have a search bar to search by name and phone
+[] the data grid will have pagination
+[] the date columns will be sortable

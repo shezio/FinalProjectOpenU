@@ -348,3 +348,10 @@ class Tasks(models.Model):
             models.Index(fields=["assigned_to_id"], name="idx_tasks_assigned_to_id"),
             models.Index(fields=["updated_at"], name="idx_tasks_updated_at"),
         ]
+
+class InitialFamilyData(models.Model):
+    name = models.CharField(max_length=50, null=False)
+    phone = models.CharField(max_length=50, null=False)
+    other_information = models.TextField(max_length=500, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)

@@ -235,8 +235,8 @@
 }
 
 .approval-span {
-  font-size: 20px;
-  color: /* light gray */ #999;
+  font-size: 24px;
+  color: /* black */ #333;
   margin-top: 20px;
   text-align: center;
 }

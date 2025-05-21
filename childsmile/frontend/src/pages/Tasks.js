@@ -53,6 +53,34 @@ const Tasks = () => {
   const [taskToEdit, setTaskToEdit] = useState(null); // Task being edited
   const [dueDate, setDueDate] = useState(''); // Due date state
 
+  const getTaskBgColor = (dueDateStr, status) => {
+    if (status === "הושלמה") return "#d4edda"; // Pale green if completed
+    
+    if (!dueDateStr) return "#fff";
+    // Parse "DD/MM/YYYY" format
+    const [day, month, year] = dueDateStr.split('/').map(Number);
+    if (!day || !month || !year) return "#fff";
+    const dueDate = new Date(year, month - 1, day);
+    const now = new Date();
+    // Remove time part for comparison
+    now.setHours(0, 0, 0, 0);
+    dueDate.setHours(0, 0, 0, 0);
+
+    if (dueDate < now) {
+      return "#ffcccc"; // Red for overdue
+    }
+    // Check if due this week (Sunday-Saturday)
+    const weekStart = new Date(now);
+    weekStart.setDate(now.getDate() - now.getDay());
+    const weekEnd = new Date(weekStart);
+    weekEnd.setDate(weekStart.getDate() + 6);
+
+    if (dueDate >= weekStart && dueDate <= weekEnd) {
+      return "#fff7cc"; // Yellow for this week
+    }
+    return "#fff"; // Pale white for future
+  };
+
   const fetchData = async (forceFetch = false) => {
     // If not forcing a fetch and tasks already exist in local storage, skip fetching
     setLoading(true); // Show loading spinner while fetching data
@@ -346,7 +374,7 @@ const Tasks = () => {
                     setIsModalOpen(true);
                   }}
                 >
-                  צור משימה חדשה
+                  {t('Create New Task')}
                 </button>
               </div>
               <div className="filter">
@@ -354,7 +382,7 @@ const Tasks = () => {
                   value={selectedFilter}
                   onChange={(e) => setSelectedFilter(e.target.value)} // Update the filter state
                 >
-                  <option value="">סנן לפי סוג משימה</option>
+                  <option value="">{t("All Tasks - Click to filter by type")}</option>
                   {filteredTaskTypes.map((type) => (
                     <option key={type.id} value={type.id}>
                       {type.name}
@@ -363,7 +391,7 @@ const Tasks = () => {
                 </select>
               </div>
               <div className="refresh">
-                <button onClick={() => fetchData(true)}>רענן רשימת משימות</button> {/* Force fetch data */}
+                <button onClick={() => fetchData(true)}>{t("Refresh Task List")}</button> {/* Force fetch data */}
               </div>
             </div>
             <div className="tasks-layout">
@@ -393,16 +421,21 @@ const Tasks = () => {
                                     ref={provided.innerRef}
                                     {...provided.draggableProps}
                                     {...provided.dragHandleProps}
+                                    style={{
+                                      backgroundColor: getTaskBgColor(task.due_date, task.status),
+                                      ...provided.draggableProps.style
+                                    }}
                                   >
                                     <h2>{task.description}</h2>
                                     <p>
                                       יש לבצע עד: {task.due_date}
                                     </p>
                                     <p>סטטוס: {task.status}</p>
-                                    <p>לביצוע על ידי: {task.assignee}</p>
+                                    <p className='strong-p'>לביצוע על ידי: {task.assignee}</p>
                                     <div className="actions">
                                       <button onClick={() => handleTaskClick(task)}>מידע</button>
-                                      <button onClick={() => handleEditTask(task)}>ערוך</button>                                      <button onClick={() => handleUpdateStatus(task)}>עדכן סטטוס</button>
+                                      <button onClick={() => handleEditTask(task)}>ערוך</button>
+                                      <button onClick={() => handleUpdateStatus(task)}>עדכן סטטוס</button>
                                       <button onClick={() => handleDeleteTask(task.id)}>מחק</button>
                                     </div>
                                   </div>
