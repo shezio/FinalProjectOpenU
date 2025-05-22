@@ -2305,6 +2305,9 @@ def get_tutorships(request):
     try:
         tutorships = Tutorships.objects.select_related("child", "tutor__staff").values(
             "id",
+            # add child id and tutor id to the response
+            "child_id",
+            "tutor_id",
             "child__childfirstname",
             "child__childsurname",
             "tutor__staff__staff_id",
@@ -2320,6 +2323,8 @@ def get_tutorships(request):
         tutorships_data = [
             {
                 "id": tutorship["id"],
+                "child_id": tutorship["child_id"],
+                "tutor_id": tutorship["tutor_id"],
                 "child_firstname": tutorship["child__childfirstname"],
                 "child_lastname": tutorship["child__childsurname"],
                 "tutor_staff_id": tutorship["tutor__staff__staff_id"],

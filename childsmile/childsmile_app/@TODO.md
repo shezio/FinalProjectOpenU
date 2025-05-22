@@ -601,31 +601,100 @@ Volunteer Feedback:
 [] create , update delete for general volunteer feedback and also make sure the volunter_feedback_report which is the GET here  - gives us all the fields tutor feedback report gives on the feedback object
 
 Initial Family Data:
-create new migration file that
-[] adds a new DB table in the system called "inital_family_data" with the following fields:
-- Name - text up to 50 characters - not null
-- Phone - text up to 50 characters - not null
-- Other information - text up to 500 characters - nullable
-- Created at - date time - will always be the time of creation - not null
-- Updated at - date time - not null
-
 [V] create a model for this table 
 class InitialFamilyData(models.Model):
-    name = models.CharField(max_length=50, null=False)
-    phone = models.CharField(max_length=50, null=False)
+    initial_family_data_id = models.AutoField(primary_key=True)
+    names = models.CharField(max_length=50, null=False)
+    phones= models.CharField(max_length=50, null=False)
     other_information = models.TextField(max_length=500, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    family_added = models.BooleanField(default=False)
+    def __str__(self):
+        return f"InitialFamilyData({self.initial_family_data_id}, {self.names}, {self.phones})"
+    class Meta:
+        db_table = "initial_family_data"
+
+[] update tasks model to add the fields names, phones, and other information, and initial_family_data_id as FK to the initial family data table but can be empty
+class Tasks(models.Model):
+    task_id = models.AutoField(primary_key=True)
+    task_type = models.ForeignKey(Task_Types, on_delete=models.CASCADE)
+    description = models.TextField()
+    due_date = models.DateField()
+    status = models.CharField(max_length=255, default="Pending")
+    assigned_to = models.ForeignKey(Staff, on_delete=models.CASCADE, related_name="tasks")
+    related_child = models.ForeignKey(Children, on_delete=models.CASCADE, null=True, blank=True)
+    related_tutor = models.ForeignKey(Tutors, on_delete=models.CASCADE, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    # add pending_tutor_id field need to add a column to tasks table and model thats called new_pending_tutor_id it can be empty but values must be from pending_tutor table
+    pending_tutor = models.ForeignKey(Pending_Tutor, on_delete=models.SET_NULL, null=True, blank=True, db_column='pending_tutor_id_id')  # Specify the column name in the database
+    initial_family_data_id_fk = models.ForeignKey(InitialFamilyData, on_delete=models.SET_NULL, null=True, blank=True)
+    names = models.CharField(max_length=50, null=True, blank=True)
+    phones = models.CharField(max_length=50, null=True, blank=True)
+    other_information = models.TextField(max_length=500, null=True, blank=True)
+
+    def __str__(self):
+        return f"Task {self.task_id} - {self.task_type}"
+    
+    class Meta:
+        db_table = "childsmile_app_tasks"
+        indexes = [
+            models.Index(fields=["assigned_to_id"], name="idx_tasks_assigned_to_id"),
+            models.Index(fields=["updated_at"], name="idx_tasks_updated_at"),
+            # add index to the new field initial_family_data_id_fk
+            models.Index(fields=["initial_family_data_id_fk"], name="idx_tasks_initial_family_data_id_fk"),
+        ]
+
+
+
+create new migration file that
+[] adds a new DB table in the system called "initial_family_data" with the following fields:
+- Initial family data id - auto increment - primary key
+- Names - text up to 50 characters - not null
+- Phones - text up to 50 characters - not null
+- Other information - text up to 500 characters - nullable
+- Created at - date time - will always be the time of creation - not null
+- Updated at - date time - not null
+- Family added - boolean - default false
+
+[] add the new fields to the tasks table
+- names - text up to 50 characters - nullable
+- phones - text up to 50 characters - nullable
+- other_information - text up to 500 characters - nullable
+- initial_family_data_id_fk - foreign key to initial family data table - can be null
 
 [] create create, update, delete and get views for this table
 [] create urls for each of the views
 
 in volunteers feedback and tutor feedback screens - on general_volunteer_hospital_visit feedback type ONLY
-[] add a <h2> called initial family data with 3 fields: name, phone, and other information
+[] add a <h2> called initial family data with 3 fields: names, phone, and other information
 [] once the feedback is submitted - only on create not edit - POST only
 [] add the data to the initial family data table
-[] create automatically a task to all Technical Coordinators to add a family
+[] create automatically a task to all Technical Coordinators to add a family - if names and phones are both not empty
 
+Tasks:
+[] add the fields to the task of adding a family once the type was chosen and add a dummy condition which is always false until we decide to show this entire feature
+[] make it automatic that upon creating of a general_volunteer_hospital_visit feedback - if the fields names and phones both arent empty - then create a task to all Technical Coordinators to add a family with the  - but ONLY AFTER the initial_familty_data new line was added
+to utilize the initial_family_data_id
+
+following data for staff ids of the technical coordinators in the system:
+[] description - "הוספת משפחה"
+[] due_date - now + 7 days
+[] status - "לא הושלמה"
+[] created_at - now
+[] updated_at - now
+[] assigned_to_id - current staff id
+[] related_child_id - null
+[] related_tutor_id - null
+[] task_type_id - the id of the task type "הוספת משפחה"
+[] pending_tutor_id - null
+[] names - the names inserted in the feedback
+[] phones- the phones inserted in the feedback
+[] other_information - the other information inserted in the feedback
+[] initial_family_data_id_fk - the id of the initial family data created
+
+[] when one task with that initial_family_data_id_fk status is set to "בביצוע" - then all the other tasks with that initial_family_data_id_fk will be deleted
 
 Permissions:
 [] give view permission to all the roles in the system
@@ -638,12 +707,34 @@ UI:
 [] add in App.js a new page called "InitialFamilyData" that will show all the data in the table
 [] add a new button in the families page that will open the initial family data page and navigate to it
 [] in the new page show all the data in a table with the following columns:
-[] Name, Phone, Other information, created_at, updated_at, actions
+[] Initial Family ID, Name, Phone, Other information, created_at, updated_at, Family Added?, actions
 [] in the actions column add a button that will open a modal with a form to update the initial family data
 [] in the actions column add a button that will delete the initial family data
+[] in the actions column add a button to mark the family as added
+ - if added
+  - show it as done - set family_added = true
+  - automatically set the status of the task to "הושלמה" - where initial_family_data_id_fk in Tasks = initial_family_data_id in InitialFamilyData
+ - if deleted
+  - then delete the task if its status was "הושלמה" by the initial_family_data_id_fk
 
 [] the table will be a data grid in a grid container under families-main-content
-[] above it there will be the filter-create-container with a button to create a new initial family data, a button to refresh the data, and date range filter buttons to filter the data by created_at
-[] the data grid will have a search bar to search by name and phone
+[] above it there will be the filter-create-container with
+    - button to create a new initial family data
+    - button to refresh the data
+    - date range filter buttons to filter the data by created_at
+    - filter by family_added
+[] the data grid will have a search bar to search by names and phone
 [] the data grid will have pagination
-[] the date columns will be sortable
+[] the date columns both will be sortable
+[] each tr will be pale green if the family_added is true otherwise white
+
+[] create modal design will be similar to the one in the feedback
+[] create modal will have a form with the following fields:
+    - names - with a placeholder "Enter names", and a validation that more than 10 characters has to be at least one comma
+    - phones - with a placeholder "Enter phones", and a validation that more than 10 characters has to be at least one comma
+    - other information - no validation
+[] update modal will be similar to the create modal but with the data filled in
+  - only on update we must also validate that the names and phones are not empty
+[] delete modal will ask if you are sure you want to delete this initial family data - like all the scary delete modals - we can use the delete family modal we already have - its convenient since all the CSS already exists
+[] mark as added modal will ask if you are sure you want to mark this initial family data as added? and state this will auto update the task status to "הושלמה" and delete the task if it was "הושלמה" - like all the scary delete modals - we can use the delete family modal we already have - its convenient since all the CSS already exists
+[] in the update modal - if you change the names or phones or other information - then it will update the task with the initial_family_data_id_fk

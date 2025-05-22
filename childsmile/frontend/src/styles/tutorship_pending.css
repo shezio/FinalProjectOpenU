@@ -1,6 +1,6 @@
 /* Scoped styles for the grid container in ActiveTutorsReport */
 .page-content .tutorship-pending-grid-container {
-    width: calc(100% - 50px);
+    width: 100%;
     /* Adjust width to leave space for the sidebar */
     margin-left: 400px;
     /* Remove unnecessary left margin */
@@ -20,7 +20,7 @@
     .page-content .tutorship-pending-grid-container {
         padding: 10px; /* Reduce padding */
         height: calc(100vh - 300px); /* Adjust height */
-        width: calc(100% - 150px); /* Adjust width to leave space for the sidebar */
+        width: 100%; /* Adjust width to leave space for the sidebar */
         margin-left: 100px; /* Adjust left margin for smaller screens */
         margin-right: 80px; /* Adjust right margin for smaller screens */
         overflow-y: auto;
@@ -41,15 +41,16 @@
 @media (max-width: 2400px) {
     .page-content .tutorship-pending-grid-container {
         height: 500px; /* Allow the grid to grow based on content */
-        width: calc(100% - 300px);
+        width: 100%;
         /* Adjust width to leave space for the sidebar */
-        margin-right: 150px;
+        margin-right: 100px;
+        transform: scale(0.95);
     }
     .new-families-report-main-content .page-content .tutorship-pending-grid-container {
       height: 500px; /* Allow the grid to grow based on content */
-      width: calc(100% - 100px);
+      width: 1500px;
       /* Adjust width to leave space for the sidebar */
-      margin-right: 50px;
+      margin-right: 150px;
   }
 
     .page-content .tutorship-pending-data-grid {

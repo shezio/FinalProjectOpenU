@@ -60,6 +60,9 @@ const Tutorships = () => {
   const [totalCount, setTotalCount] = useState(0); // Total number of tutorships
   const [isMagnifyActive, setIsMagnifyActive] = useState(false);
   const [matchSearchQuery, setMatchSearchQuery] = useState('');
+  const [enrichedTutorships, setEnrichedTutorships] = useState([]);
+  const [wizardFamilies, setWizardFamilies] = useState([]);
+  const [wizardTutors, setWizardTutors] = useState([]);
 
   const toggleMagnify = () => {
     setIsMagnifyActive((prevState) => !prevState);
@@ -204,7 +207,7 @@ const Tutorships = () => {
         staff_role_id: currentUserRoleId, // Use dynamically fetched role ID
       });
       toast.success(t('Tutorship approved successfully!'));
-      fetchTutorships(); // Refresh the tutorships list
+      fetchFullTutorships(); // Refresh the tutorships list
       closeApprovalModal();
     } catch (error) {
       console.error('Error approving tutorship:', error);
@@ -249,24 +252,24 @@ const Tutorships = () => {
       }
     });
 
-  const fetchTutorships = () => {
-    setLoading(true);
-    axios
-      .get('/api/get_tutorships/')
-      .then((response) => {
-        const fetchedTutorships = response.data.tutorships || [];
-        setTutorships(fetchedTutorships);
-        setTotalCount(fetchedTutorships.length); // 
-        fetchStaffAndRoles(); // Fetch staff and roles data
-      })
-      .catch((error) => {
-        console.error('Error fetching tutorships:', error);
-        showErrorToast(t, 'Failed to fetch tutorships.', error); // Use the toast utility for error handling
-      })
-      .finally(() => {
-        setLoading(false);
-      });
-  };
+  // const fetchTutorships = () => {
+  //   setLoading(true);
+  //   axios
+  //     .get('/api/get_tutorships/')
+  //     .then((response) => {
+  //       const fetchedTutorships = response.data.tutorships || [];
+  //       setTutorships(fetchedTutorships);
+  //       setTotalCount(fetchedTutorships.length); // 
+  //       fetchStaffAndRoles(); // Fetch staff and roles data
+  //     })
+  //     .catch((error) => {
+  //       console.error('Error fetching tutorships:', error);
+  //       showErrorToast(t, 'Failed to fetch tutorships.', error); // Use the toast utility for error handling
+  //     })
+  //     .finally(() => {
+  //       setLoading(false);
+  //     });
+  // };
 
   const parseDate = (dateString) => {
     if (!dateString) return new Date(0); // Handle missing dates
@@ -275,7 +278,7 @@ const Tutorships = () => {
   };
 
   // Sort the tutorships by created_date
-  const sortedTutorships = [...tutorships].sort((a, b) => {
+  const sortedTutorships = [...enrichedTutorships].sort((a, b) => {
     const dateA = parseDate(a.created_date); // Parse the date
     const dateB = parseDate(b.created_date); // Parse the date
     return sortOrder === 'asc' ? dateA - dateB : dateB - dateA; // Ascending or descending order
@@ -289,25 +292,49 @@ const Tutorships = () => {
     setSortOrder((prevOrder) => (prevOrder === 'asc' ? 'desc' : 'asc'));
   };
 
-  const openInfoModal = (match) => {
-
-    // Find the family and tutor data for the selected match
-    const family = families.find((f) => f.id === match.child_id) || {}; // Match by child_id
-    const tutor = tutors.find((t) => t.id === match.tutor_id) || {}; // Match by tutor_id
-
-    //console.log('Found Family:', family); // Log the found family
-    //console.log('Found Tutor:', tutor); // Log the found tutor
-
-    // Combine match, family, and tutor data
-    const combinedData = {
-      ...match,
-      ...family,
-      ...tutor,
-    };
-
-    //console.log('Combined Data for Info Modal:', combinedData); // Log the combined data for debugging
-
-    setSelectedMatchForInfo(combinedData);
+  const openInfoModal = (row) => {
+    // If it's a tutorship (from the grid), build the expected structure
+    if (row.child_firstname && row.tutor_firstname) {
+      setSelectedMatchForInfo({
+        ...row,
+        child_full_name: `${row.child_firstname ?? "---"} ${row.child_lastname ?? "---"}`,
+        tutor_full_name: `${row.tutor_firstname ?? "---"} ${row.tutor_lastname ?? "---"}`,
+        child_id: row.child_id ?? "---",
+        tutor_id: row.tutor_id ?? "---",
+        address: row.address ?? "---",
+        child_phone_number: row.child_phone_number ?? "---",
+        date_of_birth: row.date_of_birth ?? "---",
+        gender: row.gender ?? null,
+        medical_diagnosis: row.medical_diagnosis ?? "---",
+        diagnosis_date: row.diagnosis_date ?? "---",
+        marital_status: row.marital_status ?? "---",
+        num_of_siblings: row.num_of_siblings ?? "---",
+        tutoring_status: row.tutoring_status ?? "---",
+        responsible_coordinator: row.responsible_coordinator ?? "---",
+        additional_info: row.additional_info ?? "---",
+        current_medical_state: row.current_medical_state ?? "---",
+        treating_hospital: row.treating_hospital ?? "---",
+        when_completed_treatments: row.when_completed_treatments ?? "---",
+        father_name: row.father_name ?? "---",
+        father_phone: row.father_phone ?? "---",
+        mother_name: row.mother_name ?? "---",
+        mother_phone: row.mother_phone ?? "---",
+        expected_end_treatment_by_protocol: row.expected_end_treatment_by_protocol ?? "---",
+        has_completed_treatments: row.has_completed_treatments ?? false,
+        details_for_tutoring: row.details_for_tutoring ?? "---",
+        tutor_city: row.tutor_city ?? "---",
+        tutor_age: row.tutor_age ?? "---",
+        tutor_gender: row.tutor_gender ?? null,
+        phone: row.tutor_phone ?? row.phone ?? "---",
+        email: row.tutor_email ?? row.email ?? "---",
+        want_tutor: row.want_tutor ?? false,
+        comment: row.comment ?? "---",
+        tutorship_status: row.tutorship_status ?? "---",
+      });
+    } else {
+      // It's a match from the wizard, use as is
+      setSelectedMatchForInfo(row);
+    }
     setIsInfoModalOpen(true);
   };
 
@@ -320,62 +347,105 @@ const Tutorships = () => {
     setGridLoading(true);
     setMapLoading(true);
     try {
-      const [matchesResponse, familiesResponse, tutorsResponse, signedUpResponse] = await Promise.all([
+      const [matchesResponse, familiesData, tutorsWithDetails] = await Promise.all([
         axios.post('/api/calculate_possible_matches/'),
-        axios.get('/api/get_complete_family_details/'),
-        getTutors(), // Use the imported getTutors function
-        axios.get('/api/get_signedup/'), // Fetch all signed-up data
+        fetchAllFamilies(),
+        fetchAllTutorsWithDetails()
       ]);
 
-
       const matchesData = matchesResponse.data.matches || [];
-      const familiesData = familiesResponse.data.families || [];
-      const signedUpData = signedUpResponse.data.signedup_users || [];
 
-      // Map signed-up data by tutor ID for quick lookup
-      const signedUpById = signedUpData.reduce((acc, signedUp) => {
-        acc[signedUp.id] = signedUp;
-        return acc;
-      }, {});
-
-      // Combine tutor data with signed-up data
-      const tutorsWithDetails = tutorsResponse.map((tutor) => {
-        const signedUpDetails = signedUpById[tutor.value] || {}; // Match by tutor.value (ID)
-        const combinedTutor = {
-          id: tutor.value,
-          tutorship_status: tutor.label.split(' - ')[1], // Extract status from label
-          phone: signedUpDetails.phone || '', // Add phone from signed-up data
-          email: signedUpDetails.email || '', // Add email from signed-up data
-          want_tutor: signedUpDetails.want_tutor || false, // Add want_tutor from signed-up data
-          comment: signedUpDetails.comment || '', // Add comment from signed-up data
-        };
-        return combinedTutor;
-      });
-
-
-      // Combine match data with family and tutor details
       const matchesWithDetails = matchesData.map((match) => {
-        const family = familiesData.find((f) => f.id === match.child_id) || {}; // Match by child_id
-        const tutor = tutorsWithDetails.find((t) => t.id === match.tutor_id) || {}; // Match by tutor_id
-
-        const combinedMatch = {
+        const family = familiesData.find((f) => f.id === match.child_id) || {};
+        const tutor = tutorsWithDetails.find((t) => t.id === match.tutor_id) || {};
+        return {
           ...match,
           ...family,
           ...tutor,
         };
-        return combinedMatch;
       });
 
-
       setMatches(matchesWithDetails);
-      setFamilies(familiesData);
-      setTutors(tutorsWithDetails); // Save the combined tutor data
+      setWizardFamilies(familiesData);
+      setWizardTutors(tutorsWithDetails);
     } catch (error) {
       console.error('Error fetching matches:', error);
       showErrorToast(t, 'Failed to fetch matches.', error);
     } finally {
-      setGridLoading(false); // Ensure gridLoading is set to false
+      setGridLoading(false);
       setMapLoading(false);
+    }
+  };
+
+
+  const fetchFullTutorships = async () => {
+    setLoading(true);
+    try {
+      const [tutorshipsResponse, familiesData, tutorsWithDetails] = await Promise.all([
+        axios.get('/api/get_tutorships/'),
+        fetchAllFamilies(),
+        fetchAllTutorsWithDetails()
+      ]);
+
+      const tutorshipsRaw = tutorshipsResponse.data.tutorships || [];
+
+      const enrichedTutorships = tutorshipsRaw.map(tutorship => {
+        // Use the correct field for family (if you only have one family, just use families[0])
+        const family = familiesData.find(f => f.id === tutorship.child_id) || {};
+        // Use the correct field for tutor
+        const tutor = tutorsWithDetails.find(t => t.id === tutorship.tutor_id) || {};
+        return {
+          ...tutorship,
+          ...family,
+          ...tutor,
+          // Child fields
+          child_full_name: `${tutorship.child_firstname ?? family.first_name ?? "---"} ${tutorship.child_lastname ?? family.last_name ?? "---"}`,
+          child_id: family.id ?? "---",
+          address: family.address ?? "---",
+          child_phone_number: family.child_phone_number ?? "---",
+          date_of_birth: family.date_of_birth ?? "---",
+          gender: family.gender ?? null,
+          medical_diagnosis: family.medical_diagnosis ?? "---",
+          diagnosis_date: family.diagnosis_date ?? "---",
+          marital_status: family.marital_status ?? "---",
+          num_of_siblings: family.num_of_siblings ?? "---",
+          tutoring_status: family.tutoring_status ?? "---",
+          responsible_coordinator: family.responsible_coordinator ?? "---",
+          additional_info: family.additional_info ?? "---",
+          current_medical_state: family.current_medical_state ?? "---",
+          treating_hospital: family.treating_hospital ?? "---",
+          when_completed_treatments: family.when_completed_treatments ?? "---",
+          father_name: family.father_name ?? "---",
+          father_phone: family.father_phone ?? "---",
+          mother_name: family.mother_name ?? "---",
+          mother_phone: family.mother_phone ?? "---",
+          expected_end_treatment_by_protocol: family.expected_end_treatment_by_protocol ?? "---",
+          has_completed_treatments: family.has_completed_treatments ?? false,
+          details_for_tutoring: family.details_for_tutoring ?? "---",
+          // Tutor fields
+          tutor_full_name: `${tutorship.tutor_firstname ?? tutor.first_name ?? "---"} ${tutorship.tutor_lastname ?? tutor.last_name ?? "---"}`,
+          tutor_id: tutor.id ?? "---",
+          tutor_city: tutor.city ?? "---",
+          tutor_age: tutor.age ?? "---",
+          tutor_gender: tutor.gender ?? null,
+          phone: tutor.phone ?? "---",
+          email: tutor.email ?? "---",
+          want_tutor: tutor.want_tutor ?? false,
+          comment: tutor.comment ?? "---",
+          tutorship_status: tutor.tutorship_status ?? "---",
+        };
+      });
+
+      setEnrichedTutorships(enrichedTutorships);
+      setTutorships(tutorshipsRaw);
+      // Do NOT overwrite families/tutors here if you want to keep CRUD-safe originals!
+      // setFamilies(familiesData);
+      // setTutors(tutorsWithDetails);
+    } catch (error) {
+      console.error('Error fetching full tutorships:', error);
+      showErrorToast(t, 'Failed to fetch full tutorships.', error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -408,23 +478,18 @@ const Tutorships = () => {
   };
 
   const calculateAgeFromDate = (dateString) => {
-    console.log('DEBUG: Calculating age from date:', dateString); // Add debug log
-
-    // Parse the date string in DD/MM/YYYY format
-    const [day, month, year] = dateString.split('/'); // Split the string into day, month, and year
-    const birthDate = new Date(`${year}-${month}-${day}`); // Rearrange into YYYY-MM-DD format
-
-    if (isNaN(birthDate)) {
-      console.error('Invalid date format:', dateString); // Log an error if the date is invalid
-      return 'Invalid date';
+    if (!dateString || typeof dateString !== "string") {
+      return "---";
     }
-
-    const today = new Date(); // Get the current date
-    const age = today.getFullYear() - birthDate.getFullYear(); // Calculate the age in years
-    const monthDifference = today.getMonth() - birthDate.getMonth(); // Calculate the month difference
-
+    const [day, month, year] = dateString.split('/');
+    if (!day || !month || !year) return "---";
+    const birthDate = new Date(`${year}-${month}-${day}`);
+    if (isNaN(birthDate)) return "---";
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDifference = today.getMonth() - birthDate.getMonth();
     if (monthDifference < 0 || (monthDifference === 0 && today.getDate() < birthDate.getDate())) {
-      return age - 1;
+      age--;
     }
     return age;
   };
@@ -454,11 +519,49 @@ const Tutorships = () => {
 
   useEffect(() => {
     if (hasPermissionOnTutorships) {
-      fetchTutorships();
+      fetchFullTutorships();
     } else {
       setLoading(false);
     }
   }, []);
+
+  // Helper: Fetch all families
+  const fetchAllFamilies = async () => {
+    const response = await axios.get('/api/get_complete_family_details/');
+    return response.data.families || [];
+  };
+
+  // Helper: Fetch all signed-up users
+  const fetchAllSignedUp = async () => {
+    const response = await axios.get('/api/get_signedup/');
+    return response.data.signedup_users || [];
+  };
+
+  // Helper: Fetch all tutors and merge with signed-up data
+  const fetchAllTutorsWithDetails = async () => {
+    const [tutorsResponse, signedUpData] = await Promise.all([
+      getTutors(),
+      fetchAllSignedUp()
+    ]);
+    const signedUpById = signedUpData.reduce((acc, signedUp) => {
+      acc[signedUp.id] = signedUp;
+      return acc;
+    }, {});
+    return tutorsResponse.map((tutor) => {
+      const signedUpDetails = signedUpById[tutor.value] || {};
+      return {
+        ...tutor,
+        id: tutor.value,
+        tutorship_status: tutor.label?.split(' - ')[1] || '',
+        phone: signedUpDetails.phone || '',
+        email: signedUpDetails.email || '',
+        want_tutor: signedUpDetails.want_tutor || false,
+        comment: signedUpDetails.comment || '',
+        city: signedUpDetails.city || '',
+        age: signedUpDetails.age || '',
+      };
+    });
+  };
 
   if (!hasPermissionOnTutorships) {
     return (
@@ -496,7 +599,7 @@ const Tutorships = () => {
             </button>
           </div>
           <div className="refresh">
-            <button onClick={fetchTutorships}>
+            <button onClick={fetchFullTutorships}>
               {t('Refresh Tutorships')}
             </button>
           </div>
@@ -511,6 +614,7 @@ const Tutorships = () => {
               <table className="tutorship-matching-data-grid">
                 <thead>
                   <tr>
+                    <th>{t('Info')}</th>
                     <th>{t('Child Name')}</th>
                     <th>{t('Tutor Name')}</th>
                     <th>
@@ -527,7 +631,12 @@ const Tutorships = () => {
                 </thead>
                 <tbody>
                   {paginatedTutorships.map((tutorship, index) => (
-                    <tr key={tutorship.id || index}>
+                    <tr key={tutorship.id}>
+                      <td>
+                        <div className="info-icon-container" onClick={() => openInfoModal(tutorship)}>
+                          <i className="info-icon" title={t('Press to see full info')}>i</i>
+                        </div>
+                      </td>
                       <td>{`${tutorship.child_firstname} ${tutorship.child_lastname}`}</td>
                       <td>{`${tutorship.tutor_firstname} ${tutorship.tutor_lastname}`}</td>
                       <td>{tutorship.created_date}</td>
@@ -637,57 +746,60 @@ const Tutorships = () => {
         )}
         {isInfoModalOpen && selectedMatchForInfo && (
           <div className="modal show">
-            <div className="modal-content">
+            <div className="info-modal-content">
               <span className="close" onClick={closeInfoModal}>&times;</span>
-              <button className="magnify-button" onClick={toggleMagnify}>
+              {/* <button className="magnify-button" onClick={toggleMagnify}>
                 🔍 {isMagnifyActive ? t('Disable Magnify') : t('Enable Magnify')}
-              </button>
-              <div className={`info-columns ${isMagnifyActive ? 'magnify-active' : ''}`}>
+              </button> */}
+              {/* <div className={`info-columns ${isMagnifyActive ? 'magnify-active' : ''}`}> */}
+              <div className="info-columns">
                 {/* Child Info */}
                 <div className="info-column">
                   <h2>{t('Child Information')}</h2>
-                  <table className="info-table">
-                    <tbody>
-                      <tr>
-                        <td>{t('ID')}</td>
-                        <td>{selectedMatchForInfo.child_id}</td>
-                      </tr>
-                      <tr>
-                        <td>{t('Full Name')}</td>
-                        <td>{selectedMatchForInfo.child_full_name}</td>
-                      </tr>
-                      <tr>
-                        <td>{t('Address')}</td>
-                        <td> {selectedMatchForInfo.address}</td>
-                      </tr>
-                      <tr>
-                        <td>{t('Phone')}</td><td> {selectedMatchForInfo.child_phone_number}
-                        </td>
-                      </tr>
-                      <tr>
-                        <td>{t('Age')}</td>
-                        <td> {calculateAgeFromDate(selectedMatchForInfo.date_of_birth)}</td>
-                      </tr>
-                      <tr><td>{t('Gender')}</td><td> {selectedMatchForInfo.gender ? t('Female') : t('Male')}</td></tr>
-                      <tr><td>{t('Medical Diagnosis')}</td><td> {selectedMatchForInfo.medical_diagnosis}</td></tr>
-                      <tr><td>{t('Diagnosis Date')}</td><td> {selectedMatchForInfo.diagnosis_date}</td></tr>
-                      <tr><td>{t('Marital Status')}</td><td> {selectedMatchForInfo.marital_status}</td></tr>
-                      <tr><td>{t('Number of Siblings')}</td><td> {selectedMatchForInfo.num_of_siblings}</td></tr>
-                      <tr><td>{t('Tutoring Status')}</td><td> {selectedMatchForInfo.tutoring_status}</td></tr>
-                      <tr><td>{t('Responsible Coordinator')}</td><td> {selectedMatchForInfo.responsible_coordinator}</td></tr>
-                      <tr><td>{t('Additional Info')}</td><td> {selectedMatchForInfo.additional_info}</td></tr>
-                      <tr><td>{t('Current Medical State')}</td><td> {selectedMatchForInfo.current_medical_state}</td></tr>
-                      <tr><td>{t('Treating Hospital')}</td><td> {selectedMatchForInfo.treating_hospital}</td></tr>
-                      <tr><td>{t('When Completed Treatments')}</td><td> {selectedMatchForInfo.when_completed_treatments}</td></tr>
-                      <tr><td>{t('Father Name')}</td><td> {selectedMatchForInfo.father_name || '---'}</td></tr>
-                      <tr><td>{t('Father Phone')}</td><td> {selectedMatchForInfo.father_phone || '---'}</td></tr>
-                      <tr><td>{t('Mother Name')}</td><td> {selectedMatchForInfo.mother_name || '---'}</td></tr>
-                      <tr><td>{t('Mother Phone')}</td><td> {selectedMatchForInfo.mother_phone || '---'}</td></tr>
-                      <tr><td>{t('Expected End Treatment by Protocol')}</td><td> {selectedMatchForInfo.expected_end_treatment_by_protocol || '---'}</td></tr>
-                      <tr><td>{t('Has Completed Treatments')}</td><td> {selectedMatchForInfo.has_completed_treatments ? t('Yes') : t('No')}</td></tr>
-                      <tr><td>{t('Details for Tutoring')}</td><td> {selectedMatchForInfo.details_for_tutoring || '---'}</td></tr>
-                    </tbody>
-                  </table>
+                  <div className="info-table-scroll">
+                    <table className="info-table">
+                      <tbody>
+                        <tr>
+                          <td>{t('ID')}</td>
+                          <td>{selectedMatchForInfo.child_id}</td>
+                        </tr>
+                        <tr>
+                          <td>{t('Full Name')}</td>
+                          <td>{selectedMatchForInfo.child_full_name}</td>
+                        </tr>
+                        <tr>
+                          <td>{t('Address')}</td>
+                          <td> {selectedMatchForInfo.address}</td>
+                        </tr>
+                        <tr>
+                          <td>{t('Phone')}</td><td> {selectedMatchForInfo.child_phone_number}
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>{t('Age')}</td>
+                          <td> {calculateAgeFromDate(selectedMatchForInfo.date_of_birth)}</td>
+                        </tr>
+                        <tr><td>{t('Gender')}</td><td> {selectedMatchForInfo.gender ? t('Female') : t('Male')}</td></tr>
+                        <tr><td>{t('Medical Diagnosis')}</td><td> {selectedMatchForInfo.medical_diagnosis}</td></tr>
+                        <tr><td>{t('Diagnosis Date')}</td><td> {selectedMatchForInfo.diagnosis_date}</td></tr>
+                        <tr><td>{t('Marital Status')}</td><td> {selectedMatchForInfo.marital_status}</td></tr>
+                        <tr><td>{t('Number of Siblings')}</td><td> {selectedMatchForInfo.num_of_siblings}</td></tr>
+                        <tr><td>{t('Tutoring Status')}</td><td> {selectedMatchForInfo.tutoring_status}</td></tr>
+                        <tr><td>{t('Responsible Coordinator')}</td><td> {selectedMatchForInfo.responsible_coordinator}</td></tr>
+                        <tr><td>{t('Additional Info')}</td><td> {selectedMatchForInfo.additional_info}</td></tr>
+                        <tr><td>{t('Current Medical State')}</td><td> {selectedMatchForInfo.current_medical_state}</td></tr>
+                        <tr><td>{t('Treating Hospital')}</td><td> {selectedMatchForInfo.treating_hospital}</td></tr>
+                        <tr><td>{t('When Completed Treatments')}</td><td> {selectedMatchForInfo.when_completed_treatments}</td></tr>
+                        <tr><td>{t('Father Name')}</td><td> {selectedMatchForInfo.father_name || '---'}</td></tr>
+                        <tr><td>{t('Father Phone')}</td><td> {selectedMatchForInfo.father_phone || '---'}</td></tr>
+                        <tr><td>{t('Mother Name')}</td><td> {selectedMatchForInfo.mother_name || '---'}</td></tr>
+                        <tr><td>{t('Mother Phone')}</td><td> {selectedMatchForInfo.mother_phone || '---'}</td></tr>
+                        <tr><td>{t('Expected End Treatment by Protocol')}</td><td> {selectedMatchForInfo.expected_end_treatment_by_protocol || '---'}</td></tr>
+                        <tr><td>{t('Has Completed Treatments')}</td><td> {selectedMatchForInfo.has_completed_treatments ? t('Yes') : t('No')}</td></tr>
+                        <tr><td>{t('Details for Tutoring')}</td><td> {selectedMatchForInfo.details_for_tutoring || '---'}</td></tr>
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
 
                 {/* Tutor Info */}
@@ -809,7 +921,7 @@ const Tutorships = () => {
                 <table className="data-grid">
                   <thead>
                     <tr>
-                      <th>{t('מידע')}</th>
+                      <th>{t('Info')}</th>
                       <th>{t('Child Name')}</th>
                       <th>{t('Tutor Name')}</th>
                       <th>{t('Child City')}</th>

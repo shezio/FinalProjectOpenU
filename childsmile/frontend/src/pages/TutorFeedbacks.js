@@ -374,6 +374,14 @@ const TutorFeedbacks = () => {
     );
   }
 
+  // Set zoom level when component mounts
+  useEffect(() => {
+    document.body.style.zoom = "80%";
+    return () => {
+      document.body.style.zoom = "";
+    };
+  }, []);
+
   return (
     <div className="tutor-feedbacks-main-content">
       <Sidebar />

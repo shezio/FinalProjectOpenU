@@ -24,7 +24,7 @@
 /* Families grid container */
 .families-grid-container {
   flex: unset !important; /* Prevent flex-grow from affecting the container */
-  margin-top: 250px;
+  margin-top: 150px;
   /* overflow-y: auto; */
   max-height: 70vh; /* Limit the height to 70% of the viewport height */
   border: 1px solid #ddd; /* Optional: Add a border to visually separate the container */
@@ -36,7 +36,7 @@
 
 @media (max-width: 2000px) {
   .families-grid-container {
-    margin-top: 300px; /* Increase margin-top for smaller screens */
+    margin-top: 250px; /* Increase margin-top for smaller screens */
     margin-bottom: 200px; /* Increase margin-bottom for smaller screens */
   }
 }
