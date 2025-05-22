@@ -132,7 +132,7 @@ const RolesSpreadReport = () => {
                 responsive: true,
                 plugins: {
                   legend: {
-                    position: "bottom",
+                    position: "right",
                     labels: {
                       font: {
                         size: 24,

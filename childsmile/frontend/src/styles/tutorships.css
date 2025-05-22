@@ -14,12 +14,12 @@
   background: white;
   padding: 2rem;
   border-radius: 8px;
-  width: 1600px;
+  width: 80%;
   /* Limit the modal width */
   height: 750px;
   margin: auto;
   /* Center the modal horizontally */
-  margin-top: 200px;
+  margin-top: 150px;
   /* Center the modal vertically */
   display: flex;
   flex-direction: column;
@@ -29,6 +29,8 @@
   overflow: hidden;
   /* Prevent content overflow */
   position: relative;
+  z-index: 9999 !important;
+  transform: scale(0.9);
 }
 
 .matches-modal h2 {
@@ -101,7 +103,7 @@
 
 @media (max-width: 2400px) {
   .matches-modal {
-    margin-right: 300px;
+    margin-right: 250px;
   }
 }
 
@@ -516,7 +518,7 @@
     #0056b3;
 }
 
-.modal-content .close {
+.info-modal-content .close {
   position: absolute;
   top: 10px;
   right: 10px;
@@ -528,13 +530,33 @@
   display: flex;
   justify-content: space-between;
   gap: 20px;
+  height: 90%;
 }
 
 .info-column {
   flex: 1;
   border-right: 1px solid #ddd;
   padding-right: 20px;
+  align-items: right;
 }
+
+.info-column h2  {
+  font-size: 52px;
+  /* green color */
+  color: #4CAF50;
+  /* Adjust font size for the title */
+  margin-bottom: 1rem;
+  /* Add space below the title */
+  text-align: center;
+  /* Center the title */
+}
+
+.info-table-scroll {
+  overflow-y: auto;
+  max-height: 70vh; /* Or whatever fits your modal */
+  /* Optional: add padding or background if needed */
+}
+
 
 .info-column:last-child {
   border-right: none;
@@ -662,10 +684,6 @@
 .filter-value {
   font-size: 24px;
   color: #333;
-}
-
-.info-column {
-  align-items: right;
 }
 
 .info-column p {
@@ -819,7 +837,24 @@ button:disabled {
   transition: transform 0.2s ease;
 }
 
-.modal-content .magnify-button {
+.info-modal-content {
+  background-color: #ffffff;
+  border-radius: 10px;
+  padding: 50px;
+  width: 70%; /* Increase the width to make the modal wider */
+  max-width: 1920px; /* Increase the maximum width */
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+  /* animation: fadeIn 0.3s ease-in-out; */
+  font-size: 1em;
+  margin-right: 30px; /* Add some space on the right */
+  /* Allow wrapping on smaller screens */
+  gap: 1rem;
+  height: 90%;
+  max-height: 90%;
+  transform: scale(0.9);
+}
+
+.info-modal-content .magnify-button {
   background-color: #4CAF50;
   color: white;
   padding: 10px 15px;

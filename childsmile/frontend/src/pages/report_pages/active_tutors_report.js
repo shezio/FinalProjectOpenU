@@ -160,7 +160,7 @@ const ActiveTutorsReport = () => {
           </div>
         </div>
         {!loading && (
-          <div className="back-to-reports">
+          <div className="active-tutors-back-to-reports">
             <button
               className="back-button"
               onClick={() => (window.location.href = '/reports')}

@@ -6,7 +6,7 @@
 
 .roles-spread-report-page-content {
   flex: 1;
-  padding-top: 300px;
+  padding-top: 200px;
 }
 
 .roles-spread-graph-container {
@@ -16,15 +16,22 @@
   border-radius: 16px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.07);
   padding: 32px;
+  transform: scale(0.9);
+}
+@media (max-width: 1800px) {
+  .roles-spread-graph-container {
+    transform: scale(1.0);
+  }
 }
 
 .roles-spread-back-to-reports {
     display: flex;
     justify-content: flex-start;
     /* Align to the right */
-    margin-top: 10px;
+    
     /* Add some spacing above */
-    margin-right: 360px;
+    margin-right: 500px;
+    margin-top: 30px;
     /* Slightly move it to the left from the edge */
 }
 
@@ -34,7 +41,7 @@
   border: none;
   border-radius: 8px;
   padding: 8px 24px;
-  font-size: 18px;
+  font-size: 24px;
   cursor: pointer;
   margin-bottom: 16px;
 }

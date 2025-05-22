@@ -350,8 +350,8 @@ class Tasks(models.Model):
         ]
 
 class InitialFamilyData(models.Model):
-    name = models.CharField(max_length=50, null=False)
-    phone = models.CharField(max_length=50, null=False)
+    names = models.CharField(max_length=50, null=False)
+    phones = models.CharField(max_length=50, null=False)
     other_information = models.TextField(max_length=500, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

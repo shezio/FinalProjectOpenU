@@ -54,10 +54,15 @@
     /* Center the content vertically */
     flex-grow: 1;
     /* Allow it to take up available space */
-    margin-top: 100px;
+    margin-top: 50px;
     /* Add some spacing below the fixed header */
 }
-
+@media (max-width: 1800px) {
+    .families-waiting-report-main-content{
+        margin-top: 100px;
+        /* Add some spacing below the fixed header */
+    }
+}
 .new-families-report-main-content {
     display: flex;
     flex-direction: column;
@@ -84,7 +89,7 @@
 
 @media (max-width: 2400px) {
     .possible-matches-report-main-content {
-        margin-right: 200px;
+        margin-right: 80px;
         /* Adjust margin for smaller screens */
     }
 
@@ -141,6 +146,12 @@
     max-height: calc(100vh - 400px);
     /* Enable vertical scrolling if needed */
     overflow-x: hidden;
+}
+
+@media (max-width: 1800px) {
+  .reports-container {
+    max-height: calc(100vh - 200px);
+  }
 }
 
 /* Scrollbar styles for reports-container */
@@ -329,7 +340,13 @@
         gap: 50px;
     }
 }
-
+@media (max-width: 1800px) {
+    .page-content .grid-container {
+        width: calc(100% - 10px);
+        height: calc(100% - 200px);
+        /* Add some spacing below the fixed header */
+    }
+}
 /* Style for the data grid */
 .page-content .data-grid {
     width: 100%;
@@ -361,7 +378,7 @@
     /* Increase padding */
     text-align: right;
     /* Align text to the right */
-    font-size: 30px;
+    font-size: 24px;
     /* Increase font size */
     white-space: nowrap;
     /* Prevent text from wrapping */
@@ -518,7 +535,7 @@
 /* Container for map and grid */
 .families-report-container {
     display: flex;
-    height: calc(100vh - 500px);
+    height: calc(100vh - 400px);
     /* Adjust height to fit the viewport minus header and filters */
     gap: 50px;
     /* Space between map and grid */
@@ -535,7 +552,14 @@
     overflow: hidden;
     /* Prevent overflow */
     width: 1500px;
+    transform: scale(0.9);
 }
+@media (max-width: 1800px) {
+  .families-report-container {
+    height: calc(100vh - 200px);
+  }
+}
+
 
 /* Map section */
 .families-map-container {
@@ -793,23 +817,36 @@
     /* Align to the right */
     margin-top: 10px;
     /* Add some spacing above */
-    margin-right: 2px;
+    margin-right: 100px;
+    /* Slightly move it to the left from the edge */
+}
+
+.active-tutors-back-to-reports {
+    display: flex;
+    justify-content: flex-start;
+    /* Align to the right */
+    margin-top: 10px;
+    /* Add some spacing above */
+    margin-right: 50px;
     /* Slightly move it to the left from the edge */
 }
 
 @media (max-width: 2400px) {
 
     .families-waiting-report-main-content .back-to-reports,
-    .possible-matches-report-main-content .back-to-reports {
+    .possible-matches-report-main-content .back-to-reports,
+    .new-families-report-main-content .back-to-reports,
+    .active-tutors-report-main-content .back-to-reports {
         display: flex;
         justify-content: flex-start;
         /* Align to the right */
         margin-top: 10px;
         /* Add some spacing above */
-        margin-right: 172px;
+        margin-right: 180px;
         /* Slightly move it to the left from the edge */
     }
 }
+
 
 
 .back-button {
@@ -820,7 +857,7 @@
     border: none;
     padding: 8px 16px;
     border-radius: 5px;
-    font-size: 20px;
+    font-size: 24px;
     /* Increase font size */
     cursor: pointer;
     transition: background-color 0.3s ease;

@@ -49,10 +49,16 @@
   /* Adjust based on available height */
 }
 
+/* Add this to your main CSS file (e.g., common.css or index.css) */
+@media (max-width: 1800px) {
+  .tasks-container  {
+    max-height: calc(100vh - 200px);
+  }
+}
 .strong-p {
   font-weight: bold;
   /* Make text bold */
-  font-size: 22px;
+  font-size: 24px !important;
   /* Increase font size */
   color: #333;
   /* Darker color for better readability */
@@ -80,7 +86,7 @@
 
 /* Individual task card */
 .tasks-container .task {
-  width: 300px;
+  width: 320px;
   /* Fixed width for consistency */
   background-color: #fff;
   padding: 20px;
@@ -103,11 +109,13 @@
 /* Task title */
 .tasks-container .task h2 {
   margin: 0;
+  font-size: 30px;
 }
 
 /* Task description */
 .tasks-container .task p {
   margin: 5px 0;
+  font-size: 20px;
 }
 
 /* Actions container for buttons */
@@ -129,7 +137,7 @@
   /* Green background */
   color: white;
   /* White text */
-  padding: 10px 15px;
+  padding: 10px 0px;
   /* Increase padding for larger buttons */
   border: none;
   /* Remove border */
@@ -137,7 +145,7 @@
   /* Rounded corners */
   cursor: pointer;
   /* Pointer cursor on hover */
-  font-size: 20px;
+  font-size: 22px;
   /* Increase font size */
   width: auto;
   /* Allow the button to adjust its width based on content */
@@ -255,21 +263,6 @@
   /* Allow items to grow and shrink as needed */
   min-width: 150px;
   /* Set a minimum width for each item */
-}
-
-/* Handle smaller screens */
-@media (max-width: 768px) {
-  .filter-create-container {
-    flex-direction: column;
-    /* Stack items vertically on smaller screens */
-    align-items: stretch;
-    /* Stretch items to fill the container */
-  }
-
-  .filter-create-container>* {
-    width: 100%;
-    /* Make each item take up the full width */
-  }
 }
 
 .loader {
