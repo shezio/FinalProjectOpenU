@@ -865,18 +865,22 @@ export const exportVolunteerFeedbackToExcel = (feedbacks, t) => {
 
   const headers = [
     t("Volunteer Name"),
+    t("Child Name"),
     t("Event Date"),
     t("Feedback Filled At"),
     t("Description"),
+    t("Feedback Type"),
     t("Exceptional Events"),
     t("Anything Else"),
     t("Comments"),
   ];
   const rows = selectedFeedbacks.map(feedback => [
     feedback.volunteer_name,
+    feedback.child_name,
     feedback.event_date,
     feedback.feedback_filled_at,
     feedback.description,
+    t(feedback.feedback_type),
     feedback.exceptional_events,
     feedback.anything_else,
     feedback.comments,
@@ -905,7 +909,7 @@ export const exportVolunteerFeedbackToPDF = (feedbacks, t) => {
     return;
   }
 
-  const doc = new jsPDF("landscape", "mm", "a4");
+  const doc = new jsPDF("landscape", "mm", "a3");
 
   doc.addFileToVFS("Alef-Bold.ttf", AlefBold);
   doc.addFont("Alef-Bold.ttf", "Alef", "bold");
@@ -918,9 +922,11 @@ export const exportVolunteerFeedbackToPDF = (feedbacks, t) => {
 
   const headers = [
     reverseText(t("Volunteer Name")),
+    reverseText(t("Child Name")),
     reverseText(t("Event Date")),
     reverseText(t("Feedback Filled At")),
     reverseText(t("Description")),
+    reverseText(t("Feedback Type")),
     reverseText(t("Exceptional Events")),
     reverseText(t("Anything Else")),
     reverseText(t("Comments")),
@@ -930,9 +936,11 @@ export const exportVolunteerFeedbackToPDF = (feedbacks, t) => {
   // Prepare table rows
   const rows = selectedFeedbacks.map(feedback => [
     feedback.volunteer_name,
+    feedback.child_name,
     feedback.event_date,
     feedback.feedback_filled_at,
     feedback.description || "", // Handle null or undefined values
+    t(feedback.feedback_type) || "", // Handle null or undefined values
     feedback.exceptional_events || "",
     feedback.anything_else || "",
     feedback.comments || "",
@@ -960,13 +968,15 @@ export const exportVolunteerFeedbackToPDF = (feedbacks, t) => {
     styles: { font: "Alef", fontSize: 10, cellPadding: 3, halign: "right" },
     headStyles: { fillColor: [76, 175, 80], textColor: 255, halign: "right" },
     columnStyles: {
-      0: { halign: 'right', cellwidth: 40 }, // Align first column to the right
-      1: { halign: 'right' }, // Align second column to the right
-      2: { halign: 'right', cellwidth: 30 }, // Align third column to the right
-      3: { halign: 'right', cellwidth: 20 }, // Align fourth column to the right
-      4: { halign: 'right', cellwidth: 20 }, // Align fifth column to the right
-      5: { halign: 'right' }, // Align sixth column to the right
-      6: { halign: 'right', cellwidth: 30 },
+      0: { halign: 'right', cellwidth: 40 }, // volunteer name
+      1: { halign: 'right', cellwidth: 40 }, // child name
+      2: { halign: 'right', cellwidth: 30 }, // event date
+      3: { halign: 'right', cellwidth: 30 }, // feedback filled at
+      4: { halign: 'right', cellwidth: 50 }, // description
+      5: { halign: 'right', cellwidth: 30 }, // feedback type
+      6: { halign: 'right', cellwidth: 30 }, // exceptional events
+      7: { halign: 'right', cellwidth: 30 }, // anything else
+      8: { halign: 'right', cellwidth: 30 }, // comments
     },
   });
 
@@ -989,6 +999,7 @@ export const exportTutorFeedbackToExcel = (feedbacks, t) => {
     t("Event Date"),
     t("Feedback Filled At"),
     t("Description"),
+    t("Feedback Type"),
     t("Exceptional Events"),
     t("Anything Else"),
     t("Comments"),
@@ -1001,6 +1012,7 @@ export const exportTutorFeedbackToExcel = (feedbacks, t) => {
     feedback.event_date,
     feedback.feedback_filled_at,
     feedback.description,
+    t(feedback.feedback_type),
     feedback.exceptional_events,
     feedback.anything_else,
     feedback.comments,
@@ -1043,7 +1055,7 @@ export const exportTutorFeedbackToPDF = (feedbacks, t) => {
     return;
   }
 
-  const doc = new jsPDF("landscape", "mm", "a4");
+  const doc = new jsPDF("landscape", "mm", "a3");
 
   // Set RTL direction for the whole document
   doc.setR2L(true);
@@ -1054,7 +1066,7 @@ export const exportTutorFeedbackToPDF = (feedbacks, t) => {
 
   doc.addImage(logo, "PNG", 10, 10, 30, 30);
 
-  doc.setFontSize(18);
+  doc.setFontSize(22);
   doc.text(t("Tutor Feedback Report"), doc.internal.pageSize.getWidth() / 2, 20, { align: "center" });
 
   const headers = [
@@ -1062,6 +1074,7 @@ export const exportTutorFeedbackToPDF = (feedbacks, t) => {
     t("Anything Else"),
     t("Exceptional Events"),
     t("Description"),
+    t("Feedback Type"),
     t("Feedback Filled At"),
     t("Event Date"),
     t("Is First Visit?"),
@@ -1075,6 +1088,7 @@ export const exportTutorFeedbackToPDF = (feedbacks, t) => {
     feedback.anything_else || "",
     feedback.exceptional_events || "",
     feedback.description || "",
+    t(feedback.feedback_type) || "",
     reverseText(feedback.feedback_filled_at),
     reverseText(feedback.event_date),
     feedback.is_first_visit ? t("Yes") : t("No"),
@@ -1102,16 +1116,17 @@ export const exportTutorFeedbackToPDF = (feedbacks, t) => {
     styles: { font: "Alef", fontSize: 10, cellPadding: 3, halign: "right", rtl: true },
     headStyles: { fillColor: [76, 175, 80], textColor: 255, halign: "right", rtl: true },
     columnStyles: {
-      0: { halign: 'right', cellWidth: 25 },
-      1: { halign: 'right', cellWidth: 25 },
-      2: { halign: 'right', cellWidth: 25 },
-      3: { halign: 'right', cellWidth: 40 },
-      4: { halign: 'right', cellWidth: 30 },
-      5: { halign: 'right', cellWidth: 30 },
-      6: { halign: 'right', cellWidth: 25 },
-      7: { halign: 'right', cellWidth: 25 },
-      8: { halign: 'right', cellWidth: 25 },
-      9: { halign: 'right', cellWidth: 25 },
+      0: { halign: 'right', cellWidth: 25 }, // comments
+      1: { halign: 'right', cellWidth: 25 }, // anything_else
+      2: { halign: 'right', cellWidth: 25 }, // exceptional_events
+      3: { halign: 'right', cellWidth: 60 }, // description
+      4: { halign: 'right', cellWidth: 40 }, // feedback_type
+      5: { halign: 'right', cellWidth: 30 }, // feedback_filled_at
+      6: { halign: 'right', cellWidth: 30 }, // event_date
+      7: { halign: 'right', cellWidth: 25 }, // is_first_visit
+      8: { halign: 'right', cellWidth: 25 }, // is_it_your_tutee
+      9: { halign: 'right', cellWidth: 25 }, // tutee_name
+      10: { halign: 'right', cellWidth: 25 }, // tutor_name
     },
   });
 

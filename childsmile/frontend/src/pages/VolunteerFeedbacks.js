@@ -15,9 +15,8 @@ import { feedbackShowErrorToast } from "../components/toastUtils";
 const PAGE_SIZE = 2;
 
 const hasGeneralVolunteerFeedbacksViewPermission = hasViewPermissionForTable("general_v_feedback");
-const hasTutorFeedbacksViewPermission = hasViewPermissionForTable("tutor_feedback");
 
-const TutorFeedbacks = () => {
+const VolunteerFeedbacks = () => {
   const { t } = useTranslation();
   const [loading, setLoading] = useState(true);
   const [feedbacks, setFeedbacks] = useState([]);
@@ -45,8 +44,8 @@ const TutorFeedbacks = () => {
   const [showAdditionalVolunteersDropdown, setShowAdditionalVolunteersDropdown] = useState(false);
 
   // data fetching
-  const [tutors, setTutors] = useState([]);
-  const [tutees, setTutees] = useState([]);
+  const [volunteers, setVolunteers] = useState([]);
+  const [children, setChildren] = useState([]);
   const [additionalVolunteers, setAdditionalVolunteers] = useState([]);
 
   const [staffOptions, setStaffOptions] = useState([]);
@@ -63,11 +62,11 @@ const TutorFeedbacks = () => {
     setLoading(true);
     Promise.all([
       axios.get("/api/reports/volunteer-feedback-report/"),
-      axios.get("/api/get_tutorships/"),
       axios.get("/api/staff/"),
+      axios.get("/api/children/"),
     ])
-      .then(([feedbackRes, tutorshipsRes, staffRes]) => {
-        const allFeedbacks = feedbackRes.data.tutor_feedback || [];
+      .then(([feedbackRes, staffRes, childrenRes]) => {
+        const allFeedbacks = feedbackRes.data.volunteer_feedback || [];
         setFeedbacks(allFeedbacks);
         setFilteredFeedbacks(allFeedbacks);
         setCurrentPage(1);
@@ -97,28 +96,24 @@ const TutorFeedbacks = () => {
           setIsAdmin((currentStaff.roles || []).includes("System Administrator"));
         }
 
-        // Use tutorshipsRes.data.tutorships as the array
-        const tutorshipArray = tutorshipsRes.data.tutorships || [];
-        const approvedTutorships = tutorshipArray.filter(
-          t => t.approval_counter === 2
-        );
+        // Build volunteers array with staff that has at least 1 role of General Volunteer
+        const allVolunteers = staffs
+          .filter(s => (s.roles || []).includes("General Volunteer"))
+          .map(s => ({
+            id: s.id,
+            staff_id: s.id,
+            name: `${s.first_name} ${s.last_name}`
+          }));
 
-        // Build tutors and tutees arrays with full names
-        const allTutors = approvedTutorships.map(t => ({
+        const allChildren = childrenRes.data.children.map(t => ({
           id: t.id,
-          staff_id: t.tutor_staff_id,
-          name: `${t.tutor_firstname} ${t.tutor_lastname}`
+          name: `${t.first_name} ${t.last_name}`
         }));
 
-        const allTutees = approvedTutorships.map(t => ({
-          id: t.id,
-          name: `${t.child_firstname} ${t.child_lastname}`
-        }));
+        setVolunteers(allVolunteers);
+        setChildren(allChildren);
 
-        setTutors(allTutors);
-        setTutees(allTutees);
-
-        // After setTutors(allTutors);
+        // After setVolunteers(allVolunteers);
         setCanDelete(
           hasAllPermissions([
             { resource: 'childsmile_app_general_v_feedback', action: 'DELETE' },
@@ -193,11 +188,11 @@ const TutorFeedbacks = () => {
     let modalInit = { ...feedback };
     if (feedback.feedback_id) {
       modalInit.id = feedback.feedback_id;
-      // Find the tutor and tutee by name to get their IDs
-      const tutor = tutors.find(t => t.name === feedback.tutor_name);
-      const tutee = tutees.find(t => t.name === feedback.tutee_name);
-      modalInit.tutor_id = tutor ? tutor.id : feedback.tutor_id || "";
-      modalInit.tutee_id = tutee ? tutee.id : feedback.tutee_id || "";
+      // Find the volunteer and child by name to get their IDs
+      const volunteer = volunteers.find(t => t.name === feedback.volunteer_name);
+      const child = children.find(t => t.name === feedback.child_name);
+      modalInit.volunteer_id = volunteer ? volunteer.id : feedback.volunteer_id || "";
+      modalInit.child_id = child ? child.id : feedback.id || "";
       modalInit.hospital_name = feedback.hospital_name || "";
       modalInit.feedback_type = feedback.feedback_type;
       modalInit.additional_volunteers = feedback.additional_volunteers
@@ -206,7 +201,7 @@ const TutorFeedbacks = () => {
           : feedback.additional_volunteers
         : [];
     } else {
-      modalInit.feedback_type = "tutor_fun_day";
+      modalInit.feedback_type = "general_volunteer_fun_day"; // Default type for new feedback
       modalInit.hospital_name = feedback.hospital_name || "";
       modalInit.additional_volunteers = [];
     }
@@ -227,16 +222,16 @@ const TutorFeedbacks = () => {
   };
 
   const shouldShrinkTextareas =
-    modalErrors.tutor_name ||
-    modalErrors.tutee_name ||
+    modalErrors.volunteer_name ||
+    modalErrors.child_name ||
     modalErrors.event_date ||
     modalErrors.description;
 
 
   const validateModal = () => {
     const errors = {};
-    if (!modalData.tutor_id) errors.tutor_name = t("Tutor Name is required");
-    if (!modalData.tutee_id && modalData.feedback_type !== "general_volunteer_hospital_visit") errors.tutee_name = t("Tutee Name is required");
+    if (!modalData.volunteer_id) errors.volunteer_name = t("Volunteer Name is required");
+    if (!modalData.child_id && modalData.feedback_type !== "general_volunteer_hospital_visit") errors.child_name = t("Child Name is required");
     if (!modalData.event_date) errors.event_date = t("Event Date is required");
     if (!modalData.description) errors.description = t("Description is required");
     if (modalData.feedback_type === "general_volunteer_hospital_visit") {
@@ -272,18 +267,16 @@ const TutorFeedbacks = () => {
     const feedback_filled_date = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
     console.log("Feedback type:", modalData.feedback_type);
     const data = {
-      tutor_id: modalData.tutor_id,
-      tutee_id: modalData.tutee_id,
+      volunteer_id: modalData.volunteer_id,
+      child_id: modalData.child_id,
       staff_id: currentStaffid,
-      tutor_name: tutors.find(t => t.id === modalData.tutor_id)?.name,
-      tutee_name: tutees.find(t => t.id === modalData.tutee_id)?.name,
+      volunteer_name: volunteers.find(t => t.id === modalData.volunteer_id)?.name,
+      child_name: children.find(t => t.id === modalData.child_id)?.name,
       event_date: modalData.event_date,
       description: modalData.description,
       exceptional_events: modalData.exceptional_events || "",
       anything_else: modalData.anything_else || "",
       comments: modalData.comments || "",
-      is_it_your_tutee: modalData.is_it_your_tutee || false,
-      is_first_visit: modalData.is_first_visit || false,
       feedback_filled_at: feedback_filled_date,
       feedback_type: modalData.feedback_type,
       hospital_name: modalData.hospital_name,
@@ -293,14 +286,14 @@ const TutorFeedbacks = () => {
     };
 
     console.log("Data to be sent:", data);
-    axios.post("/api/create_tutor_feedback/", data)
+    axios.post("/api/create_volunteer_feedback/", data)
       .then(() => {
         toast.success(t("Feedback created successfully"));
         fetchData();
       })
       .catch((error) => {
         if (error.response && error.response.status === 404) {
-          feedbackShowErrorToast(t, "Current user was not found in active tutors, cannot create feedback", error);
+          feedbackShowErrorToast(t, "Current user was not found in active volunteers, cannot create feedback", error);
         } else {
           feedbackShowErrorToast(t, "Error creating feedback", error);
         }
@@ -314,18 +307,16 @@ const TutorFeedbacks = () => {
 
     const data = {
       id: modalData.id,
-      tutor_id: modalData.tutor_id,
-      tutee_id: modalData.tutee_id,
+      volunteer_id: modalData.volunteer_id,
+      child_id: modalData.child_id,
       staff_id: currentStaffid,
-      tutor_name: tutors.find(t => t.id === modalData.tutor_id)?.name,
-      tutee_name: tutees.find(t => t.id === modalData.tutee_id)?.name,
+      volunteer_name: volunteers.find(t => t.id === modalData.volunteer_id)?.name,
+      child_name: children.find(t => t.id === modalData.child_id)?.name,
       event_date: modalData.event_date,
       description: modalData.description,
       exceptional_events: modalData.exceptional_events || "",
       anything_else: modalData.anything_else || "",
       comments: modalData.comments || "",
-      is_it_your_tutee: modalData.is_it_your_tutee || false,
-      is_first_visit: modalData.is_first_visit || false,
       feedback_filled_at: feedback_filled_date,
       feedback_type: modalData.feedback_type,
       hospital_name: modalData.hospital_name,
@@ -334,7 +325,7 @@ const TutorFeedbacks = () => {
         : "",
     };
     console.log("Update Data to be sent:", data);
-    axios.put(`/api/update_tutor_feedback/${modalData.id}/`, data)
+    axios.put(`/api/update_volunteer_feedback/${modalData.id}/`, data)
       .then(() => {
         toast.success(t("Feedback updated successfully"));
         fetchData();
@@ -347,7 +338,7 @@ const TutorFeedbacks = () => {
 
   const handleDeleteFeedback = (id) => {
     console.log("Deleting feedback with ID:", id);
-    axios.delete(`/api/delete_tutor_feedback/${id}/`)
+    axios.delete(`/api/delete_volunteer_feedback/${id}/`)
       .then(() => {
         toast.success(t("Feedback deleted successfully"));
         fetchData();
@@ -358,19 +349,13 @@ const TutorFeedbacks = () => {
       });
   };
 
-
-  /* if user doesn't have permission to view the page, show a message */
-  if (!(hasTutorFeedbacksViewPermission && hasGeneralVolunteerFeedbacksViewPermission)) {
-    return (
-      <div className="volunteer-feedbacks-main-content">
-        <Sidebar />
-        <InnerPageHeader title={t("General Volunteer Feedbacks")} />
-        <div className="no-permission">
-          <h2>{t("You do not have permission to view this page")}</h2>
-        </div>
-      </div>
-    );
-  }
+  // Set zoom level when component mounts
+  useEffect(() => {
+    document.body.style.zoom = "80%";
+    return () => {
+      document.body.style.zoom = "";
+    };
+  }, []);
 
   return (
     <div className="volunteer-feedbacks-main-content">
@@ -392,11 +377,7 @@ const TutorFeedbacks = () => {
         <div className="feedbacks-filter-create-container">
           <div className="feedbacks-actions">
             <div className="create-feedback">
-              <button
-                onClick={() => openModal({})}
-                disabled={!(isAdmin)}
-
-              >
+              <button onClick={() => openModal({})}              >
                 {t("Create Feedback")}
               </button>
             </div>
@@ -463,10 +444,8 @@ const TutorFeedbacks = () => {
               <table className="feedbacks-data-grid">
                 <thead>
                   <tr>
-                    <th>{t("Tutor Name")}</th>
-                    <th>{t("Tutee Name / Hospital Name")}</th>
-                    <th>{t("Is It Your Tutee?")}</th>
-                    <th>{t("Is First Visit?")}</th>
+                    <th>{t("Volunteer Name")}</th>
+                    <th>{t("Child Name / Hospital Name")}</th>
                     <th className="feedbacks-wide-column">
                       {t("Event Date")}
                       <button className="sort-button" onClick={toggleSortOrderEventDate}>
@@ -487,10 +466,8 @@ const TutorFeedbacks = () => {
                 <tbody>
                   {paginatedFeedbacks.map((feedback, index) => (
                     <tr key={index}>
-                      <td>{feedback.tutor_name}</td>
-                      <td>{feedback.tutee_name}</td>
-                      <td>{feedback.is_it_your_tutee ? t("Yes") : t("No")}</td>
-                      <td>{feedback.is_first_visit ? t("Yes") : t("No")}</td>
+                      <td>{feedback.volunteer_name}</td>
+                      <td>{feedback.child_name}</td>
                       <td>{feedback.event_date}</td>
                       <td>{feedback.feedback_filled_at}</td>
                       <td>{feedback.description}</td>
@@ -579,10 +556,8 @@ const TutorFeedbacks = () => {
               <span className="feedbacks-close" onClick={() => setInfoModalData(null)}>&times;</span>
               <h2>{t("Feedback Details")}</h2>
               <div className="feedbacks-info-grid">
-                <p>{t("Tutor Name")}: {infoModalData.tutor_name}</p>
-                <p>{t("Tutee Name / Hospital Name")}:{infoModalData.tutee_name || infoModalData.hospital_name}</p>
-                <p>{t("Is It Your Tutee?")}:{infoModalData.is_it_your_tutee ? t("Yes") : t("No")}</p>
-                <p>{t("Is First Visit?")}:{infoModalData.is_first_visit ? t("Yes") : t("No")}</p>
+                <p>{t("Volunteer Name")}: {infoModalData.volunteer_name}</p>
+                <p>{t("Child Name / Hospital Name")}:{infoModalData.child_name || infoModalData.hospital_name}</p>
                 <p>{t("Event Date")}:{infoModalData.event_date}</p>
                 <p>{t("Feedback Filled At")}:{infoModalData.feedback_filled_at}</p>
                 <p>{t("Description")}:{infoModalData.description}</p>
@@ -639,10 +614,8 @@ const TutorFeedbacks = () => {
                       onChange={e => setModalData({ ...modalData, feedback_type: e.target.value })}
                       required
                     >
-                      <option value="tutor_fun_day">{t("tutor_fun_day")}</option>
                       <option value="general_volunteer_fun_day">{t("general_volunteer_fun_day")}</option>
                       <option value="general_volunteer_hospital_visit">{t("general_volunteer_hospital_visit")}</option>
-                      <option value="tutorship">{t("tutorship")}</option>
                     </select>
                   )}
                 </div>
@@ -662,89 +635,57 @@ const TutorFeedbacks = () => {
                   </>
                 )}
                 <div className="feedbacks-form-row">
-                  <label>{t("Tutor Name")}</label>
+                  <label>{t("Volunteer Name")}</label>
                   {modalData.id ? (
                     // Show as read-only text when editing
                     <input
                       type="text"
-                      value={tutors.find(t => t.id === modalData.tutor_id)?.name || modalData.tutor_name || ""}
+                      value={volunteers.find(t => t.id === modalData.volunteer_id)?.name || modalData.volunteer_name || ""}
                       disabled
                       className="feedbacks-readonly-input"
                     />
                   ) : (
                     // Allow selection when creating
                     <Select
-                      value={tutors.find(t => t.id === modalData.tutor_id) || null}
-                      onChange={option => setModalData({ ...modalData, tutor_id: option ? option.id : "" })}
-                      options={tutors}
+                      value={volunteers.find(t => t.id === modalData.volunteer_id) || null}
+                      onChange={option => setModalData({ ...modalData, volunteer_id: option ? option.id : "" })}
+                      options={volunteers}
                       getOptionLabel={option => option.name}
                       getOptionValue={option => option.id}
-                      placeholder={t("Select Tutor")}
+                      placeholder={t("Select Volunteer")}
                       isClearable
                       classNamePrefix={"feedbacks-select"}
                     />
                   )}
-                  {modalErrors.tutor_name && <div className="error">{modalErrors.tutor_name}</div>}
+                  {modalErrors.volunteer_name && <div className="error">{modalErrors.volunteer_name}</div>}
                 </div>
                 <div className="feedbacks-form-row">
                   {modalData.feedback_type !== "general_volunteer_hospital_visit" && (
                     <>
-                      <label>{t("Tutee Name")}</label>
+                      <label>{t("Child Name")}</label>
                       {modalData.id ? (
                         <input
                           type="text"
-                          value={tutees.find(t => t.id === modalData.tutee_id)?.name || modalData.tutee_name || ""}
+                          value={children.find(t => t.id === modalData.child_id)?.name || modalData.child_name || ""}
                           disabled
                           className="feedbacks-readonly-input"
                         />
                       ) : (
                         <Select
-                          value={tutees.find(t => t.id === modalData.tutee_id) || null}
-                          onChange={option => setModalData({ ...modalData, tutee_id: option ? option.id : "" })}
-                          options={tutees}
+                          value={children.find(t => t.id === modalData.child_id) || null}
+                          onChange={option => setModalData({ ...modalData, child_id: option ? option.id : "" })}
+                          options={children}
                           getOptionLabel={option => option.name}
                           getOptionValue={option => option.id}
-                          placeholder={t("Select Tutee")}
+                          placeholder={t("Select Child")}
                           isClearable
                           classNamePrefix={"feedbacks-select"}
                         />
                       )}
-                      {modalErrors.tutee_name && <div className="error">{modalErrors.tutee_name}</div>}
+                      {modalErrors.child_name && <div className="error">{modalErrors.child_name}</div>}
                     </>
                   )}
                 </div>
-                {modalData.feedback_type !== "general_volunteer_hospital_visit" && (
-                  <>
-                    <div className="feedbacks-form-row">
-                      <label>{t("Is It Your Tutee?")}</label>
-                      <Select
-                        value={modalData.is_it_your_tutee ? { value: true, label: t("Yes") } : { value: false, label: t("No"), default: true }}
-                        onChange={option => setModalData({ ...modalData, is_it_your_tutee: option.value })}
-                        options={[
-                          { value: true, label: t("Yes") },
-                          { value: false, label: t("No") }
-                        ]}
-                        placeholder={t("Select")}
-                        isClearable
-                        classNamePrefix={"feedbacks-select"}
-                      />
-                    </div>
-                    <div className="feedbacks-form-row">
-                      <label>{t("Is It Your First Visit?")}</label>
-                      <Select
-                        value={modalData.is_first_visit ? { value: true, label: t("Yes") } : { value: false, label: t("No") }}
-                        onChange={option => setModalData({ ...modalData, is_first_visit: option.value })}
-                        options={[
-                          { value: true, label: t("Yes") },
-                          { value: false, label: t("No") }
-                        ]}
-                        placeholder={t("Select")}
-                        isClearable
-                        classNamePrefix={"feedbacks-select"}
-                      />
-                    </div>
-                  </>
-                )}
                 <div className="feedbacks-form-row">
                   <label>{t("Event Date")}</label>
                   <input
@@ -840,4 +781,4 @@ const TutorFeedbacks = () => {
   );
 };
 
-export default TutorFeedbacks;
+export default VolunteerFeedbacks;

@@ -593,19 +593,12 @@ def update_family(request, child_id):
   update to marital_status of the child - update the relationship_status of the tutor to the marital_status of the child
     update to current_medical_state of the child - update the tutee_wellness to the current_medical_state of the child
 
-Tutorships:
-[] add the info button that we have in the matching wizard to every line in the tutorship grid in tutorships.js
-
-
-Volunteer Feedback:
-[] create , update delete for general volunteer feedback and also make sure the volunter_feedback_report which is the GET here  - gives us all the fields tutor feedback report gives on the feedback object
-
 Initial Family Data:
 [V] create a model for this table 
 class InitialFamilyData(models.Model):
     initial_family_data_id = models.AutoField(primary_key=True)
     names = models.CharField(max_length=50, null=False)
-    phones= models.CharField(max_length=50, null=False)
+    phones = models.CharField(max_length=50, null=False)
     other_information = models.TextField(max_length=500, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -614,6 +607,17 @@ class InitialFamilyData(models.Model):
         return f"InitialFamilyData({self.initial_family_data_id}, {self.names}, {self.phones})"
     class Meta:
         db_table = "initial_family_data"
+
+create new migration file that
+[] adds a new DB table in the system called "initial_family_data" with the following fields:
+- Initial family data id - auto increment - primary key
+- Names - text up to 50 characters - not null
+- Phones - text up to 50 characters - not null
+- Other information - text up to 500 characters - nullable
+- Created at - date time - will always be the time of creation - not null
+- Updated at - date time - not null
+- Family added - boolean - default false
+
 
 [] update tasks model to add the fields names, phones, and other information, and initial_family_data_id as FK to the initial family data table but can be empty
 class Tasks(models.Model):
@@ -633,6 +637,7 @@ class Tasks(models.Model):
     names = models.CharField(max_length=50, null=True, blank=True)
     phones = models.CharField(max_length=50, null=True, blank=True)
     other_information = models.TextField(max_length=500, null=True, blank=True)
+    initial_family_data_id_fk = models.ForeignKey(InitialFamilyData, on_delete=models.SET_NULL, null=True, blank=True)
 
     def __str__(self):
         return f"Task {self.task_id} - {self.task_type}"
@@ -648,30 +653,38 @@ class Tasks(models.Model):
 
 
 
-create new migration file that
-[] adds a new DB table in the system called "initial_family_data" with the following fields:
-- Initial family data id - auto increment - primary key
-- Names - text up to 50 characters - not null
-- Phones - text up to 50 characters - not null
-- Other information - text up to 500 characters - nullable
-- Created at - date time - will always be the time of creation - not null
-- Updated at - date time - not null
-- Family added - boolean - default false
-
-[] add the new fields to the tasks table
+add to views of tasks the new fields:
+- initial_family_data_id_fk - foreign key to the initial family data table - nullable
 - names - text up to 50 characters - nullable
 - phones - text up to 50 characters - nullable
 - other_information - text up to 500 characters - nullable
-- initial_family_data_id_fk - foreign key to initial family data table - can be null
+[] add the new fields to the GET view of tasks
+[] add the new fields to the POST view of tasks
+[] add the new fields to the PUT view of tasks
+[] add the new fields to the DELETE view of tasks
 
-[] create create, update, delete and get views for this table
-[] create urls for each of the views
+BE additions:
+[] create a new view for the InitialFamilyData model that will return all the data in the table
+[] create a new view for the InitialFamilyData model that will create a new row
+[] create a new view for the InitialFamilyData model that will update an existing row by id
+[] create a new view for the InitialFamilyData model that will delete an existing row by id
+[] create create, update, delete and get views for this InitialFamilyData model
+create urls for each of the views
+[] URL for the InitialFamilyData model that will return all the data in the table
+[] URL for the InitialFamilyData model that will create a new row
+[] URL for the InitialFamilyData model that will update an existing row by id
+[] URL for the InitialFamilyData model that will delete an existing row by id
 
-in volunteers feedback and tutor feedback screens - on general_volunteer_hospital_visit feedback type ONLY
+volunteer and tutor feedback screens - on general_volunteer_hospital_visit feedback type ONLY
 [] add a <h2> called initial family data with 3 fields: names, phone, and other information
 [] once the feedback is submitted - only on create not edit - POST only
 [] add the data to the initial family data table
 [] create automatically a task to all Technical Coordinators to add a family - if names and phones are both not empty
+
+volunteer and tutor feedback reports-  need to add new fields to the feedback report
+[] add the names field to the feedback report
+[] add the phones field to the feedback report
+[] add the other information field to the feedback report
 
 Tasks:
 [] add the fields to the task of adding a family once the type was chosen and add a dummy condition which is always false until we decide to show this entire feature
@@ -738,3 +751,12 @@ UI:
 [] delete modal will ask if you are sure you want to delete this initial family data - like all the scary delete modals - we can use the delete family modal we already have - its convenient since all the CSS already exists
 [] mark as added modal will ask if you are sure you want to mark this initial family data as added? and state this will auto update the task status to "הושלמה" and delete the task if it was "הושלמה" - like all the scary delete modals - we can use the delete family modal we already have - its convenient since all the CSS already exists
 [] in the update modal - if you change the names or phones or other information - then it will update the task with the initial_family_data_id_fk
+
+
+
+KANBANise the task screen:
+instead of cards in container - make a kanban board with 3 columns:
+then the status of the task will be the column it is in
+and the dragging from one column to another will update the status of the task
+task cannot be dragged back to and old status
+means that each column will have a different status and a task container inside it

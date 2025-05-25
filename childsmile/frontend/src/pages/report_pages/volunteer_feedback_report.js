@@ -189,6 +189,7 @@ const VolunteerFeedbackReport = () => {
                         />
                       </th>
                       <th>{t("Volunteer Name")}</th>
+                      <th>{t("Child Name")}</th>
                       <th className="wide-column">
                         {t("Event Date")}
                         <button
@@ -208,6 +209,7 @@ const VolunteerFeedbackReport = () => {
                         </button>
                       </th>
                       <th>{t("Description")}</th>
+                      <th>{t("Feedback Type")}</th>
                       <th>{t("Exceptional Events")}</th>
                       <th>{t("Anything Else")}</th>
                       <th>{t("Comments")}</th>
@@ -224,9 +226,11 @@ const VolunteerFeedbackReport = () => {
                           />
                         </td>
                         <td>{feedback.volunteer_name}</td>
+                        <td>{feedback.child_name}</td>
                         <td>{feedback.event_date}</td>
                         <td>{feedback.feedback_filled_at}</td>
                         <td>{feedback.description}</td>
+                        <td>{t(feedback.feedback_type)}</td>
                         <td>{feedback.exceptional_events}</td>
                         <td>{feedback.anything_else}</td>
                         <td>{feedback.comments}</td>

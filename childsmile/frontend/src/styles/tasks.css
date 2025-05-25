@@ -45,14 +45,14 @@
   /* Align tasks to the left */
   overflow-y: auto;
   /* Enable vertical scrolling */
-  max-height: calc(100vh - 400px);
+  max-height: calc(100vh - 300px);
   /* Adjust based on available height */
 }
 
 /* Add this to your main CSS file (e.g., common.css or index.css) */
 @media (max-width: 1800px) {
   .tasks-container  {
-    max-height: calc(100vh - 200px);
+    max-height: calc(100vh - 150px);
   }
 }
 .strong-p {
@@ -446,7 +446,7 @@
   position: absolute;
   top: 15px;
   right: 20px;
-  font-size: 28px;
+  font-size: 3em;
   font-weight: bold;
   cursor: pointer;
   transition: color 0.3s ease;

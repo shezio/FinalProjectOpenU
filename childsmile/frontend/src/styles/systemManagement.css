@@ -9,6 +9,14 @@
   margin-top: 20px;
 }
 
+.staff-grid-container .no-data {
+  text-align: center;
+  font-size: 48px;
+  font-weight: bold;
+  color: /*black */#333;
+  margin-top: 20px;
+}
+
 .staff-data-grid {
   width: 100%;
   border-collapse: collapse;
@@ -107,11 +115,16 @@
 }
 
 .staff-close {
+  color: #333;
+  /* Darker color for better visibility */
   position: absolute;
-  top: 10px;
-  right: 10px;
-  font-size: 24px;
+  top: 15px;
+  right: 20px;
+  font-size: 3em;
+  font-weight: bold;
   cursor: pointer;
+  transition: color 0.3s ease;
+  /* Smooth hover effect */
 }
 
 .staff-form-grid {
