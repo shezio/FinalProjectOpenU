@@ -42,6 +42,9 @@ from .views import (
     create_tutor_feedback,
     update_tutor_feedback,
     delete_tutor_feedback,
+    create_volunteer_feedback,
+    update_volunteer_feedback,
+    delete_volunteer_feedback,
 )
 
 from .unused_views import (
@@ -248,5 +251,20 @@ urlpatterns = [
         "api/delete_tutor_feedback/<int:feedback_id>/",
         delete_tutor_feedback,
         name="delete_tutor_feedback",
+    ),
+    path(
+        "api/create_volunteer_feedback/",
+        create_volunteer_feedback,
+        name="create_volunteer_feedback",
+    ),
+    path(
+        "api/update_volunteer_feedback/<int:feedback_id>/",
+        update_volunteer_feedback,
+        name="update_volunteer_feedback",
+    ),
+    path(
+        "api/delete_volunteer_feedback/<int:feedback_id>/",
+        delete_volunteer_feedback,
+        name="delete_volunteer_feedback",
     ),
 ]

@@ -747,7 +747,6 @@ const Tutorships = () => {
         {isInfoModalOpen && selectedMatchForInfo && (
           <div className="modal show">
             <div className="info-modal-content">
-              <span className="close" onClick={closeInfoModal}>&times;</span>
               {/* <button className="magnify-button" onClick={toggleMagnify}>
                 🔍 {isMagnifyActive ? t('Disable Magnify') : t('Enable Magnify')}
               </button> */}
@@ -887,7 +886,7 @@ const Tutorships = () => {
         <Modal isOpen={isModalOpen} onRequestClose={() => setIsModalOpen(false)} className="matches-modal">
           <div className="matches-modal-header">
             <h2>{t('Matching Wizard')}</h2>
-            <button className="close-matches-modal-button" onClick={() => setIsModalOpen(false)}>
+            <button className="close" onClick={() => setIsModalOpen(false)}>
               &times;
             </button>
           </div>

@@ -255,7 +255,7 @@
 }
 
 .report-card {
-    width: 100px;
+    width: 200px;
     height: 200px;
     background-color: #4CAF50;
     color: white;
@@ -368,6 +368,7 @@
     /* Limit height to avoid overflow */
     overflow-y: auto;
     direction: rtl;
+    transform: scale(0.95);
     /* Align the grid to the right for right-to-left languages */
 }
 

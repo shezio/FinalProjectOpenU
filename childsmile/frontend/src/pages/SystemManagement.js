@@ -79,6 +79,12 @@ const SystemManagement = () => {
     if (!staffData.roles || staffData.roles.length === 0) {
       newErrors.roles = t("At least one role must be selected.");
     }
+    if (
+      staffData.roles.includes("General Volunteer") &&
+      staffData.roles.includes("Tutor")
+    ) {
+      newErrors.roles = t("Cannot select both General Volunteer and Tutor roles at the same time.");
+    }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;

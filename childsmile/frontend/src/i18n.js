@@ -480,6 +480,9 @@ const resources = {
       'Create New Task': 'צור משימה חדשה',
       "All Statuses - Click to filter by status": "לחץ לסינון לפי סטטוס",
       "No tutorships to display": "אין חונכויות להצגה",
+      "General Volunteer Feedbacks": "משובי מתנדבים כלליים",
+      "Select Volunteer": "בחר מתנדב",
+      "Cannot select both General Volunteer and Tutor roles at the same time.": "לא ניתן לבחור את שני התפקידים - מתנדב כללי וחונך בו זמנית.",
 
     }
   }

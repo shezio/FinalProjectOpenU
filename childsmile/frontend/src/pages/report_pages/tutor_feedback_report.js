@@ -211,6 +211,7 @@ const TutorFeedbackReport = () => {
                         </button>
                       </th>
                       <th>{t("Description")}</th>
+                      <th>{t("Feedback Type")}</th>
                       <th>{t("Exceptional Events")}</th>
                       <th>{t("Anything Else")}</th>
                       <th>{t("Comments")}</th>
@@ -239,6 +240,7 @@ const TutorFeedbackReport = () => {
                             </React.Fragment>
                           ))}
                         </td>
+                        <td>{t(feedback.feedback_type)}</td>
                         <td>
                           {(feedback.exceptional_events || "").split(" ").map((word, i) => (
                             <React.Fragment key={i}>
