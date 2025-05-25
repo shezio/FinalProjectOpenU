@@ -542,22 +542,67 @@ const SystemManagement = () => {
                   </button>
                   {showRolesDropdown && (
                     <div className="roles-dropdown">
-                      {roles.map((role) => (
-                        <div key={role.id} className="roles-dropdown-item">
-                          <input
-                            type="checkbox"
-                            id={`role-${role.id}`}
-                            checked={staffData.roles.includes(role.role_name)}
-                            onChange={(e) => {
-                              const updatedRoles = e.target.checked
-                                ? [...staffData.roles, role.role_name]
-                                : staffData.roles.filter((r) => r !== role.role_name);
-                              updateStaffData('roles', updatedRoles);
-                            }}
-                          />
-                          <label htmlFor={`role-${role.id}`}>{t(role.role_name)}</label>
-                        </div>
-                      ))}
+                      {roles.map((role) => {
+                        // Hide "General Volunteer" and "Tutor" in Add mode
+                        if (
+                          modalType === 'add' &&
+                          (role.role_name === "General Volunteer" || role.role_name === "Tutor")
+                        ) {
+                          return null;
+                        }
+
+                        // In Edit mode, show both if the user has either role
+                        if (
+                          modalType === 'edit' &&
+                          (role.role_name === "General Volunteer" || role.role_name === "Tutor")
+                        ) {
+                          const hasGV = staffData.roles.includes("General Volunteer");
+                          const hasTutor = staffData.roles.includes("Tutor");
+                          // If the user has neither, hide both
+                          if (!hasGV && !hasTutor) {
+                            return null;
+                          }
+                          // Show both, both enabled
+                          return (
+                            <div key={role.id} className="roles-dropdown-item">
+                              <input
+                                type="checkbox"
+                                id={`role-${role.id}`}
+                                checked={staffData.roles.includes(role.role_name)}
+                                onChange={(e) => {
+                                  // Only allow one of the two at a time
+                                  let updatedRoles = staffData.roles.filter(
+                                    (r) => r !== "General Volunteer" && r !== "Tutor"
+                                  );
+                                  if (e.target.checked) {
+                                    updatedRoles.push(role.role_name);
+                                  }
+                                  updateStaffData('roles', updatedRoles);
+                                }}
+                              />
+                              <label htmlFor={`role-${role.id}`}>{t(role.role_name)}</label>
+                            </div>
+                          );
+                        }
+
+                        // For all other roles, normal logic
+                        return (
+                          <div key={role.id} className="roles-dropdown-item">
+                            <input
+                              type="checkbox"
+                              id={`role-${role.id}`}
+                              checked={staffData.roles.includes(role.role_name)}
+                              onChange={(e) => {
+                                const updatedRoles = e.target.checked
+                                  ? [...staffData.roles, role.role_name]
+                                  : staffData.roles.filter((r) => r !== role.role_name);
+                                updateStaffData('roles', updatedRoles);
+                              }}
+                            />
+                            <label htmlFor={`role-${role.id}`}>{t(role.role_name)}</label>
+                          </div>
+                        );
+                      })}
                     </div>
                   )}
                 </div>

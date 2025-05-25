@@ -9,6 +9,14 @@
   margin-top: 20px;
 }
 
+.staff-grid-container .no-data {
+  text-align: center;
+  font-size: 48px;
+  font-weight: bold;
+  color: /*black */#333;
+  margin-top: 20px;
+}
+
 .staff-data-grid {
   width: 100%;
   border-collapse: collapse;

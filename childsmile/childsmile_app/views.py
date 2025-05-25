@@ -1455,6 +1455,8 @@ def volunteer_feedback_report(request):
                         "anything_else": feedback.feedback.anything_else,
                         "comments": feedback.feedback.comments,
                         "feedback_type": feedback.feedback.feedback_type,
+                        "hospital_name": feedback.feedback.hospital_name,
+                        "additional_volunteers": feedback.feedback.additional_volunteers,
                     }
                 )
             except Exception as e:
@@ -2629,12 +2631,12 @@ def get_all_staff(request):
         status=200,
     )
 
-
 @csrf_exempt
 @api_view(["PUT"])
 def update_staff_member(request, staff_id):
     """
     Update a staff member's details and propagate changes to related tables.
+    Handles role transitions between General Volunteer and Tutor.
     """
     user_id = request.session.get("user_id")
     if not user_id:
@@ -2657,7 +2659,6 @@ def update_staff_member(request, staff_id):
         except Staff.DoesNotExist:
             return JsonResponse({"error": "Staff member not found."}, status=404)
 
-        # Extract data from the request
         data = request.data  # Use request.data for JSON payloads
 
         # Validate required fields
@@ -2673,7 +2674,7 @@ def update_staff_member(request, staff_id):
                 status=400,
             )
 
-            # Check if username already exists
+        # Check if username already exists
         if (
             Staff.objects.filter(username=data["username"])
             .exclude(staff_id=staff_id)
@@ -2693,26 +2694,65 @@ def update_staff_member(request, staff_id):
                 {"error": f"Email '{data['email']}' already exists."}, status=400
             )
 
-        # Update fields in the Staff table
         old_email = staff_member.email  # Store the old email for reference
+
+        # --- Handle role transitions BEFORE changing email ---
+        if "roles" in data:
+            roles = data["roles"]
+            if isinstance(roles, list):
+                if "General Volunteer" in roles and "Tutor" in roles:
+                    return JsonResponse(
+                        {"error": "Cannot assign both 'General Volunteer' and 'Tutor' roles to the same staff member."},
+                        status=400,
+                    )
+            prev_roles = set(staff_member.roles.values_list("role_name", flat=True))
+            new_roles = set(data["roles"])
+
+
+            # General Volunteer -> Tutor
+            if "Tutor" in new_roles and "General Volunteer" in prev_roles and "General Volunteer" not in new_roles:
+                gv = General_Volunteer.objects.filter(staff=staff_member).first()
+                if gv:
+                    id_id = gv.id_id
+                    signedup = SignedUp.objects.filter(id=id_id).first()
+                    tutor_email = signedup.email if signedup else old_email
+                    gv.delete()  # Delete first to avoid unique constraint error
+                    Tutors.objects.create(
+                        id_id=id_id,
+                        staff=staff_member,
+                        tutorship_status="ממתין",
+                        tutor_email=tutor_email
+                    )
+
+            # Tutor -> General Volunteer
+            if "General Volunteer" in new_roles and "Tutor" in prev_roles and "Tutor" not in new_roles:
+                tutor = Tutors.objects.filter(staff=staff_member).first()
+                if tutor:
+                    id_id = tutor.id_id
+                    tutor.delete()  # Delete first to avoid unique constraint error
+                    General_Volunteer.objects.create(
+                        id_id=id_id,
+                        staff=staff_member,
+                        signupdate=now().date(),
+                        comments=""
+                    )
+
+        # --- Now update staff fields (including email) ---
         staff_member.username = data.get("username", staff_member.username)
-        staff_member.email = data.get("email", staff_member.email)
         staff_member.first_name = data.get("first_name", staff_member.first_name)
         staff_member.last_name = data.get("last_name", staff_member.last_name)
         # update password if provided
         if "password" in data and data["password"].strip():
             staff_member.password = data["password"]
+
         # Update roles if provided
         if "roles" in data:
             roles = data["roles"]
-            print(f"DEBUG: Roles provided: {roles}")  # Log the roles provided
             if isinstance(roles, list):
                 staff_member.roles.clear()
-                for role_name in roles:  # Expecting role names instead of IDs
+                for role_name in roles:
                     try:
-                        role = Role.objects.get(
-                            role_name=role_name
-                        )  # Fetch by role_name
+                        role = Role.objects.get(role_name=role_name)
                         staff_member.roles.add(role)
                     except Role.DoesNotExist:
                         return JsonResponse(
@@ -2724,24 +2764,21 @@ def update_staff_member(request, staff_id):
                     {"error": "Roles should be provided as a list of role names."},
                     status=400,
                 )
+
+        # --- Propagate email changes to related tables (after role transitions) ---
+        if old_email != data["email"]:
+            SignedUp.objects.filter(email=old_email).update(email=data["email"])
+            Tutors.objects.filter(tutor_email=old_email).update(tutor_email=data["email"])
+            staff_member.email = data["email"]
+
         # Save the updated staff record
         try:
             staff_member.save()
-            print(f"DEBUG: Staff member with ID {staff_id} saved successfully.")
         except DatabaseError as db_error:
-            print(f"DEBUG: Database error while saving staff member: {str(db_error)}")
             return JsonResponse(
                 {"error": f"Database error: {str(db_error)}"}, status=500
             )
 
-        # Propagate email changes to related tables
-        if old_email != staff_member.email:
-            SignedUp.objects.filter(email=old_email).update(email=staff_member.email)
-            Tutors.objects.filter(tutor_email=old_email).update(
-                tutor_email=staff_member.email
-            )
-
-        print(f"DEBUG: Staff member with ID {staff_id} updated successfully.")
         return JsonResponse(
             {
                 "message": "Staff member updated successfully",
@@ -2913,6 +2950,11 @@ def create_staff_member(request):
         roles = data["roles"]
         print(f"DEBUG: Roles provided: {roles}")  # Log the roles provided
         if isinstance(roles, list):
+            if "General Volunteer" in roles or "Tutor" in roles:
+                return JsonResponse(
+                    {"error": "Cannot create a user with 'General Volunteer' nor 'Tutor' roles via this flow."},
+                    status=400,
+                )
             staff_member.roles.clear()
             for role_name in roles:  # Expecting role names instead of IDs
                 try:
@@ -3417,12 +3459,11 @@ def create_volunteer_feedback(request):
                 {"error": "No volunteer found for the provided staff ID."}, status=404
             )
 
-        volunteer_id = volunteer.volunteer_id
 
-        volunteer_feedback = General_Volunteer.objects.create(
+        volunteer_feedback = General_V_Feedback.objects.create(
             feedback=feedback,
             volunteer_name=data.get("volunteer_name"),
-            volunteer_id=volunteer_id,
+            volunteer=volunteer,
             child_name=(
                 data.get("child_name")
                 if data.get("child_name")
@@ -3526,7 +3567,6 @@ def update_volunteer_feedback(request, feedback_id):
         # Get the volunteer's id_id from General_Volunteer using the user_id (which is staff_id in General_Volunteer)
         volunteer = (
             General_Volunteer.objects.filter(staff_id=staff_filling_id).first()
-            or Tutors.objects.filter(staff_id=staff_filling_id).first()
         )  # Fallback to Tutors if not found in General_Volunteer
         print(f"DEBUG: Volunteer found: {volunteer}")  # Log the volunteer found
         if not volunteer:
@@ -3534,7 +3574,6 @@ def update_volunteer_feedback(request, feedback_id):
             return JsonResponse(
                 {"error": "No volunteer found for the provided staff ID."}, status=404
             )
-        volunteer_id = volunteer.volunteer_id
 
         volunteer_feedback = General_V_Feedback.objects.filter(
             feedback=feedback
@@ -3551,7 +3590,7 @@ def update_volunteer_feedback(request, feedback_id):
             else "ביקור בבית חולים " + feedback.hospital_name
         )
         volunteer_feedback.volunteer_name = data.get("volunteer_name")
-        volunteer_feedback.volunteer_id = volunteer_id
+        volunteer_feedback.volunteer = volunteer
         volunteer_feedback.save()
 
         print(

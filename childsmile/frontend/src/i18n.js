@@ -470,6 +470,7 @@ const resources = {
       "Department is required": "חובה למלא מחלקה",
       "All Feedbacks Types": "כל סוגי המשובים",
       "Tutee Name / Hospital Name": "שם חניך / שם בית חולים",
+      "Child Name / Hospital Name": "שם ילד / שם בית חולים",
       "Info": "מידע",
       "Feedback Details": "פרטי משוב",
       "Additional Volunteers": "מתנדבים נוספים",

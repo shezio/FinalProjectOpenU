@@ -268,7 +268,7 @@
     transition: transform 0.2s, box-shadow 0.2s;
     flex: 1 1 calc(25% - 1rem);
     /* Ensure cards take up 25% of the row width */
-    max-width: 25%;
+    max-width: 75%;
     /* Prevent cards from exceeding 25% of the row width */
     box-sizing: border-box;
     /* Include padding and border in width calculation */

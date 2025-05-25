@@ -66,7 +66,7 @@ const VolunteerFeedbacks = () => {
       axios.get("/api/children/"),
     ])
       .then(([feedbackRes, staffRes, childrenRes]) => {
-        const allFeedbacks = feedbackRes.data.feedbacks || [];
+        const allFeedbacks = feedbackRes.data.volunteer_feedback || [];
         setFeedbacks(allFeedbacks);
         setFilteredFeedbacks(allFeedbacks);
         setCurrentPage(1);

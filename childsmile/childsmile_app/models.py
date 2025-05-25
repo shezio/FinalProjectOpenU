@@ -314,7 +314,7 @@ class General_V_Feedback(models.Model):
         db_column="feedback_id_id",  # חשוב: זה מורה לדג'אנגו לקרוא לעמודה feedback_id
     )
     volunteer_name = models.CharField(max_length=255)
-    volunteer_id = models.ForeignKey(General_Volunteer, on_delete=models.CASCADE)
+    volunteer = models.ForeignKey(General_Volunteer, on_delete=models.CASCADE)
     child_name = models.CharField(max_length=255, null=True, blank=True)
 
     def __str__(self):
