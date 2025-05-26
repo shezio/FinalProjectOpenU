@@ -3,16 +3,21 @@ import axios from '../axiosConfig';
 import Sidebar from '../components/Sidebar';
 import InnerPageHeader from '../components/InnerPageHeader';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
-import { getStaff, getChildren, getTutors, getChildFullName, getTutorFullName, getPendingTutors, getPendingTutorFullName } from '../components/utils';  // Import utility functions for fetching data
+import { getStaff, getChildren, getTutors, getChildFullName, getTutorFullName, getPendingTutors, getPendingTutorFullName } from '../components/utils';
 import '../styles/common.css';
 import '../styles/tasks.css';
-import Select from 'react-select';  // Import react-select
+import Select from 'react-select';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-// import i18n from C:\Dev\FinalProjectOpenU\childsmile\frontend\src\i18n.js
-import { showErrorToast } from '../components/toastUtils'; // Import the error toast utility function
-import { useTranslation } from 'react-i18next'; // Import translation hook
-import "../i18n"; // Import i18n configuration
+import { showErrorToast } from '../components/toastUtils';
+import { useTranslation } from 'react-i18next';
+import "../i18n";
+
+const statusColumns = [
+  { key: "לא הושלמה", label: "לא הושלמה" },
+  { key: "בביצוע", label: "בביצוע" },
+  { key: "הושלמה", label: "הושלמה" }
+];
 
 const Tasks = () => {
   const { t } = useTranslation();
@@ -30,8 +35,8 @@ const Tasks = () => {
       return [];
     }
   });
-  const [filteredTaskTypes, setFilteredTaskTypes] = useState([]); // Filtered task types for the dropdown
-  const [permissions, setPermissions] = useState([]); // User permissions
+  const [filteredTaskTypes, setFilteredTaskTypes] = useState([]);
+  const [permissions, setPermissions] = useState([]);
   const [staffOptions, setStaffOptions] = useState([]);
   const [childrenOptions, setChildrenOptions] = useState([]);
   const [tutorsOptions, setTutorsOptions] = useState([]);
@@ -39,55 +44,46 @@ const Tasks = () => {
   const [selectedStaff, setSelectedStaff] = useState(null);
   const [selectedChild, setSelectedChild] = useState(null);
   const [selectedTutor, setSelectedTutor] = useState(null);
-  const [selectedPendingTutor, setSelectedPendingTutor] = useState(null); // State for selected pending tutor
+  const [selectedPendingTutor, setSelectedPendingTutor] = useState(null);
   const [selectedTaskType, setSelectedTaskType] = useState(null);
-  const [loading, setLoading] = useState(tasks.length === 0); // Only if no data is loaded from cache
+  const [loading, setLoading] = useState(tasks.length === 0);
   const [selectedTask, setSelectedTask] = useState(null);
-  const [isModalOpen, setIsModalOpen] = useState(false); // Modal visibility state
-  const [errors, setErrors] = useState({}); // Track validation errors
-  const [selectedFilter, setSelectedFilter] = useState(''); // Default filter is empty (show all)
-  const [isStatusModalOpen, setIsStatusModalOpen] = useState(false); // Modal visibility
-  const [selectedStatus, setSelectedStatus] = useState(''); // Selected status
-  const [taskToUpdate, setTaskToUpdate] = useState(null); // Task being updated
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false); // Edit modal visibility
-  const [taskToEdit, setTaskToEdit] = useState(null); // Task being edited
-  const [dueDate, setDueDate] = useState(''); // Due date state
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [errors, setErrors] = useState({});
+  const [selectedFilter, setSelectedFilter] = useState('');
+  const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
+  const [selectedStatus, setSelectedStatus] = useState('');
+  const [taskToUpdate, setTaskToUpdate] = useState(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [taskToEdit, setTaskToEdit] = useState(null);
+  const [dueDate, setDueDate] = useState('');
 
   const getTaskBgColor = (dueDateStr, status) => {
-    if (status === "הושלמה") return "#d4edda"; // Pale green if completed
-    
+    if (status === "הושלמה") return "#d4edda";
     if (!dueDateStr) return "#fff";
-    // Parse "DD/MM/YYYY" format
     const [day, month, year] = dueDateStr.split('/').map(Number);
     if (!day || !month || !year) return "#fff";
     const dueDate = new Date(year, month - 1, day);
     const now = new Date();
-    // Remove time part for comparison
     now.setHours(0, 0, 0, 0);
     dueDate.setHours(0, 0, 0, 0);
-
     if (dueDate < now) {
-      return "#ffcccc"; // Red for overdue
+      return "#ffcccc";
     }
-    // Check if due this week (Sunday-Saturday)
     const weekStart = new Date(now);
     weekStart.setDate(now.getDate() - now.getDay());
     const weekEnd = new Date(weekStart);
     weekEnd.setDate(weekStart.getDate() + 6);
-
     if (dueDate >= weekStart && dueDate <= weekEnd) {
-      return "#fff7cc"; // Yellow for this week
+      return "#fff7cc";
     }
-    return "#fff"; // Pale white for future
+    return "#fff";
   };
 
   const fetchData = async (forceFetch = false) => {
-    // If not forcing a fetch and tasks already exist in local storage, skip fetching
-    setLoading(true); // Show loading spinner while fetching data
-
+    setLoading(true);
     try {
       if (forceFetch) {
-        // Clear local storage for the resources being fetched
         localStorage.removeItem('tasks');
         localStorage.removeItem('taskTypes');
         localStorage.removeItem('staffOptions');
@@ -98,27 +94,27 @@ const Tasks = () => {
       const [tasksResponse, staffOptions, childrenOptions, tutorsOptions, pendingTutorsOptions] = await Promise.all([
         axios.get('/api/tasks/').catch((error) => {
           console.error('Error fetching tasks:', error);
-          showErrorToast(t, 'Error fetching tasks', error); // Use the reusable function
-          return { data: { tasks: [], task_types: [] } }; // Fallback response
+          showErrorToast(t, 'Error fetching tasks', error);
+          return { data: { tasks: [], task_types: [] } };
         }),
         getStaff().catch((error) => {
           console.error('Error fetching staff:', error);
-          showErrorToast(t, 'Error fetching staff', error); // Use the reusable function
+          showErrorToast(t, 'Error fetching staff', error);
           return [];
         }),
         getChildren().catch((error) => {
           console.error('Error fetching children:', error);
-          showErrorToast(t, 'Error fetching children', error); // Use the reusable function
+          showErrorToast(t, 'Error fetching children', error);
           return [];
         }),
         getTutors().catch((error) => {
           console.error('Error fetching tutors:', error);
-          showErrorToast(t, 'Error fetching tutors', error); // Use the reusable function
+          showErrorToast(t, 'Error fetching tutors', error);
           return [];
         }),
         getPendingTutors().catch((error) => {
           console.error('Error fetching pending tutors:', error);
-          showErrorToast(t, 'Error fetching pending tutors', error); // Use the reusable function
+          showErrorToast(t, 'Error fetching pending tutors', error);
           return [];
         }),
       ]);
@@ -128,7 +124,6 @@ const Tasks = () => {
       const cachedPermissions = JSON.parse(localStorage.getItem('permissions')) || [];
       const newPendingTutors = pendingTutorsOptions;
 
-      // Always update staff, children, and tutors options
       setStaffOptions(staffOptions);
       setChildrenOptions(childrenOptions);
       setTutorsOptions(tutorsOptions);
@@ -144,48 +139,77 @@ const Tasks = () => {
       );
       setFilteredTaskTypes(filteredTypes);
 
-      // Compare fetched data with local storage data
       const storedTasks = JSON.parse(localStorage.getItem('tasks')) || [];
       const storedTaskTypes = JSON.parse(localStorage.getItem('taskTypes')) || [];
 
       const isTasksDifferent = JSON.stringify(newTasks) !== JSON.stringify(storedTasks);
       const isTaskTypesDifferent = JSON.stringify(newTaskTypes) !== JSON.stringify(storedTaskTypes);
 
-      // Update state and local storage only if there is a difference
       if (isTasksDifferent) {
         setTasks(newTasks);
         localStorage.setItem('tasks', JSON.stringify(newTasks));
       }
-
       if (isTaskTypesDifferent) {
         setTaskTypes(newTaskTypes);
         localStorage.setItem('taskTypes', JSON.stringify(newTaskTypes));
       }
-
       localStorage.setItem('staffOptions', JSON.stringify(staffOptions));
       localStorage.setItem('childrenOptions', JSON.stringify(childrenOptions));
       localStorage.setItem('tutorsOptions', JSON.stringify(tutorsOptions));
       localStorage.setItem('pendingTutorsOptions', JSON.stringify(newPendingTutors));
     } catch (error) {
       console.error('Error fetching data:', error);
-      showErrorToast(t, 'Error fetching data', error); // Use the reusable function
+      showErrorToast(t, 'Error fetching data', error);
     } finally {
-      setLoading(false); // Turn off the spinner after the request is complete
+      setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchData(); // Fetch data only if tasks are not already in local storage
-  }, []); // Empty dependency array ensures this runs only once on page load
+    fetchData();
+  }, []);
 
-  const onDragEnd = (result) => {
-    if (!result.destination) return;
+  // Group tasks by status for Kanban columns
+  const tasksByStatus = statusColumns.reduce((acc, col) => {
+    acc[col.key] = tasks
+      .filter(
+        (task) =>
+          (!selectedFilter || task.type === parseInt(selectedFilter)) &&
+          task.status === col.key
+      );
+    return acc;
+  }, {});
 
-    const items = Array.from(tasks);
-    const [reorderedItem] = items.splice(result.source.index, 1);
-    items.splice(result.destination.index, 0, reorderedItem);
+  // Kanban drag and drop logic
+  const onDragEnd = async (result) => {
+    const { source, destination, draggableId } = result;
+    if (!destination) return;
 
-    setTasks(items);
+    // If dropped in the same column and position, do nothing
+    if (
+      source.droppableId === destination.droppableId &&
+      source.index === destination.index
+    ) {
+      return;
+    }
+
+    // Prevent dragging back to an old status (leftwards)
+    const sourceColIdx = statusColumns.findIndex(col => col.key === source.droppableId);
+    const destColIdx = statusColumns.findIndex(col => col.key === destination.droppableId);
+    if (destColIdx < sourceColIdx) {
+      return; // Don't allow moving back
+    }
+
+    // Update the task's status if moved to a new column
+    if (source.droppableId !== destination.droppableId) {
+      const taskId = parseInt(draggableId, 10);
+      try {
+        await axios.put(`/api/tasks/update-status/${taskId}/`, { status: destination.droppableId });
+        await fetchData(true);
+      } catch (error) {
+        showErrorToast(t, 'Error updating task status', error);
+      }
+    }
   };
 
   const getTaskTypeName = (typeId) => {
@@ -210,7 +234,6 @@ const Tasks = () => {
 
   const handleSubmitTask = async () => {
     const newErrors = {};
-    // Validate required fields
     if (!selectedTaskType) {
       newErrors.type = "זהו שדה חובה";
     }
@@ -220,88 +243,75 @@ const Tasks = () => {
     if (!selectedStaff) {
       newErrors.assigned_to = "זהו שדה חובה";
     }
-
-    // If there are errors, update the state and stop submission
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return;
     }
-
-    // Clear errors if validation passes
     setErrors({});
     const taskData = {
       due_date: document.getElementById('due_date').value,
       assigned_to: selectedStaff?.value,
       child: selectedChild?.value,
       tutor: selectedTutor?.value,
-      pending_tutor: selectedPendingTutor?.value, // Send the correct pending_tutor_id
-      type: selectedTaskType?.value, // Send the task type ID
+      pending_tutor: selectedPendingTutor?.value,
+      type: selectedTaskType?.value,
     };
-
     try {
       const response = await axios.post('/api/tasks/create/', taskData);
-      console.log('Task created:', response.data);
-
       if (response.status === 201) {
-        setIsModalOpen(false); // Close the modal
-        toast.success(t('Task created successfully')); // Show success toast
-        await fetchData(true); // Force fetch to reload tasks
+        setIsModalOpen(false);
+        toast.success(t('Task created successfully'));
+        await fetchData(true);
       }
     } catch (error) {
-      console.error('Error creating task:', error);
-      showErrorToast(t, 'Error creating task', error); // Use the reusable function
+      showErrorToast(t, 'Error creating task', error);
     }
   };
 
   const handleDeleteTask = async (taskId) => {
     try {
-      await axios.delete(`/api/tasks/delete/${taskId}/`); // Delete the task from the server
-      setTasks(tasks.filter((task) => task.id !== taskId)); // Update the local state
-      toast.success(t('Task deleted successfully')); // Show success toast
-      await fetchData(true); // Force fetch to reload tasks
+      await axios.delete(`/api/tasks/delete/${taskId}/`);
+      setTasks(tasks.filter((task) => task.id !== taskId));
+      toast.success(t('Task deleted successfully'));
+      await fetchData(true);
     } catch (error) {
-      console.error('Error deleting task:', error);
-      showErrorToast(t, 'Error deleting task', error); // Use the reusable function
+      showErrorToast(t, 'Error deleting task', error);
     }
   };
 
-  // func to update only status when עדכן סטטוס is clicked
   const handleUpdateStatus = (task) => {
-    setTaskToUpdate(task); // Set the task being updated
-    setIsStatusModalOpen(true); // Open the modal
+    setTaskToUpdate(task);
+    setIsStatusModalOpen(true);
   };
 
   const handleConfirmStatusUpdate = async () => {
     if (!selectedStatus) {
-      toast.error(t('Please select a status')); // Show error if no status is selected
+      toast.error(t('Please select a status'));
       return;
     }
-
     try {
-      await axios.put(`/api/tasks/update-status/${taskToUpdate.id}/`, { status: selectedStatus }); // Update the task status on the server
-      toast.success(t('Task updated successfully')); // Show success toast
-      setIsStatusModalOpen(false); // Close the modal
-      await fetchData(true); // Force fetch to reload tasks
+      await axios.put(`/api/tasks/update-status/${taskToUpdate.id}/`, { status: selectedStatus });
+      toast.success(t('Task updated successfully'));
+      setIsStatusModalOpen(false);
+      await fetchData(true);
     } catch (error) {
-      console.error('Error updating task:', error);
-      showErrorToast(t, 'Error updating task', error); // Use the reusable function
+      showErrorToast(t, 'Error updating task', error);
     }
   };
 
   const handleEditTask = (task) => {
-    setTaskToEdit(task); // Set the task being edited
-    setSelectedTaskType({ value: task.type, label: getTaskTypeName(task.type) }); // Pre-fill task type
-    setSelectedStaff({ value: task.assignee, label: task.assignee }); // Pre-fill assigned staff
-    setSelectedChild(childrenOptions.find((child) => child.value === task.child) || null); // Pre-fill child
-    setSelectedTutor(tutorsOptions.find((tutor) => tutor.value === task.tutor) || null); // Pre-fill tutor
-    setSelectedPendingTutor(pendingTutorsOptions.find((pendingTutor) => pendingTutor.value === task.pending_tutor) || null); // Pre-fill pending tutor
-    setDueDate(''); // Clear the due date field
-    setIsEditModalOpen(true); // Open the edit modal
+    setTaskToEdit(task);
+    setSelectedTaskType({ value: task.type, label: getTaskTypeName(task.type) });
+    setSelectedStaff({ value: task.assignee, label: task.assignee });
+    setSelectedChild(childrenOptions.find((child) => child.value === task.child) || null);
+    setSelectedTutor(tutorsOptions.find((tutor) => tutor.value === task.tutor) || null);
+    setSelectedPendingTutor(pendingTutorsOptions.find((pendingTutor) => pendingTutor.value === task.pending_tutor) || null);
+    setDueDate('');
+    setIsEditModalOpen(true);
   };
 
   const handleUpdateTask = async () => {
     const newErrors = {};
-    // Validate required fields
     if (!selectedTaskType) {
       newErrors.type = "זהו שדה חובה";
     }
@@ -311,38 +321,30 @@ const Tasks = () => {
     if (!selectedStaff) {
       newErrors.assigned_to = "זהו שדה חובה";
     }
-
-    // If there are errors, update the state and stop submission
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return;
     }
-
-    // Clear errors if validation passes
     setErrors({});
     const updatedTaskData = {
-      description: taskToEdit.description, // Keep the existing description
+      description: taskToEdit.description,
       due_date: document.getElementById('due_date').value,
       assigned_to: selectedStaff?.value,
       child: selectedChild?.value,
       tutor: selectedTutor?.value,
       pending_tutor: selectedPendingTutor?.value,
-      type: selectedTaskType?.value, // Send the task type ID
-      status: taskToEdit.status, // Keep the existing status
+      type: selectedTaskType?.value,
+      status: taskToEdit.status,
     };
-
     try {
       const response = await axios.put(`/api/tasks/update/${taskToEdit.id}/`, updatedTaskData);
-      console.log('Task updated:', response.data);
-
       if (response.status === 200) {
-        setIsEditModalOpen(false); // Close the modal
-        toast.success(t('Task updated successfully')); // Show success toast
-        await fetchData(true); // Force fetch to reload tasks
+        setIsEditModalOpen(false);
+        toast.success(t('Task updated successfully'));
+        await fetchData(true);
       }
     } catch (error) {
-      console.error('Error updating task:', error);
-      showErrorToast(t, 'Error updating task', error); // Use the reusable function
+      showErrorToast(t, 'Error updating task', error);
     }
   };
 
@@ -351,18 +353,17 @@ const Tasks = () => {
       <Sidebar />
       <InnerPageHeader title="לוח משימות" />
       <ToastContainer
-        position="top-center" // Center the toast
-        autoClose={2000} // Auto-close after 3 seconds
-        hideProgressBar={false} // Show the progress bar
+        position="top-center"
+        autoClose={2000}
+        hideProgressBar={false}
         closeOnClick
         pauseOnFocusLoss
         draggable
         pauseOnHover
-        className="toast-rtl" // Apply the RTL class to all toasts
-        rtl={true} // Ensure progress bar moves from left to right
+        className="toast-rtl"
+        rtl={true}
       />
       {loading && <div className="loader">{t("Loading data...")}</div>}
-      {/* Spinner displayed until data is loaded */}
       {!loading && (
         <>
           <div className="tasks-page-content">
@@ -370,7 +371,7 @@ const Tasks = () => {
               <div className="create-task">
                 <button
                   onClick={() => {
-                    handleClosePopup(); // Clear all fields before opening the modal
+                    handleClosePopup();
                     setIsModalOpen(true);
                   }}
                 >
@@ -380,7 +381,7 @@ const Tasks = () => {
               <div className="filter">
                 <select
                   value={selectedFilter}
-                  onChange={(e) => setSelectedFilter(e.target.value)} // Update the filter state
+                  onChange={(e) => setSelectedFilter(e.target.value)}
                 >
                   <option value="">{t("All Tasks - Click to filter by type")}</option>
                   {filteredTaskTypes.map((type) => (
@@ -390,80 +391,60 @@ const Tasks = () => {
                   ))}
                 </select>
               </div>
-              <div className="filter">
-                <select
-                  value={selectedStatus}
-                  onChange={(e) => setSelectedStatus(e.target.value)}
-                >
-                  <option value="">{t("All Statuses - Click to filter by status")}</option>
-                  <option value="לא הושלמה">{t("לא הושלמה")}</option>
-                  <option value="בביצוע">{t("בביצוע")}</option>
-                  <option value="הושלמה">{t("הושלמה")}</option>
-                </select>
-              </div>
               <div className="refresh">
-                <button onClick={() => fetchData(true)}>{t("Refresh Task List")}</button> {/* Force fetch data */}
+                <button onClick={() => fetchData(true)}>{t("Refresh Task List")}</button>
               </div>
             </div>
-            <div className="tasks-layout">
-              <div className="tasks-container-wrapper">
-                <DragDropContext onDragEnd={onDragEnd}>
-                  <Droppable droppableId="tasks" direction="horizontal">
-                    {(provided) => (
-                      <div
-                        className="tasks-container"
-                        ref={provided.innerRef}
-                        {...provided.droppableProps}
-                      >
-                        {tasks.length === 0 ? (
-                          <div className="no-tasks">אין כרגע משימות לביצוע</div>
-                        ) : (
-                          tasks
-                            .filter(
-                              (task) =>
-                                (!selectedFilter || task.type === parseInt(selectedFilter)) &&
-                                (!selectedStatus || task.status === selectedStatus)
-                            )
-                            .map((task, index) => (
-                              <Draggable
-                                key={task.id}
-                                draggableId={task.id.toString()}
-                                index={index}
-                              >
-                                {(provided) => (
-                                  <div
-                                    className="task"
-                                    ref={provided.innerRef}
-                                    {...provided.draggableProps}
-                                    {...provided.dragHandleProps}
-                                    style={{
-                                      backgroundColor: getTaskBgColor(task.due_date, task.status),
-                                      ...provided.draggableProps.style
-                                    }}
-                                  >
-                                    <h2>{task.description}</h2>
-                                    <p>
-                                      יש לבצע עד: {task.due_date}
-                                    </p>
-                                    <p>סטטוס: {task.status}</p>
-                                    <p className='strong-p'>לביצוע על ידי: {task.assignee}</p>
-                                    <div className="actions">
-                                      <button onClick={() => handleTaskClick(task)}>מידע</button>
-                                      <button onClick={() => handleEditTask(task)}>ערוך</button>
-                                      <button onClick={() => handleUpdateStatus(task)}>עדכן סטטוס</button>
-                                      <button onClick={() => handleDeleteTask(task.id)}>מחק</button>
+            {/* Kanban Board */}
+            <div className="kanban-board">
+              <DragDropContext onDragEnd={onDragEnd}>
+                <div className="kanban-columns">
+                  {statusColumns.map((col) => (
+                    <Droppable droppableId={col.key} key={col.key}>
+                      {(provided) => (
+                        <div className="kanban-column" ref={provided.innerRef} {...provided.droppableProps}>
+                          <h3>{t(col.label)}</h3>
+                          <div className="kanban-cards">
+                            {tasksByStatus[col.key].length === 0 ? (
+                              <div className="no-tasks">{t("No tasks currently displayed for this status")}</div>
+                            ) : (
+                              tasksByStatus[col.key].map((task, index) => (
+                                <Draggable key={task.id} draggableId={task.id.toString()} index={index}>
+                                  {(provided) => (
+                                    <div
+                                      className="task-card" // Use your card class here!
+                                      ref={provided.innerRef}
+                                      {...provided.draggableProps}
+                                      {...provided.dragHandleProps}
+                                      style={{
+                                        backgroundColor: getTaskBgColor(task.due_date, task.status),
+                                        ...provided.draggableProps.style
+                                      }}
+                                    >
+                                      {/* --- Your old card layout below --- */}
+                                      <h2>{task.description}</h2>
+                                      <p>יש לבצע עד: {task.due_date}</p>
+                                      <p>סטטוס: {task.status}</p>
+                                      <p className='strong-p'>לביצוע על ידי: {task.assignee}</p>
+                                      <div className="actions">
+                                        <button onClick={() => handleTaskClick(task)}>מידע</button>
+                                        <button onClick={() => handleEditTask(task)}>ערוך</button>
+                                        <button onClick={() => handleDeleteTask(task.id)}>מחק</button>
+                                      </div>
+                                      {/* --- End of your card layout --- */}
                                     </div>
-                                  </div>
-                                )}
-                              </Draggable>
-                            ))
-                        )}
-                        {provided.placeholder}
-                      </div>
-                    )}
-                  </Droppable>
-                </DragDropContext>
-              </div>
+                                  )}
+                                </Draggable>
+                              ))
+                            )}
+                          </div>
+                          {provided.placeholder}
+                        </div>
+                      )}
+                    </Droppable>
+                  ))}
+                </div>
+              </DragDropContext>
             </div>
           </div>
           {isStatusModalOpen && (
@@ -513,8 +494,8 @@ const Tasks = () => {
                 <input
                   type="date"
                   id="due_date"
-                  value={dueDate} // Bind to state
-                  onChange={(e) => setDueDate(e.target.value)} // Update state on change
+                  value={dueDate}
+                  onChange={(e) => setDueDate(e.target.value)}
                   style={{
                     borderColor: errors.due_date ? 'red' : '',
                   }}
@@ -541,7 +522,7 @@ const Tasks = () => {
                   options={childrenOptions}
                   value={selectedChild}
                   onChange={setSelectedChild}
-                  placeholder={t('Select Child')} // Add the translated placeholder
+                  placeholder={t('Select Child')}
                   isSearchable
                   isClearable
                 />
@@ -551,7 +532,7 @@ const Tasks = () => {
                   options={tutorsOptions}
                   value={selectedTutor}
                   onChange={setSelectedTutor}
-                  placeholder={t('Select Tutor')} // Add the translated placeholder
+                  placeholder={t('Select Tutor')}
                   isSearchable
                   isClearable
                 />
@@ -561,7 +542,7 @@ const Tasks = () => {
                   options={pendingTutorsOptions}
                   value={selectedPendingTutor}
                   onChange={setSelectedPendingTutor}
-                  placeholder={t('Select Pending Tutor')} // Add the translated placeholder
+                  placeholder={t('Select Pending Tutor')}
                   isSearchable
                   isClearable
                 />
@@ -581,7 +562,7 @@ const Tasks = () => {
                   value={selectedTaskType}
                   onChange={setSelectedTaskType}
                   isSearchable
-                  placeholder={t('Select Task Type')} // Add the translated placeholder
+                  placeholder={t('Select Task Type')}
                   styles={{
                     control: (base) => ({
                       ...base,
@@ -605,7 +586,7 @@ const Tasks = () => {
                   options={staffOptions}
                   value={selectedStaff}
                   onChange={setSelectedStaff}
-                  placeholder={t('Select Assignee')} // Add the translated placeholder
+                  placeholder={t('Select Assignee')}
                   isSearchable
                   styles={{
                     control: (base) => ({
@@ -621,7 +602,7 @@ const Tasks = () => {
                   options={childrenOptions}
                   value={selectedChild}
                   onChange={setSelectedChild}
-                  placeholder={t('Select Child')} // Add the translated placeholder
+                  placeholder={t('Select Child')}
                   isSearchable
                   isClearable
                 />
@@ -631,7 +612,7 @@ const Tasks = () => {
                   options={tutorsOptions}
                   value={selectedTutor}
                   onChange={setSelectedTutor}
-                  placeholder={t('Select Tutor')} // Add the translated placeholder
+                  placeholder={t('Select Tutor')}
                   isSearchable
                   isClearable
                 />
@@ -641,7 +622,7 @@ const Tasks = () => {
                   options={pendingTutorsOptions}
                   value={selectedPendingTutor}
                   onChange={setSelectedPendingTutor}
-                  placeholder={t('Select Pending Tutor')} // Add the translated placeholder
+                  placeholder={t('Select Pending Tutor')}
                   isSearchable
                   isClearable
                 />
