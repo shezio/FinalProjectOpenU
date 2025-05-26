@@ -13,6 +13,25 @@ export const showErrorToast = (t, key, error) => {
   toast.error(messageToShow);
 };
 
+export const showWarningToast = (t, key, error) => {
+  console.log('showWarningToast called with:', t, key, error); // Debug log
+
+  // Translate the error message if it matches a known key
+  const errorMessage = t(error.response?.data?.detail || error.message);
+
+  // Combine the translated error message with the context
+  // if the key is empty - use the error message directly
+  // if the error message is empty and the key is not, show the key as a warning
+  if (!errorMessage && key) {
+    toast.warn(t(key));
+  } else if (errorMessage) {
+    const messageToShow = key ? `${t(key)} - ${t(errorMessage)}` : t(errorMessage);
+    toast.warn(messageToShow);
+  } else {
+    toast.warn(t('An unknown warning occurred'));
+  }
+};
+
 export const feedbackShowErrorToast = (t, key, error) => {
   console.log('feedbackShowErrorToast called with:', t, key, error); // Debug log
 

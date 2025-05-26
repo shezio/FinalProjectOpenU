@@ -406,6 +406,7 @@
   width: 100%;
   overflow-y: auto;
   max-height: 90vh;
+  flex: 2;
 }
 
 .kanban-columns {
@@ -426,13 +427,18 @@
   flex-direction: column;
   align-items: center;
 }
+
 /* Add padding to the right so the scrollbar is away from the cards */
 .kanban-cards {
   overflow-y: auto;
-  max-height: 60vh;
-  padding-left: 24px; /* space for scrollbar */
+  flex: 1 1 auto;
+  min-height: 0;
+  padding-left: 24px;
+  /* space for scrollbar */
   /* Smooth transition for scrollbar opacity */
+  flex: 1 1 auto;
   transition: box-shadow 0.2s;
+  height: 350px;
 }
 
 /* Hide scrollbar by default, show on hover/scroll (Webkit browsers) */
@@ -452,17 +458,18 @@
 /* Scrollbar track with transparent border to push it away from cards */
 .kanban-cards::-webkit-scrollbar-track {
   background: transparent;
-  border-left: 12px solid transparent; /* pushes scrollbar further right */
+  border-left: 12px solid transparent;
+  /* pushes scrollbar further right */
 }
 
 .kanban-cards::-webkit-scrollbar-thumb {
-  background: rgba(0,0,0,0.2);
+  background: rgba(0, 0, 0, 0.2);
   border-radius: 8px;
   transition: background 0.3s;
 }
 
 .kanban-cards:hover::-webkit-scrollbar-thumb {
-  background: rgba(0,0,0,0.5);
+  background: rgba(0, 0, 0, 0.5);
 }
 
 /* Kanban task card styling */
@@ -511,8 +518,8 @@
   font-size: 20px;
 }
 
-.kanban-column .task-card .actions,
-.kanban-column .task .actions {
+.kanban-column .task-card .actions-menu,
+.kanban-column .task .actions-menu {
   margin-top: 10px;
   display: flex;
   gap: 15px;
@@ -520,8 +527,8 @@
   justify-content: flex-start;
 }
 
-.kanban-column .task-card .actions button,
-.kanban-column .task .actions button {
+.kanban-column .task-card .actions-menu button,
+.kanban-column .task .actions-menu button {
   background-color: #4CAF50;
   color: white;
   padding: 10px 0px;
@@ -535,8 +542,223 @@
   transition: transform 0.2s ease, background-color 0.3s ease;
 }
 
-.kanban-column .task-card .actions button:hover,
-.kanban-column .task .actions button:hover {
+.kanban-column .task-card .actions-menu button:hover,
+.kanban-column .task .actions-menu button:hover {
   background-color: #45a049;
   transform: scale(1.05);
+}
+
+.split-view {
+  display: flex;
+  height: 100%;
+  position: relative;
+}
+
+.task-details-panel {
+  flex: 0 0 420px;
+  background: #fff;
+  box-shadow: 2px 0 16px rgba(0, 0, 0, 0.12);
+  /* shadow on right */
+  border-radius: 12px 0 0 12px;
+  padding: 32px 24px 24px 24px;
+  position: absolute;
+  left: 0;
+  /* move to left */
+  top: 0;
+  height: 100%;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  min-width: 340px;
+  max-width: 440px;
+  animation: slideInLeft 0.2s;
+}
+
+@media (max-width: 1700px) {
+  .task-details-panel {
+    height: 70%;
+  }
+
+  .split-view {
+    display: flex;
+    height: 100vh;
+    position: relative;
+  }
+
+  .kanban-board {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    flex: 2;
+    /* REMOVE overflow-y, max-height, height */
+  }
+
+  .kanban-columns {
+    display: flex;
+    gap: 2rem;
+    width: 100%;
+    /* REMOVE overflow-y, max-height, height */
+  }
+
+  .kanban-column {
+    background: #f5f5f5;
+    border-radius: 8px;
+    padding: 1rem;
+    flex: 1 1 0;
+    min-width: 450px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 0;
+    /* REMOVE height */
+  }
+
+  .kanban-cards {
+    height: 450px;
+  }
+}
+
+@keyframes slideInLeft {
+  from {
+    left: -500px;
+    opacity: 0;
+  }
+
+  to {
+    left: 0;
+    opacity: 1;
+  }
+}
+
+.task-details-panel .close-btn {
+  position: absolute;
+  right: 16px;
+  /* move X to top right */
+  top: 16px;
+  background: none;
+  border: none;
+  font-size: 2.2rem;
+  color: #888;
+  cursor: pointer;
+  z-index: 2;
+  transition: color 0.2s;
+}
+
+.task-details-panel .close-btn:hover {
+  color: #d32f2f;
+}
+
+/* Three dots menu button */
+.task-details-panel .menu-btn {
+  position: absolute;
+  left: 16px;
+  top: 16px;
+  background: none;
+  border: none;
+  font-size: 2.2rem;
+  color: #888;
+  cursor: pointer;
+  z-index: 2;
+  transition: color 0.2s;
+}
+
+.task-details-panel .menu-btn:hover {
+  color: #45a049;
+}
+
+/* Dropdown menu */
+.task-details-panel .dropdown-menu {
+  position: absolute;
+  left: 16px;
+  top: 56px;
+  background: #fff;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  min-width: 120px;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+}
+
+.task-details-panel .dropdown-menu button {
+  background: none;
+  border: none;
+  color: #333;
+  font-family: Rubik, sans-serif;
+  font-weight: bold;
+  font-size: 24px;
+  padding: 12px 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.task-details-panel .dropdown-menu button:hover {
+  background: #f5f5f5;
+  color: #45a049;
+}
+
+.task-details-content {
+  margin-top: 48px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  /* smaller gap */
+  font-family: Rubik, sans-serif;
+  font-weight: bold;
+  line-height: 1.3;
+}
+
+.task-details-content h2 {
+  color: #45a049;
+  font-family: Rubik, sans-serif;
+  font-weight: bold;
+  font-size: 2.1em;
+  margin-bottom: 8px;
+  margin-top: 0;
+  letter-spacing: 0.5px;
+}
+
+.task-details-content p {
+  font-family: Rubik, sans-serif;
+  font-size: 24px;
+  margin: 0;
+  line-height: 1.3;
+}
+
+.task-details-panel .actions {
+  margin-top: auto;
+  display: flex;
+  gap: 16px;
+}
+
+.task-details-panel .actions button {
+  background-color: #4CAF50;
+  color: white;
+  padding: 12px 0;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 22px;
+  width: auto;
+  min-width: 120px;
+  text-align: center;
+  transition: transform 0.2s, background-color 0.3s;
+}
+
+.task-details-panel .actions button:hover {
+  background-color: #45a049;
+  transform: scale(1.05);
+}
+
+.responsive-zoom {
+  transition: transform 0.2s;
+  transform-origin: top left;
+}
+.sidebar--dragging {
+  pointer-events: none;
+  opacity: 0.5; /* Optional: visually indicate it's disabled */
 }
