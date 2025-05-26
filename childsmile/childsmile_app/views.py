@@ -16,6 +16,7 @@ from .models import (
     Tasks,
     Task_Types,
     PossibleMatches,  # Add this line
+    InitialFamilyData,
 )
 from .unused_views import (
     PermissionsViewSet,
@@ -635,6 +636,18 @@ def has_permission(request, resource, action):
 
     return any(
         permission["resource"] == prefixed_resource and permission["action"] == action
+        for permission in permissions
+    )
+
+def has_initial_family_data_permission(request, action):
+    """
+    Check if the user has the required permission for the InitialFamilyData resource and action.
+    """
+    permissions = request.session.get("permissions", [])
+    # print the permissions for debugging
+    # print(f"DEBUG: Permissions: {permissions}")  # Debug log
+    return any(
+        permission["resource"] == "initial_family_data" and permission["action"] == action
         for permission in permissions
     )
 
@@ -3659,4 +3672,193 @@ def delete_volunteer_feedback(request, feedback_id):
         print(
             f"DEBUG: An error occurred while deleting the volunteer feedback: {str(e)}"
         )
+        return JsonResponse({"error": str(e)}, status=500)
+
+"""
+create a new view for the InitialFamilyData model that will return all the data in the table
+"""
+@csrf_exempt
+@api_view(["GET"])
+def get_initial_family_data(request):
+    """
+    Retrieve all initial family data from the InitialFamilyData model.
+    """
+    user_id = request.session.get("user_id")
+    if not user_id:
+        return JsonResponse(
+            {"detail": "Authentication credentials were not provided."}, status=403
+        )
+
+    # Check if the user has VIEW permission on the "initial_family_data" resource
+    if not has_initial_family_data_permission(request, "view"):
+        return JsonResponse(
+            {"error": "You do not have permission to view this data."}, status=401
+        )
+    try:
+        initial_family_data = InitialFamilyData.objects.all()
+        data = [
+            {
+                "initial_family_data_id": item.initial_family_data_id,
+                "names": item.names,
+                "phones": item.phones,
+                "other_information": item.other_information,
+                "created_at": item.created_at,
+                "updated_at": item.updated_at,
+                "family_added": item.family_added,
+            }
+            for item in initial_family_data
+        ]
+        return JsonResponse({"initial_family_data": data}, status=200)
+    except Exception as e:
+        print(f"DEBUG: An error occurred while retrieving initial family data: {str(e)}")
+        return JsonResponse({"error": str(e)}, status=500)
+    
+""" create a new view for the InitialFamilyData model that will create a new row"""
+@csrf_exempt
+@api_view(["POST"])
+def create_initial_family_data(request):
+    """
+    Create a new initial family data record in the InitialFamilyData model.
+    """
+    user_id = request.session.get("user_id")
+    if not user_id:
+        return JsonResponse(
+            {"detail": "Authentication credentials were not provided."}, status=403
+        )
+
+    # Check if the user has CREATE permission on the "initial_family_data" resource
+    if not has_initial_family_data_permission(request, "create"):
+        return JsonResponse(
+            {"error": "You do not have permission to create initial family data."},
+            status=401,
+        )
+
+    try:
+        data = request.data  # Use request.data for JSON payloads
+
+        # Validate required fields
+        required_fields = ["names", "phones"]
+        missing_fields = [
+            field for field in required_fields if not data.get(field, "").strip()
+        ]
+        if missing_fields:
+            return JsonResponse(
+                {
+                    "error": f"Missing or empty required fields: {', '.join(missing_fields)}"
+                },
+                status=400,
+            )
+        # Create a new initial family data record in the database
+        initial_family_data = InitialFamilyData.objects.create(
+            names=data["names"],
+            phones=data["phones"],
+            other_information=data.get("other_information") if data.get("other_information") else None,
+            created_at=make_aware(datetime.datetime.now()),  # Use make_aware for timezone-aware datetime
+            updated_at=make_aware(datetime.datetime.now()),  # Use make_aware for timezone-aware datetime
+            family_added=False,  # Default to False
+        )
+
+        print(
+            f"DEBUG: Initial family data created successfully with ID {initial_family_data.initial_family_data_id}"
+        )
+        return JsonResponse(
+            {
+                "message": "Initial family data created successfully",
+                "initial_family_data_id": initial_family_data.initial_family_data_id,
+            },
+            status=201,
+        )
+    except Exception as e:
+        print(f"DEBUG: An error occurred while creating initial family data: {str(e)}")
+        return JsonResponse({"error": str(e)}, status=500)
+    
+""" create a new view for the InitialFamilyData model that will update an existing row by id"""
+@csrf_exempt
+@api_view(["PUT"])
+def update_initial_family_data(request, id):
+    """
+    Update an existing initial family data record in the InitialFamilyData model.
+    """
+    user_id = request.session.get("user_id")
+    if not user_id:
+        return JsonResponse(
+            {"detail": "Authentication credentials were not provided."}, status=403
+        )
+
+    # Check if the user has UPDATE permission on the "initial_family_data" resource
+    if not has_initial_family_data_permission(request, "update"):
+        return JsonResponse(
+            {"error": "You do not have permission to update initial family data."},
+            status=401,
+        )
+
+    try:
+        initial_family_data = InitialFamilyData.objects.get(id=id)
+    except InitialFamilyData.DoesNotExist:
+        return JsonResponse(
+            {"error": "Initial family data not found."}, status=404
+        )
+
+    data = request.data
+    required_fields = ["names", "phones"]
+    missing_fields = [
+        field for field in required_fields if not data.get(field, "").strip()
+    ]
+    if missing_fields:
+        return JsonResponse(
+            {
+                "error": f"Missing or empty required fields: {', '.join(missing_fields)}"
+            },
+            status=400,
+        )
+    
+    # Update the fields if they are provided in the request
+    initial_family_data.names = data.get("names", initial_family_data.names)
+    initial_family_data.phones = data.get("phones", initial_family_data.phones)
+    initial_family_data.other_information = data.get("other_information", initial_family_data.other_information)
+    initial_family_data.updated_at = make_aware(datetime.datetime.now())
+    initial_family_data.family_added = data.get("family_added", initial_family_data.family_added)
+
+    # Save the updated record
+    try:
+        initial_family_data.save()
+        return JsonResponse(
+            {"message": "Initial family data updated successfully"}, status=200
+        )
+    except Exception as e:
+        print(f"DEBUG: An error occurred while updating initial family data: {str(e)}")
+        return JsonResponse({"error": str(e)}, status=500)
+
+"""create a new view for the InitialFamilyData model that will delete an existing row by id"""
+@csrf_exempt
+@api_view(["DELETE"])
+def delete_initial_family_data(request, id):
+    """
+    Delete an existing initial family data record in the InitialFamilyData model.
+    """
+    user_id = request.session.get("user_id")
+    if not user_id:
+        return JsonResponse(
+            {"detail": "Authentication credentials were not provided."}, status=403
+        )
+
+    # Check if the user has DELETE permission on the "initial_family_data" resource
+    if not has_initial_family_data_permission(request, "delete"):
+        return JsonResponse(
+            {"error": "You do not have permission to delete initial family data."},
+            status=401,
+        )
+
+    try:
+        initial_family_data = InitialFamilyData.objects.get(id=id)
+        initial_family_data.delete()
+        return JsonResponse(
+            {"message": "Initial family data deleted successfully"}, status=200
+        )
+    except InitialFamilyData.DoesNotExist:
+        return JsonResponse(
+            {"error": "Initial family data not found."}, status=404
+        )
+    except Exception as e:
+        print(f"DEBUG: An error occurred while deleting initial family data: {str(e)}")
         return JsonResponse({"error": str(e)}, status=500)
