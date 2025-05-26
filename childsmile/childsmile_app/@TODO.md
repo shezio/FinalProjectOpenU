@@ -760,3 +760,5 @@ then the status of the task will be the column it is in
 and the dragging from one column to another will update the status of the task
 task cannot be dragged back to and old status
 means that each column will have a different status and a task container inside it
+and a container on all of the columns combined
+so we can drag and drop tasks between columns
