@@ -86,19 +86,45 @@ class Feedback(models.Model):
             models.Index(fields=["created_at"], name="idx_feedback_created_at"),
         ]
 
-BE additions:
-[] create a new view for the InitialFamilyData model that will return all the data in the table
-[] create a new view for the InitialFamilyData model that will create a new row
-[] create a new view for the InitialFamilyData model that will update an existing row by id
-[] create a new view for the InitialFamilyData model that will delete an existing row by id
-[] create create, update, delete and get views for this InitialFamilyData model
-create urls for each of the views
-[] URL for the InitialFamilyData model that will return all the data in the table
-[] URL for the InitialFamilyData model that will create a new row
-[] URL for the InitialFamilyData model that will update an existing row by id
-[] URL for the InitialFamilyData model that will delete an existing row by id
 
-[] add to views of tasks the new fields:
+Permissions:
+[V] give view permission to all the roles in the system
+[V] give create permission to:
+- Technical Coordinator
+- System Administrator
+- Tutor
+- General Volunteer
+- Tutors Coordinator
+- Volunteer Coordinator
+- Families Coordinator
+[V] give update permission to:
+- Technical Coordinator
+- System Administrator
+- Tutor
+- General Volunteer
+- Tutors Coordinator
+- Volunteer Coordinator
+- Families Coordinator
+[V] give delete permission to:
+- Technical Coordinator
+- System Administrator
+- Families Coordinator
+------------------------------------------------------------------------------
+# TODO
+------------------------------------------------------
+
+BE additions:
+[V] create a new view for the InitialFamilyData model that will return all the data in the table
+[V] create a new view for the InitialFamilyData model that will create a new row
+[V] create a new view for the InitialFamilyData model that will update an existing row by id
+[V] create a new view for the InitialFamilyData model that will delete an existing row by id
+create urls for each of the views
+[V] URL for the InitialFamilyData model that will return all the data in the table
+[V] URL for the InitialFamilyData model that will create a new row
+[V] URL for the InitialFamilyData model that will update an existing row by id
+[V] URL for the InitialFamilyData model that will delete an existing row by id
+
+[] add to views of tasks the new fields in the model - names,    initial_family_data_id_fk, phones, other_information
 - add the new fields to the GET view of tasks
 - add the new fields to the POST view of tasks
 - add the new fields to the PUT view of tasks
@@ -159,28 +185,7 @@ following data for staff ids of the technical coordinators in the system:
 
 [] when one task with that initial_family_data_id_fk status is set to "בביצוע" - then all the other tasks with that initial_family_data_id_fk will be deleted
 
-Permissions:
-[] give view permission to all the roles in the system
-[] give create permission to:
-- Technical Coordinator
-- System Administrator
-- Tutor
-- General Volunteer
-- Tutors Coordinator
-- Volunteer Coordinator
-- Families Coordinator
-[] give update permission to:
-- Technical Coordinator
-- System Administrator
-- Tutor
-- General Volunteer
-- Tutors Coordinator
-- Volunteer Coordinator
-- Families Coordinator
-[] give delete permission to:
-- Technical Coordinator
-- System Administrator
-- Families Coordinator
+
 
 UI:
 [] create a new page under families called "initial_family_data" that will show all the data in the table

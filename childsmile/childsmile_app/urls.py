@@ -45,6 +45,10 @@ from .views import (
     create_volunteer_feedback,
     update_volunteer_feedback,
     delete_volunteer_feedback,
+    get_initial_family_data,
+    create_initial_family_data,
+    update_initial_family_data,
+    delete_initial_family_data,
 )
 
 from .unused_views import (
@@ -266,5 +270,25 @@ urlpatterns = [
         "api/delete_volunteer_feedback/<int:feedback_id>/",
         delete_volunteer_feedback,
         name="delete_volunteer_feedback",
+    ),
+    path(
+        "api/get_initial_family_data/",
+        get_initial_family_data,
+        name="get_initial_family_data",
+    ),
+    path(
+        "api/create_initial_family_data/",
+        create_initial_family_data,
+        name="create_initial_family_data",
+    ),
+    path(
+        "api/update_initial_family_data/<int:family_id>/",
+        update_initial_family_data,
+        name="update_initial_family_data",
+    ),
+    path(
+        "api/delete_initial_family_data/<int:family_id>/",
+        delete_initial_family_data,
+        name="delete_initial_family_data",
     ),
 ]

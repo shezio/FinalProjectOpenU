@@ -17,7 +17,8 @@ from .models import (
     Feedback,
     Tutor_Feedback,
     General_V_Feedback,
-    Tasks
+    Tasks,
+    InitialFamilyData
 )
 
 """
@@ -350,6 +351,20 @@ class PossibleMatches(models.Model):
     class Meta:
         db_table = "childsmile_app_possiblematches"
 
+class InitialFamilyData(models.Model):
+    initial_family_data_id = models.AutoField(primary_key=True, auto_created=True)
+    names = models.CharField(max_length=500, null=False)
+    phones = models.CharField(max_length=500, null=False)
+    other_information = models.TextField(max_length=500, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    family_added = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"InitialFamilyData({self.initial_family_data_id}, {self.names}, {self.phones})"
+
+    class Meta:
+        db_table = "initial_family_data"
 
 class Task_Types(models.Model):
     task_type = models.CharField(max_length=255, unique=True)
@@ -389,7 +404,7 @@ class Tasks(models.Model):
     )
     # New fields for initial family data
     initial_family_data_id_fk = models.ForeignKey(
-        "InitialFamilyData",
+        InitialFamilyData,
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
@@ -414,17 +429,3 @@ class Tasks(models.Model):
         ]
 
 
-class InitialFamilyData(models.Model):
-    initial_family_data_id = models.AutoField(primary_key=True, auto_created=True)
-    names = models.CharField(max_length=500, null=False)
-    phones = models.CharField(max_length=500, null=False)
-    other_information = models.TextField(max_length=500, null=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-    family_added = models.BooleanField(default=False)
-
-    def __str__(self):
-        return f"InitialFamilyData({self.initial_family_data_id}, {self.names}, {self.phones})"
-
-    class Meta:
-        db_table = "initial_family_data"
