@@ -278,6 +278,10 @@ class Feedback(models.Model):
     )
     hospital_name = models.CharField(max_length=50, null=True, blank=True)  # New field
     additional_volunteers = models.TextField(null=True, blank=True)  # New field
+    # New fields for initial family data feedback
+    names = models.CharField(max_length=500, null=True, blank=True)
+    phones = models.CharField(max_length=500, null=True, blank=True)
+    other_information = models.TextField(max_length=500, null=True, blank=True)
 
     def __str__(self):
         return f"Feedback {self.feedback_id} by {self.staff.username}"
@@ -376,14 +380,24 @@ class Tasks(models.Model):
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    # add pending_tutor_id field need to add a column to tasks table and model thats called new_pending_tutor_id it can be empty but values must be from pending_tutor table
     pending_tutor = models.ForeignKey(
         Pending_Tutor,
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
         db_column="pending_tutor_id_id",
-    )  # Specify the column name in the database
+    )
+    # New fields for initial family data
+    initial_family_data_id_fk = models.ForeignKey(
+        "InitialFamilyData",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        db_column="initial_family_data_id_fk",
+    )
+    names = models.CharField(max_length=500, null=True, blank=True)
+    phones = models.CharField(max_length=500, null=True, blank=True)
+    other_information = models.TextField(max_length=500, null=True, blank=True)
 
     def __str__(self):
         return f"Task {self.task_id} - {self.task_type}"
@@ -393,13 +407,17 @@ class Tasks(models.Model):
         indexes = [
             models.Index(fields=["assigned_to_id"], name="idx_tasks_assigned_to_id"),
             models.Index(fields=["updated_at"], name="idx_tasks_updated_at"),
+            models.Index(
+                fields=["initial_family_data_id_fk"],
+                name="idx_tasks_init_family_data_fk",
+            ),
         ]
 
 
 class InitialFamilyData(models.Model):
-    initial_family_data_id = models.AutoField(primary_key=True)
-    names = models.CharField(max_length=50, null=False)
-    phones = models.CharField(max_length=50, null=False)
+    initial_family_data_id = models.AutoField(primary_key=True, auto_created=True)
+    names = models.CharField(max_length=500, null=False)
+    phones = models.CharField(max_length=500, null=False)
     other_information = models.TextField(max_length=500, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
