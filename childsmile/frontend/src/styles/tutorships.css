@@ -11,12 +11,13 @@
 }
 
 .matches-modal {
+  top: 1px;
   background: white;
   padding: 2rem;
   border-radius: 8px;
   width: 80%;
   /* Limit the modal width */
-  height: 750px;
+  height: 700px;
   margin: auto;
   /* Center the modal horizontally */
   margin-top: 150px;
@@ -30,7 +31,7 @@
   /* Prevent content overflow */
   position: relative;
   z-index: 9999 !important;
-  transform: scale(0.9);
+  transform: scale(0.8);
 }
 
 .matches-modal h2 {
@@ -106,6 +107,7 @@
     margin-right: 250px;
   }
 }
+
 
 @media (max-width: 1920px) {
   .page-content .tutorship-matching-grid-container {
@@ -238,10 +240,13 @@
 
 .approval-span {
   font-size: 24px;
-  color: /* black */ #333;
+  color:
+    /* black */
+    #333;
   margin-top: 20px;
   text-align: center;
 }
+
 /* Button styles */
 .tutorship-actions button {
   background-color: #4CAF50;
@@ -377,7 +382,7 @@
   /* Thicker border */
   border-right: 15px solid #3498db;
   /* Extend the arc */
-  border-radius: 50%;
+  border-radius: 70%;
   width: 100px;
   /* Wider loader */
   height: 100px;
@@ -388,7 +393,7 @@
   /* Position relative to the parent container */
   top: 30%;
   /* Center vertically */
-  left: 20%;
+  left: 40%;
   /* Center horizontally */
   transform: translate(-50%, -50%);
   /* Adjust for exact centering */
@@ -416,7 +421,7 @@
   /* Slower spin for better visibility */
   position: absolute;
   /* Position relative to the parent container */
-  top: 30%;
+  top: 40%;
   /* Center vertically */
   left: 70%;
   /* Center horizontally */
@@ -546,7 +551,7 @@
   align-items: right;
 }
 
-.info-column h2  {
+.info-column h2 {
   font-size: 52px;
   /* green color */
   color: #4CAF50;
@@ -559,7 +564,8 @@
 
 .info-table-scroll {
   overflow-y: auto;
-  max-height: 70vh; /* Or whatever fits your modal */
+  max-height: 70vh;
+  /* Or whatever fits your modal */
   /* Optional: add padding or background if needed */
 }
 
@@ -634,7 +640,9 @@
   font-size: 24px;
   margin-left: 5px;
   margin-right: 10px;
-  color: /*white*/ #fdfbfb;
+  color:
+    /*white*/
+    #fdfbfb;
 }
 
 .filter-container {
@@ -837,11 +845,16 @@ button:disabled {
 
 /* Magnify effect when active */
 .magnify-active td:hover {
-  transform: scale(3.2); /* Enlarge the text and adjust position */
-  transform-origin: right; /* Adjust origin for scaling */
-  cursor: zoom-in; /* Change cursor to indicate zoom */
-  position: relative; /* Ensure positioning works */
-  z-index: 10; /* Bring the text to the front */
+  transform: scale(3.2);
+  /* Enlarge the text and adjust position */
+  transform-origin: right;
+  /* Adjust origin for scaling */
+  cursor: zoom-in;
+  /* Change cursor to indicate zoom */
+  position: relative;
+  /* Ensure positioning works */
+  z-index: 10;
+  /* Bring the text to the front */
   transition: transform 0.2s ease;
 }
 
@@ -849,12 +862,15 @@ button:disabled {
   background-color: #ffffff;
   border-radius: 10px;
   padding: 50px;
-  width: 70%; /* Increase the width to make the modal wider */
-  max-width: 1920px; /* Increase the maximum width */
+  width: 70%;
+  /* Increase the width to make the modal wider */
+  max-width: 1920px;
+  /* Increase the maximum width */
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
   /* animation: fadeIn 0.3s ease-in-out; */
   font-size: 1em;
-  margin-right: 30px; /* Add some space on the right */
+  margin-right: 30px;
+  /* Add some space on the right */
   /* Allow wrapping on smaller screens */
   gap: 1rem;
   height: 90%;
@@ -872,8 +888,10 @@ button:disabled {
   font-size: 24px;
   transition: background-color 0.3s ease;
 }
+
 .info-column .info-table td {
-  font-size: 1.5em; /* Default font size */
+  font-size: 1.5em;
+  /* Default font size */
 }
 
 .grade-tooltip-container {
@@ -916,20 +934,24 @@ button:disabled {
   border-radius: 8px;
   border: 1px solid #bbb;
   padding: 12px;
-  position: fixed; /* <-- changed from absolute */
-  z-index: 9999;   /* <-- very high z-index */
-  top: 200px;       /* <-- adjust as needed */
+  position: fixed;
+  /* <-- changed from absolute */
+  z-index: 9999;
+  /* <-- very high z-index */
+  top: 100px;
+  /* <-- adjust as needed */
   left: 70%;
   transform: translateX(-50%);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
   font-size: 24px;
   font-family: Rubik;
   white-space: pre-line;
   pointer-events: none;
   transition: opacity 0.2s;
 }
+
 .grade-tooltip-container:hover .grade-tooltip-text,
-.grade-tooltip-icon:focus + .grade-tooltip-text {
+.grade-tooltip-icon:focus+.grade-tooltip-text {
   visibility: visible;
   opacity: 1;
   pointer-events: auto;
@@ -945,7 +967,7 @@ button:disabled {
   background: #fff;
   border-radius: 8px;
   padding: 8px 16px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07);
   width: fit-content;
   z-index: 1000;
   margin-top: 350px;

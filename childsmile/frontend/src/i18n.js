@@ -485,6 +485,7 @@ const resources = {
       "Select Volunteer": "בחר מתנדב",
       "Cannot select both General Volunteer and Tutor roles at the same time.": "לא ניתן לבחור את שני התפקידים - מתנדב כללי וחונך בו זמנית.",
       "No tasks currently displayed for this status": "כרגע לא מוצגות משימות עבור סטטוס זה",
+      'Cannot move task to a previous column': 'לא ניתן להחזיר משימה לסטטוס קודם',
 
     }
   }

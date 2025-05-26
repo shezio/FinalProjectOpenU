@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import axios from '../axiosConfig';
 import Sidebar from '../components/Sidebar';
 import InnerPageHeader from '../components/InnerPageHeader';
@@ -9,7 +9,7 @@ import '../styles/tasks.css';
 import Select from 'react-select';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { showErrorToast } from '../components/toastUtils';
+import { showErrorToast, showWarningToast } from '../components/toastUtils';
 import { useTranslation } from 'react-i18next';
 import "../i18n";
 
@@ -57,6 +57,29 @@ const Tasks = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [taskToEdit, setTaskToEdit] = useState(null);
   const [dueDate, setDueDate] = useState('');
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const menuRef = useRef();
+
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setMenuOpen(false);
+      }
+    };
+    if (menuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [menuOpen]);
+
+  // Close menu when selecting a new task
+  useEffect(() => {
+    setMenuOpen(false);
+  }, [selectedTask]);
 
   const getTaskBgColor = (dueDateStr, status) => {
     if (status === "הושלמה") return "#d4edda";
@@ -183,9 +206,24 @@ const Tasks = () => {
   // Kanban drag and drop logic
   const onDragEnd = async (result) => {
     const { source, destination, draggableId } = result;
-    if (!destination) return;
+    if (!destination) {
+      setIsDragging(false); // <-- Ensure this runs before return
+      return;
+    }
 
-    // If dropped in the same column and position, do nothing
+    // Get the column indices
+    const sourceColIdx = statusColumns.findIndex(col => col.key === source.droppableId);
+    const destColIdx = statusColumns.findIndex(col => col.key === destination.droppableId);
+
+    // Prevent moving to a previous column (left)
+    if (destColIdx < sourceColIdx) {
+      setIsDragging(false); // <-- Ensure this runs before return
+      setTimeout(() => {
+        showWarningToast(t, 'Cannot move task to a previous column', "");
+      }, 0);
+      return;
+    }
+
     if (
       source.droppableId === destination.droppableId &&
       source.index === destination.index
@@ -193,21 +231,21 @@ const Tasks = () => {
       return;
     }
 
-    // Prevent dragging back to an old status (leftwards)
-    const sourceColIdx = statusColumns.findIndex(col => col.key === source.droppableId);
-    const destColIdx = statusColumns.findIndex(col => col.key === destination.droppableId);
-    if (destColIdx < sourceColIdx) {
-      return; // Don't allow moving back
-    }
+    const taskId = parseInt(draggableId, 10);
 
-    // Update the task's status if moved to a new column
+    // Only update if moved to a different column
     if (source.droppableId !== destination.droppableId) {
-      const taskId = parseInt(draggableId, 10);
+      setTasks(prevTasks =>
+        prevTasks.map(task =>
+          task.id === taskId ? { ...task, status: destination.droppableId } : task
+        )
+      );
       try {
         await axios.put(`/api/tasks/update-status/${taskId}/`, { status: destination.droppableId });
         await fetchData(true);
       } catch (error) {
         showErrorToast(t, 'Error updating task status', error);
+        await fetchData(true);
       }
     }
   };
@@ -273,6 +311,7 @@ const Tasks = () => {
       await axios.delete(`/api/tasks/delete/${taskId}/`);
       setTasks(tasks.filter((task) => task.id !== taskId));
       toast.success(t('Task deleted successfully'));
+      handleClosePopup(); // <-- Close split view
       await fetchData(true);
     } catch (error) {
       showErrorToast(t, 'Error deleting task', error);
@@ -341,6 +380,7 @@ const Tasks = () => {
       if (response.status === 200) {
         setIsEditModalOpen(false);
         toast.success(t('Task updated successfully'));
+        handleClosePopup(); // <-- Close split view
         await fetchData(true);
       }
     } catch (error) {
@@ -348,9 +388,26 @@ const Tasks = () => {
     }
   };
 
+  // Set zoom level only for screens <= 1800px
+  // useEffect(() => {
+  //   const setZoom = () => {
+  //     if (window.innerWidth <= 1800) {
+  //       document.body.style.zoom = "80%";
+  //     } else {
+  //       document.body.style.zoom = "100%";
+  //     }
+  //   };
+  //   setZoom();
+  //   window.addEventListener('resize', setZoom);
+  //   return () => {
+  //     window.removeEventListener('resize', setZoom);
+  //     document.body.style.zoom = "100%";
+  //   };
+  // }, []);
+
   return (
     <div className="tasks-main-content">
-      <Sidebar />
+      <Sidebar className={isDragging ? "sidebar--dragging" : ""} />
       <InnerPageHeader title="לוח משימות" />
       <ToastContainer
         position="top-center"
@@ -396,55 +453,93 @@ const Tasks = () => {
               </div>
             </div>
             {/* Kanban Board */}
-            <div className="kanban-board">
-              <DragDropContext onDragEnd={onDragEnd}>
-                <div className="kanban-columns">
-                  {statusColumns.map((col) => (
-                    <Droppable droppableId={col.key} key={col.key}>
-                      {(provided) => (
-                        <div className="kanban-column" ref={provided.innerRef} {...provided.droppableProps}>
-                          <h3>{t(col.label)}</h3>
-                          <div className="kanban-cards">
-                            {tasksByStatus[col.key].length === 0 ? (
-                              <div className="no-tasks">{t("No tasks currently displayed for this status")}</div>
-                            ) : (
-                              tasksByStatus[col.key].map((task, index) => (
-                                <Draggable key={task.id} draggableId={task.id.toString()} index={index}>
-                                  {(provided) => (
-                                    <div
-                                      className="task-card" // Use your card class here!
-                                      ref={provided.innerRef}
-                                      {...provided.draggableProps}
-                                      {...provided.dragHandleProps}
-                                      style={{
-                                        backgroundColor: getTaskBgColor(task.due_date, task.status),
-                                        ...provided.draggableProps.style
-                                      }}
-                                    >
-                                      {/* --- Your old card layout below --- */}
-                                      <h2>{task.description}</h2>
-                                      <p>יש לבצע עד: {task.due_date}</p>
-                                      <p>סטטוס: {task.status}</p>
-                                      <p className='strong-p'>לביצוע על ידי: {task.assignee}</p>
-                                      <div className="actions">
-                                        <button onClick={() => handleTaskClick(task)}>מידע</button>
-                                        <button onClick={() => handleEditTask(task)}>ערוך</button>
-                                        <button onClick={() => handleDeleteTask(task.id)}>מחק</button>
+            <div className="split-view"
+              onClick={() => selectedTask && handleClosePopup()}
+              style={{ position: 'relative' }}
+            >
+              <div className="kanban-board">
+                <DragDropContext
+                  onDragEnd={result => {
+                    setIsDragging(false);
+                    onDragEnd(result);
+                  }}
+                  onDragStart={() => setIsDragging(true)}
+                >
+                  <div className="kanban-columns">
+                    {statusColumns.map((col) => (
+                      <Droppable droppableId={col.key} key={col.key}>
+                        {(provided) => (
+                          <div className="kanban-column" ref={provided.innerRef} {...provided.droppableProps}>
+                            <h3>{t(col.label)}</h3>
+                            <div className="kanban-cards">
+                              {tasksByStatus[col.key].length === 0 ? (
+                                <div className="no-tasks">{t("No tasks currently displayed for this status")}</div>
+                              ) : (
+                                tasksByStatus[col.key].map((task, index) => (
+                                  <Draggable key={task.id} draggableId={task.id.toString()} index={index}>
+                                    {(provided, snapshot) => (
+                                      <div
+                                        className="task-card"
+                                        ref={provided.innerRef}
+                                        {...provided.draggableProps}
+                                        {...provided.dragHandleProps}
+                                        style={{
+                                          backgroundColor: getTaskBgColor(task.due_date, task.status),
+                                          ...provided.draggableProps.style
+                                        }}
+                                        onClick={e => {
+                                          e.stopPropagation();
+                                          setSelectedTask(task);
+                                        }}
+                                      >
+                                        <h2>{task.description}</h2>
+                                        <p>יש לבצע עד: {task.due_date}</p>
+                                        {!snapshot.isDragging && (
+                                          <p>סטטוס: {task.status}</p>
+                                        )}
+                                        <p className='strong-p'>לביצוע על ידי: {task.assignee}</p>
                                       </div>
-                                      {/* --- End of your card layout --- */}
-                                    </div>
-                                  )}
-                                </Draggable>
-                              ))
-                            )}
+                                    )}
+                                  </Draggable>
+                                ))
+                              )}
+                            </div>
+                            {provided.placeholder}
                           </div>
-                          {provided.placeholder}
-                        </div>
-                      )}
-                    </Droppable>
-                  ))}
+                        )}
+                      </Droppable>
+                    ))}
+                  </div>
+                </DragDropContext>
+              </div>
+              {selectedTask && (
+                <div
+                  className="task-details-panel"
+                  tabIndex={0}
+                  onClick={e => e.stopPropagation()}
+                >
+                  <button className="close-btn" onClick={handleClosePopup}>×</button>
+                  <button className="menu-btn" onClick={() => setMenuOpen(v => !v)}>⋮</button>
+                  {menuOpen && (
+                    <div className="dropdown-menu" ref={menuRef}>
+                      <button onClick={() => { setMenuOpen(false); handleEditTask(selectedTask); }}>{t('ערוך')}</button>
+                      <button onClick={() => { setMenuOpen(false); handleDeleteTask(selectedTask.id); }}>{t('מחק')}</button>
+                    </div>
+                  )}
+                  <div className="task-details-content">
+                    <h2>{selectedTask.description}</h2>
+                    <p>יש לבצע עד: {selectedTask.due_date}</p>
+                    <p>סטטוס: {selectedTask.status}</p>
+                    <p>נוצרה ב: {selectedTask.created}</p>
+                    <p>עודכנה ב: {selectedTask.updated}</p>
+                    <p>סוג משימה: {getTaskTypeName(selectedTask.type)}</p>
+                    <p>לביצוע על ידי: {selectedTask.assignee}</p>
+                    <p>חניך: {getChildFullName(selectedTask.child, childrenOptions)}</p>
+                    <p>חונך: {getTutorFullName(selectedTask.tutor, tutorsOptions)}</p>
+                    <p>מועמד לחונכות: {getPendingTutorFullName(selectedTask.pending_tutor, pendingTutorsOptions)}</p>
+                  </div>
                 </div>
-              </DragDropContext>
+              )}
             </div>
           </div>
           {isStatusModalOpen && (
@@ -627,23 +722,6 @@ const Tasks = () => {
                   isClearable
                 />
                 <button onClick={handleSubmitTask}>צור</button>
-              </div>
-            </div>
-          )}
-          {selectedTask && (
-            <div className="task-popup">
-              <div className="task-popup-content">
-                <h2>{selectedTask.description}</h2>
-                <p>יש לבצע עד: {selectedTask.due_date}</p>
-                <p>סטטוס: {selectedTask.status}</p>
-                <p>נוצרה ב: {selectedTask.created}</p>
-                <p>עודכנה ב: {selectedTask.updated}</p>
-                <p>סוג משימה: {getTaskTypeName(selectedTask.type)}</p>
-                <p>לביצוע על ידי: {selectedTask.assignee}</p>
-                <p>חניך: {getChildFullName(selectedTask.child, childrenOptions)}</p>
-                <p>חונך: {getTutorFullName(selectedTask.tutor, tutorsOptions)}</p>
-                <p>מועמד לחונכות: {getPendingTutorFullName(selectedTask.pending_tutor, pendingTutorsOptions)}</p>
-                <button onClick={handleClosePopup}>סגור</button>
               </div>
             </div>
           )}
