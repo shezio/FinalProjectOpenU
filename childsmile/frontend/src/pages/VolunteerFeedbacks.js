@@ -236,6 +236,12 @@ const VolunteerFeedbacks = () => {
     if (!modalData.description) errors.description = t("Description is required");
     if (modalData.feedback_type === "general_volunteer_hospital_visit") {
       if (!modalData.hospital_name) errors.hospital_name = t("Hospital Name is required");
+      if (modalData.names && modalData.names.length >= 4 && !modalData.names.includes(",")) {
+        errors.names = t("Names must be comma separated if more than one name is entered");
+      }
+      if (modalData.phones && modalData.phones.length >= 4 && !modalData.phones.includes(",")) {
+        errors.phones = t("Phones must be comma separated if more than one phone is entered");
+      }
     }
     // Add more validation as needed
     setModalErrors(errors);
@@ -284,6 +290,12 @@ const VolunteerFeedbacks = () => {
         ? modalData.additional_volunteers.join(",")
         : "",
     };
+
+    if (modalData.feedback_type === "general_volunteer_hospital_visit") {
+      data.names = modalData.names ? modalData.names : "";
+      data.phones = modalData.phones ? modalData.phones : "";
+      data.other_information = modalData.other_information ? modalData.other_information : "";
+    }
 
     console.log("Data to be sent:", data);
     axios.post("/api/create_volunteer_feedback/", data)
@@ -572,6 +584,16 @@ const VolunteerFeedbacks = () => {
                       : infoModalData.additional_volunteers
                   }
                 </p>
+                {infoModalData.feedback_type === "general_volunteer_hospital_visit" && (
+                  <>
+                    <div>
+                      <h3>{t("Initial Family Data")}</h3>
+                      <p>{t("Names")}: {infoModalData.names || "-"}</p>
+                      <p>{t("Phones")}: {infoModalData.phones || "-"}</p>
+                      <p>{t("Other Information")}: {infoModalData.other_information || "-"}</p>
+                    </div>
+                  </>
+                )}
               </div>
               <div className="feedbacks-form-actions">
                 <button onClick={() => setInfoModalData(null)}>{t("Close")}</button>
@@ -585,7 +607,7 @@ const VolunteerFeedbacks = () => {
               className={
                 "feedbacks-modal-content" +
                 (shouldShrinkTextareas ? " feedbacks-modal-content-shrink" : "") +
-                (modalData.feedback_type === "general_volunteer_hospital_visit" ? " feedbacks-modal-content-tall" : "")
+                (modalData.feedback_type === "general_volunteer_hospital_visit" ? " feedbacks-modal-content-tall feedbacks-modal-content-wide" : "")
               }
             >
               <span className="feedbacks-close" onClick={closeModal}>&times;</span>
@@ -597,7 +619,12 @@ const VolunteerFeedbacks = () => {
                     return;
                   }
                 }}
-                className="feedbacks-form-grid"
+                className={
+                  "feedbacks-form-grid" +
+                  (modalData.feedback_type === "general_volunteer_hospital_visit"
+                    ? " feedbacks-form-grid-3col"
+                    : " feedbacks-form-grid-2col")
+                }
               >
                 <div className="feedbacks-form-row">
                   <label>{t("Feedback Type")}</label>
@@ -631,6 +658,39 @@ const VolunteerFeedbacks = () => {
                         hidden={!!modalData.id}
                       />
                       {modalErrors.hospital_name && <div className="error">{modalErrors.hospital_name}</div>}
+                    </div>
+
+                    <div className="feedbacks-form-col-initial-family">
+                      <h2>{t("Initial Family Data")}</h2>
+                      <div className="feedbacks-form-row">
+                        <label>{t("Names")}</label>
+                        <input
+                          type="text"
+                          value={modalData.names || ""}
+                          onChange={e => setModalData({ ...modalData, names: e.target.value })}
+                          placeholder={t("Enter names comma separated")}
+                        />
+                        {modalErrors.names && <div className="error">{modalErrors.names}</div>}
+                      </div>
+                      <div className="feedbacks-form-row">
+                        <label>{t("Phones")}</label>
+                        <input
+                          type="text"
+                          value={modalData.phones || ""}
+                          onChange={e => setModalData({ ...modalData, phones: e.target.value })}
+                          placeholder={t("Enter phones comma separated")}
+                        />
+                        {modalErrors.phones && <div className="error">{modalErrors.phones}</div>}
+                      </div>
+                      <div className="feedbacks-form-row">
+                        <label>{t("Other Information")}</label>
+                        <input
+                          type="text"
+                          value={modalData.other_information || ""}
+                          onChange={e => setModalData({ ...modalData, other_information: e.target.value })}
+                          placeholder={t("Enter other information")}
+                        />
+                      </div>
                     </div>
                   </>
                 )}
@@ -767,12 +827,11 @@ const VolunteerFeedbacks = () => {
                     </>
                   )}
                 </div>
+                <div className="feedbacks-form-actions">
+                  <button onClick={handleModalSubmit}>{t("Save Feedback")}</button>
+                  <button onClick={closeModal}>{t("Cancel")}</button>
+                </div>
               </form>
-              {/* Add more fields and validation as needed, each in its own row */}
-              <div className="feedbacks-form-actions">
-                <button onClick={handleModalSubmit}>{t("Save Feedback")}</button>
-                <button onClick={closeModal}>{t("Cancel")}</button>
-              </div>
             </div>
           </div>
         )}

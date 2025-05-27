@@ -20,6 +20,7 @@ import RolesSpreadStatsReport from './pages/report_pages/roles_spread_stats_repo
 import Registration from './pages/Registration'; // Import the Registration component
 import VolunteerFeedbacks from './pages/VolunteerFeedbacks'; // Import the Volunteer Feedbacks component
 import TutorFeedbacks from './pages/TutorFeedbacks'; // Import the Tutor Feedbacks component
+import InitialFamilyData from './pages/InitialFamilyData'; // Import the Initial Family Data component
 
 /*import these routes respectively to .pages
     get_families_per_location_report: { name: 'דוח משפחות לפי מיקום', path: '/reports/families_per_location_report' },
@@ -57,7 +58,7 @@ const App = () => {
       <Route path="/reports/roles_spread_stats_report" element={<RolesSpreadStatsReport />} /> {/* Add Roles Spread Stats Report route */}
       <Route path="/feedbacks/VolunteerFeedbacks" element={<VolunteerFeedbacks />} /> {/* Add Volunteer Feedbacks route */}
       <Route path="/feedbacks/TutorFeedbacks" element={<TutorFeedbacks />} /> {/* Add Tutor Feedbacks route */}
-      {/* Add the Registration route */}
+      <Route path="/initial-family-data" element={<InitialFamilyData />} /> {/* Add Initial Family Data route */}
       <Route path="/register" element={<Registration />} />
     </Routes>
   );

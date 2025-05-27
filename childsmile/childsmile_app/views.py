@@ -497,6 +497,10 @@ def create_task_internal(task_data):
             related_tutor_id=task_data.get("tutor"),  # Allow null for tutor
             task_type_id=task_data["type"],
             pending_tutor_id=pending_tutor_id,  # Use the correct Pending_Tutor ID
+            names=task_data.get("names"),
+            phones=task_data.get("phones"),
+            other_information=task_data.get("other_information"),
+            initial_family_data_id_fk=task_data.get("initial_family_data_id_fk"),
         )
         print(f"DEBUG: Task created successfully: {task}")
         return task
@@ -507,6 +511,15 @@ def create_task_internal(task_data):
         print(f"DEBUG: Error creating task: {str(e)}")
         raise e
 
+def create_tasks_for_technical_coordinators_async(initial_family_data, task_type_id):
+    """
+    Run the task creation function asynchronously.
+    """
+    thread = threading.Thread(
+        target=create_tasks_for_technical_coordinators,
+        args=(initial_family_data, task_type_id)
+    )
+    thread.start()
 
 def create_tasks_for_tutor_coordinators_async(pending_tutor_id, task_type_id):
     """
@@ -583,6 +596,53 @@ def create_tasks_for_tutor_coordinators(pending_tutor_id, task_type_id):
     except Exception as e:
         print(f"DEBUG: An error occurred while creating tasks: {str(e)}")
 
+import threading
+import datetime
+from django.utils.timezone import now
+
+def create_tasks_for_technical_coordinators(initial_family_data, task_type_id):
+    """
+    Create tasks for all Technical Coordinators for the given InitialFamilyData.
+    """
+    try:
+        # Fetch the role for Technical Coordinator
+        tech_coordinator_role = Role.objects.filter(role_name="Technical Coordinator").first()
+        if not tech_coordinator_role:
+            print("DEBUG: Role 'Technical Coordinator' not found in the database.")
+            return
+
+        # Fetch all Technical Coordinators (roles is a many-to-many field)
+        tech_coordinators = Staff.objects.filter(roles=tech_coordinator_role)
+        if not tech_coordinators.exists():
+            print("DEBUG: No Technical Coordinators found in the database.")
+            return
+
+        print(f"DEBUG: Found {tech_coordinators.count()} Technical Coordinators.")
+
+        # Get the task type object
+        task_type = Task_Types.objects.get(pk=task_type_id)
+
+        # Create tasks for each technical coordinator
+        for coordinator in tech_coordinators:
+            task_data = {
+                "description": "הוספת משפחה",
+                "due_date": (now().date() + datetime.timedelta(days=7)).strftime("%Y-%m-%d"),
+                "status": "לא הושלמה",
+                "assigned_to": coordinator.staff_id,
+                "type": task_type,
+                "names": initial_family_data.names,
+                "phones": initial_family_data.phones,
+                "other_information": initial_family_data.other_information,
+                "initial_family_data_id_fk": initial_family_data.initial_family_data_id,
+            }
+            print(f"DEBUG: Task data being sent to create_task_internal: {task_data}")
+            try:
+                task = create_task_internal(task_data)
+                print(f"DEBUG: Task created successfully with ID {task.task_id}")
+            except Exception as e:
+                print(f"DEBUG: Error creating task: {str(e)}")
+    except Exception as e:
+        print(f"DEBUG: An error occurred while creating tasks: {str(e)}")
 
 def delete_task_cache(assigned_to_id=None, is_admin=False):
     """
@@ -639,6 +699,7 @@ def has_permission(request, resource, action):
         for permission in permissions
     )
 
+
 def has_initial_family_data_permission(request, action):
     """
     Check if the user has the required permission for the InitialFamilyData resource and action.
@@ -647,7 +708,8 @@ def has_initial_family_data_permission(request, action):
     # print the permissions for debugging
     # print(f"DEBUG: Permissions: {permissions}")  # Debug log
     return any(
-        permission["resource"] == "initial_family_data" and permission["action"] == action
+        permission["resource"] == "initial_family_data"
+        and permission["action"] == action
         for permission in permissions
     )
 
@@ -800,7 +862,15 @@ def get_user_tasks(request):
                     }
                     if task.pending_tutor
                     else None
-                ),  # Serialize Pending_Tutor details or set to None
+                ),
+                "names": task.names,
+                "phones": task.phones,
+                "other_information": task.other_information,
+                "initial_family_data_id_fk": (
+                    task.initial_family_data_id_fk.initial_family_data_id
+                    if task.initial_family_data_id_fk
+                    else None
+                ),
             }
             for task in tasks
         ]
@@ -1010,9 +1080,15 @@ def update_task_status(request, task_id):
 
     try:
         task = Tasks.objects.get(task_id=task_id)
-        task.status = request.data.get("status", task.status)
+        new_status, task.status = request.data.get("status", task.status)
         task.save()
 
+        print(f"DEBUG: Task {task_id} status updated to {new_status}")  # Debug log
+
+        # If status changed to "בביצוע" and task has initial_family_data_id_fk
+        if new_status == "בביצוע" and task.initial_family_data_id_fk:
+            # Delete all other tasks with the same initial_family_data_id_fk
+            delete_other_tasks_with_initial_family_data_async(task)
         # Check if the logged-in user is an admin
         user = Staff.objects.get(staff_id=user_id)
 
@@ -1028,6 +1104,18 @@ def update_task_status(request, task_id):
         print(f"DEBUG: An error occurred: {str(e)}")
         return JsonResponse({"error": str(e)}, status=500)
 
+def delete_other_tasks_with_initial_family_data(task):
+    """
+    Deletes all tasks with the same initial_family_data_id_fk as the given task,
+    except the task itself.
+    """
+    Tasks.objects.filter(
+        initial_family_data_id_fk=task.initial_family_data_id_fk
+    ).exclude(pk=task.pk).delete()
+
+def delete_other_tasks_with_initial_family_data_async(task):
+    thread = threading.Thread(target=delete_other_tasks_with_initial_family_data, args=(task,))
+    thread.start()
 
 @csrf_exempt
 @api_view(["PUT"])
@@ -1470,6 +1558,9 @@ def volunteer_feedback_report(request):
                         "feedback_type": feedback.feedback.feedback_type,
                         "hospital_name": feedback.feedback.hospital_name,
                         "additional_volunteers": feedback.feedback.additional_volunteers,
+                        "names": feedback.feedback.names,
+                        "phones": feedback.feedback.phones,
+                        "other_information": feedback.feedback.other_information,
                     }
                 )
             except Exception as e:
@@ -1541,6 +1632,9 @@ def tutor_feedback_report(request):
                         "feedback_type": feedback.feedback.feedback_type,
                         "hospital_name": feedback.feedback.hospital_name,
                         "additional_volunteers": feedback.feedback.additional_volunteers,
+                        "names": feedback.feedback.names,
+                        "phones": feedback.feedback.phones,
+                        "other_information": feedback.feedback.other_information,
                     }
                 )
             except Exception as e:
@@ -2644,6 +2738,7 @@ def get_all_staff(request):
         status=200,
     )
 
+
 @csrf_exempt
 @api_view(["PUT"])
 def update_staff_member(request, staff_id):
@@ -2715,15 +2810,20 @@ def update_staff_member(request, staff_id):
             if isinstance(roles, list):
                 if "General Volunteer" in roles and "Tutor" in roles:
                     return JsonResponse(
-                        {"error": "Cannot assign both 'General Volunteer' and 'Tutor' roles to the same staff member."},
+                        {
+                            "error": "Cannot assign both 'General Volunteer' and 'Tutor' roles to the same staff member."
+                        },
                         status=400,
                     )
             prev_roles = set(staff_member.roles.values_list("role_name", flat=True))
             new_roles = set(data["roles"])
 
-
             # General Volunteer -> Tutor
-            if "Tutor" in new_roles and "General Volunteer" in prev_roles and "General Volunteer" not in new_roles:
+            if (
+                "Tutor" in new_roles
+                and "General Volunteer" in prev_roles
+                and "General Volunteer" not in new_roles
+            ):
                 gv = General_Volunteer.objects.filter(staff=staff_member).first()
                 if gv:
                     id_id = gv.id_id
@@ -2734,11 +2834,15 @@ def update_staff_member(request, staff_id):
                         id_id=id_id,
                         staff=staff_member,
                         tutorship_status="ממתין",
-                        tutor_email=tutor_email
+                        tutor_email=tutor_email,
                     )
 
             # Tutor -> General Volunteer
-            if "General Volunteer" in new_roles and "Tutor" in prev_roles and "Tutor" not in new_roles:
+            if (
+                "General Volunteer" in new_roles
+                and "Tutor" in prev_roles
+                and "Tutor" not in new_roles
+            ):
                 tutor = Tutors.objects.filter(staff=staff_member).first()
                 if tutor:
                     id_id = tutor.id_id
@@ -2747,7 +2851,7 @@ def update_staff_member(request, staff_id):
                         id_id=id_id,
                         staff=staff_member,
                         signupdate=now().date(),
-                        comments=""
+                        comments="",
                     )
 
         # --- Now update staff fields (including email) ---
@@ -2781,7 +2885,9 @@ def update_staff_member(request, staff_id):
         # --- Propagate email changes to related tables (after role transitions) ---
         if old_email != data["email"]:
             SignedUp.objects.filter(email=old_email).update(email=data["email"])
-            Tutors.objects.filter(tutor_email=old_email).update(tutor_email=data["email"])
+            Tutors.objects.filter(tutor_email=old_email).update(
+                tutor_email=data["email"]
+            )
             staff_member.email = data["email"]
 
         # Save the updated staff record
@@ -2965,7 +3071,9 @@ def create_staff_member(request):
         if isinstance(roles, list):
             if "General Volunteer" in roles or "Tutor" in roles:
                 return JsonResponse(
-                    {"error": "Cannot create a user with 'General Volunteer' nor 'Tutor' roles via this flow."},
+                    {
+                        "error": "Cannot create a user with 'General Volunteer' nor 'Tutor' roles via this flow."
+                    },
                     status=400,
                 )
             staff_member.roles.clear()
@@ -3169,6 +3277,11 @@ def create_tutor_feedback(request):
                 if data.get("additional_volunteers")
                 else None
             ),
+            names=data.get("names") if data.get("names") else None,
+            phones=data.get("phones") if data.get("phones") else None,
+            other_information=(
+                data.get("other_information") if data.get("other_information") else None
+            ),
         )
 
         # Get the tutor's id_id from Tutors using the user_id (which is staff_id in Tutors)
@@ -3199,6 +3312,25 @@ def create_tutor_feedback(request):
         print(
             f"DEBUG: Tutor feedback created successfully with ID {feedback.feedback_id}"
         )
+
+        if (
+            data.get("feedback_type") == "general_volunteer_hospital_visit"
+            and data.get("names")
+            and data.get("phones")
+        ):
+            # Create InitialFamilyData
+            initial_family_data = InitialFamilyData.objects.create(
+                names=data["names"],
+                phones=data["phones"],
+                other_information=data.get("other_information", "")
+            )
+
+            print(f"DEBUG: InitialFamilyData created with ID {initial_family_data.id}")
+            # Get the task type id for "הוספת משפחה"
+            task_type = Task_Types.objects.get(task_type="הוספת משפחה")
+            # Create tasks for all Technical Coordinators
+            create_tasks_for_technical_coordinators_async(initial_family_data, task_type.pk)
+        
         return JsonResponse(
             {
                 "message": "Tutor feedback created successfully",
@@ -3287,6 +3419,9 @@ def update_tutor_feedback(request, feedback_id):
             if data.get("additional_volunteers")
             else None
         )
+        feedback.names = data.get("names") if data.get("names") else None
+        feedback.phones = data.get("phones") if data.get("phones") else None
+        feedback.other_information = data.get("other_information") if data.get("other_information") else None
         feedback.save()
 
         # Get the tutor's id_id from Tutors using the user_id (which is staff_id in Tutors)
@@ -3458,20 +3593,24 @@ def create_volunteer_feedback(request):
                 if data.get("additional_volunteers")
                 else None
             ),
+            names=data.get("names") if data.get("names") else None,
+            phones=data.get("phones") if data.get("phones") else None,
+            other_information=(
+                data.get("other_information") if data.get("other_information") else None
+            ),
         )
 
         # Get the volunteer's id_id from General_Volunteer using the user_id (which is staff_id in General_Volunteer)
         print(f"DEBUG: User ID: {user_id}")  # Log the user ID
-        volunteer = (
-            General_Volunteer.objects.filter(staff_id=staff_filling_id).first()
-        )  # Fallback to Tutors if not found in General_Volunteer
+        volunteer = General_Volunteer.objects.filter(
+            staff_id=staff_filling_id
+        ).first()  # Fallback to Tutors if not found in General_Volunteer
         print(f"DEBUG: Volunteer found: {volunteer}")  # Log the volunteer found
         if not volunteer:
             print(f"DEBUG: No volunteer found for staff ID {staff_filling_id}")
             return JsonResponse(
                 {"error": "No volunteer found for the provided staff ID."}, status=404
             )
-
 
         volunteer_feedback = General_V_Feedback.objects.create(
             feedback=feedback,
@@ -3487,6 +3626,25 @@ def create_volunteer_feedback(request):
         print(
             f"DEBUG: Volunteer feedback created successfully with ID {feedback.feedback_id}"
         )
+
+        if (
+            data.get("feedback_type") == "general_volunteer_hospital_visit"
+            and data.get("names")
+            and data.get("phones")
+        ):
+            # Create InitialFamilyData
+            initial_family_data = InitialFamilyData.objects.create(
+                names=data["names"],
+                phones=data["phones"],
+                other_information=data.get("other_information", "")
+            )
+
+            print(f"DEBUG: InitialFamilyData created with ID {initial_family_data.id}")
+            # Get the task type id for "הוספת משפחה"
+            task_type = Task_Types.objects.get(task_type="הוספת משפחה")
+            # Create tasks for all Technical Coordinators
+            create_tasks_for_technical_coordinators_async(initial_family_data, task_type.pk)
+
         return JsonResponse(
             {
                 "message": "Volunteer feedback created successfully",
@@ -3575,12 +3733,17 @@ def update_volunteer_feedback(request, feedback_id):
             if data.get("additional_volunteers")
             else None
         )
+        feedback.names = data.get("names") if data.get("names") else None
+        feedback.phones = data.get("phones") if data.get("phones") else None
+        feedback.other_information = (
+            data.get("other_information") if data.get("other_information") else None
+        )
         feedback.save()
 
         # Get the volunteer's id_id from General_Volunteer using the user_id (which is staff_id in General_Volunteer)
-        volunteer = (
-            General_Volunteer.objects.filter(staff_id=staff_filling_id).first()
-        )  # Fallback to Tutors if not found in General_Volunteer
+        volunteer = General_Volunteer.objects.filter(
+            staff_id=staff_filling_id
+        ).first()  # Fallback to Tutors if not found in General_Volunteer
         print(f"DEBUG: Volunteer found: {volunteer}")  # Log the volunteer found
         if not volunteer:
             print(f"DEBUG: No volunteer found for staff ID {staff_filling_id}")
@@ -3674,9 +3837,12 @@ def delete_volunteer_feedback(request, feedback_id):
         )
         return JsonResponse({"error": str(e)}, status=500)
 
+
 """
 create a new view for the InitialFamilyData model that will return all the data in the table
 """
+
+
 @csrf_exempt
 @api_view(["GET"])
 def get_initial_family_data(request):
@@ -3710,10 +3876,15 @@ def get_initial_family_data(request):
         ]
         return JsonResponse({"initial_family_data": data}, status=200)
     except Exception as e:
-        print(f"DEBUG: An error occurred while retrieving initial family data: {str(e)}")
+        print(
+            f"DEBUG: An error occurred while retrieving initial family data: {str(e)}"
+        )
         return JsonResponse({"error": str(e)}, status=500)
-    
+
+
 """ create a new view for the InitialFamilyData model that will create a new row"""
+
+
 @csrf_exempt
 @api_view(["POST"])
 def create_initial_family_data(request):
@@ -3752,9 +3923,15 @@ def create_initial_family_data(request):
         initial_family_data = InitialFamilyData.objects.create(
             names=data["names"],
             phones=data["phones"],
-            other_information=data.get("other_information") if data.get("other_information") else None,
-            created_at=make_aware(datetime.datetime.now()),  # Use make_aware for timezone-aware datetime
-            updated_at=make_aware(datetime.datetime.now()),  # Use make_aware for timezone-aware datetime
+            other_information=(
+                data.get("other_information") if data.get("other_information") else None
+            ),
+            created_at=make_aware(
+                datetime.datetime.now()
+            ),  # Use make_aware for timezone-aware datetime
+            updated_at=make_aware(
+                datetime.datetime.now()
+            ),  # Use make_aware for timezone-aware datetime
             family_added=False,  # Default to False
         )
 
@@ -3771,8 +3948,11 @@ def create_initial_family_data(request):
     except Exception as e:
         print(f"DEBUG: An error occurred while creating initial family data: {str(e)}")
         return JsonResponse({"error": str(e)}, status=500)
-    
+
+
 """ create a new view for the InitialFamilyData model that will update an existing row by id"""
+
+
 @csrf_exempt
 @api_view(["PUT"])
 def update_initial_family_data(request, id):
@@ -3795,9 +3975,7 @@ def update_initial_family_data(request, id):
     try:
         initial_family_data = InitialFamilyData.objects.get(id=id)
     except InitialFamilyData.DoesNotExist:
-        return JsonResponse(
-            {"error": "Initial family data not found."}, status=404
-        )
+        return JsonResponse({"error": "Initial family data not found."}, status=404)
 
     data = request.data
     required_fields = ["names", "phones"]
@@ -3806,18 +3984,20 @@ def update_initial_family_data(request, id):
     ]
     if missing_fields:
         return JsonResponse(
-            {
-                "error": f"Missing or empty required fields: {', '.join(missing_fields)}"
-            },
+            {"error": f"Missing or empty required fields: {', '.join(missing_fields)}"},
             status=400,
         )
-    
+
     # Update the fields if they are provided in the request
     initial_family_data.names = data.get("names", initial_family_data.names)
     initial_family_data.phones = data.get("phones", initial_family_data.phones)
-    initial_family_data.other_information = data.get("other_information", initial_family_data.other_information)
+    initial_family_data.other_information = data.get(
+        "other_information", initial_family_data.other_information
+    )
     initial_family_data.updated_at = make_aware(datetime.datetime.now())
-    initial_family_data.family_added = data.get("family_added", initial_family_data.family_added)
+    initial_family_data.family_added = data.get(
+        "family_added", initial_family_data.family_added
+    )
 
     # Save the updated record
     try:
@@ -3829,7 +4009,10 @@ def update_initial_family_data(request, id):
         print(f"DEBUG: An error occurred while updating initial family data: {str(e)}")
         return JsonResponse({"error": str(e)}, status=500)
 
+
 """create a new view for the InitialFamilyData model that will delete an existing row by id"""
+
+
 @csrf_exempt
 @api_view(["DELETE"])
 def delete_initial_family_data(request, id):
@@ -3856,9 +4039,7 @@ def delete_initial_family_data(request, id):
             {"message": "Initial family data deleted successfully"}, status=200
         )
     except InitialFamilyData.DoesNotExist:
-        return JsonResponse(
-            {"error": "Initial family data not found."}, status=404
-        )
+        return JsonResponse({"error": "Initial family data not found."}, status=404)
     except Exception as e:
         print(f"DEBUG: An error occurred while deleting initial family data: {str(e)}")
         return JsonResponse({"error": str(e)}, status=500)

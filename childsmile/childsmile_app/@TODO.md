@@ -109,11 +109,7 @@ Permissions:
 - Technical Coordinator
 - System Administrator
 - Families Coordinator
-------------------------------------------------------------------------------
-# TODO
-------------------------------------------------------
 
-BE additions:
 [V] create a new view for the InitialFamilyData model that will return all the data in the table
 [V] create a new view for the InitialFamilyData model that will create a new row
 [V] create a new view for the InitialFamilyData model that will update an existing row by id
@@ -124,77 +120,90 @@ create urls for each of the views
 [V] URL for the InitialFamilyData model that will update an existing row by id
 [V] URL for the InitialFamilyData model that will delete an existing row by id
 
-[] add to views of tasks the new fields in the model - names,    initial_family_data_id_fk, phones, other_information
+[V] add to ALL views relating tasks the new fields in the model - names,    initial_family_data_id_fk, phones, other_information
 - add the new fields to the GET view of tasks
 - add the new fields to the POST view of tasks
 - add the new fields to the PUT view of tasks
 - add the new fields to the DELETE view of tasks
 
-[] add the new fields to the GET view of tutor feedback
-[] add the new fields to the POST view of tutor feedback
-[] add the new fields to the PUT view of tutor feedback
-[] add the new fields to the DELETE view of tutor feedback
 
-[] add the new fields to the GET view of volunteer feedback
-[] add the new fields to the POST view of volunteer feedback
-[] add the new fields to the PUT view of volunteer feedback
-[] add the new fields to the DELETE view of volunteer feedback
 
-[] add the new fields to the GET view of tutor_feedback_report
-[] add the new fields to the POST view of tutor_feedback_report
-[] add the new fields to the PUT view of tutor_feedback_report
-[] add the new fields to the DELETE view of tutor_feedback_report
+[v] add the new fields to the GET view of tutor feedback
+[v] add the new fields to the POST view of tutor feedback
+[v] add the new fields to the PUT view of tutor feedback
+[v] add the new fields to the DELETE view of tutor feedback
 
-[] add the new fields to the GET view of volunteer_feedback_report
-[] add the new fields to the POST view of volunteer_feedback_report
-[] add the new fields to the PUT view of volunteer_feedback_report
-[] add the new fields to the DELETE view of volunteer_feedback_report
+[v] add the new fields to the GET view of volunteer feedback
+[v] add the new fields to the POST view of volunteer feedback
+[v] add the new fields to the PUT view of volunteer feedback
+[v] add the new fields to the DELETE view of volunteer feedback
+
+[v] add the new fields to the GET view of tutor_feedback_report
+[v] add the new fields to the POST view of tutor_feedback_report
+[v] add the new fields to the PUT view of tutor_feedback_report
+[v] add the new fields to the DELETE view of tutor_feedback_report
+
+[v] add the new fields to the GET view of volunteer_feedback_report
+[v] add the new fields to the POST view of volunteer_feedback_report
+[v] add the new fields to the PUT view of volunteer_feedback_report
+[v] add the new fields to the DELETE view of volunteer_feedback_report
+
 
 
 volunteer and tutor feedback screens - on general_volunteer_hospital_visit feedback type ONLY
-[] add a <h2> called initial family data with 3 fields: names, phone, and other information
-[] once the feedback is submitted - only on create not edit - POST only
-[] add the data to the initial family data table
-[] create automatically a task to all Technical Coordinators to add a family - if names and phones both aren't empty
+[V] add a <h2> called initial family data with 3 fields: names, phone, and other information
+[v] once the feedback is submitted - only on create not edit - POST only
+[v] add the data to the initial family data table
+[v] create automatically a task to all Technical Coordinators to add a family - if names and phones both aren't empty
 
-volunteer and tutor feedback reports-  need to add new fields to the feedback report BE and FE
-[] add the names field to the feedback report
-[] add the phones field to the feedback report
-[] add the other information field to the feedback report
-
-Tasks:
-[] add the fields to the task of adding a family once the type was chosen and add a dummy condition which is always false until we decide to show this entire feature
-[] make it automatic that upon creating of a general_volunteer_hospital_visit feedback - if the fields names and phones both arent empty - then create a task to all Technical Coordinators to add a family with the  - but ONLY AFTER the initial_familty_data new line was added
+[V] make it automatic that upon creating of a general_volunteer_hospital_visit feedback - if the fields names and phones both arent empty - then create a task to all Technical Coordinators to add a family with the  - but ONLY AFTER the initial_familty_data new line was added
 to utilize the initial_family_data_id
 
 following data for staff ids of the technical coordinators in the system:
-[] description - "הוספת משפחה"
-[] due_date - now + 7 days
-[] status - "לא הושלמה"
-[] created_at - now
-[] updated_at - now
-[] assigned_to_id - current staff id
-[] related_child_id - null
-[] related_tutor_id - null
-[] task_type_id - the id of the task type "הוספת משפחה"
-[] pending_tutor_id - null
-[] names - the names inserted in the feedback
-[] phones- the phones inserted in the feedback
-[] other_information - the other information inserted in the feedback
-[] initial_family_data_id_fk - the id of the initial family data created
+[v] description - "הוספת משפחה"
+[v] due_date - now + 7 days
+[v] status - "לא הושלמה"
+[v] created_at - now
+[v] updated_at - now
+[v] assigned_to_id - current staff id
+[v] related_child_id - null
+[v] related_tutor_id - null
+[v] task_type_id - the id of the task type "הוספת משפחה"
+[v] pending_tutor_id - null
+[v] names - the names inserted in the feedback
+[v] phones- the phones inserted in the feedback
+[v] other_information - the other information inserted in the feedback
+[v] initial_family_data_id_fk - the id of the initial family data created
+[V] show the new fields in the split view for the task
 
-[] when one task with that initial_family_data_id_fk status is set to "בביצוע" - then all the other tasks with that initial_family_data_id_fk will be deleted
+
+volunteer and tutor feedback reports-  need to add new fields to the feedback report FE
+[v] add the names field to the feedback report
+[v] add the phones field to the feedback report
+[v] add the other information field to the feedback report
 
 
+
+UI
+[v] add in App.js a new page called "InitialFamilyData" 
+
+------------------------------------------------------------------------------
+# TODO
+------------------------------------------------------------------------------
+
+BE additions:
 
 UI:
-[] create a new page under families called "initial_family_data" that will show all the data in the table
-[] add in App.js a new page called "InitialFamilyData" that will show all the data in the table
-[] add a new button in the families page that will open the initial family data page and navigate to it
+
+[] add a new button in the families page that will open the initial family data page and navigate to "/initial-family-data"
+
+
+[] create a new page under families called "InitialFamilyData" that will show all the data in the table using "api/get_initial_family_data/",
 [] in the new page show all the data in a table with the following columns:
 [] Initial Family ID, Name, Phone, Other information, created_at, updated_at, Family Added?, actions
-[] in the actions column add a button that will open a modal with a form to update the initial family data
-[] in the actions column add a button that will delete the initial family data
+[] in the actions column add a button that will open a modal with a form to update the initial family data - update will use         "api/update_initial_family_data/<int:family_id>/",
+[] in the actions column add a button that will open a modal with a form to create a new initial family data - create will use "api/create_initial_family_data/"
+[] in the actions column add a button that will open a modal asking  - the scary modal we have in families - to delete the initial family data - delete will use "api/delete_initial_family_data/<int:family_id>/",
 [] in the actions column add a button to mark the family as added
  - if added
   - show it as done - set family_added = true
