@@ -3398,6 +3398,15 @@ def update_tutor_feedback(request, feedback_id):
                 status=404,
             )
         staff_filling_id = data.get("staff_id")
+        # Get the tutor's id_id from Tutors using the user_id (which is staff_id in Tutors)
+        tutor = Tutors.objects.filter(staff_id=staff_filling_id).first()
+        print(f"DEBUG: Tutor found: {tutor}")  # Log the tutor found
+        if not tutor:
+            print(f"DEBUG: No tutor found for staff ID {staff_filling_id}")
+            return JsonResponse(
+                {"error": "No tutor found for the provided staff ID."}, status=404
+            )
+        
         feedback.timestamp = data.get("feedback_filled_at")
         feedback.event_date = make_aware(
             datetime.datetime.strptime(data.get("event_date"), "%Y-%m-%d")
@@ -3424,14 +3433,7 @@ def update_tutor_feedback(request, feedback_id):
         feedback.other_information = data.get("other_information") if data.get("other_information") else None
         feedback.save()
 
-        # Get the tutor's id_id from Tutors using the user_id (which is staff_id in Tutors)
-        tutor = Tutors.objects.filter(staff_id=staff_filling_id).first()
-        print(f"DEBUG: Tutor found: {tutor}")  # Log the tutor found
-        if not tutor:
-            print(f"DEBUG: No tutor found for staff ID {staff_filling_id}")
-            return JsonResponse(
-                {"error": "No tutor found for the provided staff ID."}, status=404
-            )
+
         tutor_id_id = tutor.id_id
 
         tutor_feedback = Tutor_Feedback.objects.filter(feedback=feedback).first()
@@ -3712,6 +3714,18 @@ def update_volunteer_feedback(request, feedback_id):
                 status=404,
             )
         staff_filling_id = data.get("staff_id")
+
+        # Get the volunteer's id_id from General_Volunteer using the user_id (which is staff_id in General_Volunteer)
+        volunteer = General_Volunteer.objects.filter(
+            staff_id=staff_filling_id
+        ).first()  # Fallback to Tutors if not found in General_Volunteer
+        print(f"DEBUG: Volunteer found: {volunteer}")  # Log the volunteer found
+        if not volunteer:
+            print(f"DEBUG: No volunteer found for staff ID {staff_filling_id}")
+            return JsonResponse(
+                {"error": "No volunteer found for the provided staff ID."}, status=404
+            )
+        
         feedback.timestamp = data.get("feedback_filled_at")
         feedback.event_date = make_aware(
             datetime.datetime.strptime(data.get("event_date"), "%Y-%m-%d")
@@ -3739,17 +3753,6 @@ def update_volunteer_feedback(request, feedback_id):
             data.get("other_information") if data.get("other_information") else None
         )
         feedback.save()
-
-        # Get the volunteer's id_id from General_Volunteer using the user_id (which is staff_id in General_Volunteer)
-        volunteer = General_Volunteer.objects.filter(
-            staff_id=staff_filling_id
-        ).first()  # Fallback to Tutors if not found in General_Volunteer
-        print(f"DEBUG: Volunteer found: {volunteer}")  # Log the volunteer found
-        if not volunteer:
-            print(f"DEBUG: No volunteer found for staff ID {staff_filling_id}")
-            return JsonResponse(
-                {"error": "No volunteer found for the provided staff ID."}, status=404
-            )
 
         volunteer_feedback = General_V_Feedback.objects.filter(
             feedback=feedback

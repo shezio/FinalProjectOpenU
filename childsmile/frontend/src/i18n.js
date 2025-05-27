@@ -496,6 +496,11 @@ const resources = {
       "Enter other information": "הזן פרטים נוספים",
       "Names must be comma separated if more than one name is entered": "אם יש יותר משם אחד, חובה להפריד בין השמות בפסיקים",
       "Phones must be comma separated if more than one phone is entered": "אם יש יותר מטלפון אחד, חובה להפריד בין הטלפונים בפסיקים",
+      "Volunteer Name is required": "חובה למלא שם מתנדב",
+      "ERROR": "שגיאה",
+      "Error Updating Feedback": "שגיאה בעדכון משוב",
+      "Child Name is required": "חובה למלא שם ילד",
+
 
 
     }

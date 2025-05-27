@@ -194,7 +194,8 @@ UI
 BE additions:
 
 UI:
-
+[] fix feedback report bugs of column order - and make sure we have the initfamilydata column in both
+[] fix pins on families report locations
 [] add a new button in the families page that will open the initial family data page and navigate to "/initial-family-data"
 
 

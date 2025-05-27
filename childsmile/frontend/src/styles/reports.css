@@ -368,7 +368,7 @@
     /* Limit height to avoid overflow */
     overflow-y: auto;
     direction: rtl;
-    transform: scale(0.95);
+    transform: scale(0.9);
     /* Align the grid to the right for right-to-left languages */
 }
 
