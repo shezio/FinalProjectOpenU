@@ -215,6 +215,7 @@ const TutorFeedbackReport = () => {
                       <th>{t("Exceptional Events")}</th>
                       <th>{t("Anything Else")}</th>
                       <th>{t("Comments")}</th>
+                      <th>{t("Initial Family Data")}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -261,6 +262,22 @@ const TutorFeedbackReport = () => {
                               {word} {(i + 1) % 5 === 0 && <br />}
                             </React.Fragment>
                           ))}
+                        </td>
+                        <td>
+                          {[
+                            feedback.names,
+                            feedback.phones,
+                            feedback.other_information
+                          ].filter(Boolean).length > 0
+                            ? (
+                              <>
+                                {feedback.names && <div>{t("Names")}: {feedback.names}</div>}
+                                {feedback.phones && <div>{t("Phones")}: {feedback.phones}</div>}
+                                {feedback.other_information && <div>{t("Other Information")}: {feedback.other_information}</div>}
+                              </>
+                            )
+                            : "---"
+                          }
                         </td>
                       </tr>
                     ))}

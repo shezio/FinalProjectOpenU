@@ -780,16 +780,16 @@
 }
 
 .feedbacks-close {
-  color: #333;
-  /* Darker color for better visibility */
-  position: absolute;
-  top: 15px;
-  right: 20px;
-  font-size: 3em;
-  font-weight: bold;
-  cursor: pointer;
-  transition: color 0.3s ease;
-  /* Smooth hover effect */
+    color: #333;
+    /* Darker color for better visibility */
+    position: absolute;
+    top: 15px;
+    right: 20px;
+    font-size: 3em;
+    font-weight: bold;
+    cursor: pointer;
+    transition: color 0.3s ease;
+    /* Smooth hover effect */
 }
 
 .feedbacks-textarea {
@@ -910,14 +910,28 @@
     line-height: 1.5;
 }
 
+.feedbacks-info-grid h3 {
+    margin: 0;
+    /* Remove default margin */
+    font-size: 2em;
+    line-height: 1.5;
+    color: #4caf50;
+}
+
 .feedbacks-modal-content-tall {
     height: 100%;
     /* or whatever height you need */
+    transform: scale(0.9);
+}
+
+.feedbacks-modal-content-tall.feedbacks-modal-content-scale {
+    /* Only apply the scale from .feedbacks-modal-content-scale */
+    transform: scale(0.85) !important;
 }
 
 .feedbacks-modal-content-tall .feedbacks-form-actions {
     padding-top: 0;
-    margin-top: 120px;
+    margin-top: 100px;
 }
 
 .additional-volunteers-dropdown-container {
@@ -958,4 +972,39 @@
     /* Optional: makes the checkbox green in supported browsers */
     margin-right: 10px;
     vertical-align: middle;
+}
+
+.feedbacks-form-grid-2col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+
+.feedbacks-form-grid-3col {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 20px;
+}
+
+.feedbacks-form-col-initial-family {
+    grid-column: 3;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.feedbacks-modal-content.feedbacks-modal-content-wide {
+    width: 2000px;
+    /* or whatever width fits your design */
+    max-width: 95vw;
+    min-width: 900px;
+}
+
+.feedbacks-modal-content.feedbacks-modal-content-wide button {
+    width: 200px;
+    /* Adjust button width */
+    font-size: 24px;
+    gap: 300px;
+    /* Ensure button text is large enough */
 }

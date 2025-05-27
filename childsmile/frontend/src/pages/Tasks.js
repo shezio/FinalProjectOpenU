@@ -537,6 +537,15 @@ const Tasks = () => {
                     <p>חניך: {getChildFullName(selectedTask.child, childrenOptions)}</p>
                     <p>חונך: {getTutorFullName(selectedTask.tutor, tutorsOptions)}</p>
                     <p>מועמד לחונכות: {getPendingTutorFullName(selectedTask.pending_tutor, pendingTutorsOptions)}</p>
+                    {/* Show initial family data fields only for "הוספת משפחה" */}
+                    {getTaskTypeName(selectedTask.type) === "הוספת משפחה" && (
+                      <>
+                        <h3>{t("Initial Family Details")}</h3>
+                        <p>שמות: {selectedTask.names ? selectedTask.names : "---"}</p>
+                        <p>טלפונים: {selectedTask.phones ? selectedTask.phones : "---"}</p>
+                        <p>מידע נוסף: {selectedTask.other_information ? selectedTask.other_information : "---"}</p>
+                      </>
+                    )}
                   </div>
                 </div>
               )}

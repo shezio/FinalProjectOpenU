@@ -486,6 +486,17 @@ const resources = {
       "Cannot select both General Volunteer and Tutor roles at the same time.": "לא ניתן לבחור את שני התפקידים - מתנדב כללי וחונך בו זמנית.",
       "No tasks currently displayed for this status": "כרגע לא מוצגות משימות עבור סטטוס זה",
       'Cannot move task to a previous column': 'לא ניתן להחזיר משימה לסטטוס קודם',
+      "Initial Family Details": "פרטי משפחה ראשוניים",
+      "Initial Family Data": "פרטי משפחה ראשוניים",
+      "Phones": "טלפונים",
+      "Names": "שמות",
+      "Other Information": "פרטים נוספים",
+      "Enter names comma separated": "הזן שמות מופרדים בפסיקים",
+      "Enter phones comma separated": "הזן טלפונים מופרדים בפסיקים",
+      "Enter other information": "הזן פרטים נוספים",
+      "Names must be comma separated if more than one name is entered": "אם יש יותר משם אחד, חובה להפריד בין השמות בפסיקים",
+      "Phones must be comma separated if more than one phone is entered": "אם יש יותר מטלפון אחד, חובה להפריד בין הטלפונים בפסיקים",
+
 
     }
   }

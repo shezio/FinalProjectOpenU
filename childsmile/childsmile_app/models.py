@@ -405,7 +405,7 @@ class Tasks(models.Model):
     # New fields for initial family data
     initial_family_data_id_fk = models.ForeignKey(
         InitialFamilyData,
-        on_delete=models.SET_NULL,
+        on_delete=models.CASCADE,
         null=True,
         blank=True,
         db_column="initial_family_data_id_fk",
