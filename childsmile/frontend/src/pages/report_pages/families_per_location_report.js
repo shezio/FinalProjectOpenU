@@ -14,13 +14,12 @@ import "leaflet/dist/leaflet.css";
 import html2canvas from "html2canvas";
 import "leaflet-easyprint";
 import L from "leaflet";
-import markerIcon from "leaflet/dist/images/marker-icon.png";
-import markerShadow from "leaflet/dist/images/marker-shadow.png";
+import markerIcon from '../../assets/markers/custom-marker-icon-2x-green.png';
+import markerShadow from '../../assets/markers/custom-marker-shadow.png';
 import { showErrorToast } from "../../components/toastUtils";
 
 // Fix Leaflet's default icon paths
 delete L.Icon.Default.prototype._getIconUrl;
-
 L.Icon.Default.mergeOptions({
   iconUrl: markerIcon,
   shadowUrl: markerShadow,

@@ -23,7 +23,7 @@ const VolunteerFeedbacks = () => {
   const [filteredFeedbacks, setFilteredFeedbacks] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [canDelete, setCanDelete] = useState(false);
-
+  const [validationPopup, setValidationPopup] = useState(null);
 
   // Filters
   const [eventFrom, setEventFrom] = useState("");
@@ -221,13 +221,6 @@ const VolunteerFeedbacks = () => {
     setModalErrors({});
   };
 
-  const shouldShrinkTextareas =
-    modalErrors.volunteer_name ||
-    modalErrors.child_name ||
-    modalErrors.event_date ||
-    modalErrors.description;
-
-
   const validateModal = () => {
     const errors = {};
     if (!modalData.volunteer_id) errors.volunteer_name = t("Volunteer Name is required");
@@ -243,9 +236,15 @@ const VolunteerFeedbacks = () => {
         errors.phones = t("Phones must be comma separated if more than one phone is entered");
       }
     }
-    // Add more validation as needed
     setModalErrors(errors);
-    return Object.keys(errors).length === 0;
+
+    if (Object.keys(errors).length > 0) {
+      setValidationPopup(Object.values(errors));
+      return false;
+    } else {
+      setValidationPopup(null);
+      return true;
+    }
   };
 
   const handleModalSubmit = () => {
@@ -482,7 +481,7 @@ const VolunteerFeedbacks = () => {
                       <td>{feedback.child_name}</td>
                       <td>{feedback.event_date}</td>
                       <td>{feedback.feedback_filled_at}</td>
-                      <td>{feedback.description}</td>
+                      <td><div className="td-scroll">{feedback.description}</div></td>
                       <td>{t(feedback.feedback_type)}</td>
                       <td>
                         <button
@@ -606,122 +605,119 @@ const VolunteerFeedbacks = () => {
             <div
               className={
                 "feedbacks-modal-content" +
-                (shouldShrinkTextareas ? " feedbacks-modal-content-shrink" : "") +
                 (modalData.feedback_type === "general_volunteer_hospital_visit" ? " feedbacks-modal-content-tall feedbacks-modal-content-wide" : "")
               }
             >
               <span className="feedbacks-close" onClick={closeModal}>&times;</span>
               <h2>{modalData.id ? t("Edit Feedback") : t("Create Feedback")}</h2>
               <form
-                onSubmit={(e) => {
+                onSubmit={e => {
                   e.preventDefault();
-                  if (!validate()) {
-                    return;
-                  }
+                  if (!validateModal()) return;
+                  handleModalSubmit();
                 }}
                 className={
-                  "feedbacks-form-grid" +
-                  (modalData.feedback_type === "general_volunteer_hospital_visit"
-                    ? " feedbacks-form-grid-3col"
-                    : " feedbacks-form-grid-2col")
+                  modalData.feedback_type === "general_volunteer_hospital_visit"
+                    ? "feedbacks-form-grid-3col"
+                    : "feedbacks-form-grid-2col"
                 }
               >
-                <div className="feedbacks-form-row">
-                  <label>{t("Feedback Type")}</label>
-                  {modalData.id ? (
-                    <input
-                      type="text"
-                      value={t(modalData.feedback_type)}
-                      disabled
-                      className="feedbacks-readonly-input"
-                    />
-                  ) : (
-                    <select
-                      value={modalData.feedback_type}
-                      onChange={e => setModalData({ ...modalData, feedback_type: e.target.value })}
-                      required
-                    >
-                      <option value="general_volunteer_fun_day">{t("general_volunteer_fun_day")}</option>
-                      <option value="general_volunteer_hospital_visit">{t("general_volunteer_hospital_visit")}</option>
-                    </select>
-                  )}
-                </div>
+                {/* LEFT COLUMN: Only for hospital visit */}
                 {modalData.feedback_type === "general_volunteer_hospital_visit" && (
-                  <>
+                  <div className="feedbacks-form-col-initial-family">
+                    <h3>{t("Initial Family Data")}</h3>
+                    <div className="feedbacks-form-row">
+                      <label>{t("Names")}</label>
+                      <input
+                        type="text"
+                        value={modalData.names || ""}
+                        onChange={e => setModalData({ ...modalData, names: e.target.value })}
+                        placeholder={t("Enter names comma separated")}
+                      />
+                    </div>
+                    <div className="feedbacks-form-row">
+                      <label>{t("Phones")}</label>
+                      <input
+                        type="text"
+                        value={modalData.phones || ""}
+                        onChange={e => setModalData({ ...modalData, phones: e.target.value })}
+                        placeholder={t("Enter phones comma separated")}
+                      />
+                    </div>
+                    <div className="feedbacks-form-row">
+                      <label>{t("Other Information")}</label>
+                      <input
+                        type="text"
+                        value={modalData.other_information || ""}
+                        onChange={e => setModalData({ ...modalData, other_information: e.target.value })}
+                        placeholder={t("Enter other information")}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* MAIN FIELDS: Always in 2 columns */}
+                <div className="feedbacks-form-col-main">
+                  <div className="feedbacks-form-row">
+                    <label>{t("Feedback Type")}</label>
+                    {modalData.id ? (
+                      <input
+                        type="text"
+                        value={t(modalData.feedback_type)}
+                        disabled
+                        className="feedbacks-readonly-input"
+                      />
+                    ) : (
+                      <select
+                        value={modalData.feedback_type}
+                        onChange={e => setModalData({ ...modalData, feedback_type: e.target.value })}
+                      >
+                        <option value="general_volunteer_fun_day">{t("general_volunteer_fun_day")}</option>
+                        <option value="general_volunteer_hospital_visit">{t("general_volunteer_hospital_visit")}</option>
+                      </select>
+                    )}
+                  </div>
+
+                  {/* Hospital Name only for hospital visit */}
+                  {modalData.feedback_type === "general_volunteer_hospital_visit" && (
                     <div className="feedbacks-form-row">
                       <label hidden={!!modalData.id}>{t("Hospital Name")}</label>
                       <input
                         type="text"
                         value={modalData.hospital_name || ""}
                         onChange={e => setModalData({ ...modalData, hospital_name: e.target.value })}
-                        required
                         hidden={!!modalData.id}
                       />
-                      {modalErrors.hospital_name && <div className="error">{modalErrors.hospital_name}</div>}
                     </div>
-
-                    <div className="feedbacks-form-col-initial-family">
-                      <h2>{t("Initial Family Data")}</h2>
-                      <div className="feedbacks-form-row">
-                        <label>{t("Names")}</label>
-                        <input
-                          type="text"
-                          value={modalData.names || ""}
-                          onChange={e => setModalData({ ...modalData, names: e.target.value })}
-                          placeholder={t("Enter names comma separated")}
-                        />
-                        {modalErrors.names && <div className="error">{modalErrors.names}</div>}
-                      </div>
-                      <div className="feedbacks-form-row">
-                        <label>{t("Phones")}</label>
-                        <input
-                          type="text"
-                          value={modalData.phones || ""}
-                          onChange={e => setModalData({ ...modalData, phones: e.target.value })}
-                          placeholder={t("Enter phones comma separated")}
-                        />
-                        {modalErrors.phones && <div className="error">{modalErrors.phones}</div>}
-                      </div>
-                      <div className="feedbacks-form-row">
-                        <label>{t("Other Information")}</label>
-                        <input
-                          type="text"
-                          value={modalData.other_information || ""}
-                          onChange={e => setModalData({ ...modalData, other_information: e.target.value })}
-                          placeholder={t("Enter other information")}
-                        />
-                      </div>
-                    </div>
-                  </>
-                )}
-                <div className="feedbacks-form-row">
-                  <label>{t("Volunteer Name")}</label>
-                  {modalData.id ? (
-                    // Show as read-only text when editing
-                    <input
-                      type="text"
-                      value={volunteers.find(t => t.id === modalData.volunteer_id)?.name || modalData.volunteer_name || ""}
-                      disabled
-                      className="feedbacks-readonly-input"
-                    />
-                  ) : (
-                    // Allow selection when creating
-                    <Select
-                      value={volunteers.find(t => t.id === modalData.volunteer_id) || null}
-                      onChange={option => setModalData({ ...modalData, volunteer_id: option ? option.id : "" })}
-                      options={volunteers}
-                      getOptionLabel={option => option.name}
-                      getOptionValue={option => option.id}
-                      placeholder={t("Select Volunteer")}
-                      isClearable
-                      classNamePrefix={"feedbacks-select"}
-                    />
                   )}
-                  {modalErrors.volunteer_name && <div className="error">{modalErrors.volunteer_name}</div>}
-                </div>
-                <div className="feedbacks-form-row">
+
+                  {/* Volunteer Name */}
+                  <div className="feedbacks-form-row">
+                    <label>{t("Volunteer Name")}</label>
+                    {modalData.id ? (
+                      <input
+                        type="text"
+                        value={volunteers.find(t => t.id === modalData.volunteer_id)?.name || modalData.volunteer_name || ""}
+                        disabled
+                        className="feedbacks-readonly-input"
+                      />
+                    ) : (
+                      <Select
+                        value={volunteers.find(t => t.id === modalData.volunteer_id) || null}
+                        onChange={option => setModalData({ ...modalData, volunteer_id: option ? option.id : "" })}
+                        options={volunteers}
+                        getOptionLabel={option => option.name}
+                        getOptionValue={option => option.id}
+                        placeholder={t("Select Volunteer")}
+                        isClearable
+                        classNamePrefix={"feedbacks-select"}
+                      />
+                    )}
+                  </div>
+
+                  {/* Child Name only for non-hospital visit */}
                   {modalData.feedback_type !== "general_volunteer_hospital_visit" && (
-                    <>
+                    <div className="feedbacks-form-row">
                       <label>{t("Child Name")}</label>
                       {modalData.id ? (
                         <input
@@ -742,56 +738,54 @@ const VolunteerFeedbacks = () => {
                           classNamePrefix={"feedbacks-select"}
                         />
                       )}
-                      {modalErrors.child_name && <div className="error">{modalErrors.child_name}</div>}
-                    </>
+                    </div>
                   )}
-                </div>
-                <div className="feedbacks-form-row">
-                  <label>{t("Event Date")}</label>
-                  <input
-                    type="date"
-                    className="feedbacks-date-input"
-                    value={modalData.event_date || ""}
-                    onChange={e => setModalData({ ...modalData, event_date: e.target.value })}
-                  />
-                  {modalErrors.event_date && <div className="error">{modalErrors.event_date}</div>}
-                </div>
-                <div className="feedbacks-form-row">
-                  <label>{t("Meeting Description")}</label>
-                  <textarea
-                    className={`feedbacks-textarea${shouldShrinkTextareas ? " feedbacks-textarea-shrink" : ""}`}
-                    value={modalData.description || ""}
-                    onChange={e => setModalData({ ...modalData, description: e.target.value })}
-                  />
-                  {modalErrors.description && <div className="error">{modalErrors.description}</div>}
-                </div>
-                <div className="feedbacks-form-row">
-                  <label>{t("Were there any exceptional events?")}</label>
-                  <textarea
-                    className={`feedbacks-textarea${shouldShrinkTextareas ? " feedbacks-textarea-shrink" : ""}`}
-                    value={modalData.exceptional_events || ""}
-                    onChange={e => setModalData({ ...modalData, exceptional_events: e.target.value })}
-                  />
-                </div>
-                <div className="feedbacks-form-row">
-                  <label>{t("Anything Else?")}</label>
-                  <textarea
-                    className={`feedbacks-textarea${shouldShrinkTextareas ? " feedbacks-textarea-shrink" : ""}`}
-                    value={modalData.anything_else || ""}
-                    onChange={e => setModalData({ ...modalData, anything_else: e.target.value })}
-                  />
-                </div>
-                <div className="feedbacks-form-row">
-                  <label>{t("Comments")}</label>
-                  <textarea
-                    className={`feedbacks-textarea${shouldShrinkTextareas ? " feedbacks-textarea-shrink" : ""}`}
-                    value={modalData.comments || ""}
-                    onChange={e => setModalData({ ...modalData, comments: e.target.value })}
-                  />
-                </div>
-                <div className="feedbacks-form-row">
+
+                  {/* All other fields (these are always shown) */}
+                  <div className="feedbacks-form-row">
+                    <label>{t("Event Date")}</label>
+                    <input
+                      type="date"
+                      className="feedbacks-date-input"
+                      value={modalData.event_date || ""}
+                      onChange={e => setModalData({ ...modalData, event_date: e.target.value })}
+                    />
+                  </div>
+                  <div className="feedbacks-form-row">
+                    <label>{t("Meeting Description")}</label>
+                    <textarea
+                      className="feedbacks-textarea"
+                      value={modalData.description || ""}
+                      onChange={e => setModalData({ ...modalData, description: e.target.value })}
+                    />
+                  </div>
+                  <div className="feedbacks-form-row">
+                    <label>{t("Were there any exceptional events?")}</label>
+                    <textarea
+                      className="feedbacks-textarea"
+                      value={modalData.exceptional_events || ""}
+                      onChange={e => setModalData({ ...modalData, exceptional_events: e.target.value })}
+                    />
+                  </div>
+                  <div className="feedbacks-form-row">
+                    <label>{t("Anything Else?")}</label>
+                    <textarea
+                      className="feedbacks-textarea"
+                      value={modalData.anything_else || ""}
+                      onChange={e => setModalData({ ...modalData, anything_else: e.target.value })}
+                    />
+                  </div>
+                  <div className="feedbacks-form-row">
+                    <label>{t("Comments")}</label>
+                    <textarea
+                      className="feedbacks-textarea"
+                      value={modalData.comments || ""}
+                      onChange={e => setModalData({ ...modalData, comments: e.target.value })}
+                    />
+                  </div>
+                  {/* Additional Volunteers only for hospital visit */}
                   {modalData.feedback_type === "general_volunteer_hospital_visit" && (
-                    <>
+                    <div className="feedbacks-form-row">
                       <label>{t("Additional Volunteers")}</label>
                       <div className="additional-volunteers-dropdown-container">
                         <button
@@ -824,15 +818,31 @@ const VolunteerFeedbacks = () => {
                           </div>
                         )}
                       </div>
-                    </>
+                    </div>
                   )}
-                </div>
-                <div className="feedbacks-form-actions">
-                  <button onClick={handleModalSubmit}>{t("Save Feedback")}</button>
-                  <button onClick={closeModal}>{t("Cancel")}</button>
+                  {/* Form actions */}
+                  <div className="feedbacks-form-actions">
+                    <button type="submit">{t("Save Feedback")}</button>
+                    <button type="button" onClick={closeModal}>{t("Cancel")}</button>
+                  </div>
                 </div>
               </form>
             </div>
+          </div>
+        )}
+        {validationPopup && (
+          <div className="validation-popup">
+            <div className="validation-popup-header error-ribbon">
+              {t("ERROR")}
+            </div>
+            <ul>
+              {validationPopup.map((err, idx) => (
+                <li key={idx}>{err}</li>
+              ))}
+            </ul>
+            <button className="validation-popup-close" onClick={() => setValidationPopup(null)}>
+              {t("Close")}
+            </button>
           </div>
         )}
       </div>

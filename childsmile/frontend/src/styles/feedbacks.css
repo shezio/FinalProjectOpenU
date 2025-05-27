@@ -11,15 +11,6 @@
     /* Add some spacing below the fixed header */
 }
 
-
-@media (max-width: 2400px) {
-
-    .feedbacks-container {
-        gap: 90px;
-        margin-right: 200px;
-    }
-}
-
 .tutor-feedbacks-main-content {
     display: flex;
     flex-direction: column;
@@ -28,7 +19,7 @@
     /* Center the content vertically */
     flex-grow: 1;
     /* Allow it to take up available space */
-    margin-top: 100px;
+    margin-top: 30px;
     /* Add some spacing below the fixed header */
     width: 90%;
     padding-right: 250px;
@@ -42,7 +33,7 @@
     /* Center the content vertically */
     flex-grow: 1;
     /* Allow it to take up available space */
-    margin-top: 100px;
+    margin-top: 30px;
     /* Add some spacing below the fixed header */
     width: 90%;
     padding-right: 250px;
@@ -234,6 +225,10 @@
     width: 100%;
 }
 
+.tutor-feedbacks-main-content .feedbacks-page-content {
+    top: 0;
+}
+
 /* Scoped styles for the grid container in ActiveTutorsReport */
 .feedbacks-page-content .feedbacks-grid-container {
     width: calc(100% - 100px);
@@ -249,50 +244,10 @@
     /* Align the grid container to the right */
     max-width: 100%;
     /* Ensure the grid does not exceed the visible area */
+    margin-bottom: 200px;
 }
 
-/* Styles for medium screens (e.g., laptops) */
-@media (max-width: 2400px) {
-    .feedbacks-page-content .feedbacks-grid-container {
-        width: calc(100% - 10px);
-        /* Reduce width for smaller screens */
-        margin-left: 200px;
-        /* Adjust margin for smaller screens */
-        /* max zoom out should be 0.8 */
-        transform: scale(0.95);
-        /* Zoom out the grid */
-        transform-origin: top right;
-        /* Set the origin for scaling */
-    }
-}
-
-/* Style for the data grid */
-.feedbacks-page-content .feedbacks-data-grid {
-    width: 100%;
-    /* Ensure the table takes up the full width of its container */
-    border-collapse: collapse;
-    font-size: 30px;
-    /* Increase font size */
-    font-family: Arial, sans-serif;
-    /* Use a sans-serif font for better readability */
-    background-color: #fff;
-    /* White background for the table */
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-    /* Add a subtle shadow for depth */
-    border-radius: 8px;
-    /* Rounded corners for the table */
-    overflow: hidden;
-    /* Ensure rounded corners are visible */
-    max-height: 80vh;
-    /* Limit height to avoid overflow */
-    overflow-y: auto;
-    direction: rtl;
-    transform: scale(0.95);
-    /* Align the grid to the right for right-to-left languages */
-}
-
-.feedbacks-page-content .feedbacks-data-grid th,
-.feedbacks-page-content .feedbacks-data-grid td {
+.feedbacks-page-content .feedbacks-data-grid th {
     border: 1px solid #ddd;
     padding: 12px;
     /* Increase padding */
@@ -302,7 +257,6 @@
     /* Increase font size */
     white-space: nowrap;
     /* Prevent text from wrapping */
-    overflow: hidden;
     /* Hide overflow if the text is too long */
     text-overflow: ellipsis;
     /* Add ellipsis for overflowing text */
@@ -318,15 +272,45 @@
     /* Green header background */
     color: white;
     font-weight: bold;
-    font-size: 30px;
+    font-size: 24px;
 }
 
-.feedbacks-page-content .feedbacks-data-grid td {
-    position: relative;
-    /* Ensure the cell does not block interaction */
-    z-index: 0;
-    /* Keep the cell behind the checkbox */
+.feedbacks-page-content .feedbacks-data-grid td,
+.feedbacks-data-grid td {
+    border: 1px solid #ddd;
+    padding: 12px;
+    text-align: right;
+    font-size: 24px;
     color: #333;
+    vertical-align: top;
+    white-space: normal;
+    text-overflow: ellipsis;
+    scrollbar-width: thin;
+    scrollbar-color: #ccc #fff;
+}
+
+.td-scroll {
+    max-height: 150px;
+    overflow-y: auto;
+    white-space: pre-line;
+    /* Optional: for line breaks */
+    scrollbar-width: thin;
+    scrollbar-color: #ccc #fff;
+}
+.td-scroll::-webkit-scrollbar {
+    width: 6px;
+}
+.td-scroll::-webkit-scrollbar-thumb {
+    background: #ccc;
+    border-radius: 4px;
+}
+.feedbacks-page-content .feedbacks-data-grid td::-webkit-scrollbar {
+    width: 6px;
+}
+
+.feedbacks-page-content .feedbacks-data-grid td::-webkit-scrollbar-thumb {
+    background: #ccc;
+    border-radius: 4px;
 }
 
 .feedbacks-page-content .no-data {
@@ -438,7 +422,7 @@
 .feedbacks-grid-container {
     flex: 2;
     /* Take up 2 parts of the available space */
-    overflow-x: auto;
+    overflow-y: auto;
     /* Allow horizontal scrolling if needed */
     background-color: #fff;
     /* White background for the grid */
@@ -450,7 +434,8 @@
     /* Subtle shadow for depth */
     padding: 20px;
     /* Add padding inside the grid container */
-    max-height: 100%;
+    max-height: 60vh;
+    min-height: 200px;
     /* Ensure the grid doesn't overflow vertically */
     /* overflow-y: auto; */
     /* Enable vertical scrolling if needed */
@@ -460,22 +445,26 @@
 
 /* Feedbacks data grid */
 .feedbacks-data-grid {
+    transform: scale(0.9);
+    /* Allow horizontal scrolling if needed */
     width: 100%;
-    /* Full width of the container */
+    /* Ensure the table takes up the full width of its container */
     border-collapse: collapse;
-    /* Remove gaps between table cells */
     font-size: 30px;
-    /* Increase font size for readability */
+    /* Increase font size */
     font-family: Arial, sans-serif;
     /* Use a sans-serif font for better readability */
     background-color: #fff;
     /* White background for the table */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    /* Add a subtle shadow for depth */
     border-radius: 8px;
     /* Rounded corners for the table */
-    overflow: hidden;
     /* Ensure rounded corners are visible */
+    /* Limit height to avoid overflow */
     direction: rtl;
-    /* Align the grid to the right for RTL languages */
+    margin-right: 0;
+    /* Align the grid to the right for right-to-left languages */
 }
 
 /* Table headers */
@@ -496,24 +485,14 @@
     /* Border for clarity */
 }
 
-/* Table cells */
-.feedbacks-data-grid td {
-    border: 1px solid #ddd;
-    /* Border for clarity */
-    padding: 12px;
-    /* Add padding */
-    text-align: right;
-    /* Align text to the right */
-    font-size: 24px;
-    /* Increase font size */
-    color: #333;
-    /* Dark text color */
-    white-space: nowrap;
-    /* Prevent text from wrapping */
-    overflow: hidden;
-    /* Hide overflow if the text is too long */
-    text-overflow: ellipsis;
-    /* Add ellipsis for overflowing text */
+/* Table cells scrollbar styles */
+.feedbacks-data-grid td::-webkit-scrollbar {
+    width: 6px;
+}
+
+.feedbacks-data-grid td::-webkit-scrollbar-thumb {
+    background: #ccc;
+    border-radius: 4px;
 }
 
 /* No data message */
@@ -591,12 +570,16 @@
     display: flex;
     justify-content: flex-start;
     /* Align to the right */
-    margin-right: 2px;
+    margin-right: 5px;
     /* Slightly move it to the left from the edge */
     margin-bottom: 20px;
 }
 
-@media (max-width: 2400px) {
+@media (max-width: 1800px) {
+    .feedbacks-filter-create-container {
+        right: 144px;
+        top: 250px;
+    }
 
     .tutor-feedbacks-main-content .back-to-feedbacks,
     .volunteer-feedbacks-main-content .back-to-feedbacks {
@@ -605,8 +588,27 @@
         /* Align to the right */
         margin-top: 10px;
         /* Add some spacing above */
-        margin-right: 100px;
+        margin-right: 0;
+        width: 70%;
         /* Slightly move it to the left from the edge */
+    }
+
+    .feedbacks-page-content .feedbacks-grid-container {
+        width: calc(100% - 1000px);
+        /* Reduce width for smaller screens */
+        margin-left: 300px;
+        /* Adjust margin for smaller screens */
+        /* max zoom out should be 0.8 */
+        /* Zoom out the grid */
+        transform-origin: top right;
+        /* Set the origin for scaling */
+        margin-right: 0;
+        bottom: 200px;
+    }
+
+    .feedbacks-container {
+        gap: 90px;
+        margin-right: 200px;
     }
 }
 
@@ -649,16 +651,16 @@
     /* Reduce spacing between items */
     position: fixed;
     /* Fix the container in place */
-    top: 200px;
+    top: 220px;
     /* Stick to the top of the page */
-    right: 250px;
+    right: 144px;
     /* Align to the right side of the page */
     font-size: 1em;
     /* Ensure all fonts are 2em */
     /* מסיר רווחים פנימיים בין הכפתורים */
     padding: 10px 20px;
     /* ניתן להתאים לפי הצורך */
-
+    transform: scale(0.9);
 }
 
 /* Style the buttons and dropdowns */
@@ -910,7 +912,8 @@
     line-height: 1.5;
 }
 
-.feedbacks-info-grid h3 {
+.feedbacks-info-grid h3,
+.feedbacks-form-col-initial-family h3 {
     margin: 0;
     /* Remove default margin */
     font-size: 2em;
@@ -931,7 +934,7 @@
 
 .feedbacks-modal-content-tall .feedbacks-form-actions {
     padding-top: 0;
-    margin-top: 100px;
+    margin-top: 50px;
 }
 
 .additional-volunteers-dropdown-container {
@@ -976,35 +979,77 @@
 
 .feedbacks-form-grid-2col {
     display: grid;
+    grid-template-columns: 400;
+    gap: 20px;
+}
+
+.feedbacks-form-grid-3col {
+    display: grid;
+    grid-template-columns: 900px;
+    gap: 20px;
+    direction: rtl;
+    /* 💥 ADD THIS */
+}
+
+.feedbacks-form-col-initial-family {
+    grid-column: 1;
+    /* 💥 WAS 3, set to 1 because direction is now LTR */
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+}
+
+.feedbacks-form-col-main {
+    grid-column: 1;
+    display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 20px;
 }
 
-
-.feedbacks-form-grid-3col {
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    gap: 20px;
-}
-
-.feedbacks-form-col-initial-family {
-    grid-column: 3;
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-}
-
-.feedbacks-modal-content.feedbacks-modal-content-wide {
-    width: 2000px;
-    /* or whatever width fits your design */
-    max-width: 95vw;
+.feedbacks-modal-content-wide {
     min-width: 900px;
 }
 
-.feedbacks-modal-content.feedbacks-modal-content-wide button {
-    width: 200px;
-    /* Adjust button width */
+.validation-popup {
+    position: fixed;
+    top: 20%;
+    left: 50%;
+    transform: translate(-50%, 0);
+    background: #fff;
+    border: 2px solid #e53935;
+    border-radius: 8px;
+    z-index: 9999;
+    min-width: 350px;
+    max-width: 90vw;
+    box-shadow: 0 2px 16px rgba(0, 0, 0, 0.2);
+    padding: 0 0 20px 0;
+    text-align: center;
+}
+
+.validation-popup-header.error-ribbon {
+    background: #e53935;
+    color: #fff;
+    font-weight: bold;
+    padding: 12px 0;
+    border-radius: 8px 8px 0 0;
+    font-size: 48px;
+}
+
+.validation-popup ul {
+    list-style: none;
+    margin: 16px 0 0 0;
+    padding: 0 24px;
+    color: #e53935;
+    font-size: 32px;
+}
+
+.validation-popup-close {
+    margin-top: 18px;
+    background: #e53935;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    padding: 8px 24px;
+    cursor: pointer;
     font-size: 24px;
-    gap: 300px;
-    /* Ensure button text is large enough */
 }
