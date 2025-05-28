@@ -550,6 +550,20 @@
     background-color: #0056b3;
 }
 
+.reset-date-button {
+  background-color: #6c757d;
+  color: white;
+  padding: 10px 20px;
+  font-size: 24px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-left: 10px;
+  transition: background-color 0.3s ease;
+}
+.reset-date-button:hover {
+  background-color: #495057;
+}
 /* Style for the refresh button */
 .refresh-button {
     background-color: #28a745;
@@ -593,13 +607,13 @@
 @media (max-width: 1800px) {
     .families-report-container {
         height: calc(100vh - 200px);
-        transform: scale(1);
+        transform: scale(0.95);
         width: 1700px;
         margin-right: 200px;
     }
 
     .back-to-reports {
-        margin-right: 200px !important;
+        margin-right: 300px !important;
         /* Slightly move it to the left from the edge */
     }
 
@@ -951,93 +965,6 @@
 }
 
 @media (max-width: 1800px) {
-    .families-report-container.export-mode {
-        transform-origin: top left;
-        width: 2000px;
-        height: 1000px;
-        z-index: 10000;
-        background: #fff;
-        display: flex;
-        gap: 50px;
-        position: absolute;
-        top: -9999px;
-        left: -9999px;
-        flex-direction: row;
-    }
-
-    .families-report-container.export-mode .families-map-container {
-        flex: 0 0 750px !important;
-        /* fixed width */
-        min-width: 0;
-        min-height: 0;
-        height: 1500px !important;
-        overflow: hidden;
-        width: 750px !important;
-        position: relative;
-    }
-
-    .families-report-container.export-mode .leaflet-container {
-        height: 1500px !important;
-        width: 750px !important;
-        position: relative;
-        top: 0;
-        left: 0;
-        background-color: #e6e6e6;
-        transform: translateZ(0);
-        /* triggers GPU rendering */
-    }
-
-
-
-    .families-report-container.export-mode .leaflet-container .leaflet-tile {
-        image-rendering: pixelated;
-        background: none !important;
-        transform: translateZ(0);
-        border: none !important;
-        margin: 0 !important;
-        padding: 0 !important;
-        display: block;
-    }
-
-    .families-report-container.export-mode .leaflet-pane {
-        will-change: transform;
-    }
-
-    .families-report-container.export-mode .families-map-container .popup-text {
-        font-size: 20px;
-        letter-spacing: 1px;
-        max-width: none;
-        /* allow as wide as needed */
-        white-space: nowrap;
-        /* keep all in one line */
-        padding: 8px 12px;
-        text-align: right;
-        /* align text to the right for RTL */
-        direction: rtl;
-    }
-
-    .families-report-container.export-mode .families-location-grid-container {
-        flex: 1 1 0;
-        min-width: 0;
-        min-height: 0;
-        height: 100%;
-        overflow: auto;
-        width: 1400px !important;
-        height: 1000px !important;
-    }
-
-    .families-report-container.export-mode .families-data-grid th,
-    .families-report-container.export-mode .families-data-grid td {
-        font-size: 20px;
-        white-space: pre-line;
-        letter-spacing: 1px;
-        padding: 10px 8px;
-    }
-
-    .families-report-container.export-mode .families-data-grid {
-        table-layout: auto;
-    }
-
     .families-location-grid-container.grid-export-mode {
         width: 1200px !important;
         font-size: 20px;

@@ -152,10 +152,21 @@ const ActiveTutorsReport = () => {
               className="date-input"
             />
             <button className="filter-button" onClick={fetchData}>
-              סנן
+              {t('Filter')}
+            </button>
+            <button
+              className="reset-date-button"
+              onClick={() => {
+                setFromDate("");
+                setToDate("");
+                // Wait for state to update, then fetch all data
+                setTimeout(() => fetchData(), 0);
+              }}
+            >
+              {t("Reset Dates")}
             </button>
             <button className="refresh-button" onClick={refreshData}>
-              רענן
+              {t('Refresh')}
             </button>
           </div>
         </div>

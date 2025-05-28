@@ -425,9 +425,6 @@ const TutorFeedbacks = () => {
                 {t("Create Feedback")}
               </button>
             </div>
-            <button className="feedbacks-refresh-button" onClick={fetchData}>
-              {t("Refresh")}
-            </button>
             <div className="feedbacks-filter-row">
               <label>{t("Feedback Type")}:</label>
               <select
@@ -476,6 +473,22 @@ const TutorFeedbacks = () => {
             </div>
             <button className="feedbacks-filter-button" onClick={applyFilters}>
               {t("Filter")}
+            </button>
+            <button
+              className="reset-date-button"
+              onClick={() => {
+                setEventFrom("");
+                setEventTo("");
+                setFeedbackFrom("");
+                setFeedbackTo("");
+                // Wait for state to update, then fetch all data
+                setTimeout(() => fetchData(), 0);
+              }}
+            >
+              {t("Reset Dates")}
+            </button>
+            <button className="feedbacks-refresh-button" onClick={fetchData}>
+              {t("Refresh")}
             </button>
           </div>
         </div>

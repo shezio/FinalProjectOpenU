@@ -149,6 +149,17 @@ const NewFamiliesReport = () => {
             <button className="filter-button" onClick={fetchData}>
               {t("Filter")}
             </button>
+            <button
+              className="reset-date-button"
+              onClick={() => {
+                setFromDate("");
+                setToDate("");
+                // Wait for state to update, then fetch all data
+                setTimeout(() => fetchData(), 0);
+              }}
+            >
+              {t("Reset Dates")}
+            </button>
             <button className="refresh-button" onClick={refreshData}>
               {t("Refresh")}
             </button>

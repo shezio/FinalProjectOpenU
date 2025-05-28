@@ -109,7 +109,7 @@ const resources = {
       "Error generating report": "שגיאה ביצירת הדוח",
       "Error updating task": "שגיאה בעדכון משימה",
       "Event Date": "תאריך האירוע",
-      "Export Map and Grid": "ייצא מפה וטבלה כתמונה",
+      "Export Map and Grid": "ייצא כתמונה",
       "Export to Excel": "ייצוא לאקסל",
       "Export to PDF": "ייצוא לPDF",
       "Exporting...": "מייצא...",
@@ -500,9 +500,7 @@ const resources = {
       "ERROR": "שגיאה",
       "Error Updating Feedback": "שגיאה בעדכון משוב",
       "Child Name is required": "חובה למלא שם ילד",
-
-
-
+      "Reset Dates": "אפס",
     }
   }
 };
