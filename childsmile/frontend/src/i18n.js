@@ -109,7 +109,7 @@ const resources = {
       "Error generating report": "שגיאה ביצירת הדוח",
       "Error updating task": "שגיאה בעדכון משימה",
       "Event Date": "תאריך האירוע",
-      "Export Map as Image": "ייצא מפה כתמונה",
+      "Export Map and Grid": "ייצא מפה וטבלה כתמונה",
       "Export to Excel": "ייצוא לאקסל",
       "Export to PDF": "ייצוא לPDF",
       "Exporting...": "מייצא...",

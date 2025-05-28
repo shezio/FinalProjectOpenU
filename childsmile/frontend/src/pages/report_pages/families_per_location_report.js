@@ -12,19 +12,21 @@ import { useTranslation } from "react-i18next";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import html2canvas from "html2canvas";
+import leafletImage from 'leaflet-image';
 import "leaflet-easyprint";
-import L from "leaflet";
-import markerIcon from '../../assets/markers/custom-marker-icon-2x-green.png';
-import markerShadow from '../../assets/markers/custom-marker-shadow.png';
+import L, { map } from "leaflet";
+import markerIcon from '../../assets/markers/marker-icon.png';
+import markerShadow from '../../assets/markers/marker-shadow.png';
 import { showErrorToast } from "../../components/toastUtils";
 
-// Fix Leaflet's default icon paths
-delete L.Icon.Default.prototype._getIconUrl;
-L.Icon.Default.mergeOptions({
+const familyMarkerIcon = L.icon({
   iconUrl: markerIcon,
   shadowUrl: markerShadow,
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41],
 });
-
 
 const FamiliesPerLocationReport = () => {
   const [families, setFamilies] = useState([]);
@@ -38,6 +40,7 @@ const FamiliesPerLocationReport = () => {
   const mapRef = useRef();
   const hasPermissionToView = hasViewPermissionForTable("children");
   const [sortOrderRegistrationDate, setSortOrderRegistrationDate] = useState('desc'); // Default to ascending
+  const [isExporting, setIsExporting] = useState(false);
 
   const parseDate = (dateString) => {
     if (!dateString) return new Date(0); // Handle missing dates
@@ -118,44 +121,127 @@ const FamiliesPerLocationReport = () => {
     fetchData();
   };
 
-  const exportMapAsImage = () => {
-    const reportContainer = document.querySelector(".families-report-container");
-    if (!reportContainer) {
-      console.error("Report container not found");
+  const exportMapAndGrid = async () => {
+    if (!mapRef.current) return;
+    setIsExporting(true);
+
+    const gridElement = document.querySelector('.families-location-grid-container');
+    const mapElement = mapRef.current.getContainer();
+
+    if (!gridElement || !mapElement) {
+      toast.error(t("Grid or map not found"));
+      setIsExporting(false);
       return;
     }
 
-    // Show loader on the export button
-    const exportButton = document.querySelector(".export-map-button");
-    if (exportButton) {
-      exportButton.disabled = true;
-      exportButton.textContent = t("Exporting...");
-    }
+    let tempMapDiv = null;
+    let tempMap = null;
 
-    // Use html2canvas to capture the entire container
-    html2canvas(reportContainer, {
-      useCORS: true, // Enables image capture from cross-origin tiles
-      allowTaint: false,
-      logging: true,
-      scale: 2, // Higher scale = better quality
-    })
-      .then((canvas) => {
-        const link = document.createElement("a");
-        link.download = `${t("families_per_location_report")}.png`;
-        link.href = canvas.toDataURL("image/png");
-        link.click();
-      })
-      .catch((err) => {
-        console.error("Error exporting report:", err);
-        toast.error(t("Error exporting report"));
-      })
-      .finally(() => {
-        // Reset export button state
-        if (exportButton) {
-          exportButton.disabled = false;
-          exportButton.textContent = t("Export Map as Image");
+    try {
+      // Create hidden map container
+      tempMapDiv = document.createElement("div");
+      tempMapDiv.style.width = "2000px";
+      tempMapDiv.style.height = "2000px";
+      tempMapDiv.style.position = "absolute";
+      tempMapDiv.style.top = "-9999px";
+      tempMapDiv.style.left = "-9999px";
+      document.body.appendChild(tempMapDiv);
+
+      // Initialize hidden Leaflet map
+      tempMap = L.map(tempMapDiv, {
+        center: mapRef.current.getCenter(),
+        zoom: mapRef.current.getZoom() + 2,
+        zoomControl: false,
+        attributionControl: false,
+      });
+
+      // Copy base tile layer
+      const originalLayers = mapRef.current._layers;
+      Object.values(originalLayers).forEach(layer => {
+        if (layer instanceof L.TileLayer) {
+          L.tileLayer(layer._url, layer.options).addTo(tempMap);
         }
       });
+
+      // Copy markers and overlays
+      Object.values(originalLayers).forEach(layer => {
+        // Handle markers
+        if (layer instanceof L.Marker) {
+          const marker = L.marker(layer.getLatLng(), { icon: layer.options.icon });
+          marker.addTo(tempMap);
+        }
+
+        // Optional: handle other types like L.Circle, L.Polygon etc.
+        else if (layer instanceof L.Circle) {
+          const circle = L.circle(layer.getLatLng(), layer.options);
+          circle.addTo(tempMap);
+        } else if (layer instanceof L.Polygon) {
+          const polygon = L.polygon(layer.getLatLngs(), layer.options);
+          polygon.addTo(tempMap);
+        }
+      });
+
+      await new Promise(resolve => setTimeout(resolve, 500)); // allow render
+
+      const mapCanvas = await new Promise((resolve, reject) => {
+        leafletImage(tempMap, (err, canvas) => {
+          if (err || !canvas) reject(err);
+          else resolve(canvas);
+        });
+      });
+
+      // Clone and render grid
+      const gridClone = gridElement.cloneNode(true);
+      gridClone.classList.add('grid-export-mode');
+      gridClone.style.position = 'absolute';
+      gridClone.style.top = '-9999px';
+      gridClone.style.left = '-9999px';
+      document.body.appendChild(gridClone);
+
+      const gridCanvas = await html2canvas(gridClone, {
+        useCORS: true,
+        allowTaint: false,
+        scale: 2,
+      });
+
+      document.body.removeChild(gridClone);
+
+      // Combine both
+      const totalWidth = mapCanvas.width + gridCanvas.width;
+      const totalHeight = Math.max(mapCanvas.height, gridCanvas.height);
+
+      const finalCanvas = document.createElement('canvas');
+      finalCanvas.width = totalWidth;
+      finalCanvas.height = totalHeight;
+
+      const ctx = finalCanvas.getContext('2d');
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, totalWidth, totalHeight);
+      ctx.drawImage(mapCanvas, 0, 0);
+      ctx.drawImage(gridCanvas, mapCanvas.width, 0);
+
+      // Download result
+      const link = document.createElement('a');
+      link.download = `${t("families_per_location_report")}.png`;
+      link.href = finalCanvas.toDataURL('image/png');
+      link.click();
+    } catch (err) {
+      console.error("Export failed:", err);
+      toast.error(t("Error exporting report"));
+    } finally {
+      try {
+        if (tempMap) {
+          tempMap.off();
+          tempMap.remove();
+        }
+        if (tempMapDiv?.parentNode) {
+          tempMapDiv.parentNode.removeChild(tempMapDiv);
+        }
+      } catch (e) {
+        console.warn("Temp map cleanup failed", e);
+      }
+      setIsExporting(false);
+    }
   };
 
 
@@ -166,6 +252,20 @@ const FamiliesPerLocationReport = () => {
       setLoading(false);
     }
   }, [hasPermissionToView]);
+
+  useEffect(() => {
+    if (mapRef.current) {
+      setTimeout(() => {
+        mapRef.current.invalidateSize();
+        mapRef.current.eachLayer(layer => {
+          if (layer instanceof L.TileLayer) {
+            layer.redraw();
+          }
+        });
+        L.DomUtil.setSize(mapRef.current.getContainer(), L.point(750, 1500));
+      }, 3000); // Wait for DOM to update
+    }
+  }, [families]); // Re-run when families data changes
 
   if (!hasPermissionToView) {
     return (
@@ -232,8 +332,8 @@ const FamiliesPerLocationReport = () => {
             <button className="refresh-button" onClick={refreshData}>
               {t("Refresh")}
             </button>
-            <button className="export-map-button" onClick={exportMapAsImage}>
-              {t("Export Map as Image")}
+            <button className="export-map-button" onClick={exportMapAndGrid} disabled={isExporting}>
+              {isExporting && <span className="loader-export-spinner" />} {t("Export Map and Grid")}
             </button>
           </div>
         </div>
@@ -251,7 +351,7 @@ const FamiliesPerLocationReport = () => {
           {/* Grid Section */}
           <div className="families-location-grid-container ">
             {loading ? (
-              <div className="loader">{t("Loading data...")}</div>
+              <div className="families-grid-container-loader">{t("Loading data...")}</div>
             ) : families.length === 0 ? (
               <div className="no-data">{t("No data to display")}</div>
             ) : (
@@ -304,8 +404,9 @@ const FamiliesPerLocationReport = () => {
               <div className="map-loader">{t("Loading map...")}</div>
             ) : (
               <MapContainer
-                center={[31.5, 35.0]} // Adjusted coordinates to show more of the north
-                zoom={7}
+                center={[31.5, 34.8]} // Adjusted coordinates to show more of the north
+                zoom={8}
+                scrollWheelZoom={true}
                 style={{ height: "100%", width: "100%" }}
                 whenCreated={(mapInstance) => {
                   mapRef.current = mapInstance; // Store the map instance in the ref
@@ -324,9 +425,10 @@ const FamiliesPerLocationReport = () => {
                       <Marker
                         key={index}
                         position={[family.latitude, family.longitude]}
+                        icon={familyMarkerIcon}
                       >
                         <Popup className="popup-text">
-                          {`${family.first_name} ${family.last_name}`} -   {family.city}
+                          {`${family.first_name} ${family.last_name}`} - {family.city}
                         </Popup>
                       </Marker>
                     )
@@ -335,6 +437,7 @@ const FamiliesPerLocationReport = () => {
             )}
           </div>
         </div>
+        <div id="export-map-container" style={{ display: "none" }}></div>
       </div>
     </div>
   );
