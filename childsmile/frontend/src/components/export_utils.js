@@ -1053,19 +1053,6 @@ export const exportTutorFeedbackToExcel = (feedbacks, t) => {
   toast.success(t("Report generated successfully"));
 };
 
-const formatHebrewTextForPDFnew = (text, wordsPerLine = 5) => {
-  if (!text) return "";
-  const words = text.split(' ');
-  const lines = [];
-
-  for (let i = 0; i < words.length; i += wordsPerLine) {
-    const lineWords = words.slice(i, i + wordsPerLine);
-    lines.push(lineWords.join(' '));
-  }
-
-  return lines.join('\n');
-};
-
 
 export const exportTutorFeedbackToPDF = (feedbacks, t) => {
   const selectedFeedbacks = feedbacks.filter(feedback => feedback.selected);
@@ -1089,6 +1076,7 @@ export const exportTutorFeedbackToPDF = (feedbacks, t) => {
   doc.text(t("Tutor Feedback Report"), doc.internal.pageSize.getWidth() / 2, 20, { align: "center" });
 
   const headers = [
+    t("Initial Family Data"),
     t("Comments"),
     t("Anything Else"),
     t("Exceptional Events"),
@@ -1100,10 +1088,14 @@ export const exportTutorFeedbackToPDF = (feedbacks, t) => {
     t("Is It Your Tutee?"),
     t("Tutee Name"),
     t("Tutor Name"),
-    t("Initial Family Data"),
   ];
 
   const rows = selectedFeedbacks.map(feedback => [
+    [
+      (feedback.names ? t("Names") + ": " + feedback.names + "\n" : "") +
+      (feedback.phones ? t("Phones") + ": " + feedback.phones + "\n" : "") +
+      (feedback.other_information ? t("Other Information") + ": " + feedback.other_information : "")
+    ].join(""),
     feedback.comments || "",
     feedback.anything_else || "",
     feedback.exceptional_events || "",
@@ -1115,11 +1107,6 @@ export const exportTutorFeedbackToPDF = (feedbacks, t) => {
     feedback.is_it_your_tutee ? t("Yes") : t("No"),
     feedback.tutee_name,
     feedback.tutor_name,
-    [
-      (feedback.names ? t("Names") + ": " + feedback.names + "\n" : "") +
-      (feedback.phones ? t("Phones") + ": " + feedback.phones + "\n" : "") +
-      (feedback.other_information ? t("Other Information") + ": " + feedback.other_information : "")
-    ].join("")
   ]);
 
   doc.autoTable({
@@ -1141,18 +1128,18 @@ export const exportTutorFeedbackToPDF = (feedbacks, t) => {
     styles: { font: "Alef", fontSize: 10, cellPadding: 3, halign: "right", rtl: true },
     headStyles: { fillColor: [76, 175, 80], textColor: 255, halign: "right", rtl: true },
     columnStyles: {
-      0: { halign: 'right', cellWidth: 50 }, // initial_family_data
-      1: { halign: 'right', cellWidth: 25 }, // comments
-      2: { halign: 'right', cellWidth: 25 }, // anything_else
-      3: { halign: 'right', cellWidth: 25 }, // exceptional_events
-      4: { halign: 'right', cellWidth: 60 }, // description
-      5: { halign: 'right', cellWidth: 40 }, // feedback_type
-      6: { halign: 'right', cellWidth: 30 }, // feedback_filled_at
-      7: { halign: 'right', cellWidth: 30 }, // event_date
-      8: { halign: 'right', cellWidth: 25 }, // is_first_visit
-      9: { halign: 'right', cellWidth: 25 }, // is_it_your_tutee
-      10: { halign: 'right', cellWidth: 25 }, // tutee_name
-      11: { halign: 'right', cellWidth: 25 }, // tutor_name
+      0: { halign: 'right', cellWidth: 25 }, // tutor_name
+      1: { halign: 'right', cellWidth: 25 }, // tutee_name
+      2: { halign: 'right', cellWidth: 25 }, // is_it_your_tutee
+      3: { halign: 'right', cellWidth: 25 }, // is_first_visit
+      4: { halign: 'right', cellWidth: 30 }, // event_date
+      5: { halign: 'right', cellWidth: 30 }, // feedback_filled_at
+      6: { halign: 'right', cellWidth: 40 }, // feedback_type
+      7: { halign: 'right', cellWidth: 60 }, // description
+      8: { halign: 'right', cellWidth: 25 }, // exceptional_events
+      9: { halign: 'right', cellWidth: 25 }, // anything_else
+      10: { halign: 'right', cellWidth: 25 }, // comments
+      11: { halign: 'right', cellWidth: 50 }, // initial_family_data
     },
   });
 
