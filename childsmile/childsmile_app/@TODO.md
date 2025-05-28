@@ -186,7 +186,8 @@ volunteer and tutor feedback reports-  need to add new fields to the feedback re
 
 UI
 [v] add in App.js a new page called "InitialFamilyData" 
-
+[V] fix pins on families report locations
+[V] fix feedback report bugs of column order - and make sure we have the initfamilydata column in both
 ------------------------------------------------------------------------------
 # TODO
 ------------------------------------------------------------------------------
@@ -194,8 +195,7 @@ UI
 BE additions:
 
 UI:
-[] fix pins on families report locations
-[V] fix feedback report bugs of column order - and make sure we have the initfamilydata column in both
+
 [] add a new button in the families page that will open the initial family data page and navigate to "/initial-family-data"
 
 
