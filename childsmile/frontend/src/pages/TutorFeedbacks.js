@@ -688,6 +688,7 @@ const TutorFeedbacks = () => {
                         value={modalData.names || ""}
                         onChange={e => setModalData({ ...modalData, names: e.target.value })}
                         placeholder={t("Enter names comma separated")}
+                        disabled={!!modalData.id} // <-- Add this
                       />
                     </div>
                     <div className="feedbacks-form-row">
@@ -697,6 +698,7 @@ const TutorFeedbacks = () => {
                         value={modalData.phones || ""}
                         onChange={e => setModalData({ ...modalData, phones: e.target.value })}
                         placeholder={t("Enter phones comma separated")}
+                        disabled={!!modalData.id} // <-- Add this
                       />
                     </div>
                     <div className="feedbacks-form-row">
@@ -706,6 +708,7 @@ const TutorFeedbacks = () => {
                         value={modalData.other_information || ""}
                         onChange={e => setModalData({ ...modalData, other_information: e.target.value })}
                         placeholder={t("Enter other information")}
+                        disabled={!!modalData.id} // <-- Add this
                       />
                     </div>
                   </div>

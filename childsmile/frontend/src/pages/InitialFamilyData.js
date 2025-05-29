@@ -14,6 +14,16 @@ import { useNavigate } from 'react-router-dom'; // Add this import at the top wi
 
 Modal.setAppElement('#root');
 
+function formatDate(dateString) {
+  if (!dateString) return '';
+  const d = new Date(dateString);
+  if (isNaN(d)) return '';
+  const day = String(d.getDate()).padStart(2, '0');
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const year = d.getFullYear();
+  return `${day}/${month}/${year}`;
+}
+
 const InitialFamilyData = () => {
   const { t } = useTranslation();
   const navigate = useNavigate(); // Add this line
@@ -54,8 +64,8 @@ const InitialFamilyData = () => {
         sort_order: sortOrder,
       };
       const response = await axios.get('/api/get_initial_family_data/', { params });
-      setFamilies(response.data.families || []);
-      setTotalCount(response.data.families?.length || 0);
+      setFamilies(response.data.initial_family_data || []); // <-- fix here
+      setTotalCount(response.data.initial_family_data?.length || 0); // <-- and here
     } catch (error) {
       showErrorToast(t, 'Error fetching initial family data', error);
       setFamilies([]);
@@ -298,11 +308,38 @@ const InitialFamilyData = () => {
             ) : (
               paginatedFamilies.map((family) => (
                 <tr key={family.initial_family_id} className={getRowClass(family)}>
-                  <td>{family.names}</td>
-                  <td>{family.phones}</td>
-                  <td>{family.other_information}</td>
-                  <td>{family.created_at}</td>
-                  <td>{family.updated_at}</td>
+                  <td>
+                    {family.names
+                      .split(',')
+                      .map((part, idx, arr) => (
+                        <React.Fragment key={idx}>
+                          {part.trim()}
+                          {idx < arr.length - 1 && <br />}
+                        </React.Fragment>
+                      ))}
+                  </td>
+                  <td>
+                    {family.phones
+                      .split(',')
+                      .map((part, idx, arr) => (
+                        <React.Fragment key={idx}>
+                          {part.trim()}
+                          {idx < arr.length - 1 && <br />}
+                        </React.Fragment>
+                      ))}
+                  </td>
+                  <td>
+                    {family.other_information
+                      ? family.other_information.split(',').map((part, idx, arr) => (
+                          <React.Fragment key={idx}>
+                            {part.trim()}
+                            {idx < arr.length - 1 && <br />}
+                          </React.Fragment>
+                        ))
+                      : ''}
+                  </td>
+                  <td>{formatDate(family.created_at)}</td>
+                  <td>{formatDate(family.updated_at)}</td>
                   <td>
                     {family.family_added ? (
                       <span className="families-added-yes">{t('Yes')}</span>
@@ -312,12 +349,6 @@ const InitialFamilyData = () => {
                   </td>
                   <td>
                     <div className="family-actions">
-                      <button className="info-button" onClick={() => openUpdateModal(family)}>
-                        {t('Update')}
-                      </button>
-                      <button className="edit-button" onClick={openCreateModal}>
-                        {t('Create')}
-                      </button>
                       <button className="delete-button" onClick={() => openDeleteModal(family)}>
                         {t('Delete')}
                       </button>

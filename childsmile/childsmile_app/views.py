@@ -486,6 +486,12 @@ def create_task_internal(task_data):
         task_type = Task_Types.objects.get(id=task_data["type"])
         print(f"DEBUG: Task type fetched: {task_type.task_type}")
 
+
+        initial_family_data_id = task_data.get("initial_family_data_id_fk")
+        initial_family_data = None
+        if initial_family_data_id:
+            initial_family_data = InitialFamilyData.objects.get(pk=initial_family_data_id)
+
         task = Tasks.objects.create(
             description=task_type.task_type,  # Use the task type name as the description
             due_date=task_data["due_date"],
@@ -500,7 +506,7 @@ def create_task_internal(task_data):
             names=task_data.get("names"),
             phones=task_data.get("phones"),
             other_information=task_data.get("other_information"),
-            initial_family_data_id_fk=task_data.get("initial_family_data_id_fk"),
+            initial_family_data_id_fk=initial_family_data,
         )
         print(f"DEBUG: Task created successfully: {task}")
         return task
@@ -511,15 +517,17 @@ def create_task_internal(task_data):
         print(f"DEBUG: Error creating task: {str(e)}")
         raise e
 
+
 def create_tasks_for_technical_coordinators_async(initial_family_data, task_type_id):
     """
     Run the task creation function asynchronously.
     """
     thread = threading.Thread(
         target=create_tasks_for_technical_coordinators,
-        args=(initial_family_data, task_type_id)
+        args=(initial_family_data, task_type_id),
     )
     thread.start()
+
 
 def create_tasks_for_tutor_coordinators_async(pending_tutor_id, task_type_id):
     """
@@ -596,9 +604,6 @@ def create_tasks_for_tutor_coordinators(pending_tutor_id, task_type_id):
     except Exception as e:
         print(f"DEBUG: An error occurred while creating tasks: {str(e)}")
 
-import threading
-import datetime
-from django.utils.timezone import now
 
 def create_tasks_for_technical_coordinators(initial_family_data, task_type_id):
     """
@@ -606,7 +611,9 @@ def create_tasks_for_technical_coordinators(initial_family_data, task_type_id):
     """
     try:
         # Fetch the role for Technical Coordinator
-        tech_coordinator_role = Role.objects.filter(role_name="Technical Coordinator").first()
+        tech_coordinator_role = Role.objects.filter(
+            role_name="Technical Coordinator"
+        ).first()
         if not tech_coordinator_role:
             print("DEBUG: Role 'Technical Coordinator' not found in the database.")
             return
@@ -620,16 +627,18 @@ def create_tasks_for_technical_coordinators(initial_family_data, task_type_id):
         print(f"DEBUG: Found {tech_coordinators.count()} Technical Coordinators.")
 
         # Get the task type object
-        task_type = Task_Types.objects.get(pk=task_type_id)
+        task_type = Task_Types.objects.get(id=task_type_id)
 
         # Create tasks for each technical coordinator
         for coordinator in tech_coordinators:
             task_data = {
                 "description": "הוספת משפחה",
-                "due_date": (now().date() + datetime.timedelta(days=7)).strftime("%Y-%m-%d"),
+                "due_date": (now().date() + datetime.timedelta(days=7)).strftime(
+                    "%Y-%m-%d"
+                ),
                 "status": "לא הושלמה",
                 "assigned_to": coordinator.staff_id,
-                "type": task_type,
+                "type": task_type.id,
                 "names": initial_family_data.names,
                 "phones": initial_family_data.phones,
                 "other_information": initial_family_data.other_information,
@@ -643,6 +652,7 @@ def create_tasks_for_technical_coordinators(initial_family_data, task_type_id):
                 print(f"DEBUG: Error creating task: {str(e)}")
     except Exception as e:
         print(f"DEBUG: An error occurred while creating tasks: {str(e)}")
+
 
 def delete_task_cache(assigned_to_id=None, is_admin=False):
     """
@@ -1104,6 +1114,7 @@ def update_task_status(request, task_id):
         print(f"DEBUG: An error occurred: {str(e)}")
         return JsonResponse({"error": str(e)}, status=500)
 
+
 def delete_other_tasks_with_initial_family_data(task):
     """
     Deletes all tasks with the same initial_family_data_id_fk as the given task,
@@ -1113,9 +1124,13 @@ def delete_other_tasks_with_initial_family_data(task):
         initial_family_data_id_fk=task.initial_family_data_id_fk
     ).exclude(pk=task.pk).delete()
 
+
 def delete_other_tasks_with_initial_family_data_async(task):
-    thread = threading.Thread(target=delete_other_tasks_with_initial_family_data, args=(task,))
+    thread = threading.Thread(
+        target=delete_other_tasks_with_initial_family_data, args=(task,)
+    )
     thread.start()
+
 
 @csrf_exempt
 @api_view(["PUT"])
@@ -3252,37 +3267,45 @@ def create_tutor_feedback(request):
 
         staff_filling_id = data.get("staff_id")
         # Create a new tutor feedback record in the database
-        feedback = Feedback.objects.create(
-            timestamp=data.get("feedback_filled_at"),
-            event_date=make_aware(
-                datetime.datetime.strptime(data.get("event_date"), "%Y-%m-%d")
-            ),
-            staff_id=staff_filling_id,
-            description=data.get("description"),
-            exceptional_events=(
-                data.get("exceptional_events")
-                if data.get("exceptional_events")
-                else None
-            ),
-            anything_else=(
-                data.get("anything_else") if data.get("anything_else") else None
-            ),
-            comments=data.get("comments") if data.get("comments") else None,
-            feedback_type=data.get("feedback_type"),
-            hospital_name=(
-                data.get("hospital_name") if data.get("hospital_name") else None
-            ),
-            additional_volunteers=(
-                data.get("additional_volunteers")
-                if data.get("additional_volunteers")
-                else None
-            ),
-            names=data.get("names") if data.get("names") else None,
-            phones=data.get("phones") if data.get("phones") else None,
-            other_information=(
-                data.get("other_information") if data.get("other_information") else None
-            ),
-        )
+        error = None
+        try:
+            feedback = Feedback.objects.create(
+                timestamp=data.get("feedback_filled_at"),
+                event_date=make_aware(
+                    datetime.datetime.strptime(data.get("event_date"), "%Y-%m-%d")
+                ),
+                staff_id=staff_filling_id,
+                description=data.get("description"),
+                exceptional_events=(
+                    data.get("exceptional_events")
+                    if data.get("exceptional_events")
+                    else None
+                ),
+                anything_else=(
+                    data.get("anything_else") if data.get("anything_else") else None
+                ),
+                comments=data.get("comments") if data.get("comments") else None,
+                feedback_type=data.get("feedback_type"),
+                hospital_name=(
+                    data.get("hospital_name") if data.get("hospital_name") else None
+                ),
+                additional_volunteers=(
+                    data.get("additional_volunteers")
+                    if data.get("additional_volunteers")
+                    else None
+                ),
+                names=data.get("names") if data.get("names") else None,
+                phones=data.get("phones") if data.get("phones") else None,
+                other_information=(
+                    data.get("other_information")
+                    if data.get("other_information")
+                    else None
+                ),
+            )
+        except Exception as e:
+            error = str(e)
+            error_type = "feedback_creation_error"
+            print(f"DEBUG: Error creating feedback: {error}")  # Log the error
 
         # Get the tutor's id_id from Tutors using the user_id (which is staff_id in Tutors)
         print(f"DEBUG: User ID: {user_id}")  # Log the user ID
@@ -3295,42 +3318,84 @@ def create_tutor_feedback(request):
             )
 
         tutor_id_id = tutor.id_id
+        if not error:
+            try:
+                tutor_feedback = Tutor_Feedback.objects.create(
+                    feedback=feedback,
+                    tutee_name=(
+                        data.get("tutee_name")
+                        if data.get("tutee_name")
+                        else "ביקור בבית חולים " + feedback.hospital_name
+                    ),
+                    tutor_name=data.get("tutor_name"),
+                    tutor_id=tutor_id_id,
+                    is_it_your_tutee=data.get("is_it_your_tutee"),
+                    is_first_visit=data.get("is_first_visit"),
+                )
 
-        tutor_feedback = Tutor_Feedback.objects.create(
-            feedback=feedback,
-            tutee_name=(
-                data.get("tutee_name")
-                if data.get("tutee_name")
-                else "ביקור בבית חולים " + feedback.hospital_name
-            ),
-            tutor_name=data.get("tutor_name"),
-            tutor_id=tutor_id_id,
-            is_it_your_tutee=data.get("is_it_your_tutee"),
-            is_first_visit=data.get("is_first_visit"),
-        )
+                print(
+                    f"DEBUG: Tutor feedback created successfully with ID {feedback.feedback_id}"
+                )
+            except Exception as e:
+                error = str(e)
+                error_type = "tutor_feedback_creation_error"
+                print(
+                    f"DEBUG: An error occurred while creating tutor feedback: {error}"
+                )
 
-        print(
-            f"DEBUG: Tutor feedback created successfully with ID {feedback.feedback_id}"
-        )
+        if not error:
+            try:
+                if (
+                    data.get("feedback_type") == "general_volunteer_hospital_visit"
+                    and data.get("names")
+                    and data.get("phones")
+                ):
+                    # Create InitialFamilyData
+                    initial_family_data = InitialFamilyData.objects.create(
+                        names=data["names"],
+                        phones=data["phones"],
+                        other_information=data.get("other_information", ""),
+                    )
 
-        if (
-            data.get("feedback_type") == "general_volunteer_hospital_visit"
-            and data.get("names")
-            and data.get("phones")
-        ):
-            # Create InitialFamilyData
-            initial_family_data = InitialFamilyData.objects.create(
-                names=data["names"],
-                phones=data["phones"],
-                other_information=data.get("other_information", "")
+                    print(
+                        f"DEBUG: InitialFamilyData created with ID {initial_family_data.initial_family_data_id}"
+                    )
+            except Exception as e:
+                error = str(e)
+                error_type = "initial_family_data_creation_error"
+                print(
+                    f"DEBUG: An error occurred while creating InitialFamilyData: {error}"
+                )
+
+        if not error:
+            try:
+                # Get the task type id for "הוספת משפחה"
+                task_type = Task_Types.objects.get(task_type="הוספת משפחה")
+                # Create tasks for all Technical Coordinators
+                create_tasks_for_technical_coordinators_async(
+                    initial_family_data, task_type.id
+                )
+                print(
+                    "DEBUG: Tasks for Technical Coordinators created successfully."
+                )
+            except Exception as e:
+                error = str(e)
+                error_type = "task_creation_error"
+                print(
+                    f"DEBUG: An error occurred while creating tasks for Technical Coordinators: {error}"
+                )
+
+        if error:
+            # If any error occurred, delete the created feedback and tutor_feedback
+            feedback.delete()
+            if "tutor_feedback" in locals():
+                tutor_feedback.delete()
+            if "initial_family_data" in locals():
+                initial_family_data.delete()
+            raise Exception(
+                f"An error occurred while creating tutor feedback: {error} (Error Type: {error_type})"
             )
 
-            print(f"DEBUG: InitialFamilyData created with ID {initial_family_data.id}")
-            # Get the task type id for "הוספת משפחה"
-            task_type = Task_Types.objects.get(task_type="הוספת משפחה")
-            # Create tasks for all Technical Coordinators
-            create_tasks_for_technical_coordinators_async(initial_family_data, task_type.pk)
-        
         return JsonResponse(
             {
                 "message": "Tutor feedback created successfully",
@@ -3341,7 +3406,7 @@ def create_tutor_feedback(request):
         )
     except Exception as e:
         print(f"DEBUG: An error occurred while creating tutor feedback: {str(e)}")
-        return JsonResponse({"error": str(e)}, status=500)
+        return JsonResponse({"error": error_type + ': ' + str(e)}, status=500)
 
 
 @csrf_exempt
@@ -3389,7 +3454,7 @@ def update_tutor_feedback(request, feedback_id):
                 },
                 status=400,
             )
-
+        
         # Update the existing tutor feedback record in the database
         feedback = Feedback.objects.filter(feedback_id=feedback_id).first()
         if not feedback:
@@ -3406,57 +3471,74 @@ def update_tutor_feedback(request, feedback_id):
             return JsonResponse(
                 {"error": "No tutor found for the provided staff ID."}, status=404
             )
-        
-        feedback.timestamp = data.get("feedback_filled_at")
-        feedback.event_date = make_aware(
-            datetime.datetime.strptime(data.get("event_date"), "%Y-%m-%d")
-        )
-        feedback.staff_id = staff_filling_id
-        feedback.description = data.get("description")
-        feedback.exceptional_events = (
-            data.get("exceptional_events") if data.get("exceptional_events") else None
-        )
-        feedback.anything_else = (
-            data.get("anything_else") if data.get("anything_else") else None
-        )
-        feedback.comments = data.get("comments") if data.get("comments") else None
-        feedback.hospital_name = (
-            data.get("hospital_name") if data.get("hospital_name") else None
-        )
-        feedback.additional_volunteers = (
-            data.get("additional_volunteers")
-            if data.get("additional_volunteers")
-            else None
-        )
-        feedback.names = data.get("names") if data.get("names") else None
-        feedback.phones = data.get("phones") if data.get("phones") else None
-        feedback.other_information = data.get("other_information") if data.get("other_information") else None
-        feedback.save()
 
+        error = None
+        try:
+            feedback.timestamp = data.get("feedback_filled_at")
+            feedback.event_date = make_aware(
+                datetime.datetime.strptime(data.get("event_date"), "%Y-%m-%d")
+            )
+            feedback.staff_id = staff_filling_id
+            feedback.description = data.get("description")
+            feedback.exceptional_events = (
+                data.get("exceptional_events") if data.get("exceptional_events") else None
+            )
+            feedback.anything_else = (
+                data.get("anything_else") if data.get("anything_else") else None
+            )
+            feedback.comments = data.get("comments") if data.get("comments") else None
+            feedback.hospital_name = (
+                data.get("hospital_name") if data.get("hospital_name") else None
+            )
+            feedback.additional_volunteers = (
+                data.get("additional_volunteers")
+                if data.get("additional_volunteers")
+                else None
+            )
+            feedback.names = data.get("names") if data.get("names") else None
+            feedback.phones = data.get("phones") if data.get("phones") else None
+            feedback.other_information = (
+                data.get("other_information") if data.get("other_information") else None
+            )
+            feedback.save()
+        except Exception as e:
+            error = str(e)
+            error_type = "feedback_update_error"
+            print(f"DEBUG: Error updating feedback: {error}")
 
         tutor_id_id = tutor.id_id
 
-        tutor_feedback = Tutor_Feedback.objects.filter(feedback=feedback).first()
-        if not tutor_feedback:
-            return JsonResponse(
-                {"error": "Tutor feedback not found."},
-                status=404,
-            )
+        if not error:
+            try:
+                tutor_feedback = Tutor_Feedback.objects.filter(feedback=feedback).first()
+                if not tutor_feedback:
+                    return JsonResponse(
+                        {"error": "Tutor feedback not found."},
+                        status=404,
+                    )
 
-        tutor_feedback.tutee_name = (
-            data.get("tutee_name")
-            if data.get("tutee_name")
-            else "ביקור בבית חולים " + feedback.hospital_name
-        )
-        tutor_feedback.tutor_name = data.get("tutor_name")
-        tutor_feedback.tutor_id = tutor_id_id
-        tutor_feedback.is_it_your_tutee = data.get("is_it_your_tutee")
-        tutor_feedback.is_first_visit = data.get("is_first_visit")
-        tutor_feedback.save()
+                tutor_feedback.tutee_name = (
+                    data.get("tutee_name")
+                    if data.get("tutee_name")
+                    else "ביקור בבית חולים " + feedback.hospital_name
+                )
+                tutor_feedback.tutor_name = data.get("tutor_name")
+                tutor_feedback.tutor_id = tutor_id_id
+                tutor_feedback.is_it_your_tutee = data.get("is_it_your_tutee")
+                tutor_feedback.is_first_visit = data.get("is_first_visit")
+                tutor_feedback.save()
+                
+                print(
+                    f"DEBUG: Tutor feedback updated successfully with ID {feedback.feedback_id}"
+                )
+            except Exception as e:
+                error = str(e)
+                error_type = "tutor_feedback_update_error"
+                print(
+                    f"DEBUG: An error occurred while updating tutor feedback: {error}"
+                )
+        
 
-        print(
-            f"DEBUG: Tutor feedback updated successfully with ID {feedback.feedback_id}"
-        )
         return JsonResponse(
             {
                 "message": "Tutor feedback updated successfully",
@@ -3570,37 +3652,45 @@ def create_volunteer_feedback(request):
 
         staff_filling_id = data.get("staff_id")
         # Create a new tutor feedback record in the database
-        feedback = Feedback.objects.create(
-            timestamp=data.get("feedback_filled_at"),
-            event_date=make_aware(
-                datetime.datetime.strptime(data.get("event_date"), "%Y-%m-%d")
-            ),
-            staff_id=staff_filling_id,
-            description=data.get("description"),
-            exceptional_events=(
-                data.get("exceptional_events")
-                if data.get("exceptional_events")
-                else None
-            ),
-            anything_else=(
-                data.get("anything_else") if data.get("anything_else") else None
-            ),
-            comments=data.get("comments") if data.get("comments") else None,
-            feedback_type=data.get("feedback_type"),
-            hospital_name=(
-                data.get("hospital_name") if data.get("hospital_name") else None
-            ),
-            additional_volunteers=(
-                data.get("additional_volunteers")
-                if data.get("additional_volunteers")
-                else None
-            ),
-            names=data.get("names") if data.get("names") else None,
-            phones=data.get("phones") if data.get("phones") else None,
-            other_information=(
-                data.get("other_information") if data.get("other_information") else None
-            ),
-        )
+        error = None
+        try:
+            feedback = Feedback.objects.create(
+                timestamp=data.get("feedback_filled_at"),
+                event_date=make_aware(
+                    datetime.datetime.strptime(data.get("event_date"), "%Y-%m-%d")
+                ),
+                staff_id=staff_filling_id,
+                description=data.get("description"),
+                exceptional_events=(
+                    data.get("exceptional_events")
+                    if data.get("exceptional_events")
+                    else None
+                ),
+                anything_else=(
+                    data.get("anything_else") if data.get("anything_else") else None
+                ),
+                comments=data.get("comments") if data.get("comments") else None,
+                feedback_type=data.get("feedback_type"),
+                hospital_name=(
+                    data.get("hospital_name") if data.get("hospital_name") else None
+                ),
+                additional_volunteers=(
+                    data.get("additional_volunteers")
+                    if data.get("additional_volunteers")
+                    else None
+                ),
+                names=data.get("names") if data.get("names") else None,
+                phones=data.get("phones") if data.get("phones") else None,
+                other_information=(
+                    data.get("other_information")
+                    if data.get("other_information")
+                    else None
+                ),
+            )
+        except Exception as e:
+            error = str(e)
+            error_type = "feedback_creation_error"
+            print(f"DEBUG: Error creating feedback: {error}")
 
         # Get the volunteer's id_id from General_Volunteer using the user_id (which is staff_id in General_Volunteer)
         print(f"DEBUG: User ID: {user_id}")  # Log the user ID
@@ -3614,38 +3704,76 @@ def create_volunteer_feedback(request):
                 {"error": "No volunteer found for the provided staff ID."}, status=404
             )
 
-        volunteer_feedback = General_V_Feedback.objects.create(
-            feedback=feedback,
-            volunteer_name=data.get("volunteer_name"),
-            volunteer=volunteer,
-            child_name=(
-                data.get("child_name")
-                if data.get("child_name")
-                else "ביקור בבית חולים " + feedback.hospital_name
-            ),
-        )
+        if not error:
+            try:
+                volunteer_feedback = General_V_Feedback.objects.create(
+                    feedback=feedback,
+                    volunteer_name=data.get("volunteer_name"),
+                    volunteer=volunteer,
+                    child_name=(
+                        data.get("child_name")
+                        if data.get("child_name")
+                        else "ביקור בבית חולים " + feedback.hospital_name
+                    ),
+                )        
+                print(
+                    f"DEBUG: Volunteer feedback created successfully with ID {feedback.feedback_id}"
+                )
+            except Exception as e:
+                error = str(e)
+                error_type = "volunteer_feedback_creation_error"
+                print(f"DEBUG: Error creating volunteer feedback: {error}")
 
-        print(
-            f"DEBUG: Volunteer feedback created successfully with ID {feedback.feedback_id}"
-        )
 
-        if (
-            data.get("feedback_type") == "general_volunteer_hospital_visit"
-            and data.get("names")
-            and data.get("phones")
-        ):
-            # Create InitialFamilyData
-            initial_family_data = InitialFamilyData.objects.create(
-                names=data["names"],
-                phones=data["phones"],
-                other_information=data.get("other_information", "")
+        if not error:
+            try:
+                if (
+                    data.get("feedback_type") == "general_volunteer_hospital_visit"
+                    and data.get("names")
+                    and data.get("phones")
+                ):
+                    # Create InitialFamilyData
+                    initial_family_data = InitialFamilyData.objects.create(
+                        names=data["names"],
+                        phones=data["phones"],
+                        other_information=data.get("other_information", ""),
+                    )
+
+                    print(
+                        f"DEBUG: InitialFamilyData created with ID {initial_family_data.initial_family_data_id}"
+                    )
+            except Exception as e:
+                error = str(e)
+                error_type = "initial_family_data_creation_error"
+                print(
+                    f"DEBUG: An error occurred while creating InitialFamilyData: {error}"
+                )
+        if not error:
+            try:
+                # Get the task type id for "הוספת משפחה"
+                task_type = Task_Types.objects.get(task_type="הוספת משפחה")
+                # Create tasks for all Technical Coordinators
+                create_tasks_for_technical_coordinators_async(
+                    initial_family_data, task_type.id
+                )
+                print(
+                    "DEBUG: Tasks for Technical Coordinators created successfully."
+                )
+            except Exception as e:
+                error = str(e)
+                error_type = "task_creation_error"
+                print(f"DEBUG: An error occurred while creating tasks: {error}")
+
+        if error:
+            # If any error occurred, delete the created feedback and volunteer_feedback
+            feedback.delete()
+            if "volunteer_feedback" in locals():
+                volunteer_feedback.delete()
+            if "initial_family_data" in locals():
+                initial_family_data.delete()
+            raise Exception(
+                f"An error occurred while creating volunteer feedback: {error} (Error Type: {error_type})"
             )
-
-            print(f"DEBUG: InitialFamilyData created with ID {initial_family_data.id}")
-            # Get the task type id for "הוספת משפחה"
-            task_type = Task_Types.objects.get(task_type="הוספת משפחה")
-            # Create tasks for all Technical Coordinators
-            create_tasks_for_technical_coordinators_async(initial_family_data, task_type.pk)
 
         return JsonResponse(
             {
@@ -3657,7 +3785,7 @@ def create_volunteer_feedback(request):
         )
     except Exception as e:
         print(f"DEBUG: An error occurred while creating volunteer feedback: {str(e)}")
-        return JsonResponse({"error": str(e)}, status=500)
+        return JsonResponse({"error": error_type + ': ' + str(e)}, status=500)
 
 
 @csrf_exempt
@@ -3725,56 +3853,69 @@ def update_volunteer_feedback(request, feedback_id):
             return JsonResponse(
                 {"error": "No volunteer found for the provided staff ID."}, status=404
             )
-        
-        feedback.timestamp = data.get("feedback_filled_at")
-        feedback.event_date = make_aware(
-            datetime.datetime.strptime(data.get("event_date"), "%Y-%m-%d")
-        )
-        feedback.staff_id = staff_filling_id
-        feedback.description = data.get("description")
-        feedback.exceptional_events = (
-            data.get("exceptional_events") if data.get("exceptional_events") else None
-        )
-        feedback.anything_else = (
-            data.get("anything_else") if data.get("anything_else") else None
-        )
-        feedback.comments = data.get("comments") if data.get("comments") else None
-        feedback.hospital_name = (
-            data.get("hospital_name") if data.get("hospital_name") else None
-        )
-        feedback.additional_volunteers = (
-            data.get("additional_volunteers")
-            if data.get("additional_volunteers")
-            else None
-        )
-        feedback.names = data.get("names") if data.get("names") else None
-        feedback.phones = data.get("phones") if data.get("phones") else None
-        feedback.other_information = (
-            data.get("other_information") if data.get("other_information") else None
-        )
-        feedback.save()
 
-        volunteer_feedback = General_V_Feedback.objects.filter(
-            feedback=feedback
-        ).first()
-        if not volunteer_feedback:
-            return JsonResponse(
-                {"error": "Volunteer feedback not found."},
-                status=404,
+        error = None
+        try:
+            feedback.timestamp = data.get("feedback_filled_at")
+            feedback.event_date = make_aware(
+                datetime.datetime.strptime(data.get("event_date"), "%Y-%m-%d")
             )
+            feedback.staff_id = staff_filling_id
+            feedback.description = data.get("description")
+            feedback.exceptional_events = (
+                data.get("exceptional_events") if data.get("exceptional_events") else None
+            )
+            feedback.anything_else = (
+                data.get("anything_else") if data.get("anything_else") else None
+            )
+            feedback.comments = data.get("comments") if data.get("comments") else None
+            feedback.hospital_name = (
+                data.get("hospital_name") if data.get("hospital_name") else None
+            )
+            feedback.additional_volunteers = (
+                data.get("additional_volunteers")
+                if data.get("additional_volunteers")
+                else None
+            )
+            feedback.names = data.get("names") if data.get("names") else None
+            feedback.phones = data.get("phones") if data.get("phones") else None
+            feedback.other_information = (
+                data.get("other_information") if data.get("other_information") else None
+            )
+            feedback.save()
+        except Exception as e:
+            error = str(e)
+            error_type = "feedback_update_error"
+            print(f"DEBUG: Error updating feedback: {error}")
 
-        volunteer_feedback.child_name = (
-            data.get("child_name")
-            if data.get("child_name")
-            else "ביקור בבית חולים " + feedback.hospital_name
-        )
-        volunteer_feedback.volunteer_name = data.get("volunteer_name")
-        volunteer_feedback.volunteer = volunteer
-        volunteer_feedback.save()
+        if not error:
+            try:
+                volunteer_feedback = General_V_Feedback.objects.filter(
+                    feedback=feedback
+                ).first()
+                if not volunteer_feedback:
+                    return JsonResponse(
+                        {"error": "Volunteer feedback not found."},
+                        status=404,
+                    )
 
-        print(
-            f"DEBUG: Volunteer feedback updated successfully with ID {feedback.feedback_id}"
-        )
+                volunteer_feedback.child_name = (
+                    data.get("child_name")
+                    if data.get("child_name")
+                    else "ביקור בבית חולים " + feedback.hospital_name
+                )
+                volunteer_feedback.volunteer_name = data.get("volunteer_name")
+                volunteer_feedback.volunteer = volunteer
+                volunteer_feedback.save()
+                print(
+                    f"DEBUG: Volunteer feedback updated successfully with ID {feedback.feedback_id}"
+                )
+            except Exception as e:
+                error = str(e)
+                error_type = "volunteer_feedback_update_error"
+                print(f"DEBUG: Error updating volunteer feedback: {error}")
+
+
         return JsonResponse(
             {
                 "message": "Volunteer feedback updated successfully",

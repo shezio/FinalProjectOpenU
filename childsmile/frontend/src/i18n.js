@@ -506,7 +506,7 @@ const resources = {
       "Other information": "פרטים נוספים",
       "Created At": "נוצר בתאריך",
       "Updated At": "עודכן בתאריך",
-      "Family Added?": "האם המשפחה נוספה?",
+      "Family Added?": "נוספה?",
       "Add Initial Family Data": "הוסף נתוני משפחה ראשוניים",
       "Created At To": "נוצר בתאריך עד",
       "Created At From": "נוצר בתאריך מ",
@@ -518,6 +518,7 @@ const resources = {
       "Enter phones": "הזן טלפונים",
       "Create": "צור",
       "Back to Families": "חזור למסך משפחות",
+      "Mark as Added": "סמן כנוספה",
 
 
     }
