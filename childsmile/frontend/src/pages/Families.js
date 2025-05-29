@@ -13,6 +13,7 @@ import hospitals from "../components/hospitals.json"; // Import the hospitals JS
 import settlementsAndStreets from "../components/settlements_n_streets.json";
 import Select from "react-select";
 import Modal from "react-modal";
+import { useNavigate } from 'react-router-dom'; // Add this import at the top with other imports
 
 Modal.setAppElement('#root'); // Replace '#root' with the ID of your app's root element
 const Families = () => {
@@ -61,6 +62,7 @@ const Families = () => {
 
   // Validation state
   const [errors, setErrors] = useState({});
+  const navigate = useNavigate(); // Add this line
 
   const fetchFamilies = async () => {
     setLoading(true);
@@ -425,7 +427,12 @@ const Families = () => {
           rtl={true}
         />
         <div className="filter-create-container">
-          <div className="create-task">
+          <div className="create-task init-family-data-button">
+            <button
+              onClick={() => navigate('/initial-family-data')}
+            >
+              {t('Initial Family Data')}
+            </button>
             <button onClick={openAddModal}>
               {t('Add New Family')}
             </button>
@@ -513,7 +520,7 @@ const Families = () => {
                   {/* Right Arrows */}
                   <button
                     onClick={() => setPage(page + 1)} // Go to the next page
-                    disabled={page === Math.ceil(totalCount / pageSize) || totalCount <= 1  }
+                    disabled={page === Math.ceil(totalCount / pageSize) || totalCount <= 1}
                     className="pagination-arrow"
                   >
                     &rsaquo; {/* Single right arrow */}

@@ -501,6 +501,25 @@ const resources = {
       "Error Updating Feedback": "שגיאה בעדכון משוב",
       "Child Name is required": "חובה למלא שם ילד",
       "Reset Dates": "אפס",
+      "No initial family data to display": "אין נתוני משפחה ראשוניים להצגה",
+      "Are you sure you want to mark this initial family data as added?": "האם אתה בטוח שברצונך לסמן נתוני משפחה ראשוניים אלה כהוספו?",
+      "Other information": "פרטים נוספים",
+      "Created At": "נוצר בתאריך",
+      "Updated At": "עודכן בתאריך",
+      "Family Added?": "האם המשפחה נוספה?",
+      "Add Initial Family Data": "הוסף נתוני משפחה ראשוניים",
+      "Created At To": "נוצר בתאריך עד",
+      "Created At From": "נוצר בתאריך מ",
+      "Family Added": "האם המשפחה נוספה",
+      "All": "הכל",
+      "Search by name or phone": "חפש לפי שם או טלפון",
+      "Create Initial Family Data": "צור נתוני משפחה ראשוניים",
+      "Enter names": "הזן שמות",
+      "Enter phones": "הזן טלפונים",
+      "Create": "צור",
+      "Back to Families": "חזור למסך משפחות",
+
+
     }
   }
 };
