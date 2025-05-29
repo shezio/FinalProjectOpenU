@@ -138,7 +138,7 @@
 .filter-create-container>* {
   flex: 1 1 auto;
   /* Allow items to grow and shrink as needed */
-  min-width: 150px;
+  /* min-width: 150px; */
   /* Set a minimum width for each item */
 }
 
