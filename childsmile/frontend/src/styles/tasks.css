@@ -576,7 +576,7 @@
 
 @media (max-width: 1700px) {
   .task-details-panel {
-    height: 70%;
+    height: 100%;
   }
 
   .split-view {
@@ -720,6 +720,15 @@
   margin-bottom: 8px;
   margin-top: 0;
   letter-spacing: 0.5px;
+}
+
+.task-details-content h3 {
+  color: #45a049;
+  font-family: Rubik, sans-serif;
+  font-weight: bold;
+  font-size: 1.7em;
+  margin-bottom: 4px;
+  margin-top: 0;
 }
 
 .task-details-content p {

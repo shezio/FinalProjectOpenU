@@ -49,6 +49,7 @@ from .views import (
     create_initial_family_data,
     update_initial_family_data,
     delete_initial_family_data,
+    mark_initial_family_complete,
 )
 
 from .unused_views import (
@@ -282,13 +283,18 @@ urlpatterns = [
         name="create_initial_family_data",
     ),
     path(
-        "api/update_initial_family_data/<int:family_id>/",
+        "api/update_initial_family_data/<int:initial_family_data_id>/",
         update_initial_family_data,
         name="update_initial_family_data",
     ),
     path(
-        "api/delete_initial_family_data/<int:family_id>/",
+        "api/delete_initial_family_data/<int:initial_family_data_id>/",
         delete_initial_family_data,
         name="delete_initial_family_data",
+    ),
+    path(
+        "api/mark_initial_family_complete/<int:initial_family_data_id>/",
+        mark_initial_family_complete,
+        name="mark_initial_family_complete",
     ),
 ]
