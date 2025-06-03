@@ -29,7 +29,7 @@
 .families-grid-container {
   flex: unset !important;
   /* Prevent flex-grow from affecting the container */
-  margin-top: 150px;
+  margin-top: 100px;
   /* overflow-y: auto; */
   max-height: 70vh;
   /* Limit the height to 70% of the viewport height */
@@ -41,7 +41,7 @@
   /* Remove any padding that might add extra space */
   box-sizing: border-box;
   /* Ensure padding and border are included in the height calculation */
-  margin-bottom: 200px;
+  margin-bottom: 400px;
   /* Add some space at the bottom */
 }
 
@@ -51,6 +51,7 @@
     /* Increase margin-top for smaller screens */
     margin-bottom: 200px;
     /* Increase margin-bottom for smaller screens */
+    margin-right: 200px;
   }
 }
 
@@ -58,6 +59,7 @@
 .families-data-grid {
   width: 100%;
   border-collapse: collapse;
+  table-layout: auto !important;
 }
 
 .families-data-grid th,
@@ -466,6 +468,7 @@ textarea.error {
   border-radius: 4px;
   font-size: 24px;
 }
+
 .families-added-filter {
   padding: 8px;
   width: 300px;
@@ -517,30 +520,64 @@ textarea.error {
 }
 
 .init-family-date-input {
-    padding: 1px;
-    margin: 0;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    width: 200px;
-    height: 50px;
-    font-size: 20px;
-    /* Adjust width as needed */
+  padding: 1px;
+  margin: 0;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  width: 200px;
+  height: 50px;
+  font-size: 20px;
+  /* Adjust width as needed */
 }
 
 .create-task.init-family-data-button button:first-child {
-    background-color: #c5128f !important;
-    color: white;
-    padding: 10px 20px;
-    font-size: 24px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    margin-left: 10px;
+  background-color: #c5128f !important;
+  color: white;
+  padding: 10px 20px;
+  font-size: 24px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-left: 10px;
 }
+
 .create-task.init-family-data-button button:first-child:hover {
-    background-color: #218838;
+  background-color: #218838;
 }
 
 .families-row-added {
   background-color: #e6ffe6 !important;
+}
+
+/* Add to your CSS */
+.button-disabled {
+  background-color:
+    /* light green */
+    #eb8989 !important;
+  color: #666;
+  cursor: not-allowed;
+  opacity: 0.6;
+  border: 1px solid #aaa;
+  transition: background-color 0.3s ease;
+}
+
+.td-scrollable {
+  height: 4.8em;           /* About 4 lines, adjust as needed */
+  overflow-y: auto;
+  word-break: break-word;
+  white-space: pre-line;
+  line-height: 1.2em;
+  padding-right: 4px;
+}
+
+.td-x-scrollable {
+  max-width: 250px;      /* Adjust as needed */
+  min-height: 2.4em;     /* About 2 lines, adjust as needed */
+  height: 4.4em;         /* Fix the height so the scrollbar is always at the bottom */
+  overflow-x: auto;
+  overflow-y: hidden;
+  white-space: nowrap;
+  word-break: break-all;
+  display: flex;
+  align-items: flex-start;  /* Align content to the bottom */
 }

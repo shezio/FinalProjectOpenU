@@ -266,6 +266,15 @@ const VolunteerFeedbacks = () => {
     fetchData();
   };
 
+  const handleRefresh = () => {
+    // set the date fields to empty strings
+    setEventFrom(""); 
+    setEventTo("");
+    setFeedbackFrom("");
+    setFeedbackTo("");
+    fetchData();
+  };
+
   const handleAddFeedbackSubmit = () => {
     // Prepare data as the DB expects: use tutor_id and tutee_id, not names
     const now = new Date();
@@ -439,20 +448,7 @@ const VolunteerFeedbacks = () => {
             <button className="feedbacks-filter-button" onClick={applyFilters}>
               {t("Filter")}
             </button>
-            <button
-              className="reset-date-button"
-              onClick={() => {
-                setEventFrom("");
-                setEventTo("");
-                setFeedbackFrom("");
-                setFeedbackTo("");
-                // Wait for state to update, then fetch all data
-                setTimeout(() => fetchData(), 0);
-              }}
-            >
-              {t("Reset Dates")}
-            </button>
-            <button className="feedbacks-refresh-button" onClick={fetchData}>
+            <button className="feedbacks-refresh-button" onClick={handleRefresh}>
               {t("Refresh")}
             </button>
           </div>

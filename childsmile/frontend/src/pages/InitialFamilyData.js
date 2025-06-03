@@ -24,6 +24,11 @@ function formatDate(dateString) {
   return `${day}/${month}/${year}`;
 }
 
+function stripTime(date) {
+  if (!date) return null;
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+}
+
 const InitialFamilyData = () => {
   const { t } = useTranslation();
   const navigate = useNavigate(); // Add this line
@@ -51,6 +56,25 @@ const InitialFamilyData = () => {
   const [formData, setFormData] = useState({ names: '', phones: '', other_information: '' });
   const [formErrors, setFormErrors] = useState({});
 
+  // Staff and roles state
+  const [staff, setStaff] = useState([]);
+  const [roles, setRoles] = useState([]);
+  const [currentUser, setCurrentUser] = useState(null);
+  const [currentUserRoles, setCurrentUserRoles] = useState([]);
+
+  function parseDate(dateStr) {
+    if (!dateStr) return null;
+    // Try ISO first
+    const iso = Date.parse(dateStr);
+    if (!isNaN(iso)) return new Date(iso);
+    // Try DD/MM/YYYY
+    const parts = dateStr.split('/');
+    if (parts.length === 3) {
+      // new Date(year, monthIndex, day)
+      return new Date(Number(parts[2]), Number(parts[1]) - 1, Number(parts[0]));
+    }
+    return null;
+  }
   // Fetch families
   const fetchFamilies = async () => {
     setLoading(true);
@@ -67,10 +91,32 @@ const InitialFamilyData = () => {
     }
   };
 
+  // Fetch staff and roles
+  useEffect(() => {
+    const fetchStaffAndRoles = async () => {
+      try {
+        const [staffRes, rolesRes] = await Promise.all([
+          axios.get('/api/staff/'),
+          axios.get('/api/get_roles/')
+        ]);
+        setStaff(staffRes.data.staff || []);
+        setRoles(rolesRes.data.roles || []);
+        // Get current username from localStorage (like in Tutorships.js)
+        const username = localStorage.getItem('origUsername');
+        const user = staffRes.data.staff.find(u => u.username === username);
+        setCurrentUser(user);
+        setCurrentUserRoles(user ? user.roles : []);
+      } catch (error) {
+        // handle error
+      }
+    };
+    fetchStaffAndRoles();
+  }, []);
+
   useEffect(() => {
     fetchFamilies();
     // eslint-disable-next-line
-  }, [search, filterAdded, dateFrom, dateTo, sortBy, sortOrder]);
+  }, []);
 
   useEffect(() => {
     setFilteredFamilies(families);
@@ -117,12 +163,19 @@ const InitialFamilyData = () => {
       filtered = filtered.filter(f => String(f.family_added) === filterAdded);
     }
 
-    // Filter by date range
     if (dateFrom) {
-      filtered = filtered.filter(f => new Date(f.created_at) >= new Date(dateFrom));
+      const fromDate = stripTime(new Date(dateFrom));
+      filtered = filtered.filter(f => {
+        const created = stripTime(parseDate(f.created_at));
+        return created && created >= fromDate;
+      });
     }
     if (dateTo) {
-      filtered = filtered.filter(f => new Date(f.created_at) <= new Date(dateTo));
+      const toDate = stripTime(new Date(dateTo));
+      filtered = filtered.filter(f => {
+        const created = stripTime(parseDate(f.created_at));
+        return created && created <= toDate;
+      });
     }
 
     // Sort
@@ -179,26 +232,6 @@ const InitialFamilyData = () => {
     }
   };
 
-  // Modal open/close
-  const openCreateModal = () => {
-    setFormData({ names: '', phones: '', other_information: '' });
-    setFormErrors({});
-    setShowCreateModal(true);
-  };
-  const closeCreateModal = () => setShowCreateModal(false);
-
-  const openUpdateModal = (family) => {
-    setSelectedFamily(family);
-    setFormData({
-      names: family.names || '',
-      phones: family.phones || '',
-      other_information: family.other_information || ''
-    });
-    setFormErrors({});
-    setShowUpdateModal(true);
-  };
-  const closeUpdateModal = () => setShowUpdateModal(false);
-
   const openDeleteModal = (family) => {
     setSelectedFamily(family);
     setShowDeleteModal(true);
@@ -210,57 +243,6 @@ const InitialFamilyData = () => {
     setShowMarkAddedModal(true);
   };
   const closeMarkAddedModal = () => setShowMarkAddedModal(false);
-
-  // Validation
-  const validateCreate = () => {
-    const errors = {};
-    if (!formData.names || formData.names.length < 10 || !formData.names.includes(',')) {
-      errors.names = t('Names must be at least 10 characters and contain a comma.');
-    }
-    if (!formData.phones || formData.phones.length < 10 || !formData.phones.includes(',')) {
-      errors.phones = t('Phones must be at least 10 characters and contain a comma.');
-    }
-    return errors;
-  };
-  const validateUpdate = () => {
-    const errors = {};
-    if (!formData.names) errors.names = t('Names is required.');
-    if (!formData.phones) errors.phones = t('Phones is required.');
-    return errors;
-  };
-
-  // Create
-  const handleCreate = async (e) => {
-    e.preventDefault();
-    const errors = validateCreate();
-    setFormErrors(errors);
-    if (Object.keys(errors).length > 0) return;
-    try {
-      await axios.post('/api/create_initial_family_data/', formData);
-      toast.success(t('Initial family data created!'));
-      closeCreateModal();
-      fetchFamilies();
-    } catch (error) {
-      showErrorToast(t, 'Error creating initial family data', error);
-    }
-  };
-
-  // Update
-  const handleUpdate = async (e) => {
-    e.preventDefault();
-    const errors = validateUpdate();
-    setFormErrors(errors);
-    if (Object.keys(errors).length > 0) return;
-    try {
-      await axios.put(`/api/update_initial_family_data/${selectedFamily.initial_family_data_id}/`, formData);
-      toast.success(t('Initial family data updated!'));
-      closeUpdateModal();
-      fetchFamilies();
-      // Optionally update related task here if needed
-    } catch (error) {
-      showErrorToast(t, 'Error updating initial family data', error);
-    }
-  };
 
   // Delete
   const handleDelete = async () => {
@@ -275,6 +257,17 @@ const InitialFamilyData = () => {
     }
   };
 
+  // @todo - use this in all refreshes
+  const handleRefresh = () => {
+    setDateFrom('');
+    setDateTo('');
+    setSearch('');
+    setFilterAdded('');
+    setSortBy('created_at');
+    setSortOrder('desc');
+    setPage(1);
+    fetchFamilies();
+  };
   // Mark as added
   const handleMarkAsAdded = async () => {
     try {
@@ -292,13 +285,15 @@ const InitialFamilyData = () => {
   const getRowClass = (family) =>
     family.family_added ? "families-row-added" : "";
 
+  const canManage = currentUserRoles.includes('System Administrator') || currentUserRoles.includes('Technical Coordinator');
+
   return (
     <div className="families-main-content">
       <Sidebar />
       <InnerPageHeader title={t('Initial Family Data')} />
       <ToastContainer position="top-center" autoClose={5000} rtl={true} />
       <div className="filter-create-container">
-        <button className="refresh-button" onClick={fetchFamilies}>
+        <button className="refresh-button" onClick={handleRefresh}>
           {t('Refresh')}
         </button>
         <label htmlFor="date-from">
@@ -374,34 +369,40 @@ const InitialFamilyData = () => {
                   <tr key={family.initial_family_id} className={getRowClass(family)}>
                     <td>{family.initial_family_data_id}</td>
                     <td>
-                      {family.names
-                        .split(',')
-                        .map((part, idx, arr) => (
-                          <React.Fragment key={idx}>
-                            {part.trim()}
-                            {idx < arr.length - 1 && <br />}
-                          </React.Fragment>
-                        ))}
+                      <div className="td-scrollable">
+                        {family.names
+                          .split(',')
+                          .map((part, idx, arr) => (
+                            <React.Fragment key={idx}>
+                              {part.trim()}
+                              {idx < arr.length - 1 && <br />}
+                            </React.Fragment>
+                          ))}
+                      </div>
                     </td>
                     <td>
-                      {family.phones
-                        .split(',')
-                        .map((part, idx, arr) => (
-                          <React.Fragment key={idx}>
-                            {part.trim()}
-                            {idx < arr.length - 1 && <br />}
-                          </React.Fragment>
-                        ))}
+                      <div className="td-scrollable">
+                        {family.phones
+                          .split(',')
+                          .map((part, idx, arr) => (
+                            <React.Fragment key={idx}>
+                              {part.trim()}
+                              {idx < arr.length - 1 && <br />}
+                            </React.Fragment>
+                          ))}
+                      </div>
                     </td>
                     <td>
-                      {family.other_information
-                        ? family.other_information.split(',').map((part, idx, arr) => (
-                          <React.Fragment key={idx}>
-                            {part.trim()}
-                            {idx < arr.length - 1 && <br />}
-                          </React.Fragment>
-                        ))
-                        : ''}
+                      <div className="td-x-scrollable">
+                        {family.other_information
+                          ? family.other_information.split(',').map((part, idx, arr) => (
+                            <React.Fragment key={idx}>
+                              {part.trim()}
+                              {idx < arr.length - 1 && <br />}
+                            </React.Fragment>
+                          ))
+                          : ''}
+                      </div>
                     </td>
                     <td>{formatDate(family.created_at)}</td>
                     <td>{formatDate(family.updated_at)}</td>
@@ -414,13 +415,17 @@ const InitialFamilyData = () => {
                     </td>
                     <td>
                       <div className="family-actions">
-                        <button className="delete-button" onClick={() => openDeleteModal(family)}>
+                        <button
+                          className={`delete-button${!canManage ? ' button-disabled' : ''}`}
+                          onClick={() => openDeleteModal(family)}
+                          disabled={!canManage}
+                        >
                           {t('Delete')}
                         </button>
                         <button
                           className="mark-added-button"
                           onClick={() => openMarkAddedModal(family)}
-                          disabled={family.family_added}
+                          disabled={family.family_added || !canManage}
                           style={family.family_added ? { cursor: 'not-allowed' } : {}}
                         >
                           {t('Mark as Added')}
@@ -461,98 +466,6 @@ const InitialFamilyData = () => {
             >&raquo;</button>
           </div>
         </div>
-      )}
-
-      {/* Create Modal */}
-      {showCreateModal && (
-        <Modal
-          isOpen={showCreateModal}
-          onRequestClose={closeCreateModal}
-          contentLabel="Create Initial Family Data"
-          className="families-modal-content"
-          overlayClassName="delete-modal-overlay"
-        >
-          <h2>{t('Create Initial Family Data')}</h2>
-          <form onSubmit={handleCreate} className="form-grid">
-            <div className="form-column">
-              <label>{t('Names')}</label>
-              <input
-                type="text"
-                name="names"
-                placeholder={t("Enter names")}
-                value={formData.names}
-                onChange={e => setFormData({ ...formData, names: e.target.value })}
-                className={formErrors.names ? "error" : ""}
-              />
-              {formErrors.names && <span className="families-error-message">{formErrors.names}</span>}
-              <label>{t('Phones')}</label>
-              <input
-                type="text"
-                name="phones"
-                placeholder={t("Enter phones")}
-                value={formData.phones}
-                onChange={e => setFormData({ ...formData, phones: e.target.value })}
-                className={formErrors.phones ? "error" : ""}
-              />
-              {formErrors.phones && <span className="families-error-message">{formErrors.phones}</span>}
-              <label>{t('Other information')}</label>
-              <textarea
-                name="other_information"
-                value={formData.other_information}
-                onChange={e => setFormData({ ...formData, other_information: e.target.value })}
-              />
-            </div>
-            <div className="form-actions">
-              <button type="submit">{t('Create')}</button>
-              <button type="button" onClick={closeCreateModal}>{t('Cancel')}</button>
-            </div>
-          </form>
-        </Modal>
-      )}
-
-      {/* Update Modal */}
-      {showUpdateModal && (
-        <Modal
-          isOpen={showUpdateModal}
-          onRequestClose={closeUpdateModal}
-          contentLabel="Update Initial Family Data"
-          className="families-modal-content"
-          overlayClassName="delete-modal-overlay"
-        >
-          <h2>{t('Update Initial Family Data')}</h2>
-          <form onSubmit={handleUpdate} className="form-grid">
-            <div className="form-column">
-              <label>{t('Names')}</label>
-              <input
-                type="text"
-                name="names"
-                value={formData.names}
-                onChange={e => setFormData({ ...formData, names: e.target.value })}
-                className={formErrors.names ? "error" : ""}
-              />
-              {formErrors.names && <span className="families-error-message">{formErrors.names}</span>}
-              <label>{t('Phones')}</label>
-              <input
-                type="text"
-                name="phones"
-                value={formData.phones}
-                onChange={e => setFormData({ ...formData, phones: e.target.value })}
-                className={formErrors.phones ? "error" : ""}
-              />
-              {formErrors.phones && <span className="families-error-message">{formErrors.phones}</span>}
-              <label>{t('Other information')}</label>
-              <textarea
-                name="other_information"
-                value={formData.other_information}
-                onChange={e => setFormData({ ...formData, other_information: e.target.value })}
-              />
-            </div>
-            <div className="form-actions">
-              <button type="submit">{t('Update')}</button>
-              <button type="button" onClick={closeUpdateModal}>{t('Cancel')}</button>
-            </div>
-          </form>
-        </Modal>
       )}
 
       {/* Delete Modal */}

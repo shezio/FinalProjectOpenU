@@ -362,6 +362,15 @@ const TutorFeedbacks = () => {
       });
   };
 
+  const handleRefresh = () => {
+    // set the date fields to empty strings
+    setEventFrom("");
+    setEventTo("");
+    setFeedbackFrom("");
+    setFeedbackTo("");
+    fetchData();
+  };
+
   const handleDeleteFeedback = (id) => {
     console.log("Deleting feedback with ID:", id);
     axios.delete(`/api/delete_tutor_feedback/${id}/`)
@@ -474,20 +483,7 @@ const TutorFeedbacks = () => {
             <button className="feedbacks-filter-button" onClick={applyFilters}>
               {t("Filter")}
             </button>
-            <button
-              className="reset-date-button"
-              onClick={() => {
-                setEventFrom("");
-                setEventTo("");
-                setFeedbackFrom("");
-                setFeedbackTo("");
-                // Wait for state to update, then fetch all data
-                setTimeout(() => fetchData(), 0);
-              }}
-            >
-              {t("Reset Dates")}
-            </button>
-            <button className="feedbacks-refresh-button" onClick={fetchData}>
+            <button className="feedbacks-refresh-button" onClick={handleRefresh}>
               {t("Refresh")}
             </button>
           </div>

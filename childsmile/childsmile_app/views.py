@@ -4141,6 +4141,16 @@ def mark_initial_family_complete(request, initial_family_data_id):
             {"detail": "Authentication credentials were not provided."}, status=403
         )
 
+    # Fetch the user and their roles
+    user = Staff.objects.get(staff_id=user_id)
+    user_roles = set(user.roles.values_list("role_name", flat=True))
+    allowed_roles = {"System Administrator", "Technical Coordinator"}
+    if not user_roles.intersection(allowed_roles):
+        return JsonResponse(
+            {"error": "You do not have permission to mark initial family data as complete."},
+            status=401,
+        )
+
     # Check if the user has UPDATE permission on the "initial_family_data" resource
     if not has_initial_family_data_permission(request, "update"):
         return JsonResponse(
@@ -4191,6 +4201,16 @@ def delete_initial_family_data(request, initial_family_data_id):
             {"detail": "Authentication credentials were not provided."}, status=403
         )
 
+    # Fetch the user and their roles
+    user = Staff.objects.get(staff_id=user_id)
+    user_roles = set(user.roles.values_list("role_name", flat=True))
+    allowed_roles = {"System Administrator", "Technical Coordinator"}
+    if not user_roles.intersection(allowed_roles):
+        return JsonResponse(
+            {"error": "You do not have permission to delete initial family data."},
+            status=401,
+        )
+    
     # Check if the user has DELETE permission on the "initial_family_data" resource
     if not has_initial_family_data_permission(request, "delete"):
         return JsonResponse(

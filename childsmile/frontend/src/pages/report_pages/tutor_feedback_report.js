@@ -109,7 +109,23 @@ const TutorFeedbackReport = () => {
   useEffect(() => {
     fetchData();
   }, []);
-
+  // Set the zoom level of the page based on screen width
+  useEffect(() => {
+    const setZoom = () => {
+      if (window.innerWidth <= 1800) {
+        document.body.style.zoom = "67%";
+      } else {
+        document.body.style.zoom = "75%";
+      }
+    };
+    setZoom();
+    window.addEventListener("resize", setZoom);
+    return () => {
+      document.body.style.zoom = "100%"; // Reset zoom on unmount
+      window.removeEventListener("resize", setZoom);
+    };
+  }, []);
+  
   return (
     <div className="tutor-feedback-report-main-content">
       <Sidebar />
@@ -159,17 +175,6 @@ const TutorFeedbackReport = () => {
                 />
                 <button className="filter-button" onClick={applyDateFilter}>
                   {t("Filter")}
-                </button>
-                <button
-                  className="reset-date-button"
-                  onClick={() => {
-                    setFromDate("");
-                    setToDate("");
-                    // Wait for state to update, then fetch all data
-                    setTimeout(() => fetchData(), 0);
-                  }}
-                >
-                  {t("Reset Dates")}
                 </button>
                 <button className="refresh-button" onClick={refreshData}>
                   {t("Refresh")}
