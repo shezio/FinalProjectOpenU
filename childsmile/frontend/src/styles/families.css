@@ -540,3 +540,7 @@ textarea.error {
 .create-task.init-family-data-button button:first-child:hover {
     background-color: #218838;
 }
+
+.families-row-added {
+  background-color: #e6ffe6 !important;
+}

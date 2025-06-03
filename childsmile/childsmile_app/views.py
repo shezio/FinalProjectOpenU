@@ -653,20 +653,6 @@ def create_tasks_for_technical_coordinators(initial_family_data, task_type_id):
     except Exception as e:
         print(f"DEBUG: An error occurred while creating tasks: {str(e)}")
 
-
-def delete_task_cache(assigned_to_id=None, is_admin=False):
-    """
-    Delete the cache for tasks.
-    If is_admin is True, it clears the cache for all tasks (admin cache).
-    If assigned_to_id is provided, it clears the cache for that specific user.
-    """
-    if is_admin:
-        cache.delete("all_tasks")  # Clear the admin cache
-    elif assigned_to_id:
-        user_cache_key = f"user_tasks_{assigned_to_id}"
-        cache.delete(user_cache_key)  # Clear the cache for the specific user
-
-
 def is_admin(user):
     """
     Check if the given user is an admin.
@@ -829,77 +815,69 @@ def get_user_tasks(request):
     user_is_admin = is_admin(user)
     print(f"DEBUG: Is user '{user.username}' an admin? {user_is_admin}")  # Debug log
 
-    # Use cache to avoid repeated queries
-    cache_key = f"user_tasks_{user_id}" if not user_is_admin else "all_tasks"
-    tasks_data = cache.get(cache_key)
+    # Always fetch tasks from DB, no cache
+    if user_is_admin:
+        print("DEBUG: Fetching all tasks for admin user.")  # Debug log
+        tasks = (
+            Tasks.objects.all()
+            .select_related("task_type", "assigned_to", "pending_tutor__id")
+            .order_by("-updated_at")
+        )
+    else:
+        print(
+            f"DEBUG: Fetching tasks assigned to user '{user.username}'."
+        )  # Debug log
+        tasks = (
+            Tasks.objects.filter(assigned_to_id=user_id)
+            .select_related("task_type", "assigned_to", "pending_tutor__id")
+            .order_by("-updated_at")
+        )
 
-    if not tasks_data:
-        # Fetch tasks efficiently
-        if user_is_admin:
-            print("DEBUG: Fetching all tasks for admin user.")  # Debug log
-            tasks = (
-                Tasks.objects.all()
-                .select_related("task_type", "assigned_to", "pending_tutor__id")
-                .order_by("-updated_at")
-            )
-        else:
-            print(
-                f"DEBUG: Fetching tasks assigned to user '{user.username}'."
-            )  # Debug log
-            tasks = (
-                Tasks.objects.filter(assigned_to_id=user_id)
-                .select_related("task_type", "assigned_to", "pending_tutor__id")
-                .order_by("-updated_at")
-            )
+    # Build tasks_data for the response
+    tasks_data = [
+        {
+            "id": task.task_id,
+            "description": task.description,
+            "due_date": task.due_date.strftime("%d/%m/%Y"),
+            "status": task.status,
+            "created": task.created_at.strftime("%d/%m/%Y"),
+            "updated": task.updated_at.strftime("%d/%m/%Y"),
+            "assignee": task.assigned_to.username,
+            "child": task.related_child_id,
+            "tutor": task.related_tutor_id,
+            "type": task.task_type_id,
+            "pending_tutor": (
+                {
+                    "id": task.pending_tutor.id_id,
+                    "first_name": task.pending_tutor.id.first_name,
+                    "surname": task.pending_tutor.id.surname,
+                }
+                if task.pending_tutor
+                else None
+            ),
+            "names": task.names,
+            "phones": task.phones,
+            "other_information": task.other_information,
+            "initial_family_data_id_fk": (
+                task.initial_family_data_id_fk.initial_family_data_id
+                if task.initial_family_data_id_fk
+                else None
+            ),
+        }
+        for task in tasks
+    ]
 
-        tasks_data = [
-            {
-                "id": task.task_id,
-                "description": task.description,
-                "due_date": task.due_date.strftime("%d/%m/%Y"),
-                "status": task.status,
-                "created": task.created_at.strftime("%d/%m/%Y"),
-                "updated": task.updated_at.strftime("%d/%m/%Y"),
-                "assignee": task.assigned_to.username,
-                "child": task.related_child_id,
-                "tutor": task.related_tutor_id,
-                "type": task.task_type_id,
-                "pending_tutor": (
-                    {
-                        "id": task.pending_tutor.id_id,
-                        "first_name": task.pending_tutor.id.first_name,
-                        "surname": task.pending_tutor.id.surname,
-                    }
-                    if task.pending_tutor
-                    else None
-                ),
-                "names": task.names,
-                "phones": task.phones,
-                "other_information": task.other_information,
-                "initial_family_data_id_fk": (
-                    task.initial_family_data_id_fk.initial_family_data_id
-                    if task.initial_family_data_id_fk
-                    else None
-                ),
-            }
-            for task in tasks
-        ]
-        cache.set(cache_key, tasks_data, timeout=300)  # Cache for 5 minutes
-
-    # Fetch all task types (no filtering)
-    task_types_data = cache.get("task_types_data")
-    if not task_types_data:
-        task_types = Task_Types.objects.all()
-        task_types_data = [
-            {
-                "id": t.id,
-                "name": t.task_type,
-                "resource": t.resource,
-                "action": t.action,
-            }
-            for t in task_types
-        ]
-        cache.set("task_types_data", task_types_data, timeout=300)
+    # Always fetch all task types, no cache
+    task_types = Task_Types.objects.all()
+    task_types_data = [
+        {
+            "id": t.id,
+            "name": t.task_type,
+            "resource": t.resource,
+            "action": t.action,
+        }
+        for t in task_types
+    ]
 
     return JsonResponse({"tasks": tasks_data, "task_types": task_types_data})
 
@@ -1023,7 +1001,6 @@ def create_task(request):
         user = Staff.objects.get(staff_id=user_id)
 
         # Invalidate the cache for tasks
-        delete_task_cache(task.assigned_to_id, is_admin=is_admin(user))
 
         return JsonResponse({"task_id": task.task_id}, status=201)
     except Task_Types.DoesNotExist:
@@ -1060,7 +1037,6 @@ def delete_task(request, task_id):
         user = Staff.objects.get(staff_id=user_id)
 
         # Invalidate the cache for tasks
-        delete_task_cache(assigned_to_id, is_admin=is_admin(user))
 
         return JsonResponse({"message": "Task deleted successfully."}, status=200)
     except Tasks.DoesNotExist:
@@ -1090,7 +1066,8 @@ def update_task_status(request, task_id):
 
     try:
         task = Tasks.objects.get(task_id=task_id)
-        new_status, task.status = request.data.get("status", task.status)
+        new_status = request.data.get("status", task.status)
+        task.status = new_status
         task.save()
 
         print(f"DEBUG: Task {task_id} status updated to {new_status}")  # Debug log
@@ -1103,7 +1080,6 @@ def update_task_status(request, task_id):
         user = Staff.objects.get(staff_id=user_id)
 
         # Invalidate the cache for tasks
-        delete_task_cache(task.assigned_to_id, is_admin=is_admin(user))
 
         return JsonResponse(
             {"message": "Task status updated successfully."}, status=200
@@ -1203,7 +1179,6 @@ def update_task(request, task_id):
         user = Staff.objects.get(staff_id=user_id)
 
         # Invalidate the cache for tasks
-        delete_task_cache(task.assigned_to_id, is_admin=is_admin(user))
 
         return JsonResponse({"message": "Task updated successfully."}, status=200)
     except Tasks.DoesNotExist:
@@ -4099,7 +4074,7 @@ def create_initial_family_data(request):
 
 @csrf_exempt
 @api_view(["PUT"])
-def update_initial_family_data(request, id):
+def update_initial_family_data(request, initial_family_data_id):
     """
     Update an existing initial family data record in the InitialFamilyData model.
     """
@@ -4117,7 +4092,7 @@ def update_initial_family_data(request, id):
         )
 
     try:
-        initial_family_data = InitialFamilyData.objects.get(id=id)
+        initial_family_data = InitialFamilyData.objects.get(initial_family_data_id=initial_family_data_id)
     except InitialFamilyData.DoesNotExist:
         return JsonResponse({"error": "Initial family data not found."}, status=404)
 
@@ -4154,12 +4129,59 @@ def update_initial_family_data(request, id):
         return JsonResponse({"error": str(e)}, status=500)
 
 
-"""create a new view for the InitialFamilyData model that will delete an existing row by id"""
+@csrf_exempt
+@api_view(["PUT"])
+def mark_initial_family_complete(request, initial_family_data_id):
+    """
+    Update an existing initial family data record in the InitialFamilyData model.
+    """
+    user_id = request.session.get("user_id")
+    if not user_id:
+        return JsonResponse(
+            {"detail": "Authentication credentials were not provided."}, status=403
+        )
 
+    # Check if the user has UPDATE permission on the "initial_family_data" resource
+    if not has_initial_family_data_permission(request, "update"):
+        return JsonResponse(
+            {"error": "You do not have permission to update initial family data."},
+            status=401,
+        )
+
+    try:
+        initial_family_data = InitialFamilyData.objects.get(initial_family_data_id=initial_family_data_id)
+    except InitialFamilyData.DoesNotExist:
+        return JsonResponse({"error": "Initial family data not found."}, status=404)
+
+    data = request.data
+
+    # Update the fields if they are provided in the request
+    initial_family_data.updated_at = make_aware(datetime.datetime.now())
+    initial_family_data.family_added = data.get(
+        "family_added", initial_family_data.family_added
+    )
+
+    # Save the updated record
+    try:
+        initial_family_data.save()
+
+        related_tasks = Tasks.objects.filter(initial_family_data_id_fk=initial_family_data_id)
+        if related_tasks.exists():
+            for task in related_tasks:
+                task.status = "הושלמה"
+                task.save()
+                print(f"DEBUG: Task {task.task_id} marked as completed.")
+
+        return JsonResponse(
+            {"message": "Initial family data successfully marked as complete"}, status=200
+        )
+    except Exception as e:
+        print(f"DEBUG: An error occurred while marking initial family data complete: {str(e)}")
+        return JsonResponse({"error": str(e)}, status=500)
 
 @csrf_exempt
 @api_view(["DELETE"])
-def delete_initial_family_data(request, id):
+def delete_initial_family_data(request, initial_family_data_id):
     """
     Delete an existing initial family data record in the InitialFamilyData model.
     """
@@ -4177,8 +4199,17 @@ def delete_initial_family_data(request, id):
         )
 
     try:
-        initial_family_data = InitialFamilyData.objects.get(id=id)
+        initial_family_data = InitialFamilyData.objects.get(initial_family_data_id=initial_family_data_id)
+
+        related_tasks = Tasks.objects.filter(initial_family_data_id_fk=initial_family_data_id)
+        if related_tasks.exists():
+            for task in related_tasks:
+                task.delete()
+                print(f"DEBUG: Task {task.task_id} deleted due to initial family data deletion.")
+        
+        # Delete the initial family data record
         initial_family_data.delete()
+
         return JsonResponse(
             {"message": "Initial family data deleted successfully"}, status=200
         )

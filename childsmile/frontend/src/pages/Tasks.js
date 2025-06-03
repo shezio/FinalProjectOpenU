@@ -12,6 +12,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import { showErrorToast, showWarningToast } from '../components/toastUtils';
 import { useTranslation } from 'react-i18next';
 import "../i18n";
+import { useLocation } from 'react-router-dom';
 
 const statusColumns = [
   { key: "לא הושלמה", label: "לא הושלמה" },
@@ -60,6 +61,7 @@ const Tasks = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const menuRef = useRef();
+  const location = useLocation();
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -191,6 +193,10 @@ const Tasks = () => {
   useEffect(() => {
     fetchData();
   }, []);
+
+  useEffect(() => {
+    fetchData(true); // force fetch every time the route changes
+  }, [location.pathname]);
 
   // Group tasks by status for Kanban columns
   const tasksByStatus = statusColumns.reduce((acc, col) => {

@@ -196,40 +196,34 @@ BE additions:
 
 UI:
 
-[] add a new button in the families page that will open the initial family data page and navigate to "/initial-family-data"
+[V] add a new button in the families page that will open the initial family data page and navigate to "/initial-family-data"
 
 
-[] create a new page under families called "InitialFamilyData" that will show all the data in the table using "api/get_initial_family_data/",
-[] in the new page show all the data in a table with the following columns:
-[] Initial Family ID, Name, Phone, Other information, created_at, updated_at, Family Added?, actions
-[] in the actions column add a button that will open a modal with a form to update the initial family data - update will use         "api/update_initial_family_data/<int:family_id>/",
-[] in the actions column add a button that will open a modal with a form to create a new initial family data - create will use "api/create_initial_family_data/"
-[] in the actions column add a button that will open a modal asking  - the scary modal we have in families - to delete the initial family data - delete will use "api/delete_initial_family_data/<int:family_id>/",
-[] in the actions column add a button to mark the family as added
+[V] create a new page under families called "InitialFamilyData" that will show all the data in the table using "api/get_initial_family_data/",
+[V] in the new page show all the data in a table with the following columns:
+[V] Initial Family ID, Name, Phone, Other information, created_at, updated_at, Family Added?, actions
+[V] in the actions column add a button that will open a modal with a form to update the initial family data - update will use         "api/update_initial_family_data/<int:family_id>/",
+[V] in the actions column add a button that will open a modal with a form to create a new initial family data - create will use "api/create_initial_family_data/"
+[V] in the actions column add a button that will open a modal asking  - the scary modal we have in families - to delete the initial family data - delete will use "api/delete_initial_family_data/<int:family_id>/",
+[V] in the actions column add a button to mark the family as added
  - if added
   - show it as done - set family_added = true
   - automatically set the status of the task to "הושלמה" - where initial_family_data_id_fk in Tasks = initial_family_data_id in InitialFamilyData
  - if deleted
   - then delete the task if its status was "הושלמה" by the initial_family_data_id_fk
 
-[] the table will be a data grid in a grid container under families-main-content
-[] above it there will be the filter-create-container with
+[V] the table will be a data grid in a grid container under families-main-content
+[V] above it there will be the filter-create-container with
     - button to create a new initial family data
     - button to refresh the data
     - date range filter buttons to filter the data by created_at
     - filter by family_added
-[] the data grid will have a search bar to search by names and phone
-[] the data grid will have pagination
-[] the date columns both will be sortable
-[] each tr will be pale green if the family_added is true otherwise white
+[V] the data grid will have a search bar to search by names and phone
+[V] the data grid will have pagination
+[V] the date columns both will be sortable
+[V] each tr will be pale green if the family_added is true otherwise white
 
-[] create modal design will be similar to the one in the feedback
-[] create modal will have a form with the following fields:
-    - names - with a placeholder "Enter names", and a validation that more than 10 characters has to be at least one comma
-    - phones - with a placeholder "Enter phones", and a validation that more than 10 characters has to be at least one comma
-    - other information - no validation
-[] update modal will be similar to the create modal but with the data filled in
-  - only on update we must also validate that the names and phones are not empty
+
 [] delete modal will ask if you are sure you want to delete this initial family data - like all the scary delete modals - we can use the delete family modal we already have - its convenient since all the CSS already exists
 [] mark as added modal will ask if you are sure you want to mark this initial family data as added? and state this will auto update the task status to "הושלמה" and delete the task if it was "הושלמה" - like all the scary delete modals - we can use the delete family modal we already have - its convenient since all the CSS already exists
 [] in the update modal - if you change the names or phones or other information - then it will update the task with the initial_family_data_id_fk

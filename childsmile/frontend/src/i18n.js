@@ -502,7 +502,7 @@ const resources = {
       "Child Name is required": "חובה למלא שם ילד",
       "Reset Dates": "אפס",
       "No initial family data to display": "אין נתוני משפחה ראשוניים להצגה",
-      "Are you sure you want to mark this initial family data as added?": "האם אתה בטוח שברצונך לסמן נתוני משפחה ראשוניים אלה כהוספו?",
+      "Are you sure you want to mark this initial family data as added?": "האם אתה בטוח שברצונך לסמן נתוני משפחה ראשוניים אלה כנוספו?",
       "Other information": "פרטים נוספים",
       "Created At": "נוצר בתאריך",
       "Updated At": "עודכן בתאריך",
@@ -519,8 +519,16 @@ const resources = {
       "Create": "צור",
       "Back to Families": "חזור למסך משפחות",
       "Mark as Added": "סמן כנוספה",
-
-
+      "Are you sure you want to delete this initial family data?":
+       "האם אתה בטוח שברצונך למחוק נתוני משפחה ראשוניים אלה?",
+      "Initial Family Data deleted successfully": "נתוני משפחה ראשוניים נמחקו בהצלחה",
+      "Deleting will remove all associated data and the tasks for tech coordinator will be deleted as well. This action cannot be undone.": 
+      "מחיקה תסיר את כל הנתונים הקשורים אליה, והמשימות לרכז טכני יימחקו גם הן. פעולה זו אינה ניתנת לביטול.",
+      "This will auto update the task status to \"הושלמה\" and delete the task if it was \"הושלמה\".": "הפעולה תעדכן אוטומטית את סטטוס המשימה ל\"הושלמה\" ותמחק את המשימה אם היא הייתה \"הושלמה\".",
+      "Initial Family ID": "#",
+      'Family marked as added!': 'המשפחה סומנה כנוספה!',
+      'Error marking as added': 'שגיאה בסימון כנוספה',
+      'Initial family data deleted!': 'נתוני משפחה ראשוניים נמחקו בהצלחה!',
     }
   }
 };

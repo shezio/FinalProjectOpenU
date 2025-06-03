@@ -37,7 +37,7 @@ const InitialFamilyData = () => {
   const [sortBy, setSortBy] = useState('created_at');
   const [sortOrder, setSortOrder] = useState('desc');
   const [page, setPage] = useState(1);
-  const [pageSize] = useState(4);
+  const [pageSize] = useState(3);
   const [totalCount, setTotalCount] = useState(0);
 
   // Modal states
@@ -55,17 +55,9 @@ const InitialFamilyData = () => {
   const fetchFamilies = async () => {
     setLoading(true);
     try {
-      const params = {
-        search,
-        family_added: filterAdded,
-        created_at_from: dateFrom,
-        created_at_to: dateTo,
-        sort_by: sortBy,
-        sort_order: sortOrder,
-      };
-      const response = await axios.get('/api/get_initial_family_data/', { params });
-      setFamilies(response.data.initial_family_data || []); // <-- fix here
-      setTotalCount(response.data.initial_family_data?.length || 0); // <-- and here
+      const response = await axios.get('/api/get_initial_family_data/');
+      setFamilies(response.data.initial_family_data || []);
+      setTotalCount(response.data.initial_family_data?.length || 0);
     } catch (error) {
       showErrorToast(t, 'Error fetching initial family data', error);
       setFamilies([]);
@@ -83,6 +75,74 @@ const InitialFamilyData = () => {
   useEffect(() => {
     setFilteredFamilies(families);
   }, [families]);
+
+  // Add this useEffect to sort whenever sortBy or sortOrder changes
+  useEffect(() => {
+    let sorted = [...families];
+    if (sortBy) {
+      sorted.sort((a, b) => {
+        let aValue = a[sortBy];
+        let bValue = b[sortBy];
+
+        // For dates, compare as dates
+        if (sortBy === 'created_at' || sortBy === 'updated_at') {
+          aValue = new Date(aValue);
+          bValue = new Date(bValue);
+        }
+
+        if (aValue < bValue) return sortOrder === 'asc' ? -1 : 1;
+        if (aValue > bValue) return sortOrder === 'asc' ? 1 : -1;
+        return 0;
+      });
+    }
+    setFilteredFamilies(sorted);
+    setPage(1); // Optionally reset to first page on sort
+  }, [families, sortBy, sortOrder]);
+
+  // Filter and search
+  useEffect(() => {
+    let filtered = [...families];
+
+    // Search by name or phone
+    if (search) {
+      const searchLower = search.toLowerCase();
+      filtered = filtered.filter(f =>
+        (f.names && f.names.toLowerCase().includes(searchLower)) ||
+        (f.phones && f.phones.toLowerCase().includes(searchLower))
+      );
+    }
+
+    // Filter by family_added
+    if (filterAdded !== '') {
+      filtered = filtered.filter(f => String(f.family_added) === filterAdded);
+    }
+
+    // Filter by date range
+    if (dateFrom) {
+      filtered = filtered.filter(f => new Date(f.created_at) >= new Date(dateFrom));
+    }
+    if (dateTo) {
+      filtered = filtered.filter(f => new Date(f.created_at) <= new Date(dateTo));
+    }
+
+    // Sort
+    if (sortBy) {
+      filtered.sort((a, b) => {
+        let aValue = a[sortBy];
+        let bValue = b[sortBy];
+        if (sortBy === 'created_at' || sortBy === 'updated_at') {
+          aValue = new Date(aValue);
+          bValue = new Date(bValue);
+        }
+        if (aValue < bValue) return sortOrder === 'asc' ? -1 : 1;
+        if (aValue > bValue) return sortOrder === 'asc' ? 1 : -1;
+        return 0;
+      });
+    }
+
+    setFilteredFamilies(filtered);
+    setPage(1);
+  }, [families, search, filterAdded, dateFrom, dateTo, sortBy, sortOrder]);
 
   // Pagination
   const paginatedFamilies = filteredFamilies.slice((page - 1) * pageSize, page * pageSize);
@@ -192,7 +252,7 @@ const InitialFamilyData = () => {
     setFormErrors(errors);
     if (Object.keys(errors).length > 0) return;
     try {
-      await axios.put(`/api/update_initial_family_data/${selectedFamily.initial_family_id}/`, formData);
+      await axios.put(`/api/update_initial_family_data/${selectedFamily.initial_family_data_id}/`, formData);
       toast.success(t('Initial family data updated!'));
       closeUpdateModal();
       fetchFamilies();
@@ -205,7 +265,7 @@ const InitialFamilyData = () => {
   // Delete
   const handleDelete = async () => {
     try {
-      await axios.delete(`/api/delete_initial_family_data/${selectedFamily.initial_family_id}/`);
+      await axios.delete(`/api/delete_initial_family_data/${selectedFamily.initial_family_data_id}/`);
       toast.success(t('Initial family data deleted!'));
       closeDeleteModal();
       fetchFamilies();
@@ -218,7 +278,7 @@ const InitialFamilyData = () => {
   // Mark as added
   const handleMarkAsAdded = async () => {
     try {
-      await axios.post(`/api/update_initial_family_data/${selectedFamily.initial_family_id}/`, { family_added: true });
+      await axios.put(`/api/mark_initial_family_complete/${selectedFamily.initial_family_data_id}/`, { family_added: true });
       toast.success(t('Family marked as added!'));
       closeMarkAddedModal();
       fetchFamilies();
@@ -275,124 +335,133 @@ const InitialFamilyData = () => {
           className="families-search-bar"
         />
       </div>
-      <div className="families-grid-container">
-        <div className="back-to-families">
-          <button
-            className="back-button"
-            onClick={() => navigate('/families')}
-          >
-            {t('Back to Families')}
-          </button>
-        </div>
-        <table className="families-data-grid">
-          <thead>
-            <tr>
-              <th>{t('Names')}</th>
-              <th>{t('Phones')}</th>
-              <th>{t('Other information')}</th>
-              <th onClick={() => handleSort('created_at')} style={{ cursor: 'pointer' }}>
-                {t('Created At')} {sortBy === 'created_at' ? (sortOrder === 'asc' ? '▲' : '▼') : ''}
-              </th>
-              <th onClick={() => handleSort('updated_at')} style={{ cursor: 'pointer' }}>
-                {t('Updated At')} {sortBy === 'updated_at' ? (sortOrder === 'asc' ? '▲' : '▼') : ''}
-              </th>
-              <th>{t('Family Added?')}</th>
-              <th>{t('Actions')}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {paginatedFamilies.length === 0 ? (
+      {loading ? (
+        <div className="loader">{t("Loading data...")}</div>
+      ) : (
+        <div className="families-grid-container">
+          <div className="back-to-families">
+            <button
+              className="back-button"
+              onClick={() => navigate('/families')}
+            >
+              {t('Back to Families')}
+            </button>
+          </div>
+          <table className="families-data-grid">
+            <thead>
               <tr>
-                <td colSpan={8} className="no-data">{t('No initial family data to display')}</td>
+                <th>{t('Initial Family ID')}</th>
+                <th>{t('Names')}</th>
+                <th>{t('Phones')}</th>
+                <th>{t('Other information')}</th>
+                <th onClick={() => handleSort('created_at')} style={{ cursor: 'pointer' }}>
+                  {t('Created At')} {sortBy === 'created_at' ? (sortOrder === 'asc' ? '▲' : '▼') : ''}
+                </th>
+                <th onClick={() => handleSort('updated_at')} style={{ cursor: 'pointer' }}>
+                  {t('Updated At')} {sortBy === 'updated_at' ? (sortOrder === 'asc' ? '▲' : '▼') : ''}
+                </th>
+                <th>{t('Family Added?')}</th>
+                <th>{t('Actions')}</th>
               </tr>
-            ) : (
-              paginatedFamilies.map((family) => (
-                <tr key={family.initial_family_id} className={getRowClass(family)}>
-                  <td>
-                    {family.names
-                      .split(',')
-                      .map((part, idx, arr) => (
-                        <React.Fragment key={idx}>
-                          {part.trim()}
-                          {idx < arr.length - 1 && <br />}
-                        </React.Fragment>
-                      ))}
-                  </td>
-                  <td>
-                    {family.phones
-                      .split(',')
-                      .map((part, idx, arr) => (
-                        <React.Fragment key={idx}>
-                          {part.trim()}
-                          {idx < arr.length - 1 && <br />}
-                        </React.Fragment>
-                      ))}
-                  </td>
-                  <td>
-                    {family.other_information
-                      ? family.other_information.split(',').map((part, idx, arr) => (
+            </thead>
+            <tbody>
+              {paginatedFamilies.length === 0 ? (
+                <tr>
+                  <td colSpan={8} className="no-data">{t('No initial family data to display')}</td>
+                </tr>
+              ) : (
+                paginatedFamilies.map((family) => (
+                  <tr key={family.initial_family_id} className={getRowClass(family)}>
+                    <td>{family.initial_family_data_id}</td>
+                    <td>
+                      {family.names
+                        .split(',')
+                        .map((part, idx, arr) => (
+                          <React.Fragment key={idx}>
+                            {part.trim()}
+                            {idx < arr.length - 1 && <br />}
+                          </React.Fragment>
+                        ))}
+                    </td>
+                    <td>
+                      {family.phones
+                        .split(',')
+                        .map((part, idx, arr) => (
+                          <React.Fragment key={idx}>
+                            {part.trim()}
+                            {idx < arr.length - 1 && <br />}
+                          </React.Fragment>
+                        ))}
+                    </td>
+                    <td>
+                      {family.other_information
+                        ? family.other_information.split(',').map((part, idx, arr) => (
                           <React.Fragment key={idx}>
                             {part.trim()}
                             {idx < arr.length - 1 && <br />}
                           </React.Fragment>
                         ))
-                      : ''}
-                  </td>
-                  <td>{formatDate(family.created_at)}</td>
-                  <td>{formatDate(family.updated_at)}</td>
-                  <td>
-                    {family.family_added ? (
-                      <span className="families-added-yes">{t('Yes')}</span>
-                    ) : (
-                      <span className="families-added-no">{t('No')}</span>
-                    )}
-                  </td>
-                  <td>
-                    <div className="family-actions">
-                      <button className="delete-button" onClick={() => openDeleteModal(family)}>
-                        {t('Delete')}
-                      </button>
-                      {!family.family_added && (
-                        <button className="mark-added-button" onClick={() => openMarkAddedModal(family)}>
+                        : ''}
+                    </td>
+                    <td>{formatDate(family.created_at)}</td>
+                    <td>{formatDate(family.updated_at)}</td>
+                    <td>
+                      {family.family_added ? (
+                        <span className="families-added-yes">{t('Yes')}</span>
+                      ) : (
+                        <span className="families-added-no">{t('No')}</span>
+                      )}
+                    </td>
+                    <td>
+                      <div className="family-actions">
+                        <button className="delete-button" onClick={() => openDeleteModal(family)}>
+                          {t('Delete')}
+                        </button>
+                        <button
+                          className="mark-added-button"
+                          onClick={() => openMarkAddedModal(family)}
+                          disabled={family.family_added}
+                          style={family.family_added ? { cursor: 'not-allowed' } : {}}
+                        >
                           {t('Mark as Added')}
                         </button>
-                      )}
-                    </div>
-                  </td>
-                </tr>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+          {/* Pagination Controls */}
+          <div className="pagination">
+            <button onClick={() => setPage(1)} disabled={page === 1} className="pagination-arrow">&laquo;</button>
+            <button onClick={() => setPage(page - 1)} disabled={page === 1} className="pagination-arrow">&lsaquo;</button>
+            {totalCount <= pageSize ? (
+              <button className="active">1</button>
+            ) : (
+              Array.from({ length: Math.ceil(totalCount / pageSize) }, (_, i) => (
+                <button
+                  key={i + 1}
+                  onClick={() => setPage(i + 1)}
+                  className={page === i + 1 ? 'active' : ''}
+                >
+                  {i + 1}
+                </button>
               ))
             )}
-          </tbody>
-        </table>
-        {/* Pagination Controls */}
-        <div className="pagination">
-          <button onClick={() => setPage(1)} disabled={page === 1} className="pagination-arrow">&laquo;</button>
-          <button onClick={() => setPage(page - 1)} disabled={page === 1} className="pagination-arrow">&lsaquo;</button>
-          {totalCount <= pageSize ? (
-            <button className="active">1</button>
-          ) : (
-            Array.from({ length: Math.ceil(totalCount / pageSize) }, (_, i) => (
-              <button
-                key={i + 1}
-                onClick={() => setPage(i + 1)}
-                className={page === i + 1 ? 'active' : ''}
-              >
-                {i + 1}
-              </button>
-            ))
-          )}
-          <button
-            onClick={() => setPage(page + 1)}
-            disabled={page === Math.ceil(totalCount / pageSize) || totalCount <= 1}
-            className="pagination-arrow"
-          >&rsaquo;</button>
-          <button
-            onClick={() => setPage(Math.ceil(totalCount / pageSize))}
-            disabled={page === Math.ceil(totalCount / pageSize) || totalCount <= 1}
-            className="pagination-arrow"
-          >&raquo;</button>
+            <button
+              onClick={() => setPage(page + 1)}
+              disabled={page === Math.ceil(totalCount / pageSize) || totalCount <= 1}
+              className="pagination-arrow"
+            >&rsaquo;</button>
+            <button
+              onClick={() => setPage(Math.ceil(totalCount / pageSize))}
+              disabled={page === Math.ceil(totalCount / pageSize) || totalCount <= 1}
+              className="pagination-arrow"
+            >&raquo;</button>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Create Modal */}
       {showCreateModal && (
@@ -497,7 +566,7 @@ const InitialFamilyData = () => {
         >
           <h2>{t('Are you sure you want to delete this initial family data?')}</h2>
           <p style={{ color: 'red', fontWeight: 'bold' }}>
-            {t('Deleting will remove all associated data. This action cannot be undone.')}
+            {t('Deleting will remove all associated data and the tasks for tech coordinator will be deleted as well. This action cannot be undone.')}
           </p>
           <div className="modal-actions">
             <button onClick={handleDelete} className="yes-button">
