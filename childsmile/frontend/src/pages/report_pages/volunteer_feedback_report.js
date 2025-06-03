@@ -110,6 +110,23 @@ const VolunteerFeedbackReport = () => {
     fetchData();
   }, []);
 
+  // Set the zoom level of the page based on screen width
+  useEffect(() => {
+    const setZoom = () => {
+      if (window.innerWidth <= 1800) {
+        document.body.style.zoom = "67%";
+      } else {
+        document.body.style.zoom = "75%";
+      }
+    };
+    setZoom();
+    window.addEventListener("resize", setZoom);
+    return () => {
+      document.body.style.zoom = "100%"; // Reset zoom on unmount
+      window.removeEventListener("resize", setZoom);
+    };
+  }, []);
+
   return (
     <div className="volunteer-feedback-report-main-content">
       <Sidebar />
@@ -159,17 +176,6 @@ const VolunteerFeedbackReport = () => {
                 />
                 <button className="filter-button" onClick={applyDateFilter}>
                   {t("Filter")}
-                </button>
-                <button
-                  className="reset-date-button"
-                  onClick={() => {
-                    setFromDate("");
-                    setToDate("");
-                    // Wait for state to update, then fetch all data
-                    setTimeout(() => fetchData(), 0);
-                  }}
-                >
-                  {t("Reset Dates")}
                 </button>
                 <button className="refresh-button" onClick={refreshData}>
                   {t("Refresh")}
@@ -241,26 +247,28 @@ const VolunteerFeedbackReport = () => {
                         <td>{feedback.child_name}</td>
                         <td>{feedback.event_date}</td>
                         <td>{feedback.feedback_filled_at}</td>
-                        <td>{feedback.description}</td>
+                        <td><div className="td-scrollable">{feedback.description}</div></td>
                         <td>{t(feedback.feedback_type)}</td>
                         <td>{feedback.exceptional_events}</td>
                         <td>{feedback.anything_else}</td>
                         <td>{feedback.comments}</td>
                         <td>
-                          {[
-                            feedback.names,
-                            feedback.phones,
-                            feedback.other_information
-                          ].filter(Boolean).length > 0
-                            ? (
-                              <>
-                                {feedback.names && <div>{t("Names")}: {feedback.names}</div>}
-                                {feedback.phones && <div>{t("Phones")}: {feedback.phones}</div>}
-                                {feedback.other_information && <div>{t("Other Information")}: {feedback.other_information}</div>}
-                              </>
-                            )
-                            : "---"
-                          }
+                          <div className="td-scrollable">
+                            {[
+                              feedback.names,
+                              feedback.phones,
+                              feedback.other_information
+                            ].filter(Boolean).length > 0
+                              ? (
+                                <>
+                                  {feedback.names && <div>{t("Names")}: {feedback.names}</div>}
+                                  {feedback.phones && <div>{t("Phones")}: {feedback.phones}</div>}
+                                  {feedback.other_information && <div>{t("Other Information")}: {feedback.other_information}</div>}
+                                </>
+                              )
+                              : "---"
+                            }
+                          </div>
                         </td>
                       </tr>
                     ))}

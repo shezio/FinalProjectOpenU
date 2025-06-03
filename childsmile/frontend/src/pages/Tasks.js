@@ -394,6 +394,11 @@ const Tasks = () => {
     }
   };
 
+  const isInterviewTask = (typeId) => {
+    const type = taskTypes.find(t => t.id === typeId);
+    return type && type.name === "ראיון מועמד לחונכות";
+  };
+
   // Set zoom level only for screens <= 1800px
   // useEffect(() => {
   //   const setZoom = () => {
@@ -540,9 +545,17 @@ const Tasks = () => {
                     <p>עודכנה ב: {selectedTask.updated}</p>
                     <p>סוג משימה: {getTaskTypeName(selectedTask.type)}</p>
                     <p>לביצוע על ידי: {selectedTask.assignee}</p>
-                    <p>חניך: {getChildFullName(selectedTask.child, childrenOptions)}</p>
-                    <p>חונך: {getTutorFullName(selectedTask.tutor, tutorsOptions)}</p>
-                    <p>מועמד לחונכות: {getPendingTutorFullName(selectedTask.pending_tutor, pendingTutorsOptions)}</p>
+                    {/* Show Child and Tutor only if NOT "ראיון מועמד לחונכות" */}
+                    {!isInterviewTask(selectedTask.type) && (
+                      <>
+                        <p>חניך: {getChildFullName(selectedTask.child, childrenOptions)}</p>
+                        <p>חונך: {getTutorFullName(selectedTask.tutor, tutorsOptions)}</p>
+                      </>
+                    )}
+                    {/* Show Pending Tutor only if IS "ראיון מועמד לחונכות" */}
+                    {isInterviewTask(selectedTask.type) && (
+                      <p>מועמד לחונכות: {getPendingTutorFullName(selectedTask.pending_tutor, pendingTutorsOptions)}</p>
+                    )}
                     {/* Show initial family data fields only for "הוספת משפחה" */}
                     {getTaskTypeName(selectedTask.type) === "הוספת משפחה" && (
                       <>
@@ -626,36 +639,44 @@ const Tasks = () => {
                   }}
                 />
                 {errors.assigned_to && <p className="error-text">{errors.assigned_to}</p>}
-                <label>{t('Child')}</label>
-                <Select
-                  id="child"
-                  options={childrenOptions}
-                  value={selectedChild}
-                  onChange={setSelectedChild}
-                  placeholder={t('Select Child')}
-                  isSearchable
-                  isClearable
-                />
-                <label>{t('Tutor')}</label>
-                <Select
-                  id="tutor"
-                  options={tutorsOptions}
-                  value={selectedTutor}
-                  onChange={setSelectedTutor}
-                  placeholder={t('Select Tutor')}
-                  isSearchable
-                  isClearable
-                />
-                <label>{t('Pending Tutor')}</label>
-                <Select
-                  id="pending_tutor"
-                  options={pendingTutorsOptions}
-                  value={selectedPendingTutor}
-                  onChange={setSelectedPendingTutor}
-                  placeholder={t('Select Pending Tutor')}
-                  isSearchable
-                  isClearable
-                />
+                {!isInterviewTask(selectedTaskType?.value) && (
+                  <>
+                    <label>{t('Child')}</label>
+                    <Select
+                      id="child"
+                      options={childrenOptions}
+                      value={selectedChild}
+                      onChange={setSelectedChild}
+                      placeholder={t('Select Child')}
+                      isSearchable
+                      isClearable
+                    />
+                    <label>{t('Tutor')}</label>
+                    <Select
+                      id="tutor"
+                      options={tutorsOptions}
+                      value={selectedTutor}
+                      onChange={setSelectedTutor}
+                      placeholder={t('Select Tutor')}
+                      isSearchable
+                      isClearable
+                    />
+                  </>
+                )}
+                {isInterviewTask(selectedTaskType?.value) && (
+                  <>
+                    <label>מועמד לחונכות</label>
+                    <Select
+                      id="pending_tutor"
+                      options={pendingTutorsOptions}
+                      value={selectedPendingTutor}
+                      onChange={setSelectedPendingTutor}
+                      placeholder={t('Select Pending Tutor')}
+                      isSearchable
+                      isClearable
+                    />
+                  </>
+                )}
                 <button onClick={handleUpdateTask}>{t('Update Task')}</button>
               </div>
             </div>
@@ -706,36 +727,44 @@ const Tasks = () => {
                   }}
                 />
                 {errors.assigned_to && <p className="error-text">{errors.assigned_to}</p>}
-                <label>ילד</label>
-                <Select
-                  id="child"
-                  options={childrenOptions}
-                  value={selectedChild}
-                  onChange={setSelectedChild}
-                  placeholder={t('Select Child')}
-                  isSearchable
-                  isClearable
-                />
-                <label>חונך</label>
-                <Select
-                  id="tutor"
-                  options={tutorsOptions}
-                  value={selectedTutor}
-                  onChange={setSelectedTutor}
-                  placeholder={t('Select Tutor')}
-                  isSearchable
-                  isClearable
-                />
-                <label>מועמד לחונכות</label>
-                <Select
-                  id="pending_tutor"
-                  options={pendingTutorsOptions}
-                  value={selectedPendingTutor}
-                  onChange={setSelectedPendingTutor}
-                  placeholder={t('Select Pending Tutor')}
-                  isSearchable
-                  isClearable
-                />
+                {!isInterviewTask(selectedTaskType?.value) && (
+                  <>
+                    <label>ילד</label>
+                    <Select
+                      id="child"
+                      options={childrenOptions}
+                      value={selectedChild}
+                      onChange={setSelectedChild}
+                      placeholder={t('Select Child')}
+                      isSearchable
+                      isClearable
+                    />
+                    <label>חונך</label>
+                    <Select
+                      id="tutor"
+                      options={tutorsOptions}
+                      value={selectedTutor}
+                      onChange={setSelectedTutor}
+                      placeholder={t('Select Tutor')}
+                      isSearchable
+                      isClearable
+                    />
+                  </>
+                )}
+                {isInterviewTask(selectedTaskType?.value) && (
+                  <>
+                    <label>מועמד לחונכות</label>
+                    <Select
+                      id="pending_tutor"
+                      options={pendingTutorsOptions}
+                      value={selectedPendingTutor}
+                      onChange={setSelectedPendingTutor}
+                      placeholder={t('Select Pending Tutor')}
+                      isSearchable
+                      isClearable
+                    />
+                  </>
+                )}
                 <button onClick={handleSubmitTask}>צור</button>
               </div>
             </div>

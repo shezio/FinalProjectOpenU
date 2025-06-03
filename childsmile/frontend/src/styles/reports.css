@@ -126,7 +126,6 @@
     margin-top: 100px;
     /* Add some spacing below the fixed header */
     width: 90%;
-    padding-right: 250px;
 }
 
 .reports-page {
@@ -313,7 +312,7 @@
     /* Adjust width to leave space for the sidebar */
     margin-left: 900px;
     /* Remove unnecessary left margin */
-    height: calc(100vh - 400px);
+    height: calc(100vh - 4000px);
     top: 50px;
     /* Adjust height based on available space */
     padding: 20px;
@@ -327,9 +326,10 @@
 /* Styles for medium screens (e.g., laptops) */
 @media (max-width: 2400px) {
     .page-content .grid-container {
-        width: calc(100% - 10px);
+        width: calc(100% - 50px);
+        height: calc(100% - 3000px);
         /* Reduce width for smaller screens */
-        margin-left: 200px;
+        margin-right: 300px;
         /* Adjust margin for smaller screens */
         /* max zoom out should be 0.8 */
         transform: scale(0.95);
@@ -345,9 +345,15 @@
 
 @media (max-width: 1800px) {
     .page-content .grid-container {
-        width: calc(100% - 10px);
-        height: calc(100% - 200px);
+        width: 2000px;
+        height: 800px;
+        margin-right: 100px;
+        margin-left: 10px;
+
         /* Add some spacing below the fixed header */
+    }
+    .volunteer-feedback-report-main-content .page-content {
+        margin-right: 200px;
     }
 }
 
@@ -551,19 +557,21 @@
 }
 
 .reset-date-button {
-  background-color: #6c757d;
-  color: white;
-  padding: 10px 20px;
-  font-size: 24px;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  margin-left: 10px;
-  transition: background-color 0.3s ease;
+    background-color: #6c757d;
+    color: white;
+    padding: 10px 20px;
+    font-size: 24px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-left: 10px;
+    transition: background-color 0.3s ease;
 }
+
 .reset-date-button:hover {
-  background-color: #495057;
+    background-color: #495057;
 }
+
 /* Style for the refresh button */
 .refresh-button {
     background-color: #28a745;
@@ -901,7 +909,13 @@
         /* Align to the right */
         margin-top: 10px;
         /* Add some spacing above */
-        margin-right: 180px;
+        /* Slightly move it to the left from the edge */
+    }
+
+    .tutor-feedback-report-main-content .back-to-reports,
+    .volunteer-feedback-report-main-content .back-to-reports {
+        /* Add some spacing above */
+        margin-right: 200px !important;
         /* Slightly move it to the left from the edge */
     }
 }
@@ -983,4 +997,30 @@
         width: 1000px !important;
         height: 1000px !important;
     }
+}
+
+.td-scrollable {
+    height: 4.8em;
+    /* About 4 lines, adjust as needed */
+    overflow-y: auto;
+    word-break: break-word;
+    white-space: pre-line;
+    line-height: 1.2em;
+    padding-right: 4px;
+}
+
+.td-x-scrollable {
+    max-width: 250px;
+    /* Adjust as needed */
+    min-height: 2.4em;
+    /* About 2 lines, adjust as needed */
+    height: 4.4em;
+    /* Fix the height so the scrollbar is always at the bottom */
+    overflow-x: auto;
+    overflow-y: hidden;
+    white-space: nowrap;
+    word-break: break-all;
+    display: flex;
+    align-items: flex-start;
+    /* Align content to the bottom */
 }
