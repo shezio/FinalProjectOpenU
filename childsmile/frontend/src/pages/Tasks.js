@@ -297,6 +297,7 @@ const Tasks = () => {
       );
       try {
         await axios.put(`/api/tasks/update-status/${taskId}/`, { status: destination.droppableId });
+        toast.success(t('Task updated successfully')); // <-- Add this line
         await fetchData(true);
       } catch (error) {
         showErrorToast(t, 'Error updating task status', error);
@@ -409,15 +410,16 @@ const Tasks = () => {
     setSelectedTutor(tutorsOptions.find((tutor) => tutor.value === task.tutor) || null);
 
     // Find in pending tutors
-    let pendingTutorOption = pendingTutorsOptions.find(opt => opt.value === task.pending_tutor);
-    // If not found, find in general volunteers
-    if (!pendingTutorOption) {
-      pendingTutorOption = (generalVolunteersNotPending || []).map(vol => ({
-        value: vol.id,
-        label: `${vol.first_name} ${vol.last_name} - ${t('General Volunteer')}`,
-        isGeneralVolunteer: true,
-        email: vol.email,
-      })).find(opt => opt.value === task.pending_tutor);
+    const pendingTutorId = typeof task.pending_tutor === 'object' ? task.pending_tutor.id : task.pending_tutor;
+    let pendingTutorOption = pendingTutorsOptions.find(opt => Number(opt.value) === Number(pendingTutorId));
+    if (!pendingTutorOption && pendingTutorId) {
+      // Fallback: create a minimal option so the Select can display it
+      pendingTutorOption = {
+        value: pendingTutorId,
+        label: typeof task.pending_tutor === 'object'
+          ? `${task.pending_tutor.first_name} ${task.pending_tutor.surname || task.pending_tutor.last_name || ''}`
+          : `ID ${pendingTutorId}`,
+      };
     }
     setSelectedPendingTutor(pendingTutorOption || null);
     setDueDate('');
@@ -631,29 +633,6 @@ const Tasks = () => {
               )}
             </div>
           </div>
-          {isStatusModalOpen && (
-            <div className="modal show" id="status-update-modal">
-              <div className="modal-content">
-                <span className="close" onClick={() => setIsStatusModalOpen(false)}>&times;</span>
-                <h2>{t('Update Task Status')}</h2>
-                <p>{t('Select a new status for the task')}:</p>
-                <div className="status-dropdown">
-                  <select
-                    value={selectedStatus}
-                    onChange={(e) => setSelectedStatus(e.target.value)}
-                  >
-                    <option value="" disabled>
-                      {t('Select a status')}
-                    </option>
-                    <option value="לא הושלמה">{t('לא הושלמה')}</option>
-                    <option value="בביצוע">{t('בביצוע')}</option>
-                    <option value="הושלמה">{t('הושלמה')}</option>
-                  </select>
-                </div>
-                <button onClick={handleConfirmStatusUpdate}>{t('בצע עדכון')}</button>
-              </div>
-            </div>
-          )}
           {isEditModalOpen && (
             <div className={`modal show`} id="edit-task-modal">
               <div className="modal-content">
@@ -742,6 +721,7 @@ const Tasks = () => {
                       placeholder={t('Select Pending Tutor')}
                       isSearchable
                       isClearable
+                      isDisabled={selectedTask.status === 'הושלמה' || selectedTask.status === 'בביצוע'}
                       styles={{
                         control: (base) => ({
                           ...base,

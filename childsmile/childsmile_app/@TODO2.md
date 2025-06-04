@@ -617,13 +617,13 @@ Use the id_id from the pending tutor.
 Use the staff_id from the staff table (matched by email).
 Set tutorship_status to "אין_חניך".
 Set tutor_email from the signedup table.
-Only then, delete the pending tutor row.
 --------------------------------------------------------------
+
+@TODO
 On delete task:
 
-If the task type is "ראיון מועמד לחונכות":
-Remove the pending tutor row.
-Set the staff's roles to "General Volunteer" (if not already present).
+If the task type is "ראיון מועמד לחונכות" - remove the pending tutor row.
+----------------------------------------------------------------
 Tutorships
 On update tutorship:
 
@@ -645,6 +645,8 @@ If the child's current_medical_state is updated, update the tutor's tutee_wellne
 In short:
 You are syncing roles and statuses between tasks, pending tutors, tutors, staff, and children, especially around the "ראיון מועמד לחונכות" process and tutorship lifecycle.
 You also propagate family changes to related tutor fields.
+----------------------------------------------
+Add modal to show all info of a tutor or general volunteer in the system managing page
 
 
 בוודאי! הנה תרגום לעברית של סיכום הלוגיקה העסקית והמשימות:

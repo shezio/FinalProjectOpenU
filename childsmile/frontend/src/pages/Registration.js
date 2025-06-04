@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState , useEffect} from "react";
 import { useTranslation } from "react-i18next";
 import "../styles/registration.css"; // Add styles for the registration page
 import axios from "../axiosConfig";
@@ -109,13 +109,13 @@ const Registration = () => {
       axios
         .post("/api/create_volunteer_or_tutor/", formData)
         .then((response) => {
-            const username = response.data.username; // Extract the username from the response
-            toast.success(
+          const username = response.data.username; // Extract the username from the response
+          toast.success(
             t(
               "Welcome to Child Smile! Please log in with your credentials: Username: {{username}}, Password: 1234"
             ).replace("{{username}}", username),
             { autoClose: 5000 }
-            );
+          );
 
           // Delay navigation to allow the toaster to display
           // Refresh the browser and navigate
@@ -129,6 +129,14 @@ const Registration = () => {
         });
     }
   };
+
+
+  useEffect(() => {
+    document.body.style.zoom = "115%";
+    return () => {
+      document.body.style.zoom = "";
+    };
+  }, []);
 
   return (
     <div className="registration-container">

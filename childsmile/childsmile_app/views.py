@@ -116,6 +116,43 @@ def get_or_update_city_location(city, retries=3, delay=2):
     return {"latitude": None, "longitude": None}
 
 
+def promote_pending_tutor_to_tutor(task):
+    # 1. Get the Pending_Tutor instance (FK on task)
+    pending_tutor = task.pending_tutor
+    if not pending_tutor:
+        return False, "Pending tutor not found"
+
+    # 2. Get the related SignedUp instance (FK on Pending_Tutor)
+    signedup = pending_tutor.id  # This is the SignedUp instance
+    if not signedup:
+        return False, "SignedUp row not found for pending tutor"
+
+    # 3. Get the Staff instance by email (from SignedUp)
+    staff = Staff.objects.filter(email=signedup.email).first()
+    if not staff:
+        return False, "Staff not found for pending tutor email"
+
+    # 4. Remove "General Volunteer" role if present
+    general_vol_role = Role.objects.filter(role_name="General Volunteer").first()
+    if general_vol_role and general_vol_role in staff.roles.all():
+        staff.roles.remove(general_vol_role)
+
+    # 5. Add "Tutor" role if not present
+    tutor_role = Role.objects.filter(role_name="Tutor").first()
+    if tutor_role and tutor_role not in staff.roles.all():
+        staff.roles.add(tutor_role)
+
+    # 6. Insert new row in Tutors table (if not already exists)
+    if not Tutors.objects.filter(id_id=signedup.id).exists():
+        Tutors.objects.create(
+            id_id=signedup.id,
+            staff=staff,
+            tutorship_status="אין_חניך",
+            tutor_email=signedup.email
+        )
+
+    return True, "Promoted successfully"
+
 def check_matches_permissions(request, required_permissions):
     """
     Check if the user has the required permissions for possible matches.
@@ -1098,10 +1135,17 @@ def update_task_status(request, task_id):
         if new_status == "בביצוע" and task.initial_family_data_id_fk:
             # Delete all other tasks with the same initial_family_data_id_fk
             delete_other_tasks_with_initial_family_data_async(task)
-        # Check if the logged-in user is an admin
-        user = Staff.objects.get(staff_id=user_id)
-
-        # Invalidate the cache for tasks
+        elif new_status == "הושלמה":
+            # task_type is a FK to Task_Types, so you can access task.task_type.task_type
+            print(f"DEBUG: task_type = {task.task_type.task_type}")
+            if task.task_type.task_type == "ראיון מועמד לחונכות":
+                # pending_tutor is a FK to Pending_Tutor
+                if task.pending_tutor:
+                    print(f"DEBUG: pending_tutor_id = {task.pending_tutor.pending_tutor_id}")
+                    ok, msg = promote_pending_tutor_to_tutor(task)
+                    print(f"DEBUG: Promotion called, result: {ok}, {msg}")
+                    if not ok:
+                        return JsonResponse({"Error promoting pending tutor": msg}, status=400)
 
         return JsonResponse(
             {"message": "Task status updated successfully."}, status=200
@@ -1154,7 +1198,9 @@ def update_task(request, task_id):
         # Update task fields
         task.description = request.data.get("description", task.description)
         task.due_date = request.data.get("due_date", task.due_date)
-        task.status = request.data.get("status", task.status)
+        new_status = request.data.get("status", task.status)
+        if new_status:
+            task.status = new_status
         task.updated_at = datetime.datetime.now()
 
         # Handle assigned_to (convert staff_id directly)
@@ -1197,10 +1243,14 @@ def update_task(request, task_id):
         # Save the updated task
         task.save()
 
-        # Check if the logged-in user is an admin
-        user = Staff.objects.get(staff_id=user_id)
-
-        # Invalidate the cache for tasks
+        if new_status == "הושלמה":
+            task_type = getattr(task, "task_type", None)
+            if task_type and getattr(task_type, "name", "") == "ראיון מועמד לחונכות":
+                pending_tutor_id = getattr(task, "pending_tutor_id", None)
+                if pending_tutor_id:
+                    ok, msg = promote_pending_tutor_to_tutor(task)
+                    if not ok:
+                        return JsonResponse({"Error promoting pending tutor": msg}, status=400)
 
         return JsonResponse({"message": "Task updated successfully."}, status=200)
     except Tasks.DoesNotExist:
