@@ -2,4 +2,4 @@
 .\childsmile\myenv\Scripts\activate ;  python .\childsmile\manage.py runserver
 
 -- quickly start FE
-cd .\childsmile\frontend\ ; npm start
+cd .\childsmile\frontend\ ; npm start 
