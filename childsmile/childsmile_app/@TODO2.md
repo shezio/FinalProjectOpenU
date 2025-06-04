@@ -592,3 +592,117 @@ def update_family(request, child_id):
 
   update to marital_status of the child - update the relationship_status of the tutor to the marital_status of the child
     update to current_medical_state of the child - update the tutee_wellness to the current_medical_state of the child
+
+
+
+
+
+YAANI:
+
+summary of your tasks and business logic notes:
+
+Task/Role Management for "ראיון מועמד לחונכות" (Interview Candidate for Tutorship)
+On create task:
+
+If the task type is "ראיון מועמד לחונכות" and there is no line in the pending tutors table for the assigned user, create a new pending tutor entry for that user.
+
+--------------------------------------------------------------
+On update task:
+
+If the task type is "ראיון מועמד לחונכות" and the status changes to "הושלמה":
+Remove the "General Volunteer" role from the staff (if present).
+Add the "Tutor" role to the staff.
+Insert a new row in the tutors table:
+Use the id_id from the pending tutor.
+Use the staff_id from the staff table (matched by email).
+Set tutorship_status to "אין_חניך".
+Set tutor_email from the signedup table.
+Only then, delete the pending tutor row.
+--------------------------------------------------------------
+On delete task:
+
+If the task type is "ראיון מועמד לחונכות":
+Remove the pending tutor row.
+Set the staff's roles to "General Volunteer" (if not already present).
+Tutorships
+On update tutorship:
+
+When a tutorship is updated:
+Set the tutor's tutorship_status to "יש_חניך".
+Set the tutor's relationship_status to the child's marital_status.
+Set the tutor's tutee_wellness to the child's current_medical_state.
+Set the child's tutoring_status to "יש_חונך".
+On delete tutorship:
+
+When a tutorship is deleted:
+Set the tutor's tutorship_status to "אין_חניך".
+Set the tutor's relationship_status and tutee_wellness to null.
+Set the child's tutoring_status to "למצוא_חונך_בעדיפות_גבוה".
+Family Updates
+On update family:
+If the child's marital_status is updated, update the tutor's relationship_status to match.
+If the child's current_medical_state is updated, update the tutor's tutee_wellness to match.
+In short:
+You are syncing roles and statuses between tasks, pending tutors, tutors, staff, and children, especially around the "ראיון מועמד לחונכות" process and tutorship lifecycle.
+You also propagate family changes to related tutor fields.
+
+
+בוודאי! הנה תרגום לעברית של סיכום הלוגיקה העסקית והמשימות:
+
+---
+
+### ניהול משימות ותפקידים עבור "ראיון מועמד לחונכות"
+
+#### בעת יצירת משימה:
+- אם סוג המשימה הוא **"ראיון מועמד לחונכות"** ואין שורה בטבלת **מועמדים לחונכות ממתינים** עבור המשתמש שהוקצה למשימה – יש ליצור שורה חדשה בטבלה זו עבור המשתמש.
+
+#### בעת עדכון משימה:
+- אם סוג המשימה הוא **"ראיון מועמד לחונכות"** והסטטוס משתנה ל-**"הושלמה"**:
+  - הסר את תפקיד **"מתנדב כללי"** מהצוות (אם קיים).
+  - הוסף את תפקיד **"חונך"** לצוות.
+  - הוסף שורה חדשה בטבלת **חונכים**:
+    - השתמש ב-`id_id` מהטבלה של מועמדים ממתינים.
+    - השתמש ב-`staff_id` מהטבלת צוות (בהתאם לדוא"ל).
+    - הגדר `tutorship_status` כ-**"אין_חניך"**.
+    - הגדר `tutor_email` לפי טבלת הנרשמים.
+  - רק לאחר מכן, מחק את השורה מטבלת המועמדים הממתינים.
+
+#### בעת מחיקת משימה:
+- אם סוג המשימה הוא **"ראיון מועמד לחונכות"**:
+  - מחק את השורה מטבלת המועמדים הממתינים.
+  - הגדר את תפקידי הצוות כ-**"מתנדב כללי"** (אם לא קיים כבר).
+
+---
+
+### חונכויות
+
+#### בעת עדכון חונכות:
+- כאשר חונכות מתעדכנת:
+  - הגדר את `tutorship_status` של החונך כ-**"יש_חניך"**.
+  - עדכן את `relationship_status` של החונך לפי `marital_status` של הילד.
+  - עדכן את `tutee_wellness` של החונך לפי `current_medical_state` של הילד.
+  - עדכן את `tutoring_status` של הילד ל-**"יש_חונך"**.
+
+#### בעת מחיקת חונכות:
+- כאשר חונכות נמחקת:
+  - הגדר את `tutorship_status` של החונך כ-**"אין_חניך"**.
+  - אפס את `relationship_status` ו-`tutee_wellness` של החונך.
+  - הגדר את `tutoring_status` של הילד ל-**"למצוא_חונך_בעדיפות_גבוה"**.
+
+---
+
+### עדכוני משפחה
+
+#### בעת עדכון משפחה:
+- אם `marital_status` של הילד מתעדכן – עדכן את `relationship_status` של החונך בהתאם.
+- אם `current_medical_state` של הילד מתעדכן – עדכן את `tutee_wellness` של החונך בהתאם.
+
+---
+
+### סיכום קצר:
+הלוגיקה מסנכרנת תפקידים וסטטוסים בין משימות, מועמדים ממתינים, חונכים, צוות וילדים – בעיקר סביב תהליך **"ראיון מועמד לחונכות"** ומחזור החיים של חונכות.  
+בנוסף, שינויים בפרטי המשפחה מתעדכנים גם בשדות הרלוונטיים של החונך.
+
+---
+
+רוצה שאכין לך מזה תרשים זרימה או קובץ מסודר?

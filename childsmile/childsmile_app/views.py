@@ -486,11 +486,12 @@ def create_task_internal(task_data):
         task_type = Task_Types.objects.get(id=task_data["type"])
         print(f"DEBUG: Task type fetched: {task_type.task_type}")
 
-
         initial_family_data_id = task_data.get("initial_family_data_id_fk")
         initial_family_data = None
         if initial_family_data_id:
-            initial_family_data = InitialFamilyData.objects.get(pk=initial_family_data_id)
+            initial_family_data = InitialFamilyData.objects.get(
+                pk=initial_family_data_id
+            )
 
         task = Tasks.objects.create(
             description=task_type.task_type,  # Use the task type name as the description
@@ -652,6 +653,7 @@ def create_tasks_for_technical_coordinators(initial_family_data, task_type_id):
                 print(f"DEBUG: Error creating task: {str(e)}")
     except Exception as e:
         print(f"DEBUG: An error occurred while creating tasks: {str(e)}")
+
 
 def is_admin(user):
     """
@@ -824,9 +826,7 @@ def get_user_tasks(request):
             .order_by("-updated_at")
         )
     else:
-        print(
-            f"DEBUG: Fetching tasks assigned to user '{user.username}'."
-        )  # Debug log
+        print(f"DEBUG: Fetching tasks assigned to user '{user.username}'.")  # Debug log
         tasks = (
             Tasks.objects.filter(assigned_to_id=user_id)
             .select_related("task_type", "assigned_to", "pending_tutor__id")
@@ -993,6 +993,28 @@ def create_task(request):
                     },
                     status=400,
                 )
+                # --- NEW LOGIC: Add Pending_Tutor if needed ---
+        try:
+            task_type_obj = Task_Types.objects.get(id=task_data["type"])
+            if task_type_obj.task_type == "ראיון מועמד לחונכות":
+                pending_tutor_id = task_data.get("pending_tutor")
+                if pending_tutor_id:
+                    # If not already in Pending_Tutor, create it
+                    if not Pending_Tutor.objects.filter(
+                        id_id=pending_tutor_id
+                    ).exists():
+                        new_pending = Pending_Tutor.objects.create(
+                            id_id=pending_tutor_id, pending_status="ממתין"
+                        )
+                    print(f"DEBUG: Created new Pending_Tutor with ID {pending_tutor_id}")
+                    # Update task_data to use the PK, not the volunteer ID
+                    task_data["pending_tutor"] = new_pending.pending_tutor_id
+                else:
+                    # If already exists, get the PK
+                    existing = Pending_Tutor.objects.get(id_id=pending_tutor_id)
+                    task_data["pending_tutor"] = existing.pending_tutor_id
+        except Exception as e:
+            print(f"DEBUG: Error in Pending_Tutor creation logic: {str(e)}")
 
         print(f"DEBUG: Task data being sent to create_task_internal: {task_data}")
         task = create_task_internal(task_data)
@@ -3350,9 +3372,7 @@ def create_tutor_feedback(request):
                 create_tasks_for_technical_coordinators_async(
                     initial_family_data, task_type.id
                 )
-                print(
-                    "DEBUG: Tasks for Technical Coordinators created successfully."
-                )
+                print("DEBUG: Tasks for Technical Coordinators created successfully.")
             except Exception as e:
                 error = str(e)
                 error_type = "task_creation_error"
@@ -3381,7 +3401,7 @@ def create_tutor_feedback(request):
         )
     except Exception as e:
         print(f"DEBUG: An error occurred while creating tutor feedback: {str(e)}")
-        return JsonResponse({"error": error_type + ': ' + str(e)}, status=500)
+        return JsonResponse({"error": error_type + ": " + str(e)}, status=500)
 
 
 @csrf_exempt
@@ -3429,7 +3449,7 @@ def update_tutor_feedback(request, feedback_id):
                 },
                 status=400,
             )
-        
+
         # Update the existing tutor feedback record in the database
         feedback = Feedback.objects.filter(feedback_id=feedback_id).first()
         if not feedback:
@@ -3456,7 +3476,9 @@ def update_tutor_feedback(request, feedback_id):
             feedback.staff_id = staff_filling_id
             feedback.description = data.get("description")
             feedback.exceptional_events = (
-                data.get("exceptional_events") if data.get("exceptional_events") else None
+                data.get("exceptional_events")
+                if data.get("exceptional_events")
+                else None
             )
             feedback.anything_else = (
                 data.get("anything_else") if data.get("anything_else") else None
@@ -3485,7 +3507,9 @@ def update_tutor_feedback(request, feedback_id):
 
         if not error:
             try:
-                tutor_feedback = Tutor_Feedback.objects.filter(feedback=feedback).first()
+                tutor_feedback = Tutor_Feedback.objects.filter(
+                    feedback=feedback
+                ).first()
                 if not tutor_feedback:
                     return JsonResponse(
                         {"error": "Tutor feedback not found."},
@@ -3502,7 +3526,7 @@ def update_tutor_feedback(request, feedback_id):
                 tutor_feedback.is_it_your_tutee = data.get("is_it_your_tutee")
                 tutor_feedback.is_first_visit = data.get("is_first_visit")
                 tutor_feedback.save()
-                
+
                 print(
                     f"DEBUG: Tutor feedback updated successfully with ID {feedback.feedback_id}"
                 )
@@ -3512,7 +3536,6 @@ def update_tutor_feedback(request, feedback_id):
                 print(
                     f"DEBUG: An error occurred while updating tutor feedback: {error}"
                 )
-        
 
         return JsonResponse(
             {
@@ -3690,7 +3713,7 @@ def create_volunteer_feedback(request):
                         if data.get("child_name")
                         else "ביקור בבית חולים " + feedback.hospital_name
                     ),
-                )        
+                )
                 print(
                     f"DEBUG: Volunteer feedback created successfully with ID {feedback.feedback_id}"
                 )
@@ -3698,7 +3721,6 @@ def create_volunteer_feedback(request):
                 error = str(e)
                 error_type = "volunteer_feedback_creation_error"
                 print(f"DEBUG: Error creating volunteer feedback: {error}")
-
 
         if not error:
             try:
@@ -3731,9 +3753,7 @@ def create_volunteer_feedback(request):
                 create_tasks_for_technical_coordinators_async(
                     initial_family_data, task_type.id
                 )
-                print(
-                    "DEBUG: Tasks for Technical Coordinators created successfully."
-                )
+                print("DEBUG: Tasks for Technical Coordinators created successfully.")
             except Exception as e:
                 error = str(e)
                 error_type = "task_creation_error"
@@ -3760,7 +3780,7 @@ def create_volunteer_feedback(request):
         )
     except Exception as e:
         print(f"DEBUG: An error occurred while creating volunteer feedback: {str(e)}")
-        return JsonResponse({"error": error_type + ': ' + str(e)}, status=500)
+        return JsonResponse({"error": error_type + ": " + str(e)}, status=500)
 
 
 @csrf_exempt
@@ -3838,7 +3858,9 @@ def update_volunteer_feedback(request, feedback_id):
             feedback.staff_id = staff_filling_id
             feedback.description = data.get("description")
             feedback.exceptional_events = (
-                data.get("exceptional_events") if data.get("exceptional_events") else None
+                data.get("exceptional_events")
+                if data.get("exceptional_events")
+                else None
             )
             feedback.anything_else = (
                 data.get("anything_else") if data.get("anything_else") else None
@@ -3889,7 +3911,6 @@ def update_volunteer_feedback(request, feedback_id):
                 error = str(e)
                 error_type = "volunteer_feedback_update_error"
                 print(f"DEBUG: Error updating volunteer feedback: {error}")
-
 
         return JsonResponse(
             {
@@ -4092,7 +4113,9 @@ def update_initial_family_data(request, initial_family_data_id):
         )
 
     try:
-        initial_family_data = InitialFamilyData.objects.get(initial_family_data_id=initial_family_data_id)
+        initial_family_data = InitialFamilyData.objects.get(
+            initial_family_data_id=initial_family_data_id
+        )
     except InitialFamilyData.DoesNotExist:
         return JsonResponse({"error": "Initial family data not found."}, status=404)
 
@@ -4147,7 +4170,9 @@ def mark_initial_family_complete(request, initial_family_data_id):
     allowed_roles = {"System Administrator", "Technical Coordinator"}
     if not user_roles.intersection(allowed_roles):
         return JsonResponse(
-            {"error": "You do not have permission to mark initial family data as complete."},
+            {
+                "error": "You do not have permission to mark initial family data as complete."
+            },
             status=401,
         )
 
@@ -4159,7 +4184,9 @@ def mark_initial_family_complete(request, initial_family_data_id):
         )
 
     try:
-        initial_family_data = InitialFamilyData.objects.get(initial_family_data_id=initial_family_data_id)
+        initial_family_data = InitialFamilyData.objects.get(
+            initial_family_data_id=initial_family_data_id
+        )
     except InitialFamilyData.DoesNotExist:
         return JsonResponse({"error": "Initial family data not found."}, status=404)
 
@@ -4175,7 +4202,9 @@ def mark_initial_family_complete(request, initial_family_data_id):
     try:
         initial_family_data.save()
 
-        related_tasks = Tasks.objects.filter(initial_family_data_id_fk=initial_family_data_id)
+        related_tasks = Tasks.objects.filter(
+            initial_family_data_id_fk=initial_family_data_id
+        )
         if related_tasks.exists():
             for task in related_tasks:
                 task.status = "הושלמה"
@@ -4183,11 +4212,15 @@ def mark_initial_family_complete(request, initial_family_data_id):
                 print(f"DEBUG: Task {task.task_id} marked as completed.")
 
         return JsonResponse(
-            {"message": "Initial family data successfully marked as complete"}, status=200
+            {"message": "Initial family data successfully marked as complete"},
+            status=200,
         )
     except Exception as e:
-        print(f"DEBUG: An error occurred while marking initial family data complete: {str(e)}")
+        print(
+            f"DEBUG: An error occurred while marking initial family data complete: {str(e)}"
+        )
         return JsonResponse({"error": str(e)}, status=500)
+
 
 @csrf_exempt
 @api_view(["DELETE"])
@@ -4210,7 +4243,7 @@ def delete_initial_family_data(request, initial_family_data_id):
             {"error": "You do not have permission to delete initial family data."},
             status=401,
         )
-    
+
     # Check if the user has DELETE permission on the "initial_family_data" resource
     if not has_initial_family_data_permission(request, "delete"):
         return JsonResponse(
@@ -4219,14 +4252,20 @@ def delete_initial_family_data(request, initial_family_data_id):
         )
 
     try:
-        initial_family_data = InitialFamilyData.objects.get(initial_family_data_id=initial_family_data_id)
+        initial_family_data = InitialFamilyData.objects.get(
+            initial_family_data_id=initial_family_data_id
+        )
 
-        related_tasks = Tasks.objects.filter(initial_family_data_id_fk=initial_family_data_id)
+        related_tasks = Tasks.objects.filter(
+            initial_family_data_id_fk=initial_family_data_id
+        )
         if related_tasks.exists():
             for task in related_tasks:
                 task.delete()
-                print(f"DEBUG: Task {task.task_id} deleted due to initial family data deletion.")
-        
+                print(
+                    f"DEBUG: Task {task.task_id} deleted due to initial family data deletion."
+                )
+
         # Delete the initial family data record
         initial_family_data.delete()
 
@@ -4238,3 +4277,39 @@ def delete_initial_family_data(request, initial_family_data_id):
     except Exception as e:
         print(f"DEBUG: An error occurred while deleting initial family data: {str(e)}")
         return JsonResponse({"error": str(e)}, status=500)
+
+
+@csrf_exempt
+@api_view(["GET"])
+def get_general_volunteers_not_pending(request):
+    """
+    Get all general volunteers who are NOT in the Pending_Tutor table.
+    """
+    user_id = request.session.get("user_id")
+    if not user_id:
+        return JsonResponse(
+            {"detail": "Authentication credentials were not provided."}, status=403
+        )
+
+    # Only allow users with permission to view general volunteers
+    if not has_permission(request, "general_volunteer", "VIEW"):
+        return JsonResponse(
+            {"error": "You do not have permission to access this resource."}, status=401
+        )
+
+    # Get all General Volunteers whose id_id is NOT in Pending_Tutor
+    pending_ids = Pending_Tutor.objects.values_list("id_id", flat=True)
+    volunteers = General_Volunteer.objects.exclude(
+        id_id__in=pending_ids
+    ).select_related("staff")
+    data = [
+        {
+            "id": gv.id_id,
+            "staff_id": gv.staff.staff_id,
+            "first_name": gv.staff.first_name,
+            "last_name": gv.staff.last_name,
+            "email": gv.staff.email,
+        }
+        for gv in volunteers
+    ]
+    return JsonResponse({"general_volunteers": data}, status=200)

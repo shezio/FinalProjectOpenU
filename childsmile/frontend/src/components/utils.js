@@ -56,6 +56,21 @@ export const getPendingTutors = async () => {
   }
 };
 
+export const getGeneralVolunteersNotPending = async () => {
+  try {
+    const response = await axios.get('/api/get_general_volunteers_not_pending/');
+    console.log('General Volunteers Not Pending API response:', response.data);
+    const volunteers = response.data.general_volunteers || [];
+    return volunteers.map((volunteer) => ({
+      value: volunteer.id,
+      label: `${volunteer.first_name} ${volunteer.last_name} - ${volunteer.email}`,
+    }));
+  } catch (error) {
+    console.error('Error fetching general volunteers not pending:', error);
+    return [];
+  }
+};
+
 export const getChildFullName = (childId, childrenOptions) => {
   console.log('getChildFullName called with:', { childId, childrenOptions });
   const child = childrenOptions.find((child) => child.value === childId);
@@ -176,3 +191,6 @@ export const hasSomePermissions = (requiredPermissions) => {
       )
     );
   };
+
+  // Helper to determine if a staff member is a Tutor or General Volunteer
+export const isTutorOrGeneralVolunteer = (staff) => staff.label.includes("חונך") || staff.label.includes("מתנדב כללי");

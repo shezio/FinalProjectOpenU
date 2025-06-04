@@ -529,6 +529,7 @@ const resources = {
       'Family marked as added!': 'המשפחה סומנה כנוספה!',
       'Error marking as added': 'שגיאה בסימון כנוספה',
       'Initial family data deleted!': 'נתוני משפחה ראשוניים נמחקו בהצלחה!',
+      'General Volunteers': "מתנדבים כלליים",
     }
   }
 };

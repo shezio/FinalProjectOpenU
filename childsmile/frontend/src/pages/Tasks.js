@@ -3,7 +3,7 @@ import axios from '../axiosConfig';
 import Sidebar from '../components/Sidebar';
 import InnerPageHeader from '../components/InnerPageHeader';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
-import { getStaff, getChildren, getTutors, getChildFullName, getTutorFullName, getPendingTutors, getPendingTutorFullName } from '../components/utils';
+import { getStaff, getChildren, getTutors, getChildFullName, getTutorFullName, getPendingTutors, getGeneralVolunteersNotPending, isTutorOrGeneralVolunteer } from '../components/utils';
 import '../styles/common.css';
 import '../styles/tasks.css';
 import Select from 'react-select';
@@ -42,6 +42,7 @@ const Tasks = () => {
   const [childrenOptions, setChildrenOptions] = useState([]);
   const [tutorsOptions, setTutorsOptions] = useState([]);
   const [pendingTutorsOptions, setPendingTutorsOptions] = useState([]);
+  const [generalVolunteersNotPending, setGeneralVolunteersNotPending] = useState([]);
   const [selectedStaff, setSelectedStaff] = useState(null);
   const [selectedChild, setSelectedChild] = useState(null);
   const [selectedTutor, setSelectedTutor] = useState(null);
@@ -83,6 +84,30 @@ const Tasks = () => {
     setMenuOpen(false);
   }, [selectedTask]);
 
+
+  const getPendingOrGeneralTutorFullName = (pendingTutor, pendingTutorsOptions, generalVolunteersNotPending, t) => {
+    // If pendingTutor is an object, try to find by id or by name
+    if (pendingTutor && typeof pendingTutor === 'object') {
+      // Try to find by PK (id)
+      let option = pendingTutorsOptions.find(opt => opt.value === pendingTutor.id);
+      if (option) return option.label;
+      // Try to find by name in general volunteers
+      option = (generalVolunteersNotPending || []).map(vol => ({
+        value: vol.id,
+        label: `${vol.first_name} ${vol.last_name} - ${t('General Volunteer')}`,
+      })).find(opt => opt.value === pendingTutor.id);
+      return option ? option.label : `${pendingTutor.first_name} ${pendingTutor.surname}`;
+    }
+    // If pendingTutor is a number (PK)
+    let option = pendingTutorsOptions.find(opt => opt.value === pendingTutor);
+    if (option) return option.label;
+    option = (generalVolunteersNotPending || []).map(vol => ({
+      value: vol.id,
+      label: `${vol.first_name} ${vol.last_name} - ${t('General Volunteer')}`,
+    })).find(opt => opt.value === pendingTutor);
+    return option ? option.label : "---";
+  };
+
   const getTaskBgColor = (dueDateStr, status) => {
     if (status === "הושלמה") return "#d4edda";
     if (!dueDateStr) return "#fff";
@@ -115,8 +140,9 @@ const Tasks = () => {
         localStorage.removeItem('childrenOptions');
         localStorage.removeItem('tutorsOptions');
         localStorage.removeItem('pendingTutorsOptions');
+        localStorage.removeItem('generalVolunteersNotPending');
       }
-      const [tasksResponse, staffOptions, childrenOptions, tutorsOptions, pendingTutorsOptions] = await Promise.all([
+      const [tasksResponse, staffOptions, childrenOptions, tutorsOptions, pendingTutorsOptions, generalVolunteersNotPending] = await Promise.all([
         axios.get('/api/tasks/').catch((error) => {
           console.error('Error fetching tasks:', error);
           showErrorToast(t, 'Error fetching tasks', error);
@@ -142,17 +168,24 @@ const Tasks = () => {
           showErrorToast(t, 'Error fetching pending tutors', error);
           return [];
         }),
+        getGeneralVolunteersNotPending().catch((error) => {
+          console.error('Error fetching general volunteers not pending:', error);
+          showErrorToast(t, 'Error fetching general volunteers not pending', error);
+          return [];
+        }),
       ]);
 
       const newTasks = tasksResponse.data.tasks || [];
       const newTaskTypes = tasksResponse.data.task_types || [];
       const cachedPermissions = JSON.parse(localStorage.getItem('permissions')) || [];
       const newPendingTutors = pendingTutorsOptions;
+      const newGeneralVolunteersNotPending = generalVolunteersNotPending;
 
       setStaffOptions(staffOptions);
       setChildrenOptions(childrenOptions);
       setTutorsOptions(tutorsOptions);
       setPendingTutorsOptions(newPendingTutors);
+      setGeneralVolunteersNotPending(newGeneralVolunteersNotPending);
       setPermissions(cachedPermissions);
 
       const filteredTypes = newTaskTypes.filter((taskType) =>
@@ -182,6 +215,7 @@ const Tasks = () => {
       localStorage.setItem('childrenOptions', JSON.stringify(childrenOptions));
       localStorage.setItem('tutorsOptions', JSON.stringify(tutorsOptions));
       localStorage.setItem('pendingTutorsOptions', JSON.stringify(newPendingTutors));
+      localStorage.setItem('generalVolunteersNotPending', JSON.stringify(newGeneralVolunteersNotPending));
     } catch (error) {
       console.error('Error fetching data:', error);
       showErrorToast(t, 'Error fetching data', error);
@@ -197,6 +231,21 @@ const Tasks = () => {
   useEffect(() => {
     fetchData(true); // force fetch every time the route changes
   }, [location.pathname]);
+
+  // Combine pending tutors and general volunteers for the dropdown
+  const groupedPendingTutorOptions = [
+    {
+      label: t('Pending Tutors'),
+      options: pendingTutorsOptions,
+    },
+    {
+      label: t('General Volunteers'),
+      options: (generalVolunteersNotPending || []).map(vol => ({
+        ...vol,
+        label: `${vol.label.split(' - ')[0]} - ${t('General Volunteer')}`,
+      })),
+    }
+  ];
 
   // Group tasks by status for Kanban columns
   const tasksByStatus = statusColumns.reduce((acc, col) => {
@@ -287,6 +336,14 @@ const Tasks = () => {
     if (!selectedStaff) {
       newErrors.assigned_to = "זהו שדה חובה";
     }
+    // Enforce pending_tutor if task type is "ראיון מועמד לחונכות"
+    if (
+      selectedTaskType &&
+      (taskTypes.find(t => t.id === selectedTaskType.value)?.name === "ראיון מועמד לחונכות") &&
+      !selectedPendingTutor
+    ) {
+      newErrors.pending_tutor = "זהו שדה חובה";
+    }
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return;
@@ -350,7 +407,19 @@ const Tasks = () => {
     setSelectedStaff({ value: task.assignee, label: task.assignee });
     setSelectedChild(childrenOptions.find((child) => child.value === task.child) || null);
     setSelectedTutor(tutorsOptions.find((tutor) => tutor.value === task.tutor) || null);
-    setSelectedPendingTutor(pendingTutorsOptions.find((pendingTutor) => pendingTutor.value === task.pending_tutor) || null);
+
+    // Find in pending tutors
+    let pendingTutorOption = pendingTutorsOptions.find(opt => opt.value === task.pending_tutor);
+    // If not found, find in general volunteers
+    if (!pendingTutorOption) {
+      pendingTutorOption = (generalVolunteersNotPending || []).map(vol => ({
+        value: vol.id,
+        label: `${vol.first_name} ${vol.last_name} - ${t('General Volunteer')}`,
+        isGeneralVolunteer: true,
+        email: vol.email,
+      })).find(opt => opt.value === task.pending_tutor);
+    }
+    setSelectedPendingTutor(pendingTutorOption || null);
     setDueDate('');
     setIsEditModalOpen(true);
   };
@@ -399,22 +468,7 @@ const Tasks = () => {
     return type && type.name === "ראיון מועמד לחונכות";
   };
 
-  // Set zoom level only for screens <= 1800px
-  // useEffect(() => {
-  //   const setZoom = () => {
-  //     if (window.innerWidth <= 1800) {
-  //       document.body.style.zoom = "80%";
-  //     } else {
-  //       document.body.style.zoom = "100%";
-  //     }
-  //   };
-  //   setZoom();
-  //   window.addEventListener('resize', setZoom);
-  //   return () => {
-  //     window.removeEventListener('resize', setZoom);
-  //     document.body.style.zoom = "100%";
-  //   };
-  // }, []);
+
 
   return (
     <div className="tasks-main-content">
@@ -440,6 +494,7 @@ const Tasks = () => {
                 <button
                   onClick={() => {
                     handleClosePopup();
+                    setSelectedPendingTutor(null); // <-- Add this line
                     setIsModalOpen(true);
                   }}
                 >
@@ -554,7 +609,13 @@ const Tasks = () => {
                     )}
                     {/* Show Pending Tutor only if IS "ראיון מועמד לחונכות" */}
                     {isInterviewTask(selectedTask.type) && (
-                      <p>מועמד לחונכות: {getPendingTutorFullName(selectedTask.pending_tutor, pendingTutorsOptions)}</p>
+                      <p>
+                        מועמד לחונכות: {getPendingOrGeneralTutorFullName(
+                          selectedTask.pending_tutor,
+                          pendingTutorsOptions,
+                          generalVolunteersNotPending,
+                          t)}
+                      </p>
                     )}
                     {/* Show initial family data fields only for "הוספת משפחה" */}
                     {getTaskTypeName(selectedTask.type) === "הוספת משפחה" && (
@@ -625,10 +686,17 @@ const Tasks = () => {
                 />
                 {errors.due_date && <p className="error-text">{errors.due_date}</p>}
                 <label>{t('Assigned To')}</label>
+                {console.log(
+                  "staffOptions for assigned_to",
+                  staffOptions.map(staff => ({ label: staff.label, role: staff.role }))
+                )}
                 <Select
                   id="assigned_to"
-                  options={staffOptions}
-                  value={selectedStaff}
+                  options={
+                    isInterviewTask(selectedTaskType?.value)
+                      ? staffOptions.filter(staff => !isTutorOrGeneralVolunteer(staff))
+                      : staffOptions
+                  } value={selectedStaff}
                   onChange={setSelectedStaff}
                   isSearchable
                   styles={{
@@ -668,13 +736,20 @@ const Tasks = () => {
                     <label>מועמד לחונכות</label>
                     <Select
                       id="pending_tutor"
-                      options={pendingTutorsOptions}
+                      options={groupedPendingTutorOptions}
                       value={selectedPendingTutor}
                       onChange={setSelectedPendingTutor}
                       placeholder={t('Select Pending Tutor')}
                       isSearchable
                       isClearable
+                      styles={{
+                        control: (base) => ({
+                          ...base,
+                          borderColor: errors.pending_tutor ? 'red' : base.borderColor,
+                        }),
+                      }}
                     />
+                    {errors.pending_tutor && <p className="error-text">{errors.pending_tutor}</p>}
                   </>
                 )}
                 <button onClick={handleUpdateTask}>{t('Update Task')}</button>
@@ -712,9 +787,17 @@ const Tasks = () => {
                 />
                 {errors.due_date && <p className="error-text">{errors.due_date}</p>}
                 <label>משוייך ל</label>
+                {console.log(
+                  "staffOptions for assigned_to",
+                  staffOptions.map(staff => ({ label: staff.label, role: staff.role }))
+                )}
                 <Select
                   id="assigned_to"
-                  options={staffOptions}
+                  options={
+                    isInterviewTask(selectedTaskType?.value)
+                      ? staffOptions.filter(staff => !isTutorOrGeneralVolunteer(staff))
+                      : staffOptions
+                  }
                   value={selectedStaff}
                   onChange={setSelectedStaff}
                   placeholder={t('Select Assignee')}
@@ -756,13 +839,20 @@ const Tasks = () => {
                     <label>מועמד לחונכות</label>
                     <Select
                       id="pending_tutor"
-                      options={pendingTutorsOptions}
+                      options={groupedPendingTutorOptions}
                       value={selectedPendingTutor}
                       onChange={setSelectedPendingTutor}
                       placeholder={t('Select Pending Tutor')}
                       isSearchable
                       isClearable
+                      styles={{
+                        control: (base) => ({
+                          ...base,
+                          borderColor: errors.pending_tutor ? 'red' : base.borderColor,
+                        }),
+                      }}
                     />
+                    {errors.pending_tutor && <p className="error-text">{errors.pending_tutor}</p>}
                   </>
                 )}
                 <button onClick={handleSubmitTask}>צור</button>

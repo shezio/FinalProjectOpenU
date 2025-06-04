@@ -50,6 +50,7 @@ from .views import (
     update_initial_family_data,
     delete_initial_family_data,
     mark_initial_family_complete,
+    get_general_volunteers_not_pending,
 )
 
 from .unused_views import (
@@ -296,5 +297,10 @@ urlpatterns = [
         "api/mark_initial_family_complete/<int:initial_family_data_id>/",
         mark_initial_family_complete,
         name="mark_initial_family_complete",
+    ),
+    path(
+        "api/get_general_volunteers_not_pending/",
+        get_general_volunteers_not_pending,
+        name="get_general_volunteers_not_pending",
     ),
 ]
