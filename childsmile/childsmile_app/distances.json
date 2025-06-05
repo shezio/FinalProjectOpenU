@@ -169,6 +169,16 @@
             "distance": 23,
             "city2_latitude": 32.958648,
             "city2_longitude": 35.1716603
+        },
+        "אור עקיבא": {
+            "distance": 36,
+            "city2_latitude": 32.5090151,
+            "city2_longitude": 34.9195677
+        },
+        "אילת": {
+            "distance": 363,
+            "city2_latitude": 29.5569348,
+            "city2_longitude": 34.9497949
         }
     },
     "אשדוד": {
@@ -253,6 +263,16 @@
             "distance": 66,
             "city2_latitude": 31.246415,
             "city2_longitude": 34.4032541
+        },
+        "אור עקיבא": {
+            "distance": 83,
+            "city2_latitude": 32.5090151,
+            "city2_longitude": 34.9195677
+        },
+        "אילת": {
+            "distance": 251,
+            "city2_latitude": 29.5569348,
+            "city2_longitude": 34.9497949
         }
     },
     "דימונה": {
@@ -302,6 +322,16 @@
             "distance": 64,
             "city2_latitude": 31.246415,
             "city2_longitude": 34.4032541
+        },
+        "אור עקיבא": {
+            "distance": 161,
+            "city2_latitude": 32.5090151,
+            "city2_longitude": 34.9195677
+        },
+        "אילת": {
+            "distance": 169,
+            "city2_latitude": 29.5569348,
+            "city2_longitude": 34.9497949
         }
     },
     "רמת גן": {
@@ -351,6 +381,16 @@
             "distance": 100,
             "city2_latitude": 31.246415,
             "city2_longitude": 34.4032541
+        },
+        "אור עקיבא": {
+            "distance": 50,
+            "city2_latitude": 32.5090151,
+            "city2_longitude": 34.9195677
+        },
+        "אילת": {
+            "distance": 280,
+            "city2_latitude": 29.5569348,
+            "city2_longitude": 34.9497949
         }
     },
     "נווה אילן": {
@@ -400,6 +440,16 @@
             "distance": 50,
             "city2_latitude": 31.246415,
             "city2_longitude": 34.4032541
+        },
+        "אור עקיבא": {
+            "distance": 99,
+            "city2_latitude": 32.5090151,
+            "city2_longitude": 34.9195677
+        },
+        "אילת": {
+            "distance": 238,
+            "city2_latitude": 29.5569348,
+            "city2_longitude": 34.9497949
         }
     },
     "אביאל": {
@@ -478,6 +528,16 @@
             "distance": 94,
             "city2_latitude": 31.246415,
             "city2_longitude": 34.4032541
+        },
+        "אור עקיבא": {
+            "distance": 57,
+            "city2_latitude": 32.5090151,
+            "city2_longitude": 34.9195677
+        },
+        "אילת": {
+            "distance": 275,
+            "city2_latitude": 29.5569348,
+            "city2_longitude": 34.9497949
         }
     },
     "תל אביב - יפו": {
@@ -527,6 +587,16 @@
             "distance": 100,
             "city2_latitude": 31.246415,
             "city2_longitude": 34.4032541
+        },
+        "אור עקיבא": {
+            "distance": 49,
+            "city2_latitude": 32.5090151,
+            "city2_longitude": 34.9195677
+        },
+        "אילת": {
+            "distance": 282,
+            "city2_latitude": 29.5569348,
+            "city2_longitude": 34.9497949
         }
     },
     "באר שבע": {
@@ -576,6 +646,16 @@
             "distance": 38,
             "city2_latitude": 31.246415,
             "city2_longitude": 34.4032541
+        },
+        "אור עקיבא": {
+            "distance": 141,
+            "city2_latitude": 32.5090151,
+            "city2_longitude": 34.9195677
+        },
+        "אילת": {
+            "distance": 189,
+            "city2_latitude": 29.5569348,
+            "city2_longitude": 34.9497949
         }
     },
     "תל אביב יפו": {
@@ -660,6 +740,16 @@
             "distance": 100,
             "city2_latitude": 31.246415,
             "city2_longitude": 34.4032541
+        },
+        "אור עקיבא": {
+            "distance": 49,
+            "city2_latitude": 32.5090151,
+            "city2_longitude": 34.9195677
+        },
+        "אילת": {
+            "distance": 282,
+            "city2_latitude": 29.5569348,
+            "city2_longitude": 34.9497949
         }
     },
     "אשקלון": {

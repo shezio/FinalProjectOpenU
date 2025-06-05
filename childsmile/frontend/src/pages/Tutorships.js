@@ -1,4 +1,4 @@
-import React, { use, useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import ReactSlider from 'react-slider';
 import Sidebar from '../components/Sidebar';
 import InnerPageHeader from '../components/InnerPageHeader';
@@ -17,7 +17,6 @@ import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import markerIcon from 'leaflet/dist/images/marker-icon.png';
 import markerShadow from 'leaflet/dist/images/marker-shadow.png';
-import { useRef } from 'react';
 import redMarker from '../assets/markers/custom-marker-icon-2x-red.png';
 import yellowMarker from '../assets/markers/custom-marker-icon-2x-yellow.png';
 import greenMarker from '../assets/markers/custom-marker-icon-2x-green.png';
@@ -29,6 +28,31 @@ L.Icon.Default.mergeOptions({
   iconUrl: markerIcon,
   shadowUrl: markerShadow,
 });
+
+const HourglassSpinner = () => {
+  const [rotation, setRotation] = useState(0);
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setRotation(r => (r + 180) % 360);
+    }, 300); // 300ms for visible effect
+    return () => clearInterval(interval);
+  }, []);
+  return (
+    <span
+      className="pending-distance"
+      style={{
+        display: 'inline-block',
+        transition: 'transform 0.2s',
+        transform: `rotate(${rotation}deg)`,
+        fontSize: '1.5em',
+      }}
+      role="img"
+      aria-label="hourglass"
+    >
+      ⏳
+    </span>
+  );
+};
 
 const Tutorships = () => {
   const [tutorships, setTutorships] = useState([]);
@@ -911,6 +935,15 @@ const Tutorships = () => {
               onChange={(value) => setFilterThreshold(value)}
             />
             <span className="filter-value">{filterThreshold}</span>
+            {matches.some(m => m.distance_pending) && (
+              <div className="pending-distances-warning" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <HourglassSpinner />
+                <span>חלק מהמרחקים בין ערים עדיין מחושבים. נא לרענן בעוד מספר שניות.</span>
+                <button onClick={fetchMatches} style={{ marginRight: 8 }}>
+                  רענן עכשיו
+                </button>
+              </div>
+            )}
           </div>
           <div className="match-modal-content">
             <div className="grid-container">
@@ -975,6 +1008,12 @@ const Tutorships = () => {
                         <td>{match.tutor_full_name}</td>
                         <td>{match.child_city}</td>
                         <td>{match.tutor_city}</td>
+                        {/* Add this cell for distance */}
+                        {/* <td>
+                          {match.distance_pending
+                            ? <span className="pending-distance">⏳</span>
+                            : `${match.distance_between_cities} ק"מ`}
+                        </td> */}
                         <td>{match.grade}</td>
                       </tr>
                     ))}

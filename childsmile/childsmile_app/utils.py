@@ -284,6 +284,7 @@ def calculate_distances(matches):
                 match["child_longitude"] = result["city1_longitude"]
                 match["tutor_latitude"] = result["city2_latitude"]
                 match["tutor_longitude"] = result["city2_longitude"]
+                match["distance_pending"] = result.get("distance_pending", False)
             except KeyError as e:
                 print(f"DEBUG: KeyError while accessing result: {e}")
                 raise
@@ -293,6 +294,7 @@ def calculate_distances(matches):
             match["child_longitude"] = None
             match["tutor_latitude"] = None
             match["tutor_longitude"] = None
+            match["distance_pending"] = True
     return matches
 
 
@@ -321,92 +323,28 @@ def calculate_distance_between_cities(city1, city2):
     # Check if city1 exists in the file
     if city1 in distances:
         city1_data = distances[city1]
-        # Check if city2 exists under city1
         if city2 in city1_data:
-            print(
-                f"DEBUG: Found distance for {city1} and {city2}: {city1_data[city2]['distance']} km"
-            )
             return {
                 "distance": city1_data[city2]["distance"],
                 "city1_latitude": distances[city1]["city_latitude"],
                 "city1_longitude": distances[city1]["city_longitude"],
                 "city2_latitude": city1_data[city2]["city2_latitude"],
                 "city2_longitude": city1_data[city2]["city2_longitude"],
+                "distance_pending": False,
             }
     else:
-        # Initialize city1 data if not present
         distances[city1] = {}
 
-    # Geocode city1 if its coordinates are not already stored
-    if (
-        "city_latitude" not in distances[city1]
-        or "city_longitude" not in distances[city1]
-    ):
-        geolocator = Nominatim(user_agent="childsmile", timeout=5)
-        location1 = geolocator.geocode(city1)
-        if location1:
-            distances[city1]["city_latitude"] = location1.latitude
-            distances[city1]["city_longitude"] = location1.longitude
-        else:
-            print(f"DEBUG: Could not geocode {city1}")
-            return {
-                "distance": 0,
-                "city1_latitude": None,
-                "city1_longitude": None,
-                "city2_latitude": None,
-                "city2_longitude": None,
-            }
-
-    # Geocode city2
-    geolocator = Nominatim(user_agent="childsmile", timeout=5)
-    location2 = geolocator.geocode(city2)
-    if location2:
-        lat1, lon1 = (
-            distances[city1]["city_latitude"],
-            distances[city1]["city_longitude"],
-        )
-        lat2, lon2 = location2.latitude, location2.longitude
-
-        # Haversine formula
-        R = 6371  # Radius of the Earth in kilometers
-        dlat = radians(lat2 - lat1)
-        dlon = radians(lon2 - lon1)
-        a = (sin(dlat / 2) ** 2) + cos(radians(lat1)) * cos(radians(lat2)) * (
-            sin(dlon / 2) ** 2
-        )
-        c = 2 * atan2(sqrt(a), sqrt(1 - a))
-        distance = ceil(R * c)  # Round up to the nearest whole number
-
-        # Save city2 data under city1
-        distances[city1][city2] = {
-            "distance": distance,
-            "city2_latitude": lat2,
-            "city2_longitude": lon2,
-        }
-
-        # Save the updated distances to the file
-        with open(DISTANCES_FILE, "w", encoding="utf-8") as file:
-            json.dump(distances, file, ensure_ascii=False, indent=4)
-
-        print(
-            f"DEBUG: Calculated and saved distance for {city1} and {city2}: {distance} km"
-        )
-        return {
-            "distance": distance,
-            "city1_latitude": lat1,
-            "city1_longitude": lon1,
-            "city2_latitude": lat2,
-            "city2_longitude": lon2,
-        }
-    else:
-        print(f"DEBUG: Could not geocode {city2}")
-        return {
-            "distance": 0,
-            "city1_latitude": distances[city1]["city_latitude"],
-            "city1_longitude": distances[city1]["city_longitude"],
-            "city2_latitude": None,
-            "city2_longitude": None,
-        }
+    # If not found, trigger async calculation and return pending
+    async_calculate_and_store_distance(city1, city2)
+    return {
+        "distance": 0,
+        "city1_latitude": None,
+        "city1_longitude": None,
+        "city2_latitude": None,
+        "city2_longitude": None,
+        "distance_pending": True,
+    }
 
 
 # helper function to calculate the grade of possible matche according the distance between the two cities and the ages of the child and the tutor
@@ -796,3 +734,76 @@ def delete_other_tasks_with_initial_family_data_async(task):
         target=delete_other_tasks_with_initial_family_data, args=(task,)
     )
     thread.start()
+
+
+in_progress_pairs = set()
+
+def async_calculate_and_store_distance(city1, city2):
+    pair = tuple(sorted([city1, city2]))
+    if pair in in_progress_pairs:
+        return  # Already being calculated
+    in_progress_pairs.add(pair)
+
+    def worker():
+        try:
+            calculate_and_store_distance_force(city1, city2)
+        finally:
+            in_progress_pairs.discard(pair)
+    threading.Thread(target=worker, daemon=True).start()
+
+def calculate_and_store_distance_force(city1, city2):
+    """
+    Always calculate and store the distance between city1 and city2 if not present.
+    This function does NOT call async_calculate_and_store_distance.
+    """
+    print(f"DEBUG: [FORCE] Calculating and storing distance between {city1} and {city2}")
+
+    # Ensure the file exists and is properly formatted
+    if not os.path.exists(DISTANCES_FILE):
+        with open(DISTANCES_FILE, "w", encoding="utf-8") as file:
+            json.dump({}, file, ensure_ascii=False, indent=4)
+
+    # Load distances from the JSON file
+    with open(DISTANCES_FILE, "r", encoding="utf-8") as file:
+        try:
+            distances = json.load(file)
+        except json.JSONDecodeError:
+            distances = {}
+
+    # Check if city1 exists in the file
+    if city1 in distances:
+        city1_data = distances[city1]
+        if city2 in city1_data:
+            return  # Already present, nothing to do
+    else:
+        distances[city1] = {}
+
+    # Ensure both cities have coordinates
+    loc1 = get_or_update_city_location(city1)
+    loc2 = get_or_update_city_location(city2)
+    if not loc1 or not loc1.get("latitude") or not loc2 or not loc2.get("latitude"):
+        print(f"DEBUG: [FORCE] Could not geocode one or both cities: {city1}, {city2}")
+        return
+
+    lat1, lon1 = loc1["latitude"], loc1["longitude"]
+    lat2, lon2 = loc2["latitude"], loc2["longitude"]
+
+    # Haversine formula
+    R = 6371  # Radius of the Earth in kilometers
+    dlat = radians(lat2 - lat1)
+    dlon = radians(lon2 - lon1)
+    a = (sin(dlat / 2) ** 2) + cos(radians(lat1)) * cos(radians(lat2)) * (sin(dlon / 2) ** 2)
+    c = 2 * atan2(sqrt(a), sqrt(1 - a))
+    distance = ceil(R * c)  # Round up to the nearest whole number
+
+    # Save city2 data under city1
+    distances[city1][city2] = {
+        "distance": distance,
+        "city2_latitude": lat2,
+        "city2_longitude": lon2,
+    }
+    # Save the updated distances to the file
+    with open(DISTANCES_FILE, "w", encoding="utf-8") as file:
+        json.dump(distances, file, ensure_ascii=False, indent=4)
+
+    print(f"DEBUG: [FORCE] Calculated and saved distance for {city1} and {city2}: {distance} km")
