@@ -41,6 +41,16 @@
             "distance": 97,
             "city2_latitude": 32.958648,
             "city2_longitude": 35.1716603
+        },
+        "בית הערבה": {
+            "distance": 56,
+            "city2_latitude": 31.8090731,
+            "city2_longitude": 35.4780553
+        },
+        "אור יהודה": {
+            "distance": 17,
+            "city2_latitude": 32.0290285,
+            "city2_longitude": 34.8481983
         }
     },
     "עכו": {
@@ -179,6 +189,21 @@
             "distance": 363,
             "city2_latitude": 29.5569348,
             "city2_longitude": 34.9497949
+        },
+        "בת ים": {
+            "distance": 93,
+            "city2_latitude": 32.0128493,
+            "city2_longitude": 34.746913
+        },
+        "בית הערבה": {
+            "distance": 122,
+            "city2_latitude": 31.8090731,
+            "city2_longitude": 35.4780553
+        },
+        "אור יהודה": {
+            "distance": 89,
+            "city2_latitude": 32.0290285,
+            "city2_longitude": 34.8481983
         }
     },
     "אשדוד": {
@@ -273,6 +298,11 @@
             "distance": 251,
             "city2_latitude": 29.5569348,
             "city2_longitude": 34.9497949
+        },
+        "בת ים": {
+            "distance": 26,
+            "city2_latitude": 32.0128493,
+            "city2_longitude": 34.746913
         }
     },
     "דימונה": {
@@ -332,6 +362,11 @@
             "distance": 169,
             "city2_latitude": 29.5569348,
             "city2_longitude": 34.9497949
+        },
+        "בת ים": {
+            "distance": 109,
+            "city2_latitude": 32.0128493,
+            "city2_longitude": 34.746913
         }
     },
     "רמת גן": {
@@ -391,6 +426,11 @@
             "distance": 280,
             "city2_latitude": 29.5569348,
             "city2_longitude": 34.9497949
+        },
+        "בת ים": {
+            "distance": 10,
+            "city2_latitude": 32.0128493,
+            "city2_longitude": 34.746913
         }
     },
     "נווה אילן": {
@@ -450,6 +490,11 @@
             "distance": 238,
             "city2_latitude": 29.5569348,
             "city2_longitude": 34.9497949
+        },
+        "בת ים": {
+            "distance": 42,
+            "city2_latitude": 32.0128493,
+            "city2_longitude": 34.746913
         }
     },
     "אביאל": {
@@ -538,6 +583,11 @@
             "distance": 275,
             "city2_latitude": 29.5569348,
             "city2_longitude": 34.9497949
+        },
+        "בת ים": {
+            "distance": 4,
+            "city2_latitude": 32.0128493,
+            "city2_longitude": 34.746913
         }
     },
     "תל אביב - יפו": {
@@ -597,6 +647,11 @@
             "distance": 282,
             "city2_latitude": 29.5569348,
             "city2_longitude": 34.9497949
+        },
+        "בת ים": {
+            "distance": 9,
+            "city2_latitude": 32.0128493,
+            "city2_longitude": 34.746913
         }
     },
     "באר שבע": {
@@ -656,6 +711,11 @@
             "distance": 189,
             "city2_latitude": 29.5569348,
             "city2_longitude": 34.9497949
+        },
+        "בת ים": {
+            "distance": 86,
+            "city2_latitude": 32.0128493,
+            "city2_longitude": 34.746913
         }
     },
     "תל אביב יפו": {
@@ -750,6 +810,11 @@
             "distance": 282,
             "city2_latitude": 29.5569348,
             "city2_longitude": 34.9497949
+        },
+        "בת ים": {
+            "distance": 9,
+            "city2_latitude": 32.0128493,
+            "city2_longitude": 34.746913
         }
     },
     "אשקלון": {
@@ -794,6 +859,16 @@
             "distance": 155,
             "city2_latitude": 32.958648,
             "city2_longitude": 35.1716603
+        },
+        "בית הערבה": {
+            "distance": 88,
+            "city2_latitude": 31.8090731,
+            "city2_longitude": 35.4780553
+        },
+        "אור יהודה": {
+            "distance": 49,
+            "city2_latitude": 32.0290285,
+            "city2_longitude": 34.8481983
         }
     },
     "ירושלים": {
@@ -867,6 +942,16 @@
             "distance": 91,
             "city2_latitude": 32.958648,
             "city2_longitude": 35.1716603
+        },
+        "בית הערבה": {
+            "distance": 72,
+            "city2_latitude": 31.8090731,
+            "city2_longitude": 35.4780553
+        },
+        "אור יהודה": {
+            "distance": 18,
+            "city2_latitude": 32.0290285,
+            "city2_longitude": 34.8481983
         }
     },
     "חדרה": {
@@ -940,6 +1025,16 @@
             "distance": 94,
             "city2_latitude": 32.958648,
             "city2_longitude": 35.1716603
+        },
+        "בית הערבה": {
+            "distance": 72,
+            "city2_latitude": 31.8090731,
+            "city2_longitude": 35.4780553
+        },
+        "אור יהודה": {
+            "distance": 16,
+            "city2_latitude": 32.0290285,
+            "city2_longitude": 34.8481983
         }
     },
     "שבי ציון": {

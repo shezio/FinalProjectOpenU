@@ -530,6 +530,9 @@ const resources = {
       'Error marking as added': 'שגיאה בסימון כנוספה',
       'Initial family data deleted!': 'נתוני משפחה ראשוניים נמחקו בהצלחה!',
       'General Volunteers': "מתנדבים כלליים",
+      "Refresh Now": "רענן עכשיו",
+      "Some distances between cities are still being calculated. Please refresh in a few seconds.": "חלק מהמרחקים בין ערים עדיין מחושבים. נא לרענן בעוד מספר שניות.",
+      "All distances are ready.": "כל המרחקים מוכנים."
     }
   }
 };
