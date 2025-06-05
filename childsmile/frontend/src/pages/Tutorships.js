@@ -1,4 +1,4 @@
-import React, { use, useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import ReactSlider from 'react-slider';
 import Sidebar from '../components/Sidebar';
 import InnerPageHeader from '../components/InnerPageHeader';
@@ -17,7 +17,6 @@ import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import markerIcon from 'leaflet/dist/images/marker-icon.png';
 import markerShadow from 'leaflet/dist/images/marker-shadow.png';
-import { useRef } from 'react';
 import redMarker from '../assets/markers/custom-marker-icon-2x-red.png';
 import yellowMarker from '../assets/markers/custom-marker-icon-2x-yellow.png';
 import greenMarker from '../assets/markers/custom-marker-icon-2x-green.png';
@@ -29,6 +28,31 @@ L.Icon.Default.mergeOptions({
   iconUrl: markerIcon,
   shadowUrl: markerShadow,
 });
+
+const HourglassSpinner = () => {
+  const [rotation, setRotation] = useState(0);
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setRotation(r => (r + 180) % 360);
+    }, 500); // 300ms for visible effect
+    return () => clearInterval(interval);
+  }, []);
+  return (
+    <span
+      className="pending-distance"
+      style={{
+        display: 'inline-block',
+        transition: 'transform 0.2s',
+        transform: `rotate(${rotation}deg)`,
+        fontSize: '1.5em',
+      }}
+      role="img"
+      aria-label="hourglass"
+    >
+      ⏳
+    </span>
+  );
+};
 
 const Tutorships = () => {
   const [tutorships, setTutorships] = useState([]);
@@ -63,7 +87,9 @@ const Tutorships = () => {
   const [enrichedTutorships, setEnrichedTutorships] = useState([]);
   const [wizardFamilies, setWizardFamilies] = useState([]);
   const [wizardTutors, setWizardTutors] = useState([]);
-
+  const showPendingDistancesWarning = matches.some(m => m.distance_pending);
+  const [distancesReady, setDistancesReady] = useState(false);
+  //const showPendingDistancesWarning = true; // Always show the warning for now
   const toggleMagnify = () => {
     setIsMagnifyActive((prevState) => !prevState);
   };
@@ -128,8 +154,13 @@ const Tutorships = () => {
   };
 
   const determinePendingCoordinator = (tutorship, rolesData) => {
+    console.log('Tutorship last_approver:', tutorship.last_approver, 'Roles:', rolesData);
     // Extract the IDs of the roles that have already approved
-    const approvedRoleIds = tutorship.last_approver || [];
+    const approvedRoleIds = Array.isArray(tutorship.last_approver)
+      ? tutorship.last_approver
+      : tutorship.last_approver
+        ? [tutorship.last_approver]
+        : [];
 
     // Find the coordinator whose role ID is NOT in the approvedRoleIds list
     const pendingRole = rolesData.find(
@@ -174,6 +205,7 @@ const Tutorships = () => {
   };
 
   const openAddWizardModal = () => {
+    fetchStaffAndRoles(); // Ensure roles are loaded
     setIsModalOpen(true);
     fetchMatches(); // Fetch matches when opening the modal
   };
@@ -231,6 +263,8 @@ const Tutorships = () => {
       showErrorToast(t, 'Error deleting tutorship', error); // Use the toast utility for error messages
     } finally {
       closeTutorshipDeleteModal();
+      setTutorshipToDelete(null); // Clear the tutorship ID after deletion
+      fetchFullTutorships(); // Refresh the tutorships list
     }
   };
 
@@ -381,6 +415,8 @@ const Tutorships = () => {
   const fetchFullTutorships = async () => {
     setLoading(true);
     try {
+      await fetchStaffAndRoles(); // <-- Ensure staff and roles are loaded first
+
       const [tutorshipsResponse, familiesData, tutorsWithDetails] = await Promise.all([
         axios.get('/api/get_tutorships/'),
         fetchAllFamilies(),
@@ -395,9 +431,9 @@ const Tutorships = () => {
         // Use the correct field for tutor
         const tutor = tutorsWithDetails.find(t => t.id === tutorship.tutor_id) || {};
         return {
-          ...tutorship,
           ...family,
           ...tutor,
+          ...tutorship,
           // Child fields
           child_full_name: `${tutorship.child_firstname ?? family.first_name ?? "---"} ${tutorship.child_lastname ?? family.last_name ?? "---"}`,
           child_id: family.id ?? "---",
@@ -436,8 +472,12 @@ const Tutorships = () => {
         };
       });
 
+      console.log('Enriched Tutorships:', enrichedTutorships); // Log the enriched tutorships for debugging
+      console.log('Tutorships Raw:', tutorshipsRaw); // Log the raw tutorships for debugging
+
       setEnrichedTutorships(enrichedTutorships);
       setTutorships(tutorshipsRaw);
+      setTotalCount(enrichedTutorships.length); // Set the total count for pagination
       // Do NOT overwrite families/tutors here if you want to keep CRUD-safe originals!
       // setFamilies(familiesData);
       // setTutors(tutorsWithDetails);
@@ -562,6 +602,7 @@ const Tutorships = () => {
       };
     });
   };
+
 
   if (!hasPermissionOnTutorships) {
     return (
@@ -849,9 +890,11 @@ const Tutorships = () => {
                     </tbody>
                   </table>
                   <div className="modal-actions">
-                    <button className="create-tutorship-button" onClick={createTutorship}>
-                      {t('Create Tutorship')}
-                    </button>
+                    {isModalOpen && (
+                      <button className="create-tutorship-button" onClick={createTutorship}>
+                        {t('Create Tutorship')}
+                      </button>
+                    )}
                     <button className="close-info-button" onClick={closeInfoModal}>
                       {t('Close')}
                     </button>
@@ -911,8 +954,26 @@ const Tutorships = () => {
               onChange={(value) => setFilterThreshold(value)}
             />
             <span className="filter-value">{filterThreshold}</span>
+            {/* Show the warning div only if there are pending distances */}
+            {showPendingDistancesWarning && (
+              <div className="pending-distances-warning" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <HourglassSpinner />
+                <span>{t("Some distances between cities are still being calculated. Please refresh in a few seconds.")}</span>
+                {/* {distancesReady && ( */}
+                  <button onClick={fetchMatches} className="refresh-now-btn visible">
+                    {t("Refresh Now")}
+                  </button>
+                {/* )} */}
+              </div>
+            )}
           </div>
-          <div className="match-modal-content">
+          <div
+            className={
+              showPendingDistancesWarning
+                ? "match-modal-content short-match-modal-content"
+                : "match-modal-content"
+            }
+          >
             <div className="grid-container">
               {gridLoading ? (
                 <div className="grid-loader">{t("Loading data...")}</div>

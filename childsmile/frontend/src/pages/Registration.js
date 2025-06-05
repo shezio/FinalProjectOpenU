@@ -15,7 +15,7 @@ import Switch from "react-switch"; // Import react-switch
 const Registration = () => {
   const { t } = useTranslation();
   const navigate = useNavigate(); // Initialize the navigate function
-
+  const [registrationButtonDisabled, setRegistrationButtonDisabled] = useState(false);
   // Form state
   const [formData, setFormData] = useState({
     id: '',
@@ -110,6 +110,7 @@ const Registration = () => {
         .post("/api/create_volunteer_or_tutor/", formData)
         .then((response) => {
           const username = response.data.username; // Extract the username from the response
+          setRegistrationButtonDisabled(true); // Disable the registration button
           toast.success(
             t(
               "Welcome to Child Smile! Please log in with your credentials: Username: {{username}}, Password: 1234"
@@ -125,7 +126,7 @@ const Registration = () => {
         })
         .catch((error) => {
           console.error("Error during registration:", error);
-          showErrorToast(t, '', { message: "Registration failed. Please try again." });
+          showErrorToast(t, 'Registration failed. Please try again.', error);
         });
     }
   };
@@ -295,7 +296,7 @@ const Registration = () => {
           </div>
         </div>
 
-        <button type="submit">{t("Register")}</button>
+        <button type="submit" disabled={registrationButtonDisabled}>{t("Register")}</button>
       </form>
 
       <ToastContainer

@@ -650,19 +650,7 @@ You also propagate family changes to related tutor fields.
 Add modal to show all info of a tutor or general volunteer in the system managing page
 
 
-const hasPendingDistances = matches.some(m => m.distance_pending);
-
-return (
-  <>
-    {hasPendingDistances && (
-      <div className="pending-distances-warning">
-        חלק מהמרחקים בין ערים עדיין מחושבים. נא לרענן בעוד מספר שניות.
-        <button onClick={fetchMatches}>רענן עכשיו</button>
-      </div>
-    )}
-    {/* ...rest of your UI... */}
-  </>
-);
+test adding new tutor and async clacl matches for css improves
 
 #### בעת מחיקת משימה:
 - אם סוג המשימה הוא **"ראיון מועמד לחונכות"**:
