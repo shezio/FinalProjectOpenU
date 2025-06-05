@@ -36,6 +36,11 @@
             "distance": 65,
             "city2_latitude": 31.528902,
             "city2_longitude": 35.0944873
+        },
+        "אבו סנאן": {
+            "distance": 97,
+            "city2_latitude": 32.958648,
+            "city2_longitude": 35.1716603
         }
     },
     "עכו": {
@@ -139,6 +144,31 @@
             "distance": 144,
             "city2_latitude": 31.528902,
             "city2_longitude": 35.0944873
+        },
+        "אבנת": {
+            "distance": 134,
+            "city2_latitude": 31.6792556,
+            "city2_longitude": 35.4365531
+        },
+        "אביגיל": {
+            "distance": 159,
+            "city2_latitude": 31.4030281,
+            "city2_longitude": 35.1401862
+        },
+        "אחוזת ברק": {
+            "distance": 38,
+            "city2_latitude": 32.6418437,
+            "city2_longitude": 35.3387534
+        },
+        "ישע": {
+            "distance": 184,
+            "city2_latitude": 31.246415,
+            "city2_longitude": 34.4032541
+        },
+        "אבו סנאן": {
+            "distance": 23,
+            "city2_latitude": 32.958648,
+            "city2_longitude": 35.1716603
         }
     },
     "אשדוד": {
@@ -203,6 +233,26 @@
             "distance": 52,
             "city2_latitude": 31.528902,
             "city2_longitude": 35.0944873
+        },
+        "אבנת": {
+            "distance": 76,
+            "city2_latitude": 31.6792556,
+            "city2_longitude": 35.4365531
+        },
+        "אביגיל": {
+            "distance": 64,
+            "city2_latitude": 31.4030281,
+            "city2_longitude": 35.1401862
+        },
+        "אחוזת ברק": {
+            "distance": 114,
+            "city2_latitude": 32.6418437,
+            "city2_longitude": 35.3387534
+        },
+        "ישע": {
+            "distance": 66,
+            "city2_latitude": 31.246415,
+            "city2_longitude": 34.4032541
         }
     },
     "דימונה": {
@@ -232,6 +282,26 @@
             "distance": 113,
             "city2_latitude": 32.0686867,
             "city2_longitude": 34.8246812
+        },
+        "אבנת": {
+            "distance": 78,
+            "city2_latitude": 31.6792556,
+            "city2_longitude": 35.4365531
+        },
+        "אביגיל": {
+            "distance": 39,
+            "city2_latitude": 31.4030281,
+            "city2_longitude": 35.1401862
+        },
+        "אחוזת ברק": {
+            "distance": 178,
+            "city2_latitude": 32.6418437,
+            "city2_longitude": 35.3387534
+        },
+        "ישע": {
+            "distance": 64,
+            "city2_latitude": 31.246415,
+            "city2_longitude": 34.4032541
         }
     },
     "רמת גן": {
@@ -261,6 +331,26 @@
             "distance": 0,
             "city2_latitude": 32.0686867,
             "city2_longitude": 34.8246812
+        },
+        "אבנת": {
+            "distance": 73,
+            "city2_latitude": 31.6792556,
+            "city2_longitude": 35.4365531
+        },
+        "אביגיל": {
+            "distance": 80,
+            "city2_latitude": 31.4030281,
+            "city2_longitude": 35.1401862
+        },
+        "אחוזת ברק": {
+            "distance": 80,
+            "city2_latitude": 32.6418437,
+            "city2_longitude": 35.3387534
+        },
+        "ישע": {
+            "distance": 100,
+            "city2_latitude": 31.246415,
+            "city2_longitude": 34.4032541
         }
     },
     "נווה אילן": {
@@ -290,6 +380,26 @@
             "distance": 51,
             "city2_latitude": 32.0686867,
             "city2_longitude": 34.8246812
+        },
+        "אבנת": {
+            "distance": 82,
+            "city2_latitude": 31.6792556,
+            "city2_longitude": 35.4365531
+        },
+        "אביגיל": {
+            "distance": 61,
+            "city2_latitude": 31.4030281,
+            "city2_longitude": 35.1401862
+        },
+        "אחוזת ברק": {
+            "distance": 130,
+            "city2_latitude": 32.6418437,
+            "city2_longitude": 35.3387534
+        },
+        "ישע": {
+            "distance": 50,
+            "city2_latitude": 31.246415,
+            "city2_longitude": 34.4032541
         }
     },
     "אביאל": {
@@ -348,6 +458,26 @@
             "distance": 7,
             "city2_latitude": 32.0686867,
             "city2_longitude": 34.8246812
+        },
+        "אבנת": {
+            "distance": 73,
+            "city2_latitude": 31.6792556,
+            "city2_longitude": 35.4365531
+        },
+        "אביגיל": {
+            "distance": 77,
+            "city2_latitude": 31.4030281,
+            "city2_longitude": 35.1401862
+        },
+        "אחוזת ברק": {
+            "distance": 87,
+            "city2_latitude": 32.6418437,
+            "city2_longitude": 35.3387534
+        },
+        "ישע": {
+            "distance": 94,
+            "city2_latitude": 31.246415,
+            "city2_longitude": 34.4032541
         }
     },
     "תל אביב - יפו": {
@@ -377,6 +507,26 @@
             "distance": 5,
             "city2_latitude": 32.0686867,
             "city2_longitude": 34.8246812
+        },
+        "אבנת": {
+            "distance": 77,
+            "city2_latitude": 31.6792556,
+            "city2_longitude": 35.4365531
+        },
+        "אביגיל": {
+            "distance": 84,
+            "city2_latitude": 31.4030281,
+            "city2_longitude": 35.1401862
+        },
+        "אחוזת ברק": {
+            "distance": 82,
+            "city2_latitude": 32.6418437,
+            "city2_longitude": 35.3387534
+        },
+        "ישע": {
+            "distance": 100,
+            "city2_latitude": 31.246415,
+            "city2_longitude": 34.4032541
         }
     },
     "באר שבע": {
@@ -406,6 +556,26 @@
             "distance": 92,
             "city2_latitude": 32.0686867,
             "city2_longitude": 34.8246812
+        },
+        "אבנת": {
+            "distance": 78,
+            "city2_latitude": 31.6792556,
+            "city2_longitude": 35.4365531
+        },
+        "אביגיל": {
+            "distance": 38,
+            "city2_latitude": 31.4030281,
+            "city2_longitude": 35.1401862
+        },
+        "אחוזת ברק": {
+            "distance": 164,
+            "city2_latitude": 32.6418437,
+            "city2_longitude": 35.3387534
+        },
+        "ישע": {
+            "distance": 38,
+            "city2_latitude": 31.246415,
+            "city2_longitude": 34.4032541
         }
     },
     "תל אביב יפו": {
@@ -470,6 +640,26 @@
             "distance": 5,
             "city2_latitude": 32.0686867,
             "city2_longitude": 34.8246812
+        },
+        "אבנת": {
+            "distance": 77,
+            "city2_latitude": 31.6792556,
+            "city2_longitude": 35.4365531
+        },
+        "אביגיל": {
+            "distance": 84,
+            "city2_latitude": 31.4030281,
+            "city2_longitude": 35.1401862
+        },
+        "אחוזת ברק": {
+            "distance": 82,
+            "city2_latitude": 32.6418437,
+            "city2_longitude": 35.3387534
+        },
+        "ישע": {
+            "distance": 100,
+            "city2_latitude": 31.246415,
+            "city2_longitude": 34.4032541
         }
     },
     "אשקלון": {
@@ -509,6 +699,11 @@
             "distance": 52,
             "city2_latitude": 31.528902,
             "city2_longitude": 35.0944873
+        },
+        "אבו סנאן": {
+            "distance": 155,
+            "city2_latitude": 32.958648,
+            "city2_longitude": 35.1716603
         }
     },
     "ירושלים": {
@@ -577,6 +772,11 @@
             "distance": 77,
             "city2_latitude": 31.528902,
             "city2_longitude": 35.0944873
+        },
+        "אבו סנאן": {
+            "distance": 91,
+            "city2_latitude": 32.958648,
+            "city2_longitude": 35.1716603
         }
     },
     "חדרה": {
@@ -645,6 +845,11 @@
             "distance": 75,
             "city2_latitude": 31.528902,
             "city2_longitude": 35.0944873
+        },
+        "אבו סנאן": {
+            "distance": 94,
+            "city2_latitude": 32.958648,
+            "city2_longitude": 35.1716603
         }
     },
     "שבי ציון": {

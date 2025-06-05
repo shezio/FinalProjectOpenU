@@ -623,6 +623,7 @@ Set tutor_email from the signedup table.
 On delete task:
 
 If the task type is "ראיון מועמד לחונכות" - remove the pending tutor row.
+if the user was a tutor  - dont make him a general volunteer if he already has that role
 ----------------------------------------------------------------
 Tutorships
 On update tutorship:
@@ -649,25 +650,19 @@ You also propagate family changes to related tutor fields.
 Add modal to show all info of a tutor or general volunteer in the system managing page
 
 
-בוודאי! הנה תרגום לעברית של סיכום הלוגיקה העסקית והמשימות:
+const hasPendingDistances = matches.some(m => m.distance_pending);
 
----
-
-### ניהול משימות ותפקידים עבור "ראיון מועמד לחונכות"
-
-#### בעת יצירת משימה:
-- אם סוג המשימה הוא **"ראיון מועמד לחונכות"** ואין שורה בטבלת **מועמדים לחונכות ממתינים** עבור המשתמש שהוקצה למשימה – יש ליצור שורה חדשה בטבלה זו עבור המשתמש.
-
-#### בעת עדכון משימה:
-- אם סוג המשימה הוא **"ראיון מועמד לחונכות"** והסטטוס משתנה ל-**"הושלמה"**:
-  - הסר את תפקיד **"מתנדב כללי"** מהצוות (אם קיים).
-  - הוסף את תפקיד **"חונך"** לצוות.
-  - הוסף שורה חדשה בטבלת **חונכים**:
-    - השתמש ב-`id_id` מהטבלה של מועמדים ממתינים.
-    - השתמש ב-`staff_id` מהטבלת צוות (בהתאם לדוא"ל).
-    - הגדר `tutorship_status` כ-**"אין_חניך"**.
-    - הגדר `tutor_email` לפי טבלת הנרשמים.
-  - רק לאחר מכן, מחק את השורה מטבלת המועמדים הממתינים.
+return (
+  <>
+    {hasPendingDistances && (
+      <div className="pending-distances-warning">
+        חלק מהמרחקים בין ערים עדיין מחושבים. נא לרענן בעוד מספר שניות.
+        <button onClick={fetchMatches}>רענן עכשיו</button>
+      </div>
+    )}
+    {/* ...rest of your UI... */}
+  </>
+);
 
 #### בעת מחיקת משימה:
 - אם סוג המשימה הוא **"ראיון מועמד לחונכות"**:

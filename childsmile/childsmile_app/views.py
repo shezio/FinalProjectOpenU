@@ -148,10 +148,11 @@ def promote_pending_tutor_to_tutor(task):
             id_id=signedup.id,
             staff=staff,
             tutorship_status="אין_חניך",
-            tutor_email=signedup.email
+            tutor_email=signedup.email,
         )
 
     return True, "Promoted successfully"
+
 
 def check_matches_permissions(request, required_permissions):
     """
@@ -267,13 +268,13 @@ def calculate_distances(matches):
     :return: List of matches with calculated distances and coordinates.
     """
     for match in matches:
-        print(f"DEBUG: Processing match: {match}")  # Log the match being processed
+        # print(f"DEBUG: Processing match: {match}")  # Log the match being processed
         result = calculate_distance_between_cities(
             match["child_city"], match["tutor_city"]
         )
-        print(
-            f"DEBUG: Result from calculate_distance_between_cities: {result}"
-        )  # Log the result
+        # print(
+        #     f"DEBUG: Result from calculate_distance_between_cities: {result}"
+        # )  # Log the result
 
         if result:
             try:
@@ -447,6 +448,7 @@ def calculate_grades(possible_matches):
 
     # Iterate through the matches and calculate grades
     for index, match in enumerate(possible_matches):
+#        tutor_id = match.get("tutor_id")
         # Start with a base grade spread linearly across matches
         base_grade = (
             (index / (total_matches - 1)) * max_grade
@@ -454,31 +456,60 @@ def calculate_grades(possible_matches):
             else max_grade
         )
 
+        # if tutor_id == 845121544:
+        #     print(f"\nDEBUG: Calculating grade for tutor_id={tutor_id}")
+        #     print(f"  Initial base_grade: {base_grade}")
+
+
         # Adjust grade based on age difference
         child_age = match.get("child_age")
         tutor_age = match.get("tutor_age")
         age_difference = abs(child_age - tutor_age)
+        # if tutor_id == 845121544:
+        #     print(f"  child_age: {child_age}, tutor_age: {tutor_age}, age_difference: {age_difference}")
+
         if age_difference < low_age_difference:
             base_grade += max_age_bonus
+            # if tutor_id == 845121544:
+            #     print(f"  +{max_age_bonus} (age diff < {low_age_difference}) => {base_grade}")
         elif age_difference < mid_age_difference:
             base_grade += mid_age_bonus
+            # if tutor_id == 845121544:
+            #     print(f"  +{mid_age_bonus} (age diff < {mid_age_difference}) => {base_grade}")
         elif age_difference < high_age_difference:
             base_grade += low_age_bonus
+            # if tutor_id == 845121544:
+            #     print(f"  +{low_age_bonus} (age diff < {high_age_difference}) => {base_grade}")
 
         # Adjust grade based on distance
         distance = match.get("distance_between_cities")
+        # if tutor_id == 845121544:
+        #     print(f"  distance: {distance}")
         if distance < low_distance_diff:
             base_grade += max_distance_bonus
+            # if tutor_id == 845121544:
+            #     print(f"  +{max_distance_bonus} (distance < {low_distance_diff}) => {base_grade}")
         elif distance < mid_distance_diff:
             base_grade += mid_distance_bonus
+            # if tutor_id == 845121544:
+            #     print(f"  +{mid_distance_bonus} (distance < {mid_distance_diff}) => {base_grade}")
         elif distance < high_distance_diff:
             base_grade += low_distance_bonus
+            # if tutor_id == 845121544:
+            #     print(f"  +{low_distance_bonus} (distance < {high_distance_diff}) => {base_grade}")
         elif distance > penalty_distance_diff:
             base_grade = high_distance_penalty
+            # if tutor_id == 845121544:
+            #     print(
+            #         f"  Setting grade to {high_distance_penalty} (distance > {penalty_distance_diff})"
+            #     )
 
         # Ensure the grade is within the allowed range and if its not fix it
         # if its less than -5 we will set it to -5, if its more than 100 we will set it to 100
         base_grade = max(high_distance_penalty, min(base_grade, max_grade))
+
+        # if tutor_id == 845121544:
+        #     print(f"  Final base_grade: {ceil(base_grade)}")
 
         # Add the calculated grade to the match object - rounded up to the nearest whole number
         match["grade"] = ceil(base_grade)
@@ -1043,7 +1074,9 @@ def create_task(request):
                         new_pending = Pending_Tutor.objects.create(
                             id_id=pending_tutor_id, pending_status="ממתין"
                         )
-                    print(f"DEBUG: Created new Pending_Tutor with ID {pending_tutor_id}")
+                    print(
+                        f"DEBUG: Created new Pending_Tutor with ID {pending_tutor_id}"
+                    )
                     # Update task_data to use the PK, not the volunteer ID
                     task_data["pending_tutor"] = new_pending.pending_tutor_id
                 else:
@@ -1141,11 +1174,15 @@ def update_task_status(request, task_id):
             if task.task_type.task_type == "ראיון מועמד לחונכות":
                 # pending_tutor is a FK to Pending_Tutor
                 if task.pending_tutor:
-                    print(f"DEBUG: pending_tutor_id = {task.pending_tutor.pending_tutor_id}")
+                    print(
+                        f"DEBUG: pending_tutor_id = {task.pending_tutor.pending_tutor_id}"
+                    )
                     ok, msg = promote_pending_tutor_to_tutor(task)
                     print(f"DEBUG: Promotion called, result: {ok}, {msg}")
                     if not ok:
-                        return JsonResponse({"Error promoting pending tutor": msg}, status=400)
+                        return JsonResponse(
+                            {"Error promoting pending tutor": msg}, status=400
+                        )
 
         return JsonResponse(
             {"message": "Task status updated successfully."}, status=200
@@ -1250,7 +1287,9 @@ def update_task(request, task_id):
                 if pending_tutor_id:
                     ok, msg = promote_pending_tutor_to_tutor(task)
                     if not ok:
-                        return JsonResponse({"Error promoting pending tutor": msg}, status=400)
+                        return JsonResponse(
+                            {"Error promoting pending tutor": msg}, status=400
+                        )
 
         return JsonResponse({"message": "Task updated successfully."}, status=200)
     except Tasks.DoesNotExist:
@@ -2420,7 +2459,7 @@ def calculate_possible_matches(request):
 
         # Step 2: Fetch possible matches
         possible_matches = fetch_possible_matches()
-        print(f"DEBUG: Fetched {len(possible_matches)} possible matches.")
+        #print(f"DEBUG: Fetched {len(possible_matches)} possible matches.")
 
         # Step 3: Calculate distances and coordinates
         possible_matches = calculate_distances(possible_matches)
@@ -2428,14 +2467,23 @@ def calculate_possible_matches(request):
 
         # Step 4: Calculate grades
         graded_matches = calculate_grades(possible_matches)
-        print(f"DEBUG: Calculated grades for matches.")
+        #print(f"DEBUG: Calculated grades for matches.")
+
+        # # --- PRINT ALL TUTORS INCLUDED IN MATCHES ---
+        # tutor_ids = set(match["tutor_id"] for match in graded_matches)
+        # tutors = Tutors.objects.filter(id_id__in=tutor_ids).select_related("staff")
+        # print("DEBUG: Tutors included in matches:")
+        # for t in tutors:
+        #     print(
+        #         f"staff={t.staff.first_name} {t.staff.last_name}, id={t.id_id}"
+        #     )
 
         # Step 5: Clear the possiblematches table
         # print("DEBUG: Clearing possible matches table.")
         clear_possible_matches()
 
         # Step 6: Insert new matches
-        print(f"DEBUG: Inserting {len(graded_matches)} new matches into the database.")
+        #print(f"DEBUG: Inserting {len(graded_matches)} new matches into the database.")
         insert_new_matches(graded_matches)
 
         # print("DEBUG: New matches inserted successfully.")

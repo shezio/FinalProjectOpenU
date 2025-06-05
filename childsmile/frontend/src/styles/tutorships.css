@@ -1013,3 +1013,22 @@ button:disabled {
   border-radius: 4px;
   font-size: 24px;
 }
+
+.pending-distances-warning {
+  background: #fff3cd;
+  color: #856404;
+  border: 1px solid #ffeeba;
+  padding: 12px;
+  margin-bottom: 16px;
+  border-radius: 4px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.pending-distance {
+  color: #ff9800;
+  font-weight: bold;
+  font-size: 1.2em;
+}
