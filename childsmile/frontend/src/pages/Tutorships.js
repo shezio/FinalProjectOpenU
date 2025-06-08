@@ -93,11 +93,12 @@ const Tutorships = () => {
   const [enrichedTutorships, setEnrichedTutorships] = useState([]);
   const [wizardFamilies, setWizardFamilies] = useState([]);
   const [wizardTutors, setWizardTutors] = useState([]);
-  const showPendingDistancesWarning = matches.some(m => m.distance_pending);
-  const [distancesReady, setDistancesReady] = useState(false);
+  //const showPendingDistancesWarning = matches.some(m => m.distance_pending);
   const [CoordinatorOrAdmin, setCoordinatorOrAdmin] = useState(false);
-  //const showPendingDistancesWarning = true; // Always show the warning for now
-
+  const showPendingDistancesWarning = true; // Always show the warning for now
+  const [statusFilter, setStatusFilter] = useState('');
+  const [showStatusDropdown, setShowStatusDropdown] = useState(false);
+  const statusFilterRef = useRef();
 
   const toggleMagnify = () => {
     setIsMagnifyActive((prevState) => !prevState);
@@ -156,7 +157,7 @@ const Tutorships = () => {
         console.error('Current user not found in staff data.');
         showErrorToast(t, 'Current user not found. Please contact support.');
       }
-            // Helper to check if user is coordinator or admin
+      // Helper to check if user is coordinator or admin
       const isCoordinatorOrAdmin = rolesData.some(
         (role) =>
           role.role_name === 'Tutors Coordinator' ||
@@ -295,6 +296,7 @@ const Tutorships = () => {
         (match.tutor_full_name && match.tutor_full_name.toLowerCase().includes(query))
       );
     })
+    .filter((match) => !statusFilter || match.tutoring_status === statusFilter) // <-- Add this line
     .sort((a, b) => {
       if (sortOrder === 'asc') {
         return a.grade - b.grade;
@@ -342,6 +344,21 @@ const Tutorships = () => {
   const toggleSortOrder = () => {
     setSortOrder((prevOrder) => (prevOrder === 'asc' ? 'desc' : 'asc'));
   };
+  // Add near the top of Tutorships.js
+  const TUTORING_STATUS_ROW_COLORS = {
+    "לא_רוצים": "#e6e6e6",                // grayish
+    "לא_רלוונטי": "#e6e6e6",              // grayish
+    "בוגר": "#e6f7ff",                     // light blue
+    "שידוך_בסימן_שאלה": "#f9e6ff",         // light purple
+    "למצוא_חונך_בעדיפות_גבוה": "#e53935", // strong red (urgent)
+    "למצוא_חונך_אין_באיזור_שלו": "#fff0e6", // light orange
+    "יש_חונך": "#e6ffe6",                  // light green
+    "למצוא_חונך": "#fffbe6",               // light yellow (default)
+  };
+
+  function getTutoringStatusRowColor(status) {
+    return TUTORING_STATUS_ROW_COLORS[status] || "#fff";
+  }
 
   const openInfoModal = (row) => {
     // If it's a tutorship (from the grid), build the expected structure
@@ -620,6 +637,24 @@ const Tutorships = () => {
     });
   };
 
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (
+        statusFilterRef.current &&
+        !statusFilterRef.current.contains(event.target)
+      ) {
+        setShowStatusDropdown(false);
+      }
+    }
+    if (showStatusDropdown) {
+      document.addEventListener("mousedown", handleClickOutside);
+    } else {
+      document.removeEventListener("mousedown", handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [showStatusDropdown]);
 
   if (!hasViewPermission) {
     return (
@@ -964,15 +999,59 @@ const Tutorships = () => {
             <ReactSlider
               id="filter-slider"
               className="custom-slider"
-              thumbClassName="custom-slider-thumb"
+              thumbClassName="custom-slider-threshold-thumb"
               trackClassName="custom-slider-track"
               min={0}
               max={100}
               value={filterThreshold}
-              onChange={(value) => setFilterThreshold(value)}
+              onChange={setFilterThreshold}
+              renderThumb={(props, state) => (
+                <div {...props}>{state.valueNow}</div>
+              )}
             />
-            <span className="filter-value">{filterThreshold}</span>
-            {/* Show the warning div only if there are pending distances */}
+            <div className="status-filter-container" ref={statusFilterRef}>
+              <label className="status-filter-label">{t('Filter by Urgency')}</label>
+              <span
+                className="funnel-icon"
+                tabIndex={0}
+                onClick={() => setShowStatusDropdown(v => !v)}
+              >
+                <svg className="funnel-icon-svg" viewBox="0 0 24 24" fill="none">
+                  <path d="M3 5h18l-7 9v5l-4 2v-7l-7-9z" fill="#555" />
+                </svg>
+              </span>
+              {showStatusDropdown && (
+                <div className="status-filter-dropdown">
+                  <div
+                    className={`status-filter-option${statusFilter === '' ? ' selected' : ''}`}
+                    onClick={() => {
+                      setStatusFilter('');
+                      setShowStatusDropdown(false);
+                    }}
+                    style={{ backgroundColor: '#fff' }}
+                  >
+                    {t('All Urgencies')}
+                  </div>
+                  {Object.entries(TUTORING_STATUS_ROW_COLORS).map(([status, color]) => (
+                    <div
+                      key={status}
+                      className={`status-filter-option${statusFilter === status ? ' selected' : ''}`}
+                      onClick={() => {
+                        setStatusFilter(status);
+                        setShowStatusDropdown(false);
+                      }}
+                      style={{
+                        backgroundColor: color,
+                        color: status === "למצוא_חונך_בעדיפות_גבוה" ? "#fff" : "#000",
+                        fontWeight: status === "למצוא_חונך_בעדיפות_גבוה" ? "bold" : "normal"
+                      }}
+                    >
+                      {t(status.replace(/_/g, ' '))}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
             {showPendingDistancesWarning && (
               <div className="pending-distances-warning" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <HourglassSpinner />
@@ -1040,10 +1119,18 @@ const Tutorships = () => {
                   <tbody>
                     {sortedAndFilteredMatches.map((match, index) => (
                       <tr
-                        key={`${match.child_id}-${match.tutor_id}-${index}`} // Ensure the key is unique by appending the index
-
+                        key={`${match.child_id}-${match.tutor_id}-${index}`}
                         onClick={() => handleRowClick(match)}
-                        className={selectedMatch === match ? 'selected' : ''}
+                        className={
+                          (selectedMatch === match ? 'selected-row ' : '') +
+                          (match.tutoring_status === "למצוא_חונך_בעדיפות_גבוה" ? "urgent-row" : "")
+                        }
+                        style={{
+                          backgroundColor: selectedMatch === match
+                            ? '#add8e6'
+                            : getTutoringStatusRowColor(match.tutoring_status),
+                          color: selectedMatch === match ? '#111' : undefined
+                        }}
                       >
                         <td>
                           <div className="info-icon-container" onClick={() => openInfoModal(match)}>

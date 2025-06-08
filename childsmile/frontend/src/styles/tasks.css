@@ -771,3 +771,11 @@
   pointer-events: none;
   opacity: 0.5; /* Optional: visually indicate it's disabled */
 }
+
+/* Add to your CSS */
+.disabled-btn {
+  opacity: 0.5;
+  pointer-events: none;
+  cursor: not-allowed;
+}
+
