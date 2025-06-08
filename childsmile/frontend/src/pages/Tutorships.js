@@ -93,9 +93,9 @@ const Tutorships = () => {
   const [enrichedTutorships, setEnrichedTutorships] = useState([]);
   const [wizardFamilies, setWizardFamilies] = useState([]);
   const [wizardTutors, setWizardTutors] = useState([]);
-  //const showPendingDistancesWarning = matches.some(m => m.distance_pending);
+  const showPendingDistancesWarning = matches.some(m => m.distance_pending);
   const [CoordinatorOrAdmin, setCoordinatorOrAdmin] = useState(false);
-  const showPendingDistancesWarning = true; // Always show the warning for now
+  //const showPendingDistancesWarning = true; // Always show the warning for now
   const [statusFilter, setStatusFilter] = useState('');
   const [showStatusDropdown, setShowStatusDropdown] = useState(false);
   const statusFilterRef = useRef();
