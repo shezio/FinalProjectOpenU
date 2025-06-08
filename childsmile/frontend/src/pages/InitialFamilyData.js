@@ -42,7 +42,7 @@ const InitialFamilyData = () => {
   const [sortBy, setSortBy] = useState('created_at');
   const [sortOrder, setSortOrder] = useState('desc');
   const [page, setPage] = useState(1);
-  const [pageSize] = useState(3);
+  const [pageSize] = useState(2);
   const [totalCount, setTotalCount] = useState(0);
 
   // Modal states

@@ -14,18 +14,28 @@ const Login = () => {
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    console.log('Form submitted');
-    console.log('Username:', username);
-    console.log('Password:', password);
+    const trimmedUsername = username.trim();
+    const trimmedPassword = password.trim();
+
+    // Validate input
+    if (!trimmedUsername || !trimmedPassword) {
+      setError(t('Please enter both username and password.'));
+      return;
+    }
+    // if we have spaces in the username, replace them with '_'
+    if (trimmedUsername.includes(' ') || trimmedPassword.includes(' ')) {
+      setError(t('Username and password cannot contain spaces.'));
+      return;
+    }
 
     try {
-      const response = await axios.post('/api/login/', { username, password });
+      const response = await axios.post('/api/login/', { username: trimmedUsername, password: trimmedPassword });
       console.log('Login successful:', response.data);
       setSuccess(t(response.data.message));
       setError('');
       // store the usernname in local storage without the '_' - replace with space
-      localStorage.setItem('username', username.replace(/_/g, ' '));
-      localStorage.setItem('origUsername', username); // Store the original username
+      localStorage.setItem('username', trimmedUsername.replace(/_/g, ' '));
+      localStorage.setItem('origUsername', trimmedUsername); // Store the original username
 
       // Fetch permissions after successful login
       const permissionsResponse = await axios.get('/api/permissions/');
@@ -44,12 +54,6 @@ const Login = () => {
       navigate('/tasks');
 
     } catch (err) {
-      // if the username or password has spaces - show error message about it
-      if (username.includes(' ') || password.includes(' ')) {
-        setError(t("שם משתמש או סיסמה לא יכולים להכיל רווחים"));
-        setSuccess('');
-        return;
-      }
       console.error('Login error:', err);
       setError(t(err.response?.data?.error || 'An error occurred. Please try again.'));
       setSuccess('');
@@ -66,7 +70,7 @@ const Login = () => {
         <input
           type="text"
           placeholder={t("שם משתמש")}
-          value={username}
+          value={username} // Trim whitespace from username
           onChange={(e) => setUsername(e.target.value)}
         />
         <input

@@ -10,7 +10,7 @@ const Sidebar = () => {
   const hasPermissionToTasks = hasViewPermissionForTable('tasks');
   const hasPermissionToFamilies = hasViewPermissionForTable('children');
   const hasPermissionToFeedbacks = hasViewPermissionForTable('general_v_feedback') || hasViewPermissionForTable('tutor_feedback');
-  const hasPermissionToTutorships = hasCreatePermissionForTable('tutorships');
+  const hasPermissionToTutorships = hasViewPermissionForTable('tutorships');
   const hasPermissionToSystemManagement = hasDeletePermissionForTable('staff');
   const hasPermissionToAnyReport = hasViewPermissionForReports();
 

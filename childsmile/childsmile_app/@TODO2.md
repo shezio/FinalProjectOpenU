@@ -619,6 +619,18 @@ Set tutorship_status to "אין_חניך".
 Set tutor_email from the signedup table.
 --------------------------------------------------------------
 
+
+
+
+
+
+
+
+
+
+
+
+
 @TODO
 On delete task:
 
@@ -650,8 +662,6 @@ You also propagate family changes to related tutor fields.
 Add modal to show all info of a tutor or general volunteer in the system managing page
 
 
-test adding new tutor and async clacl matches for css improves
-
 #### בעת מחיקת משימה:
 - אם סוג המשימה הוא **"ראיון מועמד לחונכות"**:
   - מחק את השורה מטבלת המועמדים הממתינים.
@@ -676,18 +686,9 @@ test adding new tutor and async clacl matches for css improves
 
 ---
 
-### עדכוני משפחה
 
 #### בעת עדכון משפחה:
 - אם `marital_status` של הילד מתעדכן – עדכן את `relationship_status` של החונך בהתאם.
 - אם `current_medical_state` של הילד מתעדכן – עדכן את `tutee_wellness` של החונך בהתאם.
 
----
-
-### סיכום קצר:
-הלוגיקה מסנכרנת תפקידים וסטטוסים בין משימות, מועמדים ממתינים, חונכים, צוות וילדים – בעיקר סביב תהליך **"ראיון מועמד לחונכות"** ומחזור החיים של חונכות.  
-בנוסף, שינויים בפרטי המשפחה מתעדכנים גם בשדות הרלוונטיים של החונך.
-
----
-
-רוצה שאכין לך מזה תרשים זרימה או קובץ מסודר?
+-

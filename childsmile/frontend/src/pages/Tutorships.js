@@ -9,7 +9,7 @@ import axios from '../axiosConfig';
 import Modal from 'react-modal';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { hasAllPermissions, getTutors } from '../components/utils';
+import { hasViewPermissionForTable, hasUpdatePermissionForTable, hasDeletePermissionForTable, hasCreatePermissionForTable, getTutors } from '../components/utils';
 import { useTranslation } from 'react-i18next'; // Import the translation hook
 import { showErrorToast, showErrorApprovalToast } from '../components/toastUtils'; // Import the toast utility
 import { MapContainer, TileLayer, Marker, Popup, Polyline } from 'react-leaflet';
@@ -28,6 +28,12 @@ L.Icon.Default.mergeOptions({
   iconUrl: markerIcon,
   shadowUrl: markerShadow,
 });
+
+
+const hasDeletePermission = hasDeletePermissionForTable('tutorships');
+const hasCreatePermission = hasCreatePermissionForTable('tutorships');
+const hasUpdatePermission = hasUpdatePermissionForTable('tutorships');
+const hasViewPermission = hasViewPermissionForTable('tutorships');
 
 const HourglassSpinner = () => {
   const [rotation, setRotation] = useState(0);
@@ -89,6 +95,7 @@ const Tutorships = () => {
   const [wizardTutors, setWizardTutors] = useState([]);
   const showPendingDistancesWarning = matches.some(m => m.distance_pending);
   const [distancesReady, setDistancesReady] = useState(false);
+  const [CoordinatorOrAdmin, setCoordinatorOrAdmin] = useState(false);
   //const showPendingDistancesWarning = true; // Always show the warning for now
   const toggleMagnify = () => {
     setIsMagnifyActive((prevState) => !prevState);
@@ -147,6 +154,15 @@ const Tutorships = () => {
         console.error('Current user not found in staff data.');
         showErrorToast(t, 'Current user not found. Please contact support.');
       }
+            // Helper to check if user is coordinator or admin
+      const isCoordinatorOrAdmin = rolesData.some(
+        (role) =>
+          role.role_name === 'Tutors Coordinator' ||
+          role.role_name === 'Families Coordinator' ||
+          role.role_name === 'System Administrator'
+      );
+      console.log('DEBUG: Is Coordinator or Admin:', isCoordinatorOrAdmin); // Add debug log
+      setCoordinatorOrAdmin(isCoordinatorOrAdmin);
     } catch (error) {
       console.error('Error fetching staff or roles:', error);
       showErrorToast(t, 'Failed to fetch staff or roles.', error);
@@ -180,7 +196,6 @@ const Tutorships = () => {
     { resource: 'childsmile_app_tutorships', action: 'VIEW' },
   ];
 
-  const hasPermissionOnTutorships = hasAllPermissions(requiredPermissions);
 
   // Function to get a custom marker icon based on the distance
   const getColoredMarkerIcon = (grade) => {
@@ -558,7 +573,7 @@ const Tutorships = () => {
   };
 
   useEffect(() => {
-    if (hasPermissionOnTutorships) {
+    if (hasViewPermission) {
       fetchFullTutorships();
     } else {
       setLoading(false);
@@ -604,7 +619,7 @@ const Tutorships = () => {
   };
 
 
-  if (!hasPermissionOnTutorships) {
+  if (!hasViewPermission) {
     return (
       <div className="tutorships-main-content">
         <Sidebar />
@@ -685,13 +700,14 @@ const Tutorships = () => {
                         <div className="tutorship-actions">
                           <button
                             className="approve-button"
-                            disabled={tutorship.approval_counter >= 2}
+                            disabled={tutorship.approval_counter >= 2 || !CoordinatorOrAdmin || !hasUpdatePermission}
                             onClick={() => openApprovalModal(tutorship)}
                           >
                             {t('Final Approval')}
                           </button>
                           <button
                             className="delete-button"
+                            hidden={!hasDeletePermission}
                             onClick={() => openTutorshipDeleteModal(tutorship.id)}
                           >
                             {t('Delete')}
@@ -890,7 +906,7 @@ const Tutorships = () => {
                     </tbody>
                   </table>
                   <div className="modal-actions">
-                    {isModalOpen && (
+                    {isModalOpen && hasCreatePermission && (
                       <button className="create-tutorship-button" onClick={createTutorship}>
                         {t('Create Tutorship')}
                       </button>
@@ -960,9 +976,9 @@ const Tutorships = () => {
                 <HourglassSpinner />
                 <span>{t("Some distances between cities are still being calculated. Please refresh in a few seconds.")}</span>
                 {/* {distancesReady && ( */}
-                  <button onClick={fetchMatches} className="refresh-now-btn visible">
-                    {t("Refresh Now")}
-                  </button>
+                <button onClick={fetchMatches} className="refresh-now-btn visible">
+                  {t("Refresh Now")}
+                </button>
                 {/* )} */}
               </div>
             )}
@@ -1131,9 +1147,11 @@ const Tutorships = () => {
           </div>
           <div className="modal-actions">
             <button className="calc-match-button" onClick={fetchMatches}>{t('Calculate Matches')}</button>
-            <button className="create-tutorship-button" onClick={createTutorship} disabled={!selectedMatch}>
-              {t('Create Tutorship')}
-            </button>
+            {hasCreatePermission && (
+              <button className="create-tutorship-button" onClick={createTutorship} disabled={!selectedMatch}>
+                {t('Create Tutorship')}
+              </button>
+            )}
           </div>
         </Modal>
       </div>

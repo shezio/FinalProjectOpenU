@@ -507,7 +507,7 @@ const VolunteerFeedbacks = () => {
                         </button>
                         <button
                           className="feedbacks-delete-button"
-                          disabled={!canDelete}
+                          hidden={!canDelete}
                           onClick={() => handleDelete(feedback.feedback_id)}
                         >
                           {t("Delete")}

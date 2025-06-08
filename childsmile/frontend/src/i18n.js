@@ -215,7 +215,8 @@ const resources = {
       "Comment": "הערות",
       "Age": "גיל",
       "Gender": "מין",
-      "Register": "הרשמה להתנדבות - חיוך של ילד",
+      "Registration": "הרשמה להתנדבות - חיוך של ילד",
+      "Register": "הרשמה",
       "Male": "זכר",
       "Female": "נקבה",
       "Registration failed. Please try again.": "הרשמה נכשלה. אנא נסה שוב.",
@@ -532,7 +533,9 @@ const resources = {
       'General Volunteers': "מתנדבים כלליים",
       "Refresh Now": "רענן עכשיו",
       "Some distances between cities are still being calculated. Please refresh in a few seconds.": "חלק מהמרחקים בין ערים עדיין מחושבים. נא לרענן בעוד מספר שניות.",
-      "All distances are ready.": "כל המרחקים מוכנים."
+      "All distances are ready.": "כל המרחקים מוכנים.",
+      'Please enter both username and password.': "חובה למלא שם משתמש וסיסמה.",
+      'Username and password cannot contain spaces.': "שם משתמש וסיסמה לא יכולים להכיל רווחים.",
     }
   }
 };

@@ -75,7 +75,7 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 def calculate_possible_matches(request):
     try:
         # Step 1: Check user permissions
-        check_matches_permissions(request, ["CREATE", "UPDATE", "DELETE"])
+        check_matches_permissions(request, ["CREATE", "UPDATE", "DELETE", "VIEW"])
         # print("DEBUG: User has all required permissions.")
 
         # Step 2: Fetch possible matches

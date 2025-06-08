@@ -119,6 +119,12 @@ body {
 
 .welcome {
     font-size: 2em;
+    word-break: break-word;
+    /* Use break-word for better word breaking */
+    white-space: normal;
+    /* Allow normal wrapping */
+    max-width: 320px;
+    /* Optional: limit width so long names wrap */
 }
 
 .logout-button {
@@ -139,7 +145,7 @@ body {
 @media (max-width: 2400px) {
     .logo {
         width: 150px;
-        
+
         /* Remove extra margin */
         position: relative;
         flex-shrink: 1;
