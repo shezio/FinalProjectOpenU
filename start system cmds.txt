@@ -1,5 +1,5 @@
 -- quickly start BE
 .\childsmile\myenv\Scripts\activate ;  python .\childsmile\manage.py runserver
-
+python .\childsmile\manage.py shell
 -- quickly start FE
 cd .\childsmile\frontend\ ; npm start 

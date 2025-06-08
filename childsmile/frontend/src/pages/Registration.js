@@ -1,4 +1,4 @@
-import React, { useState , useEffect} from "react";
+import React, { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import "../styles/registration.css"; // Add styles for the registration page
 import axios from "../axiosConfig";
@@ -13,6 +13,12 @@ import Switch from "react-switch"; // Import react-switch
 
 
 const Registration = () => {
+  // useEffect(() => {
+  //   toast.info("זוהי הודעת טוסט לבדיקה\nThis is a test toast for CSS!", {
+  //     className: "registration-toast",
+  //     bodyClassName: "registration-toast-body-inner"
+  //   });
+  // }, []);
   const { t } = useTranslation();
   const navigate = useNavigate(); // Initialize the navigate function
   const [registrationButtonDisabled, setRegistrationButtonDisabled] = useState(false);
@@ -101,6 +107,14 @@ const Registration = () => {
     return Object.keys(newErrors).length === 0;
   };
 
+  const switchProps = {
+    handleDiameter: 60,
+    height: 80,
+    width: 180,
+    offColor: "#d9534f",
+    onColor: "#0275d8",
+    className: "custom-switch",
+  };
   const handleSubmit = (e) => {
     e.preventDefault(); // Prevent the default form submission behavior
     console.log("DEBUG: Form data being submitted:", formData); // Log the form data
@@ -132,26 +146,35 @@ const Registration = () => {
   };
 
 
-  useEffect(() => {
-    document.body.style.zoom = "115%";
-    return () => {
-      document.body.style.zoom = "";
-    };
-  }, []);
+  // useEffect(() => {
+  //   document.body.style.zoom = "105%";
+  //   return () => {
+  //     document.body.style.zoom = "";
+  //   };
+  // }, []);
 
   return (
-    <div className="registration-container">
-      <div style={{ width: "100%", display: "flex", justifyContent: "center", alignItems: "center", marginBottom: "20px", direction: "ltr" }} className="registration-logo-container">
-        <img src={logo} alt="Logo" className="regisration-logo" />
-      </div>
-
+    <>
+      <ToastContainer
+        position="top-center"
+        autoClose={10000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={true}
+        pauseOnFocusLoss
+        pauseOnHover
+      />
       <form className="registration-form" onSubmit={handleSubmit}>
-        <h2>{t("Register")}</h2>
-
+        <img src={logo} alt="Logo" className="regisration-logo" />
+        <h2>{t("Registration")}</h2>
         <div className="form-columns">
           {/* עמודה ימנית */}
           <div className="column">
-            <label>{t("First Name")}</label>
+            <div className="label-error-row">
+              <label>{t("First Name")}</label>
+              {errors.first_name && <span className="error-message">{errors.first_name}</span>}
+            </div>
             <input
               type="text"
               name="first_name"
@@ -159,9 +182,11 @@ const Registration = () => {
               onChange={handleChange}
               className={errors.first_name ? "error" : ""}
             />
-            {errors.first_name && <span className="error-message">{errors.first_name}</span>}
 
-            <label>{t("Surname")}</label>
+            <div className="label-error-row">
+              <label>{t("Surname")}</label>
+              {errors.surname && <span className="error-message">{errors.surname}</span>}
+            </div>
             <input
               type="text"
               name="surname"
@@ -169,9 +194,11 @@ const Registration = () => {
               onChange={handleChange}
               className={errors.surname ? "error" : ""}
             />
-            {errors.surname && <span className="error-message">{errors.surname}</span>}
 
-            <label>{t("Age")}: {formData.age}</label>
+            <div className="label-error-row">
+              <label>{t("Age")}: {formData.age}</label>
+              {errors.age && <span className="error-message">{errors.age}</span>}
+            </div>
             <input
               type="range"
               name="age"
@@ -180,40 +207,41 @@ const Registration = () => {
               value={formData.age}
               onChange={handleChange}
             />
-            {errors.age && <span className="error-message">{errors.age}</span>}
 
-            {/* Gender Switch */}
-            <label>{t("Gender")}</label>
+            <div className="label-error-row">
+              <label>{t("Gender")}</label>
+              {errors.gender && <span className="error-message">{errors.gender}</span>}
+            </div>
             <div className="switch-container">
               <Switch
                 onChange={(checked) => handleToggleChange("gender", checked ? "Female" : "Male")}
                 checked={formData.gender === "Female"}
-                className="custom-switch"
                 checkedIcon={<div className="switch-label">{t("Female")}</div>}
                 uncheckedIcon={<div className="switch-label">{t("Male")}</div>}
-                offColor="#d9534f" // Deeper red tone
-                onColor="#0275d8" // Deeper blue tone
-                handleDiameter={30}
-                height={30}
-                width={100}
+                {...switchProps}
               />
             </div>
-            {errors.gender && <span className="error-message">{errors.gender}</span>}
 
-            <label>{t('ID')}</label>
+            <div className="label-error-row">
+              <label>{t("ID")}</label>
+              {errors.id && <span className="error-message">{errors.id}</span>}
+            </div>
             <input
               type="text"
               name="id"
               value={formData.id}
               onChange={handleChange}
+              maxLength="9"
               className={errors.id ? 'error' : ''}
             />
-            {errors.id && <span className="error-message">{errors.id}</span>}
           </div>
 
           {/* עמודה שמאלית */}
           <div className="column">
-            <label>{t("Phone")}</label>
+            <div className="label-error-row">
+              <label>{t("Phone")}</label>
+              {errors.phone && <span className="error-message">{errors.phone}</span>}
+            </div>
             <div className="phone-container">
               <input
                 type="text"
@@ -240,9 +268,11 @@ const Registration = () => {
                 ))}
               </select>
             </div>
-            {errors.phone && <span className="error-message">{errors.phone}</span>}
 
-            <label>{t("City")}</label>
+            <div className="label-error-row">
+              <label>{t("City")}</label>
+              {errors.city && <span className="error-message">{errors.city}</span>}
+            </div>
             <select
               name="city"
               value={formData.city}
@@ -256,7 +286,7 @@ const Registration = () => {
                 </option>
               ))}
             </select>
-            {errors.city && <span className="error-message">{errors.city}</span>}
+
 
             <label>{t("Comment")}</label>
             <textarea
@@ -266,7 +296,10 @@ const Registration = () => {
               className="no-resize"
             />
 
-            <label>{t("Email")}</label>
+            <div className="label-error-row">
+              <label>{t("Email")}</label>
+              {errors.email && <span className="error-message">{errors.email}</span>}
+            </div>
             <input
               type="email"
               name="email"
@@ -274,41 +307,26 @@ const Registration = () => {
               onChange={handleChange}
               className={errors.email ? "error" : ""}
             />
-            {errors.email && <span className="error-message">{errors.email}</span>}
 
-            {/* Want to be a Tutor Switch */}
-            <label>{t("Want to be a Tutor?")}</label>
+
+            <div className="label-error-row">
+              <label>{t("Want to be a Tutor?")}</label>
+              {errors.want_tutor && <span className="error-message">{errors.want_tutor}</span>}
+            </div>
             <div className="switch-container">
               <Switch
                 onChange={(checked) => handleToggleChange("want_tutor", checked ? "true" : "false")}
                 checked={formData.want_tutor === "true"}
-                className="custom-switch"
                 checkedIcon={<div className="switch-label">{t("Yes")}</div>}
                 uncheckedIcon={<div className="switch-label">{t("No")}</div>}
-                offColor="#d9534f" // Deeper red tone
-                onColor="#0275d8" // Deeper blue tone
-                handleDiameter={30}
-                height={30}
-                width={100}
+                {...switchProps}
               />
             </div>
-            {errors.want_tutor && <span className="error-message">{errors.want_tutor}</span>}
           </div>
         </div>
-
         <button type="submit" disabled={registrationButtonDisabled}>{t("Register")}</button>
       </form>
-
-      <ToastContainer
-        position="top-center"
-        autoClose={10000}
-        hideProgressBar={false}
-        newestOnTop={false}
-        closeOnClick
-        rtl={true}
-        pauseOnFocusLoss
-        pauseOnHover />
-    </div >
+    </>
   );
 };
 

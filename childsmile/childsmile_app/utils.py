@@ -166,9 +166,8 @@ def check_matches_permissions(request, required_permissions):
     if not user_id:
         raise PermissionError("Authentication credentials were not provided.")
 
-    for permission in required_permissions:
-        if not has_permission(request, "possiblematches", permission):
-            raise PermissionError(f"You do not have {permission} permission.")
+    if not any(has_permission(request, "possiblematches", permission) for permission in required_permissions):
+        raise PermissionError(f"You do not have any of the required permissions: {', '.join(required_permissions)}")
 
 
 def fetch_possible_matches():

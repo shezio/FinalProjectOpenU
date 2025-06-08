@@ -1,51 +1,39 @@
-/* General container styles */
-.registration-container {
-    max-width: 600px;
-    margin: 0 auto;
-    padding: 20px;
-    background-color: #f9f9f9;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.registration-logo-container {
-    align-items: center;
-    /* Center the logo vertically */
-    display: flex;
-}
-
-
 .regisration-logo {
     max-width: 150px;
     height: auto;
+    margin-right: 900px;
 }
 
 .registration-form h2 {
     text-align: center;
-    margin-bottom: 20px;
-    font-size: 28px;
+    margin-bottom: 10px;
+    font-size: 52px;
     font-weight: bold;
-    font-family: 'David Libre', sans-serif;
+    font-family: Rubik;
+    margin-top: 10px;
 }
 
+/* Button styles */
 .registration-form button {
-    width: 100%;
+    width: 50%;
     padding: 10px;
-    background-color: #4CAF50;
+    background-color: #4caf50;
     color: white;
     border: none;
     border-radius: 4px;
     cursor: pointer;
-    font-size: 18px;
+    font-size: 52px;
     font-weight: bold;
+    font-family: Rubik;
+    margin-right: 500px;
 }
-
 
 .registration-form label {
     display: block;
     margin-bottom: 5px;
     font-weight: bold;
-    font-size: 20px;
+    font-size: 36px;
+    font-family: Rubik;
 }
 
 .registration-form input,
@@ -56,6 +44,8 @@
     margin-bottom: 10px;
     border: 1px solid #ccc;
     border-radius: 4px;
+    font-size: 24px;
+    font-family: Rubik;
 }
 
 .registration-form textarea.no-resize {
@@ -73,20 +63,48 @@
     border-color: red;
 }
 
+/* Make the range input bigger */
 .registration-form input[type="range"] {
     width: 100%;
-    height: 20px;
+    height: 32px;           /* Increase the height of the slider track */
     margin-bottom: 10px;
+    accent-color: #0275d8;  /* Modern browsers: slider color */
+}
+
+/* Style the thumb (the draggable circle) for Chrome, Edge, Safari */
+.registration-form input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 32px;            /* Thumb width */
+    height: 32px;           /* Thumb height */
+    border-radius: 50%;
+    background: #0275d8;
+    cursor: pointer;
+    border: 2px solid #fff;
+    box-shadow: 0 0 2px #888;
+}
+
+/* Style the track for Chrome, Edge, Safari */
+.registration-form input[type="range"]::-webkit-slider-runnable-track {
+    height: 14px;           /* Track height */
+    border-radius: 20px;
+}
+
+/* Remove outline on focus for all browsers */
+.registration-form input[type="range"]:focus {
+    outline: none;
 }
 
 .error-message {
     color: red;
-    font-size: 14px;
-    margin-top: -5px;    /* מקרב את ההודעה לשדה */
+    font-size: 20px;
+    margin-top: -5px;
+    /* מקרב את ההודעה לשדה */
     margin-bottom: 10px;
     display: block;
-    direction: rtl;      /* חשוב לעברית */
-    font-family: 'David Libre', sans-serif;
+    direction: rtl;
+    /* חשוב לעברית */
+    font-family: Rubik;
 }
 
 .error-message::before {
@@ -98,22 +116,22 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-bottom: 15px;
 }
 
 /* Custom switch styles */
 .switch-container .react-switch {
     width: 300px;
     /* Make the switch controller wider */
-    height: 20px;
+    height: 80px;
     /* Adjust the height for better proportions */
     border-radius: 7px;
+
 }
 
 .switch-container .react-switch-handle {
-    width: 20px;
+    width: 60px;
     /* Adjust the handle size */
-    height: 20px;
+    height: 60px;
     /* Match the height of the switch */
     top: -3px;
     /* Center the handle vertically */
@@ -122,7 +140,7 @@
 
 /* Text inside the switch */
 .switch-container .switch-label {
-    font-size: 18px;
+    font-size: 36px;
     font-weight: bold;
     color: white;
     display: flex;
@@ -134,6 +152,7 @@
     padding: 0 10px;
     /* Add horizontal padding so text doesn't stick to edges */
     box-sizing: border-box;
+    font-family: Rubik;
 }
 
 
@@ -141,17 +160,6 @@
 .switch-container .react-switch:active .react-switch-handle {
     box-shadow: none;
     /* Remove the active shadow */
-}
-
-/* Button styles */
-.registration-form button {
-    width: 100%;
-    padding: 10px;
-    background-color: #4caf50;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
 }
 
 .registration-form button:hover {
@@ -162,15 +170,19 @@
 .phone-container {
     display: flex;
     align-items: center;
-    gap: 5px; /* Add spacing between elements */
+    gap: 5px;
+    /* Add spacing between elements */
     margin-bottom: 10px;
+    font-size: 24px;
 }
 
 .phone-container select {
-    width: 80px; /* Make the dropdown smaller */
+    width: 80px;
+    /* Make the dropdown smaller */
     padding: 5px;
     border: 1px solid #ccc;
     border-radius: 4px;
+    font-size: 24px;
 }
 
 .phone-container .dash {
@@ -180,7 +192,8 @@
 }
 
 .phone-container input {
-    flex: 1; /* Make the text field take the remaining space */
+    flex: 1;
+    /* Make the text field take the remaining space */
     padding: 8px;
     border: 1px solid #ccc;
     border-radius: 4px;
@@ -191,47 +204,52 @@
     border-color: red;
 }
 
-/* Responsive styles for smaller screens */
-/* need 67% zoom on smaller screens */
-@media (max-width: 768px) {
-    .registration-container {
-        padding: 10px;
-        width: 90%;
-    }
-
-    .registration-form h2 {
-        font-size: 24px;
-    }
-
-    .registration-form label {
-        font-size: 14px;
-    }
-
-    .registration-form input,
-    .registration-form select,
-    .registration-form textarea {
-        font-size: 14px;
-    }
-
-    .registration-form button {
-        font-size: 16px;
-    }
-}
-
 .form-columns {
     display: flex;
     gap: 40px;
     flex-wrap: wrap;
-  }
-  
-  .column {
+}
+
+.column {
     flex: 1;
-    min-width: 280px;
-  }
-  
-  @media screen and (max-width: 768px) {
-    .form-columns {
-      flex-direction: column;
-    }
-  }
-  
+    width: 100%;
+    align-items: center;
+    margin-right: 50px;
+    margin-left: 50px;
+    margin-bottom: 5px;
+}
+
+.label-error-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.error-message-inline {
+    color: red;
+    font-size: 36px !important;
+    margin-top: 5px;
+    /* מקרב את ההודעה לשדה */
+    margin-bottom: 10px;
+    display: block;
+    direction: rtl;
+    /* חשוב לעברית */
+    font-family: Rubik;
+}
+
+.registration-toast .Toastify__toast {
+  background: #0275d8;
+  color: #fff;
+  font-family: Rubik;
+  font-size: 48px;
+  border-radius: 12px;
+  min-width: 320px;
+  max-width: 480px;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.12);
+}
+
+.registration-toast-body-inner {
+  white-space: pre-line;
+  padding: 8px 16px;
+  font-size: 36px;
+}

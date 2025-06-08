@@ -33,23 +33,6 @@ body {
   margin-bottom: 20px;
 }
 
-.login-container {
-  background-color: #fff;
-  padding: 40px;
-  /* Increase padding to enlarge the container */
-  border-radius: 10px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-  /* Add a subtle shadow */
-  text-align: center;
-  max-width: 500px;
-  /* Limit the width for better layout */
-  width: 100%;
-  /* Ensure it takes up full width on smaller screens */
-  margin-top: 100px;
-  /* Adjust margin to center the container */
-  transition: all 0.3s ease;
-}
-
 @font-face {
   font-family: 'Rubik';
   src: url('./fonts/Rubik-VariableFont_wght.ttf') format('truetype');
@@ -67,11 +50,11 @@ body {
   letter-spacing: 3px;
   text-align: center;
   /* Centers the text horizontally */
-  font-size: 72px;
+  font-size: 120px;
   /* Adjust font size as needed */
   font-weight: bold;
   /* Make the text bold */
-  margin-bottom: 72px;
+  margin-bottom: 52px;
   /* Add spacing below the title */
   color: #1da821;
   /* Adjust text color */
@@ -115,6 +98,7 @@ body {
   border: none;
   border-radius: 5px;
   cursor: pointer;
+  font-weight: bold;
 }
 
 .login-main-content button:hover {
@@ -144,6 +128,7 @@ body {
   /* Optional: Add padding for better spacing */
   border-radius: 5px;
   /* Optional: Add rounded corners */
+
 }
 
 .top-left img.amit {
@@ -173,7 +158,8 @@ body {
 .login-main-content submit,
 .login-main-content span,
 .login-main-content button {
-  font-size: 24px;
+  font-size: 36px;
+  font-family: Rubik, sans-serif;
   /* Increase font size for better readability */
 }
 
@@ -220,6 +206,7 @@ body {
   font-size: 0.95em;
   color: #444;
 }
+
 .user-role {
   background: #f3f3f3;
   border-radius: 4px;
