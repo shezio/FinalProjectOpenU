@@ -28,7 +28,7 @@ const SystemManagement = () => {
   const [filteredStaff, setFilteredStaff] = useState([]); // For UI filtering
   const [searchQuery, setSearchQuery] = useState('');
   const [page, setPage] = useState(1);
-  const [pageSize] = useState(5);
+  const [pageSize] = useState(6);
   const [totalCount, setTotalCount] = useState(0);
   const [modalType, setModalType] = useState(''); // "add" or "edit"
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);

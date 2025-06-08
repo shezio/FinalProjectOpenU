@@ -97,6 +97,8 @@ const Tutorships = () => {
   const [distancesReady, setDistancesReady] = useState(false);
   const [CoordinatorOrAdmin, setCoordinatorOrAdmin] = useState(false);
   //const showPendingDistancesWarning = true; // Always show the warning for now
+
+
   const toggleMagnify = () => {
     setIsMagnifyActive((prevState) => !prevState);
   };

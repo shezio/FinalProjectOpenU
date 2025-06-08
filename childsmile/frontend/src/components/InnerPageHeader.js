@@ -22,14 +22,16 @@ const InnerPageHeader = ({ title }) => {
       console.log("Sending logout request...");  // Debugging log
       const response = await axios.post("/api/logout/");
       console.log("Logout response:", response);  // Debugging log
-      if (response.status === 200) {
-        localStorage.clear();  // Clear all local storage
-        navigate("/");
-      } else {
-        console.error("Logout 5555 failed", response.data);
+      if (response.status !== 200) {
+        console.error("Logout failed with status:", response.status);
       }
     } catch (error) {
-      console.error("Logout 6666 failed", error);
+      console.error("Logout exception:", error);
+    }
+    finally {
+      // Optionally, you can redirect to the login page or show a message
+      localStorage.clear();  // Clear all local storage
+      window.location.href = "/";
     }
   };
 
