@@ -617,7 +617,8 @@
   color: #333;
   /* Darker text color */
 }
-.leaflet-container a.leaflet-popup-close-button{
+
+.leaflet-container a.leaflet-popup-close-button {
   display: none;
 }
 
@@ -690,11 +691,13 @@
 }
 
 .custom-slider-track {
-  background:
-    /* light gray */
-    #ccc;
   height: 100%;
   border-radius: 5px;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 8px;
+  background: #e0e0e0;
+  border-radius: 4px;
 }
 
 .custom-slider-thumb {
@@ -1048,6 +1051,112 @@ button:disabled {
   transition: opacity 0.8s;
   margin-right: 8px;
 }
+
 .refresh-now-btn.visible {
   opacity: 1;
+}
+
+/* Add to your CSS file */
+.urgent-row {
+  background-color: #e53935 !important;
+  color: #fff !important;
+  font-weight: bold;
+}
+
+/* In your CSS */
+.status-filter-container {
+  position: relative;
+  display: inline-block;
+}
+
+.status-filter-label {
+  margin-right: 8px;
+  font-size: 24px;
+  vertical-align: right;
+}
+
+.funnel-icon {
+  width: 63px;
+  height: 63px;
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+  vertical-align: middle;
+  margin-right: 8px;
+}
+
+.funnel-icon-svg {
+  width: 96px !important;
+  height: 96px !important;
+}
+
+.status-filter-select {
+  position: absolute;
+  top: 30px;
+  right: 0;
+  z-index: 1000;
+  min-width: 140px;
+  font-size: 24px;
+  font-family: Rubik, sans-serif;
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  padding: 4px 8px;
+  direction: rtl;
+}
+
+.status-filter-dropdown {
+  position: absolute;
+  top: 60px;
+  right: 0;
+  z-index: 9999;
+  min-width: 180px;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  padding: 0;
+  overflow: visible;
+  border: 1px solid #ddd;
+}
+
+.status-filter-option {
+  padding: 12px 18px;
+  font-size: 22px;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+  border-bottom: 1px solid #eee;
+}
+
+.status-filter-option:last-child {
+  border-bottom: none;
+}
+
+.status-filter-option.selected {
+  background: #add8e6 !important;
+  color: #111 !important;
+  font-weight: bold;
+}
+
+.custom-slider-threshold-thumb {
+  width: 32px;
+  height: 32px;
+  background: #1976d2;
+  color: #fff;
+  font-weight: bold;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  border: 2px solid #fff;
+  font-size: 1.3em;
+  cursor: grab;
+  z-index: 2;
+  position: relative;
+  top: -14px; /* Adjust to position above the track */
+}
+
+.selected-row {
+  background: #add8e6 !important;
+  color: #111 !important;
+  font-weight: normal !important;
 }

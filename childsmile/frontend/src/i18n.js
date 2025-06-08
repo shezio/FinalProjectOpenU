@@ -536,6 +536,9 @@ const resources = {
       "All distances are ready.": "כל המרחקים מוכנים.",
       'Please enter both username and password.': "חובה למלא שם משתמש וסיסמה.",
       'Username and password cannot contain spaces.': "שם משתמש וסיסמה לא יכולים להכיל רווחים.",
+      'All Urgencies': "כל הדחיפויות",
+      'Filter by Urgency': "סנן לפי דחיפות"
+
     }
   }
 };

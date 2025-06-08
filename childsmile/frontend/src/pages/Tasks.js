@@ -350,14 +350,22 @@ const Tasks = () => {
       return;
     }
     setErrors({});
+
+    // Only include child/tutor if NOT "הוספת משפחה"
+    const taskTypeName = taskTypes.find(t => t.id === selectedTaskType.value)?.name;
     const taskData = {
       due_date: document.getElementById('due_date').value,
       assigned_to: selectedStaff?.value,
-      child: selectedChild?.value,
-      tutor: selectedTutor?.value,
-      pending_tutor: selectedPendingTutor?.value,
       type: selectedTaskType?.value,
     };
+    if (taskTypeName !== "הוספת משפחה") {
+      taskData.child = selectedChild?.value;
+      taskData.tutor = selectedTutor?.value;
+    }
+    if (taskTypeName === "ראיון מועמד לחונכות") {
+      taskData.pending_tutor = selectedPendingTutor?.value;
+    }
+
     try {
       const response = await axios.post('/api/tasks/create/', taskData);
       if (response.status === 201) {
@@ -409,19 +417,27 @@ const Tasks = () => {
     setSelectedChild(childrenOptions.find((child) => child.value === task.child) || null);
     setSelectedTutor(tutorsOptions.find((tutor) => tutor.value === task.tutor) || null);
 
-    // Find in pending tutors
-    const pendingTutorId = typeof task.pending_tutor === 'object' ? task.pending_tutor.id : task.pending_tutor;
-    let pendingTutorOption = pendingTutorsOptions.find(opt => Number(opt.value) === Number(pendingTutorId));
-    if (!pendingTutorOption && pendingTutorId) {
-      // Fallback: create a minimal option so the Select can display it
-      pendingTutorOption = {
-        value: pendingTutorId,
-        label: typeof task.pending_tutor === 'object'
-          ? `${task.pending_tutor.first_name} ${task.pending_tutor.surname || task.pending_tutor.last_name || ''}`
-          : `ID ${pendingTutorId}`,
-      };
+    // Fix: Only try to get id if task.pending_tutor is not null/undefined
+    let pendingTutorId = null;
+    if (task.pending_tutor) {
+      pendingTutorId = typeof task.pending_tutor === 'object' ? task.pending_tutor.id : task.pending_tutor;
     }
-    setSelectedPendingTutor(pendingTutorOption || null);
+
+    let pendingTutorOption = null;
+    if (pendingTutorId) {
+      pendingTutorOption = pendingTutorsOptions.find(opt => Number(opt.value) === Number(pendingTutorId));
+      if (!pendingTutorOption) {
+        // Fallback: create a minimal option so the Select can display it
+        pendingTutorOption = {
+          value: pendingTutorId,
+          label: typeof task.pending_tutor === 'object'
+            ? `${task.pending_tutor.first_name} ${task.pending_tutor.surname || task.pending_tutor.last_name || ''}`
+            : `ID ${pendingTutorId}`,
+        };
+      }
+    }
+    setSelectedPendingTutor(pendingTutorOption);
+
     setDueDate('');
     setIsEditModalOpen(true);
   };
@@ -442,22 +458,29 @@ const Tasks = () => {
       return;
     }
     setErrors({});
+
+    const taskTypeName = taskTypes.find(t => t.id === selectedTaskType.value)?.name;
     const updatedTaskData = {
       description: taskToEdit.description,
       due_date: document.getElementById('due_date').value,
       assigned_to: selectedStaff?.value,
-      child: selectedChild?.value,
-      tutor: selectedTutor?.value,
-      pending_tutor: selectedPendingTutor?.value,
       type: selectedTaskType?.value,
       status: taskToEdit.status,
     };
+    if (taskTypeName !== "הוספת משפחה") {
+      updatedTaskData.child = selectedChild?.value;
+      updatedTaskData.tutor = selectedTutor?.value;
+    }
+    if (taskTypeName === "ראיון מועמד לחונכות") {
+      updatedTaskData.pending_tutor = selectedPendingTutor?.value;
+    }
+
     try {
       const response = await axios.put(`/api/tasks/update/${taskToEdit.id}/`, updatedTaskData);
       if (response.status === 200) {
         setIsEditModalOpen(false);
         toast.success(t('Task updated successfully'));
-        handleClosePopup(); // <-- Close split view
+        handleClosePopup();
         await fetchData(true);
       }
     } catch (error) {
@@ -470,7 +493,10 @@ const Tasks = () => {
     return type && type.name === "ראיון מועמד לחונכות";
   };
 
-
+  const isFamilyAdditionTask = (typeId) => {
+    const type = taskTypes.find(t => t.id === typeId);
+    return type && type.name === "הוספת משפחה";
+  };
 
   return (
     <div className="tasks-main-content">
@@ -590,7 +616,13 @@ const Tasks = () => {
                   <button className="menu-btn" onClick={() => setMenuOpen(v => !v)}>⋮</button>
                   {menuOpen && (
                     <div className="dropdown-menu" ref={menuRef}>
-                      <button onClick={() => { setMenuOpen(false); handleEditTask(selectedTask); }}>{t('ערוך')}</button>
+                      <button
+                        disabled={selectedTask.status === "הושלמה"}
+                        className={selectedTask.status === "הושלמה" ? "disabled-btn" : ""}
+                        onClick={() => { setMenuOpen(false); handleEditTask(selectedTask); }}
+                      >
+                        {t('ערוך')}
+                      </button>
                       <button onClick={() => { setMenuOpen(false); handleDeleteTask(selectedTask.id); }}>{t('מחק')}</button>
                     </div>
                   )}
@@ -603,7 +635,7 @@ const Tasks = () => {
                     <p>סוג משימה: {getTaskTypeName(selectedTask.type)}</p>
                     <p>לביצוע על ידי: {selectedTask.assignee}</p>
                     {/* Show Child and Tutor only if NOT "ראיון מועמד לחונכות" */}
-                    {!isInterviewTask(selectedTask.type) && (
+                    {!isInterviewTask(selectedTask.type) && !isFamilyAdditionTask(selectedTask.type) && (
                       <>
                         <p>חניך: {getChildFullName(selectedTask.child, childrenOptions)}</p>
                         <p>חונך: {getTutorFullName(selectedTask.tutor, tutorsOptions)}</p>
@@ -620,7 +652,7 @@ const Tasks = () => {
                       </p>
                     )}
                     {/* Show initial family data fields only for "הוספת משפחה" */}
-                    {getTaskTypeName(selectedTask.type) === "הוספת משפחה" && (
+                    {isFamilyAdditionTask(selectedTask.type) && (
                       <>
                         <h3>{t("Initial Family Details")}</h3>
                         <p>שמות: {selectedTask.names ? selectedTask.names : "---"}</p>
@@ -686,7 +718,7 @@ const Tasks = () => {
                   }}
                 />
                 {errors.assigned_to && <p className="error-text">{errors.assigned_to}</p>}
-                {!isInterviewTask(selectedTaskType?.value) && (
+                {!isInterviewTask(selectedTaskType?.value) && !isFamilyAdditionTask(selectedTaskType?.value) && (
                   <>
                     <label>{t('Child')}</label>
                     <Select
@@ -730,6 +762,14 @@ const Tasks = () => {
                       }}
                     />
                     {errors.pending_tutor && <p className="error-text">{errors.pending_tutor}</p>}
+                  </>
+                )}
+                {isFamilyAdditionTask(selectedTaskType?.value) && (
+                  <>
+                    <h3>{t("Initial Family Details")}</h3>
+                    <p>שמות: {selectedTask.names ? selectedTask.names : "---"}</p>
+                    <p>טלפונים: {selectedTask.phones ? selectedTask.phones : "---"}</p>
+                    <p>מידע נוסף: {selectedTask.other_information ? selectedTask.other_information : "---"}</p>
                   </>
                 )}
                 <button onClick={handleUpdateTask}>{t('Update Task')}</button>
@@ -790,7 +830,7 @@ const Tasks = () => {
                   }}
                 />
                 {errors.assigned_to && <p className="error-text">{errors.assigned_to}</p>}
-                {!isInterviewTask(selectedTaskType?.value) && (
+                {!isInterviewTask(selectedTaskType?.value) && !isFamilyAdditionTask(selectedTaskType?.value) && (
                   <>
                     <label>ילד</label>
                     <Select
