@@ -20,7 +20,7 @@ const Sidebar = () => {
         <button
           data-path="/tasks"
           className={location.pathname.startsWith('/tasks') ? 'active' : ''}
-          onClick={() => navigate('/tasks')}
+          onClick={() => window.location.href = '/tasks'}
         >
           לוח משימות
         </button>
@@ -29,7 +29,7 @@ const Sidebar = () => {
         <button
           data-path="/families"
           className={location.pathname.startsWith('/families') ? 'active' : ''}
-          onClick={() => navigate('/families')}
+          onClick={() => window.location.href = '/families'}
         >
           משפחות
         </button>
@@ -38,7 +38,7 @@ const Sidebar = () => {
         <button
           data-path="/feedbacks"
           className={location.pathname.startsWith('/feedbacks') ? 'active' : ''}
-          onClick={() => navigate('/feedbacks')}
+          onClick={() => window.location.href = '/feedbacks'}
         >
           משובים
         </button>
@@ -47,7 +47,7 @@ const Sidebar = () => {
         <button
           data-path="/tutorships"
           className={location.pathname.startsWith('/tutorships') ? 'active' : ''}
-          onClick={() => navigate('/tutorships')}
+          onClick={() => window.location.href = '/tutorships'}
         >
           חונכות
         </button>
@@ -56,7 +56,7 @@ const Sidebar = () => {
         <button
           data-path="/reports"
           className={location.pathname.startsWith('/reports') ? 'active' : ''}
-          onClick={() => navigate('/reports')}
+          onClick={() => window.location.href = '/reports'}
         >
           דוחות
         </button>
@@ -65,7 +65,7 @@ const Sidebar = () => {
         <button
           data-path="/system-management"
           className={location.pathname.startsWith('/system-management') ? 'active' : ''}
-          onClick={() => navigate('/system-management')}
+          onClick={() => window.location.href = '/system-management'}
         >
           ניהול מערכת
         </button>
