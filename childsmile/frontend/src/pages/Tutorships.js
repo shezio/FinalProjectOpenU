@@ -411,6 +411,18 @@ const Tutorships = () => {
     setSelectedMatchForInfo(null);
   };
 
+
+  const handleRefreshMatches = async () => {
+    try {
+      await fetchMatches();
+    } catch (error) {
+      toast.warn(
+        t("The calculations hadn't finished yet. Please try again in several seconds."),
+        { position: "top-center", autoClose: 4000 }
+      );
+    }
+  };
+
   const fetchMatches = async () => {
     setGridLoading(true);
     setMapLoading(true);
@@ -982,7 +994,7 @@ const Tutorships = () => {
         <Modal isOpen={isModalOpen} onRequestClose={() => setIsModalOpen(false)} className="matches-modal">
           <div className="matches-modal-header">
             <h2>{t('Matching Wizard')}</h2>
-            <button className="close" onClick={() => setIsModalOpen(false)}>
+            <button className="matches-close" onClick={() => setIsModalOpen(false)}>
               &times;
             </button>
           </div>
@@ -1010,7 +1022,11 @@ const Tutorships = () => {
               )}
             />
             <div className="status-filter-container" ref={statusFilterRef}>
-              <label className="status-filter-label">{t('Filter by Urgency')}</label>
+              <label className="status-filter-label">
+                {statusFilter
+                  ? t(statusFilter.replace(/_/g, ' '))
+                  : t('Filter by Urgency')}
+              </label>
               <span
                 className="funnel-icon"
                 tabIndex={0}
@@ -1057,7 +1073,7 @@ const Tutorships = () => {
                 <HourglassSpinner />
                 <span>{t("Some distances between cities are still being calculated. Please refresh in a few seconds.")}</span>
                 {/* {distancesReady && ( */}
-                <button onClick={fetchMatches} className="refresh-now-btn visible">
+                <button onClick={handleRefreshMatches} className="refresh-now-btn visible">
                   {t("Refresh Now")}
                 </button>
                 {/* )} */}

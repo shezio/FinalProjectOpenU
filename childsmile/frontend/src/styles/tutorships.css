@@ -11,13 +11,13 @@
 }
 
 .matches-modal {
-  top: 1px;
+  top: -72px;
   background: white;
   padding: 2rem;
   border-radius: 8px;
   width: 90%;
   /* Limit the modal width */
-  height: 700px;
+  height: 800px;
   margin: auto;
   /* Center the modal horizontally */
   margin-top: 150px;
@@ -475,6 +475,11 @@
   opacity: 1;
 }
 
+.modal-actions {
+  margin-top: 20px !important
+  /* Add some space above the buttons */
+}
+
 .modal-actions .calc-match-button {
   background-color:
     /* blue */
@@ -523,7 +528,7 @@
     #0056b3;
 }
 
-.info-modal-content .close,
+.info-modal-content .close ,
 .match-modal-content .close {
   color: #333;
   /* Darker color for better visibility */
@@ -531,6 +536,19 @@
   top: 15px;
   right: 20px;
   font-size: 3em;
+  font-weight: bold;
+  cursor: pointer;
+  transition: color 0.3s ease;
+  /* Smooth hover effect */
+}
+
+.matches-modal-header .matches-close {
+  color: #333;
+  /* Darker color for better visibility */
+  position: absolute;
+  top: 72px !important;
+  right: 20px;
+  font-size: 3em !important;
   font-weight: bold;
   cursor: pointer;
   transition: color 0.3s ease;

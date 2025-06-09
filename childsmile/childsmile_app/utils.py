@@ -57,7 +57,7 @@ from django.utils.timezone import now
 import datetime
 import urllib3
 from django.utils.timezone import make_aware
-from geopy.exc import GeocoderTimedOut
+from geopy.exc import GeocoderTimedOut, GeocoderUnavailable
 from geopy.geocoders import Nominatim
 import threading, time
 from time import sleep
@@ -65,56 +65,56 @@ from math import sin, cos, sqrt, atan2, radians, ceil
 import json
 import os
 from django.db.models import Count, F
+import tempfile
+import shutil
+from filelock import FileLock
+
 
 DISTANCES_FILE = os.path.join(os.path.dirname(__file__), "distances.json")
 LOCATIONS_FILE = os.path.join(os.path.dirname(__file__), "locations.json")
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
+
 def get_or_update_city_location(city, retries=3, delay=2):
     """
     Retrieve the latitude and longitude of a city from the LOCATIONS_FILE.
     If the city is not found, geocode it and update the file.
     """
-    # Ensure the file exists and is properly formatted
-    if not os.path.exists(LOCATIONS_FILE):
-        with open(LOCATIONS_FILE, "w", encoding="utf-8") as file:
-            json.dump({}, file, ensure_ascii=False, indent=4)
-
-    # Load locations from the JSON file
-    with open(LOCATIONS_FILE, "r", encoding="utf-8") as file:
+    # Load existing locations
+    locations = {}
+    if os.path.exists(LOCATIONS_FILE):
         try:
-            locations = json.load(file)
-        except json.JSONDecodeError:
-            locations = {}
+            with open(LOCATIONS_FILE, "r", encoding="utf-8") as f:
+                locations = json.load(f)
+        except Exception as e:
+            print(f"Error loading locations file: {e}")
+            # Optionally: return None or empty dict
 
-    # Check if the city is already in the file
+    # If city already exists, return it
     if city in locations:
-        return locations[city]  # Return cached location
+        return locations[city]
 
-    # Geocode the city if not found in the file
-    geolocator = Nominatim(user_agent="childsmile", timeout=5)
+    geolocator = Nominatim(user_agent="childsmile_app")
     for attempt in range(retries):
         try:
-            location = geolocator.geocode(city)
+            # Try with ", ישראל" for better accuracy
+            location = geolocator.geocode(f"{city}, ישראל", timeout=10)
+            if not location:
+                # Try without country as fallback
+                location = geolocator.geocode(city, timeout=10)
             if location:
-                # Save the geocoded location to the file
-                locations[city] = {
-                    "latitude": location.latitude,
-                    "longitude": location.longitude,
-                }
-                with open(LOCATIONS_FILE, "w", encoding="utf-8") as file:
-                    json.dump(locations, file, ensure_ascii=False, indent=4)
+                add_city_location(city, location.latitude, location.longitude)
+                # Reload to get the latest data (in case another process added more)
+                with open(LOCATIONS_FILE, "r", encoding="utf-8") as f:
+                    locations = json.load(f)
                 return locations[city]
-        except GeocoderTimedOut:
-            print(
-                f"DEBUG: Geocoding timed out for city '{city}', retrying ({attempt + 1}/{retries})..."
-            )
-            sleep(delay)
-
-    # If geocoding fails, return None
-    print(f"DEBUG: Failed to geocode city '{city}' after {retries} retries.")
-    return {"latitude": None, "longitude": None}
+            else:
+                print(f"Could not geocode city: {city} (attempt {attempt+1})")
+        except (GeocoderTimedOut, GeocoderUnavailable, Exception) as e:
+            print(f"Geocoding failed for city '{city}': {e} (attempt {attempt+1})")
+        time.sleep(delay)
+    return None
 
 
 def promote_pending_tutor_to_tutor(task):
@@ -166,8 +166,13 @@ def check_matches_permissions(request, required_permissions):
     if not user_id:
         raise PermissionError("Authentication credentials were not provided.")
 
-    if not any(has_permission(request, "possiblematches", permission) for permission in required_permissions):
-        raise PermissionError(f"You do not have any of the required permissions: {', '.join(required_permissions)}")
+    if not any(
+        has_permission(request, "possiblematches", permission)
+        for permission in required_permissions
+    ):
+        raise PermissionError(
+            f"You do not have any of the required permissions: {', '.join(required_permissions)}"
+        )
 
 
 def fetch_possible_matches():
@@ -303,14 +308,13 @@ def calculate_distance_between_cities(city1, city2):
     """
     Calculate the distance between two cities in kilometers and return their coordinates.
     First, check the distances.json file for the distance and coordinates.
-    If not found, calculate the distance, add it to the file, and return it.
+    If not found or incomplete, trigger async calculation and return pending.
     """
     print(f"DEBUG: Calculating distance between {city1} and {city2}")
 
     # Ensure the file exists and is properly formatted
     if not os.path.exists(DISTANCES_FILE):
-        with open(DISTANCES_FILE, "w", encoding="utf-8") as file:
-            json.dump({}, file, ensure_ascii=False, indent=4)
+        safe_update_json(DISTANCES_FILE, lambda d: d.clear())
 
     # Load distances from the JSON file
     with open(DISTANCES_FILE, "r", encoding="utf-8") as file:
@@ -319,22 +323,57 @@ def calculate_distance_between_cities(city1, city2):
         except json.JSONDecodeError:
             distances = {}
 
-    # Check if city1 exists in the file
-    if city1 in distances:
-        city1_data = distances[city1]
-        if city2 in city1_data:
-            return {
-                "distance": city1_data[city2]["distance"],
-                "city1_latitude": distances[city1]["city_latitude"],
-                "city1_longitude": distances[city1]["city_longitude"],
-                "city2_latitude": city1_data[city2]["city2_latitude"],
-                "city2_longitude": city1_data[city2]["city2_longitude"],
-                "distance_pending": False,
-            }
-    else:
-        distances[city1] = {}
+    def is_complete_city_entry(city_entry):
+        return (
+            isinstance(city_entry, dict)
+            and "city_latitude" in city_entry
+            and "city_longitude" in city_entry
+        )
 
-    # If not found, trigger async calculation and return pending
+    # Check if city1 exists and is complete
+    city1_data = distances.get(city1)
+    if city1_data and is_complete_city_entry(city1_data):
+        if city2 in city1_data:
+            pair_data = city1_data[city2]
+            # Check that all required keys exist
+            if (
+                "distance" in pair_data
+                and "city2_latitude" in pair_data
+                and "city2_longitude" in pair_data
+            ):
+                return {
+                    "distance": pair_data["distance"],
+                    "city1_latitude": city1_data["city_latitude"],
+                    "city1_longitude": city1_data["city_longitude"],
+                    "city2_latitude": pair_data["city2_latitude"],
+                    "city2_longitude": pair_data["city2_longitude"],
+                    "distance_pending": False,
+                }
+            else:
+                # Incomplete/corrupt pair data, remove and recalc
+                print(
+                    f"DEBUG: Incomplete/corrupt pair data for {city1}-{city2}, deleting and recalculating."
+                )
+
+                def updater(d):
+                    if city1 in d and city2 in d[city1]:
+                        del d[city1][city2]
+
+                safe_update_json(DISTANCES_FILE, updater)
+    else:
+        # Incomplete/corrupt city1 entry, remove and recalc
+        if city1 in distances:
+            print(
+                f"DEBUG: Incomplete/corrupt city entry for {city1}, deleting and recalculating."
+            )
+
+            def updater(d):
+                if city1 in d:
+                    del d[city1]
+
+            safe_update_json(DISTANCES_FILE, updater)
+
+    # If not found or incomplete, trigger async calculation and return pending
     async_calculate_and_store_distance(city1, city2)
     return {
         "distance": 0,
@@ -386,7 +425,7 @@ def calculate_grades(possible_matches):
 
     # Iterate through the matches and calculate grades
     for index, match in enumerate(possible_matches):
-#        tutor_id = match.get("tutor_id")
+        #        tutor_id = match.get("tutor_id")
         # Start with a base grade spread linearly across matches
         base_grade = (
             (index / (total_matches - 1)) * max_grade
@@ -397,7 +436,6 @@ def calculate_grades(possible_matches):
         # if tutor_id == 845121544:
         #     print(f"\nDEBUG: Calculating grade for tutor_id={tutor_id}")
         #     print(f"  Initial base_grade: {base_grade}")
-
 
         # Adjust grade based on age difference
         child_age = match.get("child_age")
@@ -737,6 +775,7 @@ def delete_other_tasks_with_initial_family_data_async(task):
 
 in_progress_pairs = set()
 
+
 def async_calculate_and_store_distance(city1, city2):
     pair = tuple(sorted([city1, city2]))
     if pair in in_progress_pairs:
@@ -748,34 +787,18 @@ def async_calculate_and_store_distance(city1, city2):
             calculate_and_store_distance_force(city1, city2)
         finally:
             in_progress_pairs.discard(pair)
+
     threading.Thread(target=worker, daemon=True).start()
+
 
 def calculate_and_store_distance_force(city1, city2):
     """
     Always calculate and store the distance between city1 and city2 if not present.
     This function does NOT call async_calculate_and_store_distance.
     """
-    print(f"DEBUG: [FORCE] Calculating and storing distance between {city1} and {city2}")
-
-    # Ensure the file exists and is properly formatted
-    if not os.path.exists(DISTANCES_FILE):
-        with open(DISTANCES_FILE, "w", encoding="utf-8") as file:
-            json.dump({}, file, ensure_ascii=False, indent=4)
-
-    # Load distances from the JSON file
-    with open(DISTANCES_FILE, "r", encoding="utf-8") as file:
-        try:
-            distances = json.load(file)
-        except json.JSONDecodeError:
-            distances = {}
-
-    # Check if city1 exists in the file
-    if city1 in distances:
-        city1_data = distances[city1]
-        if city2 in city1_data:
-            return  # Already present, nothing to do
-    else:
-        distances[city1] = {}
+    print(
+        f"DEBUG: [FORCE] Calculating and storing distance between {city1} and {city2}"
+    )
 
     # Ensure both cities have coordinates
     loc1 = get_or_update_city_location(city1)
@@ -788,21 +811,71 @@ def calculate_and_store_distance_force(city1, city2):
     lat2, lon2 = loc2["latitude"], loc2["longitude"]
 
     # Haversine formula
-    R = 6371  # Radius of the Earth in kilometers
+    R = 6371
     dlat = radians(lat2 - lat1)
     dlon = radians(lon2 - lon1)
-    a = (sin(dlat / 2) ** 2) + cos(radians(lat1)) * cos(radians(lat2)) * (sin(dlon / 2) ** 2)
+    a = (sin(dlat / 2) ** 2) + cos(radians(lat1)) * cos(radians(lat2)) * (
+        sin(dlon / 2) ** 2
+    )
     c = 2 * atan2(sqrt(a), sqrt(1 - a))
-    distance = ceil(R * c)  # Round up to the nearest whole number
+    distance = ceil(R * c)
 
-    # Save city2 data under city1
-    distances[city1][city2] = {
-        "distance": distance,
-        "city2_latitude": lat2,
-        "city2_longitude": lon2,
-    }
-    # Save the updated distances to the file
-    with open(DISTANCES_FILE, "w", encoding="utf-8") as file:
-        json.dump(distances, file, ensure_ascii=False, indent=4)
+    # Save city2 data under city1 using the safe updater
+    add_city_distance(city1, city2, distance, lat2, lon2)
 
-    print(f"DEBUG: [FORCE] Calculated and saved distance for {city1} and {city2}: {distance} km")
+    print(
+        f"DEBUG: [FORCE] Calculated and saved distance for {city1} and {city2}: {distance} km"
+    )
+
+
+def safe_update_json(filename, update_func):
+    lockfile = filename + ".lock"
+    with FileLock(lockfile):
+        # Reload the latest data
+        if os.path.exists(filename):
+            with open(filename, "r", encoding="utf-8") as f:
+                try:
+                    data = json.load(f)
+                except Exception:
+                    data = {}
+        else:
+            data = {}
+        # Let the caller update the data
+        update_func(data)
+        # Write atomically
+        with tempfile.NamedTemporaryFile(
+            "w", encoding="utf-8", dir=os.path.dirname(filename), delete=False
+        ) as tmpfile:
+            json.dump(data, tmpfile, ensure_ascii=False, indent=4)
+            tempname = tmpfile.name
+        shutil.move(tempname, filename)
+
+
+def add_city_location(city, lat, lon):
+    def updater(locations):
+        locations[city] = {"latitude": lat, "longitude": lon}
+
+    safe_update_json(LOCATIONS_FILE, updater)
+
+
+def add_city_distance(city1, city2, distance, lat2, lon2):
+    # Get city1's coordinates from locations.json
+    with open(LOCATIONS_FILE, "r", encoding="utf-8") as f:
+        locations = json.load(f)
+    city1_coords = locations.get(city1, {})
+    lat1 = city1_coords.get("latitude")
+    lon1 = city1_coords.get("longitude")
+
+    def updater(distances):
+        if city1 not in distances:
+            distances[city1] = {}
+        # Store city1's own coordinates at the top level
+        distances[city1]["city_latitude"] = lat1
+        distances[city1]["city_longitude"] = lon1
+        distances[city1][city2] = {
+            "distance": distance,
+            "city2_latitude": lat2,
+            "city2_longitude": lon2,
+        }
+
+    safe_update_json(DISTANCES_FILE, updater)

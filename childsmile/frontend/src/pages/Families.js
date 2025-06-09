@@ -665,6 +665,7 @@ const Families = () => {
                     name="child_phone_number"
                     value={newFamily.child_phone_number}
                     onChange={handleAddFamilyChange}
+                    maxLength="10"
                     className={errors.child_phone_number ? "error" : ""}
                   />
                   {errors.child_phone_number && <span className="families-error-message">{errors.child_phone_number}</span>}
@@ -821,6 +822,7 @@ const Families = () => {
                     name="father_phone"
                     value={newFamily.father_phone}
                     onChange={handleAddFamilyChange}
+                    maxLength="10"
                     className={errors.father_phone ? "error" : ""}
                   />
                   {errors.father_phone && <span className="families-error-message">{errors.father_phone}</span>}
@@ -841,6 +843,7 @@ const Families = () => {
                     name="mother_phone"
                     value={newFamily.mother_phone}
                     onChange={handleAddFamilyChange}
+                    maxLength="10"
                     className={errors.mother_phone ? "error" : ""}
                   />
                   {errors.mother_phone && <span className="families-error-message">{errors.mother_phone}</span>}
@@ -1003,6 +1006,7 @@ const Families = () => {
                     name="child_phone_number"
                     value={newFamily.child_phone_number}
                     onChange={handleAddFamilyChange}
+                    maxLength="10"
                     className={errors.child_phone_number ? "error" : ""}
                   />
                   {errors.child_phone_number && <span className="families-error-message">{errors.child_phone_number}</span>}
@@ -1096,6 +1100,7 @@ const Families = () => {
                     name="child_id"
                     value={newFamily.child_id}
                     onChange={handleAddFamilyChange}
+                    maxLength="9"
                     className={errors.child_id ? "error" : ""}
                   />
                   {errors.child_id && <span className="families-error-message">{errors.child_id}</span>}
@@ -1167,6 +1172,7 @@ const Families = () => {
                     name="father_phone"
                     value={newFamily.father_phone}
                     onChange={handleAddFamilyChange}
+                    maxLength="10"
                     className={errors.father_phone ? "error" : ""}
                   />
                   {errors.father_phone && <span className="families-error-message">{errors.father_phone}</span>}
@@ -1187,6 +1193,7 @@ const Families = () => {
                     name="mother_phone"
                     value={newFamily.mother_phone}
                     onChange={handleAddFamilyChange}
+                    maxLength="10"
                     className={errors.mother_phone ? "error" : ""}
                   />
                   {errors.mother_phone && <span className="families-error-message">{errors.mother_phone}</span>}

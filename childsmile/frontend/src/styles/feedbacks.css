@@ -355,13 +355,16 @@
 }
 
 .feedbacks-actions button {
-    margin-right: 10px;
+    margin-right: 2px;
     padding: 10px;
     border: none;
     border-radius: 5px;
     cursor: pointer;
 }
 
+.pagination {
+    margin-top: 1px !important;
+}
 
 .loader {
     text-align: center;
@@ -764,7 +767,7 @@
     max-width: 90%;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     position: relative;
-    height: 85%;
+    height: 100%;
     display: flex;
     max-height: fit-content;
     flex-direction: column;
@@ -925,7 +928,7 @@
 }
 
 .feedbacks-modal-content-tall {
-    height: 100%;
+    height: 105%;
     /* or whatever height you need */
     transform: scale(0.9);
 }
