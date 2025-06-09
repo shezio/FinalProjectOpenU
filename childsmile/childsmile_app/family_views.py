@@ -382,7 +382,7 @@ def update_family(request, child_id):
         family.marital_status = data.get("marital_status", family.marital_status)
 
         # print("DEBUG: Updating num_of_siblings...")
-        family.num_of_siblings = data.get("num_of_siblings", family.num_ofsiblings)
+        family.num_of_siblings = data.get("num_of_siblings", family.num_of_siblings)
 
         # print("DEBUG: Updating details_for_tutoring...")
         family.details_for_tutoring = data.get(

@@ -1084,5 +1084,49 @@
             "city2_latitude": 31.5303092,
             "city2_longitude": 35.0763328
         }
+    },
+    "אילת": {
+        "city_latitude": 29.5569348,
+        "city_longitude": 34.9497949,
+        "בת ים": {
+            "distance": 274,
+            "city2_latitude": 32.0128493,
+            "city2_longitude": 34.746913
+        },
+        "אחוזת ברק": {
+            "distance": 346,
+            "city2_latitude": 32.6418437,
+            "city2_longitude": 35.3387534
+        },
+        "אילת": {
+            "distance": 0,
+            "city2_latitude": 29.5569348,
+            "city2_longitude": 34.9497949
+        },
+        "ישע": {
+            "distance": 196,
+            "city2_latitude": 31.246415,
+            "city2_longitude": 34.4032541
+        },
+        "אור עקיבא": {
+            "distance": 329,
+            "city2_latitude": 32.5090151,
+            "city2_longitude": 34.9195677
+        },
+        "חיפה": {
+            "distance": 363,
+            "city2_latitude": 32.8191218,
+            "city2_longitude": 34.9983856
+        },
+        "אבנת": {
+            "distance": 282,
+            "city2_latitude": 32.091717,
+            "city2_longitude": 34.865871
+        },
+        "אביגיל": {
+            "distance": 247,
+            "city2_latitude": 31.7649992,
+            "city2_longitude": 35.2277653
+        }
     }
 }

@@ -277,7 +277,14 @@
   padding: 8px;
   border: 1px solid #ccc;
   border-radius: 5px;
+}
+
+.form-column select {
   font-size: 1em;
+}
+
+.form-column textarea {
+  font-size: 1.5em;
 }
 
 .form-column input {

@@ -532,13 +532,14 @@ const resources = {
       'Initial family data deleted!': 'נתוני משפחה ראשוניים נמחקו בהצלחה!',
       'General Volunteers': "מתנדבים כלליים",
       "Refresh Now": "רענן עכשיו",
-      "Some distances between cities are still being calculated. Please refresh in a few seconds.": "חלק מהמרחקים בין ערים עדיין מחושבים. נא לרענן בעוד מספר שניות.",
+      "Some distances between cities are still being calculated. Please refresh in a few seconds.": "טרם ניתן להציג חלק מהמרחקים. נא לרענן בעוד מספר שניות.",
       "All distances are ready.": "כל המרחקים מוכנים.",
       'Please enter both username and password.': "חובה למלא שם משתמש וסיסמה.",
       'Username and password cannot contain spaces.': "שם משתמש וסיסמה לא יכולים להכיל רווחים.",
       'All Urgencies': "כל הדחיפויות",
-      'Filter by Urgency': "סנן לפי דחיפות"
-
+      'Filter by Urgency': "סנן לפי דחיפות",
+      "The calculations hadn't finished yet. Please try again in several seconds.": "החישובים עדיין לא הסתיימו. אנא נסה שוב בעוד מספר שניות.",
+      'Failed to fetch matches.': 'שגיאה בטעינת התאמות',
     }
   }
 };

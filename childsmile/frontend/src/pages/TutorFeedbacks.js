@@ -428,8 +428,6 @@ const TutorFeedbacks = () => {
             <div className="create-feedback">
               <button
                 onClick={() => openModal({})}
-                disabled={!(isCurrentUserTutor || isAdmin)}
-
               >
                 {t("Create Feedback")}
               </button>
