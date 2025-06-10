@@ -198,6 +198,7 @@ const InitialFamilyData = () => {
   }, [families, search, filterAdded, dateFrom, dateTo, sortBy, sortOrder]);
 
   // Pagination
+  const totalPages = Math.max(1, Math.ceil(filteredFamilies.length / pageSize));
   const paginatedFamilies = filteredFamilies.slice((page - 1) * pageSize, page * pageSize);
 
   // Search handler
@@ -441,27 +442,23 @@ const InitialFamilyData = () => {
           <div className="pagination">
             <button onClick={() => setPage(1)} disabled={page === 1} className="pagination-arrow">&laquo;</button>
             <button onClick={() => setPage(page - 1)} disabled={page === 1} className="pagination-arrow">&lsaquo;</button>
-            {totalCount <= pageSize ? (
-              <button className="active">1</button>
-            ) : (
-              Array.from({ length: Math.ceil(totalCount / pageSize) }, (_, i) => (
-                <button
-                  key={i + 1}
-                  onClick={() => setPage(i + 1)}
-                  className={page === i + 1 ? 'active' : ''}
-                >
-                  {i + 1}
-                </button>
-              ))
-            )}
+            {Array.from({ length: totalPages }, (_, i) => (
+              <button
+                key={i + 1}
+                onClick={() => setPage(i + 1)}
+                className={page === i + 1 ? 'active' : ''}
+              >
+                {i + 1}
+              </button>
+            ))}
             <button
               onClick={() => setPage(page + 1)}
-              disabled={page === Math.ceil(totalCount / pageSize) || totalCount <= 1}
+              disabled={page === totalPages || totalPages === 1}
               className="pagination-arrow"
             >&rsaquo;</button>
             <button
-              onClick={() => setPage(Math.ceil(totalCount / pageSize))}
-              disabled={page === Math.ceil(totalCount / pageSize) || totalCount <= 1}
+              onClick={() => setPage(totalPages)}
+              disabled={page === totalPages || totalPages === 1}
               className="pagination-arrow"
             >&raquo;</button>
           </div>

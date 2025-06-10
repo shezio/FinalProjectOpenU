@@ -352,6 +352,9 @@
 
         /* Add some spacing below the fixed header */
     }
+    .active-tutors-report-main-content .page-content .grid-container {
+        width: 1500px;   /* Add some spacing below the fixed header */
+    }
     .volunteer-feedback-report-main-content .page-content {
         margin-right: 200px;
     }
@@ -912,6 +915,7 @@
         /* Slightly move it to the left from the edge */
     }
 
+    .active-tutors-report-main-content .active-tutors-back-to-reports,
     .tutor-feedback-report-main-content .back-to-reports,
     .volunteer-feedback-report-main-content .back-to-reports {
         /* Add some spacing above */
