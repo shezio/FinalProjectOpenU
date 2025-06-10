@@ -22,7 +22,7 @@ const Feedbacks = () => {
   const general_v_feedback_resource = 'childsmile_app_general_v_feedback';
   const tutor_feedback_resource = 'childsmile_app_tutor_feedback';
 
-  const actions = 'CREATE';
+  const actions = 'VIEW';
   const volunteer_feedback_report_permissions = [
     { resource: general_v_feedback_resource, action: actions },
     { resource: staff_resource, action: actions },

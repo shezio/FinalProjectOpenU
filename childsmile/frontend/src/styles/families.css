@@ -288,7 +288,7 @@
 }
 
 .form-column input {
-  width: 100%;
+  width: 90%;
   border: 1px solid #ccc;
   border-radius: 5px;
   font-size: 1em;
@@ -587,4 +587,11 @@ textarea.error {
   word-break: break-all;
   display: flex;
   align-items: flex-start;  /* Align content to the bottom */
+}
+
+
+.error {
+    color: red;
+    margin-top: 10px;
+    font-size: 1em !important;
 }
