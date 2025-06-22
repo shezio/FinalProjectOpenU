@@ -17,6 +17,7 @@ from .models import (
     Task_Types,
     PossibleMatches,  # Add this line
     InitialFamilyData,
+    CityGeoDistance,
 )
 from .unused_views import (
     PermissionsViewSet,
@@ -69,49 +70,38 @@ import tempfile
 import shutil
 from filelock import FileLock
 
-
-DISTANCES_FILE = os.path.join(os.path.dirname(__file__), "distances.json")
-LOCATIONS_FILE = os.path.join(os.path.dirname(__file__), "locations.json")
-
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
 def get_or_update_city_location(city, retries=3, delay=2):
     """
-    Retrieve the latitude and longitude of a city from the LOCATIONS_FILE.
-    If the city is not found, geocode it and update the file.
+    Retrieve the latitude and longitude of a city from the DB.
+    If the city is not found, geocode it and update the DB.
     """
-    # Load existing locations
-    locations = {}
-    if os.path.exists(LOCATIONS_FILE):
-        try:
-            with open(LOCATIONS_FILE, "r", encoding="utf-8") as f:
-                locations = json.load(f)
-        except Exception as e:
-            print(f"Error loading locations file: {e}")
-            # Optionally: return None or empty dict
+    # Try to find any record where city is city1 or city2
+    geo = CityGeoDistance.objects.filter(city1=city).first() or CityGeoDistance.objects.filter(city2=city).first()
+    if geo:
+        if geo.city1 == city and geo.city1_latitude and geo.city1_longitude:
+            return {"latitude": geo.city1_latitude, "longitude": geo.city1_longitude}
+        if geo.city2 == city and geo.city2_latitude and geo.city2_longitude:
+            return {"latitude": geo.city2_latitude, "longitude": geo.city2_longitude}
 
-    # If city already exists, return it
-    if city in locations:
-        return locations[city]
-
+    # If not found, geocode and store in DB
     geolocator = Nominatim(user_agent="childsmile_app")
     for attempt in range(retries):
         try:
-            # Try with ", ישראל" for better accuracy
-            location = geolocator.geocode(f"{city}, ישראל", timeout=10)
-            if not location:
-                # Try without country as fallback
-                location = geolocator.geocode(city, timeout=10)
+            location = geolocator.geocode(f"{city}, ישראל", timeout=10) or geolocator.geocode(city, timeout=10)
             if location:
-                add_city_location(city, location.latitude, location.longitude)
-                # Reload to get the latest data (in case another process added more)
-                with open(LOCATIONS_FILE, "r", encoding="utf-8") as f:
-                    locations = json.load(f)
-                return locations[city]
-            else:
-                print(f"Could not geocode city: {city} (attempt {attempt+1})")
-        except (GeocoderTimedOut, GeocoderUnavailable, Exception) as e:
+                # Save a dummy CityGeoDistance row with city as city1 and empty city2
+                CityGeoDistance.objects.get_or_create(
+                    city1=city, city2="",
+                    defaults={
+                        "city1_latitude": location.latitude,
+                        "city1_longitude": location.longitude,
+                    }
+                )
+                return {"latitude": location.latitude, "longitude": location.longitude}
+        except Exception as e:
             print(f"Geocoding failed for city '{city}': {e} (attempt {attempt+1})")
         time.sleep(delay)
     return None
@@ -307,71 +297,29 @@ def calculate_distances(matches):
 def calculate_distance_between_cities(city1, city2):
     """
     Calculate the distance between two cities in kilometers and return their coordinates.
-    First, check the distances.json file for the distance and coordinates.
+    First, check the CityGeoDistance table for the distance and coordinates.
     If not found or incomplete, trigger async calculation and return pending.
     """
     print(f"DEBUG: Calculating distance between {city1} and {city2}")
 
-    # Ensure the file exists and is properly formatted
-    if not os.path.exists(DISTANCES_FILE):
-        safe_update_json(DISTANCES_FILE, lambda d: d.clear())
+    geo = CityGeoDistance.objects.filter(city1=city1, city2=city2).first() or \
+          CityGeoDistance.objects.filter(city1=city2, city2=city1).first()
 
-    # Load distances from the JSON file
-    with open(DISTANCES_FILE, "r", encoding="utf-8") as file:
-        try:
-            distances = json.load(file)
-        except json.JSONDecodeError:
-            distances = {}
-
-    def is_complete_city_entry(city_entry):
-        return (
-            isinstance(city_entry, dict)
-            and "city_latitude" in city_entry
-            and "city_longitude" in city_entry
-        )
-
-    # Check if city1 exists and is complete
-    city1_data = distances.get(city1)
-    if city1_data and is_complete_city_entry(city1_data):
-        if city2 in city1_data:
-            pair_data = city1_data[city2]
-            # Check that all required keys exist
-            if (
-                "distance" in pair_data
-                and "city2_latitude" in pair_data
-                and "city2_longitude" in pair_data
-            ):
-                return {
-                    "distance": pair_data["distance"],
-                    "city1_latitude": city1_data["city_latitude"],
-                    "city1_longitude": city1_data["city_longitude"],
-                    "city2_latitude": pair_data["city2_latitude"],
-                    "city2_longitude": pair_data["city2_longitude"],
-                    "distance_pending": False,
-                }
-            else:
-                # Incomplete/corrupt pair data, remove and recalc
-                print(
-                    f"DEBUG: Incomplete/corrupt pair data for {city1}-{city2}, deleting and recalculating."
-                )
-
-                def updater(d):
-                    if city1 in d and city2 in d[city1]:
-                        del d[city1][city2]
-
-                safe_update_json(DISTANCES_FILE, updater)
-    else:
-        # Incomplete/corrupt city1 entry, remove and recalc
-        if city1 in distances:
-            print(
-                f"DEBUG: Incomplete/corrupt city entry for {city1}, deleting and recalculating."
-            )
-
-            def updater(d):
-                if city1 in d:
-                    del d[city1]
-
-            safe_update_json(DISTANCES_FILE, updater)
+    if geo and all([
+        geo.city1_latitude is not None,
+        geo.city1_longitude is not None,
+        geo.city2_latitude is not None,
+        geo.city2_longitude is not None,
+        geo.distance is not None
+    ]):
+        return {
+            "distance": geo.distance,
+            "city1_latitude": geo.city1_latitude,
+            "city1_longitude": geo.city1_longitude,
+            "city2_latitude": geo.city2_latitude,
+            "city2_longitude": geo.city2_longitude,
+            "distance_pending": False,
+        }
 
     # If not found or incomplete, trigger async calculation and return pending
     async_calculate_and_store_distance(city1, city2)
@@ -827,55 +775,23 @@ def calculate_and_store_distance_force(city1, city2):
         f"DEBUG: [FORCE] Calculated and saved distance for {city1} and {city2}: {distance} km"
     )
 
-
-def safe_update_json(filename, update_func):
-    lockfile = filename + ".lock"
-    with FileLock(lockfile):
-        # Reload the latest data
-        if os.path.exists(filename):
-            with open(filename, "r", encoding="utf-8") as f:
-                try:
-                    data = json.load(f)
-                except Exception:
-                    data = {}
-        else:
-            data = {}
-        # Let the caller update the data
-        update_func(data)
-        # Write atomically
-        with tempfile.NamedTemporaryFile(
-            "w", encoding="utf-8", dir=os.path.dirname(filename), delete=False
-        ) as tmpfile:
-            json.dump(data, tmpfile, ensure_ascii=False, indent=4)
-            tempname = tmpfile.name
-        shutil.move(tempname, filename)
-
-
 def add_city_location(city, lat, lon):
-    def updater(locations):
-        locations[city] = {"latitude": lat, "longitude": lon}
-
-    safe_update_json(LOCATIONS_FILE, updater)
-
+    # Update all records where city is city1 or city2
+    CityGeoDistance.objects.filter(city1=city).update(city1_latitude=lat, city1_longitude=lon)
+    CityGeoDistance.objects.filter(city2=city).update(city2_latitude=lat, city2_longitude=lon)
+    # Or create a dummy record if none exists
+    if not CityGeoDistance.objects.filter(city1=city).exists() and not CityGeoDistance.objects.filter(city2=city).exists():
+        CityGeoDistance.objects.create(city1=city, city2="", city1_latitude=lat, city1_longitude=lon)
 
 def add_city_distance(city1, city2, distance, lat2, lon2):
-    # Get city1's coordinates from locations.json
-    with open(LOCATIONS_FILE, "r", encoding="utf-8") as f:
-        locations = json.load(f)
-    city1_coords = locations.get(city1, {})
-    lat1 = city1_coords.get("latitude")
-    lon1 = city1_coords.get("longitude")
-
-    def updater(distances):
-        if city1 not in distances:
-            distances[city1] = {}
-        # Store city1's own coordinates at the top level
-        distances[city1]["city_latitude"] = lat1
-        distances[city1]["city_longitude"] = lon1
-        distances[city1][city2] = {
-            "distance": distance,
-            "city2_latitude": lat2,
-            "city2_longitude": lon2,
-        }
-
-    safe_update_json(DISTANCES_FILE, updater)
+    # Get city1's coordinates from geocoding or other source
+    loc1 = get_or_update_city_location(city1)
+    lat1 = loc1.get("latitude") if loc1 else None
+    lon1 = loc1.get("longitude") if loc1 else None
+    obj, created = CityGeoDistance.objects.get_or_create(city1=city1, city2=city2)
+    obj.city1_latitude = lat1
+    obj.city1_longitude = lon1
+    obj.city2_latitude = lat2
+    obj.city2_longitude = lon2
+    obj.distance = distance
+    obj.save()
