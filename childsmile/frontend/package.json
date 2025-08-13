@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "start": "set NODE_OPTIONS=--openssl-legacy-provider && webpack serve --mode development",
-    "build": "set NODE_OPTIONS=--openssl-legacy-provider && webpack --mode production"
+     "start": "export NODE_OPTIONS=--openssl-legacy-provider && webpack serve --mode development",
+     "build": "export NODE_OPTIONS=--openssl-legacy-provider && webpack --mode production"
   },
   "dependencies": {
     "axios": "1.8.3",

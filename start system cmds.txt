@@ -3,3 +3,16 @@
 python .\childsmile\manage.py shell
 -- quickly start FE
 cd .\childsmile\frontend\ ; npm start 
+
+
+
+on macos
+FE
+cd /Users/shlomosmac/Applications/dev/FinalProjectOpenU/childsmile/frontend && npm start
+BE
+cd /Users/shlomosmac/Applications/dev/FinalProjectOpenU/childsmile && python manage.py runserver
+
+
+
+  git config --global user.email "shlezi0@gmail.com"
+  git config --global user.name "shezio"
