@@ -73,6 +73,12 @@ from filelock import FileLock
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
+def get_enum_values(enum_type):
+    from django.db import connection
+    with connection.cursor() as cursor:
+        cursor.execute(f"SELECT unnest(enum_range(NULL::{enum_type}))")
+        return [row[0] for row in cursor.fetchall()]
+
 def get_or_update_city_location(city, retries=3, delay=2):
     """
     Retrieve the latitude and longitude of a city from the DB.

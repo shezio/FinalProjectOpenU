@@ -131,6 +131,7 @@ def get_complete_family_details(request):
                     else None
                 ),
                 "has_completed_treatments": family.has_completed_treatments,
+                "status": family.status,  # Add the status field
             }
             for family in families
         ]
@@ -155,11 +156,19 @@ def get_complete_family_details(request):
             ]
             cache.set("tutoring_statuses_data", tutoring_statuses_data, timeout=300)
 
+        # Fetch statuses only once
+        statuses_data = cache.get("statuses_data")
+        if not statuses_data:
+            statuses = get_enum_values("status")
+            statuses_data = [{"status": status} for status in statuses]
+            cache.set("statuses_data", statuses_data, timeout=300)
+
         return JsonResponse(
             {
                 "families": families_data,
                 "marital_statuses": marital_statuses_data,
                 "tutoring_statuses": tutoring_statuses_data,
+                "statuses": statuses_data,
             },
             status=200,
         )
@@ -206,6 +215,7 @@ def create_family(request):
             "marital_status",
             "tutoring_status",
             "street_and_apartment_number",
+            "status",
         ]
         missing_fields = [field for field in required_fields if field not in data]
         if missing_fields:
@@ -263,6 +273,7 @@ def create_family(request):
             has_completed_treatments=data.get(
                 "has_completed_treatments", False
             ),  # Default to False
+            status=(data["status"] if data.get("status") else "טיפולים"),  # Default to "טיפולים"
         )
 
         return JsonResponse(
@@ -332,6 +343,7 @@ def update_family(request, child_id):
             "marital_status",
             "tutoring_status",
             "street_and_apartment_number",
+            "status",
         ]
         missing_fields = [field for field in required_fields if field not in data]
         if missing_fields:
@@ -433,6 +445,9 @@ def update_family(request, child_id):
             "has_completed_treatments", family.has_completed_treatments
         )
 
+        # print("DEBUG: Updating status...")
+        family.status = data.get("status", family.status)
+
         # print("DEBUG: Updating lastupdateddate...")
         family.lastupdateddate = datetime.datetime.now()
 
@@ -450,71 +465,6 @@ def update_family(request, child_id):
         # Update childsmile_app_tasks
         Tasks.objects.filter(related_child_id=child_id).update(
             updated_at=datetime.datetime.now(),
-        )
-
-        # Update childsmile_app_healthy
-        Healthy.objects.filter(child_id=child_id).update(
-            street_and_apartment_number=data.get(
-                "street_and_apartment_number", family.street_and_apartment_number
-            ),
-            father_name=(
-                data.get("father_name", family.father_name)
-                if family.father_name
-                else None
-            ),
-            father_phone=(
-                data.get("father_phone", family.father_phone)
-                if family.father_phone
-                else None
-            ),
-            mother_name=(
-                data.get("mother_name", family.mother_name)
-                if family.mother_name
-                else None
-            ),
-            mother_phone=(
-                data.get("mother_phone", family.mother_phone)
-                if family.mother_phone
-                else None
-            ),
-        )
-
-        # Update childsmile_app_matures
-        Matures.objects.filter(child_id=child_id).update(
-            full_address=data.get(
-                "street_and_apartment_number", family.street_and_apartment_number
-            )
-            + ", "
-            + data.get("city", family.city),
-            current_medical_state=data.get(
-                "current_medical_state", family.current_medical_state
-            ),
-            when_completed_treatments=parse_date_field(
-                data.get("when_completed_treatments"), "when_completed_treatments"
-            ),
-            parent_name=(
-                data.get("father_name", family.father_name)
-                if family.father_name
-                else (
-                    data.get("mother_name", family.mother_name)
-                    if family.mother_name
-                    else None
-                )
-            ),
-            parent_phone=(
-                data.get("father_phone", family.father_phone)
-                if family.father_phone
-                else (
-                    data.get("mother_phone", family.mother_phone)
-                    if family.mother_phone
-                    else None
-                )
-            ),
-            additional_info=(
-                data.get("additional_info", family.additional_info)
-                if family.additional_info
-                else None
-            ),
         )
 
         print(f"DEBUG: Family with child_id {child_id} updated successfully.")
@@ -563,16 +513,6 @@ def delete_family(request, child_id):
         Tasks.objects.filter(related_child_id=child_id).delete()
 
         print(f"DEBUG: Related tasks for child_id {child_id} deleted.")
-
-        # delete related records in childsmile_app_healthy
-        Healthy.objects.filter(child_id=child_id).delete()
-
-        print(f"DEBUG: Related healthy records for child_id {child_id} deleted.")
-
-        # delete related records in childsmile_app_matures
-        Matures.objects.filter(child_id=child_id).delete()
-
-        print(f"DEBUG: Related maturing records for child_id {child_id} deleted.")
 
         # delete related records in childsmile_app_tutorships
         Tutorships.objects.filter(child_id=child_id).delete()

@@ -184,6 +184,19 @@ class Children(models.Model):
         null=True, blank=True
     )  # New field
     has_completed_treatments = models.BooleanField(null=True, blank=True)  # New field
+    status = models.CharField(
+        max_length=20,
+        default="טיפולים",
+        choices=[
+            ("טיפולים", "טיפולים"),
+            ("מעקבים", "מעקבים"),
+            ("אחזקה", "אחזקה"),
+            ("מחלים", "מחלים"),
+            ("בריא", "בריא"),
+        ],
+        null=False,
+        blank=False,
+    )
 
     def __str__(self):
         return f"{self.childfirstname} {self.childsurname}"

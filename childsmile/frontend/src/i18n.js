@@ -70,7 +70,8 @@ const resources = {
       "Export to PDF": "Export to PDF",
       "TEST REPORT NAME": "TEST REPORT NAME",
       "Filter": "Filter",
-      "Refresh": "Refresh"
+      "Refresh": "Refresh",
+      "Status is required.": "Status is required.",
     }
   },
   he: {
@@ -234,7 +235,7 @@ const resources = {
       "Families Management": "ניהול משפחות",
       "Last Name": "שם משפחה",
       "Address": "כתובת",
-      "Status": "מצב חונכות",
+      "Status": "סטטוס",
       "Actions": "פעולות",
       "No families to display": "אין משפחות להצגה",
       'Details': 'הצג פרטים נוספים',
@@ -540,6 +541,7 @@ const resources = {
       'Filter by Urgency': "סנן לפי דחיפות",
       "The calculations hadn't finished yet. Please try again in several seconds.": "החישובים עדיין לא הסתיימו. אנא נסה שוב בעוד מספר שניות.",
       'Failed to fetch matches.': 'שגיאה בטעינת התאמות',
+      "Status is required.": "סטטוס הוא שדה חובה.",
     }
   }
 };
