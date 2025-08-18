@@ -29,6 +29,7 @@ const Families = () => {
   const [showAddModal, setShowAddModal] = useState(false); // State for Add Family modal
   const [maritalStatuses, setMaritalStatuses] = useState([]);
   const [tutoringStatuses, setTutoringStatuses] = useState([]);
+  const [statuses, setStatuses] = useState([]);
   const [page, setPage] = useState(1);
   const [pageSize] = useState(5); // Number of families per page
   const [totalCount, setTotalCount] = useState(0);
@@ -58,6 +59,7 @@ const Families = () => {
     mother_phone: '',
     expected_end_treatment_by_protocol: '',
     has_completed_treatments: false, // Default to false
+    status: 'טיפולים', // Default status
   });
 
   // Validation state
@@ -71,7 +73,8 @@ const Families = () => {
       setFamilies(response.data.families); // Use the "families" key from the API response
       setTotalCount(response.data.families.length); // Set the total count for pagination
       setMaritalStatuses(response.data.marital_statuses.map((item) => item.status)); // Extract marital statuses
-      setTutoringStatuses(response.data.tutoring_statuses.map((item) => item.status)); // Extract tutoring statuses
+      setTutoringStatuses(response.data.tutoring_statuses.map((item) => item.status)); // Extract tutoringstatuses
+      setStatuses(response.data.statuses.map((item) => item.status)); // Extract statuses
     } catch (error) {
       console.error('Error fetching families:', error);
       showErrorToast(t, 'Error fetching families data', error); // Use the reusable function
@@ -175,6 +178,9 @@ const Families = () => {
     if (!newFamily.tutoring_status) {
       newErrors.tutoring_status = t("Tutoring status is required.");
     }
+    if (!newFamily.status) {
+      newErrors.status = t("Status is required.");
+    }
 
     console.log("Validation errors:", newErrors); // Debugging
     setErrors(newErrors);
@@ -232,6 +238,7 @@ const Families = () => {
       mother_phone: '',
       expected_end_treatment_by_protocol: '',
       has_completed_treatments: false, // Default to false
+      status: 'טיפולים', // Default status
     });
     setErrors({}); // Clear any previous validation errors
     setShowAddModal(true); // Open the modal
@@ -265,6 +272,7 @@ const Families = () => {
       mother_phone: '',
       expected_end_treatment_by_protocol: '',
       has_completed_treatments: false,
+      status: 'טיפולים', // Reset to default status
     });
     setErrors({}); // Clear errors when closing the modal
   };
@@ -318,6 +326,7 @@ const Families = () => {
       mother_phone: family.mother_phone || '',
       expected_end_treatment_by_protocol: formatDate(family.expected_end_treatment_by_protocol) || '',
       has_completed_treatments: family.has_completed_treatments || false,
+      status: family.status || 'טיפולים', // Default to 'טיפולים' if not provided
     };
 
     const cityKey = family.city ? family.city.trim() : '';
@@ -384,6 +393,7 @@ const Families = () => {
       mother_phone: '',
       expected_end_treatment_by_protocol: '',
       has_completed_treatments: false,
+      status: 'טיפולים', // Reset to default status
     });
     setErrors({});
   };
@@ -455,6 +465,7 @@ const Families = () => {
                       <th>{t('Last Name')}</th>
                       <th>{t('Address')}</th>
                       <th>{t('Phone')}</th>
+                      <th>{t('Tutorship Status')}</th>
                       <th>{t('Status')}</th>
                       <th>{t('Actions')}</th>
                     </tr>
@@ -466,6 +477,7 @@ const Families = () => {
                         <td>{family.address}</td>
                         <td>{family.child_phone_number || '---'}</td>
                         <td>{family.tutoring_status || '---'}</td>
+                        <td>{family.status}</td>
                         <td>
                           <div className="family-actions">
                             <button className="info-button" onClick={() => showFamilyDetails(family)}>
@@ -548,6 +560,7 @@ const Families = () => {
               <div className="family-details-grid">
                 <p>{t('ID')}: {selectedFamily.id}</p>
                 <p>{t('Full Name')}: {selectedFamily.first_name} {selectedFamily.last_name}</p>
+                <p>{t('Status')}: {selectedFamily.status || 'טיפולים'}</p>
                 <p>{t('Address')}: {selectedFamily.address}</p>
                 <p>{t('Phone')}: {selectedFamily.child_phone_number || '---'}</p>
                 <p>{t('Gender')}: {selectedFamily.gender ? t('נקבה') : t('זכר')}</p>
@@ -569,6 +582,7 @@ const Families = () => {
                 <p>{t('Expected End Treatment by Protocol')}: {selectedFamily.expected_end_treatment_by_protocol || '---'}</p>
                 <p>{t('Has Completed Treatments')}: {selectedFamily.has_completed_treatments ? t('Yes') : t('No')}</p>
                 <p>{t('Details for Tutoring')}: {selectedFamily.details_for_tutoring || '---'}</p>
+                <p>{t('Status')}: {selectedFamily.status || 'טיפולים'}</p>
               </div>
               <button onClick={closeFamilyDetails}>{t('Close')}</button>
             </div>
@@ -644,8 +658,9 @@ const Families = () => {
                   />
                   {errors.street && <span className="families-error-message">{errors.street}</span>}
 
-                </div>
+                </div>  {/* End of first form-column */}
 
+                {/* Second form-column */}
                 <div className="form-column">
                   <label>{t('Apartment Number')}</label>
                   <input
@@ -705,8 +720,9 @@ const Families = () => {
                     className={errors.date_of_birth ? "error" : ""}
                   />
                   {errors.date_of_birth && <span className="families-error-message">{errors.date_of_birth}</span>}
-                </div>
+                </div> {/* End of second form-column */}
 
+                {/* Third form-column */}
                 <div className="form-column">
                   <label>{t('Marital Status')}</label>
                   <select
@@ -755,7 +771,9 @@ const Families = () => {
                     className=""
                     disabled
                   />
-                </div>
+                </div> {/* End of third form-column */}
+
+                {/* Fourth form-column */}
                 <div className="form-column">
                   <label>{t('Medical Diagnosis')}</label>
                   <input
@@ -803,8 +821,9 @@ const Families = () => {
                     onChange={handleAddFamilyChange}
                     className="scrollable-textarea"
                   />
-                </div>
+                </div> {/* End of fourth form-column */}
 
+                {/* Fifth form-column */}
                 <div className="form-column">
                   <label>{t('Father Name')}</label>
                   <input
@@ -847,8 +866,9 @@ const Families = () => {
                     className={errors.mother_phone ? "error" : ""}
                   />
                   {errors.mother_phone && <span className="families-error-message">{errors.mother_phone}</span>}
-                </div>
+                </div> {/* End of fifth form-column */}
 
+                {/* Sixth form-column */}
                 <div className="form-column">
                   <label>{t('Expected End Treatment by Protocol')}</label>
                   <input
@@ -903,7 +923,24 @@ const Families = () => {
                     ))}
                   </select>
                   {errors.tutoring_status && <span className="families-error-message">{errors.tutoring_status}</span>}
+
+                  <label>{t('Status')}</label>
+                  <select
+                    name="status"
+                    value={newFamily.status}
+                    onChange={handleAddFamilyChange}
+                    className={errors.status ? "error" : ""}
+                  >
+                    {statuses.map((status, index) => (
+                      <option key={index} value={status}>
+                        {status}
+                      </option>
+                    ))}
+                  </select>
+                  {errors.status && <span className="families-error-message">{errors.status}</span>}
                 </div>
+
+                
 
                 <div className="form-actions">
                   <button type="submit">{t('Update Family')}</button>
@@ -1254,6 +1291,21 @@ const Families = () => {
                     ))}
                   </select>
                   {errors.tutoring_status && <span className="families-error-message">{errors.tutoring_status}</span>}
+
+                  <label>{t('Status')}</label>
+                  <select
+                    name="status"
+                    value={newFamily.status}
+                    onChange={handleAddFamilyChange}
+                    className={errors.status ? "error" : ""}
+                  >
+                    {statuses.map((status, index) => (
+                      <option key={index} value={status}>
+                        {status}
+                      </option>
+                    ))}
+                  </select>
+                  {errors.status && <span className="families-error-message">{errors.status}</span>}
                 </div>
 
                 <div className="form-actions">
