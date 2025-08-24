@@ -32,7 +32,10 @@ const Families = () => {
   const [statuses, setStatuses] = useState([]);
   const [page, setPage] = useState(1);
   const [pageSize] = useState(5); // Number of families per page
-  const [totalCount, setTotalCount] = useState(0);
+  const [showHealthyOnly, setShowHealthyOnly] = useState(false);
+  const [showMatureOnly, setShowMatureOnly] = useState(false); // State for showing mature families only
+  const [totalCount, setTotalCount] = useState(0); // Total number of families after filtering
+  const [selectedStatus, setSelectedStatus] = useState(''); // State for selected status filter
   const [newFamily, setNewFamily] = useState({
     child_id: '',
     childfirstname: '',
@@ -71,7 +74,6 @@ const Families = () => {
     try {
       const response = await axios.get('/api/get_complete_family_details/');
       setFamilies(response.data.families); // Use the "families" key from the API response
-      setTotalCount(response.data.families.length); // Set the total count for pagination
       setMaritalStatuses(response.data.marital_statuses.map((item) => item.status)); // Extract marital statuses
       setTutoringStatuses(response.data.tutoring_statuses.map((item) => item.status)); // Extract tutoringstatuses
       setStatuses(response.data.statuses.map((item) => item.status)); // Extract statuses
@@ -84,12 +86,26 @@ const Families = () => {
     }
   };
 
+  let filteredFamilies = families;
+  if (showHealthyOnly) {
+    filteredFamilies = filteredFamilies.filter((family) => family.status === "בריא");
+  }
+  if (showMatureOnly) {
+    filteredFamilies = filteredFamilies.filter((family) => family.age >= 16);
+  }
+  if (selectedStatus) {
+    filteredFamilies = filteredFamilies.filter((family) => family.status === selectedStatus);
+  }
+  const paginatedFamilies = filteredFamilies.slice((page - 1) * pageSize, page * pageSize);
 
-  const paginatedFamilies = families.slice((page - 1) * pageSize, page * pageSize);
 
   useEffect(() => {
     fetchFamilies();
   }, []);
+
+  useEffect(() => {
+    setTotalCount(filteredFamilies.length);
+  }, [filteredFamilies]);
 
   const handleAddFamilyChange = (e) => {
     const { name, value } = e.target;
@@ -446,6 +462,30 @@ const Families = () => {
             <button onClick={openAddModal}>
               {t('Add New Family')}
             </button>
+            <button
+              className={`toggle-healthy-btn${showHealthyOnly ? " active" : ""}`}
+              onClick={() => setShowHealthyOnly((prev) => !prev)}
+            >
+              {showHealthyOnly ? t('Show All Statuses') : t('Show Healthy Only')}
+            </button>
+            <button
+              className={`toggle-mature-btn${showMatureOnly ? " active" : ""}`}
+              onClick={() => setShowMatureOnly((prev) => !prev)}
+            >
+              {showMatureOnly ? t('Show All Ages') : t('Show Matures Only')}
+            </button>
+          </div>
+          <div className="status-filter">
+            <select
+              value={selectedStatus}
+              onChange={(e) => setSelectedStatus(e.target.value)}
+              className="families-status-filter-label"
+            >
+              <option value="" >סנן לפי סטטוס</option>
+              {statuses.map((status, idx) => (
+                <option key={idx} value={status}>{status}</option>
+              ))}
+            </select>
           </div>
           <div className="refresh">
             <button onClick={fetchFamilies}>
@@ -457,7 +497,7 @@ const Families = () => {
           <div className="loader">{t('Loading data...')}</div>
         ) : (
           <div className="families-grid-container">
-            {families.length > 0 ? (
+            {filteredFamilies.length > 0 ? (
               <>
                 <table className="families-data-grid">
                   <thead>
@@ -547,7 +587,9 @@ const Families = () => {
                 </div>
               </>
             ) : (
-              <div className="no-data">{t('No families to display')}</div>
+              <div className="no-data">
+                {t('No matching results found. Adjust the filters to see data.')}
+              </div>
             )}
           </div>
         )}
@@ -940,7 +982,7 @@ const Families = () => {
                   {errors.status && <span className="families-error-message">{errors.status}</span>}
                 </div>
 
-                
+
 
                 <div className="form-actions">
                   <button type="submit">{t('Update Family')}</button>

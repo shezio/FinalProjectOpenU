@@ -9,7 +9,6 @@ from .models import (
     Children,
     Tutorships,
     Matures,
-    Healthy,
     Feedback,
     Tutor_Feedback,
     General_V_Feedback,
@@ -30,7 +29,6 @@ from .unused_views import (
     ChildrenViewSet,
     TutorshipsViewSet,
     MaturesViewSet,
-    HealthyViewSet,
     FeedbackViewSet,
     Tutor_FeedbackViewSet,
     General_V_FeedbackViewSet,
@@ -199,7 +197,8 @@ def fetch_possible_matches():
         SELECT 1
         FROM childsmile_app_tutorships tutorship
         WHERE tutorship.child_id = child.child_id or tutorship.tutor_id = tutor.id_id
-    );
+    )
+    AND child.status <> 'בריא';
     """
     with connection.cursor() as cursor:
         cursor.execute(query)

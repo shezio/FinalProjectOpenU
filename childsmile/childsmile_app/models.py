@@ -13,7 +13,6 @@ from .models import (
     Children,
     Tutorships,
     Matures,
-    Healthy,
     Feedback,
     Tutor_Feedback,
     General_V_Feedback,
@@ -233,7 +232,6 @@ class Tutorships(models.Model):
     class Meta:
         db_table = "childsmile_app_tutorships"
 
-
 class Matures(models.Model):
     timestamp = models.DateTimeField(auto_now_add=True)
     child = models.OneToOneField(Children, on_delete=models.CASCADE, primary_key=True)
@@ -250,26 +248,6 @@ class Matures(models.Model):
 
     class Meta:
         db_table = "childsmile_app_matures"
-
-
-class Healthy(models.Model):
-    child = models.OneToOneField(
-        Children, on_delete=models.CASCADE, primary_key=True, db_column="child_id_id"
-    )  # Specify the column name in the database
-    street_and_apartment_number = models.CharField(
-        max_length=255, null=True, blank=True
-    )
-    father_name = models.CharField(max_length=255, null=True, blank=True)
-    father_phone = models.CharField(max_length=20, null=True, blank=True)
-    mother_name = models.CharField(max_length=255, null=True, blank=True)
-    mother_phone = models.CharField(max_length=20, null=True, blank=True)
-
-    def __str__(self):
-        return f"Healthy {self.child.childfirstname} {self.child.childsurname}"
-
-    class Meta:
-        db_table = "childsmile_app_healthy"
-
 
 class Feedback(models.Model):
     feedback_id = models.AutoField(primary_key=True)

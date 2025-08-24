@@ -10,7 +10,6 @@ from .models import (
     Children,
     Tutorships,
     Matures,
-    Healthy,
     Feedback,
     Tutor_Feedback,
     General_V_Feedback,
@@ -29,7 +28,6 @@ admin.site.register(Tutors)
 admin.site.register(Children)
 admin.site.register(Tutorships)
 admin.site.register(Matures)
-admin.site.register(Healthy)
 admin.site.register(Feedback)
 admin.site.register(Tutor_Feedback)
 admin.site.register(General_V_Feedback)

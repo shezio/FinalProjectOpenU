@@ -74,7 +74,6 @@ from .unused_views import (
     ChildrenViewSet,
     TutorshipsViewSet,
     MaturesViewSet,
-    HealthyViewSet,
     FeedbackViewSet,
     Tutor_FeedbackViewSet,
     General_V_FeedbackViewSet,
@@ -94,7 +93,6 @@ router.register(r"tutors", TutorsViewSet)
 router.register(r"children", ChildrenViewSet)
 router.register(r"tutorships", TutorshipsViewSet)
 router.register(r"matures", MaturesViewSet)
-router.register(r"healthy", HealthyViewSet)
 router.register(r"feedback", FeedbackViewSet)
 router.register(r"tutor_feedback", Tutor_FeedbackViewSet)
 router.register(r"general_v_feedback", General_V_FeedbackViewSet)
