@@ -15,7 +15,6 @@ from .models import (
     Children,
     Tutorships,
     Matures,
-    Healthy,
     Feedback,
     Tutor_Feedback,
     General_V_Feedback,
@@ -116,12 +115,6 @@ class TutorshipsViewSet(viewsets.ModelViewSet):
 class MaturesViewSet(viewsets.ModelViewSet):
     queryset = Matures.objects.all()
     permission_classes = [IsAuthenticated]
-
-
-class HealthyViewSet(viewsets.ModelViewSet):
-    queryset = Healthy.objects.all()
-    permission_classes = [IsAuthenticated]
-
 
 class FeedbackViewSet(viewsets.ModelViewSet):
     queryset = Feedback.objects.all()

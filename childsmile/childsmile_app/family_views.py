@@ -9,7 +9,6 @@ from .models import (
     Children,
     Tutorships,
     Matures,
-    Healthy,
     Feedback,
     Tutor_Feedback,
     General_V_Feedback,
@@ -29,7 +28,6 @@ from .unused_views import (
     ChildrenViewSet,
     TutorshipsViewSet,
     MaturesViewSet,
-    HealthyViewSet,
     FeedbackViewSet,
     Tutor_FeedbackViewSet,
     General_V_FeedbackViewSet,
@@ -132,6 +130,7 @@ def get_complete_family_details(request):
                 ),
                 "has_completed_treatments": family.has_completed_treatments,
                 "status": family.status,  # Add the status field
+                "age": family.age,  # Add the age field
             }
             for family in families
         ]

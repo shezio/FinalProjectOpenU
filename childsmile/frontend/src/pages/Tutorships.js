@@ -398,6 +398,7 @@ const Tutorships = () => {
         want_tutor: row.want_tutor ?? false,
         comment: row.comment ?? "---",
         tutorship_status: row.tutorship_status ?? "---",
+        status: row.status ?? "---",
       });
     } else {
       // It's a match from the wizard, use as is
@@ -504,6 +505,7 @@ const Tutorships = () => {
           expected_end_treatment_by_protocol: family.expected_end_treatment_by_protocol ?? "---",
           has_completed_treatments: family.has_completed_treatments ?? false,
           details_for_tutoring: family.details_for_tutoring ?? "---",
+          status: family.status ?? "---",
           // Tutor fields
           tutor_full_name: `${tutorship.tutor_firstname ?? tutor.first_name ?? "---"} ${tutorship.tutor_lastname ?? tutor.last_name ?? "---"}`,
           tutor_id: tutor.id ?? "---",
@@ -902,6 +904,7 @@ const Tutorships = () => {
                         <tr><td>{t('Expected End Treatment by Protocol')}</td><td> {selectedMatchForInfo.expected_end_treatment_by_protocol || '---'}</td></tr>
                         <tr><td>{t('Has Completed Treatments')}</td><td> {selectedMatchForInfo.has_completed_treatments ? t('Yes') : t('No')}</td></tr>
                         <tr><td>{t('Details for Tutoring')}</td><td> {selectedMatchForInfo.details_for_tutoring || '---'}</td></tr>
+                        <tr><td>{t('Status')}</td><td> {selectedMatchForInfo.status}</td></tr>
                       </tbody>
                     </table>
                   </div>

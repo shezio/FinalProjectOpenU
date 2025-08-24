@@ -542,6 +542,11 @@ const resources = {
       "The calculations hadn't finished yet. Please try again in several seconds.": "החישובים עדיין לא הסתיימו. אנא נסה שוב בעוד מספר שניות.",
       'Failed to fetch matches.': 'שגיאה בטעינת התאמות',
       "Status is required.": "סטטוס הוא שדה חובה.",
+      "Show Healthy Only": "הצג בריאים בלבד",
+      "Show All Statuses": "הצג כל הסטטוסים",
+      'No matching results found. Adjust the filters to see data.': 'לא נמצאו תוצאות תואמות. שנה את המסננים כדי לראות נתונים.',
+      "Show All Ages": "הצג את כל הגילאים",
+      "Show Matures Only": "הצג בוגרים בלבד",
     }
   }
 };

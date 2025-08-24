@@ -595,3 +595,57 @@ textarea.error {
     margin-top: 10px;
     font-size: 1em !important;
 }
+
+.toggle-healthy-btn {
+  background-color: #fa9005 !important;
+  color: white;
+  padding: 10px 20px;
+  font-size: 24px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-left: 10px;
+  transition: background-color 0.3s, box-shadow 0.2s;
+}
+
+.toggle-healthy-btn.active {
+  background-color: /* darker than e78709*/ #c16c03 !important;
+  box-shadow: 0 2px 8px rgba(33,136,56,0.2);
+}
+
+
+.toggle-mature-btn {
+  background-color: #9405fa !important;
+  color: white;
+  padding: 10px 20px;
+  font-size: 24px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-left: 10px;
+  transition: background-color 0.3s, box-shadow 0.2s;
+}
+
+.toggle-mature-btn.active {
+  background-color: /* darker than 9405fa */ #6b03c1 !important;
+  box-shadow: 0 2px 8px rgba(33,136,56,0.2);
+}
+
+/* In your CSS */
+.families-status-filter-container {
+  position: relative;
+  display: inline-block;
+}
+
+.families-status-filter-label {
+  background-color: #56d50c !important;
+  color: white !important;
+  padding: 10px 20px !important;
+  font-size: 24px !important;
+  border: none !important;
+  border-radius: 5px !important;
+  cursor: pointer !important;
+  margin-left: 10px !important;
+  transition: background-color 0.3s, box-shadow 0.2s !important;
+  appearance: none; /* Optional: removes default arrow, but macOS style will remain if you want */
+}
