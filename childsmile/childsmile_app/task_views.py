@@ -247,13 +247,35 @@ def delete_task(request, task_id):
     try:
         task = Tasks.objects.get(task_id=task_id)
         assigned_to_id = task.assigned_to_id
-        task.delete()
+        pending_tutor_id = task.pending_tutor_id
+        task_type = task.task_type
+
 
         # Check if the logged-in user is an admin
         user = Staff.objects.get(staff_id=user_id)
 
-        # Invalidate the cache for tasks
-
+        # If task type is "ראיון מועמד לחונכות", delete the associated Pending_Tutor
+        if task_type and getattr(task_type, "task_type", None) == "ראיון מועמד לחונכות":
+            # print all task details for debug
+            print(f"DEBUG: Deleting task {task_id} of type {task_type}")
+            print(f"DEBUG: Assigned to ID {assigned_to_id}")
+            print(f"DEBUG: Pending tutor ID {pending_tutor_id}")
+            print(f"DEBUG: Task type {task_type}")
+            if pending_tutor_id:
+                try:
+                    pending_tutor = Pending_Tutor.objects.get(pending_tutor_id=pending_tutor_id)
+                    # check if the user has permission to delete the pending tutor
+                    if not has_permission(request, "pending_tutor", "DELETE"):
+                        return JsonResponse(
+                            {"error": "You do not have permission to delete pending tutors."}, status=401
+                        )
+                    else:
+                        pending_tutor.delete()
+                    print(f"DEBUG: Deleted Pending_Tutor with ID {pending_tutor_id}")
+                except Pending_Tutor.DoesNotExist:
+                    print(f"DEBUG: Pending_Tutor with ID {pending_tutor_id} does not exist")
+        
+        task.delete()
         return JsonResponse({"message": "Task deleted successfully."}, status=200)
     except Tasks.DoesNotExist:
         return JsonResponse({"error": "Task not found."}, status=404)
