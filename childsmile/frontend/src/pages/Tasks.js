@@ -13,6 +13,7 @@ import { showErrorToast, showWarningToast } from '../components/toastUtils';
 import { useTranslation } from 'react-i18next';
 import "../i18n";
 import { useLocation } from 'react-router-dom';
+import Modal from 'react-modal';
 
 const statusColumns = [
   { key: "לא הושלמה", label: "לא הושלמה" },
@@ -61,6 +62,8 @@ const Tasks = () => {
   const [dueDate, setDueDate] = useState('');
   const [menuOpen, setMenuOpen] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [taskToDelete, setTaskToDelete] = useState(null);
   const menuRef = useRef();
   const location = useLocation();
 
@@ -498,6 +501,22 @@ const Tasks = () => {
     return type && type.name === "הוספת משפחה";
   };
 
+  const openDeleteModal = (task) => {
+    setTaskToDelete(task);
+    setIsDeleteModalOpen(true);
+  };
+
+  const closeDeleteModal = () => {
+    setTaskToDelete(null);
+    setIsDeleteModalOpen(false);
+  };
+
+  const confirmDeleteTask = async () => {
+    if (!taskToDelete) return;
+    await handleDeleteTask(taskToDelete.id);
+    closeDeleteModal();
+  };
+
   return (
     <div className="tasks-main-content">
       <Sidebar className={isDragging ? "sidebar--dragging" : ""} />
@@ -623,7 +642,7 @@ const Tasks = () => {
                       >
                         {t('ערוך')}
                       </button>
-                      <button onClick={() => { setMenuOpen(false); handleDeleteTask(selectedTask.id); }}>{t('מחק')}</button>
+                      <button onClick={() => { setMenuOpen(false); openDeleteModal(selectedTask); }}>{t('מחק')}</button>
                     </div>
                   )}
                   <div className="task-details-content">
@@ -878,6 +897,34 @@ const Tasks = () => {
                 <button onClick={handleSubmitTask}>צור</button>
               </div>
             </div>
+          )}
+          {isDeleteModalOpen && taskToDelete && (
+            <Modal
+              isOpen={isDeleteModalOpen}
+              onRequestClose={closeDeleteModal}
+              contentLabel="Delete Confirmation"
+              className="delete-modal"
+              overlayClassName="delete-modal-overlay"
+            >
+              <h2>{t('Are you sure you want to delete this task?')}</h2>
+              <p style={{ color: 'red', fontWeight: 'bold' }}>
+                {taskToDelete && isInterviewTask(taskToDelete.type)
+                  ? t('Deleting an interview task will also remove the candidate from the pending tutors list')
+                  : t('Deleting a task will remove all associated data')
+                }
+                <br /><br />
+                {t('This action cannot be undone')}
+                <br />
+              </p>
+              <div className="modal-actions">
+                <button onClick={confirmDeleteTask} className="yes-button">
+                  {t('Yes')}
+                </button>
+                <button onClick={closeDeleteModal} className="no-button">
+                  {t('No')}
+                </button>
+              </div>
+            </Modal>
           )}
         </>
       )}

@@ -547,6 +547,9 @@ const resources = {
       'No matching results found. Adjust the filters to see data.': 'לא נמצאו תוצאות תואמות. שנה את המסננים כדי לראות נתונים.',
       "Show All Ages": "הצג את כל הגילאים",
       "Show Matures Only": "הצג בוגרים בלבד",
+      'Are you sure you want to delete this task?': 'האם אתה בטוח שברצונך למחוק משימה זו?',
+      'Deleting an interview task will also remove the candidate from the pending tutors list': 'מחיקת משימת ראיון תסיר גם את המועמד מרשימת המועמדים לחונכות',
+      'Deleting a task will remove all associated data': 'מחיקת משימה תסיר את כל הנתונים הקשורים',
     }
   }
 };
