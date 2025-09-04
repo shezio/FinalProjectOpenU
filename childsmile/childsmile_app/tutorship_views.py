@@ -16,6 +16,7 @@ from .models import (
     Task_Types,
     PossibleMatches,  # Add this line
     InitialFamilyData,
+    PrevTutorshipStatuses,  # Add this line
 )
 from .unused_views import (
     PermissionsViewSet,
@@ -230,6 +231,18 @@ def create_tutorship(request):
                 {"error": "Invalid staff_role_id. It must be an integer."}, status=400
             )
 
+        # Retrieve child and tutor objects
+        child = Children.objects.get(child_id=data["child_id"])
+        tutor = Tutors.objects.get(id_id=data["tutor_id"])
+
+        # Save current statuses in PrevTutorshipStatuses
+        PrevTutorshipStatuses.objects.create(
+            tutor_id=tutor,
+            child_id=child,
+            tutor_tut_status=tutor.tutorship_status,  # or the correct field name
+            child_tut_status=child.tutoring_status,   # or the correct field name
+        )
+
         # Create a new tutorship record in the database
         tutorship = Tutorships.objects.create(
             child_id=data["child_id"],
@@ -240,6 +253,13 @@ def create_tutorship(request):
             approval_counter=1,  # Start with 1 approver
         )
 
+        # After tutorship creation
+        child.tutoring_status = "יש_חונך"
+        child.save()
+
+        tutor.tutorship_status = "יש_חניך"
+        tutor.save()
+        
         print(f"DEBUG: Tutorship created successfully with ID {tutorship.id}")
         return JsonResponse(
             {"message": "Tutorship created successfully", "tutorship_id": tutorship.id},

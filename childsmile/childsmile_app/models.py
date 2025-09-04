@@ -439,3 +439,17 @@ class CityGeoDistance(models.Model):
 
     def __str__(self):
         return f"{self.city1} <-> {self.city2}: {self.distance}km"
+    
+class PrevTutorshipStatuses(models.Model):
+    prev_id = models.AutoField(primary_key=True, serialize=False)
+    tutor_id = models.ForeignKey(Tutors, on_delete=models.CASCADE, null=False)
+    child_id = models.ForeignKey(Children, on_delete=models.CASCADE, null=False)
+    tutor_tut_status = models.CharField(max_length=50, null=False)
+    child_tut_status = models.CharField(max_length=50, null=False)
+    last_updated = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"PrevTutorshipStatus {self.prev_id} - Tutor {self.tutor.id} - Child {self.child.child_id}"
+
+    class Meta:
+        db_table = "childsmile_app_prevtutorshipstatuses"
