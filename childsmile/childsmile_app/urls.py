@@ -62,6 +62,10 @@ from .tutorship_views import (
     update_tutorship,
     delete_tutorship,
 )
+from .tutor_volunteer_views import (
+    update_general_volunteer,
+    update_tutor,
+)
 
 from .unused_views import (
     PermissionsViewSet,
@@ -310,5 +314,15 @@ urlpatterns = [
         "api/get_general_volunteers_not_pending/",
         get_general_volunteers_not_pending,
         name="get_general_volunteers_not_pending",
+    ),
+    path(
+        "api/update_general_volunteer/<int:volunteer_id>/",
+        update_general_volunteer,
+        name="update_general_volunteer",
+    ),
+    path(
+        "api/update_tutor/<int:tutor_id>/",
+        update_tutor,
+        name="update_tutor",
     ),
 ]
