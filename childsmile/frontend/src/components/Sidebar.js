@@ -13,6 +13,7 @@ const Sidebar = () => {
   const hasPermissionToTutorships = hasViewPermissionForTable('tutorships');
   const hasPermissionToSystemManagement = hasDeletePermissionForTable('staff');
   const hasPermissionToAnyReport = hasViewPermissionForReports();
+  const hasPermissionToTutorVolunteerMgmt = hasViewPermissionForTable('tutors') || hasViewPermissionForTable('volunteers');
 
   return (
     <div className="sidebar">
@@ -34,6 +35,17 @@ const Sidebar = () => {
           משפחות
         </button>
       )}
+      {/* Tutor and Volunteer Management  */}
+      {hasPermissionToTutorVolunteerMgmt && (
+        <button
+          data-path="/tutor-volunteer-mgmt"
+          className={location.pathname.startsWith('/tutor-volunteer-mgmt') ? 'active' : ''}
+          onClick={() => window.location.href = '/tutor-volunteer-mgmt'}
+        >
+          ניהול חונכים ומתנדבים
+        </button>
+      )}
+      {/* End Tutor and Volunteer Management  */}
       {hasPermissionToFeedbacks && (
         <button
           data-path="/feedbacks"
