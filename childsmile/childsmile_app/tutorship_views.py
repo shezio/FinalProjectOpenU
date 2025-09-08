@@ -236,7 +236,7 @@ def create_tutorship(request):
         tutor = Tutors.objects.get(id_id=data["tutor_id"])
 
         # Save current statuses in PrevTutorshipStatuses
-        PrevTutorshipStatuses.objects.create(
+        prev_status = PrevTutorshipStatuses.objects.create(
             tutor_id=tutor,
             child_id=child,
             tutor_tut_status=tutor.tutorship_status,  # or the correct field name
@@ -253,6 +253,10 @@ def create_tutorship(request):
             approval_counter=1,  # Start with 1 approver
         )
 
+        # 4. Update the prev_status record to set tutorship FK
+        prev_status.tutorship_id = tutorship
+        prev_status.save()
+        
         # After tutorship creation
         child.tutoring_status = "יש_חונך"
         child.save()
@@ -369,6 +373,33 @@ def delete_tutorship(request, tutorship_id):
             tutorship = Tutorships.objects.get(id=tutorship_id)
         except Tutorships.DoesNotExist:
             return JsonResponse({"error": "Tutorship not found"}, status=404)
+
+        tutor = tutorship.tutor
+        child = tutorship.child
+
+        # Find the PrevTutorshipStatuses record for this tutorship
+        prev_status = PrevTutorshipStatuses.objects.filter(
+            tutorship_id=tutorship
+        ).order_by('-last_updated').first()
+
+        if prev_status:
+            tutor.tutorship_status = prev_status.tutor_tut_status
+            child.tutoring_status = prev_status.child_tut_status
+            tutor.save()
+            child.save()
+            prev_status.delete()
+        else:
+            tutor.tutorship_status = "אין_חניך"
+            child.tutoring_status = "אין_חונך"
+            tutor.save()
+            child.save()
+            PrevTutorshipStatuses.objects.create(
+                tutor=tutor,
+                child=child,
+                tutor_tut_status="אין_חניך",
+                child_tut_status="אין_חונך",
+                tutorship_id=None
+            )
 
         # Delete the tutorship record
         tutorship.delete()

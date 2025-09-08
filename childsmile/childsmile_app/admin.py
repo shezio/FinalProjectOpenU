@@ -16,6 +16,7 @@ from .models import (
     Tasks,
     PossibleMatches,  # Add this line
     InitialFamilyData,
+    PrevTutorshipStatuses,
 )
 
 admin.site.register(Permissions)
@@ -34,3 +35,4 @@ admin.site.register(General_V_Feedback)
 admin.site.register(Tasks)
 admin.site.register(PossibleMatches)  # Add this line
 admin.site.register(InitialFamilyData)
+admin.site.register(PrevTutorshipStatuses)

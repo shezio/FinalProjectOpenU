@@ -447,6 +447,8 @@ class PrevTutorshipStatuses(models.Model):
     tutor_tut_status = models.CharField(max_length=50, null=False)
     child_tut_status = models.CharField(max_length=50, null=False)
     last_updated = models.DateTimeField(auto_now=True)
+    tutorship_id = models.ForeignKey(Tutorships, on_delete=models.CASCADE, null=True)
+
 
     def __str__(self):
         return f"PrevTutorshipStatus {self.prev_id} - Tutor {self.tutor.id} - Child {self.child.child_id}"
