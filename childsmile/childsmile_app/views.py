@@ -220,6 +220,10 @@ def get_tutors(request):
             "first_name": t.staff.first_name,  # נתונים מטבלת Staff
             "last_name": t.staff.last_name,
             "tutorship_status": t.tutorship_status,
+            "preferences": t.preferences,
+            "tutor_email": t.tutor_email,
+            "relationship_status": t.relationship_status,
+            "tutee_wellness": t.tutee_wellness,
         }
         for t in tutors
     ]
@@ -906,6 +910,8 @@ def get_general_volunteers_not_pending(request):
             "first_name": gv.staff.first_name,
             "last_name": gv.staff.last_name,
             "email": gv.staff.email,
+            "signupdate": gv.signupdate,
+            "comments": gv.comments,
         }
         for gv in volunteers
     ]

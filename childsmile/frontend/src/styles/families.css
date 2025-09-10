@@ -626,6 +626,18 @@ textarea.error {
   transition: background-color 0.3s, box-shadow 0.2s;
 }
 
+.refresh-volunteers-tutors-btn {
+  background-color: #2196f3 !important;
+  color: white;
+  padding: 10px 20px;
+  font-size: 24px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-left: 10px;
+  transition: background-color 0.3s, box-shadow 0.2s;
+}
+
 .toggle-mature-btn.active {
   background-color: /* darker than 9405fa */ #6b03c1 !important;
   box-shadow: 0 2px 8px rgba(33,136,56,0.2);
