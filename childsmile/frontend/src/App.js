@@ -21,6 +21,7 @@ import Registration from './pages/Registration'; // Import the Registration comp
 import VolunteerFeedbacks from './pages/VolunteerFeedbacks'; // Import the Volunteer Feedbacks component
 import TutorFeedbacks from './pages/TutorFeedbacks'; // Import the Tutor Feedbacks component
 import InitialFamilyData from './pages/InitialFamilyData'; // Import the Initial Family Data component
+import TutorVolunteerMgmt from './pages/TutorVolunteerMgmt'; // Import the Tutor and Volunteer Management component
 
 /*import these routes respectively to .pages
     get_families_per_location_report: { name: 'דוח משפחות לפי מיקום', path: '/reports/families_per_location_report' },
@@ -59,6 +60,7 @@ const App = () => {
       <Route path="/feedbacks/VolunteerFeedbacks" element={<VolunteerFeedbacks />} /> {/* Add Volunteer Feedbacks route */}
       <Route path="/feedbacks/TutorFeedbacks" element={<TutorFeedbacks />} /> {/* Add Tutor Feedbacks route */}
       <Route path="/initial-family-data" element={<InitialFamilyData />} /> {/* Add Initial Family Data route */}
+      <Route path="/tutor-volunteer-mgmt" element={<TutorVolunteerMgmt />} /> {/* Add Tutor and Volunteer Management route */}
       <Route path="/register" element={<Registration />} />
     </Routes>
   );

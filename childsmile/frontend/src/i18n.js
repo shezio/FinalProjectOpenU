@@ -550,6 +550,17 @@ const resources = {
       'Are you sure you want to delete this task?': 'האם אתה בטוח שברצונך למחוק משימה זו?',
       'Deleting an interview task will also remove the candidate from the pending tutors list': 'מחיקת משימת ראיון תסיר גם את המועמד מרשימת המועמדים לחונכות',
       'Deleting a task will remove all associated data': 'מחיקת משימה תסיר את כל הנתונים הקשורים',
+      'Tutors Management': 'ניהול חונכים',
+      'Volunteers Management': 'ניהול מתנדבים',
+      'Refresh Tutors List': 'רענן רשימת חונכים',
+      'Refresh Volunteers List': 'רענן רשימת מתנדבים',
+      'Show Volunteers': 'הצג מתנדבים',
+      'Show Tutors': 'הצג חונכים',
+      'Preferences': 'העדפות',
+      'Tutee Wellness': 'מצב רפואי נוכחי',
+      'Relationship Status': 'מצב משפחתי',
+      'Name': 'שם',
+      
     }
   }
 };
