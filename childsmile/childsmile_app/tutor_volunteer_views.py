@@ -118,7 +118,10 @@ def update_tutor(request, tutor_id):
     # Only allow updating relationship_status and tutee_wellness if tutor is in tutorship
     if "relationship_status" in data or "tutee_wellness" in data:
         tutorship = Tutorships.objects.filter(tutor_id=tutor_id).first()
-        if tutorship:
+        if not tutorship or not tutorship.child:
+            # Just warn, do not update these fields
+            print("Tutor not in tutorship, cannot update relationship_status or tutee_wellness.")
+        else:
             child = tutorship.child
             if "relationship_status" in data:
                 tutor.relationship_status = child.marital_status
@@ -126,8 +129,6 @@ def update_tutor(request, tutor_id):
             if "tutee_wellness" in data:
                 tutor.tutee_wellness = child.current_medical_state
                 updated = True
-        else:
-            print("Tutor not in tutorship, cannot update relationship_status or tutee_wellness.")
 
     # Update tutorship_status and PrevTutorshipStatuses
     if "tutorship_status" in data:
@@ -138,12 +139,15 @@ def update_tutor(request, tutor_id):
             prev_status.tutor_tut_status = data["tutorship_status"]
             prev_status.save()
         else:
-            PrevTutorshipStatuses.objects.create(
-                tutor_id=tutor,
-                child_id=None,
-                tutor_tut_status=data["tutorship_status"],
-                child_tut_status="",
-            )
+            tutorship = Tutorships.objects.filter(tutor_id=tutor_id).first()
+            if tutorship and tutorship.child:
+                PrevTutorshipStatuses.objects.create(
+                    tutor_id=tutor,
+                    child_id=tutorship.child,
+                    tutor_tut_status=data["tutorship_status"],
+                    child_tut_status="",
+                )
+            # else: do not create history record if no child
 
     if "preferences" in data:
         tutor.preferences = data["preferences"]

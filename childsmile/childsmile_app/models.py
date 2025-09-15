@@ -111,6 +111,7 @@ class General_Volunteer(models.Model):
     staff = models.ForeignKey(Staff, on_delete=models.CASCADE)
     signupdate = models.DateField()
     comments = models.TextField(null=True, blank=True)
+    updated = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return f"General Volunteer {self.id.first_name} {self.id.surname}"
@@ -139,6 +140,7 @@ class Tutors(models.Model):
     tutor_email = models.EmailField(null=True, blank=True)
     relationship_status = models.CharField(max_length=255, null=True, blank=True)
     tutee_wellness = models.CharField(max_length=255, null=True, blank=True)
+    updated = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return f"Tutor {self.id.first_name} {self.id.surname}"
