@@ -560,7 +560,13 @@ const resources = {
       'Tutee Wellness': 'מצב רפואי נוכחי',
       'Relationship Status': 'מצב משפחתי',
       'Name': 'שם',
-      
+      "no data - see tutorship status": "אין נתונים",
+      "Updated": "עודכן לאחרונה",
+      "Tutor updated successfully": "החונך עודכן בהצלחה!",
+      "Error updating tutor": "שגיאה בעדכון חונך",
+      "Volunteer updated successfully": "המתנדב עודכן בהצלחה!",
+      "Error updating volunteer": "שגיאה בעדכון מתנדב",
+      "Error fetching volunteers": "שגיאה בטעינת מתנדבים",
     }
   }
 };

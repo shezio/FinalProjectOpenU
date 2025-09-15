@@ -8,6 +8,7 @@ from .models import (
     Tutors,
     Children,
     Tutorships,
+    TutorshipStatus,
     Matures,
     Feedback,
     Tutor_Feedback,
@@ -224,11 +225,14 @@ def get_tutors(request):
             "tutor_email": t.tutor_email,
             "relationship_status": t.relationship_status,
             "tutee_wellness": t.tutee_wellness,
+            "updated": t.updated,  # The new 'updated' field
         }
         for t in tutors
     ]
-
-    return JsonResponse({"tutors": tutors_data})
+    # add tutorship_status_options to the response
+    # Use TutorshipStatus.choices for the dropdown options
+    status_options = [choice[0] for choice in TutorshipStatus.choices]
+    return JsonResponse({"tutors": tutors_data, "tutorship_status_options": status_options})
 
 @csrf_exempt
 @transaction.atomic
@@ -912,6 +916,7 @@ def get_general_volunteers_not_pending(request):
             "email": gv.staff.email,
             "signupdate": gv.signupdate,
             "comments": gv.comments,
+            "updated": gv.updated,
         }
         for gv in volunteers
     ]
