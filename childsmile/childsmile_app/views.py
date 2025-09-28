@@ -17,6 +17,7 @@ from .models import (
     Task_Types,
     PossibleMatches,  # Add this line
     InitialFamilyData,
+    MaritalStatus,
 )
 from .unused_views import (
     PermissionsViewSet,
@@ -226,13 +227,18 @@ def get_tutors(request):
             "relationship_status": t.relationship_status,
             "tutee_wellness": t.tutee_wellness,
             "updated": t.updated,  # The new 'updated' field
+            "in_tutorship": Tutorships.objects.filter(tutor_id=t.id_id, child__isnull=False).exists(),  # Add this flag
         }
         for t in tutors
     ]
-    # add tutorship_status_options to the response
-    # Use TutorshipStatus.choices for the dropdown options
+    # Get marital status options from Children model
+    marital_status_options = [choice[0] for choice in MaritalStatus.choices]
     status_options = [choice[0] for choice in TutorshipStatus.choices]
-    return JsonResponse({"tutors": tutors_data, "tutorship_status_options": status_options})
+    return JsonResponse({
+        "tutors": tutors_data,
+        "tutorship_status_options": status_options,
+        "marital_status_options": marital_status_options,
+    })
 
 @csrf_exempt
 @transaction.atomic

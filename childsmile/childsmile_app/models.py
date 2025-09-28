@@ -138,7 +138,9 @@ class Tutors(models.Model):
     tutorship_status = models.CharField(max_length=255, choices=TutorshipStatus.choices)
     preferences = models.TextField(null=True, blank=True)
     tutor_email = models.EmailField(null=True, blank=True)
-    relationship_status = models.CharField(max_length=255, null=True, blank=True)
+    relationship_status = models.CharField(
+        max_length=20, choices=MaritalStatus.choices, null=True, blank=True
+    )
     tutee_wellness = models.CharField(max_length=255, null=True, blank=True)
     updated = models.DateTimeField(auto_now=True)
 
@@ -234,6 +236,7 @@ class Tutorships(models.Model):
     class Meta:
         db_table = "childsmile_app_tutorships"
 
+
 class Matures(models.Model):
     timestamp = models.DateTimeField(auto_now_add=True)
     child = models.OneToOneField(Children, on_delete=models.CASCADE, primary_key=True)
@@ -250,6 +253,7 @@ class Matures(models.Model):
 
     class Meta:
         db_table = "childsmile_app_matures"
+
 
 class Feedback(models.Model):
     feedback_id = models.AutoField(primary_key=True)
@@ -344,6 +348,7 @@ class PossibleMatches(models.Model):
     class Meta:
         db_table = "childsmile_app_possiblematches"
 
+
 class InitialFamilyData(models.Model):
     initial_family_data_id = models.AutoField(primary_key=True, auto_created=True)
     names = models.CharField(max_length=500, null=False)
@@ -358,6 +363,7 @@ class InitialFamilyData(models.Model):
 
     class Meta:
         db_table = "initial_family_data"
+
 
 class Task_Types(models.Model):
     task_type = models.CharField(max_length=255, unique=True)
@@ -441,7 +447,8 @@ class CityGeoDistance(models.Model):
 
     def __str__(self):
         return f"{self.city1} <-> {self.city2}: {self.distance}km"
-    
+
+
 class PrevTutorshipStatuses(models.Model):
     prev_id = models.AutoField(primary_key=True, serialize=False)
     tutor_id = models.ForeignKey(Tutors, on_delete=models.CASCADE, null=False)
@@ -450,7 +457,6 @@ class PrevTutorshipStatuses(models.Model):
     child_tut_status = models.CharField(max_length=50, null=False)
     last_updated = models.DateTimeField(auto_now=True)
     tutorship_id = models.ForeignKey(Tutorships, on_delete=models.CASCADE, null=True)
-
 
     def __str__(self):
         return f"PrevTutorshipStatus {self.prev_id} - Tutor {self.tutor.id} - Child {self.child.child_id}"
