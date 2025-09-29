@@ -293,6 +293,7 @@ const TutorVolunteerMgmt = () => {
                           value={editValue}
                           onChange={e => setEditValue(e.target.value)}
                           onBlur={() => confirmEdit(entity, "relationship_status")}
+                          style={{ minWidth: "220px", height: "30px", fontSize: "24px" }}
                         >
                           {maritalStatusOptions.map(opt => (
                             <option key={opt} value={opt}>{opt}</option>
@@ -317,6 +318,7 @@ const TutorVolunteerMgmt = () => {
                           value={editValue}
                           onChange={e => setEditValue(e.target.value)}
                           onBlur={() => confirmEdit(entity, "tutee_wellness")}
+                          style={{ minWidth: "220px", height: "30px", fontSize: "24px", overflowX: "auto" }}
                         />
                       ) : (
                         <>
@@ -453,6 +455,7 @@ const TutorVolunteerMgmt = () => {
                               value={editValue}
                               onChange={e => setEditValue(e.target.value)}
                               onBlur={() => confirmEdit(entity, "relationship_status")}
+                              style={{ minWidth: "220px", height: "30px", fontSize: "24px" }}
                             >
                               {maritalStatusOptions.map(opt => (
                                 <option key={opt} value={opt}>{opt}</option>
@@ -477,6 +480,7 @@ const TutorVolunteerMgmt = () => {
                               value={editValue}
                               onChange={e => setEditValue(e.target.value)}
                               onBlur={() => confirmEdit(entity, "tutee_wellness")}
+                              style={{ minWidth: "220px", height: "30px", fontSize: "24px", overflowX: "auto" }}
                             />
                           ) : (
                             <>
@@ -543,6 +547,9 @@ const TutorVolunteerMgmt = () => {
     )
   );
 
+  // Determine which face is active (controls .active CSS)
+  const activeSide = showTutors ? "front" : "back";
+
   return (
     <div className="families-main-content">
       <Sidebar />
@@ -576,13 +583,13 @@ const TutorVolunteerMgmt = () => {
         </div>
         <div className="families-grid-wrapper">
           {/* Replace the cube grid with the new flip structure */}
-          <div className="flip-wrapper" style={{ width: '1600px', height: '480px', marginLeft: '250px' }}>
+          <div className="flip-wrapper">
             <div className={`flip-inner${isRotating ? ' rotating' : ''}`}>
-              <div className="flip-front">
+              <div className={`flip-front ${activeSide === 'front' ? 'active' : ''}`}>
                 {/* Tutors table */}
                 {renderTutorsGrid()}
               </div>
-              <div className="flip-back">
+              <div className={`flip-back ${activeSide === 'back' ? 'active' : ''}`}>
                 {/* Volunteers table */}
                 {renderVolunteersGrid()}
               </div>
