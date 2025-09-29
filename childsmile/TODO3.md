@@ -1,7 +1,5 @@
 
-REGRESSION BUG need to fix the other grid by using a custom named grid in tutorsVolunteersmgmt.js and css file - so it will not conflict with the other grid
 
-UI BUG relationship status dropdown list should look like the others when edited now too small
 
 FUNCTIONAL BUG also the edit of the relationship status is not as the user selected it always takes the first option in the list - need to fix it
 
