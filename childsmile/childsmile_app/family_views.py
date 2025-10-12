@@ -466,6 +466,14 @@ def update_family(request, child_id):
             updated_at=datetime.datetime.now(),
         )
 
+        # NEW: Update tutor's tutee_wellness and relationship_status if tutorship exists
+        tutorship = Tutorships.objects.filter(child_id=child_id).first()
+        if tutorship and tutorship.tutor_id:
+            Tutors.objects.filter(id_id=tutorship.tutor_id).update(
+                tutee_wellness=family.current_medical_state,
+                relationship_status=family.marital_status
+            )
+
         print(f"DEBUG: Family with child_id {child_id} updated successfully.")
 
         return JsonResponse(
