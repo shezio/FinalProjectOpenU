@@ -41,14 +41,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'childsmile_app',
     'corsheaders',
-    'django.contrib.sites',  # Required for allauth
-    'allauth',
-    'allauth.account',
-    'allauth.socialaccount',
-    'allauth.socialaccount.providers.google',
 ]
-SITE_ID = 1
-
 
 # Add this at the bottom of your settings.py
 REST_FRAMEWORK = {
@@ -60,27 +53,15 @@ REST_FRAMEWORK = {
 }
 
 MIDDLEWARE = [
-   "django.middleware.security.SecurityMiddleware",
+    "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
-    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
-    "django.middleware.csrf.CsrfViewMiddleware",
+    #"django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    'allauth.account.middleware.AccountMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
 ]
-
-# Allauth settings to minimize interference
-ACCOUNT_ADAPTER = 'allauth.account.adapter.DefaultAccountAdapter'
-ACCOUNT_EMAIL_VERIFICATION = 'none'  # Disable email verification
-ACCOUNT_LOGIN_ON_EMAIL_CONFIRMATION = False
-ACCOUNT_LOGOUT_ON_GET = False
-ACCOUNT_SESSION_REMEMBER = None
-
-# This tells allauth to only handle /accounts/ URLs
-ACCOUNT_LOGIN_URL = '/accounts/login/'
-ACCOUNT_LOGOUT_URL = '/accounts/logout/'
 
 ROOT_URLCONF = "childsmile.urls"
 
@@ -148,6 +129,9 @@ USE_I18N = True
 
 USE_TZ = True
 
+# CSRF_COOKIE_NAME = None  # Disable CSRF cookies entirely
+# CSRF_USE_SESSIONS = False
+
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
@@ -165,35 +149,3 @@ CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = ["http://localhost:9000"]  # Adjust to match frontend URL
 SESSION_COOKIE_SAMESITE = None
 SESSION_COOKIE_SECURE = False  # Set to True in production with HTTPS
-
-AUTHENTICATION_BACKENDS = (
-    'django.contrib.auth.backends.ModelBackend',  # legacy login
-    'allauth.account.auth_backends.AuthenticationBackend',  # allauth
-)
-
-CSRF_TRUSTED_ORIGINS = [
-    "http://localhost:9000",
-]
-
-LOGIN_REDIRECT_URL = '/tasks'  # Redirect to your app's home page
-# Replace the existing SOCIALACCOUNT_AUTO_SIGNUP line with:
-SOCIALACCOUNT_ADAPTER = 'childsmile_app.adapters.CustomSocialAccountAdapter'
-SOCIALACCOUNT_AUTO_SIGNUP = False  # Don't auto-create accounts
-
-# Add these Google OAuth settings
-SOCIALACCOUNT_PROVIDERS = {
-    'google': {
-        'SCOPE': [
-            'profile',
-            'email',
-        ],
-        'AUTH_PARAMS': {
-            'access_type': 'online',
-        },
-        'OAUTH_PKCE_ENABLED': True,
-    }
-}
-
-# Fix the deprecated setting
-ACCOUNT_SIGNUP_FIELDS = ['email*', 'username*', 'password1*', 'password2*']
-ACCOUNT_EMAIL_VERIFICATION = 'none'
