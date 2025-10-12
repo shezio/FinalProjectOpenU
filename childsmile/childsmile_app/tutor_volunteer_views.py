@@ -115,39 +115,72 @@ def update_tutor(request, tutor_id):
             pass
         updated = True
 
+    # Try to locate existing tutorship (we’ll need it later)
+    tutorship = Tutorships.objects.filter(tutor_id=tutor_id).first()
+    child = tutorship.child if tutorship else None
+
     # Only allow updating relationship_status and tutee_wellness if tutor is in tutorship
-    if "relationship_status" in data or "tutee_wellness" in data:
-        tutorship = Tutorships.objects.filter(tutor_id=tutor_id).first()
-        if not tutorship or not tutorship.child:
-            # Just warn, do not update these fields
-            print("Tutor not in tutorship, cannot update relationship_status or tutee_wellness.")
-        else:
-            child = tutorship.child
-            if "relationship_status" in data:
-                tutor.relationship_status = child.marital_status
-                updated = True
-            if "tutee_wellness" in data:
-                tutor.tutee_wellness = child.current_medical_state
+    if ("relationship_status" in data or "tutee_wellness" in data) and tutorship and child:
+        if "relationship_status" in data:
+            new_status = data["relationship_status"]
+            if new_status != tutor.relationship_status:
+                tutor.relationship_status = new_status
+                child.marital_status = new_status
+                child.save()
                 updated = True
 
-    # Update tutorship_status and PrevTutorshipStatuses
+        if "tutee_wellness" in data:
+            new_wellness = data["tutee_wellness"]
+            if new_wellness != tutor.tutee_wellness:
+                tutor.tutee_wellness = new_wellness
+                child.current_medical_state = new_wellness
+                child.save()
+                updated = True
+
+    # --- Tutorship status logic + PrevTutorshipStatuses ---
     if "tutorship_status" in data:
-        tutor.tutorship_status = data["tutorship_status"]
-        updated = True
-        prev_status = PrevTutorshipStatuses.objects.filter(tutor_id=tutor).order_by('-last_updated').first()
-        if prev_status:
-            prev_status.tutor_tut_status = data["tutorship_status"]
-            prev_status.save()
-        else:
-            tutorship = Tutorships.objects.filter(tutor_id=tutor_id).first()
-            if tutorship and tutorship.child:
+        new_tutor_status = data["tutorship_status"]
+        if new_tutor_status != tutor.tutorship_status:
+            tutor.tutorship_status = new_tutor_status
+            updated = True
+
+            # Find existing prev record
+            prev = PrevTutorshipStatuses.objects.filter(tutor_id=tutor).order_by('-last_updated').first()
+
+            if prev:
+                prev.tutor_tut_status = new_tutor_status
+                prev.save()
+            else:
                 PrevTutorshipStatuses.objects.create(
                     tutor_id=tutor,
-                    child_id=tutorship.child,
-                    tutor_tut_status=data["tutorship_status"],
-                    child_tut_status="",
+                    child_id=child if child else None,
+                    tutor_tut_status=new_tutor_status,
+                    child_tut_status=child.tutorship_status if child else "",
                 )
-            # else: do not create history record if no child
+
+    # --- Child status logic (if provided) ---
+    if "child_tut_status" in data and child:
+        new_child_status = data["child_tut_status"]
+
+        # assuming child has field tutorship_status or equivalent
+        if getattr(child, "tutorship_status", "") != new_child_status:
+            setattr(child, "tutorship_status", new_child_status)
+            child.save()
+            updated = True
+
+            # update PrevTutorshipStatuses
+            prev = PrevTutorshipStatuses.objects.filter(child_id=child).order_by('-last_updated').first()
+
+            if prev:
+                prev.child_tut_status = new_child_status
+                prev.save()
+            else:
+                PrevTutorshipStatuses.objects.create(
+                    tutor_id=tutor,
+                    child_id=child,
+                    tutor_tut_status=tutor.tutorship_status,
+                    child_tut_status=new_child_status,
+                )
 
     if "preferences" in data:
         tutor.preferences = data["preferences"]
