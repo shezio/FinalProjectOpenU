@@ -34,6 +34,8 @@ class CustomSocialAccountAdapter(DefaultSocialAccountAdapter):
         email = sociallogin.account.extra_data.get('email')
         google_name = sociallogin.account.extra_data.get('name', '')
         
+        print(f"DEBUG: save_user called with email: {email}")
+        
         try:
             # Find the existing staff member by email
             staff_user = Staff.objects.get(email=email)
@@ -44,12 +46,19 @@ class CustomSocialAccountAdapter(DefaultSocialAccountAdapter):
                 email=email,  # Use email as unique identifier
                 defaults={
                     'username': email,  # Use email as username
+                    'email': email,  # EXPLICITLY set email again
                     'first_name': google_name.split(' ')[0] if google_name else '',
                     'last_name': ' '.join(google_name.split(' ')[1:]) if len(google_name.split(' ')) > 1 else '',
                 }
             )
             
-            print(f"DEBUG: Created/found Django user: {django_user.username}")
+            # If user already exists but email is empty, update it
+            if not created and not django_user.email:
+                django_user.email = email
+                django_user.save()
+                print(f"DEBUG: Updated existing Django user with email: {email}")
+            
+            print(f"DEBUG: Created/found Django user: {django_user.username} with email: {django_user.email}")
             return django_user
             
         except Staff.DoesNotExist:

@@ -197,3 +197,5 @@ SOCIALACCOUNT_PROVIDERS = {
 # Fix the deprecated setting
 ACCOUNT_SIGNUP_FIELDS = ['email*', 'username*', 'password1*', 'password2*']
 ACCOUNT_EMAIL_VERIFICATION = 'none'
+# Redirect to React frontend after Google login
+LOGIN_REDIRECT_URL = 'http://localhost:9000/google-success'  # React app URL

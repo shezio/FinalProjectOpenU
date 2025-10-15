@@ -16,6 +16,7 @@ from .views import (
     get_roles,
     create_staff_member,
     get_general_volunteers_not_pending,
+    google_login_success,
 )
 from .task_views import (
     get_user_tasks,
@@ -324,5 +325,10 @@ urlpatterns = [
         "api/update_tutor/<int:tutor_id>/",
         update_tutor,
         name="update_tutor",
+    ),
+    path(
+        "api/google-login-success/",
+        google_login_success,
+        name="google_login_success",
     ),
 ]

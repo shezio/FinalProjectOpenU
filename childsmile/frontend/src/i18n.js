@@ -567,6 +567,9 @@ const resources = {
       "Volunteer updated successfully": "המתנדב עודכן בהצלחה!",
       "Error updating volunteer": "שגיאה בעדכון מתנדב",
       "Error fetching volunteers": "שגיאה בטעינת מתנדבים",
+      "Login with an email account": "התחבר באמצעות Email",
+      "Login with a Google account": "התחבר באמצעות חשבון גוגל",
+      "Please enter your email address": "הכנס כתובת Email",
     }
   }
 };
