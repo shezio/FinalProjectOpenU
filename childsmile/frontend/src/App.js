@@ -22,6 +22,9 @@ import VolunteerFeedbacks from './pages/VolunteerFeedbacks'; // Import the Volun
 import TutorFeedbacks from './pages/TutorFeedbacks'; // Import the Tutor Feedbacks component
 import InitialFamilyData from './pages/InitialFamilyData'; // Import the Initial Family Data component
 import TutorVolunteerMgmt from './pages/TutorVolunteerMgmt'; // Import the Tutor and Volunteer Management component
+import GoogleSuccess from './pages/GoogleSuccess';
+
+// Add this route to your router:
 
 /*import these routes respectively to .pages
     get_families_per_location_report: { name: 'דוח משפחות לפי מיקום', path: '/reports/families_per_location_report' },
@@ -62,6 +65,7 @@ const App = () => {
       <Route path="/initial-family-data" element={<InitialFamilyData />} /> {/* Add Initial Family Data route */}
       <Route path="/tutor-volunteer-mgmt" element={<TutorVolunteerMgmt />} /> {/* Add Tutor and Volunteer Management route */}
       <Route path="/register" element={<Registration />} />
+      <Route path="/google-success" element={<GoogleSuccess />} />
     </Routes>
   );
 };

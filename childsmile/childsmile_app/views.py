@@ -927,3 +927,74 @@ def get_general_volunteers_not_pending(request):
         for gv in volunteers
     ]
     return JsonResponse({"general_volunteers": data}, status=200)
+
+@csrf_exempt
+@api_view(["POST"])
+def google_login_success(request):
+    """
+    Setup session for Google OAuth user - like regular login
+    """
+    # Debug information
+    print(f"DEBUG: request.user: {request.user}")
+    print(f"DEBUG: request.user.is_authenticated: {request.user.is_authenticated}")
+    print(f"DEBUG: request.session.keys(): {list(request.session.keys())}")
+    print(f"DEBUG: _auth_user_id: {request.session.get('_auth_user_id')}")
+    
+    # Try to get Django User from session
+    django_user = None
+    user_id_from_session = request.session.get('_auth_user_id')
+    
+    if request.user.is_authenticated:
+        django_user = request.user
+    elif user_id_from_session:
+        # Manually get the user from session
+        from django.contrib.auth.models import User
+        try:
+            django_user = User.objects.get(id=user_id_from_session)
+            print(f"DEBUG: Found Django user from session: {django_user}")
+            print(f"DEBUG: Django user email: '{django_user.email}'")  # ADD THIS
+            print(f"DEBUG: Django user username: '{django_user.username}'")  # ADD THIS
+        except User.DoesNotExist:
+            print(f"DEBUG: Django user with ID {user_id_from_session} not found")
+    
+    if not django_user:
+        return JsonResponse({
+            "error": "Not authenticated",
+            "debug_user": str(request.user),
+            "debug_session_keys": list(request.session.keys()),
+            "debug_user_id": user_id_from_session,
+        }, status=401)
+    
+    print(f"DEBUG: About to search for Staff with email: '{django_user.email}'")  # ADD THIS
+    
+    try:
+        # Find the Staff record by email
+        staff_user = Staff.objects.get(email=django_user.email)
+        
+        # Create NEW session like in login_view (don't reuse the OAuth session)
+        request.session.flush()  # Clear the OAuth session
+        request.session.create()  # Create fresh session
+        request.session["user_id"] = staff_user.staff_id
+        request.session["username"] = staff_user.username
+        request.session.set_expiry(86400)  # 1 day expiry
+        
+        print(f"DEBUG: Created session for staff user: {staff_user.username}")
+        
+        return JsonResponse({
+            "message": "Google login successful!",
+            "user_id": staff_user.staff_id,
+            "username": staff_user.username,
+            "email": staff_user.email
+        })
+        
+    except Staff.DoesNotExist:
+        # Show what emails exist in Staff table for debugging
+        all_staff_emails = list(Staff.objects.values_list('email', flat=True))
+        print(f"DEBUG: Available Staff emails: {all_staff_emails}")
+        return JsonResponse({
+            "error": f"Staff member not found for email: '{django_user.email}'",
+            "debug_available_emails": all_staff_emails[:5],  # Show first 5 for debugging
+        }, status=404)
+    except Exception as e:
+        print(f"DEBUG: Error in google_login_success: {str(e)}")
+        return JsonResponse({"error": str(e)}, status=500)
