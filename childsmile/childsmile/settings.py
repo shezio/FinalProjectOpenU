@@ -114,7 +114,7 @@ DATABASES = {
         "ENGINE": "django.db.backends.postgresql",
         "NAME": "child_smile_db",
         "USER": "child_smile_user",
-        "PASSWORD": "0192pqowL@!",
+        "PASSWORD": os.getenv('DB_PASSWORD'),
         "HOST": "localhost",
         "PORT": "5432",
     }

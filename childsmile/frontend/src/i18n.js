@@ -571,16 +571,27 @@ const resources = {
       "Login with a Google account": "התחבר באמצעות חשבון גוגל",
       "Please enter your email address": "הכנס כתובת Email",
       "Please enter a valid email address": "אנא הכנס כתובת Email תקינה",
-      "Failed to send login code": "שליחת קוד ההתחברות נכשלה, בדוק את כתובת ה-Email ונסה שוב",
+      "Failed to send login code": "שליחת קוד ההתחברות נכשלה, בדוק את כתובת האימייל ונסה שוב",
       'Login code was sent to the address: ': 'קוד ההתחברות נשלח לכתובת: ',
       "Verify Code": "אמת קוד",
       "Sending...": "שולח קוד לתיבת ה-Email...",
       "← Back to Email": "← חזור למסך ההתחברות",
-      'Please enter the 6-digit code sent to your email': 'אנא הכנס את קוד האימות בן 6 הספרות שנשלח לכתובת ה-Email שלך',
+      'Please enter the 6-digit code sent to your email': 'אנא הכנס את קוד האימות בן 6 הספרות שנשלח לכתובת האימייל שלך',
       "Invalid or expired code": "קוד לא תקין או שפג תוקפו",
       'Verifying...': 'מאמת קוד...',
       "Email not found in system": "כתובת ה-Email לא נמצאה במערכת",
-      "Invalid verification code": "קוד אימות לא תקין"
+      "Invalid verification code": "קוד אימות לא תקין",
+      'Verification code sent to the new user\'s email!': 'קוד האימות נשלח לכתובת ה-Email של המשתמש החדש!',
+      'Verification code sent to your email!': 'קוד האימות נשלח לכתובת ה-Email שלך!',
+      "← Back to Registration": "← חזור למסך הרישום",
+      "Verify & Complete Registration": "אמת והשלם את הרישום",
+      'Staff Creation Verification': 'אימות יצירת משתמש',
+      'Please enter the 6-digit code sent to': 'אנא הכנס את קוד האימות בן 6 הספרות שנשלח לכתובת האימייל',
+      "Verify & Create Staff": "אמת וצור משתמש",
+      'Verification failed.': 'האימות נכשל.',
+      'Staff member created successfully.': 'המשתמש נוצר בהצלחה.',
+      'Error verifying staff creation TOTP:': 'שגיאה באימות יצירת משתמש:',
+      "Welcome to Child Smile! You can now log in using email authentication or via your google account.": "ברוך הבא לחיוך של ילד! כעת תוכל להתחבר באמצעות אימות אימייל או דרך חשבון Google שלך."
     }
   }
 };

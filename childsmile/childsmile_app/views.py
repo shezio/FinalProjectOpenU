@@ -77,47 +77,6 @@ from datetime import timedelta
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-
-@csrf_exempt  # Disable CSRF (makes things easier)
-@api_view(["POST"])
-def login_view(request):
-    username = request.data.get("username")
-    password = request.data.get("password")
-
-    try:
-        user = Staff.objects.get(username=username)
-        if user.password == password:  # No hashing, just compare
-
-            # Parse roles as a Python list
-            user_roles = list(user.roles.all()) if user.roles else []
-            print(f"DEBUG: the user roles for user '{username}' are : {user_roles}")
-
-            # Check if the user has any roles
-            if not user_roles:  # If roles is an empty list
-                print(f"DEBUG: User '{username}' has no roles.")
-                return JsonResponse(
-                    {
-                        "error": "Please wait until you get permissions from your coordinator."
-                    },
-                    status=401,
-                )
-            request.session.create()  # Create session
-            request.session["user_id"] = user.staff_id
-            request.session["username"] = user.username
-            request.session.set_expiry(86400)  # 1 day expiry
-
-            response = JsonResponse({"message": "Login successful!"})
-            response.set_cookie(
-                "sessionid", request.session.session_key, httponly=True, samesite="Lax"
-            )
-            return response
-        else:
-            return JsonResponse({"error": "Invalid password"}, status=400)
-
-    except Staff.DoesNotExist:
-        return JsonResponse({"error": "Invalid username"}, status=400)
-
-
 @api_view(["GET"])
 def get_permissions(request):
     user_id = request.session.get("user_id")
@@ -340,7 +299,6 @@ def create_volunteer_or_tutor(request):
         # Insert into Staff table
         staff = Staff.objects.create(
             username=username,
-            password="1234",  # Replace with hashed password in production
             email=email,
             first_name=first_name,
             last_name=surname,
@@ -650,9 +608,7 @@ def update_staff_member(request, staff_id):
         staff_member.username = data.get("username", staff_member.username)
         staff_member.first_name = data.get("first_name", staff_member.first_name)
         staff_member.last_name = data.get("last_name", staff_member.last_name)
-        # update password if provided
-        if "password" in data and data["password"].strip():
-            staff_member.password = data["password"]
+        staff_member.email = data.get("email", staff_member.email)
 
         # Update roles if provided
         if "roles" in data:
@@ -823,7 +779,7 @@ def create_staff_member(request):
         data = request.data  # Use request.data for JSON payloads
 
         # Validate required fields
-        required_fields = ["username", "password", "email", "first_name", "last_name"]
+        required_fields = ["username", "email", "first_name", "last_name"]
         missing_fields = [
             field for field in required_fields if not data.get(field, "").strip()
         ]
@@ -850,7 +806,6 @@ def create_staff_member(request):
         # Create a new staff record in the database
         staff_member = Staff.objects.create(
             username=data["username"],
-            password=data["password"],  # Assuming password is provided in the request
             email=data["email"],
             first_name=data["first_name"],
             last_name=data["last_name"],
@@ -1202,3 +1157,434 @@ def test_gmail_auth(request):
             "error": str(e),
             "message": "Gmail SMTP authentication failed - need App Password"
         }, status=400)
+
+# Add these new endpoints to views.py
+
+@csrf_exempt
+@api_view(["POST"])
+@ratelimit(key='ip', rate='5/m', method='POST', block=True)
+def register_send_totp(request):
+    """
+    Step 1: Validate registration data and send TOTP code
+    """
+    try:
+        data = request.data
+        
+        # Validate all required fields first
+        required_fields = ['id', 'first_name', 'surname', 'age', 'phone_prefix', 'phone_suffix', 'city', 'email']
+        missing_fields = [field for field in required_fields if not data.get(field)]
+        
+        if missing_fields:
+            return JsonResponse({
+                "error": f"Missing required fields: {', '.join(missing_fields)}"
+            }, status=400)
+        
+        email = data.get('email', '').strip().lower()
+        
+        # Validate email format
+        if '@' not in email or '.' not in email.split('@')[1]:
+            return JsonResponse({"error": "Invalid email format"}, status=400)
+        
+        # Check if email or ID already exists
+        user_id = data.get('id')
+        if SignedUp.objects.filter(id=user_id).exists():
+            return JsonResponse({"error": "A user with this ID already exists"}, status=400)
+        
+        if SignedUp.objects.filter(email=email).exists():
+            return JsonResponse({"error": "A user with this email already exists"}, status=400)
+        
+        if Staff.objects.filter(email=email).exists():
+            return JsonResponse({"error": "A user with this email already exists"}, status=400)
+        
+        # Store registration data in session temporarily
+        request.session['pending_registration'] = data
+        request.session['registration_email'] = email
+        
+        # Generate and send TOTP
+        TOTPCode.objects.filter(email=email, used=False).update(used=True)
+        code = TOTPCode.generate_code()
+        TOTPCode.objects.create(email=email, code=code)
+        
+        # Send email
+        subject = "Registration Verification - Child's Smile"
+        message = f"""
+        Hello {data.get('first_name', '')},
+        
+        Your registration verification code is: {code}
+        
+        This code will expire in 5 minutes.
+        
+        Please enter this code to complete your registration.
+        
+        Best regards,
+        Child's Smile Team
+        """
+        
+        send_mail(
+            subject,
+            message,
+            settings.DEFAULT_FROM_EMAIL,
+            [email],
+            fail_silently=False,
+        )
+        
+        print(f"DEBUG: Sent registration TOTP code {code} to {email}")
+        
+        return JsonResponse({
+            "message": "Verification code sent to your email",
+            "email": email
+        })
+        
+    except Exception as e:
+        print(f"ERROR in register_send_totp: {str(e)}")
+        return JsonResponse({"error": "Failed to send verification code"}, status=500)
+
+@csrf_exempt
+@api_view(["POST"])
+@ratelimit(key='ip', rate='10/m', method='POST', block=True)
+def register_verify_totp(request):
+    """
+    Step 2: Verify TOTP and create user
+    """
+    try:
+        data = json.loads(request.body)
+        email = data.get('email', '').strip().lower()
+        code = data.get('code', '').strip()
+        
+        if not email or not code:
+            return JsonResponse({"error": "Email and code are required"}, status=400)
+        
+        # Check if this matches the pending registration
+        pending_email = request.session.get('registration_email')
+        if pending_email != email:
+            return JsonResponse({"error": "Invalid registration session"}, status=400)
+        
+        # Verify TOTP code
+        totp_record = TOTPCode.objects.filter(
+            email=email,
+            code=code,
+            used=False
+        ).order_by('-created_at').first()
+        
+        if not totp_record or not totp_record.is_valid():
+            return JsonResponse({"error": "Invalid or expired code"}, status=400)
+        
+        # Increment attempts
+        totp_record.attempts += 1
+        totp_record.save()
+        
+        if totp_record.code != code:
+            if totp_record.attempts >= 3:
+                totp_record.used = True
+                totp_record.save()
+                return JsonResponse({"error": "Too many failed attempts"}, status=429)
+            return JsonResponse({"error": "Invalid code"}, status=400)
+        
+        # Mark code as used
+        totp_record.used = True
+        totp_record.save()
+        
+        # Get registration data from session
+        registration_data = request.session.get('pending_registration')
+        if not registration_data:
+            return JsonResponse({"error": "Registration session expired"}, status=400)
+        
+        # Now create the user using existing create_volunteer_or_tutor logic
+        # Create a new request object with the stored data
+        from django.http import HttpRequest
+        temp_request = HttpRequest()
+        temp_request.data = registration_data
+        temp_request.method = 'POST'
+        
+        # Call the existing function (but skip validation since we already did it)
+        result = create_volunteer_or_tutor_internal(registration_data)
+        
+        # Clear session data
+        if 'pending_registration' in request.session:
+            del request.session['pending_registration']
+        if 'registration_email' in request.session:
+            del request.session['registration_email']
+        
+        return result
+        
+    except Exception as e:
+        print(f"ERROR in register_verify_totp: {str(e)}")
+        return JsonResponse({"error": "Registration failed"}, status=500)
+
+@transaction.atomic
+def create_volunteer_or_tutor_internal(data):
+    """
+    Internal function to create volunteer/tutor (extracted from original function)
+    """
+    try:
+        user_id = data.get("id")
+        first_name = data.get("first_name")
+        surname = data.get("surname")
+        age = int(data.get("age"))
+        gender = data.get("gender") == "Female"
+        phone_prefix = data.get("phone_prefix")
+        phone_suffix = data.get("phone_suffix")
+        phone = f"{phone_prefix}-{phone_suffix}" if phone_prefix and phone_suffix else None
+        city = data.get("city")
+        comment = data.get("comment", "")
+        email = data.get("email")
+        want_tutor = data.get("want_tutor") == "true"
+
+        # Create username
+        username = f"{first_name}_{surname}"
+        index = 1
+        original_username = username
+        while Staff.objects.filter(username=username).exists():
+            username = f"{original_username}_{index}"
+            index += 1
+
+        # Insert into SignedUp table
+        signedup = SignedUp.objects.create(
+            id=user_id,
+            first_name=first_name,
+            surname=surname,
+            age=age,
+            gender=gender,
+            phone=phone,
+            city=city,
+            comment=comment,
+            email=email,
+            want_tutor=want_tutor,
+        )
+
+        # Get role
+        role_name = "General Volunteer"
+        role = Role.objects.get(role_name=role_name)
+
+        # Create Staff
+        staff = Staff.objects.create(
+            username=username,
+            email=email,
+            first_name=first_name,
+            last_name=surname,
+            created_at=now(),
+        )
+        staff.roles.add(role)
+        staff.refresh_from_db()
+
+        # Create volunteer or pending tutor
+        if want_tutor:
+            pending_tutor = Pending_Tutor.objects.create(
+                id_id=signedup.id,
+                pending_status="ממתין",
+            )
+            
+            task_type = Task_Types.objects.filter(
+                task_type="ראיון מועמד לחונכות"
+            ).first()
+            if task_type:
+                create_tasks_for_tutor_coordinators_async(pending_tutor.pending_tutor_id, task_type.id)
+        else:
+            General_Volunteer.objects.create(
+                id_id=signedup.id,
+                staff_id=staff.staff_id,
+                signupdate=now().date(),
+                comments="",
+            )
+
+        return JsonResponse({
+            "message": "Registration completed successfully!",
+            "username": username,
+        }, status=201)
+
+    except Exception as e:
+        print(f"ERROR in create_volunteer_or_tutor_internal: {str(e)}")
+        return JsonResponse({"error": str(e)}, status=500)
+
+@csrf_exempt
+@api_view(["POST"])
+@ratelimit(key='ip', rate='5/m', method='POST', block=True)
+def staff_creation_send_totp(request):
+    """
+    Step 1: Validate staff data and send TOTP to the new user's email
+    """
+    try:
+        user_id = request.session.get("user_id")
+        if not user_id:
+            return JsonResponse({"detail": "Authentication required"}, status=403)
+
+        # Check if user is admin
+        user = Staff.objects.get(staff_id=user_id)
+        if not is_admin(user):
+            return JsonResponse({"error": "Admin permission required"}, status=401)
+
+        data = request.data
+        
+        # Validate required fields
+        required_fields = ["username", "email", "first_name", "last_name"]
+        missing_fields = [field for field in required_fields if not data.get(field, "").strip()]
+        if missing_fields:
+            return JsonResponse({
+                "error": f"Missing required fields: {', '.join(missing_fields)}"
+            }, status=400)
+
+        # Check if username/email already exists
+        if Staff.objects.filter(username=data["username"]).exists():
+            return JsonResponse({"error": f"Username '{data['username']}' already exists"}, status=400)
+
+        if Staff.objects.filter(email=data["email"]).exists():
+            return JsonResponse({"error": f"Email '{data['email']}' already exists"}, status=400)
+
+        # Store staff creation data in session
+        request.session['pending_staff_creation'] = data
+        request.session['staff_creation_new_user_email'] = data["email"]  # Store new user's email
+
+        # Send TOTP to the NEW USER's email (not admin's)
+        new_user_email = data["email"]
+        TOTPCode.objects.filter(email=new_user_email, used=False).update(used=True)
+        code = TOTPCode.generate_code()
+        TOTPCode.objects.create(email=new_user_email, code=code)
+
+        # Send email to the new user
+        subject = "Welcome to Child's Smile - Email Verification"
+        message = f"""
+        Hello {data.get('first_name')} {data.get('last_name')},
+        
+        An administrator is creating an account for you in the Child's Smile system.
+        
+        Your verification code is: {code}
+        
+        This code will expire in 5 minutes.
+        
+        After verification, you can log in using your email address: {new_user_email}
+        
+        Welcome to Child's Smile!
+        Best regards,
+        Child's Smile Team
+        """
+        
+        send_mail(
+            subject,
+            message,
+            settings.DEFAULT_FROM_EMAIL,
+            [new_user_email],
+            fail_silently=False,
+        )
+        
+        print(f"DEBUG: Sent staff creation TOTP code {code} to new user {new_user_email}")
+        
+        return JsonResponse({
+            "message": "Verification code sent to the new user's email",
+            "new_user_email": new_user_email
+        })
+        
+    except Exception as e:
+        print(f"ERROR in staff_creation_send_totp: {str(e)}")
+        return JsonResponse({"error": "Failed to send verification code"}, status=500)
+
+@csrf_exempt
+@api_view(["POST"])
+@ratelimit(key='ip', rate='10/m', method='POST', block=True)
+def staff_creation_verify_totp(request):
+    """
+    Step 2: Verify TOTP and create staff member
+    """
+    try:
+        user_id = request.session.get("user_id")
+        if not user_id:
+            return JsonResponse({"detail": "Authentication required"}, status=403)
+
+        user = Staff.objects.get(staff_id=user_id)
+        if not is_admin(user):
+            return JsonResponse({"error": "Admin permission required"}, status=401)
+
+        data = json.loads(request.body)
+        code = data.get('code', '').strip()
+        
+        if not code:
+            return JsonResponse({"error": "Verification code is required"}, status=400)
+        
+        # Check session - verify against new user's email
+        new_user_email = request.session.get('staff_creation_new_user_email')
+        if not new_user_email:
+            return JsonResponse({"error": "Invalid session"}, status=400)
+        
+        # Verify TOTP against the new user's email
+        totp_record = TOTPCode.objects.filter(
+            email=new_user_email,  # Check against new user's email
+            code=code,
+            used=False
+        ).order_by('-created_at').first()
+        
+        if not totp_record or not totp_record.is_valid():
+            return JsonResponse({"error": "Invalid or expired code"}, status=400)
+        
+        totp_record.attempts += 1
+        totp_record.save()
+        
+        if totp_record.code != code:
+            if totp_record.attempts >= 3:
+                totp_record.used = True
+                totp_record.save()
+                return JsonResponse({"error": "Too many failed attempts"}, status=429)
+            return JsonResponse({"error": "Invalid code"}, status=400)
+        
+        # Mark code as used
+        totp_record.used = True
+        totp_record.save()
+        
+        # Get staff creation data from session
+        staff_data = request.session.get('pending_staff_creation')
+        if not staff_data:
+            return JsonResponse({"error": "Session expired"}, status=400)
+        
+        # Create staff member using existing logic
+        result = create_staff_member_internal(staff_data)
+        
+        # Clear session data
+        if 'pending_staff_creation' in request.session:
+            del request.session['pending_staff_creation']
+        if 'staff_creation_new_user_email' in request.session:
+            del request.session['staff_creation_new_user_email']
+        
+        return result
+        
+    except Exception as e:
+        print(f"ERROR in staff_creation_verify_totp: {str(e)}")
+        return JsonResponse({"error": "Staff creation failed"}, status=500)
+
+# Add this function after the staff_creation_verify_totp function
+def create_staff_member_internal(data):
+    """
+    Internal function to create staff member (extracted from original)
+    """
+    try:
+        staff_member = Staff.objects.create(
+            username=data["username"],
+            email=data["email"],
+            first_name=data["first_name"],
+            last_name=data["last_name"],
+            created_at=datetime.datetime.now(),
+        )
+
+        # Assign roles
+        roles = data["roles"]
+        if isinstance(roles, list):
+            if "General Volunteer" in roles or "Tutor" in roles:
+                return JsonResponse({
+                    "error": "Cannot create user with 'General Volunteer' or 'Tutor' roles via this flow"
+                }, status=400)
+            
+            staff_member.roles.clear()
+            for role_name in roles:
+                try:
+                    role = Role.objects.get(role_name=role_name)
+                    staff_member.roles.add(role)
+                except Role.DoesNotExist:
+                    return JsonResponse({
+                        "error": f"Role '{role_name}' does not exist"
+                    }, status=400)
+
+        return JsonResponse({
+            "message": "Staff member created successfully",
+            "staff_id": staff_member.staff_id,
+        }, status=201)
+
+    except Exception as e:
+        print(f"ERROR in create_staff_member_internal: {str(e)}")
+        return JsonResponse({"error": str(e)}, status=500)
