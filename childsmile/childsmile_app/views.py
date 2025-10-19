@@ -66,6 +66,14 @@ import json
 import os
 from django.db.models import Count, F
 from .utils import *
+from django.core.mail import send_mail
+from django.conf import settings
+from django_ratelimit.decorators import ratelimit
+from .models import TOTPCode, Staff
+import random
+import string
+from django.utils import timezone
+from datetime import timedelta
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -998,3 +1006,199 @@ def google_login_success(request):
     except Exception as e:
         print(f"DEBUG: Error in google_login_success: {str(e)}")
         return JsonResponse({"error": str(e)}, status=500)
+
+@csrf_exempt
+@api_view(["POST"])
+@ratelimit(key='ip', rate='5/m', method='POST', block=True)  # 5 requests per minute per IP
+def login_email(request):
+    """
+    Send TOTP code to email address
+    """
+    try:
+        data = json.loads(request.body)
+        email = data.get('email', '').strip().lower()
+        
+        if not email:
+            return JsonResponse({"error": "Email is required"}, status=400)
+        
+        # Validate email format (basic)
+        if '@' not in email or '.' not in email.split('@')[1]:
+            return JsonResponse({"error": "Invalid email format"}, status=400)
+        
+        # Check if email exists in Staff table
+        if not Staff.objects.filter(email=email).exists():
+            return JsonResponse({"error": "Email not found in system"}, status=404)
+        
+        # Invalidate any existing codes for this email
+        TOTPCode.objects.filter(email=email, used=False).update(used=True)
+        
+        # Generate new TOTP code
+        code = TOTPCode.generate_code()
+        totp_record = TOTPCode.objects.create(email=email, code=code)
+        
+        # Send email
+        subject = "Your Login Code - Amit's Smile"
+        message = f"""
+        Hello,
+        
+        Your login code is: {code}
+        
+        This code will expire in 5 minutes.
+        
+        If you didn't request this code, please ignore this email.
+        
+        Best regards,
+        Child's Smile Team
+        """
+        
+        send_mail(
+            subject,
+            message,
+            settings.DEFAULT_FROM_EMAIL,
+            [email],
+            fail_silently=False,
+        )
+        
+        print(f"DEBUG: Sent TOTP code {code} to {email}")
+        
+        return JsonResponse({
+            "message": "Login code sent to your email",
+            "email": email
+        })
+        
+    except Exception as e:
+        print(f"ERROR in login_email: {str(e)}")
+        return JsonResponse({"error": "Failed to send login code"}, status=500)
+
+@csrf_exempt
+@api_view(["POST"])
+@ratelimit(key='ip', rate='10/m', method='POST', block=True)  # 10 requests per minute per IP
+def verify_totp(request):
+    """
+    Verify TOTP code and create session
+    """
+    try:
+        data = json.loads(request.body)
+        email = data.get('email', '').strip().lower()
+        code = data.get('code', '').strip()
+        
+        if not email or not code:
+            return JsonResponse({"error": "Email and code are required"}, status=400)
+        
+        # Find the most recent valid TOTP code
+        totp_record = TOTPCode.objects.filter(
+            email=email,
+            code=code,
+            used=False
+        ).order_by('-created_at').first()
+        
+        if not totp_record:
+            return JsonResponse({"error": "Invalid or expired code"}, status=400)
+        
+        # Check if code is still valid
+        if not totp_record.is_valid():
+            return JsonResponse({"error": "Code has expired or too many attempts"}, status=400)
+        
+        # Increment attempts
+        totp_record.attempts += 1
+        totp_record.save()
+        
+        # If code doesn't match, return error
+        if totp_record.code != code:
+            if totp_record.attempts >= 3:
+                totp_record.used = True
+                totp_record.save()
+                return JsonResponse({"error": "Too many failed attempts"}, status=429)
+            return JsonResponse({"error": "Invalid code"}, status=400)
+        
+        # Mark code as used
+        totp_record.used = True
+        totp_record.save()
+        
+        # Find Staff member
+        try:
+            staff_user = Staff.objects.get(email=email)
+        except Staff.DoesNotExist:
+            return JsonResponse({"error": "Staff member not found"}, status=404)
+        
+        # Create session (same as regular login)
+        request.session.create()
+        request.session["user_id"] = staff_user.staff_id
+        request.session["username"] = staff_user.username
+        request.session.set_expiry(86400)  # 1 day expiry
+        
+        return JsonResponse({
+            "message": "Login successful!",
+            "user_id": staff_user.staff_id,
+            "username": staff_user.username,
+            "email": staff_user.email
+        })
+        
+    except Exception as e:
+        print(f"ERROR in verify_totp: {str(e)}")
+        return JsonResponse({"error": "Verification failed"}, status=500)
+
+@csrf_exempt
+@api_view(["POST"])
+def test_email_setup(request):
+    """Test the current email configuration"""
+    try:
+        from django.core.mail import send_mail
+        from django.conf import settings
+        
+        # Get email from request body instead of hardcoded
+        data = json.loads(request.body) if request.body else {}
+        test_email = data.get('email', 'childsmile533@gmail.com')  # Default to your email
+        
+        print(f"DEBUG: Testing email setup with: {test_email}")
+        print(f"DEBUG: EMAIL_BACKEND: {settings.EMAIL_BACKEND}")
+        print(f"DEBUG: DEFAULT_FROM_EMAIL: {settings.DEFAULT_FROM_EMAIL}")
+        
+        send_mail(
+            'Test Email - TOTP System (Real Email Test)',
+            f'Hello! This is a test email sent to {test_email}.\n\nIf you receive this, your email setup is working!\n\nTest TOTP Code: 123456',
+            settings.DEFAULT_FROM_EMAIL,
+            [test_email],  # Send to the email from request
+            fail_silently=False,
+        )
+        
+        return JsonResponse({
+            "message": f"Test email sent successfully to {test_email}!",
+            "backend": settings.EMAIL_BACKEND,
+            "from_email": settings.DEFAULT_FROM_EMAIL
+        })
+        
+    except Exception as e:
+        print(f"ERROR: {str(e)}")
+        return JsonResponse({"error": str(e)}, status=500)
+
+@csrf_exempt
+@api_view(["POST"])
+def test_gmail_auth(request):
+    """Test Gmail SMTP authentication only"""
+    try:
+        import smtplib
+        from django.conf import settings
+        
+        print(f"DEBUG: Testing Gmail SMTP authentication...")
+        print(f"DEBUG: EMAIL_HOST: {settings.EMAIL_HOST}")
+        print(f"DEBUG: EMAIL_HOST_USER: {settings.EMAIL_HOST_USER}")
+        print(f"DEBUG: EMAIL_PASSWORD: {'*' * len(settings.EMAIL_HOST_PASSWORD)}")
+        
+        # Try to connect and authenticate
+        server = smtplib.SMTP(settings.EMAIL_HOST, settings.EMAIL_PORT)
+        server.starttls()
+        server.login(settings.EMAIL_HOST_USER, settings.EMAIL_HOST_PASSWORD)
+        server.quit()
+        
+        return JsonResponse({
+            "success": True,
+            "message": f"Gmail SMTP authentication successful for {settings.EMAIL_HOST_USER}"
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            "success": False,
+            "error": str(e),
+            "message": "Gmail SMTP authentication failed - need App Password"
+        }, status=400)

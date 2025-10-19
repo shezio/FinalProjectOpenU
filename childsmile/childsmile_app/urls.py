@@ -17,6 +17,10 @@ from .views import (
     create_staff_member,
     get_general_volunteers_not_pending,
     google_login_success,
+    login_email,
+    verify_totp,
+    test_email_setup,
+    test_gmail_auth,
 )
 from .task_views import (
     get_user_tasks,
@@ -331,4 +335,8 @@ urlpatterns = [
         google_login_success,
         name="google_login_success",
     ),
+    path("api/auth/login-email/", login_email, name="login_email"),
+    path("api/auth/verify-totp/", verify_totp, name="verify_totp"),
+    path("api/test-email-setup/", test_email_setup, name="test_email_setup"),
+    path("api/test-gmail-auth/", test_gmail_auth, name="test_gmail_auth"),
 ]

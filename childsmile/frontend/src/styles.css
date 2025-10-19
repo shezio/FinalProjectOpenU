@@ -164,6 +164,10 @@ body {
   /* Increase font size for better readability */
 }
 
+.totp-verification-section.login-main-content button {
+  width: 50% !important;
+}
+
 .login-main-content span,
 .login-main-content .login-error,
 .login-main-content .login-success {
@@ -245,4 +249,43 @@ body {
   font-weight: bold;
   font-size: 16px;
   font-family: 'Arial', sans-serif;
+}
+
+.totp-input-container {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  align-items: center;
+  margin: 20px 0;
+  direction: ltr;
+}
+
+/* Update your .totp-digit-input in styles.css */
+.totp-digit-input {
+  width: 60px !important;  /* Use !important to override other rules */
+  height: 50px;
+  border: 2px solid #ddd;
+  border-radius: 8px;
+  text-align: center;
+  font-size: 24px;
+  font-weight: bold;
+  font-family: 'Courier New', monospace;
+  background-color: white;
+  transition: all 0.2s ease;
+  outline: none;
+  box-sizing: border-box;  /* Add this to prevent padding from affecting width */
+  min-width: 60px;  /* Ensure minimum width */
+  max-width: 60px;  /* Ensure maximum width */
+}
+
+.totp-digit-input:focus {
+  border-color: #4285F4;
+  box-shadow: 0 0 0 3px rgba(66, 133, 244, 0.1);
+  transform: scale(1.05);
+}
+
+.totp-digit-input:disabled {
+  background-color: #f5f5f5;
+  cursor: not-allowed;
+  opacity: 0.6;
 }

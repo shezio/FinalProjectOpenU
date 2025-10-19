@@ -199,3 +199,19 @@ ACCOUNT_SIGNUP_FIELDS = ['email*', 'username*', 'password1*', 'password2*']
 ACCOUNT_EMAIL_VERIFICATION = 'none'
 # Redirect to React frontend after Google login
 LOGIN_REDIRECT_URL = 'http://localhost:9000/google-success'  # React app URL
+
+
+
+
+# Replace your gmail settings with an App Password
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'childsmile533@gmail.com'
+EMAIL_HOST_PASSWORD = 'zwqk qpwi uibj abyf'
+DEFAULT_FROM_EMAIL = 'noreply@send.amitssmile.com'
+
+# TOTP Settings
+TOTP_EXPIRY_MINUTES = 5
+TOTP_MAX_ATTEMPTS = 3
