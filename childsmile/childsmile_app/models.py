@@ -1,4 +1,8 @@
 from django.db import models
+import random
+import string
+from django.utils import timezone
+from datetime import timedelta
 
 """
 models to appear in the admin panel
@@ -463,3 +467,26 @@ class PrevTutorshipStatuses(models.Model):
 
     class Meta:
         db_table = "childsmile_app_prevtutorshipstatuses"
+
+
+class TOTPCode(models.Model):
+    email = models.EmailField()
+    code = models.CharField(max_length=6)
+    created_at = models.DateTimeField(auto_now_add=True)
+    used = models.BooleanField(default=False)
+    attempts = models.IntegerField(default=0)
+
+    class Meta:
+        db_table = 'totp_codes'
+
+    def is_expired(self):
+        return timezone.now() > self.created_at + timedelta(minutes=5)
+
+    def is_valid(self):
+        return not self.used and not self.is_expired() and self.attempts < 3
+
+    @staticmethod
+    def generate_code():
+        return ''.join(random.choices(string.digits, k=6))
+
+

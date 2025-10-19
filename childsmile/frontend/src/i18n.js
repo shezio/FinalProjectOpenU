@@ -570,6 +570,16 @@ const resources = {
       "Login with an email account": "התחבר באמצעות Email",
       "Login with a Google account": "התחבר באמצעות חשבון גוגל",
       "Please enter your email address": "הכנס כתובת Email",
+      "Please enter a valid email address": "אנא הכנס כתובת Email תקינה",
+      "Failed to send login code": "שליחת קוד ההתחברות נכשלה, בדוק את כתובת ה-Email ונסה שוב",
+      'Login code was sent to the address: ': 'קוד ההתחברות נשלח לכתובת: ',
+      "Verify Code": "אמת קוד",
+      "Sending...": "שולח קוד לתיבת ה-Email...",
+      "← Back to Email": "← חזור למסך ההתחברות",
+      'Please enter the 6-digit code sent to your email': 'אנא הכנס את קוד האימות בן 6 הספרות שנשלח לכתובת ה-Email שלך',
+      "Invalid or expired code": "קוד לא תקין או שפג תוקפו",
+      'Verifying...': 'מאמת קוד...',
+      "Email not found in system": "כתובת ה-Email לא נמצאה במערכת",
     }
   }
 };
