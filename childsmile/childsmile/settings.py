@@ -12,7 +12,10 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 
 from pathlib import Path
 import os
+from dotenv import load_dotenv  # Add this import
 
+# Load environment variables from .env file
+load_dotenv()  # Add this line
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -21,7 +24,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-a564n1zlpwoso+@jup#)j&hcb1ijs0ckie-y_a8vk0-_s=8dyy"
+SECRET_KEY = os.getenv('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -194,9 +197,14 @@ SOCIALACCOUNT_PROVIDERS = {
     }
 }
 
+# Add these settings to skip the ugly confirmation page
+SOCIALACCOUNT_LOGIN_ON_GET = True  # Skip confirmation page
+ACCOUNT_EMAIL_VERIFICATION = 'none'  # You already have this
+SOCIALACCOUNT_AUTO_SIGNUP = True  # Auto-create user accounts
+ACCOUNT_LOGOUT_ON_GET = True  # Optional: allow GET logout
+
 # Fix the deprecated setting
 ACCOUNT_SIGNUP_FIELDS = ['email*', 'username*', 'password1*', 'password2*']
-ACCOUNT_EMAIL_VERIFICATION = 'none'
 # Redirect to React frontend after Google login
 LOGIN_REDIRECT_URL = 'http://localhost:9000/google-success'  # React app URL
 

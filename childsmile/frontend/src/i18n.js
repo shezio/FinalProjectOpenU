@@ -580,6 +580,7 @@ const resources = {
       "Invalid or expired code": "קוד לא תקין או שפג תוקפו",
       'Verifying...': 'מאמת קוד...',
       "Email not found in system": "כתובת ה-Email לא נמצאה במערכת",
+      "Invalid verification code": "קוד אימות לא תקין"
     }
   }
 };
