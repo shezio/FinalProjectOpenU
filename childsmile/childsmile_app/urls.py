@@ -1,7 +1,6 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from .views import (
-    login_view,
     get_permissions,
     logout_view,
     get_children,
@@ -21,6 +20,10 @@ from .views import (
     verify_totp,
     test_email_setup,
     test_gmail_auth,
+    register_send_totp,
+    register_verify_totp,
+    staff_creation_send_totp,
+    staff_creation_verify_totp
 )
 from .task_views import (
     get_user_tasks,
@@ -110,7 +113,6 @@ router.register(r"possible_matches", PossibleMatchesViewSet)  # Add this line
 
 urlpatterns = [
     path("", include(router.urls)),
-    path("api/login/", login_view, name="login"),
     path("api/permissions/", get_permissions, name="get_permissions"),
     path("api/logout/", logout_view, name="logout"),
     path("api/tasks/", get_user_tasks, name="get_user_tasks"),
@@ -339,4 +341,8 @@ urlpatterns = [
     path("api/auth/verify-totp/", verify_totp, name="verify_totp"),
     path("api/test-email-setup/", test_email_setup, name="test_email_setup"),
     path("api/test-gmail-auth/", test_gmail_auth, name="test_gmail_auth"),
+    path("api/register-send-totp/", register_send_totp, name="register_send_totp"),
+    path("api/register-verify-totp/", register_verify_totp, name="register_verify_totp"),
+    path("api/staff-creation-send-totp/", staff_creation_send_totp, name="staff_creation_send_totp"),
+    path("api/staff-creation-verify-totp/", staff_creation_verify_totp, name="staff_creation_verify_totp"),
 ]

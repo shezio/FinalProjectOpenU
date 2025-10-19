@@ -31,22 +31,24 @@ const SystemManagement = () => {
   const [pageSize] = useState(6);
   const [totalCount, setTotalCount] = useState(0);
   const [modalType, setModalType] = useState(''); // "add" or "edit"
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModal] = useState(false);
   const [staffToDelete, setStaffToDelete] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showAddStaffModal, setShowAddStaffModal] = useState(false);
   const [roles, setRoles] = useState([]); // For roles dropdown
   const [showRolesDropdown, setShowRolesDropdown] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState({}); // For form validation errors
   const [staffData, setStaffData] = useState({
     username: '',
-    password: '',
     email: '',
     first_name: '',
     last_name: '',
     roles: [],
   });
+  const [showStaffTotpModal, setShowStaffTotpModal] = useState(false);
+  const [staffTotpCode, setStaffTotpCode] = useState('');
+  const [newUserEmail, setNewUserEmail] = useState(''); // Change from adminEmail
+  const [totpLoading, setTotpLoading] = useState(false);
 
   useEffect(() => {
     if (hasPermissionOnSystemManagement) {
@@ -63,9 +65,6 @@ const SystemManagement = () => {
     const newErrors = {};
     if (!staffData.username.trim()) {
       newErrors.username = t("Username is required.");
-    }
-    if (!staffData.password.trim() && modalType === 'add') {
-      newErrors.password = t("Password is required.");
     }
     if (!staffData.email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(staffData.email)) {
       newErrors.email = t("A valid email is required.");
@@ -168,7 +167,6 @@ const SystemManagement = () => {
       setStaffData({
         id: staff.id,
         username: staff.username,
-        password: '', // Password is not pre-filled for security
         email: staff.email,
         first_name: staff.first_name,
         last_name: staff.last_name,
@@ -177,7 +175,6 @@ const SystemManagement = () => {
     } else {
       setStaffData({
         username: '',
-        password: '',
         email: '',
         first_name: '',
         last_name: '',
@@ -208,7 +205,6 @@ const SystemManagement = () => {
     setShowRolesDropdown(false);
     setStaffData({
       username: '',
-      password: '',
       email: '',
       first_name: '',
       last_name: '',
@@ -219,75 +215,91 @@ const SystemManagement = () => {
 
   const handleAddStaffSubmit = async () => {
     try {
-      await axios.post('/api/create_staff_member/', staffData);
-      toast.success(t('Staff member added successfully.'));
-      fetchAllStaff(); // Refresh the staff list
-      closeAddStaffModal();
+      setTotpLoading(true);
+      // Step 1: Send TOTP to the new user's email
+      const response = await axios.post('/api/staff-creation-send-totp/', staffData);
+      setNewUserEmail(staffData.email); // Use the new user's email from form
+      setShowStaffTotpModal(true);
+      setTotpLoading(false);
+      toast.success(t('Verification code sent to the new user\'s email!'));
     } catch (error) {
-      console.error('Error adding staff member:', error);
-      if (error.response && error.response.data && error.response.data.error) {
-        const errorMessage = error.response.data.error;
-
-        if (errorMessage.includes('Username')) {
-          // Extract the username
-          const match = errorMessage.match(/Username '(.+?)' already exists\./);
-          const username = match ? match[1] : '';
-          const translatedMessage = t("Username '{{username}}' already exists.", { username });
-          toast.warn(translatedMessage);
-        } else if (errorMessage.includes('Email')) {
-          // Extract the email
-          const match = errorMessage.match(/Email '(.+?)' already exists\./);
-          const email = match ? match[1] : '';
-          const translatedMessage = t("Email '{{email}}' already exists.", { email });
-          toast.warn(translatedMessage);
-        } else {
-          // Fallback for other errors
-          toast.warn(t(errorMessage));
-        }
-      } else {
-        showErrorToast(t, 'Failed to add staff member.', error);
-      }
+      console.error('Error sending TOTP:', error);
+      setTotpLoading(false);
+      showErrorToast(t, 'Failed to send verification code.', error);
     }
   };
 
-  const handleEditStaffSubmit = async () => {
+  // Add TOTP verification for staff creation
+  const handleStaffTotpVerification = async (e) => {
+    e.preventDefault();
+    if (staffTotpCode.length !== 6) {
+      toast.error(t("Please enter a 6-digit code"));
+      return;
+    }
+
     try {
-      console.log('Staff Data being sent:', staffData); // Debug log
-      console.log('Staff ID:', staffData.id); // Specifically log the ID
-
-      await axios.put(`/api/update_staff_member/${staffData.id}/`, staffData);
-      toast.success(t('Staff member updated successfully.'));
-      fetchAllStaff(); // Refresh the staff list
+      setTotpLoading(true);
+      await axios.post('/api/staff-creation-verify-totp/', {
+        code: staffTotpCode
+      });
+      toast.success(t('Staff member created successfully.'));
+      fetchAllStaff();
+      closeStaffTotpModal();
       closeAddStaffModal();
+      setTotpLoading(false);
     } catch (error) {
-      console.error('Error updating staff member:', error);
-      if (error.response && error.response.data && error.response.data.error) {
-        const errorMessage = error.response.data.error;
-
-        if (errorMessage.includes('Username')) {
-          // Extract the username
-          const match = errorMessage.match(/Username '(.+?)' already exists\./);
-          const username = match ? match[1] : '';
-          const translatedMessage = t("Username '{{username}}' already exists.", { username });
-          toast.warn(translatedMessage);
-        } else if (errorMessage.includes('Email')) {
-          // Extract the email
-          const match = errorMessage.match(/Email '(.+?)' already exists\./);
-          const email = match ? match[1] : '';
-          const translatedMessage = t("Email '{{email}}' already exists.", { email });
-          toast.warn(translatedMessage);
-        } else {
-          // Fallback for other errors
-          toast.warn(t(errorMessage));
-        }
-      } else {
-        showErrorToast(t, 'Failed to update staff member.', error);
-      }
+      console.error('Error verifying staff creation TOTP:', error);
+      setTotpLoading(false);
+      showErrorToast(t, 'Verification failed.', error);
     }
   };
 
+  // Add function to close TOTP modal
+  const closeStaffTotpModal = () => {
+    setShowStaffTotpModal(false);
+    setStaffTotpCode('');
+    setNewUserEmail(''); // Clear new user's email instead of admin email
+  };
+
+  // Add TOTP input render function for staff
+  const renderStaffTOTPInputBoxes = () => {
+    const handleTotpChange = (index, value) => {
+      if (!/^\d*$/.test(value)) return;
+      
+      const newCode = staffTotpCode.split('');
+      newCode[index] = value;
+      const updatedCode = newCode.join('').slice(0, 6);
+      setStaffTotpCode(updatedCode);
+      
+      if (value && index < 5) {
+        const nextInput = document.getElementById(`staff-totp-${index + 1}`);
+        if (nextInput) nextInput.focus();
+      }
+    };
+
+    return (
+      <div className="totp-input-container">
+        {[0, 1, 2, 3, 4, 5].map((index) => (
+          <input
+            key={index}
+            id={`staff-totp-${index}`}
+            type="text"
+            maxLength="1"
+            value={staffTotpCode[index] || ''}
+            onChange={(e) => handleTotpChange(index, e.target.value)}
+            className="totp-input-box"
+          />
+        ))}
+      </div>
+    );
+  };
+
+  // Add this function after the closeAddStaffModal function
   const updateStaffData = (field, value) => {
-    setStaffData((prev) => ({ ...prev, [field]: value }));
+    setStaffData(prev => ({
+      ...prev,
+      [field]: value
+    }));
   };
 
   if (!hasPermissionOnSystemManagement) {
@@ -472,27 +484,6 @@ const SystemManagement = () => {
               </div>
 
               <div className="staff-form-row">
-                <label>{t('Password')}</label>
-                <div className="password-input-container">
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    value={staffData.password || ''}
-                    onClick={() => updateStaffData('password', '')}
-                    onChange={(e) => updateStaffData('password', e.target.value)}
-                    className={`password-input ${errors.password ? 'error' : ''}`}
-                    placeholder={modalType === 'add' ? t('Enter Password') : t('Leave blank to keep current password')}
-                  />
-                  <span
-                    className={`eye-icon ${showPassword ? 'open' : ''}`}
-                    onClick={() => setShowPassword(prev => !prev)}
-                  >
-                    {showPassword ? <FaEyeSlash /> : <FaEye />}
-                  </span>
-                </div>
-                {errors.password && <span className="staff-error-message">{errors.password}</span>}
-              </div>
-
-              <div className="staff-form-row">
                 <label>{t('Email')}</label>
                 <form noValidate>
                   <input
@@ -643,6 +634,28 @@ const SystemManagement = () => {
             </button>
           </div>
         </Modal>
+      )}
+
+      {/* Staff TOTP Modal */}
+      {showStaffTotpModal && (
+        <div className="staff-modal-overlay">
+          <div className="staff-modal-content">
+            <span className="staff-close" onClick={closeStaffTotpModal}>&times;</span>
+            <h2>{t('Staff Creation Verification')}</h2>
+            <p>{t('Please enter the 6-digit code sent to')} {newUserEmail}</p>
+            <form onSubmit={handleStaffTotpVerification}>
+              {renderStaffTOTPInputBoxes()}
+              <div className="staff-form-actions">
+                <button type="submit" disabled={totpLoading || staffTotpCode.length !== 6}>
+                  {totpLoading ? t('Verifying...') : t("Verify & Create Staff")}
+                </button>
+                <button type="button" onClick={closeStaffTotpModal}>
+                  {t("Cancel")}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
     </div>
   );

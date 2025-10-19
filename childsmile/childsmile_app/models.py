@@ -78,7 +78,6 @@ class Staff(models.Model):
     staff_id = models.AutoField(primary_key=True)
     username = models.CharField(max_length=255, unique=True)
     email = models.EmailField(max_length=255, unique=True)
-    password = models.CharField(max_length=255)
     roles = models.ManyToManyField(Role, related_name="staff_members")
     first_name = models.CharField(max_length=255)
     last_name = models.CharField(max_length=255)
