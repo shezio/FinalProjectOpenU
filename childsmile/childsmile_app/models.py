@@ -488,4 +488,55 @@ class TOTPCode(models.Model):
     def generate_code():
         return ''.join(random.choices(string.digits, k=6))
 
-
+class AuditLog(models.Model):
+    # Primary key
+    audit_id = models.AutoField(primary_key=True)
+    
+    # User information (indexed for performance)
+    user_email = models.EmailField(max_length=255, db_index=True)
+    username = models.CharField(max_length=150, db_index=True)
+    
+    # Timestamp (indexed for performance - most common query filter)
+    timestamp = models.DateTimeField(auto_now_add=True, db_index=True)
+    
+    # Action information (indexed for performance)
+    action = models.CharField(max_length=100, db_index=True)  # CREATE, UPDATE, DELETE, VIEW, etc.
+    endpoint = models.CharField(max_length=255)  # API endpoint called
+    method = models.CharField(max_length=10)  # GET, POST, PUT, DELETE
+    
+    # Database impact
+    affected_tables = models.JSONField(default=list)  # List of table names
+    
+    # User permissions at time of action
+    user_roles = models.JSONField(default=list)  # User's roles at time of action
+    permissions = models.JSONField(default=list)  # Specific permissions checked
+    
+    # Entity details
+    entity_type = models.CharField(max_length=100, null=True, blank=True)  # e.g., 'Staff', 'Volunteer'
+    entity_ids = models.JSONField(default=list)  # IDs of affected entities
+    
+    # Request details
+    ip_address = models.GenericIPAddressField(null=True, blank=True)
+    user_agent = models.TextField(null=True, blank=True)
+    
+    # Response details
+    status_code = models.IntegerField(null=True, blank=True)
+    success = models.BooleanField(default=True)
+    error_message = models.TextField(null=True, blank=True)
+    
+    # Additional context (for complex operations)
+    additional_data = models.JSONField(default=dict, null=True, blank=True)
+    
+    class Meta:
+        db_table = 'audit_log'
+        # Composite indexes for common query patterns
+        indexes = [
+            models.Index(fields=['timestamp', 'user_email']),
+            models.Index(fields=['action', 'timestamp']),
+            models.Index(fields=['entity_type', 'timestamp']),
+            models.Index(fields=['success', 'timestamp']),
+        ]
+        ordering = ['-timestamp']  # Most recent first
+    
+    def __str__(self):
+        return f"{self.timestamp} - {self.username} - {self.action} - {self.endpoint}"

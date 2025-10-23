@@ -23,7 +23,7 @@ from .views import (
     register_send_totp,
     register_verify_totp,
     staff_creation_send_totp,
-    staff_creation_verify_totp
+    staff_creation_verify_totp,
 )
 from .task_views import (
     get_user_tasks,
@@ -92,6 +92,7 @@ from .unused_views import (
     TaskViewSet,
     PossibleMatchesViewSet,  # Add this line
 )
+from .audit_views import get_audit_logs, get_audit_statistics, export_audit_logs
 
 
 router = DefaultRouter()
@@ -342,7 +343,20 @@ urlpatterns = [
     path("api/test-email-setup/", test_email_setup, name="test_email_setup"),
     path("api/test-gmail-auth/", test_gmail_auth, name="test_gmail_auth"),
     path("api/register-send-totp/", register_send_totp, name="register_send_totp"),
-    path("api/register-verify-totp/", register_verify_totp, name="register_verify_totp"),
-    path("api/staff-creation-send-totp/", staff_creation_send_totp, name="staff_creation_send_totp"),
-    path("api/staff-creation-verify-totp/", staff_creation_verify_totp, name="staff_creation_verify_totp"),
+    path(
+        "api/register-verify-totp/", register_verify_totp, name="register_verify_totp"
+    ),
+    path(
+        "api/staff-creation-send-totp/",
+        staff_creation_send_totp,
+        name="staff_creation_send_totp",
+    ),
+    path(
+        "api/staff-creation-verify-totp/",
+        staff_creation_verify_totp,
+        name="staff_creation_verify_totp",
+    ),
+    path("api/audit-logs/", get_audit_logs, name="get_audit_logs"),
+    path("api/audit-statistics/", get_audit_statistics, name="get_audit_statistics"),
+    path("api/audit-logs/export/", export_audit_logs, name="export_audit_logs"),
 ]
