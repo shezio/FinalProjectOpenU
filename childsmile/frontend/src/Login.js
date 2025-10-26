@@ -178,6 +178,31 @@ const Login = () => {
     );
   };
 
+  React.useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const error = urlParams.get('error');
+    const email = urlParams.get('email');
+    
+    if (error) {
+      switch (error) {
+        case 'no_email':
+          setError(t('Unable to get email from Google account'));
+          break;
+        case 'unauthorized':
+          setError(t("Access denied. Email ") + email + t(" is not authorized to access this system"));
+          break;
+        case 'auth_failed':
+          setError(t('Google login was cancelled or failed'));
+          break;
+        default:
+          setError(t('Google login failed'));
+      }
+      
+      // Clean up the URL
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, [t]);
+
   return (
     <div className="login-main-content">
       <Header />

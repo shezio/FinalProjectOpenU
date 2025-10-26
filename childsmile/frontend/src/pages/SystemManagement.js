@@ -302,6 +302,35 @@ const SystemManagement = () => {
     }));
   };
 
+  const handleEditStaffSubmit = async () => {
+    if (!validate()) {
+      return;
+    }
+
+    try {
+      setTotpLoading(true);
+      
+      // Call the update API endpoint
+      await axios.put(`/api/update_staff_member/${staffData.id}/`, {
+        username: staffData.username,
+        email: staffData.email,
+        first_name: staffData.first_name,
+        last_name: staffData.last_name,
+        roles: staffData.roles,
+      });
+      
+      toast.success(t('Staff member updated successfully.'));
+      fetchAllStaff(); // Refresh the staff list
+      closeAddStaffModal(); // Close the modal
+      setTotpLoading(false);
+      
+    } catch (error) {
+      console.error('Error updating staff member:', error);
+      setTotpLoading(false);
+      showErrorToast(t, 'Failed to update staff member.', error);
+    }
+  };
+
   if (!hasPermissionOnSystemManagement) {
     return (
       <div className="sys-mgmt-main-content">

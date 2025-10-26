@@ -527,6 +527,15 @@ class AuditLog(models.Model):
     # Additional context (for complex operations)
     additional_data = models.JSONField(default=dict, null=True, blank=True)
     
+    report_name = models.CharField(
+        max_length=200, null=True, blank=True,
+        help_text="Name of the report for VIEW_REPORT_* / EXPORT_REPORT_* actions"
+    )
+    description = models.TextField(
+        null=True, blank=True,
+        help_text="Human-readable story built from all other fields"
+    )
+
     class Meta:
         db_table = 'audit_log'
         # Composite indexes for common query patterns
