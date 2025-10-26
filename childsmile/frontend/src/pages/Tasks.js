@@ -337,6 +337,23 @@ const Tasks = () => {
     if (!document.getElementById('due_date').value) {
       newErrors.due_date = "זהו שדה חובה";
     }
+    const dueDateValue = document.getElementById('due_date').value;
+    if (dueDateValue) {
+      const today = new Date();
+      const dueDate = new Date(dueDateValue);
+      if (isNaN(dueDate.getTime())) {
+        newErrors.due_date = t("Due date must be a valid date.");
+      } else {
+        // Normalize times to midnight for accurate year comparison
+        today.setHours(0,0,0,0);
+        dueDate.setHours(0,0,0,0);
+        const timeDiff = dueDate - today;
+        const oneMonthInMs = 30 * 24 * 60 * 60 * 1000;
+        if (timeDiff < 0 || timeDiff > oneMonthInMs) {
+          newErrors.due_date = t("Due date must be in the future and up to 1 month from now.");
+        }
+      }
+    }
     if (!selectedStaff) {
       newErrors.assigned_to = "זהו שדה חובה";
     }
