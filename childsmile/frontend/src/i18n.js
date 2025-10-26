@@ -591,7 +591,10 @@ const resources = {
       'Verification failed.': 'האימות נכשל.',
       'Staff member created successfully.': 'המשתמש נוצר בהצלחה.',
       'Error verifying staff creation TOTP:': 'שגיאה באימות יצירת משתמש:',
-      "Welcome to Child Smile! You can now log in using email authentication or via your google account.": "ברוך הבא לחיוך של ילד! כעת תוכל להתחבר באמצעות אימות אימייל או דרך חשבון Google שלך."
+      "Welcome to Child Smile! You can now log in using email authentication or via your google account.": "ברוך הבא לחיוך של ילד! כעת תוכל להתחבר באמצעות אימות אימייל או דרך חשבון Google שלך.",
+      "Verification failed": "האימות נכשל",
+      " is not authorized to access this system": " אין הרשאה לגשת למערכת זו",
+      "Access denied. Email ": "הגישה נדחתה. ל",
     }
   }
 };

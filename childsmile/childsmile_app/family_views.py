@@ -64,6 +64,7 @@ import json
 import os
 from django.db.models import Count, F
 from .utils import *
+from .audit_utils import log_api_action
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -76,12 +77,26 @@ def get_complete_family_details(request):
     """
     user_id = request.session.get("user_id")
     if not user_id:
+        log_api_action(
+            request=request,
+            action='VIEW_FAMILY_DETAILS_FAILED',
+            success=False,
+            error_message="Authentication credentials were not provided",
+            status_code=403
+        )
         return JsonResponse(
             {"detail": "Authentication credentials were not provided."}, status=403
         )
 
     # Check if the user has VIEW permission on the "children" resource
     if not has_permission(request, "children", "VIEW"):
+        log_api_action(
+            request=request,
+            action='VIEW_FAMILY_DETAILS_FAILED',
+            success=False,
+            error_message="You do not have permission to view this report",
+            status_code=401
+        )
         return JsonResponse(
             {"error": "You do not have permission to view this report."}, status=401
         )
@@ -129,8 +144,8 @@ def get_complete_family_details(request):
                     else None
                 ),
                 "has_completed_treatments": family.has_completed_treatments,
-                "status": family.status,  # Add the status field
-                "age": family.age,  # Add the age field
+                "status": family.status,
+                "age": family.age,
             }
             for family in families
         ]
@@ -173,6 +188,13 @@ def get_complete_family_details(request):
         )
     except Exception as e:
         print(f"DEBUG: An error occurred: {str(e)}")
+        log_api_action(
+            request=request,
+            action='VIEW_FAMILY_DETAILS_FAILED',
+            success=False,
+            error_message=str(e),
+            status_code=500
+        )
         return JsonResponse({"error": str(e)}, status=500)
 
 
@@ -184,19 +206,33 @@ def create_family(request):
     """
     user_id = request.session.get("user_id")
     if not user_id:
+        log_api_action(
+            request=request,
+            action='CREATE_FAMILY_FAILED',
+            success=False,
+            error_message="Authentication credentials were not provided",
+            status_code=403
+        )
         return JsonResponse(
             {"detail": "Authentication credentials were not provided."}, status=403
         )
 
     # Check if the user has CREATE permission on the "children" resource
     if not has_permission(request, "children", "CREATE"):
+        log_api_action(
+            request=request,
+            action='CREATE_FAMILY_FAILED',
+            success=False,
+            error_message="You do not have permission to create a family",
+            status_code=401
+        )
         return JsonResponse(
             {"error": "You do not have permission to create a family."}, status=401
         )
 
     try:
         # Extract data from the request
-        data = request.data  # Use request.data for JSON payloads
+        data = request.data
 
         # Validate required fields
         required_fields = [
@@ -218,6 +254,13 @@ def create_family(request):
         ]
         missing_fields = [field for field in required_fields if field not in data]
         if missing_fields:
+            log_api_action(
+                request=request,
+                action='CREATE_FAMILY_FAILED',
+                success=False,
+                error_message=f"Missing required fields: {', '.join(missing_fields)}",
+                status_code=400
+            )
             return JsonResponse(
                 {"error": f"Missing required fields: {', '.join(missing_fields)}"},
                 status=400,
@@ -225,21 +268,21 @@ def create_family(request):
 
         # Create a new family record in the database
         family = Children.objects.create(
-            child_id=data["child_id"],  # Assuming child_id is provided in the request
+            child_id=data["child_id"],
             childfirstname=data["childfirstname"],
             childsurname=data["childsurname"],
             registrationdate=datetime.datetime.now(),
             lastupdateddate=datetime.datetime.now(),
             gender=True if data["gender"] == "נקבה" else False,
-            responsible_coordinator=user_id,  # the user who is creating the family - which is a Family Coordinator
+            responsible_coordinator=user_id,
             city=data["city"],
             child_phone_number=data["child_phone_number"],
             treating_hospital=data["treating_hospital"],
             date_of_birth=data["date_of_birth"],
-            medical_diagnosis=data.get("medical_diagnosis"),  # Optional
+            medical_diagnosis=data.get("medical_diagnosis"),
             diagnosis_date=(
                 data.get("diagnosis_date") if data.get("diagnosis_date") else None
-            ),  # Optional
+            ),
             marital_status=data["marital_status"],
             num_of_siblings=data["num_of_siblings"],
             details_for_tutoring=(
@@ -247,32 +290,43 @@ def create_family(request):
                 if data.get("details_for_tutoring")
                 else "לא_רלוונטי"
             ),
-            additional_info=data.get("additional_info"),  # Optional
+            additional_info=data.get("additional_info"),
             tutoring_status=(
                 data["tutoring_status"] if data.get("tutoring_status") else "לא_רלוונטי"
             ),
-            current_medical_state=data.get("current_medical_state"),  # Optional
+            current_medical_state=data.get("current_medical_state"),
             when_completed_treatments=(
                 data.get("when_completed_treatments")
                 if data.get("when_completed_treatments")
                 else None
-            ),  # Optional
-            father_name=data.get("father_name"),  # Optional
-            father_phone=data.get("father_phone"),  # Optional
-            mother_name=data.get("mother_name"),  # Optional
-            mother_phone=data.get("mother_phone"),  # Optional
-            street_and_apartment_number=data.get(
-                "street_and_apartment_number"
-            ),  # Optional
+            ),
+            father_name=data.get("father_name"),
+            father_phone=data.get("father_phone"),
+            mother_name=data.get("mother_name"),
+            mother_phone=data.get("mother_phone"),
+            street_and_apartment_number=data.get("street_and_apartment_number"),
             expected_end_treatment_by_protocol=(
                 data.get("expected_end_treatment_by_protocol")
                 if data.get("expected_end_treatment_by_protocol")
                 else None
-            ),  # Optional
-            has_completed_treatments=data.get(
-                "has_completed_treatments", False
-            ),  # Default to False
-            status=(data["status"] if data.get("status") else "טיפולים"),  # Default to "טיפולים"
+            ),
+            has_completed_treatments=data.get("has_completed_treatments", False),
+            status=(data["status"] if data.get("status") else "טיפולים"),
+        )
+
+        # Log successful family creation
+        log_api_action(
+            request=request,
+            action='CREATE_FAMILY_SUCCESS',
+            affected_tables=['childsmile_app_children'],
+            entity_type='Children',
+            entity_ids=[family.child_id],
+            success=True,
+            additional_data={
+                'family_name': f"{data['childfirstname']} {data['childsurname']}",
+                'family_city': data['city'],
+                'responsible_coordinator': user_id
+            }
         )
 
         return JsonResponse(
@@ -281,6 +335,13 @@ def create_family(request):
         )
     except Exception as e:
         print(f"DEBUG: An error occurred while creating a family: {str(e)}")
+        log_api_action(
+            request=request,
+            action='CREATE_FAMILY_FAILED',
+            success=False,
+            error_message=str(e),
+            status_code=500
+        )
         return JsonResponse({"error": str(e)}, status=500)
 
 
@@ -293,12 +354,28 @@ def update_family(request, child_id):
     """
     user_id = request.session.get("user_id")
     if not user_id:
+        log_api_action(
+            request=request,
+            action='UPDATE_FAMILY_FAILED',
+            success=False,
+            error_message="Authentication credentials were not provided",
+            status_code=403
+        )
         return JsonResponse(
             {"detail": "Authentication credentials were not provided."}, status=403
         )
 
     # Check if the user has UPDATE permission on the "children" resource
     if not has_permission(request, "children", "UPDATE"):
+        log_api_action(
+            request=request,
+            action='UPDATE_FAMILY_FAILED',
+            success=False,
+            error_message="You do not have permission to update this family",
+            status_code=401,
+            entity_type='Children',
+            entity_ids=[child_id]
+        )
         return JsonResponse(
             {"error": "You do not have permission to update this family."}, status=401
         )
@@ -308,24 +385,38 @@ def update_family(request, child_id):
         try:
             family = Children.objects.get(child_id=child_id)
         except Children.DoesNotExist:
+            log_api_action(
+                request=request,
+                action='UPDATE_FAMILY_FAILED',
+                success=False,
+                error_message="Family not found",
+                status_code=404,
+                entity_type='Children',
+                entity_ids=[child_id]
+            )
             return JsonResponse({"error": "Family not found."}, status=404)
 
         # Extract data from the request
-        data = request.data  # Use request.data for JSON payloads
+        data = request.data
 
         # Validate that the child_id in the request matches the existing child_id
         request_child_id = data.get("child_id")
         if request_child_id and str(request_child_id) != str(child_id):
+            log_api_action(
+                request=request,
+                action='UPDATE_FAMILY_FAILED',
+                success=False,
+                error_message="The child_id in the request does not match the existing child_id",
+                status_code=400,
+                entity_type='Children',
+                entity_ids=[child_id]
+            )
             return JsonResponse(
                 {
                     "error": "The child_id in the request does not match the existing child_id."
                 },
                 status=400,
             )
-
-        # print(f"DEBUG: child_id from request: {request_child_id}")
-        # print(f"DEBUG: child_id from URL: {child_id}")
-        # print(f"DEBUG: Incoming request data for update: {data}")
 
         required_fields = [
             "child_id",
@@ -346,108 +437,48 @@ def update_family(request, child_id):
         ]
         missing_fields = [field for field in required_fields if field not in data]
         if missing_fields:
+            log_api_action(
+                request=request,
+                action='UPDATE_FAMILY_FAILED',
+                success=False,
+                error_message=f"Missing required fields: {', '.join(missing_fields)}",
+                status_code=400,
+                entity_type='Children',
+                entity_ids=[child_id]
+            )
             return JsonResponse(
                 {"error": f"Missing required fields: {', '.join(missing_fields)}"},
                 status=400,
             )
 
+        # Store original values for audit
+        original_name = f"{family.childfirstname} {family.childsurname}"
+        
         # Update fields in the Children table
-        # print("DEBUG: Updating childfirstname...")
         family.childfirstname = data.get("childfirstname", family.childfirstname)
-
-        # print("DEBUG: Updating childsurname...")
         family.childsurname = data.get("childsurname", family.childsurname)
-
-        # print("DEBUG: Updating gender...")
         family.gender = True if data.get("gender") == "נקבה" else False
-
-        # print("DEBUG: Updating city...")
         family.city = data.get("city", family.city)
-
-        # print("DEBUG: Updating child_phone_number...")
-        family.child_phone_number = data.get(
-            "child_phone_number", family.child_phone_number
-        )
-
-        # print("DEBUG: Updating treating_hospital...")
-        family.treating_hospital = data.get(
-            "treating_hospital", family.treating_hospital
-        )
-
-        # print("DEBUG: Updating date_of_birth...")
-        family.date_of_birth = parse_date_field(
-            data.get("date_of_birth"), "date_of_birth"
-        )
-
-        # print("DEBUG: Updating medical_diagnosis...")
-        family.medical_diagnosis = data.get(
-            "medical_diagnosis", family.medical_diagnosis
-        )
-
-        # print("DEBUG: Updating diagnosis_date...")
-        family.diagnosis_date = parse_date_field(
-            data.get("diagnosis_date"), "diagnosis_date"
-        )
-
-        # print("DEBUG: Updating marital_status...")
+        family.child_phone_number = data.get("child_phone_number", family.child_phone_number)
+        family.treating_hospital = data.get("treating_hospital", family.treating_hospital)
+        family.date_of_birth = parse_date_field(data.get("date_of_birth"), "date_of_birth")
+        family.medical_diagnosis = data.get("medical_diagnosis", family.medical_diagnosis)
+        family.diagnosis_date = parse_date_field(data.get("diagnosis_date"), "diagnosis_date")
         family.marital_status = data.get("marital_status", family.marital_status)
-
-        # print("DEBUG: Updating num_of_siblings...")
         family.num_of_siblings = data.get("num_of_siblings", family.num_of_siblings)
-
-        # print("DEBUG: Updating details_for_tutoring...")
-        family.details_for_tutoring = data.get(
-            "details_for_tutoring", family.details_for_tutoring
-        )
-
-        # print("DEBUG: Updating additional_info...")
+        family.details_for_tutoring = data.get("details_for_tutoring", family.details_for_tutoring)
         family.additional_info = data.get("additional_info", family.additional_info)
-
-        # print("DEBUG: Updating tutoring_status...")
         family.tutoring_status = data.get("tutoring_status", family.tutoring_status)
-
-        # print("DEBUG: Updating current_medical_state...")
-        family.current_medical_state = data.get(
-            "current_medical_state", family.current_medical_state
-        )
-
-        # print("DEBUG: Updating when_completed_treatments...")
-        family.when_completed_treatments = parse_date_field(
-            data.get("when_completed_treatments"), "when_completed_treatments"
-        )
-
-        # print("DEBUG: Updating father_name...")
+        family.current_medical_state = data.get("current_medical_state", family.current_medical_state)
+        family.when_completed_treatments = parse_date_field(data.get("when_completed_treatments"), "when_completed_treatments")
         family.father_name = data.get("father_name", family.father_name)
-
-        # print("DEBUG: Updating father_phone...")
         family.father_phone = data.get("father_phone", family.father_phone)
-
-        # print("DEBUG: Updating mother_name...")
         family.mother_name = data.get("mother_name", family.mother_name)
-
-        # print("DEBUG: Updating mother_phone...")
         family.mother_phone = data.get("mother_phone", family.mother_phone)
-
-        # print("DEBUG: Updating street_and_apartment_number...")
-        family.street_and_apartment_number = data.get(
-            "street_and_apartment_number", family.street_and_apartment_number
-        )
-
-        # print("DEBUG: Updating expected_end_treatment_by_protocol...")
-        family.expected_end_treatment_by_protocol = parse_date_field(
-            data.get("expected_end_treatment_by_protocol"),
-            "expected_end_treatment_by_protocol",
-        )
-
-        # print("DEBUG: Updating has_completed_treatments...")
-        family.has_completed_treatments = data.get(
-            "has_completed_treatments", family.has_completed_treatments
-        )
-
-        # print("DEBUG: Updating status...")
+        family.street_and_apartment_number = data.get("street_and_apartment_number", family.street_and_apartment_number)
+        family.expected_end_treatment_by_protocol = parse_date_field(data.get("expected_end_treatment_by_protocol"), "expected_end_treatment_by_protocol")
+        family.has_completed_treatments = data.get("has_completed_treatments", family.has_completed_treatments)
         family.status = data.get("status", family.status)
-
-        # print("DEBUG: Updating lastupdateddate...")
         family.lastupdateddate = datetime.datetime.now()
 
         # Save the updated family record
@@ -456,23 +487,47 @@ def update_family(request, child_id):
             print(f"DEBUG: Family with child_id {child_id} saved successfully.")
         except DatabaseError as db_error:
             print(f"DEBUG: Database error while saving family: {str(db_error)}")
+            log_api_action(
+                request=request,
+                action='UPDATE_FAMILY_FAILED',
+                success=False,
+                error_message=f"Database error: {str(db_error)}",
+                status_code=500,
+                entity_type='Children',
+                entity_ids=[child_id]
+            )
             return JsonResponse(
                 {"error": f"Database error: {str(db_error)}"}, status=500
             )
 
         # Propagate changes to related tables
-        # Update childsmile_app_tasks
         Tasks.objects.filter(related_child_id=child_id).update(
             updated_at=datetime.datetime.now(),
         )
 
-        # NEW: Update tutor's tutee_wellness and relationship_status if tutorship exists
+        # Update tutor's tutee_wellness and relationship_status if tutorship exists
         tutorship = Tutorships.objects.filter(child_id=child_id).first()
         if tutorship and tutorship.tutor_id:
             Tutors.objects.filter(id_id=tutorship.tutor_id).update(
                 tutee_wellness=family.current_medical_state,
                 relationship_status=family.marital_status
             )
+
+        # Log successful family update
+        log_api_action(
+            request=request,
+            action='UPDATE_FAMILY_SUCCESS',
+            affected_tables=['childsmile_app_children', 'childsmile_app_tasks', 'childsmile_app_tutors'],
+            entity_type='Children',
+            entity_ids=[family.child_id],
+            success=True,
+            additional_data={
+                'updated_family_name': f"{family.childfirstname} {family.childsurname}",
+                'original_family_name': original_name,
+                'family_city': family.city,
+                'family_status': family.status
+            }
+        )
 
         print(f"DEBUG: Family with child_id {child_id} updated successfully.")
 
@@ -485,6 +540,15 @@ def update_family(request, child_id):
         )
     except Exception as e:
         print(f"DEBUG: An error occurred while updating the family: {str(e)}")
+        log_api_action(
+            request=request,
+            action='UPDATE_FAMILY_FAILED',
+            success=False,
+            error_message=str(e),
+            status_code=500,
+            entity_type='Children',
+            entity_ids=[child_id]
+        )
         return JsonResponse({"error": str(e)}, status=500)
 
 
@@ -496,12 +560,28 @@ def delete_family(request, child_id):
     """
     user_id = request.session.get("user_id")
     if not user_id:
+        log_api_action(
+            request=request,
+            action='DELETE_FAMILY_FAILED',
+            success=False,
+            error_message="Authentication credentials were not provided",
+            status_code=403
+        )
         return JsonResponse(
             {"detail": "Authentication credentials were not provided."}, status=403
         )
 
     # Check if the user has DELETE permission on the "children" resource
     if not has_permission(request, "children", "DELETE"):
+        log_api_action(
+            request=request,
+            action='DELETE_FAMILY_FAILED',
+            success=False,
+            error_message="You do not have permission to delete this family",
+            status_code=401,
+            entity_type='Children',
+            entity_ids=[child_id]
+        )
         return JsonResponse(
             {"error": "You do not have permission to delete this family."}, status=401
         )
@@ -510,7 +590,17 @@ def delete_family(request, child_id):
         # Fetch the existing family record
         try:
             family = Children.objects.get(child_id=child_id)
+            family_name = f"{family.childfirstname} {family.childsurname}"
         except Children.DoesNotExist:
+            log_api_action(
+                request=request,
+                action='DELETE_FAMILY_FAILED',
+                success=False,
+                error_message="Family not found",
+                status_code=404,
+                entity_type='Children',
+                entity_ids=[child_id]
+            )
             return JsonResponse({"error": "Family not found."}, status=404)
 
         # Delete the family record
@@ -518,13 +608,24 @@ def delete_family(request, child_id):
 
         # delete related records in childsmile_app_tasks
         Tasks.objects.filter(related_child_id=child_id).delete()
-
         print(f"DEBUG: Related tasks for child_id {child_id} deleted.")
 
         # delete related records in childsmile_app_tutorships
         Tutorships.objects.filter(child_id=child_id).delete()
-
         print(f"DEBUG: Related tutorship records for child_id {child_id} deleted.")
+
+        # Log successful family deletion
+        log_api_action(
+            request=request,
+            action='DELETE_FAMILY_SUCCESS',
+            affected_tables=['childsmile_app_children', 'childsmile_app_tasks', 'childsmile_app_tutorships'],
+            entity_type='Children',
+            entity_ids=[child_id],
+            success=True,
+            additional_data={
+                'deleted_family_name': family_name
+            }
+        )
 
         print(f"DEBUG: Family with child_id {child_id} deleted successfully.")
 
@@ -534,7 +635,17 @@ def delete_family(request, child_id):
         )
     except Exception as e:
         print(f"DEBUG: An error occurred while deleting the family: {str(e)}")
+        log_api_action(
+            request=request,
+            action='DELETE_FAMILY_FAILED',
+            success=False,
+            error_message=str(e),
+            status_code=500,
+            entity_type='Children',
+            entity_ids=[child_id]
+        )
         return JsonResponse({"error": str(e)}, status=500)
+
 
 @csrf_exempt
 @api_view(["GET"])
@@ -713,6 +824,13 @@ def mark_initial_family_complete(request, initial_family_data_id):
     """
     user_id = request.session.get("user_id")
     if not user_id:
+        log_api_action(
+            request=request,
+            action='MARK_FAMILY_ADDED_FAILED',
+            success=False,
+            error_message="Authentication credentials were not provided",
+            status_code=403
+        )
         return JsonResponse(
             {"detail": "Authentication credentials were not provided."}, status=403
         )
@@ -722,6 +840,15 @@ def mark_initial_family_complete(request, initial_family_data_id):
     user_roles = set(user.roles.values_list("role_name", flat=True))
     allowed_roles = {"System Administrator", "Technical Coordinator"}
     if not user_roles.intersection(allowed_roles):
+        log_api_action(
+            request=request,
+            action='MARK_FAMILY_ADDED_FAILED',
+            success=False,
+            error_message="You do not have permission to mark initial family data as complete",
+            status_code=401,
+            entity_type='InitialFamilyData',
+            entity_ids=[initial_family_data_id]
+        )
         return JsonResponse(
             {
                 "error": "You do not have permission to mark initial family data as complete."
@@ -731,6 +858,15 @@ def mark_initial_family_complete(request, initial_family_data_id):
 
     # Check if the user has UPDATE permission on the "initial_family_data" resource
     if not has_initial_family_data_permission(request, "update"):
+        log_api_action(
+            request=request,
+            action='MARK_FAMILY_ADDED_FAILED',
+            success=False,
+            error_message="You do not have permission to update initial family data",
+            status_code=401,
+            entity_type='InitialFamilyData',
+            entity_ids=[initial_family_data_id]
+        )
         return JsonResponse(
             {"error": "You do not have permission to update initial family data."},
             status=401,
@@ -741,6 +877,15 @@ def mark_initial_family_complete(request, initial_family_data_id):
             initial_family_data_id=initial_family_data_id
         )
     except InitialFamilyData.DoesNotExist:
+        log_api_action(
+            request=request,
+            action='MARK_FAMILY_ADDED_FAILED',
+            success=False,
+            error_message="Initial family data not found",
+            status_code=404,
+            entity_type='InitialFamilyData',
+            entity_ids=[initial_family_data_id]
+        )
         return JsonResponse({"error": "Initial family data not found."}, status=404)
 
     data = request.data
@@ -764,6 +909,20 @@ def mark_initial_family_complete(request, initial_family_data_id):
                 task.save()
                 print(f"DEBUG: Task {task.task_id} marked as completed.")
 
+        # Log successful mark as complete
+        log_api_action(
+            request=request,
+            action='MARK_FAMILY_ADDED_SUCCESS',
+            affected_tables=['childsmile_app_initialfamilydata', 'childsmile_app_tasks'],
+            entity_type='InitialFamilyData',
+            entity_ids=[initial_family_data_id],
+            success=True,
+            additional_data={
+                'family_names': initial_family_data.names,
+                'family_added_status': initial_family_data.family_added
+            }
+        )
+
         return JsonResponse(
             {"message": "Initial family data successfully marked as complete"},
             status=200,
@@ -771,6 +930,15 @@ def mark_initial_family_complete(request, initial_family_data_id):
     except Exception as e:
         print(
             f"DEBUG: An error occurred while marking initial family data complete: {str(e)}"
+        )
+        log_api_action(
+            request=request,
+            action='MARK_FAMILY_ADDED_FAILED',
+            success=False,
+            error_message=str(e),
+            status_code=500,
+            entity_type='InitialFamilyData',
+            entity_ids=[initial_family_data_id]
         )
         return JsonResponse({"error": str(e)}, status=500)
 
@@ -783,6 +951,13 @@ def delete_initial_family_data(request, initial_family_data_id):
     """
     user_id = request.session.get("user_id")
     if not user_id:
+        log_api_action(
+            request=request,
+            action='DELETE_INITIAL_FAMILY_FAILED',
+            success=False,
+            error_message="Authentication credentials were not provided",
+            status_code=403
+        )
         return JsonResponse(
             {"detail": "Authentication credentials were not provided."}, status=403
         )
@@ -792,6 +967,15 @@ def delete_initial_family_data(request, initial_family_data_id):
     user_roles = set(user.roles.values_list("role_name", flat=True))
     allowed_roles = {"System Administrator", "Technical Coordinator"}
     if not user_roles.intersection(allowed_roles):
+        log_api_action(
+            request=request,
+            action='DELETE_INITIAL_FAMILY_FAILED',
+            success=False,
+            error_message="You do not have permission to delete initial family data",
+            status_code=401,
+            entity_type='InitialFamilyData',
+            entity_ids=[initial_family_data_id]
+        )
         return JsonResponse(
             {"error": "You do not have permission to delete initial family data."},
             status=401,
@@ -799,6 +983,15 @@ def delete_initial_family_data(request, initial_family_data_id):
 
     # Check if the user has DELETE permission on the "initial_family_data" resource
     if not has_initial_family_data_permission(request, "delete"):
+        log_api_action(
+            request=request,
+            action='DELETE_INITIAL_FAMILY_FAILED',
+            success=False,
+            error_message="You do not have permission to delete initial family data",
+            status_code=401,
+            entity_type='InitialFamilyData',
+            entity_ids=[initial_family_data_id]
+        )
         return JsonResponse(
             {"error": "You do not have permission to delete initial family data."},
             status=401,
@@ -808,6 +1001,9 @@ def delete_initial_family_data(request, initial_family_data_id):
         initial_family_data = InitialFamilyData.objects.get(
             initial_family_data_id=initial_family_data_id
         )
+        
+        # Store names for audit
+        family_names = initial_family_data.names
 
         related_tasks = Tasks.objects.filter(
             initial_family_data_id_fk=initial_family_data_id
@@ -822,11 +1018,42 @@ def delete_initial_family_data(request, initial_family_data_id):
         # Delete the initial family data record
         initial_family_data.delete()
 
+        # Log successful deletion
+        log_api_action(
+            request=request,
+            action='DELETE_INITIAL_FAMILY_SUCCESS',
+            affected_tables=['childsmile_app_initialfamilydata', 'childsmile_app_tasks'],
+            entity_type='InitialFamilyData',
+            entity_ids=[initial_family_data_id],
+            success=True,
+            additional_data={
+                'deleted_family_names': family_names
+            }
+        )
+
         return JsonResponse(
             {"message": "Initial family data deleted successfully"}, status=200
         )
     except InitialFamilyData.DoesNotExist:
+        log_api_action(
+            request=request,
+            action='DELETE_INITIAL_FAMILY_FAILED',
+            success=False,
+            error_message="Initial family data not found",
+            status_code=404,
+            entity_type='InitialFamilyData',
+            entity_ids=[initial_family_data_id]
+        )
         return JsonResponse({"error": "Initial family data not found."}, status=404)
     except Exception as e:
         print(f"DEBUG: An error occurred while deleting initial family data: {str(e)}")
+        log_api_action(
+            request=request,
+            action='DELETE_INITIAL_FAMILY_FAILED',
+            success=False,
+            error_message=str(e),
+            status_code=500,
+            entity_type='InitialFamilyData',
+            entity_ids=[initial_family_data_id]
+        )
         return JsonResponse({"error": str(e)}, status=500)

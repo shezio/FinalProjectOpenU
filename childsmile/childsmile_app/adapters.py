@@ -5,6 +5,7 @@ from django.contrib import messages
 from django.urls import reverse
 from .models import Staff
 from django.contrib.auth.models import User
+from .audit_utils import log_api_action
 
 class CustomSocialAccountAdapter(DefaultSocialAccountAdapter):
     
@@ -22,15 +23,43 @@ class CustomSocialAccountAdapter(DefaultSocialAccountAdapter):
         print(f"DEBUG: Extra data: {sociallogin.account.extra_data}")
         
         if not email:
-            messages.error(request, "Unable to get email from Google account.")
-            raise ImmediateHttpResponse(redirect('/accounts/login/'))
+            print("DEBUG: No email from Google - redirecting to React app")
+            
+            # Log failed Google login attempt - no email
+            log_api_action(
+                request=request,
+                action='GOOGLE_LOGIN_FAILED',
+                success=False,
+                error_message="Unable to get email from Google account",
+                status_code=400,
+                additional_data={'failure_reason': 'no_email_from_google'}
+            )
+            
+            # Redirect to React app instead of Django login page
+            raise ImmediateHttpResponse(redirect('http://localhost:9000/?error=no_email'))
         
         # Check if this email exists in our Staff table
         if not Staff.objects.filter(email=email).exists():
-            messages.error(request, f"Access denied. Email {email} is not authorized to access this system.")
-            raise ImmediateHttpResponse(redirect('/accounts/login/'))
+            print(f"DEBUG: Email {email} not found in Staff table - redirecting to React app")
+            
+            # Log failed Google login attempt - unauthorized email
+            log_api_action(
+                request=request,
+                action='GOOGLE_LOGIN_FAILED',
+                success=False,
+                error_message=f"Access denied. Email {email} is not authorized to access this system",
+                status_code=401,
+                additional_data={
+                    'attempted_email': email,
+                    'failure_reason': 'email_not_authorized',
+                    'google_name': google_name
+                }
+            )
+            
+            # Redirect to React app with error message instead of Django login page
+            raise ImmediateHttpResponse(redirect(f'http://localhost:9000/?error=unauthorized&email={email}'))
         
-        # **NEW: Create Django User here to avoid signup form**
+        # **Continue with existing user creation logic**
         try:
             # Try to get existing Django User
             existing_user = User.objects.get(email=email)
@@ -69,9 +98,29 @@ class CustomSocialAccountAdapter(DefaultSocialAccountAdapter):
     
     def save_user(self, request, sociallogin, form=None):
         """
-        User should already be created in pre_social_login, just return it
+        User should already be created in pre_social_login, just return it.
+        Also log successful Google login.
         """
         print(f"DEBUG: save_user called - returning existing user: {sociallogin.user}")
+        
+        # Log successful Google login
+        try:
+            staff_user = Staff.objects.get(email=sociallogin.user.email)
+            log_api_action(
+                request=request,
+                action='GOOGLE_LOGIN_SUCCESS',
+                entity_type='Staff',
+                entity_ids=[staff_user.staff_id],
+                success=True,
+                additional_data={
+                    'login_method': 'Google OAuth',
+                    'google_email': sociallogin.user.email,
+                    'staff_username': staff_user.username
+                }
+            )
+        except Staff.DoesNotExist:
+            print(f"ERROR: Staff not found for email {sociallogin.user.email} during Google login")
+        
         return sociallogin.user
     
     def is_auto_signup_allowed(self, request, sociallogin):
@@ -79,3 +128,31 @@ class CustomSocialAccountAdapter(DefaultSocialAccountAdapter):
         Skip the signup form - we handle user creation in pre_social_login
         """
         return True
+    
+    def authentication_error(self, request, provider_id, error=None, exception=None, extra_context=None):
+        """
+        Handle authentication errors (including cancellation) by redirecting to React app
+        """
+        print(f"DEBUG: Google authentication error - provider: {provider_id}, error: {error}")
+        
+        # Log failed Google login attempt - authentication error
+        log_api_action(
+            request=request,
+            action='GOOGLE_LOGIN_FAILED',
+            success=False,
+            error_message=f"Google authentication failed: {error}",
+            status_code=400,
+            additional_data={
+                'failure_reason': 'authentication_error',
+                'provider_id': provider_id,
+                'error_details': str(error) if error else 'Unknown error'
+            }
+        )
+        
+        return redirect('http://localhost:9000/?error=auth_failed')
+    
+    def get_login_redirect_url(self, request):
+        """
+        Redirect successful logins to React app
+        """
+        return 'http://localhost:9000/'
