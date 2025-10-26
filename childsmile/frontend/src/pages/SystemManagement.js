@@ -31,7 +31,7 @@ const SystemManagement = () => {
   const [pageSize] = useState(6);
   const [totalCount, setTotalCount] = useState(0);
   const [modalType, setModalType] = useState(''); // "add" or "edit"
-  const [isDeleteModalOpen, setIsDeleteModal] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [staffToDelete, setStaffToDelete] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showAddStaffModal, setShowAddStaffModal] = useState(false);
@@ -108,8 +108,9 @@ const SystemManagement = () => {
     }
   };
 
-  const openDeleteModal = (staffId) => {
-    setStaffToDelete(staffId);
+  const openDeleteModal = (user) => {
+    console.log('Opening delete modal for user:', user); // Debug log
+    setStaffToDelete(user);
     setIsDeleteModalOpen(true);
   };
 
@@ -120,7 +121,11 @@ const SystemManagement = () => {
 
   const confirmDelete = async () => {
     try {
-      await axios.delete(`/api/delete_staff_member/${staffToDelete}/`);
+      console.log('Attempting to delete staff:', staffToDelete); // Debug log
+      const staffId = staffToDelete.id; // Use the correct ID field
+      console.log('Staff ID to delete:', staffId); // Debug log
+      
+      await axios.delete(`/api/delete_staff_member/${staffId}/`);
       toast.success(t('Staff member deleted successfully.'));
       fetchAllStaff(); // Refresh the data after deletion
     } catch (error) {
@@ -414,7 +419,7 @@ const SystemManagement = () => {
                             {t('Edit')}
                           </button>
                           <button
-                            onClick={() => openDeleteModal(user.id)}
+                            onClick={() => openDeleteModal(user)}
                             className="delete-button"
                           >
                             {t('Delete')}
@@ -649,6 +654,9 @@ const SystemManagement = () => {
           overlayClassName="delete-modal-overlay"
         >
           <h2>{t('Are you sure you want to delete this staff member?')}</h2>
+          {staffToDelete && (
+            <p><strong>{staffToDelete.username} ({staffToDelete.email})</strong></p>
+          )}
           <p style={{ color: 'red', fontWeight: 'bold' }}>
             {t('Deleting a staff member will remove all associated data')}
             <br />

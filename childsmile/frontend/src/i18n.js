@@ -595,6 +595,8 @@ const resources = {
       "Verification failed": "האימות נכשל",
       " is not authorized to access this system": " אין הרשאה לגשת למערכת זו",
       "Access denied. Email ": "הגישה נדחתה. ל",
+      "Date of birth must be a valid date and the age must be between 0 and 100.": "תאריך הלידה חייב להיות תאריך תקף והגיל חייב להיות בין 0 ל-100."
+
     }
   }
 };

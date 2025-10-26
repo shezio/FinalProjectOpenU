@@ -800,3 +800,46 @@ def add_city_distance(city1, city2, distance, lat2, lon2):
     obj.city2_longitude = lon2
     obj.distance = distance
     obj.save()
+
+def is_valid_bigint_child_id(child_id):
+    """
+    Validate child_id as a bigint (9-digit ID)
+    BigInt range: -9223372036854775808 to 9223372036854775807
+    But we want exactly 9 digits for Israeli ID
+    """
+    try:
+        # Handle string input
+        if isinstance(child_id, str):
+            if not child_id.isdigit():
+                return False
+            child_id = int(child_id)
+        
+        # Must be an integer
+        if not isinstance(child_id, int):
+            return False
+            
+        # Must be positive and exactly 9 digits
+        if child_id <= 0:
+            return False
+            
+        # Check it fits in bigint range (though 9 digits always will)
+        if child_id > 9223372036854775807 or child_id < -9223372036854775808:
+            return False
+            
+        # Must be exactly 9 digits
+        return len(str(child_id)) == 9
+        
+    except (ValueError, TypeError, OverflowError):
+        return False
+    
+def is_valid_date(date_of_birth):
+    # check that the date is valid meaning the age doesnt exceed 100 years for the given date
+    # also verify that the date is in the past
+    # also verify the year has 4 digits at least
+    try:
+        birth_date = datetime.datetime.strptime(date_of_birth, "%Y-%m-%d")
+        age = (datetime.datetime.now() - birth_date).days // 365
+        return 0 <= age <= 100 and birth_date < datetime.datetime.now() and birth_date.year >= 1000
+    except (ValueError, TypeError):
+        return False
+

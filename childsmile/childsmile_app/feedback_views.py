@@ -64,6 +64,7 @@ import json
 import os
 from django.db.models import Count, F
 from .utils import *
+from .audit_utils import log_api_action
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -75,19 +76,33 @@ def create_tutor_feedback(request):
     """
     user_id = request.session.get("user_id")
     if not user_id:
+        log_api_action(
+            request=request,
+            action='CREATE_TUTOR_FEEDBACK_FAILED',
+            success=False,
+            error_message="Authentication credentials were not provided",
+            status_code=403
+        )
         return JsonResponse(
             {"detail": "Authentication credentials were not provided."}, status=403
         )
 
     # Check if the user has CREATE permission on the "tutor_feedback" resource
     if not has_permission(request, "tutor_feedback", "CREATE"):
+        log_api_action(
+            request=request,
+            action='CREATE_TUTOR_FEEDBACK_FAILED',
+            success=False,
+            error_message="You do not have permission to create a tutor feedback",
+            status_code=401
+        )
         return JsonResponse(
             {"error": "You do not have permission to create a tutor feedback."},
             status=401,
         )
 
     try:
-        data = request.data  # Use request.data for JSON payloads
+        data = request.data
 
         # Validate required fields
         required_fields = [
@@ -97,15 +112,20 @@ def create_tutor_feedback(request):
             "tutor_name",
             "feedback_type",
         ]
-        # Check if we hospital_name is empty if the feedback_type is general_volunteer_hospital_visit - add them to the required fields
         if data.get("feedback_type") == "general_volunteer_hospital_visit":
             required_fields.extend(["hospital_name"])
-            # remove tutee name from the required fields
             required_fields.remove("tutee_name")
         missing_fields = [
             field for field in required_fields if not data.get(field, "").strip()
         ]
         if missing_fields:
+            log_api_action(
+                request=request,
+                action='CREATE_TUTOR_FEEDBACK_FAILED',
+                success=False,
+                error_message=f"Missing or empty required fields: {', '.join(missing_fields)}",
+                status_code=400
+            )
             return JsonResponse(
                 {
                     "error": f"Missing or empty required fields: {', '.join(missing_fields)}"
@@ -114,8 +134,9 @@ def create_tutor_feedback(request):
             )
 
         staff_filling_id = data.get("staff_id")
-        # Create a new tutor feedback record in the database
         error = None
+        initial_family_data = None  # Initialize to None
+        
         try:
             feedback = Feedback.objects.create(
                 timestamp=data.get("feedback_filled_at"),
@@ -153,14 +174,22 @@ def create_tutor_feedback(request):
         except Exception as e:
             error = str(e)
             error_type = "feedback_creation_error"
-            print(f"DEBUG: Error creating feedback: {error}")  # Log the error
+            print(f"DEBUG: Error creating feedback: {error}")
 
-        # Get the tutor's id_id from Tutors using the user_id (which is staff_id in Tutors)
-        print(f"DEBUG: User ID: {user_id}")  # Log the user ID
+        # Get the tutor's id_id from Tutors using the user_id
+        print(f"DEBUG: User ID: {user_id}")
         tutor = Tutors.objects.filter(staff_id=staff_filling_id).first()
-        print(f"DEBUG: Tutor found: {tutor}")  # Log the tutor found
+        print(f"DEBUG: Tutor found: {tutor}")
         if not tutor:
             print(f"DEBUG: No tutor found for staff ID {staff_filling_id}")
+            log_api_action(
+                request=request,
+                action='CREATE_TUTOR_FEEDBACK_FAILED',
+                success=False,
+                error_message="No tutor found for the provided staff ID",
+                status_code=404,
+                additional_data={'staff_id': staff_filling_id}
+            )
             return JsonResponse(
                 {"error": "No tutor found for the provided staff ID."}, status=404
             )
@@ -198,7 +227,6 @@ def create_tutor_feedback(request):
                     and data.get("names")
                     and data.get("phones")
                 ):
-                    # Create InitialFamilyData
                     initial_family_data = InitialFamilyData.objects.create(
                         names=data["names"],
                         phones=data["phones"],
@@ -215,11 +243,10 @@ def create_tutor_feedback(request):
                     f"DEBUG: An error occurred while creating InitialFamilyData: {error}"
                 )
 
-        if not error:
+        # FIXED: Only create tasks if initial_family_data was actually created
+        if not error and initial_family_data is not None:
             try:
-                # Get the task type id for "הוספת משפחה"
                 task_type = Task_Types.objects.get(task_type="הוספת משפחה")
-                # Create tasks for all Technical Coordinators
                 create_tasks_for_technical_coordinators_async(
                     initial_family_data, task_type.id
                 )
@@ -232,15 +259,42 @@ def create_tutor_feedback(request):
                 )
 
         if error:
-            # If any error occurred, delete the created feedback and tutor_feedback
-            feedback.delete()
+            # Clean up on error
+            if 'feedback' in locals():
+                feedback.delete()
             if "tutor_feedback" in locals():
                 tutor_feedback.delete()
-            if "initial_family_data" in locals():
+            if initial_family_data is not None:
                 initial_family_data.delete()
+            
+            log_api_action(
+                request=request,
+                action='CREATE_TUTOR_FEEDBACK_FAILED',
+                success=False,
+                error_message=f"An error occurred while creating tutor feedback: {error} (Error Type: {error_type})",
+                status_code=500,
+                additional_data={'error_type': error_type}
+            )
             raise Exception(
                 f"An error occurred while creating tutor feedback: {error} (Error Type: {error_type})"
             )
+
+        # Log successful creation
+        log_api_action(
+            request=request,
+            action='CREATE_TUTOR_FEEDBACK_SUCCESS',
+            affected_tables=['childsmile_app_feedback', 'childsmile_app_tutor_feedback'],
+            entity_type='Tutor_Feedback',
+            entity_ids=[feedback.feedback_id],
+            success=True,
+            additional_data={
+                'feedback_type': data.get("feedback_type"),
+                'tutor_name': data.get("tutor_name"),
+                'tutee_name': data.get("tutee_name"),
+                'event_date': data.get("event_date"),
+                'created_family_data': initial_family_data is not None
+            }
+        )
 
         return JsonResponse(
             {
@@ -252,7 +306,14 @@ def create_tutor_feedback(request):
         )
     except Exception as e:
         print(f"DEBUG: An error occurred while creating tutor feedback: {str(e)}")
-        return JsonResponse({"error": error_type + ": " + str(e)}, status=500)
+        log_api_action(
+            request=request,
+            action='CREATE_TUTOR_FEEDBACK_FAILED',
+            success=False,
+            error_message=str(e),
+            status_code=500
+        )
+        return JsonResponse({"error": str(e)}, status=500)
 
 
 @csrf_exempt
@@ -263,12 +324,28 @@ def update_tutor_feedback(request, feedback_id):
     """
     user_id = request.session.get("user_id")
     if not user_id:
+        log_api_action(
+            request=request,
+            action='UPDATE_TUTOR_FEEDBACK_FAILED',
+            success=False,
+            error_message="Authentication credentials were not provided",
+            status_code=403
+        )
         return JsonResponse(
             {"detail": "Authentication credentials were not provided."}, status=403
         )
 
     # Check if the user has UPDATE permission on the "tutor_feedback" resource
     if not has_permission(request, "tutor_feedback", "UPDATE"):
+        log_api_action(
+            request=request,
+            action='UPDATE_TUTOR_FEEDBACK_FAILED',
+            success=False,
+            error_message="You do not have permission to update a tutor feedback",
+            status_code=401,
+            entity_type='Tutor_Feedback',
+            entity_ids=[feedback_id]
+        )
         return JsonResponse(
             {"error": "You do not have permission to update a tutor feedback."},
             status=401,
@@ -294,6 +371,15 @@ def update_tutor_feedback(request, feedback_id):
             field for field in required_fields if not data.get(field, "").strip()
         ]
         if missing_fields:
+            log_api_action(
+                request=request,
+                action='UPDATE_TUTOR_FEEDBACK_FAILED',
+                success=False,
+                error_message=f"Missing or empty required fields: {', '.join(missing_fields)}",
+                status_code=400,
+                entity_type='Tutor_Feedback',
+                entity_ids=[feedback_id]
+            )
             return JsonResponse(
                 {
                     "error": f"Missing or empty required fields: {', '.join(missing_fields)}"
@@ -304,6 +390,15 @@ def update_tutor_feedback(request, feedback_id):
         # Update the existing tutor feedback record in the database
         feedback = Feedback.objects.filter(feedback_id=feedback_id).first()
         if not feedback:
+            log_api_action(
+                request=request,
+                action='UPDATE_TUTOR_FEEDBACK_FAILED',
+                success=False,
+                error_message="Tutor feedback not found",
+                status_code=404,
+                entity_type='Tutor_Feedback',
+                entity_ids=[feedback_id]
+            )
             return JsonResponse(
                 {"error": "Tutor feedback not found."},
                 status=404,
@@ -314,6 +409,16 @@ def update_tutor_feedback(request, feedback_id):
         print(f"DEBUG: Tutor found: {tutor}")  # Log the tutor found
         if not tutor:
             print(f"DEBUG: No tutor found for staff ID {staff_filling_id}")
+            log_api_action(
+                request=request,
+                action='UPDATE_TUTOR_FEEDBACK_FAILED',
+                success=False,
+                error_message="No tutor found for the provided staff ID",
+                status_code=404,
+                entity_type='Tutor_Feedback',
+                entity_ids=[feedback_id],
+                additional_data={'staff_id': staff_filling_id}
+            )
             return JsonResponse(
                 {"error": "No tutor found for the provided staff ID."}, status=404
             )
@@ -362,6 +467,15 @@ def update_tutor_feedback(request, feedback_id):
                     feedback=feedback
                 ).first()
                 if not tutor_feedback:
+                    log_api_action(
+                        request=request,
+                        action='UPDATE_TUTOR_FEEDBACK_FAILED',
+                        success=False,
+                        error_message="Tutor feedback record not found",
+                        status_code=404,
+                        entity_type='Tutor_Feedback',
+                        entity_ids=[feedback_id]
+                    )
                     return JsonResponse(
                         {"error": "Tutor feedback not found."},
                         status=404,
@@ -388,6 +502,35 @@ def update_tutor_feedback(request, feedback_id):
                     f"DEBUG: An error occurred while updating tutor feedback: {error}"
                 )
 
+        if error:
+            log_api_action(
+                request=request,
+                action='UPDATE_TUTOR_FEEDBACK_FAILED',
+                success=False,
+                error_message=f"Error updating tutor feedback: {error} (Error Type: {error_type})",
+                status_code=500,
+                entity_type='Tutor_Feedback',
+                entity_ids=[feedback_id],
+                additional_data={'error_type': error_type}
+            )
+            return JsonResponse({"error": f"{error_type}: {error}"}, status=500)
+
+        # Log successful update
+        log_api_action(
+            request=request,
+            action='UPDATE_TUTOR_FEEDBACK_SUCCESS',
+            affected_tables=['childsmile_app_feedback', 'childsmile_app_tutor_feedback'],
+            entity_type='Tutor_Feedback',
+            entity_ids=[feedback.feedback_id],
+            success=True,
+            additional_data={
+                'feedback_type': data.get("feedback_type"),
+                'tutor_name': data.get("tutor_name"),
+                'tutee_name': data.get("tutee_name"),
+                'event_date': data.get("event_date")
+            }
+        )
+
         return JsonResponse(
             {
                 "message": "Tutor feedback updated successfully",
@@ -398,6 +541,15 @@ def update_tutor_feedback(request, feedback_id):
         )
     except Exception as e:
         print(f"DEBUG: An error occurred while updating tutor feedback: {str(e)}")
+        log_api_action(
+            request=request,
+            action='UPDATE_TUTOR_FEEDBACK_FAILED',
+            success=False,
+            error_message=str(e),
+            status_code=500,
+            entity_type='Tutor_Feedback',
+            entity_ids=[feedback_id]
+        )
         return JsonResponse({"error": str(e)}, status=500)
 
 
@@ -409,12 +561,28 @@ def delete_tutor_feedback(request, feedback_id):
     """
     user_id = request.session.get("user_id")
     if not user_id:
+        log_api_action(
+            request=request,
+            action='DELETE_TUTOR_FEEDBACK_FAILED',
+            success=False,
+            error_message="Authentication credentials were not provided",
+            status_code=403
+        )
         return JsonResponse(
             {"detail": "Authentication credentials were not provided."}, status=403
         )
 
     # Check if the user has DELETE permission on the "tutor_feedback" resource
     if not has_permission(request, "tutor_feedback", "DELETE"):
+        log_api_action(
+            request=request,
+            action='DELETE_TUTOR_FEEDBACK_FAILED',
+            success=False,
+            error_message="You do not have permission to delete a tutor feedback",
+            status_code=401,
+            entity_type='Tutor_Feedback',
+            entity_ids=[feedback_id]
+        )
         return JsonResponse(
             {"error": "You do not have permission to delete a tutor feedback."},
             status=401,
@@ -424,18 +592,54 @@ def delete_tutor_feedback(request, feedback_id):
         # Fetch the existing tutor feedback record
         feedback = Feedback.objects.filter(feedback_id=feedback_id).first()
         if not feedback:
+            log_api_action(
+                request=request,
+                action='DELETE_TUTOR_FEEDBACK_FAILED',
+                success=False,
+                error_message="Tutor feedback not found",
+                status_code=404,
+                entity_type='Tutor_Feedback',
+                entity_ids=[feedback_id]
+            )
             return JsonResponse({"error": "Tutor feedback not found."}, status=404)
 
         # Fetch the related Tutor_Feedback record BEFORE deleting feedback
         tutor_feedback = Tutor_Feedback.objects.filter(feedback=feedback).first()
         if not tutor_feedback:
+            log_api_action(
+                request=request,
+                action='DELETE_TUTOR_FEEDBACK_FAILED',
+                success=False,
+                error_message="Tutor feedback record not found",
+                status_code=404,
+                entity_type='Tutor_Feedback',
+                entity_ids=[feedback_id]
+            )
             return JsonResponse({"error": "Tutor feedback not found."}, status=404)
+
+        # Store data for audit log
+        tutor_name = tutor_feedback.tutor_name
+        tutee_name = tutor_feedback.tutee_name
 
         # Delete the related Tutor_Feedback record first
         tutor_feedback.delete()
 
         # Now delete the tutor feedback record
         feedback.delete()
+
+        # Log successful deletion
+        log_api_action(
+            request=request,
+            action='DELETE_TUTOR_FEEDBACK_SUCCESS',
+            affected_tables=['childsmile_app_feedback', 'childsmile_app_tutor_feedback'],
+            entity_type='Tutor_Feedback',
+            entity_ids=[feedback_id],
+            success=True,
+            additional_data={
+                'deleted_tutor_name': tutor_name,
+                'deleted_tutee_name': tutee_name
+            }
+        )
 
         print(f"DEBUG: Tutor feedback with ID {feedback_id} deleted successfully.")
         return JsonResponse(
@@ -447,6 +651,15 @@ def delete_tutor_feedback(request, feedback_id):
         )
     except Exception as e:
         print(f"DEBUG: An error occurred while deleting the tutor feedback: {str(e)}")
+        log_api_action(
+            request=request,
+            action='DELETE_TUTOR_FEEDBACK_FAILED',
+            success=False,
+            error_message=str(e),
+            status_code=500,
+            entity_type='Tutor_Feedback',
+            entity_ids=[feedback_id]
+        )
         return JsonResponse({"error": str(e)}, status=500)
 
 
@@ -459,12 +672,26 @@ def create_volunteer_feedback(request):
     """
     user_id = request.session.get("user_id")
     if not user_id:
+        log_api_action(
+            request=request,
+            action='CREATE_VOLUNTEER_FEEDBACK_FAILED',
+            success=False,
+            error_message="Authentication credentials were not provided",
+            status_code=403
+        )
         return JsonResponse(
             {"detail": "Authentication credentials were not provided."}, status=403
         )
 
-    # Check if the user has CREATE permission on the "volunteer_feedback" resource
+    # Check if the user has CREATE permission
     if not has_permission(request, "general_v_feedback", "CREATE"):
+        log_api_action(
+            request=request,
+            action='CREATE_VOLUNTEER_FEEDBACK_FAILED',
+            success=False,
+            error_message="You do not have permission to create a general volunteer feedback",
+            status_code=401
+        )
         return JsonResponse(
             {
                 "error": "You do not have permission to create a general volunteer feedback."
@@ -473,7 +700,7 @@ def create_volunteer_feedback(request):
         )
 
     try:
-        data = request.data  # Use request.data for JSON payloads
+        data = request.data
 
         # Validate required fields
         required_fields = [
@@ -483,15 +710,20 @@ def create_volunteer_feedback(request):
             "volunteer_name",
             "feedback_type",
         ]
-        # Check if we hospital_name is empty if the feedback_type is general_volunteer_hospital_visit - add them to the required fields
         if data.get("feedback_type") == "general_volunteer_hospital_visit":
             required_fields.extend(["hospital_name"])
-            # remove volunteer name from the required fields
             required_fields.remove("child_name")
         missing_fields = [
             field for field in required_fields if not data.get(field, "").strip()
         ]
         if missing_fields:
+            log_api_action(
+                request=request,
+                action='CREATE_VOLUNTEER_FEEDBACK_FAILED',
+                success=False,
+                error_message=f"Missing or empty required fields: {', '.join(missing_fields)}",
+                status_code=400
+            )
             return JsonResponse(
                 {
                     "error": f"Missing or empty required fields: {', '.join(missing_fields)}"
@@ -500,8 +732,9 @@ def create_volunteer_feedback(request):
             )
 
         staff_filling_id = data.get("staff_id")
-        # Create a new tutor feedback record in the database
         error = None
+        initial_family_data = None  # Initialize to None
+        
         try:
             feedback = Feedback.objects.create(
                 timestamp=data.get("feedback_filled_at"),
@@ -541,14 +774,22 @@ def create_volunteer_feedback(request):
             error_type = "feedback_creation_error"
             print(f"DEBUG: Error creating feedback: {error}")
 
-        # Get the volunteer's id_id from General_Volunteer using the user_id (which is staff_id in General_Volunteer)
-        print(f"DEBUG: User ID: {user_id}")  # Log the user ID
+        # Get the volunteer's id_id from General_Volunteer
+        print(f"DEBUG: User ID: {user_id}")
         volunteer = General_Volunteer.objects.filter(
             staff_id=staff_filling_id
-        ).first()  # Fallback to Tutors if not found in General_Volunteer
-        print(f"DEBUG: Volunteer found: {volunteer}")  # Log the volunteer found
+        ).first()
+        print(f"DEBUG: Volunteer found: {volunteer}")
         if not volunteer:
             print(f"DEBUG: No volunteer found for staff ID {staff_filling_id}")
+            log_api_action(
+                request=request,
+                action='CREATE_VOLUNTEER_FEEDBACK_FAILED',
+                success=False,
+                error_message="No volunteer found for the provided staff ID",
+                status_code=404,
+                additional_data={'staff_id': staff_filling_id}
+            )
             return JsonResponse(
                 {"error": "No volunteer found for the provided staff ID."}, status=404
             )
@@ -580,7 +821,6 @@ def create_volunteer_feedback(request):
                     and data.get("names")
                     and data.get("phones")
                 ):
-                    # Create InitialFamilyData
                     initial_family_data = InitialFamilyData.objects.create(
                         names=data["names"],
                         phones=data["phones"],
@@ -596,11 +836,11 @@ def create_volunteer_feedback(request):
                 print(
                     f"DEBUG: An error occurred while creating InitialFamilyData: {error}"
                 )
-        if not error:
+
+        # FIXED: Only create tasks if initial_family_data was actually created
+        if not error and initial_family_data is not None:
             try:
-                # Get the task type id for "הוספת משפחה"
                 task_type = Task_Types.objects.get(task_type="הוספת משפחה")
-                # Create tasks for all Technical Coordinators
                 create_tasks_for_technical_coordinators_async(
                     initial_family_data, task_type.id
                 )
@@ -611,15 +851,42 @@ def create_volunteer_feedback(request):
                 print(f"DEBUG: An error occurred while creating tasks: {error}")
 
         if error:
-            # If any error occurred, delete the created feedback and volunteer_feedback
-            feedback.delete()
+            # Clean up on error
+            if 'feedback' in locals():
+                feedback.delete()
             if "volunteer_feedback" in locals():
                 volunteer_feedback.delete()
-            if "initial_family_data" in locals():
+            if initial_family_data is not None:
                 initial_family_data.delete()
+            
+            log_api_action(
+                request=request,
+                action='CREATE_VOLUNTEER_FEEDBACK_FAILED',
+                success=False,
+                error_message=f"An error occurred while creating volunteer feedback: {error} (Error Type: {error_type})",
+                status_code=500,
+                additional_data={'error_type': error_type}
+            )
             raise Exception(
                 f"An error occurred while creating volunteer feedback: {error} (Error Type: {error_type})"
             )
+
+        # Log successful creation
+        log_api_action(
+            request=request,
+            action='CREATE_VOLUNTEER_FEEDBACK_SUCCESS',
+            affected_tables=['childsmile_app_feedback', 'childsmile_app_general_v_feedback'],
+            entity_type='General_V_Feedback',
+            entity_ids=[feedback.feedback_id],
+            success=True,
+            additional_data={
+                'feedback_type': data.get("feedback_type"),
+                'volunteer_name': data.get("volunteer_name"),
+                'child_name': data.get("child_name"),
+                'event_date': data.get("event_date"),
+                'created_family_data': initial_family_data is not None
+            }
+        )
 
         return JsonResponse(
             {
@@ -631,7 +898,14 @@ def create_volunteer_feedback(request):
         )
     except Exception as e:
         print(f"DEBUG: An error occurred while creating volunteer feedback: {str(e)}")
-        return JsonResponse({"error": error_type + ": " + str(e)}, status=500)
+        log_api_action(
+            request=request,
+            action='CREATE_VOLUNTEER_FEEDBACK_FAILED',
+            success=False,
+            error_message=str(e),
+            status_code=500
+        )
+        return JsonResponse({"error": str(e)}, status=500)
 
 
 @csrf_exempt
@@ -642,12 +916,28 @@ def update_volunteer_feedback(request, feedback_id):
     """
     user_id = request.session.get("user_id")
     if not user_id:
+        log_api_action(
+            request=request,
+            action='UPDATE_VOLUNTEER_FEEDBACK_FAILED',
+            success=False,
+            error_message="Authentication credentials were not provided",
+            status_code=403
+        )
         return JsonResponse(
             {"detail": "Authentication credentials were not provided."}, status=403
         )
 
     # Check if the user has UPDATE permission on the "volunteer_feedback" resource
     if not has_permission(request, "general_v_feedback", "UPDATE"):
+        log_api_action(
+            request=request,
+            action='UPDATE_VOLUNTEER_FEEDBACK_FAILED',
+            success=False,
+            error_message="You do not have permission to update a volunteer feedback",
+            status_code=401,
+            entity_type='General_V_Feedback',
+            entity_ids=[feedback_id]
+        )
         return JsonResponse(
             {"error": "You do not have permission to update a volunteer feedback."},
             status=401,
@@ -673,6 +963,15 @@ def update_volunteer_feedback(request, feedback_id):
             field for field in required_fields if not data.get(field, "").strip()
         ]
         if missing_fields:
+            log_api_action(
+                request=request,
+                action='UPDATE_VOLUNTEER_FEEDBACK_FAILED',
+                success=False,
+                error_message=f"Missing or empty required fields: {', '.join(missing_fields)}",
+                status_code=400,
+                entity_type='General_V_Feedback',
+                entity_ids=[feedback_id]
+            )
             return JsonResponse(
                 {
                     "error": f"Missing or empty required fields: {', '.join(missing_fields)}"
@@ -683,6 +982,15 @@ def update_volunteer_feedback(request, feedback_id):
         # Update the existing tutor feedback record in the database
         feedback = Feedback.objects.filter(feedback_id=feedback_id).first()
         if not feedback:
+            log_api_action(
+                request=request,
+                action='UPDATE_VOLUNTEER_FEEDBACK_FAILED',
+                success=False,
+                error_message="Volunteer feedback not found",
+                status_code=404,
+                entity_type='General_V_Feedback',
+                entity_ids=[feedback_id]
+            )
             return JsonResponse(
                 {"error": "Volunteer feedback not found."},
                 status=404,
@@ -696,6 +1004,16 @@ def update_volunteer_feedback(request, feedback_id):
         print(f"DEBUG: Volunteer found: {volunteer}")  # Log the volunteer found
         if not volunteer:
             print(f"DEBUG: No volunteer found for staff ID {staff_filling_id}")
+            log_api_action(
+                request=request,
+                action='UPDATE_VOLUNTEER_FEEDBACK_FAILED',
+                success=False,
+                error_message="No volunteer found for the provided staff ID",
+                status_code=404,
+                entity_type='General_V_Feedback',
+                entity_ids=[feedback_id],
+                additional_data={'staff_id': staff_filling_id}
+            )
             return JsonResponse(
                 {"error": "No volunteer found for the provided staff ID."}, status=404
             )
@@ -742,6 +1060,15 @@ def update_volunteer_feedback(request, feedback_id):
                     feedback=feedback
                 ).first()
                 if not volunteer_feedback:
+                    log_api_action(
+                        request=request,
+                        action='UPDATE_VOLUNTEER_FEEDBACK_FAILED',
+                        success=False,
+                        error_message="Volunteer feedback record not found",
+                        status_code=404,
+                        entity_type='General_V_Feedback',
+                        entity_ids=[feedback_id]
+                    )
                     return JsonResponse(
                         {"error": "Volunteer feedback not found."},
                         status=404,
@@ -763,6 +1090,35 @@ def update_volunteer_feedback(request, feedback_id):
                 error_type = "volunteer_feedback_update_error"
                 print(f"DEBUG: Error updating volunteer feedback: {error}")
 
+        if error:
+            log_api_action(
+                request=request,
+                action='UPDATE_VOLUNTEER_FEEDBACK_FAILED',
+                success=False,
+                error_message=f"Error updating volunteer feedback: {error} (Error Type: {error_type})",
+                status_code=500,
+                entity_type='General_V_Feedback',
+                entity_ids=[feedback_id],
+                additional_data={'error_type': error_type}
+            )
+            return JsonResponse({"error": f"{error_type}: {error}"}, status=500)
+
+        # Log successful update
+        log_api_action(
+            request=request,
+            action='UPDATE_VOLUNTEER_FEEDBACK_SUCCESS',
+            affected_tables=['childsmile_app_feedback', 'childsmile_app_general_v_feedback'],
+            entity_type='General_V_Feedback',
+            entity_ids=[feedback.feedback_id],
+            success=True,
+            additional_data={
+                'feedback_type': data.get("feedback_type"),
+                'volunteer_name': data.get("volunteer_name"),
+                'child_name': data.get("child_name"),
+                'event_date': data.get("event_date")
+            }
+        )
+
         return JsonResponse(
             {
                 "message": "Volunteer feedback updated successfully",
@@ -773,6 +1129,15 @@ def update_volunteer_feedback(request, feedback_id):
         )
     except Exception as e:
         print(f"DEBUG: An error occurred while updating volunteer feedback: {str(e)}")
+        log_api_action(
+            request=request,
+            action='UPDATE_VOLUNTEER_FEEDBACK_FAILED',
+            success=False,
+            error_message=str(e),
+            status_code=500,
+            entity_type='General_V_Feedback',
+            entity_ids=[feedback_id]
+        )
         return JsonResponse({"error": str(e)}, status=500)
 
 
@@ -784,12 +1149,28 @@ def delete_volunteer_feedback(request, feedback_id):
     """
     user_id = request.session.get("user_id")
     if not user_id:
+        log_api_action(
+            request=request,
+            action='DELETE_VOLUNTEER_FEEDBACK_FAILED',
+            success=False,
+            error_message="Authentication credentials were not provided",
+            status_code=403
+        )
         return JsonResponse(
             {"detail": "Authentication credentials were not provided."}, status=403
         )
 
     # Check if the user has DELETE permission on the "volunteer_feedback" resource
     if not has_permission(request, "general_v_feedback", "DELETE"):
+        log_api_action(
+            request=request,
+            action='DELETE_VOLUNTEER_FEEDBACK_FAILED',
+            success=False,
+            error_message="You do not have permission to delete a volunteer feedback",
+            status_code=401,
+            entity_type='General_V_Feedback',
+            entity_ids=[feedback_id]
+        )
         return JsonResponse(
             {"error": "You do not have permission to delete a volunteer feedback."},
             status=401,
@@ -799,6 +1180,15 @@ def delete_volunteer_feedback(request, feedback_id):
         # Fetch the existing volunteer feedback record
         feedback = Feedback.objects.filter(feedback_id=feedback_id).first()
         if not feedback:
+            log_api_action(
+                request=request,
+                action='DELETE_VOLUNTEER_FEEDBACK_FAILED',
+                success=False,
+                error_message="Volunteer feedback not found",
+                status_code=404,
+                entity_type='General_V_Feedback',
+                entity_ids=[feedback_id]
+            )
             return JsonResponse({"error": "Volunteer feedback not found."}, status=404)
 
         # Fetch the related General_V_Feedback record BEFORE deleting feedback
@@ -806,13 +1196,40 @@ def delete_volunteer_feedback(request, feedback_id):
             feedback=feedback
         ).first()
         if not volunteer_feedback:
+            log_api_action(
+                request=request,
+                action='DELETE_VOLUNTEER_FEEDBACK_FAILED',
+                success=False,
+                error_message="Volunteer feedback record not found",
+                status_code=404,
+                entity_type='General_V_Feedback',
+                entity_ids=[feedback_id]
+            )
             return JsonResponse({"error": "Volunteer feedback not found."}, status=404)
+
+        # Store data for audit log
+        volunteer_name = volunteer_feedback.volunteer_name
+        child_name = volunteer_feedback.child_name
 
         # Delete the related General_V_Feedback record first
         volunteer_feedback.delete()
 
         # Now delete the volunteer feedback record
         feedback.delete()
+
+        # Log successful deletion
+        log_api_action(
+            request=request,
+            action='DELETE_VOLUNTEER_FEEDBACK_SUCCESS',
+            affected_tables=['childsmile_app_feedback', 'childsmile_app_general_v_feedback'],
+            entity_type='General_V_Feedback',
+            entity_ids=[feedback_id],
+            success=True,
+            additional_data={
+                'deleted_volunteer_name': volunteer_name,
+                'deleted_child_name': child_name
+            }
+        )
 
         print(f"DEBUG: Volunteer feedback with ID {feedback_id} deleted successfully.")
         return JsonResponse(
@@ -825,5 +1242,14 @@ def delete_volunteer_feedback(request, feedback_id):
     except Exception as e:
         print(
             f"DEBUG: An error occurred while deleting the volunteer feedback: {str(e)}"
+        )
+        log_api_action(
+            request=request,
+            action='DELETE_VOLUNTEER_FEEDBACK_FAILED',
+            success=False,
+            error_message=str(e),
+            status_code=500,
+            entity_type='General_V_Feedback',
+            entity_ids=[feedback_id]
         )
         return JsonResponse({"error": str(e)}, status=500)
