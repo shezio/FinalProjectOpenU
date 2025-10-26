@@ -28,5 +28,5 @@ Task list:
 - [ ] Implement API calls from UI for VIEW_*_FAILED and EXPORT_*_FAILED actions
 
 Bugs:
-1. Cannot edit a staff - button doesnt send any request - fixed
 2. too many attempts with wrong totp - should have blocked completely to prevent brute force
+3. filter healthy works only when u r on the 1st page lol

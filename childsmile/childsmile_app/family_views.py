@@ -197,7 +197,6 @@ def get_complete_family_details(request):
         )
         return JsonResponse({"error": str(e)}, status=500)
 
-
 @csrf_exempt
 @api_view(["POST"])
 def create_family(request):
@@ -266,6 +265,33 @@ def create_family(request):
                 status=400,
             )
 
+        # if one of the required fields is invalid, return an error response
+        if not is_valid_date(data.get("date_of_birth")):
+            log_api_action(
+                request=request,
+                action='CREATE_FAMILY_FAILED',
+                success=False,
+                error_message="Invalid date of birth",
+                status_code=400
+            )
+            return JsonResponse(
+                {"error": "Invalid date of birth"},
+                status=400,
+            )
+        # Update the validation in create_family:
+        if not is_valid_bigint_child_id(data.get("child_id")):
+            log_api_action(
+                request=request,
+                action='CREATE_FAMILY_FAILED',
+                success=False,
+                error_message="Invalid child_id - must be exactly 9 digits",
+                status_code=400
+            )
+            return JsonResponse(
+                {"error": "Invalid child_id - must be exactly 9 digits"},
+                status=400,
+            )
+        
         # Create a new family record in the database
         family = Children.objects.create(
             child_id=data["child_id"],
@@ -655,12 +681,28 @@ def get_initial_family_data(request):
     """
     user_id = request.session.get("user_id")
     if not user_id:
+        # ❌ MISSING AUDIT LOG
+        log_api_action(
+            request=request,
+            action='VIEW_INITIAL_FAMILY_FAILED',
+            success=False,
+            error_message="Authentication credentials were not provided",
+            status_code=403
+        )
         return JsonResponse(
             {"detail": "Authentication credentials were not provided."}, status=403
         )
 
     # Check if the user has VIEW permission on the "initial_family_data" resource
     if not has_initial_family_data_permission(request, "view"):
+        # ❌ MISSING AUDIT LOG
+        log_api_action(
+            request=request,
+            action='VIEW_INITIAL_FAMILY_FAILED',
+            success=False,
+            error_message="You do not have permission to view this data",
+            status_code=401
+        )
         return JsonResponse(
             {"error": "You do not have permission to view this data."}, status=401
         )
@@ -683,6 +725,14 @@ def get_initial_family_data(request):
         print(
             f"DEBUG: An error occurred while retrieving initial family data: {str(e)}"
         )
+        # ❌ MISSING AUDIT LOG
+        log_api_action(
+            request=request,
+            action='VIEW_INITIAL_FAMILY_FAILED',
+            success=False,
+            error_message=str(e),
+            status_code=500
+        )
         return JsonResponse({"error": str(e)}, status=500)
 
 
@@ -697,19 +747,35 @@ def create_initial_family_data(request):
     """
     user_id = request.session.get("user_id")
     if not user_id:
+        # ❌ MISSING AUDIT LOG
+        log_api_action(
+            request=request,
+            action='CREATE_INITIAL_FAMILY_FAILED',
+            success=False,
+            error_message="Authentication credentials were not provided",
+            status_code=403
+        )
         return JsonResponse(
             {"detail": "Authentication credentials were not provided."}, status=403
         )
 
     # Check if the user has CREATE permission on the "initial_family_data" resource
     if not has_initial_family_data_permission(request, "create"):
+        # ❌ MISSING AUDIT LOG
+        log_api_action(
+            request=request,
+            action='CREATE_INITIAL_FAMILY_FAILED',
+            success=False,
+            error_message="You do not have permission to create initial family data",
+            status_code=401
+        )
         return JsonResponse(
             {"error": "You do not have permission to create initial family data."},
             status=401,
         )
 
     try:
-        data = request.data  # Use request.data for JSON payloads
+        data = request.data
 
         # Validate required fields
         required_fields = ["names", "phones"]
@@ -717,12 +783,21 @@ def create_initial_family_data(request):
             field for field in required_fields if not data.get(field, "").strip()
         ]
         if missing_fields:
+            # ❌ MISSING AUDIT LOG
+            log_api_action(
+                request=request,
+                action='CREATE_INITIAL_FAMILY_FAILED',
+                success=False,
+                error_message=f"Missing or empty required fields: {', '.join(missing_fields)}",
+                status_code=400
+            )
             return JsonResponse(
                 {
                     "error": f"Missing or empty required fields: {', '.join(missing_fields)}"
                 },
                 status=400,
             )
+        
         # Create a new initial family data record in the database
         initial_family_data = InitialFamilyData.objects.create(
             names=data["names"],
@@ -730,18 +805,29 @@ def create_initial_family_data(request):
             other_information=(
                 data.get("other_information") if data.get("other_information") else None
             ),
-            created_at=make_aware(
-                datetime.datetime.now()
-            ),  # Use make_aware for timezone-aware datetime
-            updated_at=make_aware(
-                datetime.datetime.now()
-            ),  # Use make_aware for timezone-aware datetime
+            created_at=make_aware(datetime.datetime.now()),
+            updated_at=make_aware(datetime.datetime.now()),
             family_added=False,  # Default to False
         )
 
         print(
             f"DEBUG: Initial family data created successfully with ID {initial_family_data.initial_family_data_id}"
         )
+        
+        # ❌ MISSING SUCCESS AUDIT LOG
+        log_api_action(
+            request=request,
+            action='CREATE_INITIAL_FAMILY_SUCCESS',
+            affected_tables=['childsmile_app_initialfamilydata'],
+            entity_type='InitialFamilyData',
+            entity_ids=[initial_family_data.initial_family_data_id],
+            success=True,
+            additional_data={
+                'family_names': data["names"],
+                'family_phones': data["phones"]
+            }
+        )
+        
         return JsonResponse(
             {
                 "message": "Initial family data created successfully",
@@ -751,6 +837,14 @@ def create_initial_family_data(request):
         )
     except Exception as e:
         print(f"DEBUG: An error occurred while creating initial family data: {str(e)}")
+        # ❌ MISSING AUDIT LOG
+        log_api_action(
+            request=request,
+            action='CREATE_INITIAL_FAMILY_FAILED',
+            success=False,
+            error_message=str(e),
+            status_code=500
+        )
         return JsonResponse({"error": str(e)}, status=500)
 
 
@@ -765,12 +859,30 @@ def update_initial_family_data(request, initial_family_data_id):
     """
     user_id = request.session.get("user_id")
     if not user_id:
+        # ❌ MISSING AUDIT LOG
+        log_api_action(
+            request=request,
+            action='UPDATE_INITIAL_FAMILY_FAILED',
+            success=False,
+            error_message="Authentication credentials were not provided",
+            status_code=403
+        )
         return JsonResponse(
             {"detail": "Authentication credentials were not provided."}, status=403
         )
 
     # Check if the user has UPDATE permission on the "initial_family_data" resource
     if not has_initial_family_data_permission(request, "update"):
+        # ❌ MISSING AUDIT LOG
+        log_api_action(
+            request=request,
+            action='UPDATE_INITIAL_FAMILY_FAILED',
+            success=False,
+            error_message="You do not have permission to update initial family data",
+            status_code=401,
+            entity_type='InitialFamilyData',
+            entity_ids=[initial_family_data_id]
+        )
         return JsonResponse(
             {"error": "You do not have permission to update initial family data."},
             status=401,
@@ -781,6 +893,16 @@ def update_initial_family_data(request, initial_family_data_id):
             initial_family_data_id=initial_family_data_id
         )
     except InitialFamilyData.DoesNotExist:
+        # ❌ MISSING AUDIT LOG
+        log_api_action(
+            request=request,
+            action='UPDATE_INITIAL_FAMILY_FAILED',
+            success=False,
+            error_message="Initial family data not found",
+            status_code=404,
+            entity_type='InitialFamilyData',
+            entity_ids=[initial_family_data_id]
+        )
         return JsonResponse({"error": "Initial family data not found."}, status=404)
 
     data = request.data
@@ -789,6 +911,16 @@ def update_initial_family_data(request, initial_family_data_id):
         field for field in required_fields if not data.get(field, "").strip()
     ]
     if missing_fields:
+        # ❌ MISSING AUDIT LOG
+        log_api_action(
+            request=request,
+            action='UPDATE_INITIAL_FAMILY_FAILED',
+            success=False,
+            error_message=f"Missing or empty required fields: {', '.join(missing_fields)}",
+            status_code=400,
+            entity_type='InitialFamilyData',
+            entity_ids=[initial_family_data_id]
+        )
         return JsonResponse(
             {"error": f"Missing or empty required fields: {', '.join(missing_fields)}"},
             status=400,
@@ -808,11 +940,36 @@ def update_initial_family_data(request, initial_family_data_id):
     # Save the updated record
     try:
         initial_family_data.save()
+        
+        # ❌ MISSING SUCCESS AUDIT LOG
+        log_api_action(
+            request=request,
+            action='UPDATE_INITIAL_FAMILY_SUCCESS',
+            affected_tables=['childsmile_app_initialfamilydata'],
+            entity_type='InitialFamilyData',
+            entity_ids=[initial_family_data_id],
+            success=True,
+            additional_data={
+                'updated_family_names': initial_family_data.names,
+                'family_added_status': initial_family_data.family_added
+            }
+        )
+        
         return JsonResponse(
             {"message": "Initial family data updated successfully"}, status=200
         )
     except Exception as e:
         print(f"DEBUG: An error occurred while updating initial family data: {str(e)}")
+        # ❌ MISSING AUDIT LOG
+        log_api_action(
+            request=request,
+            action='UPDATE_INITIAL_FAMILY_FAILED',
+            success=False,
+            error_message=str(e),
+            status_code=500,
+            entity_type='InitialFamilyData',
+            entity_ids=[initial_family_data_id]
+        )
         return JsonResponse({"error": str(e)}, status=500)
 
 

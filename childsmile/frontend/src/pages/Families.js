@@ -69,18 +69,29 @@ const Families = () => {
   const [errors, setErrors] = useState({});
   const navigate = useNavigate(); // Add this line
 
+  // Add sorting state for registration date
+  const [sortOrderRegistrationDate, setSortOrderRegistrationDate] = useState('desc'); // Default to descending
+
   const fetchFamilies = async () => {
     setLoading(true);
     try {
       const response = await axios.get('/api/get_complete_family_details/');
-      setFamilies(response.data.families); // Use the "families" key from the API response
-      setMaritalStatuses(response.data.marital_statuses.map((item) => item.status)); // Extract marital statuses
-      setTutoringStatuses(response.data.tutoring_statuses.map((item) => item.status)); // Extract tutoringstatuses
-      setStatuses(response.data.statuses.map((item) => item.status)); // Extract statuses
+      
+      // Sort families by registration date (descending) by default
+      const sortedFamilies = response.data.families.sort((a, b) => {
+        const dateA = parseDate(a.registration_date);
+        const dateB = parseDate(b.registration_date);
+        return dateB - dateA; // Descending order (newest first)
+      });
+      
+      setFamilies(sortedFamilies); // Use sorted data
+      setMaritalStatuses(response.data.marital_statuses.map((item) => item.status));
+      setTutoringStatuses(response.data.tutoring_statuses.map((item) => item.status));
+      setStatuses(response.data.statuses.map((item) => item.status));
     } catch (error) {
       console.error('Error fetching families:', error);
-      showErrorToast(t, 'Error fetching families data', error); // Use the reusable function
-      setFamilies([]); // Fallback to an empty array in case of an error
+      showErrorToast(t, 'Error fetching families data', error);
+      setFamilies([]);
     } finally {
       setLoading(false);
     }
@@ -184,6 +195,13 @@ const Families = () => {
     }
     if (!newFamily.date_of_birth) {
       newErrors.date_of_birth = t("Date of birth is required.");
+    }
+    // need to add validation that the date is valid and that the age doesnt exceed 100 years for the given date
+    const today = new Date();
+    const birthDate = new Date(newFamily.date_of_birth);
+    const age = today.getFullYear() - birthDate.getFullYear();
+    if (age < 0 || age > 100) {
+      newErrors.date_of_birth = t("Date of birth must be a valid date and the age must be between 0 and 100.");
     }
     if (!newFamily.marital_status) {
       newErrors.marital_status = t("Marital status is required.");
@@ -437,6 +455,24 @@ const Families = () => {
     }
   };
 
+  // Add the parseDate function (if not already present)
+  const parseDate = (dateString) => {
+    if (!dateString) return new Date(0); // Handle missing dates
+    const [day, month, year] = dateString.split('/');
+    return new Date(`${year}-${month}-${day}`);
+  };
+
+  // Add the toggle sort function for registration date
+  const toggleSortOrderRegistrationDate = () => {
+    setSortOrderRegistrationDate((prevOrder) => (prevOrder === 'asc' ? 'desc' : 'asc'));
+    const sorted = [...filteredFamilies].sort((a, b) => {
+      const dateA = parseDate(a.registration_date);
+      const dateB = parseDate(b.registration_date);
+      return sortOrderRegistrationDate === 'asc' ? dateB - dateA : dateA - dateB; // Reverse the logic
+    });
+    setFamilies(sorted); // Update the main families array with sorted data
+  };
+
   return (
     <div className="families-main-content">
       <Sidebar />
@@ -507,6 +543,15 @@ const Families = () => {
                       <th>{t('Phone')}</th>
                       <th>{t('Tutorship Status')}</th>
                       <th>{t('Status')}</th>
+                      <th className="wide-column">
+                        {t('Registration Date')}
+                        <button
+                          className="sort-button"
+                          onClick={toggleSortOrderRegistrationDate}
+                        >
+                          {sortOrderRegistrationDate === 'asc' ? '▲' : '▼'}
+                        </button>
+                      </th>
                       <th>{t('Actions')}</th>
                     </tr>
                   </thead>
@@ -518,6 +563,7 @@ const Families = () => {
                         <td>{family.child_phone_number || '---'}</td>
                         <td>{family.tutoring_status || '---'}</td>
                         <td>{family.status}</td>
+                        <td>{family.registration_date}</td>
                         <td>
                           <div className="family-actions">
                             <button className="info-button" onClick={() => showFamilyDetails(family)}>

@@ -559,7 +559,7 @@ def update_staff_member(request, staff_id):
             )
             return JsonResponse({"error": "Staff member not found."}, status=404)
 
-        data = request.data  # Use request.data for JSON payloads
+        data = request.data
 
         # Validate required fields
         required_fields = ["username", "email", "first_name", "last_name"]
@@ -567,6 +567,15 @@ def update_staff_member(request, staff_id):
             field for field in required_fields if not data.get(field, "").strip()
         ]
         if missing_fields:
+            log_api_action(
+                request=request,
+                action='UPDATE_STAFF_FAILED',
+                success=False,
+                error_message=f"Missing or empty required fields: {', '.join(missing_fields)}",
+                status_code=400,
+                entity_type='Staff',
+                entity_ids=[staff_id]
+            )
             return JsonResponse(
                 {
                     "error": f"Missing or empty required fields: {', '.join(missing_fields)}"
@@ -580,27 +589,55 @@ def update_staff_member(request, staff_id):
             .exclude(staff_id=staff_id)
             .exists()
         ):
+            log_api_action(
+                request=request,
+                action='UPDATE_STAFF_FAILED',
+                success=False,
+                error_message=f"Username '{data['username']}' already exists",
+                status_code=400,
+                entity_type='Staff',
+                entity_ids=[staff_id]
+            )
             return JsonResponse(
                 {"error": f"Username '{data['username']}' already exists."}, status=400
             )
 
-        # Check if email already exists
+        # Check if email already exists - ADD AUDIT LOGGING HERE
         if (
             Staff.objects.filter(email=data["email"])
             .exclude(staff_id=staff_id)
             .exists()
         ):
+            log_api_action(
+                request=request,
+                action='UPDATE_STAFF_FAILED',
+                success=False,
+                error_message=f"Email '{data['email']}' already exists",
+                status_code=400,
+                entity_type='Staff',
+                entity_ids=[staff_id],
+                additional_data={'attempted_email': data['email']}
+            )
             return JsonResponse(
                 {"error": f"Email '{data['email']}' already exists."}, status=400
             )
 
-        old_email = staff_member.email  # Store the old email for reference
+        old_email = staff_member.email
 
         # --- Handle role transitions BEFORE changing email ---
         if "roles" in data:
             roles = data["roles"]
             if isinstance(roles, list):
                 if "General Volunteer" in roles and "Tutor" in roles:
+                    log_api_action(
+                        request=request,
+                        action='UPDATE_STAFF_FAILED',
+                        success=False,
+                        error_message="Cannot assign both 'General Volunteer' and 'Tutor' roles to the same staff member",
+                        status_code=400,
+                        entity_type='Staff',
+                        entity_ids=[staff_id]
+                    )
                     return JsonResponse(
                         {
                             "error": "Cannot assign both 'General Volunteer' and 'Tutor' roles to the same staff member."
@@ -621,7 +658,7 @@ def update_staff_member(request, staff_id):
                     id_id = gv.id_id
                     signedup = SignedUp.objects.filter(id=id_id).first()
                     tutor_email = signedup.email if signedup else old_email
-                    gv.delete()  # Delete first to avoid unique constraint error
+                    gv.delete()
                     Tutors.objects.create(
                         id_id=id_id,
                         staff=staff_member,
@@ -638,7 +675,7 @@ def update_staff_member(request, staff_id):
                 tutor = Tutors.objects.filter(staff=staff_member).first()
                 if tutor:
                     id_id = tutor.id_id
-                    tutor.delete()  # Delete first to avoid unique constraint error
+                    tutor.delete()
                     General_Volunteer.objects.create(
                         id_id=id_id,
                         staff=staff_member,
@@ -662,11 +699,29 @@ def update_staff_member(request, staff_id):
                         role = Role.objects.get(role_name=role_name)
                         staff_member.roles.add(role)
                     except Role.DoesNotExist:
+                        log_api_action(
+                            request=request,
+                            action='UPDATE_STAFF_FAILED',
+                            success=False,
+                            error_message=f"Role with name '{role_name}' does not exist",
+                            status_code=400,
+                            entity_type='Staff',
+                            entity_ids=[staff_id]
+                        )
                         return JsonResponse(
                             {"error": f"Role with name '{role_name}' does not exist."},
                             status=400,
                         )
             else:
+                log_api_action(
+                    request=request,
+                    action='UPDATE_STAFF_FAILED',
+                    success=False,
+                    error_message="Roles should be provided as a list of role names",
+                    status_code=400,
+                    entity_type='Staff',
+                    entity_ids=[staff_id]
+                )
                 return JsonResponse(
                     {"error": "Roles should be provided as a list of role names."},
                     status=400,
@@ -684,6 +739,15 @@ def update_staff_member(request, staff_id):
         try:
             staff_member.save()
         except DatabaseError as db_error:
+            log_api_action(
+                request=request,
+                action='UPDATE_STAFF_FAILED',
+                success=False,
+                error_message=f"Database error: {str(db_error)}",
+                status_code=500,
+                entity_type='Staff',
+                entity_ids=[staff_id]
+            )
             return JsonResponse(
                 {"error": f"Database error: {str(db_error)}"}, status=500
             )
@@ -1716,7 +1780,6 @@ def create_staff_member_internal(data, request=None):
                 return JsonResponse({
                     "error": "Cannot create user with 'General Volunteer' or 'Tutor' roles via this flow"
                 }, status=400)
-            
             staff_member.roles.clear()
             for role_name in roles:
                 try:
