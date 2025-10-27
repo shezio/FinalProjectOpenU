@@ -92,7 +92,12 @@ from .unused_views import (
     TaskViewSet,
     PossibleMatchesViewSet,  # Add this line
 )
-from .audit_views import get_audit_logs, get_audit_statistics, export_audit_logs
+from .audit_views import (
+    get_audit_logs,
+    get_audit_statistics,
+    export_audit_logs,
+    audit_action,
+)
 
 
 router = DefaultRouter()
@@ -359,4 +364,5 @@ urlpatterns = [
     path("api/audit-logs/", get_audit_logs, name="get_audit_logs"),
     path("api/audit-statistics/", get_audit_statistics, name="get_audit_statistics"),
     path("api/audit-logs/export/", export_audit_logs, name="export_audit_logs"),
+    path("api/audit-action/", audit_action, name="audit_action"),
 ]

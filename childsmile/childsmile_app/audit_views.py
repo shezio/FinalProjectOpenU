@@ -7,7 +7,7 @@ from django.utils.dateparse import parse_datetime
 from django.utils import timezone
 from datetime import timedelta
 from .models import AuditLog, Staff
-from .audit_utils import is_admin
+from .audit_utils import is_admin, log_api_action
 import csv
 import json
 
@@ -252,6 +252,42 @@ def export_audit_logs(request):
             ])
         
         return response
+        
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
+
+from django.views.decorators.csrf import csrf_exempt
+
+@csrf_exempt
+@api_view(["POST"])
+def audit_action(request):
+    """Generic audit endpoint for frontend actions (especially exports)"""
+    user_id = request.session.get("user_id")
+    if not user_id:
+        return JsonResponse({"error": "Not authenticated"}, status=403)
+    
+    try:
+        data = request.data
+        
+        # Extract report_name for the AuditLog model
+        report_name = None
+        if 'additional_data' in data and 'report_name' in data['additional_data']:
+            report_name = data['additional_data']['report_name']
+        
+        log_api_action(
+            request=request,
+            action=data.get('action'),
+            success=data.get('success', True),
+            error_message=data.get('error_message'),
+            status_code=data.get('status_code', 200),
+            entity_type=data.get('entity_type', 'Export'),
+            entity_ids=data.get('entity_ids', []),
+            affected_tables=data.get('affected_tables', []),
+            report_name=report_name,  # Pass to audit log
+            additional_data=data.get('additional_data', {})
+        )
+        
+        return JsonResponse({"status": "audit_logged"}, status=200)
         
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)

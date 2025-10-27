@@ -596,7 +596,8 @@ const resources = {
       " is not authorized to access this system": " אין הרשאה לגשת למערכת זו",
       "Access denied. Email ": "הגישה נדחתה. ל",
       "Date of birth must be a valid date and the age must be between 0 and 100.": "תאריך הלידה חייב להיות תאריך תקף והגיל חייב להיות בין 0 ל-100.",
-      "Due date must be in the future and up to 1 month from now.": "תאריך היעד חייב להיות בעתיד ועד לחודש מהיום."
+      "Due date must be in the future and up to 1 month from now.": "תאריך היעד חייב להיות בעתיד ועד לחודש מהיום.",
+      "Error exporting report": "שגיאה ביצוא דוח"
     }
   }
 };
