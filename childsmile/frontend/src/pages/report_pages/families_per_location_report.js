@@ -7,7 +7,7 @@ import { hasViewPermissionForTable } from "../../components/utils";
 import axios from "../../axiosConfig";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { exportFamiliesToExcel, exportFamiliesToPDF } from "../../components/export_utils";
+import { exportFamiliesToExcel, exportFamiliesToPDF, auditExportSuccess, auditExportFailure } from "../../components/export_utils";
 import { useTranslation } from "react-i18next";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
@@ -122,13 +122,21 @@ const FamiliesPerLocationReport = () => {
   };
 
   const exportMapAndGrid = async () => {
-    if (!mapRef.current) return;
+    const reportName = 'families_per_location_report';
+    const format = 'IMAGE';
+    
+    if (!mapRef.current) {
+      await auditExportFailure(format, reportName, 'Map reference not found', 'TECHNICAL');
+      return;
+    }
+    
     setIsExporting(true);
 
     const gridElement = document.querySelector('.families-location-grid-container');
     const mapElement = mapRef.current.getContainer();
 
     if (!gridElement || !mapElement) {
+      await auditExportFailure(format, reportName, 'Grid or map element not found', 'TECHNICAL');
       toast.error(t("Grid or map not found"));
       setIsExporting(false);
       return;
@@ -225,8 +233,18 @@ const FamiliesPerLocationReport = () => {
       link.download = `${t("families_per_location_report")}.png`;
       link.href = finalCanvas.toDataURL('image/png');
       link.click();
+
+      // Use imported audit function
+      await auditExportSuccess(format, families.length, reportName, [
+        'child_names', 'addresses', 'location_data', 'map_visualization', 'geographic_coordinates'
+      ]);
+
     } catch (err) {
       console.error("Export failed:", err);
+      
+      // Use imported audit function
+      await auditExportFailure(format, reportName, err.message, 'TECHNICAL');
+      
       toast.error(t("Error exporting report"));
     } finally {
       try {

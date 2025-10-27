@@ -65,6 +65,7 @@ import json
 import os
 from django.db.models import Count, F
 from .utils import *
+from .audit_utils import log_api_action
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -119,10 +120,24 @@ def calculate_possible_matches(request):
 
     except PermissionError as e:
         print(f"DEBUG: Permission error: {str(e)}")
+        log_api_action(
+            request=request,
+            action='CALCULATE_MATCHES_FAILED',
+            success=False,
+            error_message=str(e),
+            status_code=403
+        )
         return JsonResponse({"error": str(e)}, status=403)
 
     except Exception as e:
         print(f"DEBUG: An error occurred: {str(e)}")
+        log_api_action(
+            request=request,
+            action='CALCULATE_MATCHES_FAILED',
+            success=False,
+            error_message=str(e),
+            status_code=500
+        )
         return JsonResponse({"error": str(e)}, status=500)
 
 
@@ -134,12 +149,26 @@ def get_tutorships(request):
     """
     user_id = request.session.get("user_id")
     if not user_id:
+        log_api_action(
+            request=request,
+            action='VIEW_TUTORSHIPS_FAILED',
+            success=False,
+            error_message="Authentication credentials were not provided",
+            status_code=403
+        )
         return JsonResponse(
             {"detail": "Authentication credentials were not provided."}, status=403
         )
 
     # Check if the user has VIEW permission on the "tutorships" resource
     if not has_permission(request, "tutorships", "VIEW"):
+        log_api_action(
+            request=request,
+            action='VIEW_TUTORSHIPS_FAILED',
+            success=False,
+            error_message="You do not have permission to view this page",
+            status_code=401
+        )
         return JsonResponse(
             {"error": "You do not have permission to view this page."}, status=401
         )
@@ -182,6 +211,13 @@ def get_tutorships(request):
         return JsonResponse({"tutorships": tutorships_data}, status=200)
     except Exception as e:
         print(f"DEBUG: Error fetching tutorships: {str(e)}")
+        log_api_action(
+            request=request,
+            action='VIEW_TUTORSHIPS_FAILED',
+            success=False,
+            error_message=str(e),
+            status_code=500
+        )
         return JsonResponse({"error": str(e)}, status=500)
 
 
@@ -193,12 +229,26 @@ def create_tutorship(request):
     """
     user_id = request.session.get("user_id")
     if not user_id:
+        log_api_action(
+            request=request,
+            action='CREATE_TUTORSHIP_FAILED',
+            success=False,
+            error_message="Authentication credentials were not provided",
+            status_code=403
+        )
         return JsonResponse(
             {"detail": "Authentication credentials were not provided."}, status=403
         )
 
     # Check if the user has CREATE permission on the "tutorships" resource
     if not has_permission(request, "tutorships", "CREATE"):
+        log_api_action(
+            request=request,
+            action='CREATE_TUTORSHIP_FAILED',
+            success=False,
+            error_message="You do not have permission to create a tutorship",
+            status_code=401
+        )
         return JsonResponse(
             {"error": "You do not have permission to create a tutorship."}, status=401
         )
@@ -218,6 +268,13 @@ def create_tutorship(request):
         missing_fields = [field for field in required_fields if field not in data]
         if missing_fields:
             print(f"DEBUG: Missing fields: {missing_fields}")  # Log missing fields
+            log_api_action(
+                request=request,
+                action='CREATE_TUTORSHIP_FAILED',
+                success=False,
+                error_message=f"Missing required fields: {', '.join(missing_fields)}",
+                status_code=400
+            )
             return JsonResponse(
                 {"error": f"Missing required fields: {', '.join(missing_fields)}"},
                 status=400,
@@ -227,13 +284,47 @@ def create_tutorship(request):
         staff_role_id = data.get("staff_role_id")
         if not isinstance(staff_role_id, int):
             print(f"DEBUG: Invalid staff_role_id: {staff_role_id}")
+            log_api_action(
+                request=request,
+                action='CREATE_TUTORSHIP_FAILED',
+                success=False,
+                error_message="Invalid staff_role_id. It must be an integer",
+                status_code=400
+            )
             return JsonResponse(
                 {"error": "Invalid staff_role_id. It must be an integer."}, status=400
             )
 
+        child_id = data["child_id"]
+        tutor_id = data["tutor_id"]
+
+        # NEW: Check if tutorship already exists for this child-tutor pair
+        existing_tutorship = Tutorships.objects.filter(
+            child_id=child_id, 
+            tutor_id=tutor_id
+        ).first()
+        
+        if existing_tutorship:
+            log_api_action(
+                request=request,
+                action='CREATE_TUTORSHIP_FAILED',
+                success=False,
+                error_message=f"Tutorship already exists for child {child_id} and tutor {tutor_id}",
+                status_code=409,  # Conflict status code
+                additional_data={
+                    'child_id': child_id,
+                    'tutor_id': tutor_id,
+                    'existing_tutorship_id': existing_tutorship.id
+                }
+            )
+            return JsonResponse(
+                {"error": f"Tutorship already exists for this child and tutor combination. Existing tutorship ID: {existing_tutorship.id}"},
+                status=409,
+            )
+
         # Retrieve child and tutor objects
-        child = Children.objects.get(child_id=data["child_id"])
-        tutor = Tutors.objects.get(id_id=data["tutor_id"])
+        child = Children.objects.get(child_id=child_id)
+        tutor = Tutors.objects.get(id_id=tutor_id)
 
         # Save current statuses in PrevTutorshipStatuses
         prev_status = PrevTutorshipStatuses.objects.create(
@@ -245,8 +336,8 @@ def create_tutorship(request):
 
         # Create a new tutorship record in the database
         tutorship = Tutorships.objects.create(
-            child_id=data["child_id"],
-            tutor_id=data["tutor_id"],
+            child_id=child_id,
+            tutor_id=tutor_id,
             created_date=datetime.datetime.now(),
             updated_at=datetime.datetime.now(),
             last_approver=[staff_role_id],  # Initialize with the creator's role ID
@@ -263,17 +354,64 @@ def create_tutorship(request):
 
         tutor.tutorship_status = "יש_חניך"
         tutor.save()
+
+        log_api_action(
+            request=request,
+            action='CREATE_TUTORSHIP_SUCCESS',
+            affected_tables=['childsmile_app_tutorships', 'childsmile_app_prevtutorshipstatuses', 'childsmile_app_children', 'childsmile_app_tutors'],
+            entity_type='Tutorship',
+            entity_ids=[tutorship.id],
+            success=True,
+            additional_data={
+                'child_id': child_id,
+                'tutor_id': tutor_id,
+                'staff_role_id': staff_role_id,
+                'approval_counter': 1
+            }
+        )
         
         print(f"DEBUG: Tutorship created successfully with ID {tutorship.id}")
         return JsonResponse(
             {"message": "Tutorship created successfully", "tutorship_id": tutorship.id},
             status=201,
         )
+    except Children.DoesNotExist:
+        log_api_action(
+            request=request,
+            action='CREATE_TUTORSHIP_FAILED',
+            success=False,
+            error_message=f"Child with ID {data.get('child_id')} not found",
+            status_code=404
+        )
+        return JsonResponse({"error": f"Child with ID {data.get('child_id')} not found"}, status=404)
+    except Tutors.DoesNotExist:
+        log_api_action(
+            request=request,
+            action='CREATE_TUTORSHIP_FAILED',
+            success=False,
+            error_message=f"Tutor with ID {data.get('tutor_id')} not found",
+            status_code=404
+        )
+        return JsonResponse({"error": f"Tutor with ID {data.get('tutor_id')} not found"}, status=404)
     except KeyError as e:
         print(f"DEBUG: Missing key in request data: {str(e)}")
+        log_api_action(
+            request=request,
+            action='CREATE_TUTORSHIP_FAILED',
+            success=False,
+            error_message=f"Missing key: {str(e)}",
+            status_code=400
+        )
         return JsonResponse({"error": f"Missing key: {str(e)}"}, status=400)
     except Exception as e:
         print(f"DEBUG: An error occurred while creating a tutorship: {str(e)}")
+        log_api_action(
+            request=request,
+            action='CREATE_TUTORSHIP_FAILED',
+            success=False,
+            error_message=str(e),
+            status_code=500
+        )
         return JsonResponse({"error": str(e)}, status=500)
 
 
@@ -286,12 +424,28 @@ def update_tutorship(request, tutorship_id):
     print(f"DEBUG: Received request to update tutorship with ID {tutorship_id}")
     user_id = request.session.get("user_id")
     if not user_id:
+        log_api_action(
+            request=request,
+            action='UPDATE_TUTORSHIP_FAILED',
+            success=False,
+            error_message="Authentication credentials were not provided",
+            status_code=403
+        )
         return JsonResponse(
             {"detail": "Authentication credentials were not provided."}, status=403
         )
 
     # Check if the user has UPDATE permission on the "tutorships" resource
     if not has_permission(request, "tutorships", "UPDATE"):
+        log_api_action(
+            request=request,
+            action='UPDATE_TUTORSHIP_FAILED',
+            success=False,
+            error_message="You do not have permission to update this tutorship",
+            status_code=401,
+            entity_type='Tutorship',
+            entity_ids=[tutorship_id]
+        )
         return JsonResponse(
             {"error": "You do not have permission to update this tutorship."},
             status=401,
@@ -301,18 +455,47 @@ def update_tutorship(request, tutorship_id):
     print(f"DEBUG: Incoming request data for update: {data}")  # Log the incoming data
     staff_role_id = data.get("staff_role_id")
     if not staff_role_id:
+        log_api_action(
+            request=request,
+            action='UPDATE_TUTORSHIP_FAILED',
+            success=False,
+            error_message="Staff role ID is required",
+            status_code=500,
+            entity_type='Tutorship',
+            entity_ids=[tutorship_id]
+        )
         return JsonResponse({"error": "Staff role ID is required"}, status=500)
 
     try:
         tutorship = Tutorships.objects.get(id=tutorship_id)
     except Tutorships.DoesNotExist:
+        log_api_action(
+            request=request,
+            action='UPDATE_TUTORSHIP_FAILED',
+            success=False,
+            error_message="Tutorship not found",
+            status_code=404,
+            entity_type='Tutorship',
+            entity_ids=[tutorship_id]
+        )
         return JsonResponse({"error": "Tutorship not found"}, status=404)
 
     if staff_role_id in tutorship.last_approver:
+        log_api_action(
+            request=request,
+            action='UPDATE_TUTORSHIP_FAILED',
+            success=False,
+            error_message="This role has already approved this tutorship",
+            status_code=400,
+            entity_type='Tutorship',
+            entity_ids=[tutorship_id],
+            additional_data={'staff_role_id': staff_role_id}
+        )
         return JsonResponse(
             {"error": "This role has already approved this tutorship"}, status=400
         )
     try:
+        old_approval_counter = tutorship.approval_counter
         tutorship.last_approver.append(staff_role_id)
         if tutorship.approval_counter <= 2:
             tutorship.approval_counter = len(tutorship.last_approver)
@@ -322,6 +505,7 @@ def update_tutorship(request, tutorship_id):
         tutorship.save()
 
         # --- Add Tutor role if approval_counter becomes 2 ---
+        tutor_role_added = False
         if tutorship.approval_counter == 2:
             tutor_id = (
                 tutorship.tutor_id
@@ -335,7 +519,23 @@ def update_tutorship(request, tutorship_id):
                 if tutor_role and tutor_role not in staff_member.roles.all():
                     staff_member.roles.add(tutor_role)
                     staff_member.save()
+                    tutor_role_added = True
                     print(f"DEBUG: Added 'Tutor' role to staff {staff_member.username}")
+
+        log_api_action(
+            request=request,
+            action='UPDATE_TUTORSHIP_SUCCESS',
+            affected_tables=['childsmile_app_tutorships'] + (['childsmile_app_staff'] if tutor_role_added else []),
+            entity_type='Tutorship',
+            entity_ids=[tutorship.id],
+            success=True,
+            additional_data={
+                'old_approval_counter': old_approval_counter,
+                'new_approval_counter': tutorship.approval_counter,
+                'staff_role_id': staff_role_id,
+                'tutor_role_added': tutor_role_added
+            }
+        )
 
         return JsonResponse(
             {
@@ -346,6 +546,15 @@ def update_tutorship(request, tutorship_id):
         )
     except Exception as e:
         print(f"DEBUG: An error occurred while updating the tutorship: {str(e)}")
+        log_api_action(
+            request=request,
+            action='UPDATE_TUTORSHIP_FAILED',
+            success=False,
+            error_message=str(e),
+            status_code=500,
+            entity_type='Tutorship',
+            entity_ids=[tutorship_id]
+        )
         return JsonResponse({"error": str(e)}, status=500)
 
 @csrf_exempt
@@ -356,12 +565,28 @@ def delete_tutorship(request, tutorship_id):
     """
     user_id = request.session.get("user_id")
     if not user_id:
+        log_api_action(
+            request=request,
+            action='DELETE_TUTORSHIP_FAILED',
+            success=False,
+            error_message="Authentication credentials were not provided",
+            status_code=403
+        )
         return JsonResponse(
             {"detail": "Authentication credentials were not provided."}, status=403
         )
 
     # Check if the user has DELETE permission on the "tutorships" resource
     if not has_permission(request, "tutorships", "DELETE"):
+        log_api_action(
+            request=request,
+            action='DELETE_TUTORSHIP_FAILED',
+            success=False,
+            error_message="You do not have permission to delete this tutorship",
+            status_code=401,
+            entity_type='Tutorship',
+            entity_ids=[tutorship_id]
+        )
         return JsonResponse(
             {"error": "You do not have permission to delete this tutorship."},
             status=401,
@@ -372,22 +597,37 @@ def delete_tutorship(request, tutorship_id):
         try:
             tutorship = Tutorships.objects.get(id=tutorship_id)
         except Tutorships.DoesNotExist:
+            log_api_action(
+                request=request,
+                action='DELETE_TUTORSHIP_FAILED',
+                success=False,
+                error_message="Tutorship not found",
+                status_code=404,
+                entity_type='Tutorship',
+                entity_ids=[tutorship_id]
+            )
             return JsonResponse({"error": "Tutorship not found"}, status=404)
 
         tutor = tutorship.tutor
         child = tutorship.child
+
+        # Store data for audit
+        child_id = tutorship.child_id
+        tutor_id = tutorship.tutor_id
 
         # Find the PrevTutorshipStatuses record for this tutorship
         prev_status = PrevTutorshipStatuses.objects.filter(
             tutorship_id=tutorship
         ).order_by('-last_updated').first()
 
+        status_restored = False
         if prev_status:
             tutor.tutorship_status = prev_status.tutor_tut_status
             child.tutoring_status = prev_status.child_tut_status
             tutor.save()
             child.save()
             prev_status.delete()
+            status_restored = True
         else:
             tutor.tutorship_status = "אין_חניך"
             child.tutoring_status = "אין_חונך"
@@ -404,6 +644,20 @@ def delete_tutorship(request, tutorship_id):
         # Delete the tutorship record
         tutorship.delete()
 
+        log_api_action(
+            request=request,
+            action='DELETE_TUTORSHIP_SUCCESS',
+            affected_tables=['childsmile_app_tutorships', 'childsmile_app_prevtutorshipstatuses', 'childsmile_app_children', 'childsmile_app_tutors'],
+            entity_type='Tutorship',
+            entity_ids=[tutorship_id],
+            success=True,
+            additional_data={
+                'deleted_child_id': child_id,
+                'deleted_tutor_id': tutor_id,
+                'status_restored': status_restored
+            }
+        )
+
         print(f"DEBUG: Tutorship with ID {tutorship_id} deleted successfully.")
         return JsonResponse(
             {"message": "Tutorship deleted successfully", "tutorship_id": tutorship_id},
@@ -411,4 +665,13 @@ def delete_tutorship(request, tutorship_id):
         )
     except Exception as e:
         print(f"DEBUG: An error occurred while deleting the tutorship: {str(e)}")
+        log_api_action(
+            request=request,
+            action='DELETE_TUTORSHIP_FAILED',
+            success=False,
+            error_message=str(e),
+            status_code=500,
+            entity_type='Tutorship',
+            entity_ids=[tutorship_id]
+        )
         return JsonResponse({"error": str(e)}, status=500)

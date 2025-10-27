@@ -15,18 +15,20 @@ and as for VIEW_*_FAILED and EXPORT_*_FAILED we will need to add a call from UI 
 
 Task list:
 - [x] Update views.py to include audit logging
-- [ ] Update family_views.py to include audit logging
-- [ ] Update feedback_views.py to include audit logging
-- [ ] Update task_views.py to include audit logging
-- [ ] Update report_views.py to include audit logging
-- [ ] Update tutor_volunteer_views.py to include audit logging
-- [ ] Update tutorship_views.py to include audit logging
-- [ ] Review all actions in AUDIT_ACTIONS - test every action
+- [x] Update family_views.py to include audit logging
+- [x] Update feedback_views.py to include audit logging
+- [x] Update task_views.py to include audit logging
+- [x] Update tutor_volunteer_views.py to include audit logging
+- [x] Update tutorship_views.py to include audit logging
+- [x] Review all actions in AUDIT_ACTIONS - test every action
 - [ ] Confirm if the description format is sufficient for each action
 - [ ] Identify any additional fields needed for meaningful descriptions
 - [ ] Update audit log schema if necessary
-- [ ] Implement API calls from UI for VIEW_*_FAILED and EXPORT_*_FAILED actions
+- [x] Implement API calls from UI for VIEW_*_FAILED and EXPORT_*_FAILED actions
 
-Bugs:
-2. too many attempts with wrong totp - should have blocked completely to prevent brute force
-3. filter healthy works only when u r on the 1st page lol
+Bugs/tasks:
+- too many attempts with wrong totp - should have blocked completely to prevent brute force
+- filter healthy works only when u r on the 1st page lol
+- create logger and move all debug prints to logger, define levels etc
+- add role to search in sysmgmt table search
+- no validation on updating relationship type - can set to anything  - must be one of predefined types
