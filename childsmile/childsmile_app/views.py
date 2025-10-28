@@ -1081,8 +1081,8 @@ def google_login_success(request):
         try:
             django_user = User.objects.get(id=user_id_from_session)
             print(f"DEBUG: Found Django user from session: {django_user}")
-            print(f"DEBUG: Django user email: '{django_user.email}'")  # ADD THIS
-            print(f"DEBUG: Django user username: '{django_user.username}'")  # ADD THIS
+            print(f"DEBUG: Django user email: '{django_user.email}'")
+            print(f"DEBUG: Django user username: '{django_user.username}'")
         except User.DoesNotExist:
             print(f"DEBUG: Django user with ID {user_id_from_session} not found")
     
@@ -1091,12 +1091,17 @@ def google_login_success(request):
             request=request,
             action='GOOGLE_LOGIN_FAILED',
             success=False,
-            error_message="Not authenticated",
-            status_code=401
+            error_message="Not authenticated - no Django user found",
+            status_code=401,
+            additional_data={
+                'login_method': 'Google OAuth',
+                'attempted_email': 'unknown',
+                'failure_reason': 'no_django_user'
+            }
         )
         return JsonResponse({"error": "Not authenticated"}, status=401)
     
-    print(f"DEBUG: About to search for Staff with email: '{django_user.email}'")  # ADD THIS
+    print(f"DEBUG: About to search for Staff with email: '{django_user.email}'")
     
     try:
         # Find the Staff record by email
@@ -1109,7 +1114,7 @@ def google_login_success(request):
         request.session["username"] = staff_user.username
         request.session.set_expiry(86400)
         
-        # Log successful Google login
+        # **ENHANCED GOOGLE LOGIN SUCCESS**
         log_api_action(
             request=request,
             action='GOOGLE_LOGIN_SUCCESS',
@@ -1117,7 +1122,10 @@ def google_login_success(request):
             entity_ids=[staff_user.staff_id],
             success=True,
             additional_data={
-                'login_method': 'Google OAuth'
+                'login_method': 'Google OAuth',
+                'user_full_name': f"{staff_user.first_name} {staff_user.last_name}",
+                'user_roles': [role.role_name for role in staff_user.roles.all()],
+                'google_email': django_user.email
             }
         )
         
@@ -1129,21 +1137,36 @@ def google_login_success(request):
         })
         
     except Staff.DoesNotExist:
+        # **ENHANCED GOOGLE LOGIN FAILED - WITH ATTEMPTED EMAIL**
         log_api_action(
             request=request,
             action='GOOGLE_LOGIN_FAILED',
             success=False,
-            error_message=f"Staff member not found for email: {django_user.email}",
-            status_code=404
+            error_message=f"Access denied. Email {django_user.email} is not authorized to access this system",
+            status_code=404,
+            additional_data={
+                'login_method': 'Google OAuth',
+                'attempted_email': django_user.email,  # Pass the actual email
+                'failure_reason': 'email_not_found_in_system',
+                'google_username': django_user.username if hasattr(django_user, 'username') else 'unknown'
+            }
         )
-        return JsonResponse({"error": f"Staff member not found for email: '{django_user.email}'"}, status=404)
+        return JsonResponse({"error": f"Access denied. Email {django_user.email} is not authorized to access this system"}, status=404)
+        
     except Exception as e:
+        # **ENHANCED GOOGLE LOGIN FAILED - WITH ATTEMPTED EMAIL IF AVAILABLE**
+        attempted_email = django_user.email if django_user else 'unknown'
         log_api_action(
             request=request,
             action='GOOGLE_LOGIN_FAILED',
             success=False,
             error_message=str(e),
-            status_code=500
+            status_code=500,
+            additional_data={
+                'login_method': 'Google OAuth',
+                'attempted_email': attempted_email,
+                'failure_reason': 'system_error'
+            }
         )
         return JsonResponse({"error": str(e)}, status=500)
 
@@ -1306,12 +1329,22 @@ def verify_totp(request):
             )
             return JsonResponse({"error": "Staff member not found"}, status=404)
         
-        # Log successful TOTP verification (after we have staff_user)
+        # **ENHANCED TOTP VERIFICATION SUCCESS - More informative**
         log_api_action(
             request=request,
             action='TOTP_VERIFICATION_SUCCESS',
             success=True,
-            additional_data={'verified_email': email}
+            entity_type='Authentication',
+            entity_ids=[staff_user.staff_id],
+            additional_data={
+                'verified_email': email,
+                'verification_method': 'TOTP_EMAIL',
+                'code_attempts_used': totp_record.attempts,
+                'user_full_name': f"{staff_user.first_name} {staff_user.last_name}",
+                'user_roles': [role.role_name for role in staff_user.roles.all()],
+                'security_event': True,
+                'login_step': 'totp_verification_completed'
+            }
         )
         
         # Create session
@@ -1320,7 +1353,7 @@ def verify_totp(request):
         request.session["username"] = staff_user.username
         request.session.set_expiry(86400)
         
-        # Log successful login
+        # **ENHANCED USER LOGIN SUCCESS - More context**
         log_api_action(
             request=request,
             action='USER_LOGIN_SUCCESS',
@@ -1328,7 +1361,13 @@ def verify_totp(request):
             entity_ids=[staff_user.staff_id],
             success=True,
             additional_data={
-                'login_method': 'TOTP'
+                'login_method': 'TOTP_EMAIL',
+                'verified_email': email,
+                'totp_attempts': totp_record.attempts,
+                'user_full_name': f"{staff_user.first_name} {staff_user.last_name}",
+                'user_roles': [role.role_name for role in staff_user.roles.all()],
+                'session_duration_hours': 24,
+                'login_step': 'session_created'
             }
         )
         
@@ -1527,7 +1566,30 @@ def register_verify_totp(request):
         
         if pending_email != email:
             print(f"DEBUG: Email mismatch - session: '{pending_email}', received: '{email}'")
+            # **ADD attempted_email here**
+            log_api_action(
+                request=request,
+                action='USER_REGISTRATION_FAILED',
+                success=False,
+                error_message="Invalid registration session",
+                status_code=400,
+                additional_data={'attempted_email': email}  # **ADD THIS LINE**
+            )
             return JsonResponse({"error": "Invalid registration session"}, status=400)
+        
+        # Get registration data from session
+        registration_data = request.session.get('pending_registration')
+        if not registration_data:
+            # **ADD attempted_email here**
+            log_api_action(
+                request=request,
+                action='USER_REGISTRATION_FAILED',
+                success=False,
+                error_message="Registration session expired",
+                status_code=400,
+                additional_data={'attempted_email': email}  # **ADD THIS LINE**
+            )
+            return JsonResponse({"error": "Registration session expired"}, status=400)
         
         # Verify TOTP code
         totp_record = TOTPCode.objects.filter(
@@ -1586,7 +1648,8 @@ def register_verify_totp(request):
                 action='USER_REGISTRATION_FAILED',
                 success=False,
                 error_message="Registration session expired",
-                status_code=400
+                status_code=400,
+                additional_data={'attempted_email': email}
             )
             return JsonResponse({"error": "Registration session expired"}, status=400)
         
@@ -1602,12 +1665,14 @@ def register_verify_totp(request):
         return result
         
     except Exception as e:
+        # **ADD attempted_email here**
         log_api_action(
             request=request,
             action='USER_REGISTRATION_FAILED',
             success=False,
             error_message=str(e),
-            status_code=500
+            status_code=500,
+            additional_data={'attempted_email': data.get('email', 'unknown') if 'data' in locals() else 'unknown'}  # **ADD THIS LINE**
         )
         return JsonResponse({"error": "Registration failed"}, status=500)
 
