@@ -305,6 +305,20 @@ def create_tutorship(request):
         ).first()
         
         if existing_tutorship:
+            # Get names for audit
+            try:
+                child_name = f"{Children.objects.get(child_id=child_id).childfirstname} {Children.objects.get(child_id=child_id).childsurname}"
+            except Children.DoesNotExist:
+                child_name = f"Unknown (ID: {child_id})"
+            
+            try:
+                tutor = Tutors.objects.get(id_id=tutor_id)
+                tutor_name = f"{tutor.staff.first_name} {tutor.staff.last_name}"
+                tutor_email = tutor.staff.email
+            except (Tutors.DoesNotExist, AttributeError):
+                tutor_name = f"Unknown (ID: {tutor_id})"
+                tutor_email = "Unknown"
+            
             log_api_action(
                 request=request,
                 action='CREATE_TUTORSHIP_FAILED',
@@ -313,8 +327,12 @@ def create_tutorship(request):
                 status_code=409,  # Conflict status code
                 additional_data={
                     'child_id': child_id,
+                    'child_name': child_name,
                     'tutor_id': tutor_id,
-                    'existing_tutorship_id': existing_tutorship.id
+                    'tutor_name': tutor_name,
+                    'tutor_email': tutor_email,
+                    'existing_tutorship_id': existing_tutorship.id,
+                    'reason': 'duplicate_tutorship'
                 }
             )
             return JsonResponse(
@@ -355,6 +373,10 @@ def create_tutorship(request):
         tutor.tutorship_status = "יש_חניך"
         tutor.save()
 
+        # Get names for audit
+        child_name = f"{child.childfirstname} {child.childsurname}" if child else "Unknown"
+        tutor_name = f"{tutor.staff.first_name} {tutor.staff.last_name}" if tutor and tutor.staff else "Unknown"
+
         log_api_action(
             request=request,
             action='CREATE_TUTORSHIP_SUCCESS',
@@ -364,7 +386,10 @@ def create_tutorship(request):
             success=True,
             additional_data={
                 'child_id': child_id,
+                'child_name': child_name,
                 'tutor_id': tutor_id,
+                'tutor_name': tutor_name,
+                'tutor_email': tutor.staff.email if tutor and tutor.staff else 'Unknown',
                 'staff_role_id': staff_role_id,
                 'approval_counter': 1
             }
@@ -376,21 +401,52 @@ def create_tutorship(request):
             status=201,
         )
     except Children.DoesNotExist:
+        # Try to get tutor name if available
+        tutor_name = "Unknown"
+        tutor_email = "Unknown"
+        try:
+            tutor = Tutors.objects.get(id_id=data.get('tutor_id'))
+            tutor_name = f"{tutor.staff.first_name} {tutor.staff.last_name}"
+            tutor_email = tutor.staff.email
+        except (Tutors.DoesNotExist, AttributeError):
+            pass
+        
         log_api_action(
             request=request,
             action='CREATE_TUTORSHIP_FAILED',
             success=False,
             error_message=f"Child with ID {data.get('child_id')} not found",
-            status_code=404
+            status_code=404,
+            additional_data={
+                'child_id': data.get('child_id'),
+                'child_name': 'Not Found',
+                'tutor_id': data.get('tutor_id'),
+                'tutor_name': tutor_name,
+                'tutor_email': tutor_email
+            }
         )
         return JsonResponse({"error": f"Child with ID {data.get('child_id')} not found"}, status=404)
     except Tutors.DoesNotExist:
+        # Try to get child name if available
+        child_name = "Unknown"
+        try:
+            child = Children.objects.get(child_id=data.get('child_id'))
+            child_name = f"{child.childfirstname} {child.childsurname}"
+        except Children.DoesNotExist:
+            pass
+        
         log_api_action(
             request=request,
             action='CREATE_TUTORSHIP_FAILED',
             success=False,
             error_message=f"Tutor with ID {data.get('tutor_id')} not found",
-            status_code=404
+            status_code=404,
+            additional_data={
+                'child_id': data.get('child_id'),
+                'child_name': child_name,
+                'tutor_id': data.get('tutor_id'),
+                'tutor_name': 'Not Found'
+            }
         )
         return JsonResponse({"error": f"Tutor with ID {data.get('tutor_id')} not found"}, status=404)
     except KeyError as e:
@@ -481,6 +537,11 @@ def update_tutorship(request, tutorship_id):
         return JsonResponse({"error": "Tutorship not found"}, status=404)
 
     if staff_role_id in tutorship.last_approver:
+        # Get child and tutor names for audit
+        child_name = f"{tutorship.child.childfirstname} {tutorship.child.childsurname}" if tutorship.child else "Unknown"
+        tutor_name = f"{tutorship.tutor.staff.first_name} {tutorship.tutor.staff.last_name}" if tutorship.tutor and tutorship.tutor.staff else "Unknown"
+        tutor_email = tutorship.tutor.staff.email if tutorship.tutor and tutorship.tutor.staff else "Unknown"
+        
         log_api_action(
             request=request,
             action='UPDATE_TUTORSHIP_FAILED',
@@ -489,7 +550,17 @@ def update_tutorship(request, tutorship_id):
             status_code=400,
             entity_type='Tutorship',
             entity_ids=[tutorship_id],
-            additional_data={'staff_role_id': staff_role_id}
+            additional_data={
+                'child_id': tutorship.child_id,
+                'child_name': child_name,
+                'tutor_id': tutorship.tutor_id,
+                'tutor_name': tutor_name,
+                'tutor_email': tutor_email,
+                'staff_role_id': staff_role_id,
+                'current_approval_counter': tutorship.approval_counter,
+                'last_approvers': tutorship.last_approver,
+                'reason': 'duplicate_approval'
+            }
         )
         return JsonResponse(
             {"error": "This role has already approved this tutorship"}, status=400
@@ -522,6 +593,11 @@ def update_tutorship(request, tutorship_id):
                     tutor_role_added = True
                     print(f"DEBUG: Added 'Tutor' role to staff {staff_member.username}")
 
+        # Get child and tutor names for audit
+        child_name = f"{tutorship.child.childfirstname} {tutorship.child.childsurname}" if tutorship.child else "Unknown"
+        tutor_name = f"{tutorship.tutor.staff.first_name} {tutorship.tutor.staff.last_name}" if tutorship.tutor and tutorship.tutor.staff else "Unknown"
+        tutor_email = tutorship.tutor.staff.email if tutorship.tutor and tutorship.tutor.staff else "Unknown"
+
         log_api_action(
             request=request,
             action='UPDATE_TUTORSHIP_SUCCESS',
@@ -530,10 +606,16 @@ def update_tutorship(request, tutorship_id):
             entity_ids=[tutorship.id],
             success=True,
             additional_data={
+                'child_id': tutorship.child_id,
+                'child_name': child_name,
+                'tutor_id': tutorship.tutor_id,
+                'tutor_name': tutor_name,
+                'tutor_email': tutor_email,
                 'old_approval_counter': old_approval_counter,
                 'new_approval_counter': tutorship.approval_counter,
                 'staff_role_id': staff_role_id,
-                'tutor_role_added': tutor_role_added
+                'tutor_role_added': tutor_role_added,
+                'tutorship_approved': tutorship.approval_counter == 2
             }
         )
 
@@ -546,6 +628,11 @@ def update_tutorship(request, tutorship_id):
         )
     except Exception as e:
         print(f"DEBUG: An error occurred while updating the tutorship: {str(e)}")
+        
+        # Get child and tutor names for audit error
+        child_name = f"{tutorship.child.childfirstname} {tutorship.child.childsurname}" if tutorship.child else "Unknown"
+        tutor_name = f"{tutorship.tutor.staff.first_name} {tutorship.tutor.staff.last_name}" if tutorship.tutor and tutorship.tutor.staff else "Unknown"
+        
         log_api_action(
             request=request,
             action='UPDATE_TUTORSHIP_FAILED',
@@ -553,7 +640,14 @@ def update_tutorship(request, tutorship_id):
             error_message=str(e),
             status_code=500,
             entity_type='Tutorship',
-            entity_ids=[tutorship_id]
+            entity_ids=[tutorship_id],
+            additional_data={
+                'child_id': tutorship.child_id,
+                'child_name': child_name,
+                'tutor_id': tutorship.tutor_id,
+                'tutor_name': tutor_name,
+                'staff_role_id': staff_role_id
+            }
         )
         return JsonResponse({"error": str(e)}, status=500)
 
@@ -613,7 +707,10 @@ def delete_tutorship(request, tutorship_id):
 
         # Store data for audit
         child_id = tutorship.child_id
+        child_name = f"{child.childfirstname} {child.childsurname}" if child else "Unknown"
         tutor_id = tutorship.tutor_id
+        tutor_name = f"{tutor.staff.first_name} {tutor.staff.last_name}" if tutor and tutor.staff else "Unknown"
+        tutor_email = tutor.staff.email if tutor and tutor.staff else "Unknown"
 
         # Find the PrevTutorshipStatuses record for this tutorship
         prev_status = PrevTutorshipStatuses.objects.filter(
@@ -653,8 +750,13 @@ def delete_tutorship(request, tutorship_id):
             success=True,
             additional_data={
                 'deleted_child_id': child_id,
+                'deleted_child_name': child_name,
                 'deleted_tutor_id': tutor_id,
-                'status_restored': status_restored
+                'deleted_tutor_name': tutor_name,
+                'deleted_tutor_email': tutor_email,
+                'status_restored': status_restored,
+                'tutor_old_status': prev_status.tutor_tut_status if prev_status else 'יש_חניך',
+                'child_old_status': prev_status.child_tut_status if prev_status else 'יש_חונך'
             }
         )
 

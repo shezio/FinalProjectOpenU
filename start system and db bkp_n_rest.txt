@@ -16,3 +16,13 @@ cd /Users/shlomosmac/Applications/dev/FinalProjectOpenU/childsmile && python man
 
   git config --global user.email "shlezi0@gmail.com"
   git config --global user.name "shezio"
+
+steps to db bkp and restore:
+1. Backup the database
+pg_dump -U child_smile_user -h localhost -p 5432 child_smile_db > backup_20251028.sql
+
+2. Create new db on RDS
+psql -U child_smile_user -h localhost -p 5432 -c "CREATE DATABASE child_smile_db;"
+
+3. Restore the database
+pg_restore -U child_smile_user -h localhost -p 5432 -d child_smile_db < backup_20251028.sql

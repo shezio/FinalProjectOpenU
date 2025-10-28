@@ -233,7 +233,11 @@ def create_task(request):
                     action='CREATE_TASK_FAILED',
                     success=False,
                     error_message=f"Staff member with ID or username '{assigned_to}' not found",
-                    status_code=400
+                    status_code=400,
+                    additional_data={
+                        'task_type': task_data.get("type"),
+                        'attempted_assigned_to': assigned_to
+                    }
                 )
                 return JsonResponse(
                     {
@@ -270,7 +274,11 @@ def create_task(request):
                 action='CREATE_TASK_FAILED',
                 success=False,
                 error_message="Invalid task type ID",
-                status_code=400
+                status_code=400,
+                additional_data={
+                    'attempted_task_type_id': task_data.get("type"),
+                    'attempted_assigned_to': task_data.get("assigned_to")
+                }
             )
             return JsonResponse({"detail": "Invalid task type ID."}, status=400)
         except Exception as e:
@@ -282,6 +290,18 @@ def create_task(request):
         # Check if the logged-in user is an admin
         user = Staff.objects.get(staff_id=user_id)
 
+        # Get assignee name if exists
+        assignee_name = None
+        assignee_email = None
+        assigned_to_id = task_data.get("assigned_to")
+        if assigned_to_id:
+            try:
+                assignee = Staff.objects.get(staff_id=assigned_to_id)
+                assignee_name = f"{assignee.first_name} {assignee.last_name}"
+                assignee_email = assignee.email
+            except Staff.DoesNotExist:
+                pass
+
         log_api_action(
             request=request,
             action='CREATE_TASK_SUCCESS',
@@ -290,8 +310,10 @@ def create_task(request):
             entity_ids=[task.task_id],
             success=True,
             additional_data={
-                'task_type': task_type_obj.task_type if 'task_type_obj' in locals() else None,
-                'assigned_to': task_data.get("assigned_to")
+                'task_type': task_type_obj.task_type if 'task_type_obj' in locals() else 'Unknown',
+                'assigned_to_id': assigned_to_id,
+                'assigned_to_name': assignee_name,
+                'assigned_to_email': assignee_email
             }
         )
 
@@ -381,13 +403,38 @@ def delete_task(request, task_id):
         
         task.delete()
 
+        # Get assignee name if exists
+        assignee_name = None
+        assignee_email = None
+        if assigned_to_id:
+            try:
+                assignee = Staff.objects.get(staff_id=assigned_to_id)
+                assignee_name = f"{assignee.first_name} {assignee.last_name}"
+                assignee_email = assignee.email
+            except Staff.DoesNotExist:
+                pass
+
+        # Get task type name if exists
+        task_type_name = None
+        if task_type:
+            try:
+                task_type_name = task_type.task_type
+            except:
+                pass
+
         log_api_action(
             request=request,
             action='DELETE_TASK_SUCCESS',
             affected_tables=['childsmile_app_tasks'],
             entity_type='Task',
             entity_ids=[task_id],
-            success=True
+            success=True,
+            additional_data={
+                'task_type': task_type_name,
+                'assigned_to_id': assigned_to_id,
+                'assigned_to_name': assignee_name,
+                'assigned_to_email': assignee_email
+            }
         )
 
         return JsonResponse({"message": "Task deleted successfully."}, status=200)
@@ -552,6 +599,12 @@ def update_task(request, task_id):
     try:
         task = Tasks.objects.get(task_id=task_id)
 
+        # Store original values BEFORE any updates
+        original_description = task.description
+        original_status = task.status
+        original_assigned_to = task.assigned_to_id
+        original_task_type = task.task_type_id
+
         # Update task fields
         task.description = request.data.get("description", task.description)
         task.due_date = request.data.get("due_date", task.due_date)
@@ -583,7 +636,11 @@ def update_task(request, task_id):
                     action='UPDATE_TASK_FAILED',
                     success=False,
                     error_message=f"Staff member with username or ID '{assigned_to}' not found",
-                    status_code=400
+                    status_code=400,
+                    additional_data={
+                        'task_type': task.task_type.task_type if task.task_type else 'Unknown',
+                        'attempted_assigned_to': assigned_to
+                    }
                 )
                 return JsonResponse(
                     {
@@ -604,6 +661,28 @@ def update_task(request, task_id):
         # Handle pending_tutor_id
         task.pending_tutor_id = request.data.get("pending_tutor", task.pending_tutor_id)
 
+        # Track field changes BEFORE saving
+        field_changes = []
+        if original_description != task.description:
+            field_changes.append("Description changed")
+        if original_status != task.status:
+            field_changes.append(f"Status: '{original_status}' → '{task.status}'")
+        if original_assigned_to != task.assigned_to_id:
+            old_name = "Unknown"
+            new_name = "Unknown"
+            try:
+                if original_assigned_to:
+                    old_staff = Staff.objects.get(staff_id=original_assigned_to)
+                    old_name = f"{old_staff.first_name} {old_staff.last_name}"
+                if task.assigned_to_id:
+                    new_staff = Staff.objects.get(staff_id=task.assigned_to_id)
+                    new_name = f"{new_staff.first_name} {new_staff.last_name}"
+            except Staff.DoesNotExist:
+                pass
+            field_changes.append(f"Assigned to: '{old_name}' → '{new_name}'")
+        if original_task_type != task.task_type_id:
+            field_changes.append("Task type changed")
+
         # Save the updated task
         task.save()
 
@@ -619,11 +698,27 @@ def update_task(request, task_id):
                             action='UPDATE_TASK_FAILED',
                             success=False,
                             error_message=f"Error promoting pending tutor: {msg}",
-                            status_code=400
+                            status_code=400,
+                            additional_data={
+                                'task_type': task.task_type.task_type if task.task_type else 'Unknown',
+                                'new_status': new_status,
+                                'field_changes': field_changes
+                            }
                         )
                         return JsonResponse(
                             {"Error promoting pending tutor": msg}, status=400
                         )
+
+        # Get assignee name if exists
+        assignee_name = None
+        assignee_email = None
+        if task.assigned_to_id:
+            try:
+                assignee = Staff.objects.get(staff_id=task.assigned_to_id)
+                assignee_name = f"{assignee.first_name} {assignee.last_name}"
+                assignee_email = assignee.email
+            except Staff.DoesNotExist:
+                pass
 
         log_api_action(
             request=request,
@@ -631,7 +726,17 @@ def update_task(request, task_id):
             affected_tables=['childsmile_app_tasks'],
             entity_type='Task',
             entity_ids=[task.task_id],
-            success=True
+            success=True,
+            additional_data={
+                'task_type': task.task_type.task_type if task.task_type else 'Unknown',
+                'old_status': original_status,
+                'new_status': task.status,
+                'assigned_to_id': task.assigned_to_id,
+                'assigned_to_name': assignee_name,
+                'assigned_to_email': assignee_email,
+                'field_changes': field_changes,
+                'changes_count': len(field_changes)
+            }
         )
 
         return JsonResponse({"message": "Task updated successfully."}, status=200)
