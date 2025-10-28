@@ -1,0 +1,16 @@
+[
+    {        "description": "User: שלמה בונצל\nEmail: shlezi0@gmail.com\nAction: Successfully logged in\nMethod: Google OAuth\nTimestamp: 28/10/2025 18:01:45\nRoles: System Administrator\nStatus: OAuth verified"
+    },
+    {
+        "description": "User שלמה_בונצל with email shlezi0@gmail.com performed action USER_LOGOUT on 28/10/2025 16:06:37. The user had the following roles: [System Administrator]. The action was successful."
+    },
+    {
+        "description": "User שלמה בונצל (shlezi0@gmail.com) successfully logged into the system on 28/10/2025 16:05:26 using Google OAuth.\nUser roles: [System Administrator].\nGoogle OAuth authentication completed successfully."
+    },
+    {
+        "description": "User שלמה_בונצל with email shlezi0@gmail.com performed action USER_LOGOUT on 28/10/2025 16:03:34. The user had the following roles: [System Administrator]. The action was successful."
+    },
+    {
+        "description": "User שלמה_בונצל with email shlezi0@gmail.com performed action CREATE_STAFF_FAILED on 28/10/2025 14:43:14. The user had the following roles: [System Administrator]. The action was failure. The error message was: Failed to send verification email: name 'roles' is not defined."
+    }
+]
