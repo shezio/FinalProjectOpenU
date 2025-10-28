@@ -150,18 +150,19 @@ def generate_audit_description(user_email, username, action, timestamp, user_rol
     
     # **ENHANCED VOLUNTEER/TUTOR CREATION**
     elif action in ['CREATE_VOLUNTEER_SUCCESS', 'CREATE_PENDING_TUTOR_SUCCESS'] and additional_data:
-        volunteer_email = additional_data.get('volunteer_email', additional_data.get('tutor_email', 'Unknown'))
+        volunteer_email = additional_data.get('volunteer_email', additional_data.get('tutor_email', user_email))
         first_name = additional_data.get('first_name', 'Unknown')
         surname = additional_data.get('surname', 'Unknown')
+        created_username = additional_data.get('username', username)
         
         entity_name = 'Volunteer' if 'VOLUNTEER' in action else 'Pending Tutor'
         
-        description = f"New {entity_name} {first_name} {surname} ({volunteer_email}) was successfully created on {timestamp_formatted}. "
+        description = f"New {entity_name} {first_name} {surname} (username: {created_username}, email: {volunteer_email}) was successfully created on {timestamp_formatted}. "
         
         if entity_type and entity_ids:
             description += f"Created {entity_type} record with ID: {', '.join(map(str, entity_ids))}. "
         
-        description += f"{entity_name} account setup completed successfully."
+        description += f"{entity_name} account setup completed successfully during registration process."
     
     elif action in ['CREATE_VOLUNTEER_FAILED', 'CREATE_PENDING_TUTOR_FAILED'] and additional_data:
         attempted_email = additional_data.get('attempted_email', 'Unknown')
@@ -169,7 +170,7 @@ def generate_audit_description(user_email, username, action, timestamp, user_rol
         
         description = f"Failed to create {entity_name} account for email {attempted_email} on {timestamp_formatted}. "
         description += f"Creation failed with error: {error_message or 'Unknown error'}."
-        
+    
     elif action.startswith('EXPORT_REPORT_') and additional_data:
         report_name_detail = additional_data.get('report_name', report_name or 'Unknown Report')
         export_format = additional_data.get('export_format', 'Unknown')
@@ -183,6 +184,409 @@ def generate_audit_description(user_email, username, action, timestamp, user_rol
         
         if not success and error_message:
             description += f" Export failed with error: {error_message}."
+    
+    # **NEW: ENHANCED FAMILY MANAGEMENT ACTIONS**
+    elif action == 'CREATE_FAMILY_SUCCESS' and additional_data:
+        family_name = additional_data.get('family_name', 'Unknown')
+        family_city = additional_data.get('family_city', 'Unknown')
+        
+        description = f"User {username} ({user_email}) successfully created a new family record for {family_name} on {timestamp_formatted}. "
+        description += f"Family location: {family_city}. "
+        description += f"User roles: [{roles_text}]. "
+        
+        if entity_type and entity_ids:
+            description += f"Created {entity_type} record with ID: {', '.join(map(str, entity_ids))}."
+    
+    elif action == 'UPDATE_FAMILY_SUCCESS' and additional_data:
+        updated_name = additional_data.get('updated_family_name', 'Unknown')
+        original_name = additional_data.get('original_family_name', 'Unknown')
+        family_city = additional_data.get('family_city', 'Unknown')
+        field_changes = additional_data.get('field_changes', [])
+        changes_count = additional_data.get('changes_count', 0)
+        
+        if updated_name != original_name:
+            description = f"User {username} ({user_email}) successfully updated family record from '{original_name}' to '{updated_name}' on {timestamp_formatted}. "
+        else:
+            description = f"User {username} ({user_email}) successfully updated family record for '{updated_name}' on {timestamp_formatted}. "
+        
+        # **ADD FIELD CHANGES DETAILS**
+        if field_changes:
+            description += f"Changed {changes_count} field(s): {'; '.join(field_changes)}. "
+        else:
+            description += "No field changes detected (refresh/save operation). "
+        
+        description += f"Family location: {family_city}. User roles: [{roles_text}]."
+        
+        if entity_type and entity_ids:
+            description += f" Updated {entity_type} record with ID: {', '.join(map(str, entity_ids))}."
+
+    elif action == 'DELETE_FAMILY_SUCCESS' and additional_data:
+        deleted_name = additional_data.get('deleted_family_name', 'Unknown')
+        family_city = additional_data.get('family_city', 'Unknown')
+        family_status = additional_data.get('family_status', 'Unknown')
+        family_phone = additional_data.get('family_phone', 'Unknown')
+        family_hospital = additional_data.get('family_hospital', 'Unknown')
+        medical_diagnosis = additional_data.get('medical_diagnosis', 'Unknown')
+        current_medical_state = additional_data.get('current_medical_state', 'Unknown')
+        
+        description = f"User {username} ({user_email}) successfully deleted family record for {deleted_name} on {timestamp_formatted}. "
+        description += f"Family details - Location: {family_city}, Phone: {family_phone}, Hospital: {family_hospital}, "
+        description += f"Status: {family_status}, Diagnosis: {medical_diagnosis}, Medical State: {current_medical_state}. "
+        description += f"User roles: [{roles_text}]."
+        
+        if entity_type and entity_ids:
+            description += f" Deleted {entity_type} record with ID: {', '.join(map(str, entity_ids))}."
+
+    # **ADD CREATE_FAMILY_FAILED**
+    elif action == 'CREATE_FAMILY_FAILED' and additional_data:
+        family_name = additional_data.get('family_name', 'Unknown')
+        
+        description = f"User {username} ({user_email}) failed to create family record for {family_name} on {timestamp_formatted}. "
+        description += f"Creation failed with error: {error_message or 'Unknown error'}. "
+        description += f"User roles: [{roles_text}]."
+    
+    # **ADD UPDATE_FAMILY_FAILED**
+    elif action == 'UPDATE_FAMILY_FAILED' and additional_data:
+        family_name = additional_data.get('family_name', 'Unknown')
+        attempted_changes = additional_data.get('attempted_changes', [])
+        changes_count = additional_data.get('changes_count', 0)
+        
+        description = f"User {username} ({user_email}) failed to update family record for {family_name} on {timestamp_formatted}. "
+        description += f"Update failed with error: {error_message or 'Unknown error'}. "
+        
+        # **ADD ATTEMPTED CHANGES DETAILS**
+        if attempted_changes:
+            description += f"User attempted to change {changes_count} field(s): {'; '.join(attempted_changes)}. "
+        else:
+            description += "No field changes were attempted. "
+        
+        description += f"User roles: [{roles_text}]."
+        
+        if entity_type and entity_ids:
+            description += f" Target {entity_type} record ID: {', '.join(map(str, entity_ids))}."
+    
+    # **ADD INITIAL FAMILY DATA ACTIONS**
+    elif action == 'DELETE_INITIAL_FAMILY_SUCCESS' and additional_data:
+        deleted_names = additional_data.get('deleted_family_names', 'Unknown')
+        deleted_phones = additional_data.get('deleted_family_phones', 'Unknown')
+        
+        description = f"User {username} ({user_email}) successfully deleted initial family data record on {timestamp_formatted}. "
+        description += f"Deleted family names: {deleted_names}. "
+        description += f"Deleted family phones: {deleted_phones}. "
+        description += f"User roles: [{roles_text}]."
+        
+        if entity_type and entity_ids:
+            description += f" Deleted {entity_type} record with ID: {', '.join(map(str, entity_ids))}."
+
+    elif action == 'DELETE_INITIAL_FAMILY_FAILED' and additional_data:
+        deleted_names = additional_data.get('deleted_family_names', 'Unknown')
+        deleted_phones = additional_data.get('deleted_family_phones', 'Unknown')
+        
+        description = f"User {username} ({user_email}) failed to delete initial family data record on {timestamp_formatted}. "
+        description += f"Attempted to delete family names: {deleted_names}. "
+        description += f"Attempted to delete family phones: {deleted_phones}. "
+        description += f"Deletion failed with error: {error_message or 'Unknown error'}. "
+        description += f"User roles: [{roles_text}]."
+        
+        if entity_type and entity_ids:
+            description += f" Target {entity_type} record ID: {', '.join(map(str, entity_ids))}."
+
+    elif action == 'MARK_FAMILY_ADDED_SUCCESS' and additional_data:
+        family_names = additional_data.get('family_names', 'Unknown')
+        family_phones = additional_data.get('family_phones', 'Unknown')
+        family_added_status = additional_data.get('family_added_status', False)
+        
+        description = f"User {username} ({user_email}) successfully marked initial family data as complete on {timestamp_formatted}. "
+        description += f"Family names: {family_names}. "
+        description += f"Family phones: {family_phones}. "
+        description += f"Family added status: {'Yes' if family_added_status else 'No'}. "
+        description += f"User roles: [{roles_text}]."
+        
+        if entity_type and entity_ids:
+            description += f" Marked {entity_type} record with ID: {', '.join(map(str, entity_ids))} as complete."
+
+    elif action == 'MARK_FAMILY_ADDED_FAILED' and additional_data:
+        family_names = additional_data.get('family_names', 'Unknown')
+        family_phones = additional_data.get('family_phones', 'Unknown')
+        
+        description = f"User {username} ({user_email}) failed to mark initial family data as complete on {timestamp_formatted}. "
+        description += f"Attempted family names: {family_names}. "
+        description += f"Attempted family phones: {family_phones}. "
+        description += f"Operation failed with error: {error_message or 'Unknown error'}. "
+        description += f"User roles: [{roles_text}]."
+        
+        if entity_type and entity_ids:
+            description += f" Target {entity_type} record ID: {', '.join(map(str, entity_ids))}."
+    
+    # **TASK OPERATION DESCRIPTIONS**
+    elif action == 'CREATE_TASK_SUCCESS' and additional_data:
+        task_type = additional_data.get('task_type', 'Unknown')
+        assigned_to_id = additional_data.get('assigned_to_id')
+        assigned_to_name = additional_data.get('assigned_to_name', 'Unassigned')
+        
+        if assigned_to_name and assigned_to_name != 'Unknown':
+            description = f"User {username} ({user_email}) successfully created a new task on {timestamp_formatted}. "
+            description += f"Task type: {task_type}. Assigned to: {assigned_to_name}. "
+        else:
+            description = f"User {username} ({user_email}) successfully created a new task on {timestamp_formatted}. "
+            description += f"Task type: {task_type}. Task is currently unassigned. "
+        
+        description += f"User roles: [{roles_text}]."
+        
+        if entity_type and entity_ids:
+            description += f" Created {entity_type} record with ID: {', '.join(map(str, entity_ids))}."
+
+    elif action == 'CREATE_TASK_FAILED' and additional_data:
+        task_type = additional_data.get('task_type', 'Unknown')
+        attempted_assigned_to = additional_data.get('attempted_assigned_to')
+        
+        description = f"User {username} ({user_email}) failed to create a task on {timestamp_formatted}. "
+        description += f"Attempted task type: {task_type}. "
+        
+        if attempted_assigned_to:
+            description += f"Attempted to assign to: {attempted_assigned_to}. "
+        
+        description += f"Creation failed with error: {error_message or 'Unknown error'}. "
+        description += f"User roles: [{roles_text}]."
+
+    elif action == 'UPDATE_TASK_SUCCESS' and additional_data:
+        task_type = additional_data.get('task_type', 'Unknown')
+        old_status = additional_data.get('old_status', 'Unknown')
+        new_status = additional_data.get('new_status', 'Unknown')
+        assigned_to_name = additional_data.get('assigned_to_name', 'Unknown')
+        field_changes = additional_data.get('field_changes', [])
+        changes_count = additional_data.get('changes_count', 0)
+        
+        description = f"User {username} ({user_email}) successfully updated task on {timestamp_formatted}. "
+        description += f"Task type: {task_type}. "
+        
+        if old_status != new_status:
+            description += f"Status changed from '{old_status}' to '{new_status}'. "
+        
+        if assigned_to_name and assigned_to_name != 'Unknown':
+            description += f"Currently assigned to: {assigned_to_name}. "
+        
+        # **ADD FIELD CHANGES DETAILS**
+        if field_changes:
+            description += f"Modified {changes_count} field(s): {'; '.join(field_changes)}. "
+        
+        description += f"User roles: [{roles_text}]."
+        
+        if entity_type and entity_ids:
+            description += f" Updated {entity_type} record with ID: {', '.join(map(str, entity_ids))}."
+
+    elif action == 'UPDATE_TASK_FAILED' and additional_data:
+        task_type = additional_data.get('task_type', 'Unknown')
+        attempted_assigned_to = additional_data.get('attempted_assigned_to')
+        new_status = additional_data.get('new_status')
+        field_changes = additional_data.get('field_changes', [])
+        
+        description = f"User {username} ({user_email}) failed to update task on {timestamp_formatted}. "
+        description += f"Task type: {task_type}. "
+        
+        if new_status:
+            description += f"Attempted new status: '{new_status}'. "
+        
+        if attempted_assigned_to:
+            description += f"Attempted to assign to: {attempted_assigned_to}. "
+        
+        if field_changes:
+            description += f"Attempted changes: {'; '.join(field_changes)}. "
+        
+        description += f"Update failed with error: {error_message or 'Unknown error'}. "
+        description += f"User roles: [{roles_text}]."
+
+    elif action == 'DELETE_TASK_SUCCESS' and additional_data:
+        task_type = additional_data.get('task_type', 'Unknown')
+        assigned_to_name = additional_data.get('assigned_to_name')
+        
+        description = f"User {username} ({user_email}) successfully deleted a task on {timestamp_formatted}. "
+        description += f"Task type: {task_type}. "
+        
+        if assigned_to_name and assigned_to_name != 'Unknown':
+            description += f"Task was assigned to: {assigned_to_name}. "
+        else:
+            description += "Task was unassigned. "
+        
+        description += f"User roles: [{roles_text}]."
+        
+        if entity_type and entity_ids:
+            description += f" Deleted {entity_type} record with ID: {', '.join(map(str, entity_ids))}."
+
+    elif action == 'DELETE_TASK_FAILED' and additional_data:
+        task_type = additional_data.get('task_type', 'Unknown')
+        
+        description = f"User {username} ({user_email}) failed to delete task on {timestamp_formatted}. "
+        description += f"Task type: {task_type}. "
+        description += f"Deletion failed with error: {error_message or 'Unknown error'}. "
+        description += f"User roles: [{roles_text}]."
+
+    # **VOLUNTEER UPDATE DESCRIPTIONS**
+    elif action == 'UPDATE_GENERAL_VOLUNTEER_SUCCESS' and additional_data:
+        old_comments = additional_data.get('old_comments', '')
+        new_comments = additional_data.get('new_comments', '')
+        volunteer_name = additional_data.get('volunteer_name', 'Unknown Volunteer')
+        volunteer_email = additional_data.get('volunteer_email', 'Unknown')
+        
+        description = f"User {username} ({user_email}) successfully updated general volunteer on {timestamp_formatted}. "
+        description += f"Volunteer: {volunteer_name} ({volunteer_email}). "
+        
+        if old_comments != new_comments:
+            old_display = old_comments[:50] + '...' if len(str(old_comments)) > 50 else old_comments
+            new_display = new_comments[:50] + '...' if len(str(new_comments)) > 50 else new_comments
+            description += f"Comments updated from '{old_display}' to '{new_display}'. "
+        
+        description += f"User roles: [{roles_text}]."
+        
+        if entity_type and entity_ids:
+            description += f" Updated {entity_type} record with ID: {', '.join(map(str, entity_ids))}."
+
+    elif action == 'UPDATE_GENERAL_VOLUNTEER_FAILED' and additional_data:
+        volunteer_name = additional_data.get('volunteer_name', 'Unknown')
+        attempted_email = additional_data.get('attempted_email', 'Unknown')
+        
+        description = f"User {username} ({user_email}) failed to update general volunteer on {timestamp_formatted}. "
+        description += f"Attempted volunteer: {volunteer_name} ({attempted_email}). "
+        description += f"Update failed with error: {error_message or 'Unknown error'}. "
+        description += f"User roles: [{roles_text}]."
+
+    # **TUTOR UPDATE DESCRIPTIONS**
+    elif action == 'UPDATE_TUTOR_SUCCESS' and additional_data:
+        tutor_name = additional_data.get('tutor_name', 'Unknown Tutor')
+        tutor_email = additional_data.get('tutor_email', 'Unknown')
+        changed_fields = additional_data.get('changed_fields', {})
+        has_tutorship = additional_data.get('has_tutorship', False)
+        child_name = additional_data.get('child_name', 'Unknown')
+        
+        description = f"User {username} ({user_email}) successfully updated tutor on {timestamp_formatted}. "
+        description += f"Tutor: {tutor_name} ({tutor_email}). "
+        
+        if changed_fields:
+            field_updates = []
+            for field, changes in changed_fields.items():
+                old_val = changes.get('old', 'Unknown')
+                new_val = changes.get('new', 'Unknown')
+                field_updates.append(f"{field}: '{old_val}' → '{new_val}'")
+            description += f"Fields updated: {'; '.join(field_updates)}. "
+        
+        if has_tutorship:
+            description += f"Associated child: {child_name}. "
+        
+        description += f"User roles: [{roles_text}]."
+        
+        if entity_type and entity_ids:
+            description += f" Updated {entity_type} record with ID: {', '.join(map(str, entity_ids))}."
+
+    elif action == 'UPDATE_TUTOR_FAILED' and additional_data:
+        tutor_name = additional_data.get('tutor_name', 'Unknown')
+        tutor_email = additional_data.get('tutor_email', 'Unknown')
+        attempted_fields = additional_data.get('attempted_fields', [])
+        
+        description = f"User {username} ({user_email}) failed to update tutor on {timestamp_formatted}. "
+        description += f"Attempted tutor: {tutor_name} ({tutor_email}). "
+        
+        if attempted_fields:
+            description += f"Attempted to update: {', '.join(attempted_fields)}. "
+        
+        description += f"Update failed with error: {error_message or 'Unknown error'}. "
+        description += f"User roles: [{roles_text}]."
+    
+    # **TUTORSHIP OPERATION DESCRIPTIONS**
+    elif action == 'CREATE_TUTORSHIP_SUCCESS' and additional_data:
+        child_name = additional_data.get('child_name', 'Unknown')
+        tutor_name = additional_data.get('tutor_name', 'Unknown')
+        tutor_email = additional_data.get('tutor_email', 'Unknown')
+        approval_counter = additional_data.get('approval_counter', 1)
+        
+        description = f"User {username} ({user_email}) successfully created a new tutorship on {timestamp_formatted}. "
+        description += f"Child: {child_name}. Tutor: {tutor_name} ({tutor_email}). "
+        description += f"Approval counter initialized to {approval_counter}. "
+        description += f"User roles: [{roles_text}]."
+        
+        if entity_type and entity_ids:
+            description += f" Created {entity_type} record with ID: {', '.join(map(str, entity_ids))}."
+
+    elif action == 'CREATE_TUTORSHIP_FAILED' and additional_data:
+        child_name = additional_data.get('child_name', 'Unknown')
+        tutor_name = additional_data.get('tutor_name', 'Unknown')
+        reason = additional_data.get('reason', 'unknown_reason')
+        
+        description = f"User {username} ({user_email}) failed to create tutorship on {timestamp_formatted}. "
+        description += f"Child: {child_name}. Tutor: {tutor_name}. "
+        description += f"Creation failed with error: {error_message or 'Unknown error'}. "
+        
+        if reason == 'duplicate_tutorship':
+            description += f"A tutorship already exists for this child-tutor pair. "
+            existing_id = additional_data.get('existing_tutorship_id', 'Unknown')
+            description += f"Existing tutorship ID: {existing_id}. "
+        
+        description += f"User roles: [{roles_text}]."
+
+    elif action == 'UPDATE_TUTORSHIP_SUCCESS' and additional_data:
+        child_name = additional_data.get('child_name', 'Unknown')
+        tutor_name = additional_data.get('tutor_name', 'Unknown')
+        tutor_email = additional_data.get('tutor_email', 'Unknown')
+        old_approval_counter = additional_data.get('old_approval_counter', 1)
+        new_approval_counter = additional_data.get('new_approval_counter', 1)
+        tutor_role_added = additional_data.get('tutor_role_added', False)
+        tutorship_approved = additional_data.get('tutorship_approved', False)
+        
+        description = f"User {username} ({user_email}) successfully updated tutorship on {timestamp_formatted}. "
+        description += f"Child: {child_name}. Tutor: {tutor_name} ({tutor_email}). "
+        description += f"Approval counter updated from {old_approval_counter} to {new_approval_counter}. "
+        
+        if tutor_role_added:
+            description += f"Tutor role has been added to the staff member. "
+        
+        if tutorship_approved:
+            description += f"Tutorship is now fully approved (2 approvals received). "
+        
+        description += f"User roles: [{roles_text}]."
+        
+        if entity_type and entity_ids:
+            description += f" Updated {entity_type} record with ID: {', '.join(map(str, entity_ids))}."
+
+    elif action == 'UPDATE_TUTORSHIP_FAILED' and additional_data:
+        child_name = additional_data.get('child_name', 'Unknown')
+        tutor_name = additional_data.get('tutor_name', 'Unknown')
+        reason = additional_data.get('reason', 'unknown_reason')
+        current_approval_counter = additional_data.get('current_approval_counter', 'Unknown')
+        
+        description = f"User {username} ({user_email}) failed to update tutorship on {timestamp_formatted}. "
+        description += f"Child: {child_name}. Tutor: {tutor_name}. "
+        
+        if reason == 'duplicate_approval':
+            description += f"Update failed: This role has already approved this tutorship. "
+            description += f"Current approval counter: {current_approval_counter}. "
+        
+        description += f"Error: {error_message or 'Unknown error'}. "
+        description += f"User roles: [{roles_text}]."
+
+    elif action == 'DELETE_TUTORSHIP_SUCCESS' and additional_data:
+        child_name = additional_data.get('deleted_child_name', 'Unknown')
+        tutor_name = additional_data.get('deleted_tutor_name', 'Unknown')
+        tutor_email = additional_data.get('deleted_tutor_email', 'Unknown')
+        status_restored = additional_data.get('status_restored', False)
+        tutor_old_status = additional_data.get('tutor_old_status', 'Unknown')
+        child_old_status = additional_data.get('child_old_status', 'Unknown')
+        
+        description = f"User {username} ({user_email}) successfully deleted tutorship on {timestamp_formatted}. "
+        description += f"Child: {child_name}. Tutor: {tutor_name} ({tutor_email}). "
+        
+        if status_restored:
+            description += f"Previous statuses have been restored - Tutor: {tutor_old_status}, Child: {child_old_status}. "
+        else:
+            description += f"Default statuses set - Tutor: אין_חניך, Child: אין_חונך. "
+        
+        description += f"User roles: [{roles_text}]."
+        
+        if entity_type and entity_ids:
+            description += f" Deleted {entity_type} record with ID: {', '.join(map(str, entity_ids))}."
+
+    elif action == 'DELETE_TUTORSHIP_FAILED' and additional_data:
+        description = f"User {username} ({user_email}) failed to delete tutorship on {timestamp_formatted}. "
+        description += f"Deletion failed with error: {error_message or 'Unknown error'}. "
+        description += f"User roles: [{roles_text}]."
     
     # **FALLBACK TO ORIGINAL FORMAT FOR COMPATIBILITY**
     else:
@@ -225,15 +629,19 @@ def log_api_action(
         
         # **ENHANCED: Handle special cases for registration and other anonymous actions**
         attempted_email = None
+        registration_email = None
         if additional_data:
             attempted_email = additional_data.get('attempted_email') or additional_data.get('email')
+            registration_email = additional_data.get('registration_email')
         
         # Handle different scenarios for anonymous users
         if not user_email:
-            if action in ['USER_REGISTRATION_SUCCESS', 'USER_REGISTRATION_FAILED'] and attempted_email:
-                # For registration, use the registration email as the user_email for audit
-                user_email = attempted_email
-                username = ""  # Empty string for new registrations
+            if action in ['USER_REGISTRATION_SUCCESS', 'USER_REGISTRATION_FAILED', 
+                         'CREATE_PENDING_TUTOR_SUCCESS', 'CREATE_PENDING_TUTOR_FAILED',
+                         'CREATE_VOLUNTEER_SUCCESS', 'CREATE_VOLUNTEER_FAILED'] and registration_email:
+                # For registration-related actions, use the registration email as the user_email for audit
+                user_email = registration_email
+                username = additional_data.get('username', '')  # Use the created username
             elif attempted_email and attempted_email != 'unknown':
                 # For other failed attempts (like login failures)
                 user_email = attempted_email
@@ -276,7 +684,7 @@ def log_api_action(
         with transaction.atomic():
             AuditLog.objects.create(
                 user_email=user_email,  # This will now contain the registration email
-                username=username,      # This will be empty string for registrations
+                username=username,      # This will be the created username for registrations
                 action=action,
                 endpoint=request.path,
                 method=request.method,

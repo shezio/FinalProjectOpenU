@@ -6,24 +6,33 @@ from .views import (
     get_children,
     get_tutors,
     get_staff,
-    create_volunteer_or_tutor,
     get_pending_tutors,
     get_signedup,
     get_all_staff,
-    update_staff_member,
-    delete_staff_member,
     get_roles,
-    create_staff_member,
     get_general_volunteers_not_pending,
+    test_email_setup,
+    test_gmail_auth,
+)
+from .views_auth import (
     google_login_success,
     login_email,
     verify_totp,
-    test_email_setup,
-    test_gmail_auth,
-    register_send_totp,
-    register_verify_totp,
+)
+from .views_staff import (
+    update_staff_member,
+    delete_staff_member,
+    create_staff_member,
     staff_creation_send_totp,
     staff_creation_verify_totp,
+)
+from .views_volunteer import (
+    create_volunteer_or_tutor,
+    register_send_totp,
+    register_verify_totp,
+    create_pending_tutor,
+    update_general_volunteer,
+    update_tutor,
 )
 from .task_views import (
     get_user_tasks,
@@ -69,10 +78,6 @@ from .tutorship_views import (
     create_tutorship,
     update_tutorship,
     delete_tutorship,
-)
-from .tutor_volunteer_views import (
-    update_general_volunteer,
-    update_tutor,
 )
 
 from .unused_views import (

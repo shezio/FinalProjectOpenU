@@ -210,7 +210,8 @@ def create_family(request):
             action='CREATE_FAMILY_FAILED',
             success=False,
             error_message="Authentication credentials were not provided",
-            status_code=403
+            status_code=403,
+            additional_data={'family_name': 'Unknown'}  # **ADD THIS LINE**
         )
         return JsonResponse(
             {"detail": "Authentication credentials were not provided."}, status=403
@@ -223,7 +224,8 @@ def create_family(request):
             action='CREATE_FAMILY_FAILED',
             success=False,
             error_message="You do not have permission to create a family",
-            status_code=401
+            status_code=401,
+            additional_data={'family_name': 'Unknown'}  # **ADD THIS LINE**
         )
         return JsonResponse(
             {"error": "You do not have permission to create a family."}, status=401
@@ -258,7 +260,8 @@ def create_family(request):
                 action='CREATE_FAMILY_FAILED',
                 success=False,
                 error_message=f"Missing required fields: {', '.join(missing_fields)}",
-                status_code=400
+                status_code=400,
+                additional_data={'family_name': f"{data.get('childfirstname', 'Unknown')} {data.get('childsurname', 'Unknown')}"}  # **ADD THIS LINE**
             )
             return JsonResponse(
                 {"error": f"Missing required fields: {', '.join(missing_fields)}"},
@@ -272,7 +275,8 @@ def create_family(request):
                 action='CREATE_FAMILY_FAILED',
                 success=False,
                 error_message="Invalid date of birth",
-                status_code=400
+                status_code=400,
+                additional_data={'family_name': f"{data.get('childfirstname', 'Unknown')} {data.get('childsurname', 'Unknown')}"}  # **ADD THIS LINE**
             )
             return JsonResponse(
                 {"error": "Invalid date of birth"},
@@ -285,7 +289,8 @@ def create_family(request):
                 action='CREATE_FAMILY_FAILED',
                 success=False,
                 error_message="Invalid child_id - must be exactly 9 digits",
-                status_code=400
+                status_code=400,
+                additional_data={'family_name': f"{data.get('childfirstname', 'Unknown')} {data.get('childsurname', 'Unknown')}"}  # **ADD THIS LINE**
             )
             return JsonResponse(
                 {"error": "Invalid child_id - must be exactly 9 digits"},
@@ -366,7 +371,8 @@ def create_family(request):
             action='CREATE_FAMILY_FAILED',
             success=False,
             error_message=str(e),
-            status_code=500
+            status_code=500,
+            additional_data={'family_name': f"{data.get('childfirstname', 'Unknown')} {data.get('childsurname', 'Unknown')}" if 'data' in locals() else 'Unknown'}  # **ADD THIS LINE**
         )
         return JsonResponse({"error": str(e)}, status=500)
 
@@ -385,7 +391,8 @@ def update_family(request, child_id):
             action='UPDATE_FAMILY_FAILED',
             success=False,
             error_message="Authentication credentials were not provided",
-            status_code=403
+            status_code=403,
+            additional_data={'family_name': 'Unknown'}  # **ADD THIS LINE**
         )
         return JsonResponse(
             {"detail": "Authentication credentials were not provided."}, status=403
@@ -400,7 +407,8 @@ def update_family(request, child_id):
             error_message="You do not have permission to update this family",
             status_code=401,
             entity_type='Children',
-            entity_ids=[child_id]
+            entity_ids=[child_id],
+            additional_data={'family_name': 'Unknown'}  # **ADD THIS LINE**
         )
         return JsonResponse(
             {"error": "You do not have permission to update this family."}, status=401
@@ -418,7 +426,8 @@ def update_family(request, child_id):
                 error_message="Family not found",
                 status_code=404,
                 entity_type='Children',
-                entity_ids=[child_id]
+                entity_ids=[child_id],
+                additional_data={'family_name': 'Unknown - Family not found'}  # **UPDATE THIS LINE**
             )
             return JsonResponse({"error": "Family not found."}, status=404)
 
@@ -435,7 +444,12 @@ def update_family(request, child_id):
                 error_message="The child_id in the request does not match the existing child_id",
                 status_code=400,
                 entity_type='Children',
-                entity_ids=[child_id]
+                entity_ids=[child_id],
+                additional_data={
+                    'family_name': f"{family.childfirstname} {family.childsurname}",
+                    'attempted_changes': field_changes,  # **ADD THIS**
+                    'changes_count': len(field_changes)  # **ADD THIS**
+                }
             )
             return JsonResponse(
                 {
@@ -470,7 +484,12 @@ def update_family(request, child_id):
                 error_message=f"Missing required fields: {', '.join(missing_fields)}",
                 status_code=400,
                 entity_type='Children',
-                entity_ids=[child_id]
+                entity_ids=[child_id],
+                additional_data={
+                    'family_name': f"{family.childfirstname} {family.childsurname}",
+                    'attempted_changes': field_changes,  # **ADD THIS**
+                    'changes_count': len(field_changes)  # **ADD THIS**
+                }
             )
             return JsonResponse(
                 {"error": f"Missing required fields: {', '.join(missing_fields)}"},
@@ -480,7 +499,75 @@ def update_family(request, child_id):
         # Store original values for audit
         original_name = f"{family.childfirstname} {family.childsurname}"
         
-        # Update fields in the Children table
+        # **ADD: Track what fields are being changed - BEFORE updating**
+        field_changes = []
+        
+        # Check each field for changes and track them
+        if family.childfirstname != data.get("childfirstname", family.childfirstname):
+            field_changes.append(f"First Name: '{family.childfirstname}' → '{data.get('childfirstname')}'")
+        if family.childsurname != data.get("childsurname", family.childsurname):
+            field_changes.append(f"Last Name: '{family.childsurname}' → '{data.get('childsurname')}'")
+        
+        # Handle gender comparison
+        new_gender = True if data.get("gender") == "נקבה" else False
+        if family.gender != new_gender:
+            old_gender = "נקבה" if family.gender else "זכר"
+            new_gender_text = "נקבה" if new_gender else "זכר"
+            field_changes.append(f"Gender: '{old_gender}' → '{new_gender_text}'")
+            
+        if family.city != data.get("city", family.city):
+            field_changes.append(f"City: '{family.city}' → '{data.get('city')}'")
+        if family.child_phone_number != data.get("child_phone_number", family.child_phone_number):
+            field_changes.append(f"Phone: '{family.child_phone_number}' → '{data.get('child_phone_number')}'")
+        if family.treating_hospital != data.get("treating_hospital", family.treating_hospital):
+            field_changes.append(f"Hospital: '{family.treating_hospital}' → '{data.get('treating_hospital')}'")
+        if family.medical_diagnosis != data.get("medical_diagnosis", family.medical_diagnosis):
+            field_changes.append(f"Medical Diagnosis: '{family.medical_diagnosis}' → '{data.get('medical_diagnosis')}'")
+        if family.marital_status != data.get("marital_status", family.marital_status):
+            field_changes.append(f"Marital Status: '{family.marital_status}' → '{data.get('marital_status')}'")
+        if family.num_of_siblings != data.get("num_of_siblings", family.num_of_siblings):
+            field_changes.append(f"Siblings: '{family.num_of_siblings}' → '{data.get('num_of_siblings')}'")
+        if family.details_for_tutoring != data.get("details_for_tutoring", family.details_for_tutoring):
+            field_changes.append(f"Tutoring Details: '{family.details_for_tutoring}' → '{data.get('details_for_tutoring')}'")
+        if family.additional_info != data.get("additional_info", family.additional_info):
+            field_changes.append(f"Additional Info: '{family.additional_info}' → '{data.get('additional_info')}'")
+        if family.tutoring_status != data.get("tutoring_status", family.tutoring_status):
+            field_changes.append(f"Tutoring Status: '{family.tutoring_status}' → '{data.get('tutoring_status')}'")
+        if family.current_medical_state != data.get("current_medical_state", family.current_medical_state):
+            field_changes.append(f"Medical State: '{family.current_medical_state}' → '{data.get('current_medical_state')}'")
+        if family.father_name != data.get("father_name", family.father_name):
+            field_changes.append(f"Father Name: '{family.father_name}' → '{data.get('father_name')}'")
+        if family.father_phone != data.get("father_phone", family.father_phone):
+            field_changes.append(f"Father Phone: '{family.father_phone}' → '{data.get('father_phone')}'")
+        if family.mother_name != data.get("mother_name", family.mother_name):
+            field_changes.append(f"Mother Name: '{family.mother_name}' → '{data.get('mother_name')}'")
+        if family.mother_phone != data.get("mother_phone", family.mother_phone):
+            field_changes.append(f"Mother Phone: '{family.mother_phone}' → '{data.get('mother_phone')}'")
+        if family.street_and_apartment_number != data.get("street_and_apartment_number", family.street_and_apartment_number):
+            field_changes.append(f"Address: '{family.street_and_apartment_number}' → '{data.get('street_and_apartment_number')}'")
+        if family.has_completed_treatments != data.get("has_completed_treatments", family.has_completed_treatments):
+            field_changes.append(f"Completed Treatments: '{family.has_completed_treatments}' → '{data.get('has_completed_treatments')}'")
+        if family.status != data.get("status", family.status):
+            field_changes.append(f"Status: '{family.status}' → '{data.get('status')}'")
+
+        # Handle date fields separately (compare parsed dates)
+        new_date_of_birth = parse_date_field(data.get("date_of_birth"), "date_of_birth")
+        if family.date_of_birth != new_date_of_birth:
+            field_changes.append(f"Birth Date: '{family.date_of_birth}' → '{new_date_of_birth}'")
+            
+        new_diagnosis_date = parse_date_field(data.get("diagnosis_date"), "diagnosis_date")
+        if family.diagnosis_date != new_diagnosis_date:
+            field_changes.append(f"Diagnosis Date: '{family.diagnosis_date}' → '{new_diagnosis_date}'")
+            
+        new_treatment_end = parse_date_field(data.get("when_completed_treatments"), "when_completed_treatments")
+        if family.when_completed_treatments != new_treatment_end:
+            field_changes.append(f"Treatment End: '{family.when_completed_treatments}' → '{new_treatment_end}'")
+            
+        new_expected_end = parse_date_field(data.get("expected_end_treatment_by_protocol"), "expected_end_treatment_by_protocol")
+        if family.expected_end_treatment_by_protocol != new_expected_end:
+            field_changes.append(f"Expected End: '{family.expected_end_treatment_by_protocol}' → '{new_expected_end}'")
+
+        # **KEEP ALL EXISTING FIELD UPDATES AS THEY ARE** - Update fields in the Children table
         family.childfirstname = data.get("childfirstname", family.childfirstname)
         family.childsurname = data.get("childsurname", family.childsurname)
         family.gender = True if data.get("gender") == "נקבה" else False
@@ -506,7 +593,7 @@ def update_family(request, child_id):
         family.has_completed_treatments = data.get("has_completed_treatments", family.has_completed_treatments)
         family.status = data.get("status", family.status)
         family.lastupdateddate = datetime.datetime.now()
-
+        
         # Save the updated family record
         try:
             family.save()
@@ -520,7 +607,12 @@ def update_family(request, child_id):
                 error_message=f"Database error: {str(db_error)}",
                 status_code=500,
                 entity_type='Children',
-                entity_ids=[child_id]
+                entity_ids=[child_id],
+                additional_data={
+                    'family_name': f"{family.childfirstname} {family.childsurname}",
+                    'attempted_changes': field_changes,  # **ADD THIS**
+                    'changes_count': len(field_changes)  # **ADD THIS**
+                }
             )
             return JsonResponse(
                 {"error": f"Database error: {str(db_error)}"}, status=500
@@ -551,7 +643,9 @@ def update_family(request, child_id):
                 'updated_family_name': f"{family.childfirstname} {family.childsurname}",
                 'original_family_name': original_name,
                 'family_city': family.city,
-                'family_status': family.status
+                'family_status': family.status,
+                'field_changes': field_changes,  # **ADD THIS**
+                'changes_count': len(field_changes)  # **ADD THIS**
             }
         )
 
@@ -573,7 +667,12 @@ def update_family(request, child_id):
             error_message=str(e),
             status_code=500,
             entity_type='Children',
-            entity_ids=[child_id]
+            entity_ids=[child_id],
+            additional_data={
+                'family_name': f"{family.childfirstname} {family.childsurname}" if 'family' in locals() else 'Unknown',
+                'attempted_changes': field_changes if 'field_changes' in locals() else [],  # **ADD THIS**
+                'changes_count': len(field_changes) if 'field_changes' in locals() else 0  # **ADD THIS**
+            }
         )
         return JsonResponse({"error": str(e)}, status=500)
 
@@ -625,7 +724,8 @@ def delete_family(request, child_id):
                 error_message="Family not found",
                 status_code=404,
                 entity_type='Children',
-                entity_ids=[child_id]
+                entity_ids=[child_id],
+                additional_data={'family_name': 'Unknown - Family not found'}  # **ADD THIS**
             )
             return JsonResponse({"error": "Family not found."}, status=404)
 
@@ -649,16 +749,21 @@ def delete_family(request, child_id):
             entity_ids=[child_id],
             success=True,
             additional_data={
-                'deleted_family_name': family_name
+                'deleted_family_name': family_name,
+                'family_first_name': family.childfirstname,  # **ADD THIS**
+                'family_last_name': family.childsurname,  # **ADD THIS**
+                'family_city': family.city,  # **ADD THIS**
+                'family_status': family.status,  # **ADD THIS**
+                'family_phone': family.child_phone_number,  # **ADD THIS**
+                'family_hospital': family.treating_hospital,  # **ADD THIS**
+                'family_marital_status': family.marital_status,  # **ADD THIS**
+                'family_tutoring_status': family.tutoring_status,  # **ADD THIS**
+                'date_of_birth': family.date_of_birth.strftime("%d/%m/%Y") if family.date_of_birth else None,  # **ADD THIS**
+                'medical_diagnosis': family.medical_diagnosis,  # **ADD THIS**
+                'current_medical_state': family.current_medical_state  # **ADD THIS**
             }
         )
 
-        print(f"DEBUG: Family with child_id {child_id} deleted successfully.")
-
-        return JsonResponse(
-            {"message": "Family deleted successfully", "family_id": child_id},
-            status=200,
-        )
     except Exception as e:
         print(f"DEBUG: An error occurred while deleting the family: {str(e)}")
         log_api_action(
@@ -668,7 +773,14 @@ def delete_family(request, child_id):
             error_message=str(e),
             status_code=500,
             entity_type='Children',
-            entity_ids=[child_id]
+            entity_ids=[child_id],
+            additional_data={
+                'deleted_family_name': family_name if 'family' in locals() else 'Unknown',  # **ADD THIS**
+                'family_first_name': family.childfirstname if 'family' in locals() else 'Unknown',  # **ADD THIS**
+                'family_last_name': family.childsurname if 'family' in locals() else 'Unknown',  # **ADD THIS**
+                'family_city': family.city if 'family' in locals() else 'Unknown',  # **ADD THIS**
+                'family_status': family.status if 'family' in locals() else 'Unknown'  # **ADD THIS**
+            }
         )
         return JsonResponse({"error": str(e)}, status=500)
 
@@ -1041,7 +1153,11 @@ def mark_initial_family_complete(request, initial_family_data_id):
             error_message="Initial family data not found",
             status_code=404,
             entity_type='InitialFamilyData',
-            entity_ids=[initial_family_data_id]
+            entity_ids=[initial_family_data_id],
+            additional_data={
+                'family_names': 'Unknown - Not Found',  # **ADD THIS**
+                'family_phones': 'Unknown - Not Found'  # **ADD THIS**
+            }
         )
         return JsonResponse({"error": "Initial family data not found."}, status=404)
 
@@ -1075,7 +1191,8 @@ def mark_initial_family_complete(request, initial_family_data_id):
             entity_ids=[initial_family_data_id],
             success=True,
             additional_data={
-                'family_names': initial_family_data.names,
+                'family_names': initial_family_data.names,  # **ADD THIS**
+                'family_phones': initial_family_data.phones,  # **ADD THIS**
                 'family_added_status': initial_family_data.family_added
             }
         )
@@ -1095,7 +1212,11 @@ def mark_initial_family_complete(request, initial_family_data_id):
             error_message=str(e),
             status_code=500,
             entity_type='InitialFamilyData',
-            entity_ids=[initial_family_data_id]
+            entity_ids=[initial_family_data_id],
+            additional_data={
+                'family_names': initial_family_data.names if 'initial_family_data' in locals() else 'Unknown - Error',  # **ADD THIS**
+                'family_phones': initial_family_data.phones if 'initial_family_data' in locals() else 'Unknown - Error'  # **ADD THIS**
+            }
         )
         return JsonResponse({"error": str(e)}, status=500)
 
@@ -1159,8 +1280,9 @@ def delete_initial_family_data(request, initial_family_data_id):
             initial_family_data_id=initial_family_data_id
         )
         
-        # Store names for audit
+        # Store names and phones for audit BEFORE deletion
         family_names = initial_family_data.names
+        family_phones = initial_family_data.phones
 
         related_tasks = Tasks.objects.filter(
             initial_family_data_id_fk=initial_family_data_id
@@ -1184,7 +1306,8 @@ def delete_initial_family_data(request, initial_family_data_id):
             entity_ids=[initial_family_data_id],
             success=True,
             additional_data={
-                'deleted_family_names': family_names
+                'deleted_family_names': family_names,  # **ADD THIS**
+                'deleted_family_phones': family_phones  # **ADD THIS**
             }
         )
 
@@ -1199,7 +1322,11 @@ def delete_initial_family_data(request, initial_family_data_id):
             error_message="Initial family data not found",
             status_code=404,
             entity_type='InitialFamilyData',
-            entity_ids=[initial_family_data_id]
+            entity_ids=[initial_family_data_id],
+            additional_data={
+                'deleted_family_names': 'Unknown - Not Found',  # **ADD THIS**
+                'deleted_family_phones': 'Unknown - Not Found'  # **ADD THIS**
+            }
         )
         return JsonResponse({"error": "Initial family data not found."}, status=404)
     except Exception as e:
@@ -1211,6 +1338,10 @@ def delete_initial_family_data(request, initial_family_data_id):
             error_message=str(e),
             status_code=500,
             entity_type='InitialFamilyData',
-            entity_ids=[initial_family_data_id]
+            entity_ids=[initial_family_data_id],
+            additional_data={
+                'deleted_family_names': 'Unknown - Error',  # **ADD THIS**
+                'deleted_family_phones': 'Unknown - Error'  # **ADD THIS**
+            }
         )
         return JsonResponse({"error": str(e)}, status=500)
