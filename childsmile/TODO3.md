@@ -30,5 +30,11 @@ Bugs/tasks:
 - too many attempts with wrong totp - should have blocked completely to prevent brute force
 - filter healthy works only when u r on the 1st page lol
 - create logger and move all debug prints to logger, define levels etc
+- create tests for BE, and for UI
 - add role to search in sysmgmt table search
+- make sysmgmt sort by created_at desc by default and add sort button like in families.js
 - no validation on updating relationship type - can set to anything  - must be one of predefined types
+- cannot edit tutor using a volunteer account  - no error to user and no audit about it
+- created task for user even if totp send failed and user wasnt created
+- need to widen the delete staff modal to fit any length of email address
+- edit staff - not sending totp if email changed

@@ -12,7 +12,7 @@ from django.utils.timezone import now
 from .models import (
     Staff, TOTPCode, SignedUp, Pending_Tutor, 
     General_Volunteer, Tutors, Role, Children,
-    Tutorships, PrevTutorshipStatuses, Tasks
+    Tutorships, PrevTutorshipStatuses, Tasks, Task_Types
 )
 from .utils import has_permission
 from .audit_utils import log_api_action
@@ -32,21 +32,47 @@ def register_send_totp(request):
         data = request.data
         email = data.get("email", "").strip().lower()
         first_name = data.get("first_name", "").strip()
-        last_name = data.get("last_name", "").strip()
-        registration_type = data.get("type", "").strip()
+        surname = data.get("surname", data.get("last_name", "")).strip()
+        age = data.get("age", 0)
+        gender = data.get("gender", "").strip()
+        phone_prefix = data.get("phone_prefix", "").strip()
+        phone_suffix = data.get("phone_suffix", "").strip()
+        city = data.get("city", "").strip()
+        comment = data.get("comment", "").strip()
+        want_tutor = data.get("want_tutor", False)
+        user_id = data.get("id", "").strip()  # Israeli ID
+
+        # Check which fields are missing
+        missing_fields = []
+        if not email:
+            missing_fields.append("email")
+        if not first_name:
+            missing_fields.append("first_name")
+        if not surname:
+            missing_fields.append("surname")
+        if not age:
+            missing_fields.append("age")
+        if not gender:
+            missing_fields.append("gender")
+        if not phone_prefix or not phone_suffix:
+            missing_fields.append("phone")
+        if not city:
+            missing_fields.append("city")
+        if not user_id:
+            missing_fields.append("id")
 
         # Validate required fields
-        if not email or not first_name or not last_name or not registration_type:
+        if missing_fields:
             log_api_action(
                 request=request,
                 action='USER_REGISTRATION_FAILED',
                 success=False,
-                error_message="Missing required fields: email, first_name, last_name, type",
+                error_message=f"Missing required fields: {', '.join(missing_fields)}",
                 status_code=400,
-                additional_data={'attempted_email': email}
+                additional_data={'attempted_email': email, 'missing_fields': missing_fields}
             )
             return JsonResponse({
-                "error": "Missing required fields: email, first_name, last_name, type"
+                "error": f"Missing required fields: {', '.join(missing_fields)}"
             }, status=400)
 
         # Check if user already registered
@@ -63,12 +89,21 @@ def register_send_totp(request):
                 "error": f"Email '{email}' is already registered"
             }, status=400)
 
+        # Format phone with dash
+        phone = f"{phone_prefix}-{phone_suffix}"
+
         # Store registration data in session
         request.session['pending_registration'] = {
+            "id": user_id,
             "email": email,
             "first_name": first_name,
-            "last_name": last_name,
-            "type": registration_type
+            "surname": surname,
+            "age": age,
+            "gender": gender,
+            "phone": phone,
+            "city": city,
+            "comment": comment,
+            "want_tutor": want_tutor
         }
         request.session['registration_new_user_email'] = email
 
@@ -120,7 +155,7 @@ def register_send_totp(request):
                 additional_data={
                     'attempted_email': email,
                     'attempted_first_name': first_name,
-                    'attempted_last_name': last_name
+                    'attempted_surname': surname
                 }
             )
             return JsonResponse({
@@ -294,33 +329,25 @@ def create_volunteer_or_tutor(request):
         data = request.data
         email = data.get("email", "").strip().lower()
         first_name = data.get("first_name", "").strip()
-        last_name = data.get("last_name", "").strip()
-        user_type = data.get("type", "").strip()
+        surname = data.get("surname", data.get("last_name", "")).strip()
+        age = data.get("age", 0)
+        gender = data.get("gender", "")
+        phone = data.get("phone", "").strip()
+        city = data.get("city", "").strip()
+        comment = data.get("comment", "").strip()
+        want_tutor = data.get("want_tutor", False)
 
-        if not email or not first_name or not last_name or not user_type:
+        if not email or not first_name or not surname:
             log_api_action(
                 request=request,
                 action='CREATE_VOLUNTEER_FAILED',
                 success=False,
-                error_message="Missing required fields: email, first_name, last_name, type",
+                error_message="Missing required fields: email, first_name, surname",
                 status_code=400,
                 additional_data={'attempted_email': email}
             )
             return JsonResponse({
-                "error": "Missing required fields: email, first_name, last_name, type"
-            }, status=400)
-
-        if user_type not in ["General Volunteer", "Tutor"]:
-            log_api_action(
-                request=request,
-                action='CREATE_VOLUNTEER_FAILED',
-                success=False,
-                error_message="Type must be 'General Volunteer' or 'Tutor'",
-                status_code=400,
-                additional_data={'attempted_email': email}
-            )
-            return JsonResponse({
-                "error": "Type must be 'General Volunteer' or 'Tutor'"
+                "error": "Missing required fields: email, first_name, surname"
             }, status=400)
 
         if SignedUp.objects.filter(email=email).exists():
@@ -336,40 +363,57 @@ def create_volunteer_or_tutor(request):
                 "error": f"Email '{email}' is already registered"
             }, status=400)
 
-        # Create user directly
+        # Create SignedUp record
         signup_user = SignedUp.objects.create(
             email=email,
             first_name=first_name,
-            last_name=last_name,
-            type=user_type,
-            created_at=datetime.datetime.now(),
+            surname=surname,
+            age=age,
+            gender=gender,
+            phone=phone,
+            city=city,
+            comment=comment,
+            want_tutor=want_tutor
+        )
+
+        # Create Staff record
+        staff_user = Staff.objects.create(
+            username=email.split('@')[0],
+            email=email,
+            first_name=first_name,
+            last_name=surname
         )
 
         # Create role-specific record
-        if user_type == "General Volunteer":
-            General_Volunteer.objects.create(
-                id=signup_user,
-                staff=None,
-                notes="Created by admin",
-                created_at=datetime.datetime.now()
+        if want_tutor:
+            pending_tutor = Pending_Tutor.objects.create(
+                id=signup_user
             )
-        elif user_type == "Tutor":
-            Pending_Tutor.objects.create(
+            tutor_role = Role.objects.get(role_name="Tutor")
+            staff_user.roles.add(tutor_role)
+        else:
+            general_volunteer = General_Volunteer.objects.create(
                 id=signup_user,
-                created_at=datetime.datetime.now()
+                staff=staff_user,
+                notes="Created by admin"
             )
+            volunteer_role = Role.objects.get(role_name="General Volunteer")
+            staff_user.roles.add(volunteer_role)
 
         log_api_action(
             request=request,
             action='CREATE_VOLUNTEER_SUCCESS',
-            affected_tables=['childsmile_app_signedup'],
+            affected_tables=['childsmile_app_signedup', 'childsmile_app_staff'],
             entity_type='User',
             entity_ids=[signup_user.id],
             success=True,
             additional_data={
                 'created_user_email': email,
-                'user_type': user_type,
-                'created_by_admin': True
+                'user_type': "Tutor" if want_tutor else "General Volunteer",
+                'created_by_admin': True,
+                'first_name': first_name,
+                'surname': surname,
+                'staff_id': staff_user.staff_id
             }
         )
 
@@ -377,7 +421,7 @@ def create_volunteer_or_tutor(request):
             "message": "User created successfully",
             "user_id": signup_user.id,
             "email": email,
-            "type": user_type
+            "want_tutor": want_tutor
         }, status=201)
 
     except Staff.DoesNotExist:
@@ -405,88 +449,152 @@ def create_volunteer_or_tutor(request):
         )
         return JsonResponse({"error": str(e)}, status=500)
 
-
+@transaction.atomic
 def create_volunteer_or_tutor_internal(data, request=None):
     """
-    Internal function to create volunteer or tutor user during registration
+    Internal function to create volunteer/tutor - ORIGINAL WORKING VERSION with audit improvements
     """
     try:
-        email = data.get("email", "").strip().lower()
-        first_name = data.get("first_name", "").strip()
-        last_name = data.get("last_name", "").strip()
-        user_type = data.get("type", "").strip()
+        # Extract ID from data (Israeli ID from registration)
+        user_id = data.get("id")
+        first_name = data.get("first_name")
+        surname = data.get("surname")
+        age = int(data.get("age"))
+        gender = data.get("gender") == "Female"
+        phone = data.get("phone")  # Already formatted in register_send_totp
+        city = data.get("city")
+        comment = data.get("comment", "")
+        email = data.get("email")
+        want_tutor = data.get("want_tutor") == "true" or data.get("want_tutor") is True
 
-        print(f"DEBUG: Creating {user_type} with email {email}")
+        print(f"DEBUG: Extracted user_id={user_id}, email={email}, want_tutor={want_tutor}")
+
+        # Create username
+        username = f"{first_name}_{surname}"
+        index = 1
+        original_username = username
+        while Staff.objects.filter(username=username).exists():
+            username = f"{original_username}_{index}"
+            index += 1
+
+        # Insert into SignedUp table - USE the Israeli ID
+        signedup = SignedUp.objects.create(
+            id=int(user_id),
+            first_name=first_name,
+            surname=surname,
+            age=age,
+            gender=gender,
+            phone=phone,
+            city=city,
+            comment=comment,
+            email=email,
+            want_tutor=want_tutor,
+        )
+        print(f"DEBUG: Created SignedUp with id={signedup.id}")
+
+        # Get role
+        role_name = "General Volunteer"
+        role = Role.objects.get(role_name=role_name)
+
+        # Create Staff
+        staff = Staff.objects.create(
+            username=username,
+            email=email,
+            first_name=first_name,
+            last_name=surname,
+            created_at=now(),
+        )
+        staff.roles.add(role)
+        staff.refresh_from_db()
         
-        # Check if already exists
-        if SignedUp.objects.filter(email=email).exists():
-            log_action_data = {
-                'attempted_email': email,
-                'attempted_first_name': first_name,
-                'attempted_last_name': last_name
-            }
+        # DEBUG: Verify role was added
+        staff_roles = list(staff.roles.all().values_list('role_name', flat=True))
+        print(f"DEBUG: Created staff {staff.staff_id} with roles: {staff_roles}")
+
+        # Create volunteer or pending tutor
+        if want_tutor:
+            pending_tutor = Pending_Tutor.objects.create(
+                id_id=signedup.id,
+                pending_status="ממתין",  # "Pending" in Hebrew
+            )
+            
+            # Create interview task for tutor coordinators AFTER successful pending_tutor creation
+            task_type = Task_Types.objects.filter(
+                task_type="ראיון מועמד לחונכות"
+            ).first()
+            if task_type:
+                from .task_views import create_tasks_for_tutor_coordinators_async
+                create_tasks_for_tutor_coordinators_async(pending_tutor.pending_tutor_id, task_type.id)
+            
+            # Log pending tutor creation with proper user info
             if request:
                 log_api_action(
                     request=request,
-                    action='CREATE_VOLUNTEER_FAILED',
-                    success=False,
-                    error_message=f"Email '{email}' is already registered",
-                    status_code=400,
-                    additional_data=log_action_data
+                    action='CREATE_PENDING_TUTOR_SUCCESS',
+                    affected_tables=['childsmile_app_pending_tutor', 'childsmile_app_signedup', 'childsmile_app_staff'],
+                    entity_type='Pending_Tutor',
+                    entity_ids=[pending_tutor.pending_tutor_id],
+                    success=True,
+                    additional_data={
+                        'tutor_email': email,
+                        'first_name': first_name,
+                        'surname': surname,
+                        'username': username,
+                        'staff_id': staff.staff_id,
+                        'pending_status': 'ממתין',
+                        'pending_tutor_id': pending_tutor.pending_tutor_id
+                    }
                 )
-            return JsonResponse({
-                "error": f"Email '{email}' is already registered"
-            }, status=400)
-
-        # Create user
-        signup_user = SignedUp.objects.create(
-            email=email,
-            first_name=first_name,
-            last_name=last_name,
-            type=user_type,
-            created_at=datetime.datetime.now(),
-        )
-
-        print(f"DEBUG: Created SignedUp user with id {signup_user.id}")
-
-        # Create role-specific record
-        if user_type == "General Volunteer":
+        else:
             General_Volunteer.objects.create(
-                id=signup_user,
-                staff=None,
-                notes="Self-registered via volunteer flow",
-                created_at=datetime.datetime.now()
+                id_id=signedup.id,
+                staff_id=staff.staff_id,
+                signupdate=now().date(),
+                comments="",
             )
-            print(f"DEBUG: Created General_Volunteer record")
-        elif user_type == "Tutor":
-            Pending_Tutor.objects.create(
-                id=signup_user,
-                created_at=datetime.datetime.now()
-            )
-            print(f"DEBUG: Created Pending_Tutor record")
+            
+            # Log volunteer creation with proper user info
+            if request:
+                log_api_action(
+                    request=request,
+                    action='CREATE_VOLUNTEER_SUCCESS',
+                    affected_tables=['childsmile_app_general_volunteer', 'childsmile_app_signedup', 'childsmile_app_staff'],
+                    entity_type='General_Volunteer',
+                    entity_ids=[signedup.id],
+                    success=True,
+                    additional_data={
+                        'volunteer_email': email,
+                        'first_name': first_name,
+                        'surname': surname,
+                        'username': username,
+                        'staff_id': staff.staff_id,
+                        'signup_date': now().date().isoformat()
+                    }
+                )
 
+        # Log successful registration with proper user info
         if request:
             log_api_action(
                 request=request,
-                action='CREATE_VOLUNTEER_SUCCESS',
-                affected_tables=['childsmile_app_signedup'],
-                entity_type='User',
-                entity_ids=[signup_user.id],
+                action='USER_REGISTRATION_SUCCESS',
+                affected_tables=['childsmile_app_signedup', 'childsmile_app_staff'],
+                entity_type='SignedUp',
+                entity_ids=[signedup.id],
                 success=True,
                 additional_data={
-                    'created_user_email': email,
-                    'user_type': user_type,
-                    'registration_flow': 'TOTP verified'
+                    'registration_type': 'pending_tutor' if want_tutor else 'volunteer',
+                    'email': email,
+                    'username': username,
+                    'staff_id': staff.staff_id,
+                    'first_name': first_name,
+                    'surname': surname,
+                    'israeli_id': user_id
                 }
             )
 
-        print(f"DEBUG: {user_type} creation successful")
-        
         return JsonResponse({
-            "message": "Registration successful",
-            "user_id": signup_user.id,
-            "email": email,
-            "type": user_type
+            "message": "Registration completed successfully!",
+            "username": username,
         }, status=201)
 
     except Exception as e:
@@ -496,16 +604,17 @@ def create_volunteer_or_tutor_internal(data, request=None):
         if request:
             log_api_action(
                 request=request,
-                action='CREATE_VOLUNTEER_FAILED',
+                action='CREATE_VOLUNTEER_FAILED' if not data.get("want_tutor") else 'CREATE_PENDING_TUTOR_FAILED',
                 success=False,
                 error_message=str(e),
                 status_code=500,
-                additional_data={'attempted_email': data.get('email', 'Unknown')}
+                additional_data={
+                    'attempted_email': data.get('email', 'unknown'),
+                    'attempted_username': f"{data.get('first_name', '')}_{data.get('surname', '')}",
+                    'attempted_id': data.get('id', 'unknown')
+                }
             )
-        
-        return JsonResponse({
-            "error": "Registration failed: " + str(e)
-        }, status=500)
+        return JsonResponse({"error": str(e)}, status=500)
 
 
 @csrf_exempt
@@ -686,7 +795,7 @@ def update_general_volunteer(request, volunteer_id):
         additional_data={
             'old_comments': old_comments,
             'new_comments': volunteer.comments,
-            'volunteer_name': f"{volunteer.id.first_name} {volunteer.id.last_name}",
+            'volunteer_name': f"{volunteer.id.first_name} {volunteer.id.surname}",
             'volunteer_email': volunteer.id.email
         }
     )
