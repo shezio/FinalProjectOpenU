@@ -190,19 +190,27 @@ def generate_audit_description(user_email, username, action, timestamp, user_rol
         
         entity_name = 'Volunteer' if 'VOLUNTEER' in action else 'Pending Tutor'
         
-        description = f"New {entity_name} {first_name} {surname} (username: {created_username}, email: {volunteer_email}) was successfully created on {timestamp_formatted}. "
+        description = f"New {entity_name}\n"
+        description += f"{first_name} {surname}\n"
+        description += f"Username: {created_username}\n"
+        description += f"Email: {volunteer_email}\n"
+        description += f"Created on: {timestamp_formatted}\n"
         
         if entity_type and entity_ids:
-            description += f"Created {entity_type} record with ID: {', '.join(map(str, entity_ids))}. "
+            description += f"Record ID: {', '.join(map(str, entity_ids))}\n"
         
-        description += f"{entity_name} account setup completed successfully during registration process."
+        description += f"Account setup completed\n"
+        description += f"during registration process"
     
     elif action in ['CREATE_VOLUNTEER_FAILED', 'CREATE_PENDING_TUTOR_FAILED'] and additional_data:
         attempted_email = additional_data.get('attempted_email', 'Unknown')
         entity_name = 'Volunteer' if 'VOLUNTEER' in action else 'Pending Tutor'
         
-        description = f"Failed to create {entity_name} account for email {attempted_email} on {timestamp_formatted}. "
-        description += f"Creation failed with error: {error_message or 'Unknown error'}."
+        description = f"Failed to create\n"
+        description += f"{entity_name} account for\n"
+        description += f"Email: {attempted_email}\n"
+        description += f"Date: {timestamp_formatted}\n"
+        description += f"Error: {error_message or 'Unknown error'}"
     
     elif action.startswith('EXPORT_REPORT_') and additional_data:
         report_name_detail = additional_data.get('report_name', report_name or 'Unknown Report')
@@ -689,23 +697,117 @@ def generate_audit_description(user_email, username, action, timestamp, user_rol
         description += f"Error: {error_message or 'Unknown error'}\n"
         description += f"Roles: {roles_text}"
     
+    # **STAFF UPDATE DESCRIPTIONS**
+    elif action == 'UPDATE_STAFF_SUCCESS' and additional_data:
+        updated_staff_email = additional_data.get('updated_staff_email', 'Unknown')
+        staff_full_name = additional_data.get('staff_full_name', 'Unknown')
+        field_changes = additional_data.get('field_changes', [])
+        changes_count = additional_data.get('changes_count', 0)
+        updated_roles = additional_data.get('updated_roles', [])
+        
+        description = f"User: {username}\n"
+        description += f"Email: {user_email}\n"
+        description += f"Action: Updated staff member\n"
+        description += f"Staff name: {staff_full_name}\n"
+        description += f"Staff email: {updated_staff_email}\n"
+        description += f"Changes: {changes_count} field(s)\n"
+        
+        if field_changes:
+            for change in field_changes:
+                description += f"  • {change}\n"
+        
+        if updated_roles:
+            description += f"Assigned roles: {', '.join(updated_roles)}\n"
+        
+        description += f"Admin roles: {roles_text}"
+        
+        if entity_type and entity_ids:
+            description += f"\nRecord ID: {', '.join(map(str, entity_ids))}"
+    
+    elif action == 'UPDATE_STAFF_FAILED' and additional_data:
+        updated_staff_email = additional_data.get('updated_staff_email', additional_data.get('staff_email', 'Unknown'))
+        staff_full_name = additional_data.get('staff_full_name', 'Unknown')
+        attempted_changes = additional_data.get('attempted_changes', additional_data.get('field_changes', []))
+        changes_count = additional_data.get('changes_count', 0)
+        
+        description = f"User: {username}\n"
+        description += f"Email: {user_email}\n"
+        description += f"Action: Failed update staff\n"
+        description += f"Staff name: {staff_full_name}\n"
+        description += f"Staff email: {updated_staff_email}\n"
+        description += f"Attempted changes: {changes_count} field(s)\n"
+        
+        if attempted_changes:
+            for change in attempted_changes:
+                description += f"  • {change}\n"
+        
+        description += f"Error: {error_message or 'Unknown error'}\n"
+        description += f"Admin roles: {roles_text}"
+        
+        if entity_type and entity_ids:
+            description += f"\nRecord ID: {', '.join(map(str, entity_ids))}"
+    
+    # **STAFF DELETION DESCRIPTIONS - GDPR COMPLIANCE**
+    elif action == 'DELETE_STAFF_SUCCESS' and additional_data:
+        deleted_email = additional_data.get('deleted_staff_email', 'Unknown')
+        deleted_full_name = additional_data.get('deleted_staff_full_name', 'Unknown')
+        deleted_staff_id = additional_data.get('deleted_staff_id', 'Unknown')
+        deleted_staff_roles = additional_data.get('deleted_staff_roles', [])
+
+        description = f"User: {username}\n"
+        description += f"Email: {user_email}\n"
+        description += f"Action: Deleted staff member\n"
+        description += f"Staff name: {deleted_full_name}\n"
+        description += f"Staff email: {deleted_email}\n"
+        description += f"Staff ID: {deleted_staff_id}\n"
+        description += f"Timestamp: {timestamp_formatted}\n"
+        description += f"Staff roles: {', '.join(deleted_staff_roles)}\n"
+        description += f"Status: GDPR deletion complete"
+        
+        if entity_type and entity_ids:
+            description += f"\nDeleted record ID: {', '.join(map(str, entity_ids))}"
+    
+    elif action == 'DELETE_STAFF_FAILED' and additional_data:
+        deleted_email = additional_data.get('deleted_staff_email', 'Unknown')
+        deleted_full_name = additional_data.get('deleted_staff_full_name', 'Unknown')
+        deleted_staff_id = additional_data.get('deleted_staff_id', 'Unknown')
+        deleted_staff_roles = additional_data.get('deleted_staff_roles', [])
+        
+        description = f"User: {username}\n"
+        description += f"Email: {user_email}\n"
+        description += f"Action: Failed delete staff\n"
+        description += f"Staff name of attempted deletion: {deleted_full_name}\n"
+        description += f"Staff email of attempted deletion: {deleted_email}\n"
+        description += f"Staff ID of attempted deletion: {deleted_staff_id}\n"
+        description += f"Timestamp of attempted deletion: {timestamp_formatted}\n"
+        description += f"Error: {error_message or 'Unknown error'}\n"
+        description += f"Staff Roles of attempted Deletion: {', '.join(deleted_staff_roles)}"
+
+        if entity_type and entity_ids:
+            description += f"\nRecord ID: {', '.join(map(str, entity_ids))}"
+    
     # **FALLBACK TO ORIGINAL FORMAT FOR COMPATIBILITY**
     else:
         # Base description (original format for backward compatibility)
-        description = f"User {username} with email {user_email} performed action {action} on {timestamp_formatted}. The user had the following roles: [{roles_text}]. The action was {success_text}."
+        description = f"User: {username}\n"
+        description += f"Email: {user_email}\n"
+        description += f"Action: {action}\n"
+        description += f"Timestamp: {timestamp_formatted}\n"
+        description += f"Roles: {roles_text}\n"
+        description += f"Status: {success_text}"
         
         # Add error message if failure
         if not success and error_message:
-            description += f" The error message was: {error_message}."
+            description += f"\nError: {error_message}"
         
         # Add entity information if available
         if entity_type and entity_ids:
-            entity_text = f"{entity_type} (IDs: {', '.join(map(str, entity_ids))})"
-            description += f" Affected entity: {entity_text}."
+            description += f"\nEntity: {entity_type}"
+            description += f"\nRecord ID: {', '.join(map(str, entity_ids))}"
         
         # Add report name if applicable
         if report_name:
-            description += f" Report: {report_name}."
+            description += f"\nReport: {report_name}"
     
     return description
 

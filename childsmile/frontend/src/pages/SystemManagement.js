@@ -244,16 +244,33 @@ const SystemManagement = () => {
 
     try {
       setTotpLoading(true);
-      await axios.post('/api/staff-creation-verify-totp/', {
-        code: staffTotpCode
-      });
-      toast.success(t('Staff member created successfully.'));
+      
+      // Determine if this is for creation or update based on modal type
+      if (modalType === 'add') {
+        // Staff creation flow
+        await axios.post('/api/staff-creation-verify-totp/', {
+          code: staffTotpCode
+        });
+        toast.success(t('Staff member created successfully.'));
+      } else {
+        // Staff email update flow
+        await axios.put(`/api/update_staff_member/${staffData.id}/`, {
+          username: staffData.username,
+          email: staffData.email,
+          first_name: staffData.first_name,
+          last_name: staffData.last_name,
+          roles: staffData.roles,
+          totp_code: staffTotpCode
+        });
+        toast.success(t('Staff member updated successfully.'));
+      }
+      
       fetchAllStaff();
       closeStaffTotpModal();
       closeAddStaffModal();
       setTotpLoading(false);
     } catch (error) {
-      console.error('Error verifying staff creation TOTP:', error);
+      console.error('Error verifying TOTP:', error);
       setTotpLoading(false);
       showErrorToast(t, 'Verification failed.', error);
     }
@@ -316,13 +333,22 @@ const SystemManagement = () => {
       setTotpLoading(true);
       
       // Call the update API endpoint
-      await axios.put(`/api/update_staff_member/${staffData.id}/`, {
+      const response = await axios.put(`/api/update_staff_member/${staffData.id}/`, {
         username: staffData.username,
         email: staffData.email,
         first_name: staffData.first_name,
         last_name: staffData.last_name,
         roles: staffData.roles,
       });
+      
+      // If TOTP verification is required (email changed)
+      if (response.data.requires_verification) {
+        setNewUserEmail(response.data.email);
+        setShowStaffTotpModal(true);
+        setTotpLoading(false);
+        toast.success(t('Verification code sent to new email address!'));
+        return;
+      }
       
       toast.success(t('Staff member updated successfully.'));
       fetchAllStaff(); // Refresh the staff list
@@ -678,13 +704,15 @@ const SystemManagement = () => {
         <div className="staff-modal-overlay">
           <div className="staff-modal-content">
             <span className="staff-close" onClick={closeStaffTotpModal}>&times;</span>
-            <h2>{t('Staff Creation Verification')}</h2>
+            <h2>
+              {modalType === 'add' ? t('Staff Creation Verification') : t('Email Change Verification')}
+            </h2>
             <p>{t('Please enter the 6-digit code sent to')} {newUserEmail}</p>
             <form onSubmit={handleStaffTotpVerification}>
               {renderStaffTOTPInputBoxes()}
               <div className="staff-form-actions">
                 <button type="submit" disabled={totpLoading || staffTotpCode.length !== 6}>
-                  {totpLoading ? t('Verifying...') : t("Verify & Create Staff")}
+                  {totpLoading ? t('Verifying...') : (modalType === 'add' ? t("Verify & Create Staff") : t("Verify & Update Staff"))}
                 </button>
                 <button type="button" onClick={closeStaffTotpModal}>
                   {t("Cancel")}
