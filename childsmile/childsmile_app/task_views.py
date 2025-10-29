@@ -369,7 +369,7 @@ def delete_task(request, task_id):
         assigned_to_id = task.assigned_to_id
         pending_tutor_id = task.pending_tutor_id
         task_type = task.task_type
-
+        
         # Check if the logged-in user is an admin
         user = Staff.objects.get(staff_id=user_id)
 
@@ -390,7 +390,13 @@ def delete_task(request, task_id):
                             action='DELETE_TASK_FAILED',
                             success=False,
                             error_message="You do not have permission to delete pending tutors",
-                            status_code=401
+                            status_code=401,
+                            entity_type='Task',
+                            entity_ids=[task_id],
+                            additional_data={
+                                'task_type': task_type.task_type if task_type else 'Unknown',
+                                'assigned_to_name': f"{Staff.objects.get(staff_id=assigned_to_id).first_name} {Staff.objects.get(staff_id=assigned_to_id).last_name}" if assigned_to_id else 'Unknown',
+                            }
                         )
                         return JsonResponse(
                             {"error": "You do not have permission to delete pending tutors."}, status=401
@@ -433,7 +439,7 @@ def delete_task(request, task_id):
                 'task_type': task_type_name,
                 'assigned_to_id': assigned_to_id,
                 'assigned_to_name': assignee_name,
-                'assigned_to_email': assignee_email
+                'assigned_to_email': assignee_email,
             }
         )
 
@@ -444,7 +450,13 @@ def delete_task(request, task_id):
             action='DELETE_TASK_FAILED',
             success=False,
             error_message="Task not found",
-            status_code=404
+            status_code=404,
+            entity_type='Task',
+            entity_ids=[task_id],
+            additional_data={
+                'task_type': 'Unknown',
+                'description': 'Unknown'
+            }
         )
         return JsonResponse({"error": "Task not found."}, status=404)
     except Exception as e:
@@ -454,7 +466,13 @@ def delete_task(request, task_id):
             action='DELETE_TASK_FAILED',
             success=False,
             error_message=str(e),
-            status_code=500
+            status_code=500,
+            entity_type='Task',
+            entity_ids=[task_id],
+            additional_data={
+                'task_type': 'Unknown' if 'task_type' not in locals() else (task_type.task_type if task_type else 'Unknown'),
+                'assigned_to_name': 'Unknown' if 'assignee_name' not in locals() else assignee_name
+            }
         )
         return JsonResponse({"error": str(e)}, status=500)
 
@@ -510,6 +528,7 @@ def update_task_status(request, task_id):
             if task.task_type.task_type == "ראיון מועמד לחונכות":
                 # pending_tutor is a FK to Pending_Tutor
                 if task.pending_tutor:
+                    pending_tutor_record = task.pending_tutor
                     print(
                         f"DEBUG: pending_tutor_id = {task.pending_tutor.pending_tutor_id}"
                     )
@@ -526,6 +545,27 @@ def update_task_status(request, task_id):
                         return JsonResponse(
                             {"Error promoting pending tutor": msg}, status=400
                         )
+                    else:
+                        # Promotion successful - delete the pending tutor record
+                        pending_tutor_volunteer_name = f"{pending_tutor_record.id.first_name} {pending_tutor_record.id.surname}"
+                        pending_tutor_id_val = pending_tutor_record.pending_tutor_id
+                        pending_tutor_record.delete()
+                        print(f"DEBUG: Deleted Pending_Tutor record with ID {pending_tutor_id_val}")
+                        
+                        # Log the deletion of pending tutor due to promotion
+                        log_api_action(
+                            request=request,
+                            action='DELETE_PENDING_TUTOR_SUCCESS',
+                            affected_tables=['childsmile_app_pending_tutor'],
+                            entity_type='Pending_Tutor',
+                            entity_ids=[pending_tutor_id_val],
+                            success=True,
+                            additional_data={
+                                'reason': 'Promoted to Tutor',
+                                'volunteer_name': pending_tutor_volunteer_name,
+                                'promoted_from_task_id': task.task_id
+                            }
+                        )
 
         log_api_action(
             request=request,
@@ -535,8 +575,11 @@ def update_task_status(request, task_id):
             entity_ids=[task.task_id],
             success=True,
             additional_data={
+                'task_type': task.task_type.task_type if task.task_type else 'Unknown',
                 'old_status': old_status,
-                'new_status': new_status
+                'new_status': new_status,
+                'field_changes': [f"Status: '{new_status}' → '{old_status}'"],
+                'changes_count': 1
             }
         )
 
@@ -604,6 +647,7 @@ def update_task(request, task_id):
         original_status = task.status
         original_assigned_to = task.assigned_to_id
         original_task_type = task.task_type_id
+        original_due_date = task.due_date
 
         # Update task fields
         task.description = request.data.get("description", task.description)
@@ -658,15 +702,12 @@ def update_task(request, task_id):
         # Handle task_type_id
         task.task_type_id = request.data.get("type", task.task_type_id)
 
-        # Handle pending_tutor_id
-        task.pending_tutor_id = request.data.get("pending_tutor", task.pending_tutor_id)
-
         # Track field changes BEFORE saving
         field_changes = []
         if original_description != task.description:
             field_changes.append("Description changed")
         if original_status != task.status:
-            field_changes.append(f"Status: '{original_status}' → '{task.status}'")
+            field_changes.append(f"Status: '{task.status}' → '{original_status}'")
         if original_assigned_to != task.assigned_to_id:
             old_name = "Unknown"
             new_name = "Unknown"
@@ -682,6 +723,11 @@ def update_task(request, task_id):
             field_changes.append(f"Assigned to: '{old_name}' → '{new_name}'")
         if original_task_type != task.task_type_id:
             field_changes.append("Task type changed")
+        
+        # Track due_date changes
+        new_due_date = request.data.get("due_date", original_due_date)
+        if new_due_date and original_due_date != new_due_date:
+            field_changes.append(f"Due date: '{original_due_date}' → '{new_due_date}'")
 
         # Save the updated task
         task.save()
@@ -708,6 +754,29 @@ def update_task(request, task_id):
                         return JsonResponse(
                             {"Error promoting pending tutor": msg}, status=400
                         )
+                    else:
+                        # Promotion successful - delete the pending tutor record
+                        pending_tutor_record = task.pending_tutor
+                        if pending_tutor_record:
+                            pending_tutor_volunteer_name = f"{pending_tutor_record.id.first_name} {pending_tutor_record.id.surname}"
+                            pending_tutor_id_val = pending_tutor_record.pending_tutor_id
+                            pending_tutor_record.delete()
+                            print(f"DEBUG: Deleted Pending_Tutor record with ID {pending_tutor_id_val}")
+                            
+                            # Log the deletion of pending tutor due to promotion
+                            log_api_action(
+                                request=request,
+                                action='DELETE_PENDING_TUTOR_SUCCESS',
+                                affected_tables=['childsmile_app_pending_tutor'],
+                                entity_type='Pending_Tutor',
+                                entity_ids=[pending_tutor_id_val],
+                                success=True,
+                                additional_data={
+                                    'reason': 'Promoted to Tutor',
+                                    'volunteer_name': pending_tutor_volunteer_name,
+                                    'promoted_from_task_id': task.task_id
+                                }
+                            )
 
         # Get assignee name if exists
         assignee_name = None

@@ -8,13 +8,18 @@
 --select * from public.childsmile_app_staff where email like '%020%' order by created_at desc
 
 update public.childsmile_app_staff
-set  email = 'childtest021@gmail.com'
-where email = 'childtest020@gmail.com'
+set  email = 'childtest020@gmail.com'
+where email = 'childtest021@gmail.com'
 
-
--- SELECT description
--- 	FROM public.audit_log
--- 	order by timestamp desc
--- 	limit 5
-
-
+-- find me all roles that dont have permission 'DELETE' on childsmile_app.children
+-- use childsmile_app_permission table
+SELECT DISTINCT role_id, r.role_name
+FROM public.childsmile_app_permissions
+JOIN public.childsmile_app_role r ON r.id = public.childsmile_app_permissions.role_id
+WHERE resource = 'childsmile_app_children'
+AND role_id NOT IN (
+    SELECT role_id
+    FROM public.childsmile_app_permissions
+    WHERE resource = 'childsmile_app_children'
+    AND action = 'UPDATE'
+);

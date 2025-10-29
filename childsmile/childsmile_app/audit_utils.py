@@ -231,12 +231,15 @@ def generate_audit_description(user_email, username, action, timestamp, user_rol
         family_name = additional_data.get('family_name', 'Unknown')
         family_city = additional_data.get('family_city', 'Unknown')
         
-        description = f"User {username} ({user_email}) successfully created a new family record for {family_name} on {timestamp_formatted}. "
-        description += f"Family location: {family_city}. "
-        description += f"User roles: [{roles_text}]. "
+        description = f"User: {username}\n"
+        description += f"Email: {user_email}\n"
+        description += f"Action: Created family\n"
+        description += f"Family name: {family_name}\n"
+        description += f"Location: {family_city}\n"
+        description += f"Roles: {roles_text}"
         
         if entity_type and entity_ids:
-            description += f"Created {entity_type} record with ID: {', '.join(map(str, entity_ids))}."
+            description += f"\nRecord ID: {', '.join(map(str, entity_ids))}"
     
     elif action == 'UPDATE_FAMILY_SUCCESS' and additional_data:
         updated_name = additional_data.get('updated_family_name', 'Unknown')
@@ -245,21 +248,26 @@ def generate_audit_description(user_email, username, action, timestamp, user_rol
         field_changes = additional_data.get('field_changes', [])
         changes_count = additional_data.get('changes_count', 0)
         
+        description = f"User: {username}\n"
+        description += f"Email: {user_email}\n"
+        description += f"Action: Updated family\n"
+        
         if updated_name != original_name:
-            description = f"User {username} ({user_email}) successfully updated family record from '{original_name}' to '{updated_name}' on {timestamp_formatted}. "
+            description += f"Family: {original_name} → {updated_name}\n"
         else:
-            description = f"User {username} ({user_email}) successfully updated family record for '{updated_name}' on {timestamp_formatted}. "
+            description += f"Family name: {updated_name}\n"
         
-        # **ADD FIELD CHANGES DETAILS**
+        description += f"Location: {family_city}\n"
+        description += f"Changes: {changes_count} field(s)\n"
+        
         if field_changes:
-            description += f"Changed {changes_count} field(s): {'; '.join(field_changes)}. "
-        else:
-            description += "No field changes detected (refresh/save operation). "
+            for change in field_changes:
+                description += f"  • {change}\n"
         
-        description += f"Family location: {family_city}. User roles: [{roles_text}]."
+        description += f"Roles: {roles_text}"
         
         if entity_type and entity_ids:
-            description += f" Updated {entity_type} record with ID: {', '.join(map(str, entity_ids))}."
+            description += f"\nRecord ID: {', '.join(map(str, entity_ids))}"
 
     elif action == 'DELETE_FAMILY_SUCCESS' and additional_data:
         deleted_name = additional_data.get('deleted_family_name', 'Unknown')
@@ -306,20 +314,38 @@ def generate_audit_description(user_email, username, action, timestamp, user_rol
         description += f"Email: {user_email}\n"
         description += f"Action: Failed update family\n"
         description += f"Family: {family_name}\n"
-        description += f"Error: {error_message or 'Unknown error'}\n"
+        description += f"Attempted changes: {changes_count}\n"
         
         if attempted_changes:
-            description += f"Changed fields: {changes_count}\n"
-            description += f"Details: {'; '.join(attempted_changes)}\n"
-        else:
-            description += f"No field changes\n"
+            for change in attempted_changes:
+                description += f"  • {change}\n"
         
+        description += f"Error: {error_message or 'Unknown error'}\n"
         description += f"Roles: {roles_text}"
         
         if entity_type and entity_ids:
-            description += f"\nRecord ID: {', '.join(map(str, entity_ids))}"
+            description += f"\nChild ID: {', '.join(map(str, entity_ids))}"
     
-    # **ADD INITIAL FAMILY DATA ACTIONS**
+    # **ADD DELETE_FAMILY_FAILED**
+    elif action == 'DELETE_FAMILY_FAILED' and additional_data:
+        deleted_name = additional_data.get('deleted_family_name', 'Unknown')
+        family_city = additional_data.get('family_city', 'Unknown')
+        family_status = additional_data.get('family_status', 'Unknown')
+        family_phone = additional_data.get('family_phone', 'Unknown')
+        
+        description = f"User: {username}\n"
+        description += f"Email: {user_email}\n"
+        description += f"Action: Failed delete family\n"
+        description += f"Family: {deleted_name}\n"
+        description += f"Location: {family_city}\n"
+        description += f"Phone: {family_phone}\n"
+        description += f"Status: {family_status}\n"
+        description += f"Error: {error_message or 'Unknown error'}\n"
+        description += f"Roles: {roles_text}"
+        
+        if entity_type and entity_ids:
+            description += f"\nChild ID: {', '.join(map(str, entity_ids))}"
+    
     elif action == 'DELETE_INITIAL_FAMILY_SUCCESS' and additional_data:
         deleted_names = additional_data.get('deleted_family_names', 'Unknown')
         deleted_phones = additional_data.get('deleted_family_phones', 'Unknown')
@@ -428,16 +454,14 @@ def generate_audit_description(user_email, username, action, timestamp, user_rol
         description += f"Email: {user_email}\n"
         description += f"Action: Updated task\n"
         description += f"Task type: {task_type}\n"
-        
-        if old_status != new_status:
-            description += f"Status: {old_status} → {new_status}\n"
-        
-        if assigned_to_name and assigned_to_name != 'Unknown':
-            description += f"Assigned to: {assigned_to_name}\n"
+        description += f"Changes: {changes_count} field(s)\n"
         
         if field_changes:
-            description += f"Changes: {changes_count} field(s)\n"
-            description += f"Details: {'; '.join(field_changes)}\n"
+            for change in field_changes:
+                description += f"  • {change}\n"
+
+        if assigned_to_name and assigned_to_name != 'Unknown':
+            description += f"Assigned to: {assigned_to_name}\n"
         
         description += f"Roles: {roles_text}"
         
@@ -449,11 +473,17 @@ def generate_audit_description(user_email, username, action, timestamp, user_rol
         attempted_assigned_to = additional_data.get('attempted_assigned_to')
         new_status = additional_data.get('new_status')
         field_changes = additional_data.get('field_changes', [])
+        changes_count = additional_data.get('changes_count', 0)
         
         description = f"User: {username}\n"
         description += f"Email: {user_email}\n"
         description += f"Action: Failed update task\n"
         description += f"Task type: {task_type}\n"
+        description += f"Attempted changes: {changes_count}\n"
+        
+        if field_changes:
+            for change in field_changes:
+                description += f"  • {change}\n"
         
         if new_status:
             description += f"Attempted status: {new_status}\n"
@@ -461,15 +491,15 @@ def generate_audit_description(user_email, username, action, timestamp, user_rol
         if attempted_assigned_to:
             description += f"Attempted assign: {attempted_assigned_to}\n"
         
-        if field_changes:
-            description += f"Attempted: {'; '.join(field_changes)}\n"
-        
         description += f"Error: {error_message or 'Unknown error'}\n"
         description += f"Roles: {roles_text}"
+        
+        if entity_type and entity_ids:
+            description += f"\nRecord ID: {', '.join(map(str, entity_ids))}"
 
     elif action == 'DELETE_TASK_SUCCESS' and additional_data:
         task_type = additional_data.get('task_type', 'Unknown')
-        assigned_to_name = additional_data.get('assigned_to_name')
+        assigned_to_name = additional_data.get('assigned_to_name', 'Unknown')
         
         description = f"User: {username}\n"
         description += f"Email: {user_email}\n"
@@ -488,13 +518,21 @@ def generate_audit_description(user_email, username, action, timestamp, user_rol
 
     elif action == 'DELETE_TASK_FAILED' and additional_data:
         task_type = additional_data.get('task_type', 'Unknown')
+        assigned_to_name = additional_data.get('assigned_to_name', 'Unknown')
         
         description = f"User: {username}\n"
         description += f"Email: {user_email}\n"
         description += f"Action: Failed delete task\n"
         description += f"Task type: {task_type}\n"
+        
+        if assigned_to_name and assigned_to_name != 'Unknown':
+            description += f"Assigned to: {assigned_to_name}\n"
+        
         description += f"Error: {error_message or 'Unknown error'}\n"
         description += f"Roles: {roles_text}"
+        
+        if entity_type and entity_ids:
+            description += f"\nRecord ID: {', '.join(map(str, entity_ids))}"
 
     # **VOLUNTEER UPDATE DESCRIPTIONS**
     elif action == 'UPDATE_GENERAL_VOLUNTEER_SUCCESS' and additional_data:
@@ -695,6 +733,21 @@ def generate_audit_description(user_email, username, action, timestamp, user_rol
         description += f"Email: {user_email}\n"
         description += f"Action: Failed delete tutorship\n"
         description += f"Error: {error_message or 'Unknown error'}\n"
+        description += f"Roles: {roles_text}"
+    
+    # **PENDING TUTOR DELETION - PROMOTION SUCCESS**
+    elif action == 'DELETE_PENDING_TUTOR_SUCCESS' and additional_data:
+        volunteer_name = additional_data.get('volunteer_name', 'Unknown')
+        promoted_from_task_id = additional_data.get('promoted_from_task_id', 'Unknown')
+        reason = additional_data.get('reason', 'Unknown')
+        
+        description = f"User: {username}\n"
+        description += f"Email: {user_email}\n"
+        description += f"Action: Deleted pending tutor\n"
+        description += f"Volunteer: {volunteer_name}\n"
+        description += f"Reason: {reason}\n"
+        description += f"Task ID: {promoted_from_task_id}\n"
+        description += f"Status: Successfully promoted\n"
         description += f"Roles: {roles_text}"
     
     # **STAFF UPDATE DESCRIPTIONS**
