@@ -361,7 +361,7 @@ def create_family(request):
         )
 
         return JsonResponse(
-            {"message": "Family created successfully", "family_id": family.child_id},
+            {"message": "Family created successfully", "ID": family.child_id},
             status=201,
         )
     except Exception as e:
@@ -654,7 +654,7 @@ def update_family(request, child_id):
         return JsonResponse(
             {
                 "message": "Family updated successfully",
-                "family_id": family.child_id,
+                "ID": family.child_id,
             },
             status=200,
         )
@@ -762,6 +762,10 @@ def delete_family(request, child_id):
                 'medical_diagnosis': family.medical_diagnosis,  # **ADD THIS**
                 'current_medical_state': family.current_medical_state  # **ADD THIS**
             }
+        )
+        return JsonResponse(
+            {"message": "Family deleted successfully", "ID": child_id},
+            status=200,
         )
 
     except Exception as e:
@@ -1169,6 +1173,25 @@ def mark_initial_family_complete(request, initial_family_data_id):
         "family_added", initial_family_data.family_added
     )
 
+    if initial_family_data.family_added:
+        log_api_action(
+            request=request,
+            action='MARK_FAMILY_ADDED_FAILED',
+            success=False,
+            error_message="Initial family data is already marked as complete",
+            status_code=400,
+            entity_type='InitialFamilyData',
+            entity_ids=[initial_family_data_id],
+            additional_data={
+                'family_names': initial_family_data.names,  # **ADD THIS**
+                'family_phones': initial_family_data.phones  # **ADD THIS**
+            }
+        )
+        return JsonResponse(
+            {"error": "Initial family data is already marked as complete."},
+            status=400,
+        )
+    
     # Save the updated record
     try:
         initial_family_data.save()

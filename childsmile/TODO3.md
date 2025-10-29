@@ -27,7 +27,7 @@ Task list:
 - [x] Implement API calls from UI for VIEW_*_FAILED and EXPORT_*_FAILED actions
 
 Bugs/tasks:
-- too many attempts with wrong totp - should have blocked completely to prevent brute force
+- too many attempts with wrong totp - should have blocked expire the valid one to prevent brute force
 - filter healthy works only when u r on the 1st page lol
 - create logger and move all debug prints to logger, define levels etc
 - create tests for BE, and for UI
@@ -37,4 +37,7 @@ Bugs/tasks:
 - cannot edit tutor using a volunteer account  - no error to user and no audit about it
 - created task for user even if totp send failed and user wasnt created
 - need to widen the delete staff modal to fit any length of email address
-- edit staff - not sending totp if email changed
+- showing edit and delete buttons on family view even if user has no permission to edit or delete family - should disable those buttons
+- need to verify in UI that we see correct order chronologically for this: 
+Status: בביצוע → הושלמה when we get to audit log UI
+- add ID to tutor table, since we have it when the user is still pending tutor - and no one can see it. add to model, migrate. add to UI. update once we move pending tutor to tutor. 
