@@ -983,8 +983,8 @@ def update_tutor(request, tutor_id):
                 'changed_fields': changed_fields,
                 'has_tutorship': tutorship is not None,
                 'child_id': child.child_id if child else None,
-                'child_name': child.full_name if child else 'Unknown',
-                'tutor_name': f"{tutor.staff_id.username if tutor.staff_id else 'Unknown'}",
+                'child_name': f"{child.childfirstname} {child.childsurname}" if child else 'Unknown',
+                'tutor_name': f"{tutor.staff.username if tutor.staff else 'Unknown'}",
                 'tutor_email': tutor.tutor_email
             }
         )
@@ -1000,7 +1000,7 @@ def update_tutor(request, tutor_id):
             additional_data={
                 'changed_fields': {},
                 'no_updates_made': True,
-                'tutor_name': f"{tutor.staff_id.username if tutor.staff_id else 'Unknown'}",
+                'tutor_name': f"{tutor.staff.username if tutor.staff else 'Unknown'}",
                 'tutor_email': tutor.tutor_email
             }
         )

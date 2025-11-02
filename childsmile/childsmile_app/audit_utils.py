@@ -59,7 +59,8 @@ def generate_audit_description(user_email, username, action, timestamp, user_rol
         attempts_used = additional_data.get('code_attempts_used', 1)
         verification_method = additional_data.get('verification_method', 'TOTP')
         
-        description = f"User: {user_full_name}\n"
+        description = f"Timestamp: {timestamp_formatted}\n"
+        description += f"User: {user_full_name}\n"
         description += f"Email: {user_email}\n"
         description += f"Action: Verified identity\n"
         description += f"Method: {verification_method}\n"
@@ -72,8 +73,9 @@ def generate_audit_description(user_email, username, action, timestamp, user_rol
         user_full_name = additional_data.get('user_full_name', f'{username}')
         login_method = additional_data.get('login_method', 'Unknown')
         session_duration = additional_data.get('session_duration_hours', 24)
-        
-        description = f"User: {user_full_name}\n"
+
+        description = f"Timestamp: {timestamp_formatted}\n"
+        description += f"User: {user_full_name}\n"
         description += f"Email: {user_email}\n"
         description += f"Action: Successfully logged in\n"
         description += f"Method: {login_method}\n"
@@ -84,14 +86,11 @@ def generate_audit_description(user_email, username, action, timestamp, user_rol
     elif action == 'GOOGLE_LOGIN_FAILED' and additional_data:
         attempted_email = additional_data.get('attempted_email', user_email)
         login_method = additional_data.get('login_method', 'Google OAuth')
-        
+
+        description = f"Timestamp: {timestamp_formatted}\n" 
         if attempted_email and attempted_email != 'anonymous':
-            if username and username != 'anonymous':
-                description = f"User: {username}\n"
-                description += f"Email: {attempted_email}\n"
-            else:
-                description = f"Email: {attempted_email}\n"
-            
+            description += f"User: {username}\n" if username and username != 'anonymous' else ''
+            description += f"Email: {attempted_email}\n"
             description += f"Action: Login attempt failed\n"
             description += f"Method: {login_method}\n"
             description += f"Timestamp: {timestamp_formatted}\n"
@@ -106,7 +105,8 @@ def generate_audit_description(user_email, username, action, timestamp, user_rol
         user_full_name = additional_data.get('user_full_name', f'{username}')
         login_method = additional_data.get('login_method', 'Google OAuth')
         
-        description = f"User: {user_full_name}\n"
+        description = f"Timestamp: {timestamp_formatted}\n"
+        description += f"User: {user_full_name}\n"
         description += f"Email: {user_email}\n"
         description += f"Action: Successfully logged in\n"
         description += f"Method: {login_method}\n"
@@ -153,6 +153,7 @@ def generate_audit_description(user_email, username, action, timestamp, user_rol
         step = additional_data.get('step', 'completed')
         
         if step == 'totp_sent':
+            description += f"Timestamp: {timestamp_formatted}\n"
             description = f"Admin: {username}\n"
             description += f"Email: {user_email}\n"
             description += f"Action: Created staff account\n"
@@ -161,6 +162,7 @@ def generate_audit_description(user_email, username, action, timestamp, user_rol
             description += f"Roles: {assigned_roles}\n"
             description += f"Admin roles: {roles_text}"
         else:
+            description += f"Timestamp: {timestamp_formatted}\n"
             description = f"Admin: {username}\n"
             description += f"Email: {user_email}\n"
             description += f"Action: Created staff account\n"
@@ -174,7 +176,8 @@ def generate_audit_description(user_email, username, action, timestamp, user_rol
     elif action == 'CREATE_STAFF_FAILED' and additional_data:
         target_email = additional_data.get('target_email', additional_data.get('attempted_email', 'Unknown'))
         
-        description = f"Admin: {username or 'Unknown'}\n"
+        description = f"Timestamp: {timestamp_formatted}\n"
+        description += f"Admin: {username or 'Unknown'}\n"
         description += f"Email: {user_email}\n"
         description += f"Action: Create staff failed\n"
         description += f"Target: {target_email}\n"
@@ -218,20 +221,26 @@ def generate_audit_description(user_email, username, action, timestamp, user_rol
         record_count = additional_data.get('record_count', 0)
         contains_pii = additional_data.get('contains_pii', False)
         
-        description = f"User {username} ({user_email}) {success_text}ly exported report '{report_name_detail}' in {export_format} format on {timestamp_formatted}. "
-        description += f"Export contained {record_count} records. "
-        description += f"Contains personal data: {'Yes' if contains_pii else 'No'}. "
-        description += f"User roles: [{roles_text}]."
+        description = f"Timestamp: {timestamp_formatted}\n"
+        description += f"User: {username}\n"
+        description += f"Email: {user_email}\n"
+        description += f"Action: Exported report\n"
+        description += f"Report: {report_name_detail}\n"
+        description += f"Format: {export_format}\n"
+        description += f"Records: {record_count}\n"
+        description += f"Contains PII: {'Yes' if contains_pii else 'No'}\n"
+        description += f"Roles: {roles_text}"
         
         if not success and error_message:
-            description += f" Export failed with error: {error_message}."
+            description += f"\nError: {error_message}"
     
     # **NEW: ENHANCED FAMILY MANAGEMENT ACTIONS**
     elif action == 'CREATE_FAMILY_SUCCESS' and additional_data:
         family_name = additional_data.get('family_name', 'Unknown')
         family_city = additional_data.get('family_city', 'Unknown')
-        
-        description = f"User: {username}\n"
+
+        description = f"Timestamp: {timestamp_formatted}\n"
+        description += f"User: {username}\n"
         description += f"Email: {user_email}\n"
         description += f"Action: Created family\n"
         description += f"Family name: {family_name}\n"
@@ -247,8 +256,9 @@ def generate_audit_description(user_email, username, action, timestamp, user_rol
         family_city = additional_data.get('family_city', 'Unknown')
         field_changes = additional_data.get('field_changes', [])
         changes_count = additional_data.get('changes_count', 0)
-        
-        description = f"User: {username}\n"
+
+        description = f"Timestamp: {timestamp_formatted}\n"
+        description += f"User: {username}\n"
         description += f"Email: {user_email}\n"
         description += f"Action: Updated family\n"
         
@@ -277,8 +287,9 @@ def generate_audit_description(user_email, username, action, timestamp, user_rol
         family_hospital = additional_data.get('family_hospital', 'Unknown')
         medical_diagnosis = additional_data.get('medical_diagnosis', 'Unknown')
         current_medical_state = additional_data.get('current_medical_state', 'Unknown')
-        
-        description = f"User: {username}\n"
+
+        description = f"Timestamp: {timestamp_formatted}\n"
+        description += f"User: {username}\n"
         description += f"Email: {user_email}\n"
         description += f"Action: Deleted family\n"
         description += f"Family: {deleted_name}\n"
@@ -297,7 +308,8 @@ def generate_audit_description(user_email, username, action, timestamp, user_rol
     elif action == 'CREATE_FAMILY_FAILED' and additional_data:
         family_name = additional_data.get('family_name', 'Unknown')
         
-        description = f"User: {username}\n"
+        description = f"Timestamp: {timestamp_formatted}\n"
+        description += f"User: {username}\n"
         description += f"Email: {user_email}\n"
         description += f"Action: Failed create family\n"
         description += f"Family: {family_name}\n"
@@ -309,8 +321,9 @@ def generate_audit_description(user_email, username, action, timestamp, user_rol
         family_name = additional_data.get('family_name', 'Unknown')
         attempted_changes = additional_data.get('attempted_changes', [])
         changes_count = additional_data.get('changes_count', 0)
-        
-        description = f"User: {username}\n"
+
+        description = f"Timestamp: {timestamp_formatted}\n"
+        description += f"User: {username}\n"
         description += f"Email: {user_email}\n"
         description += f"Action: Failed update family\n"
         description += f"Family: {family_name}\n"
@@ -332,8 +345,9 @@ def generate_audit_description(user_email, username, action, timestamp, user_rol
         family_city = additional_data.get('family_city', 'Unknown')
         family_status = additional_data.get('family_status', 'Unknown')
         family_phone = additional_data.get('family_phone', 'Unknown')
-        
-        description = f"User: {username}\n"
+
+        description = f"Timestamp: {timestamp_formatted}\n"
+        description += f"User: {username}\n"
         description += f"Email: {user_email}\n"
         description += f"Action: Failed delete family\n"
         description += f"Family: {deleted_name}\n"
@@ -349,8 +363,9 @@ def generate_audit_description(user_email, username, action, timestamp, user_rol
     elif action == 'DELETE_INITIAL_FAMILY_SUCCESS' and additional_data:
         deleted_names = additional_data.get('deleted_family_names', 'Unknown')
         deleted_phones = additional_data.get('deleted_family_phones', 'Unknown')
-        
-        description = f"User: {username}\n"
+
+        description = f"Timestamp: {timestamp_formatted}\n"
+        description += f"User: {username}\n"
         description += f"Email: {user_email}\n"
         description += f"Action: Deleted initial family\n"
         description += f"Family names: {deleted_names}\n"
@@ -363,8 +378,9 @@ def generate_audit_description(user_email, username, action, timestamp, user_rol
     elif action == 'DELETE_INITIAL_FAMILY_FAILED' and additional_data:
         deleted_names = additional_data.get('deleted_family_names', 'Unknown')
         deleted_phones = additional_data.get('deleted_family_phones', 'Unknown')
-        
-        description = f"User: {username}\n"
+
+        description = f"Timestamp: {timestamp_formatted}\n"
+        description += f"User: {username}\n"
         description += f"Email: {user_email}\n"
         description += f"Action: Failed delete initial\n"
         description += f"Family names: {deleted_names}\n"
@@ -380,7 +396,8 @@ def generate_audit_description(user_email, username, action, timestamp, user_rol
         family_phones = additional_data.get('family_phones', 'Unknown')
         family_added_status = additional_data.get('family_added_status', False)
         
-        description = f"User: {username}\n"
+        description = f"Timestamp: {timestamp_formatted}\n"
+        description += f"User: {username}\n"
         description += f"Email: {user_email}\n"
         description += f"Action: Marked family added\n"
         description += f"Family names: {family_names}\n"
@@ -394,8 +411,9 @@ def generate_audit_description(user_email, username, action, timestamp, user_rol
     elif action == 'MARK_FAMILY_ADDED_FAILED' and additional_data:
         family_names = additional_data.get('family_names', 'Unknown')
         family_phones = additional_data.get('family_phones', 'Unknown')
-        
-        description = f"User: {username}\n"
+
+        description = f"Timestamp: {timestamp_formatted}\n"
+        description += f"User: {username}\n"
         description += f"Email: {user_email}\n"
         description += f"Action: Failed mark family\n"
         description += f"Family names: {family_names}\n"
@@ -411,8 +429,9 @@ def generate_audit_description(user_email, username, action, timestamp, user_rol
         task_type = additional_data.get('task_type', 'Unknown')
         assigned_to_id = additional_data.get('assigned_to_id')
         assigned_to_name = additional_data.get('assigned_to_name', 'Unassigned')
-        
-        description = f"User: {username}\n"
+
+        description = f"Timestamp: {timestamp_formatted}\n"
+        description += f"User: {username}\n"
         description += f"Email: {user_email}\n"
         description += f"Action: Created new task\n"
         description += f"Task type: {task_type}\n"
@@ -430,8 +449,9 @@ def generate_audit_description(user_email, username, action, timestamp, user_rol
     elif action == 'CREATE_TASK_FAILED' and additional_data:
         task_type = additional_data.get('task_type', 'Unknown')
         attempted_assigned_to = additional_data.get('attempted_assigned_to')
-        
-        description = f"User: {username}\n"
+
+        description = f"Timestamp: {timestamp_formatted}\n"
+        description += f"User: {username}\n"
         description += f"Email: {user_email}\n"
         description += f"Action: Failed create task\n"
         description += f"Task type: {task_type}\n"
@@ -449,8 +469,9 @@ def generate_audit_description(user_email, username, action, timestamp, user_rol
         assigned_to_name = additional_data.get('assigned_to_name', 'Unknown')
         field_changes = additional_data.get('field_changes', [])
         changes_count = additional_data.get('changes_count', 0)
-        
-        description = f"User: {username}\n"
+
+        description = f"Timestamp: {timestamp_formatted}\n"
+        description += f"User: {username}\n"
         description += f"Email: {user_email}\n"
         description += f"Action: Updated task\n"
         description += f"Task type: {task_type}\n"
@@ -474,8 +495,9 @@ def generate_audit_description(user_email, username, action, timestamp, user_rol
         new_status = additional_data.get('new_status')
         field_changes = additional_data.get('field_changes', [])
         changes_count = additional_data.get('changes_count', 0)
-        
-        description = f"User: {username}\n"
+
+        description = f"Timestamp: {timestamp_formatted}\n"
+        description += f"User: {username}\n"
         description += f"Email: {user_email}\n"
         description += f"Action: Failed update task\n"
         description += f"Task type: {task_type}\n"
@@ -500,8 +522,9 @@ def generate_audit_description(user_email, username, action, timestamp, user_rol
     elif action == 'DELETE_TASK_SUCCESS' and additional_data:
         task_type = additional_data.get('task_type', 'Unknown')
         assigned_to_name = additional_data.get('assigned_to_name', 'Unknown')
-        
-        description = f"User: {username}\n"
+
+        description = f"Timestamp: {timestamp_formatted}\n"
+        description += f"User: {username}\n"
         description += f"Email: {user_email}\n"
         description += f"Action: Deleted task\n"
         description += f"Task type: {task_type}\n"
@@ -520,7 +543,8 @@ def generate_audit_description(user_email, username, action, timestamp, user_rol
         task_type = additional_data.get('task_type', 'Unknown')
         assigned_to_name = additional_data.get('assigned_to_name', 'Unknown')
         
-        description = f"User: {username}\n"
+        description = f"Timestamp: {timestamp_formatted}\n"
+        description += f"User: {username}\n"
         description += f"Email: {user_email}\n"
         description += f"Action: Failed delete task\n"
         description += f"Task type: {task_type}\n"
@@ -541,7 +565,8 @@ def generate_audit_description(user_email, username, action, timestamp, user_rol
         volunteer_name = additional_data.get('volunteer_name', 'Unknown Volunteer')
         volunteer_email = additional_data.get('volunteer_email', 'Unknown')
         
-        description = f"User: {username}\n"
+        description = f"Timestamp: {timestamp_formatted}\n"
+        description += f"User: {username}\n"
         description += f"Email: {user_email}\n"
         description += f"Action: Updated general volunteer\n"
         description += f"Volunteer: {volunteer_name}\n"
@@ -550,8 +575,7 @@ def generate_audit_description(user_email, username, action, timestamp, user_rol
         if old_comments != new_comments:
             old_display = old_comments[:50] + '...' if len(str(old_comments)) > 50 else old_comments
             new_display = new_comments[:50] + '...' if len(str(new_comments)) > 50 else new_comments
-            description += f"Comments: {old_display}\n"
-            description += f"To: {new_display}\n"
+            description += f"Comments: {old_display} → {new_display}\n"
         
         description += f"Roles: {roles_text}"
         
@@ -562,7 +586,8 @@ def generate_audit_description(user_email, username, action, timestamp, user_rol
         volunteer_name = additional_data.get('volunteer_name', 'Unknown')
         attempted_email = additional_data.get('attempted_email', 'Unknown')
         
-        description = f"User: {username}\n"
+        description = f"Timestamp: {timestamp_formatted}\n"
+        description += f"User: {username}\n"
         description += f"Email: {user_email}\n"
         description += f"Action: Failed update volunteer\n"
         description += f"Volunteer: {volunteer_name}\n"
@@ -578,11 +603,14 @@ def generate_audit_description(user_email, username, action, timestamp, user_rol
         has_tutorship = additional_data.get('has_tutorship', False)
         child_name = additional_data.get('child_name', 'Unknown')
         
-        description = f"User: {username}\n"
+        description = f"Timestamp: {timestamp_formatted}\n"
+        description += f"User: {username}\n"
         description += f"Email: {user_email}\n"
         description += f"Action: Updated tutor\n"
         description += f"Tutor: {tutor_name}\n"
-        description += f"Email: {tutor_email}\n"
+        description += f"Tutor Email: {tutor_email}\n"
+        if has_tutorship:
+            description += f"Child: {child_name}\n"
         
         if changed_fields:
             field_updates = []
@@ -591,9 +619,6 @@ def generate_audit_description(user_email, username, action, timestamp, user_rol
                 new_val = changes.get('new', 'Unknown')
                 field_updates.append(f"{field}: '{old_val}' → '{new_val}'")
             description += f"Changed: {'; '.join(field_updates)}\n"
-        
-        if has_tutorship:
-            description += f"Child: {child_name}\n"
         
         description += f"Roles: {roles_text}"
         
@@ -605,7 +630,8 @@ def generate_audit_description(user_email, username, action, timestamp, user_rol
         tutor_email = additional_data.get('tutor_email', 'Unknown')
         attempted_fields = additional_data.get('attempted_fields', [])
         
-        description = f"User: {username}\n"
+        description = f"Timestamp: {timestamp_formatted}\n"
+        description += f"User: {username}\n"
         description += f"Email: {user_email}\n"
         description += f"Action: Failed update tutor\n"
         description += f"Tutor: {tutor_name}\n"
@@ -624,7 +650,8 @@ def generate_audit_description(user_email, username, action, timestamp, user_rol
         tutor_email = additional_data.get('tutor_email', 'Unknown')
         approval_counter = additional_data.get('approval_counter', 1)
         
-        description = f"User: {username}\n"
+        description = f"Timestamp: {timestamp_formatted}\n"
+        description += f"User: {username}\n"
         description += f"Email: {user_email}\n"
         description += f"Action: Created tutorship\n"
         description += f"Child: {child_name}\n"
@@ -641,7 +668,8 @@ def generate_audit_description(user_email, username, action, timestamp, user_rol
         tutor_name = additional_data.get('tutor_name', 'Unknown')
         reason = additional_data.get('reason', 'unknown_reason')
         
-        description = f"User: {username}\n"
+        description = f"Timestamp: {timestamp_formatted}\n"
+        description += f"User: {username}\n"
         description += f"Email: {user_email}\n"
         description += f"Action: Failed create tutorship\n"
         description += f"Child: {child_name}\n"
@@ -664,13 +692,14 @@ def generate_audit_description(user_email, username, action, timestamp, user_rol
         tutor_role_added = additional_data.get('tutor_role_added', False)
         tutorship_approved = additional_data.get('tutorship_approved', False)
         
-        description = f"User: {username}\n"
+        description = f"Timestamp: {timestamp_formatted}\n"
+        description += f"User: {username}\n"
         description += f"Email: {user_email}\n"
         description += f"Action: Updated tutorship\n"
         description += f"Child: {child_name}\n"
         description += f"Tutor: {tutor_name}\n"
-        description += f"Email: {tutor_email}\n"
-        description += f"Counter: {old_approval_counter} → {new_approval_counter}\n"
+        description += f"Tutor Email: {tutor_email}\n"
+        description += f"Number of Approvers: {old_approval_counter} → {new_approval_counter}\n"
         
         if tutor_role_added:
             description += f"Status: Role added\n"
@@ -688,8 +717,9 @@ def generate_audit_description(user_email, username, action, timestamp, user_rol
         tutor_name = additional_data.get('tutor_name', 'Unknown')
         reason = additional_data.get('reason', 'unknown_reason')
         current_approval_counter = additional_data.get('current_approval_counter', 'Unknown')
-        
-        description = f"User: {username}\n"
+
+        description = f"Timestamp: {timestamp_formatted}\n"
+        description += f"User: {username}\n"
         description += f"Email: {user_email}\n"
         description += f"Action: Failed update tutorship\n"
         description += f"Child: {child_name}\n"
@@ -710,7 +740,8 @@ def generate_audit_description(user_email, username, action, timestamp, user_rol
         tutor_old_status = additional_data.get('tutor_old_status', 'Unknown')
         child_old_status = additional_data.get('child_old_status', 'Unknown')
         
-        description = f"User: {username}\n"
+        description = f"Timestamp: {timestamp_formatted}\n"
+        description += f"User: {username}\n"
         description += f"Email: {user_email}\n"
         description += f"Action: Deleted tutorship\n"
         description += f"Child: {child_name}\n"
@@ -729,9 +760,14 @@ def generate_audit_description(user_email, username, action, timestamp, user_rol
             description += f"\nRecord ID: {', '.join(map(str, entity_ids))}"
 
     elif action == 'DELETE_TUTORSHIP_FAILED' and additional_data:
-        description = f"User: {username}\n"
+        # DEBUG print additional_data
+        print(f"DEBUG additional_data: {additional_data}")
+        description = f"Timestamp: {timestamp_formatted}\n"
+        description += f"User: {username}\n"
         description += f"Email: {user_email}\n"
         description += f"Action: Failed delete tutorship\n"
+        description += f"Child: {additional_data.get('child_name', 'Unknown')}\n"
+        description += f"Tutor: {additional_data.get('tutor_name', 'Unknown')}\n"
         description += f"Error: {error_message or 'Unknown error'}\n"
         description += f"Roles: {roles_text}"
     
@@ -741,7 +777,8 @@ def generate_audit_description(user_email, username, action, timestamp, user_rol
         promoted_from_task_id = additional_data.get('promoted_from_task_id', 'Unknown')
         reason = additional_data.get('reason', 'Unknown')
         
-        description = f"User: {username}\n"
+        description = f"Timestamp: {timestamp_formatted}\n"
+        description += f"User: {username}\n"
         description += f"Email: {user_email}\n"
         description += f"Action: Deleted pending tutor\n"
         description += f"Volunteer: {volunteer_name}\n"
@@ -758,7 +795,8 @@ def generate_audit_description(user_email, username, action, timestamp, user_rol
         changes_count = additional_data.get('changes_count', 0)
         updated_roles = additional_data.get('updated_roles', [])
         
-        description = f"User: {username}\n"
+        description = f"Timestamp: {timestamp_formatted}\n"
+        description += f"User: {username}\n"
         description += f"Email: {user_email}\n"
         description += f"Action: Updated staff member\n"
         description += f"Staff name: {staff_full_name}\n"
@@ -783,7 +821,8 @@ def generate_audit_description(user_email, username, action, timestamp, user_rol
         attempted_changes = additional_data.get('attempted_changes', additional_data.get('field_changes', []))
         changes_count = additional_data.get('changes_count', 0)
         
-        description = f"User: {username}\n"
+        description = f"Timestamp: {timestamp_formatted}\n"
+        description += f"User: {username}\n"
         description += f"Email: {user_email}\n"
         description += f"Action: Failed update staff\n"
         description += f"Staff name: {staff_full_name}\n"
@@ -807,7 +846,8 @@ def generate_audit_description(user_email, username, action, timestamp, user_rol
         deleted_staff_id = additional_data.get('deleted_staff_id', 'Unknown')
         deleted_staff_roles = additional_data.get('deleted_staff_roles', [])
 
-        description = f"User: {username}\n"
+        description = f"Timestamp: {timestamp_formatted}\n"
+        description += f"User: {username}\n"
         description += f"Email: {user_email}\n"
         description += f"Action: Deleted staff member\n"
         description += f"Staff name: {deleted_full_name}\n"
@@ -825,8 +865,9 @@ def generate_audit_description(user_email, username, action, timestamp, user_rol
         deleted_full_name = additional_data.get('deleted_staff_full_name', 'Unknown')
         deleted_staff_id = additional_data.get('deleted_staff_id', 'Unknown')
         deleted_staff_roles = additional_data.get('deleted_staff_roles', [])
-        
-        description = f"User: {username}\n"
+
+        description = f"Timestamp: {timestamp_formatted}\n"
+        description += f"User: {username}\n"
         description += f"Email: {user_email}\n"
         description += f"Action: Failed delete staff\n"
         description += f"Staff name of attempted deletion: {deleted_full_name}\n"
@@ -842,7 +883,8 @@ def generate_audit_description(user_email, username, action, timestamp, user_rol
     # **FALLBACK TO ORIGINAL FORMAT FOR COMPATIBILITY**
     else:
         # Base description (original format for backward compatibility)
-        description = f"User: {username}\n"
+        description = f"Timestamp: {timestamp_formatted}\n"
+        description += f"User: {username}\n"
         description += f"Email: {user_email}\n"
         description += f"Action: {action}\n"
         description += f"Timestamp: {timestamp_formatted}\n"

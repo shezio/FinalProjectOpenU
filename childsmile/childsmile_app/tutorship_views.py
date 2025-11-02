@@ -323,7 +323,7 @@ def create_tutorship(request):
                 request=request,
                 action='CREATE_TUTORSHIP_FAILED',
                 success=False,
-                error_message=f"Tutorship already exists for child {child_id} and tutor {tutor_id}",
+                error_message=f"Tutorship already exists for \n\tchild: ID: {child_id}, Name: {child_name} and \n\ttutor: ID: {tutor_id}, Name: {tutor_name}",
                 status_code=409,  # Conflict status code
                 additional_data={
                     'child_id': child_id,
@@ -670,24 +670,8 @@ def delete_tutorship(request, tutorship_id):
             {"detail": "Authentication credentials were not provided."}, status=403
         )
 
-    # Check if the user has DELETE permission on the "tutorships" resource
-    if not has_permission(request, "tutorships", "DELETE"):
-        log_api_action(
-            request=request,
-            action='DELETE_TUTORSHIP_FAILED',
-            success=False,
-            error_message="You do not have permission to delete this tutorship",
-            status_code=401,
-            entity_type='Tutorship',
-            entity_ids=[tutorship_id]
-        )
-        return JsonResponse(
-            {"error": "You do not have permission to delete this tutorship."},
-            status=401,
-        )
-
     try:
-        # Fetch the existing tutorship record
+        # FETCH TUTORSHIP FIRST - so we have data for audit logs
         try:
             tutorship = Tutorships.objects.get(id=tutorship_id)
         except Tutorships.DoesNotExist:
@@ -698,19 +682,47 @@ def delete_tutorship(request, tutorship_id):
                 error_message="Tutorship not found",
                 status_code=404,
                 entity_type='Tutorship',
-                entity_ids=[tutorship_id]
+                entity_ids=[tutorship_id],
+                additional_data={
+                    'child_id': 'Unknown - Not Found',
+                    'child_name': 'Unknown - Not Found',
+                    'tutor_id': 'Unknown - Not Found',
+                    'tutor_name': 'Unknown - Not Found',
+                }   
             )
             return JsonResponse({"error": "Tutorship not found"}, status=404)
 
+        # Get child and tutor names BEFORE permission check - for audit logs
         tutor = tutorship.tutor
         child = tutorship.child
-
-        # Store data for audit
         child_id = tutorship.child_id
         child_name = f"{child.childfirstname} {child.childsurname}" if child else "Unknown"
         tutor_id = tutorship.tutor_id
         tutor_name = f"{tutor.staff.first_name} {tutor.staff.last_name}" if tutor and tutor.staff else "Unknown"
         tutor_email = tutor.staff.email if tutor and tutor.staff else "Unknown"
+
+        # NOW CHECK PERMISSION - we have data for audit logs if it fails
+        if not has_permission(request, "tutorships", "DELETE"):
+            log_api_action(
+                request=request,
+                action='DELETE_TUTORSHIP_FAILED',
+                success=False,
+                error_message="You do not have permission to delete this tutorship",
+                status_code=401,
+                entity_type='Tutorship',
+                entity_ids=[tutorship_id],
+                additional_data={
+                    'child_id': child_id,
+                    'child_name': child_name,
+                    'tutor_id': tutor_id,
+                    'tutor_name': tutor_name,
+                    'tutor_email': tutor_email
+                }
+            )
+            return JsonResponse(
+                {"error": "You do not have permission to delete this tutorship."},
+                status=401,
+            )
 
         # Find the PrevTutorshipStatuses record for this tutorship
         prev_status = PrevTutorshipStatuses.objects.filter(
@@ -774,6 +786,13 @@ def delete_tutorship(request, tutorship_id):
             error_message=str(e),
             status_code=500,
             entity_type='Tutorship',
-            entity_ids=[tutorship_id]
+            entity_ids=[tutorship_id],
+            additional_data={
+                'child_id': child_id if 'child_id' in locals() else 'Unknown - Error',
+                'child_name': child_name if 'child_name' in locals() else 'Unknown - Error',
+                'tutor_id': tutor_id if 'tutor_id' in locals() else 'Unknown - Error',
+                'tutor_name': tutor_name if 'tutor_name' in locals() else 'Unknown - Error',
+                'tutor_email': tutor_email if 'tutor_email' in locals() else 'Unknown - Error'
+            }
         )
         return JsonResponse({"error": str(e)}, status=500)

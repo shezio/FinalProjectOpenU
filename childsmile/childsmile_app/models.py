@@ -544,6 +544,8 @@ class AuditLog(models.Model):
             models.Index(fields=['action', 'timestamp']),
             models.Index(fields=['entity_type', 'timestamp']),
             models.Index(fields=['success', 'timestamp']),
+            # make the description field indexed for faster search
+            models.Index(fields=['description'], name='idx_auditlog_description'),
         ]
         ordering = ['-timestamp']  # Most recent first
     
