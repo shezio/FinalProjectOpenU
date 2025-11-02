@@ -68,6 +68,8 @@ from django.db.models import Count, F, Q
 from .utils import *
 from django.core.mail import send_mail
 from django.conf import settings
+from .audit_utils import log_api_action
+from .logger import api_logger
 from django_ratelimit.decorators import ratelimit
 from .models import TOTPCode, Staff
 import random
@@ -80,7 +82,9 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 @api_view(["GET"])
 def get_permissions(request):
+    api_logger.info("get_permissions called")
     user_id = request.session.get("user_id")
+    api_logger.debug(f"get_permissions run by user_id: {user_id}")
     if not user_id:
         return JsonResponse(
             {"detail": "Authentication credentials were not provided."}, status=403
@@ -116,6 +120,8 @@ def get_permissions(request):
 @csrf_exempt  # Disable CSRF (makes things easier)
 @api_view(["POST"])
 def logout_view(request):
+    api_logger.info("logout_view called")
+    user_id = request.session.get("user_id")
     try:
         # Log successful logout
         log_api_action(
@@ -135,11 +141,16 @@ def logout_view(request):
             error_message=str(e),
             status_code=400
         )
+        api_logger.error(f"Logout failed: {str(e)}")
+        api_logger.debug(f"Logout failed for user_id: {user_id}")
         return JsonResponse({"error": str(e)}, status=400)
 
 @csrf_exempt
 @api_view(["GET"])
 def get_staff(request):
+    api_logger.info("get_staff called")
+    user_id = request.session.get("user_id")
+    api_logger.debug(f"get_staff run by user_id: {user_id}")
     """
     Retrieve all staff along with their roles.
     """
@@ -169,13 +180,15 @@ def get_staff(request):
                 "roles": roles,  # Include role names instead of IDs
             }
         )
-
+    api_logger.info(f"get_staff completed successfully for user_id: {user_id}")
+    api_logger.debug(f"get_staff response: {staff_data}")
     return JsonResponse({"staff": staff_data})
 
 
 @csrf_exempt
 @api_view(["GET"])
 def get_children(request):
+    api_logger.info("get_children called")
     """
     Retrieve all children along with their tutoring status.
     """
@@ -189,12 +202,16 @@ def get_children(request):
         }
         for c in children
     ]
+    user_id = request.session.get("user_id")
+    api_logger.info(f"get_children completed successfully for user_id: {user_id}")
+    api_logger.debug(f"get_children response: {children_data}")
     return JsonResponse({"children": children_data})
 
 
 @csrf_exempt
 @api_view(["GET"])
 def get_tutors(request):
+    api_logger.info("get_tutors called")
     """
     Retrieve all tutors along with their tutorship status.
     """
@@ -217,18 +234,19 @@ def get_tutors(request):
     # Get marital status options from Children model
     marital_status_options = [choice[0] for choice in MaritalStatus.choices]
     status_options = [choice[0] for choice in TutorshipStatus.choices]
+    user_id = request.session.get("user_id")
+    api_logger.info(f"get_tutors completed successfully for user_id: {user_id}")
+    api_logger.debug(f"get_tutors response: {tutors_data}")
     return JsonResponse({
         "tutors": tutors_data,
         "tutorship_status_options": status_options,
         "marital_status_options": marital_status_options,
     })
 
-# ...create_volunteer_or_tutor moved to views_volunteer.py...
-
-
 @csrf_exempt
 @api_view(["GET"])
 def get_pending_tutors(request):
+    api_logger.info("get_pending_tutors called")
     """
     Retrieve all pending tutors with their full details.
     """
@@ -247,9 +265,11 @@ def get_pending_tutors(request):
             }
             for tutor in pending_tutors
         ]
+        api_logger.info(f"get_pending_tutors completed successfully for user_id: {request.session.get('user_id')}")
+        api_logger.debug(f"get_pending_tutors response: {pending_tutors_data}")
         return JsonResponse({"pending_tutors": pending_tutors_data}, status=200)
     except Exception as e:
-        print(f"DEBUG: Error fetching pending tutors: {str(e)}")
+        api_logger.error(f"Error fetching pending tutors: {str(e)}")
         return JsonResponse({"error": str(e)}, status=500)
 
 @csrf_exempt
@@ -289,12 +309,13 @@ def get_signedup(request):
         ]
         return JsonResponse({"signedup_users": signedup_data}, status=200)
     except Exception as e:
-        print(f"DEBUG: Error fetching signed-up users: {str(e)}")
+        api_logger.error(f"Error fetching signed-up users: {str(e)}")
         return JsonResponse({"error": str(e)}, status=500)
 
 @csrf_exempt
 @api_view(["GET"])
 def get_all_staff(request):
+    api_logger.info("get_all_staff called")
     """
     Retrieve all staff along with their roles, with pagination and search.
     """
@@ -353,6 +374,8 @@ def get_all_staff(request):
             }
         )
 
+    api_logger.info(f"get_all_staff completed successfully for user_id: {user_id}")
+    api_logger.debug(f"get_all_staff response: {staff_data}")
     return JsonResponse(
         {
             "staff": staff_data,
@@ -362,20 +385,10 @@ def get_all_staff(request):
         },
         status=200,
     )
-
-
-# ...update_staff_member moved to views_staff.py...
-
-# ...delete_staff_member moved to views_staff.py...
-
-# ...staff_creation_send_totp moved to views_staff.py...
-
-# ...staff_creation_verify_totp moved to views_staff.py...
-
-
 @csrf_exempt
 @api_view(["GET"])
 def get_roles(request):
+    api_logger.info("get_roles called")
     """
     Retrieve all roles from the database.
     """
@@ -387,6 +400,7 @@ def get_roles(request):
 
     # Check if the user is an admin
     if not has_permission(request, "role", "VIEW"):
+        api_logger.warning(f"User {user_id} attempted to access roles without permission.")
         return JsonResponse(
             {"error": "You do not have permission to view this page."}, status=401
         )
@@ -394,15 +408,17 @@ def get_roles(request):
     try:
         roles = Role.objects.all()
         roles_data = [{"id": role.id, "role_name": role.role_name} for role in roles]
+        api_logger.debug(f"get_roles response: {roles_data}")
         return JsonResponse({"roles": roles_data}, status=200)
     except Exception as e:
-        print(f"DEBUG: Error fetching roles: {str(e)}")
+        api_logger.error(f"Error fetching roles: {str(e)}")
         return JsonResponse({"error": str(e)}, status=500)
 
 
 @csrf_exempt
 @api_view(["POST"])
 def create_staff_member(request):
+    api_logger.info("create_staff_member called")
     """
     Create a new staff member and assign roles.
     """
@@ -415,6 +431,7 @@ def create_staff_member(request):
     # Check if the user is an admin
     user = Staff.objects.get(staff_id=user_id)
     if not is_admin(user):
+        api_logger.critical(f"User {user_id} attempted to create a staff member without permission.")
         return JsonResponse(
             {"error": "You do not have permission to create a staff member."},
             status=401,
@@ -428,6 +445,7 @@ def create_staff_member(request):
         missing_fields = [
             field for field in required_fields if not data.get(field, "").strip()
         ]
+        api_logger.debug(f"Data received for new staff member: {data}")
         if missing_fields:
             return JsonResponse(
                 {
@@ -438,12 +456,14 @@ def create_staff_member(request):
 
         # Check if username already exists
         if Staff.objects.filter(username=data["username"]).exists():
+            api_logger.warning(f"User {user_id} attempted to create a staff member with an existing username: {data['username']}")
             return JsonResponse(
                 {"error": f"Username '{data['username']}' already exists."}, status=400
             )
 
         # Check if email already exists
         if Staff.objects.filter(email=data["email"]).exists():
+            api_logger.warning(f"User {user_id} attempted to create a staff member with an existing email: {data['email']}")
             return JsonResponse(
                 {"error": f"Email '{data['email']}' already exists."}, status=400
             )
@@ -459,9 +479,10 @@ def create_staff_member(request):
 
         # Assign roles to the staff member
         roles = data["roles"]
-        print(f"DEBUG: Roles provided: {roles}")  # Log the roles provided
+        api_logger.debug(f"Roles provided: {roles}")
         if isinstance(roles, list):
             if "General Volunteer" in roles or "Tutor" in roles:
+                api_logger.warning(f"User {user_id} attempted to create a staff member with disallowed roles: {roles}")
                 return JsonResponse(
                     {
                         "error": "Cannot create a user with 'General Volunteer' nor 'Tutor' roles via this flow."
@@ -474,17 +495,19 @@ def create_staff_member(request):
                     role = Role.objects.get(role_name=role_name)  # Fetch by role_name
                     staff_member.roles.add(role)
                 except Role.DoesNotExist:
+                    api_logger.warning(f"User {user_id} attempted to create a staff member with a non-existent role: {role_name}")
                     return JsonResponse(
                         {"error": f"Role with name '{role_name}' does not exist."},
                         status=400,
                     )
         else:
+            api_logger.warning(f"User {user_id} attempted to create a staff member with invalid roles: {roles}")
             return JsonResponse(
                 {"error": "Roles should be provided as a list of role names."},
                 status=400,
             )
-        print(
-            f"DEBUG: Staff member created successfully with ID {staff_member.staff_id}"
+        api_logger.debug(
+            f"Staff member created successfully with ID {staff_member.staff_id}"
         )
         return JsonResponse(
             {
@@ -494,13 +517,14 @@ def create_staff_member(request):
             status=201,
         )
     except Exception as e:
-        print(f"DEBUG: An error occurred while creating a staff member: {str(e)}")
+        api_logger.error(f"An error occurred while creating a staff member: {str(e)}")
         return JsonResponse({"error": str(e)}, status=500)
 
 
 @csrf_exempt
 @api_view(["GET"])
 def get_general_volunteers_not_pending(request):
+    api_logger.info("get_general_volunteers_not_pending called")
     """
     Get all general volunteers who are NOT in the Pending_Tutor table.
     """
@@ -512,6 +536,7 @@ def get_general_volunteers_not_pending(request):
 
     # Only allow users with permission to view general volunteers
     if not has_permission(request, "general_volunteer", "VIEW"):
+        api_logger.warning(f"User {user_id} attempted to access general volunteers without permission.")
         return JsonResponse(
             {"error": "You do not have permission to access this resource."}, status=401
         )
@@ -534,19 +559,22 @@ def get_general_volunteers_not_pending(request):
         }
         for gv in volunteers
     ]
+    api_logger.info(f"get_general_volunteers_not_pending completed successfully for user_id: {user_id}")
+    api_logger.debug(f"get_general_volunteers_not_pending response: {data}")
     return JsonResponse({"general_volunteers": data}, status=200)
 
 @csrf_exempt
 @api_view(["POST"])
 def google_login_success(request):
+    api_logger.info("google_login_success called in views.py")
     """
     Setup session for Google OAuth user - like regular login
     """
     # Debug information
-    print(f"DEBUG: request.user: {request.user}")
-    print(f"DEBUG: request.user.is_authenticated: {request.user.is_authenticated}")
-    print(f"DEBUG: request.session.keys(): {list(request.session.keys())}")
-    print(f"DEBUG: _auth_user_id: {request.session.get('_auth_user_id')}")
+    api_logger.debug(f"request.user: {request.user}")
+    api_logger.debug(f"request.user.is_authenticated: {request.user.is_authenticated}")
+    api_logger.debug(f"request.session.keys(): {list(request.session.keys())}")
+    api_logger.debug(f"_auth_user_id: {request.session.get('_auth_user_id')}")
     
     # Try to get Django User from session
     django_user = None
@@ -559,11 +587,11 @@ def google_login_success(request):
         from django.contrib.auth.models import User
         try:
             django_user = User.objects.get(id=user_id_from_session)
-            print(f"DEBUG: Found Django user from session: {django_user}")
-            print(f"DEBUG: Django user email: '{django_user.email}'")
-            print(f"DEBUG: Django user username: '{django_user.username}'")
+            api_logger.debug(f"Found Django user from session: {django_user}")
+            api_logger.debug(f"Django user email: '{django_user.email}'")
+            api_logger.debug(f"Django user username: '{django_user.username}'")
         except User.DoesNotExist:
-            print(f"DEBUG: Django user with ID {user_id_from_session} not found")
+            api_logger.debug(f"Django user with ID {user_id_from_session} not found")
     
     if not django_user:
         log_api_action(
@@ -580,7 +608,7 @@ def google_login_success(request):
         )
         return JsonResponse({"error": "Not authenticated"}, status=401)
     
-    print(f"DEBUG: About to search for Staff with email: '{django_user.email}'")
+    api_logger.debug(f"About to search for Staff with email: '{django_user.email}'")
     
     try:
         # Find the Staff record by email
@@ -592,7 +620,8 @@ def google_login_success(request):
         request.session["user_id"] = staff_user.staff_id
         request.session["username"] = staff_user.username
         request.session.set_expiry(86400)
-        
+
+        api_logger.info(f"User {staff_user.staff_id} logged in successfully via Google OAuth")
         # **ENHANCED GOOGLE LOGIN SUCCESS**
         log_api_action(
             request=request,
@@ -607,7 +636,7 @@ def google_login_success(request):
                 'google_email': django_user.email
             }
         )
-        
+        api_logger.info(f"User {staff_user.staff_id} logged in successfully via Google OAuth")
         return JsonResponse({
             "message": "Google login successful!",
             "user_id": staff_user.staff_id,
@@ -630,6 +659,8 @@ def google_login_success(request):
                 'google_username': django_user.username if hasattr(django_user, 'username') else 'unknown'
             }
         )
+        user_id = request.session.get("user_id", "unknown")
+        api_logger.critical(f"User {user_id} attempted to log in with an unauthorized email: {django_user.email}")
         return JsonResponse({"error": f"Access denied. Email {django_user.email} is not authorized to access this system"}, status=404)
         
     except Exception as e:
@@ -647,15 +678,13 @@ def google_login_success(request):
                 'failure_reason': 'system_error'
             }
         )
+        api_logger.error(f"Error during Google login for email {attempted_email}: {str(e)}")
         return JsonResponse({"error": str(e)}, status=500)
-
-# ...login_email moved to views_auth.py...
-
-# ...verify_totp moved to views_auth.py...
 
 @csrf_exempt
 @api_view(["POST"])
 def test_email_setup(request):
+    api_logger.info("test_email_setup called")
     """Test the current email configuration"""
     try:
         from django.core.mail import send_mail
@@ -665,9 +694,9 @@ def test_email_setup(request):
         data = json.loads(request.body) if request.body else {}
         test_email = data.get('email', 'childsmile533@gmail.com')  # Default to your email
         
-        print(f"DEBUG: Testing email setup with: {test_email}")
-        print(f"DEBUG: EMAIL_BACKEND: {settings.EMAIL_BACKEND}")
-        print(f"DEBUG: DEFAULT_FROM_EMAIL: {settings.DEFAULT_FROM_EMAIL}")
+        api_logger.debug(f"Testing email setup with: {test_email}")
+        api_logger.debug(f"EMAIL_BACKEND: {settings.EMAIL_BACKEND}")
+        api_logger.debug(f"DEFAULT_FROM_EMAIL: {settings.DEFAULT_FROM_EMAIL}")
         
         send_mail(
             'Test Email - TOTP System (Real Email Test)',
@@ -684,21 +713,22 @@ def test_email_setup(request):
         })
         
     except Exception as e:
-        print(f"ERROR: {str(e)}")
+        api_logger.error(f"Error: {str(e)}")
         return JsonResponse({"error": str(e)}, status=500)
 
 @csrf_exempt
 @api_view(["POST"])
 def test_gmail_auth(request):
+    api_logger.info("test_gmail_auth called")
     """Test Gmail SMTP authentication only"""
     try:
         import smtplib
         from django.conf import settings
         
-        print(f"DEBUG: Testing Gmail SMTP authentication...")
-        print(f"DEBUG: EMAIL_HOST: {settings.EMAIL_HOST}")
-        print(f"DEBUG: EMAIL_HOST_USER: {settings.EMAIL_HOST_USER}")
-        print(f"DEBUG: EMAIL_PASSWORD: {'*' * len(settings.EMAIL_HOST_PASSWORD)}")
+        api_logger.debug(f"Testing Gmail SMTP authentication...")
+        api_logger.debug(f"EMAIL_HOST: {settings.EMAIL_HOST}")
+        api_logger.debug(f"EMAIL_HOST_USER: {settings.EMAIL_HOST_USER}")
+        api_logger.debug(f"EMAIL_PASSWORD: {'*' * len(settings.EMAIL_HOST_PASSWORD)}")
         
         # Try to connect and authenticate
         server = smtplib.SMTP(settings.EMAIL_HOST, settings.EMAIL_PORT)
@@ -729,6 +759,7 @@ def create_volunteer_or_tutor_internal(data, request=None):
     """
     Internal function to create volunteer/tutor (extracted from original function)
     """
+    api_logger.debug("create_volunteer_or_tutor_internal called")
     try:
         user_id = data.get("id")
         first_name = data.get("first_name")

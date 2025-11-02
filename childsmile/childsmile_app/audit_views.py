@@ -8,11 +8,13 @@ from django.utils import timezone
 from datetime import timedelta
 from .models import AuditLog, Staff
 from .audit_utils import is_admin, log_api_action
+from .logger import api_logger
 import csv
 import json
 
 @api_view(['GET'])
 def get_audit_logs(request):
+    api_logger.info("get_audit_logs called")
     """
     API endpoint for admin to view audit logs with filtering and pagination
     Query parameters:
@@ -114,6 +116,7 @@ def get_audit_logs(request):
 
 @api_view(['GET'])
 def get_audit_statistics(request):
+    api_logger.info("get_audit_statistics called")
     """
     API endpoint for admin to view audit log statistics
     """
@@ -163,6 +166,7 @@ def get_audit_statistics(request):
 
 @api_view(['GET'])
 def export_audit_logs(request):
+    api_logger.info("export_audit_logs called")
     """
     API endpoint for admin to export audit logs as CSV
     Same filtering options as get_audit_logs
@@ -261,6 +265,7 @@ from django.views.decorators.csrf import csrf_exempt
 @csrf_exempt
 @api_view(["POST"])
 def audit_action(request):
+    api_logger.info("audit_action called")
     """Generic audit endpoint for frontend actions (especially exports)"""
     user_id = request.session.get("user_id")
     if not user_id:

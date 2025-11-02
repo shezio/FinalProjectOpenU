@@ -4,8 +4,10 @@ update public.childsmile_app_staff
 set email = 'gowocij683@memeazon.com'
 where email = 'sysadminmini@mail.com'
 
+while true; do LATEST_LOG=$(ls -t childsmile/childsmile_app/logs/*.log | head -n 1); echo "Tailing $LATEST_LOG"; tail -F "$LATEST_LOG" & TAIL_PID=$!; sleep 5; kill $TAIL_PID; wait $TAIL_PID 2>/dev/null; echo "Re-evaluating newest log file..."; done
+
+
 Bugs/tasks:
-[] logger for all api calls - for debugging not for audit - log levels etc, timestamp dd/mm/yyyy hh:mm:ss - replacing all the debug prints and defining which is debug, info etc using a shared logger created in a new file for all apis
 [] create tests for UI
 [] create tests for BE
 [] create a guest account that can see all data but not change anything - for demo - all buttons to edit/create should be disabled

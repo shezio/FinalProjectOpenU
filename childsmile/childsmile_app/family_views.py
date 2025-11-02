@@ -65,6 +65,7 @@ import os
 from django.db.models import Count, F
 from .utils import *
 from .audit_utils import log_api_action
+from .logger import api_logger
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -72,6 +73,7 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 @csrf_exempt
 @api_view(["GET"])
 def get_complete_family_details(request):
+    api_logger.info("get_complete_family_details called")
     """
     get all the data from children table after checking if the user has permission to view it.
     """
@@ -187,7 +189,7 @@ def get_complete_family_details(request):
             status=200,
         )
     except Exception as e:
-        print(f"DEBUG: An error occurred: {str(e)}")
+        api_logger.error(f"An error occurred: {str(e)}")
         log_api_action(
             request=request,
             action='VIEW_FAMILY_DETAILS_FAILED',
@@ -200,6 +202,7 @@ def get_complete_family_details(request):
 @csrf_exempt
 @api_view(["POST"])
 def create_family(request):
+    api_logger.info("create_family called")
     """
     Create a new family in the children table after checking if the user has permission to create it.
     """
@@ -365,7 +368,7 @@ def create_family(request):
             status=201,
         )
     except Exception as e:
-        print(f"DEBUG: An error occurred while creating a family: {str(e)}")
+        api_logger.error(f"An error occurred while creating a family: {str(e)}")
         log_api_action(
             request=request,
             action='CREATE_FAMILY_FAILED',
@@ -384,6 +387,7 @@ def update_family(request, child_id):
     """
     Update an existing family in the children table and propagate changes to related tables.
     """
+    api_logger.info(f"update_family called for child_id: {child_id}")
     user_id = request.session.get("user_id")
     if not user_id:
         log_api_action(
@@ -597,9 +601,9 @@ def update_family(request, child_id):
         # Save the updated family record
         try:
             family.save()
-            print(f"DEBUG: Family with child_id {child_id} saved successfully.")
+            api_logger.debug(f"Family with child_id {child_id} saved successfully.")
         except DatabaseError as db_error:
-            print(f"DEBUG: Database error while saving family: {str(db_error)}")
+            api_logger.error(f"Database error while saving family: {str(db_error)}")
             log_api_action(
                 request=request,
                 action='UPDATE_FAMILY_FAILED',
@@ -649,7 +653,7 @@ def update_family(request, child_id):
             }
         )
 
-        print(f"DEBUG: Family with child_id {child_id} updated successfully.")
+        api_logger.debug(f"Family with child_id {child_id} updated successfully.")
 
         return JsonResponse(
             {
@@ -659,7 +663,7 @@ def update_family(request, child_id):
             status=200,
         )
     except Exception as e:
-        print(f"DEBUG: An error occurred while updating the family: {str(e)}")
+        api_logger.error(f"An error occurred while updating the family: {str(e)}")
         log_api_action(
             request=request,
             action='UPDATE_FAMILY_FAILED',
@@ -680,6 +684,7 @@ def update_family(request, child_id):
 @csrf_exempt
 @api_view(["DELETE"])
 def delete_family(request, child_id):
+    api_logger.info(f"delete_family called for child_id: {child_id}")
     """
     Delete a family from the children table after checking if the user has permission to delete it.
     """
@@ -734,11 +739,11 @@ def delete_family(request, child_id):
 
         # delete related records in childsmile_app_tasks
         Tasks.objects.filter(related_child_id=child_id).delete()
-        print(f"DEBUG: Related tasks for child_id {child_id} deleted.")
+        api_logger.debug(f"Related tasks for child_id {child_id} deleted.")
 
         # delete related records in childsmile_app_tutorships
         Tutorships.objects.filter(child_id=child_id).delete()
-        print(f"DEBUG: Related tutorship records for child_id {child_id} deleted.")
+        api_logger.debug(f"Related tutorship records for child_id {child_id} deleted.")
 
         # Log successful family deletion
         log_api_action(
@@ -769,7 +774,7 @@ def delete_family(request, child_id):
         )
 
     except Exception as e:
-        print(f"DEBUG: An error occurred while deleting the family: {str(e)}")
+        api_logger.error(f"An error occurred while deleting the family: {str(e)}")
         log_api_action(
             request=request,
             action='DELETE_FAMILY_FAILED',
@@ -792,6 +797,7 @@ def delete_family(request, child_id):
 @csrf_exempt
 @api_view(["GET"])
 def get_initial_family_data(request):
+    api_logger.info("get_initial_family_data called")
     """
     Retrieve all initial family data from the InitialFamilyData model.
     """
@@ -838,8 +844,8 @@ def get_initial_family_data(request):
         ]
         return JsonResponse({"initial_family_data": data}, status=200)
     except Exception as e:
-        print(
-            f"DEBUG: An error occurred while retrieving initial family data: {str(e)}"
+        api_logger.error(
+            f"An error occurred while retrieving initial family data: {str(e)}"
         )
         # ❌ MISSING AUDIT LOG
         log_api_action(
@@ -858,6 +864,7 @@ def get_initial_family_data(request):
 @csrf_exempt
 @api_view(["POST"])
 def create_initial_family_data(request):
+    api_logger.info("create_initial_family_data called")
     """
     Create a new initial family data record in the InitialFamilyData model.
     """
@@ -926,8 +933,8 @@ def create_initial_family_data(request):
             family_added=False,  # Default to False
         )
 
-        print(
-            f"DEBUG: Initial family data created successfully with ID {initial_family_data.initial_family_data_id}"
+        api_logger.debug(
+            f"Initial family data created successfully with ID {initial_family_data.initial_family_data_id}"
         )
         
         # ❌ MISSING SUCCESS AUDIT LOG
@@ -952,7 +959,7 @@ def create_initial_family_data(request):
             status=201,
         )
     except Exception as e:
-        print(f"DEBUG: An error occurred while creating initial family data: {str(e)}")
+        api_logger.error(f"An error occurred while creating initial family data: {str(e)}")
         # ❌ MISSING AUDIT LOG
         log_api_action(
             request=request,
@@ -970,6 +977,7 @@ def create_initial_family_data(request):
 @csrf_exempt
 @api_view(["PUT"])
 def update_initial_family_data(request, initial_family_data_id):
+    api_logger.info(f"update_initial_family_data called for initial_family_data_id: {initial_family_data_id}")
     """
     Update an existing initial family data record in the InitialFamilyData model.
     """
@@ -1075,7 +1083,7 @@ def update_initial_family_data(request, initial_family_data_id):
             {"message": "Initial family data updated successfully"}, status=200
         )
     except Exception as e:
-        print(f"DEBUG: An error occurred while updating initial family data: {str(e)}")
+        api_logger.error(f"An error occurred while updating initial family data: {str(e)}")
         # ❌ MISSING AUDIT LOG
         log_api_action(
             request=request,
@@ -1092,6 +1100,7 @@ def update_initial_family_data(request, initial_family_data_id):
 @csrf_exempt
 @api_view(["PUT"])
 def mark_initial_family_complete(request, initial_family_data_id):
+    api_logger.info(f"mark_initial_family_complete called for initial_family_data_id: {initial_family_data_id}")
     """
     Update an existing initial family data record in the InitialFamilyData model.
     """
@@ -1203,7 +1212,7 @@ def mark_initial_family_complete(request, initial_family_data_id):
             for task in related_tasks:
                 task.status = "הושלמה"
                 task.save()
-                print(f"DEBUG: Task {task.task_id} marked as completed.")
+                api_logger.debug(f"Task {task.task_id} marked as completed.")
 
         # Log successful mark as complete
         log_api_action(
@@ -1225,8 +1234,8 @@ def mark_initial_family_complete(request, initial_family_data_id):
             status=200,
         )
     except Exception as e:
-        print(
-            f"DEBUG: An error occurred while marking initial family data complete: {str(e)}"
+        api_logger.error(
+            f"An error occurred while marking initial family data complete: {str(e)}"
         )
         log_api_action(
             request=request,
@@ -1247,6 +1256,7 @@ def mark_initial_family_complete(request, initial_family_data_id):
 @csrf_exempt
 @api_view(["DELETE"])
 def delete_initial_family_data(request, initial_family_data_id):
+    api_logger.info(f"delete_initial_family_data called for initial_family_data_id: {initial_family_data_id}")
     """
     Delete an existing initial family data record in the InitialFamilyData model.
     """
@@ -1313,8 +1323,8 @@ def delete_initial_family_data(request, initial_family_data_id):
         if related_tasks.exists():
             for task in related_tasks:
                 task.delete()
-                print(
-                    f"DEBUG: Task {task.task_id} deleted due to initial family data deletion."
+                api_logger.debug(
+                    f"Task {task.task_id} deleted due to initial family data deletion."
                 )
 
         # Delete the initial family data record
@@ -1353,7 +1363,7 @@ def delete_initial_family_data(request, initial_family_data_id):
         )
         return JsonResponse({"error": "Initial family data not found."}, status=404)
     except Exception as e:
-        print(f"DEBUG: An error occurred while deleting initial family data: {str(e)}")
+        api_logger.error(f"An error occurred while deleting initial family data: {str(e)}")
         log_api_action(
             request=request,
             action='DELETE_INITIAL_FAMILY_FAILED',

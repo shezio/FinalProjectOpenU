@@ -16,6 +16,7 @@ from .models import (
 )
 from .utils import has_permission
 from .audit_utils import log_api_action
+from .logger import api_logger
 import json
 import datetime
 import traceback
@@ -28,6 +29,7 @@ def register_send_totp(request):
     """
     Send TOTP code for user registration verification
     """
+    api_logger.info("register_send_totp called")
     try:
         data = request.data
         email = data.get("email", "").strip().lower()
@@ -163,8 +165,8 @@ def register_send_totp(request):
             }, status=500)
         
     except Exception as e:
-        print(f"ERROR in register_send_totp: {str(e)}")
-        print(f"DEBUG: Full traceback: {traceback.format_exc()}")
+        api_logger.error(f"Error in register_send_totp: {str(e)}")
+        api_logger.error(f"Full traceback: {traceback.format_exc()}")
         log_api_action(
             request=request,
             action='USER_REGISTRATION_FAILED',
@@ -180,17 +182,18 @@ def register_send_totp(request):
 @api_view(["POST"])
 @ratelimit(key='ip', rate='10/m', method='POST', block=True)
 def register_verify_totp(request):
+    api_logger.info("register_verify_totp called")
     """
     Verify TOTP and complete user registration
     """
     try:
-        print(f"DEBUG: register_verify_totp called")
+        api_logger.debug(f"register_verify_totp called")
         
         data = json.loads(request.body)
         code = data.get('code', '').strip()
         
         email = request.session.get('registration_new_user_email', '').strip().lower()
-        print(f"DEBUG: Email from session: '{email}', code from request: '{code}'")
+        api_logger.debug(f"Email from session: '{email}', code from request: '{code}'")
         
         if not email or not code:
             log_api_action(
@@ -209,7 +212,7 @@ def register_verify_totp(request):
             used=False
         ).order_by('-created_at').first()
         
-        print(f"DEBUG: Found TOTP record: {totp_record}")
+        api_logger.debug(f"Found TOTP record: {totp_record}")
         
         if not totp_record:
             log_api_action(
@@ -262,10 +265,10 @@ def register_verify_totp(request):
         
         totp_record.used = True
         totp_record.save()
-        print(f"DEBUG: TOTP verification successful")
+        api_logger.debug(f"TOTP verification successful")
         
         registration_data = request.session.get('pending_registration')
-        print(f"DEBUG: Registration data from session: {registration_data}")
+        api_logger.debug(f"Registration data from session: {registration_data}")
         
         if not registration_data:
             log_api_action(
@@ -278,7 +281,7 @@ def register_verify_totp(request):
             )
             return JsonResponse({"error": "Registration session expired"}, status=400)
         
-        print(f"DEBUG: About to create volunteer/tutor")
+        api_logger.debug(f"About to create volunteer/tutor")
         result = create_volunteer_or_tutor_internal(registration_data, request)
         
         if 'pending_registration' in request.session:
@@ -286,12 +289,12 @@ def register_verify_totp(request):
         if 'registration_new_user_email' in request.session:
             del request.session['registration_new_user_email']
         
-        print(f"DEBUG: Registration completed successfully")
+        api_logger.debug(f"Registration completed successfully")
         return result
         
     except Exception as e:
-        print(f"ERROR in register_verify_totp: {str(e)}")
-        print(f"DEBUG: Full traceback: {traceback.format_exc()}")
+        api_logger.error(f"Error in register_verify_totp: {str(e)}")
+        api_logger.error(f"Full traceback: {traceback.format_exc()}")
         log_api_action(
             request=request,
             action='USER_REGISTRATION_FAILED',
@@ -306,6 +309,7 @@ def register_verify_totp(request):
 @csrf_exempt
 @api_view(["POST"])
 def create_volunteer_or_tutor(request):
+    api_logger.info("create_volunteer_or_tutor called")
     """
     Create a new volunteer or tutor user via direct API call (not via registration flow)
     """
@@ -437,8 +441,8 @@ def create_volunteer_or_tutor(request):
             "error": "Authentication failed"
         }, status=403)
     except Exception as e:
-        print(f"ERROR in create_volunteer_or_tutor: {str(e)}")
-        print(f"DEBUG: Full traceback: {traceback.format_exc()}")
+        api_logger.error(f"Error in create_volunteer_or_tutor: {str(e)}")
+        api_logger.error(f"Full traceback: {traceback.format_exc()}")
         log_api_action(
             request=request,
             action='CREATE_VOLUNTEER_FAILED',
@@ -451,6 +455,7 @@ def create_volunteer_or_tutor(request):
 
 @transaction.atomic
 def create_volunteer_or_tutor_internal(data, request=None):
+    api_logger.debug("create_volunteer_or_tutor_internal called")
     """
     Internal function to create volunteer/tutor - ORIGINAL WORKING VERSION with audit improvements
     """
@@ -467,7 +472,7 @@ def create_volunteer_or_tutor_internal(data, request=None):
         email = data.get("email")
         want_tutor = data.get("want_tutor") == "true" or data.get("want_tutor") is True
 
-        print(f"DEBUG: Extracted user_id={user_id}, email={email}, want_tutor={want_tutor}")
+        api_logger.debug(f"Extracted user_id={user_id}, email={email}, want_tutor={want_tutor}")
 
         # Create username
         username = f"{first_name}_{surname}"
@@ -490,7 +495,7 @@ def create_volunteer_or_tutor_internal(data, request=None):
             email=email,
             want_tutor=want_tutor,
         )
-        print(f"DEBUG: Created SignedUp with id={signedup.id}")
+        api_logger.debug(f"Created SignedUp with id={signedup.id}")
 
         # Get role
         role_name = "General Volunteer"
@@ -509,7 +514,7 @@ def create_volunteer_or_tutor_internal(data, request=None):
         
         # DEBUG: Verify role was added
         staff_roles = list(staff.roles.all().values_list('role_name', flat=True))
-        print(f"DEBUG: Created staff {staff.staff_id} with roles: {staff_roles}")
+        api_logger.debug(f"Created staff {staff.staff_id} with roles: {staff_roles}")
 
         # Create volunteer or pending tutor
         if want_tutor:
@@ -598,8 +603,8 @@ def create_volunteer_or_tutor_internal(data, request=None):
         }, status=201)
 
     except Exception as e:
-        print(f"ERROR in create_volunteer_or_tutor_internal: {str(e)}")
-        print(f"DEBUG: Full traceback: {traceback.format_exc()}")
+        api_logger.error(f"Error in create_volunteer_or_tutor_internal: {str(e)}")
+        api_logger.error(f"Full traceback: {traceback.format_exc()}")
         
         if request:
             log_api_action(
@@ -620,6 +625,7 @@ def create_volunteer_or_tutor_internal(data, request=None):
 @csrf_exempt
 @api_view(["POST"])
 def create_pending_tutor(request):
+    api_logger.info("create_pending_tutor called")
     """
     Create a pending tutor record for an existing user
     """
@@ -724,8 +730,8 @@ def create_pending_tutor(request):
             "error": "Authentication failed"
         }, status=403)
     except Exception as e:
-        print(f"ERROR in create_pending_tutor: {str(e)}")
-        print(f"DEBUG: Full traceback: {traceback.format_exc()}")
+        api_logger.error(f"Error in create_pending_tutor: {str(e)}")
+        api_logger.error(f"Full traceback: {traceback.format_exc()}")
         log_api_action(
             request=request,
             action='CREATE_PENDING_TUTOR_FAILED',
@@ -740,6 +746,7 @@ def create_pending_tutor(request):
 @csrf_exempt
 @api_view(["PUT"])
 def update_general_volunteer(request, volunteer_id):
+    api_logger.info(f"update_general_volunteer called for volunteer_id: {volunteer_id}")
     """
     Update a general volunteer's information
     """
@@ -806,6 +813,7 @@ def update_general_volunteer(request, volunteer_id):
 @csrf_exempt
 @api_view(["PUT"])
 def update_tutor(request, tutor_id):
+    api_logger.info(f"update_tutor called for tutor_id: {tutor_id}")
     """
     Update a tutor's information including email, status, and wellness data
     """

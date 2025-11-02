@@ -9,6 +9,7 @@ from django.core.mail import send_mail
 from django.conf import settings
 from .models import Staff, TOTPCode
 from .audit_utils import log_api_action
+from .logger import api_logger
 import json
 import traceback
 
@@ -20,6 +21,7 @@ def login_email(request):
     """
     Send TOTP code to email address
     """
+    api_logger.info("login_email called")
     try:
         data = json.loads(request.body)
         email = data.get('email', '').strip().lower()
@@ -33,6 +35,8 @@ def login_email(request):
                 status_code=400,
                 additional_data={'attempted_email': 'missing'}
             )
+            user_id = request.session.get("user_id", "unknown")
+            api_logger.warning(f"User {user_id} attempted to log in without providing an email.")
             return JsonResponse({"error": "Email is required"}, status=400)
         
         # Validate email format (basic)
@@ -89,7 +93,7 @@ def login_email(request):
             fail_silently=False,
         )
         
-        print(f"DEBUG: Sent TOTP code {code} to {email}")
+        api_logger.debug(f"Sent TOTP code {code} to {email}")
         
         return JsonResponse({
             "message": "Login code sent to your email",
@@ -97,7 +101,7 @@ def login_email(request):
         })
         
     except Exception as e:
-        print(f"ERROR in login_email: {str(e)}")
+        api_logger.error(f"Error in login_email: {str(e)}")
         log_api_action(
             request=request,
             action='TOTP_SEND_FAILED',
@@ -114,8 +118,9 @@ def login_email(request):
 @ratelimit(key='ip', rate='10/m', method='POST', block=True)
 def verify_totp(request):
     """
-    Verify TOTP code and create session
+    Verify TOTP code from email
     """
+    api_logger.info("verify_totp called")
     try:
         data = json.loads(request.body)
         email = data.get('email', '').strip().lower()
@@ -130,6 +135,14 @@ def verify_totp(request):
                 status_code=400,
                 additional_data={'attempted_email': email or 'missing'}
             )
+            user_id = request.session.get("user_id", "unknown")
+            # if we have code and not email, warn no email, if we have no code but email we warn no code - if none both - we warn both
+            if code and not email:
+                api_logger.warning(f"User {user_id} attempted to verify TOTP without providing an email.")
+            elif email and not code:
+                api_logger.warning(f"User {user_id} attempted to verify TOTP without providing a code using email {email}.")
+            else:
+                api_logger.warning(f"User {user_id} attempted to verify TOTP without providing email and code.")
             return JsonResponse({"error": "Email and code are required"}, status=400)
         
         # Find TOTP record
@@ -148,6 +161,7 @@ def verify_totp(request):
                 status_code=400,
                 additional_data={'attempted_email': email}
             )
+            api_logger.warning(f"User {user_id} attempted to verify TOTP with an invalid or expired code.")
             return JsonResponse({"error": "Invalid or expired code"}, status=400)
         
         if not totp_record.is_valid():
@@ -176,6 +190,7 @@ def verify_totp(request):
                     status_code=429,
                     additional_data={'attempted_email': email}
                 )
+                api_logger.critical(f"User {user_id} exceeded maximum TOTP attempts - could be a brute-force attack - check audit logs.")
                 return JsonResponse({"error": "Too many failed attempts"}, status=429)
             
             log_api_action(
@@ -186,6 +201,7 @@ def verify_totp(request):
                 status_code=400,
                 additional_data={'attempted_email': email}
             )
+            api_logger.warning(f"User {user_id} attempted to verify TOTP with an invalid code.")
             return JsonResponse({"error": "Invalid code"}, status=400)
         
         # Mark code as used
@@ -204,6 +220,7 @@ def verify_totp(request):
                 status_code=404,
                 additional_data={'attempted_email': email}
             )
+            api_logger.warning(f"User {user_id} attempted to log in without providing a staff email.")
             return JsonResponse({"error": "Staff member not found"}, status=404)
         
         # **ENHANCED TOTP VERIFICATION SUCCESS**
@@ -224,6 +241,8 @@ def verify_totp(request):
             }
         )
         
+        api_logger.info(f"TOTP verification successful for user {staff_user.staff_id} ({email})")
+
         # Create session
         request.session.create()
         request.session["user_id"] = staff_user.staff_id
@@ -247,7 +266,7 @@ def verify_totp(request):
                 'login_step': 'session_created'
             }
         )
-        
+        api_logger.info(f"User {staff_user.staff_id} logged in successfully via TOTP.")
         return JsonResponse({
             "message": "Login successful!",
             "user_id": staff_user.staff_id,
@@ -256,8 +275,8 @@ def verify_totp(request):
         })
         
     except Exception as e:
-        print(f"ERROR in verify_totp: {str(e)}")
-        print(f"DEBUG: Full traceback: {traceback.format_exc()}")
+        api_logger.error(f"Error in verify_totp: {str(e)}")
+        api_logger.error(f"Full traceback: {traceback.format_exc()}")
         log_api_action(
             request=request,
             action='USER_LOGIN_FAILED',
@@ -274,10 +293,11 @@ def google_login_success(request):
     """
     Setup session for Google OAuth user
     """
-    print(f"DEBUG: request.user: {request.user}")
-    print(f"DEBUG: request.user.is_authenticated: {request.user.is_authenticated}")
-    print(f"DEBUG: request.session.keys(): {list(request.session.keys())}")
-    print(f"DEBUG: _auth_user_id: {request.session.get('_auth_user_id')}")
+    api_logger.info("google_login_success called in views_auth.py")
+    api_logger.debug(f"request.user: {request.user}")
+    api_logger.debug(f"request.user.is_authenticated: {request.user.is_authenticated}")
+    api_logger.debug(f"request.session.keys(): {list(request.session.keys())}")
+    api_logger.debug(f"_auth_user_id: {request.session.get('_auth_user_id')}")
     
     # Try to get Django User from session
     django_user = None
@@ -290,11 +310,11 @@ def google_login_success(request):
         from django.contrib.auth.models import User
         try:
             django_user = User.objects.get(id=user_id_from_session)
-            print(f"DEBUG: Found Django user from session: {django_user}")
-            print(f"DEBUG: Django user email: '{django_user.email}'")
-            print(f"DEBUG: Django user username: '{django_user.username}'")
+            api_logger.debug(f"Found Django user from session: {django_user}")
+            api_logger.debug(f"Django user email: '{django_user.email}'")
+            api_logger.debug(f"Django user username: '{django_user.username}'")
         except User.DoesNotExist:
-            print(f"DEBUG: Django user with ID {user_id_from_session} not found")
+            api_logger.debug(f"Django user with ID {user_id_from_session} not found")
     
     if not django_user:
         log_api_action(
@@ -309,9 +329,11 @@ def google_login_success(request):
                 'failure_reason': 'no_django_user'
             }
         )
+        user_id = request.session.get("user_id", "unknown")
+        api_logger.warning(f"User {user_id} not authenticated - no Django user found")
         return JsonResponse({"error": "Not authenticated"}, status=401)
     
-    print(f"DEBUG: About to search for Staff with email: '{django_user.email}'")
+    api_logger.debug(f"About to search for Staff with email: '{django_user.email}'")
     
     try:
         # Find the Staff record by email
@@ -338,7 +360,7 @@ def google_login_success(request):
                 'google_email': django_user.email
             }
         )
-        
+        api_logger.info(f"User {staff_user.staff_id} logged in successfully via Google OAuth.")
         return JsonResponse({
             "message": "Google login successful!",
             "user_id": staff_user.staff_id,
@@ -361,6 +383,8 @@ def google_login_success(request):
                 'google_username': django_user.username if hasattr(django_user, 'username') else 'unknown'
             }
         )
+        user_id = request.session.get("user_id", "unknown")
+        api_logger.warning(f"User {user_id} Google login failed - no Django user found")
         return JsonResponse({"error": f"Access denied. Email {django_user.email} is not authorized to access this system"}, status=404)
         
     except Exception as e:
@@ -378,4 +402,5 @@ def google_login_success(request):
                 'failure_reason': 'system_error'
             }
         )
+        api_logger.exception(f"Error in google_login_success: {str(e)}")
         return JsonResponse({"error": str(e)}, status=500)
