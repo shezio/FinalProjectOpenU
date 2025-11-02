@@ -66,6 +66,7 @@ import os
 from django.db.models import Count, F
 from .utils import *
 from .audit_utils import log_api_action
+from .logger import api_logger
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -73,6 +74,7 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 @csrf_exempt
 @api_view(["POST"])
 def calculate_possible_matches(request):
+    api_logger.info("calculate_possible_matches called")
     try:
         # Step 1: Check user permissions
         check_matches_permissions(request, ["CREATE", "UPDATE", "DELETE", "VIEW"])
@@ -119,7 +121,7 @@ def calculate_possible_matches(request):
         )
 
     except PermissionError as e:
-        print(f"DEBUG: Permission error: {str(e)}")
+        api_logger.error(f"Permission error: {str(e)}")
         log_api_action(
             request=request,
             action='CALCULATE_MATCHES_FAILED',
@@ -130,7 +132,7 @@ def calculate_possible_matches(request):
         return JsonResponse({"error": str(e)}, status=403)
 
     except Exception as e:
-        print(f"DEBUG: An error occurred: {str(e)}")
+        api_logger.error(f"An error occurred: {str(e)}")
         log_api_action(
             request=request,
             action='CALCULATE_MATCHES_FAILED',
@@ -144,6 +146,7 @@ def calculate_possible_matches(request):
 @csrf_exempt
 @api_view(["GET"])
 def get_tutorships(request):
+    api_logger.info("get_tutorships called")
     """
     Retrieve all tutorships with their full details.
     """
@@ -210,7 +213,7 @@ def get_tutorships(request):
         ]
         return JsonResponse({"tutorships": tutorships_data}, status=200)
     except Exception as e:
-        print(f"DEBUG: Error fetching tutorships: {str(e)}")
+        api_logger.error(f"Error fetching tutorships: {str(e)}")
         log_api_action(
             request=request,
             action='VIEW_TUTORSHIPS_FAILED',
@@ -224,6 +227,7 @@ def get_tutorships(request):
 @csrf_exempt
 @api_view(["POST"])
 def create_tutorship(request):
+    api_logger.info("create_tutorship called")
     """
     Create a new tutorship record.
     """
@@ -255,7 +259,7 @@ def create_tutorship(request):
 
     try:
         data = request.data  # Use request.data for JSON payloads
-        print(f"DEBUG: Incoming request data: {data}")  # Log the incoming data
+        api_logger.debug(f"Incoming request data: {data}")
 
         # Handle nested "match" object
         if "match" in data:
@@ -267,7 +271,7 @@ def create_tutorship(request):
         required_fields = ["child_id", "tutor_id", "staff_role_id"]
         missing_fields = [field for field in required_fields if field not in data]
         if missing_fields:
-            print(f"DEBUG: Missing fields: {missing_fields}")  # Log missing fields
+            api_logger.debug(f"Missing fields: {missing_fields}")
             log_api_action(
                 request=request,
                 action='CREATE_TUTORSHIP_FAILED',
@@ -283,7 +287,7 @@ def create_tutorship(request):
         # Retrieve and validate the staff role ID
         staff_role_id = data.get("staff_role_id")
         if not isinstance(staff_role_id, int):
-            print(f"DEBUG: Invalid staff_role_id: {staff_role_id}")
+            api_logger.debug(f"Invalid staff_role_id: {staff_role_id}")
             log_api_action(
                 request=request,
                 action='CREATE_TUTORSHIP_FAILED',
@@ -395,7 +399,7 @@ def create_tutorship(request):
             }
         )
         
-        print(f"DEBUG: Tutorship created successfully with ID {tutorship.id}")
+        api_logger.debug(f"Tutorship created successfully with ID {tutorship.id}")
         return JsonResponse(
             {"message": "Tutorship created successfully", "tutorship_id": tutorship.id},
             status=201,
@@ -450,7 +454,7 @@ def create_tutorship(request):
         )
         return JsonResponse({"error": f"Tutor with ID {data.get('tutor_id')} not found"}, status=404)
     except KeyError as e:
-        print(f"DEBUG: Missing key in request data: {str(e)}")
+        api_logger.error(f"Missing key in request data: {str(e)}")
         log_api_action(
             request=request,
             action='CREATE_TUTORSHIP_FAILED',
@@ -460,7 +464,7 @@ def create_tutorship(request):
         )
         return JsonResponse({"error": f"Missing key: {str(e)}"}, status=400)
     except Exception as e:
-        print(f"DEBUG: An error occurred while creating a tutorship: {str(e)}")
+        api_logger.error(f"An error occurred while creating a tutorship: {str(e)}")
         log_api_action(
             request=request,
             action='CREATE_TUTORSHIP_FAILED',
@@ -474,10 +478,11 @@ def create_tutorship(request):
 @csrf_exempt
 @api_view(["POST"])
 def update_tutorship(request, tutorship_id):
+    api_logger.info(f"update_tutorship called for tutorship_id: {tutorship_id}")
     """
     Update an existing tutorship record.
     """
-    print(f"DEBUG: Received request to update tutorship with ID {tutorship_id}")
+    api_logger.debug(f"Received request to update tutorship with ID {tutorship_id}")
     user_id = request.session.get("user_id")
     if not user_id:
         log_api_action(
@@ -508,7 +513,7 @@ def update_tutorship(request, tutorship_id):
         )
 
     data = request.data
-    print(f"DEBUG: Incoming request data for update: {data}")  # Log the incoming data
+    api_logger.debug(f"Incoming request data for update: {data}")
     staff_role_id = data.get("staff_role_id")
     if not staff_role_id:
         log_api_action(
@@ -591,7 +596,7 @@ def update_tutorship(request, tutorship_id):
                     staff_member.roles.add(tutor_role)
                     staff_member.save()
                     tutor_role_added = True
-                    print(f"DEBUG: Added 'Tutor' role to staff {staff_member.username}")
+                    api_logger.debug(f"Added 'Tutor' role to staff {staff_member.username}")
 
         # Get child and tutor names for audit
         child_name = f"{tutorship.child.childfirstname} {tutorship.child.childsurname}" if tutorship.child else "Unknown"
@@ -627,7 +632,7 @@ def update_tutorship(request, tutorship_id):
             status=200,
         )
     except Exception as e:
-        print(f"DEBUG: An error occurred while updating the tutorship: {str(e)}")
+        api_logger.error(f"An error occurred while updating the tutorship: {str(e)}")
         
         # Get child and tutor names for audit error
         child_name = f"{tutorship.child.childfirstname} {tutorship.child.childsurname}" if tutorship.child else "Unknown"
@@ -654,6 +659,7 @@ def update_tutorship(request, tutorship_id):
 @csrf_exempt
 @api_view(["DELETE"])
 def delete_tutorship(request, tutorship_id):
+    api_logger.info(f"delete_tutorship called for tutorship_id: {tutorship_id}")
     """
     Delete a tutorship record.
     """
@@ -772,13 +778,13 @@ def delete_tutorship(request, tutorship_id):
             }
         )
 
-        print(f"DEBUG: Tutorship with ID {tutorship_id} deleted successfully.")
+        api_logger.debug(f"Tutorship with ID {tutorship_id} deleted successfully.")
         return JsonResponse(
             {"message": "Tutorship deleted successfully", "tutorship_id": tutorship_id},
             status=200,
         )
     except Exception as e:
-        print(f"DEBUG: An error occurred while deleting the tutorship: {str(e)}")
+        api_logger.error(f"An error occurred while deleting the tutorship: {str(e)}")
         log_api_action(
             request=request,
             action='DELETE_TUTORSHIP_FAILED',

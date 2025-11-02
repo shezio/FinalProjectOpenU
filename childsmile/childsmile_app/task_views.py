@@ -65,12 +65,14 @@ import os
 from django.db.models import Count, F
 from .utils import *
 from .audit_utils import log_api_action
+from .logger import api_logger
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 @csrf_exempt
 @api_view(["GET"])
 def get_user_tasks(request):
+    api_logger.info("get_user_tasks called")
     user_id = request.session.get("user_id")
     if not user_id:
         log_api_action(
@@ -87,22 +89,22 @@ def get_user_tasks(request):
     try:
         # Fetch the user
         user = Staff.objects.get(staff_id=user_id)
-        print(f"DEBUG: Logged-in user: {user.username}")  # Debug log
+        api_logger.debug(f"Logged-in user: {user.username}")
 
         # Check if the user is an admin
         user_is_admin = is_admin(user)
-        print(f"DEBUG: Is user '{user.username}' an admin? {user_is_admin}")  # Debug log
+        api_logger.debug(f"Is user '{user.username}' an admin? {user_is_admin}")
 
         # Always fetch tasks from DB, no cache
         if user_is_admin:
-            print("DEBUG: Fetching all tasks for admin user.")  # Debug log
+            api_logger.debug("Fetching all tasks for admin user.")
             tasks = (
                 Tasks.objects.all()
                 .select_related("task_type", "assigned_to", "pending_tutor__id")
                 .order_by("-updated_at")
             )
         else:
-            print(f"DEBUG: Fetching tasks assigned to user '{user.username}'.")  # Debug log
+            api_logger.debug(f"Fetching tasks assigned to user '{user.username}'.")
             tasks = (
                 Tasks.objects.filter(assigned_to_id=user_id)
                 .select_related("task_type", "assigned_to", "pending_tutor__id")
@@ -142,7 +144,7 @@ def get_user_tasks(request):
             }
             for task in tasks
         ]
-
+        api_logger.debug(f"Fetched tasks: {tasks_data}")
         # Always fetch all task types, no cache
         task_types = Task_Types.objects.all()
         task_types_data = [
@@ -154,7 +156,7 @@ def get_user_tasks(request):
             }
             for t in task_types
         ]
-
+        api_logger.debug(f"Fetched task types: {task_types_data}")
         return JsonResponse({"tasks": tasks_data, "task_types": task_types_data})
 
     except Staff.DoesNotExist:
@@ -165,9 +167,10 @@ def get_user_tasks(request):
             error_message="User not found",
             status_code=404
         )
+        api_logger.warning("User not found")
         return JsonResponse({"error": "User not found."}, status=404)
     except Exception as e:
-        print(f"DEBUG: An error occurred while fetching tasks: {str(e)}")
+        api_logger.error(f"An error occurred while fetching tasks: {str(e)}")
         log_api_action(
             request=request,
             action='VIEW_TASKS_FAILED',
@@ -181,10 +184,11 @@ def get_user_tasks(request):
 @csrf_exempt
 @api_view(["POST"])
 def create_task(request):
+    api_logger.info("create_task called")
     """
     Create a new task.
     """
-    print(" create task data: ", request.data)  # Debug log
+    api_logger.debug(f"Create task data: {request.data}")
     user_id = request.session.get("user_id")
     if not user_id:
         log_api_action(
@@ -207,6 +211,7 @@ def create_task(request):
             error_message="You do not have permission to create tasks",
             status_code=401
         )
+        api_logger.warning("User lacks permission to create tasks")
         return JsonResponse(
             {"error": "You do not have permission to create tasks."}, status=401
         )
@@ -239,6 +244,7 @@ def create_task(request):
                         'attempted_assigned_to': assigned_to
                     }
                 )
+                api_logger.warning(f"Staff member with ID or username '{assigned_to}' not found.")
                 return JsonResponse(
                     {
                         "detail": f"Staff member with ID or username '{assigned_to}' not found."
@@ -259,8 +265,8 @@ def create_task(request):
                         new_pending = Pending_Tutor.objects.create(
                             id_id=pending_tutor_id, pending_status="ממתין"
                         )
-                        print(
-                            f"DEBUG: Created new Pending_Tutor with ID {pending_tutor_id}"
+                        api_logger.debug(
+                            f"Created new Pending_Tutor with ID {pending_tutor_id}"
                         )
                         # Update task_data to use the PK, not the volunteer ID
                         task_data["pending_tutor"] = new_pending.pending_tutor_id
@@ -282,9 +288,9 @@ def create_task(request):
             )
             return JsonResponse({"detail": "Invalid task type ID."}, status=400)
         except Exception as e:
-            print(f"DEBUG: Error in Pending_Tutor creation logic: {str(e)}")
+            api_logger.error(f"Error in Pending_Tutor creation logic: {str(e)}")
 
-        print(f"DEBUG: Task data being sent to create_task_internal: {task_data}")
+        api_logger.debug(f"Task data being sent to create_task_internal: {task_data}")
         task = create_task_internal(task_data)
 
         # Check if the logged-in user is an admin
@@ -321,7 +327,7 @@ def create_task(request):
     except Task_Types.DoesNotExist:
         return JsonResponse({"detail": "Invalid task type ID."}, status=400)
     except Exception as e:
-        print(f"DEBUG: An error occurred: {str(e)}")
+        api_logger.error(f"An error occurred: {str(e)}")
         log_api_action(
             request=request,
             action='CREATE_TASK_FAILED',
@@ -335,6 +341,7 @@ def create_task(request):
 @csrf_exempt
 @api_view(["DELETE"])
 def delete_task(request, task_id):
+    api_logger.info(f"delete_task called for task_id: {task_id}")
     """
     Delete a task.
     """
@@ -376,10 +383,10 @@ def delete_task(request, task_id):
         # If task type is "ראיון מועמד לחונכות", delete the associated Pending_Tutor
         if task_type and getattr(task_type, "task_type", None) == "ראיון מועמד לחונכות":
             # print all task details for debug
-            print(f"DEBUG: Deleting task {task_id} of type {task_type}")
-            print(f"DEBUG: Assigned to ID {assigned_to_id}")
-            print(f"DEBUG: Pending tutor ID {pending_tutor_id}")
-            print(f"DEBUG: Task type {task_type}")
+            api_logger.debug(f"Deleting task {task_id} of type {task_type}")
+            api_logger.debug(f"Assigned to ID {assigned_to_id}")
+            api_logger.debug(f"Pending tutor ID {pending_tutor_id}")
+            api_logger.debug(f"Task type {task_type}")
             if pending_tutor_id:
                 try:
                     pending_tutor = Pending_Tutor.objects.get(pending_tutor_id=pending_tutor_id)
@@ -403,9 +410,9 @@ def delete_task(request, task_id):
                         )
                     else:
                         pending_tutor.delete()
-                    print(f"DEBUG: Deleted Pending_Tutor with ID {pending_tutor_id}")
+                    api_logger.debug(f"Deleted Pending_Tutor with ID {pending_tutor_id}")
                 except Pending_Tutor.DoesNotExist:
-                    print(f"DEBUG: Pending_Tutor with ID {pending_tutor_id} does not exist")
+                    api_logger.debug(f"Pending_Tutor with ID {pending_tutor_id} does not exist")
         
         task.delete()
 
@@ -460,7 +467,7 @@ def delete_task(request, task_id):
         )
         return JsonResponse({"error": "Task not found."}, status=404)
     except Exception as e:
-        print(f"DEBUG: An error occurred: {str(e)}")
+        api_logger.error(f"An error occurred: {str(e)}")
         log_api_action(
             request=request,
             action='DELETE_TASK_FAILED',
@@ -480,6 +487,7 @@ def delete_task(request, task_id):
 @csrf_exempt
 @api_view(["PUT"])
 def update_task_status(request, task_id):
+    api_logger.info(f"update_task_status called for task_id: {task_id}")
     """
     Update the status of a task.
     """
@@ -516,7 +524,7 @@ def update_task_status(request, task_id):
         task.status = new_status
         task.save()
 
-        print(f"DEBUG: Task {task_id} status updated to {new_status}")  # Debug log
+        api_logger.debug(f"Task {task_id} status updated to {new_status}")
 
         # If status changed to "בביצוע" and task has initial_family_data_id_fk
         if new_status == "בביצוע" and task.initial_family_data_id_fk:
@@ -524,16 +532,16 @@ def update_task_status(request, task_id):
             delete_other_tasks_with_initial_family_data_async(task)
         elif new_status == "הושלמה":
             # task_type is a FK to Task_Types, so you can access task.task_type.task_type
-            print(f"DEBUG: task_type = {task.task_type.task_type}")
+            api_logger.debug(f"task_type = {task.task_type.task_type}")
             if task.task_type.task_type == "ראיון מועמד לחונכות":
                 # pending_tutor is a FK to Pending_Tutor
                 if task.pending_tutor:
                     pending_tutor_record = task.pending_tutor
-                    print(
-                        f"DEBUG: pending_tutor_id = {task.pending_tutor.pending_tutor_id}"
+                    api_logger.debug(
+                        f"pending_tutor_id = {task.pending_tutor.pending_tutor_id}"
                     )
                     ok, msg = promote_pending_tutor_to_tutor(task)
-                    print(f"DEBUG: Promotion called, result: {ok}, {msg}")
+                    api_logger.debug(f"Promotion called, result: {ok}, {msg}")
                     if not ok:
                         log_api_action(
                             request=request,
@@ -550,7 +558,7 @@ def update_task_status(request, task_id):
                         pending_tutor_volunteer_name = f"{pending_tutor_record.id.first_name} {pending_tutor_record.id.surname}"
                         pending_tutor_id_val = pending_tutor_record.pending_tutor_id
                         pending_tutor_record.delete()
-                        print(f"DEBUG: Deleted Pending_Tutor record with ID {pending_tutor_id_val}")
+                        api_logger.debug(f"Deleted Pending_Tutor record with ID {pending_tutor_id_val}")
                         
                         # Log the deletion of pending tutor due to promotion
                         log_api_action(
@@ -596,7 +604,7 @@ def update_task_status(request, task_id):
         )
         return JsonResponse({"error": "Task not found."}, status=404)
     except Exception as e:
-        print(f"DEBUG: An error occurred: {str(e)}")
+        api_logger.error(f"An error occurred: {str(e)}")
         log_api_action(
             request=request,
             action='UPDATE_TASK_FAILED',
@@ -610,6 +618,7 @@ def update_task_status(request, task_id):
 @csrf_exempt
 @api_view(["PUT"])
 def update_task(request, task_id):
+    api_logger.info(f"update_task called for task_id: {task_id}")
     """
     Update task details.
     """
@@ -659,7 +668,7 @@ def update_task(request, task_id):
 
         # Handle assigned_to (convert staff_id directly)
         assigned_to = request.data.get("assigned_to")
-        print(f"DEBUG: assigned_to = {assigned_to}")  # Debug log
+        api_logger.debug(f"assigned_to = {assigned_to}")
         if assigned_to:
             try:
                 # Check if assigned_to is a username or staff_id
@@ -672,9 +681,9 @@ def update_task(request, task_id):
 
                 task.assigned_to_id = staff_member.staff_id
             except Staff.DoesNotExist:
-                print(
-                    f"DEBUG: Staff member with username or ID '{assigned_to}' not found."
-                )  # Debug log
+                api_logger.error(
+                    f"Staff member with username or ID '{assigned_to}' not found."
+                )
                 log_api_action(
                     request=request,
                     action='UPDATE_TASK_FAILED',
@@ -761,7 +770,7 @@ def update_task(request, task_id):
                             pending_tutor_volunteer_name = f"{pending_tutor_record.id.first_name} {pending_tutor_record.id.surname}"
                             pending_tutor_id_val = pending_tutor_record.pending_tutor_id
                             pending_tutor_record.delete()
-                            print(f"DEBUG: Deleted Pending_Tutor record with ID {pending_tutor_id_val}")
+                            api_logger.debug(f"Deleted Pending_Tutor record with ID {pending_tutor_id_val}")
                             
                             # Log the deletion of pending tutor due to promotion
                             log_api_action(
@@ -819,7 +828,7 @@ def update_task(request, task_id):
         )
         return JsonResponse({"error": "Task not found."}, status=404)
     except Exception as e:
-        print(f"DEBUG: An error occurred: {str(e)}")
+        api_logger.error(f"An error occurred: {str(e)}")
         log_api_action(
             request=request,
             action='UPDATE_TASK_FAILED',

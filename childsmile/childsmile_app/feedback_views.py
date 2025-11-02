@@ -65,12 +65,14 @@ import os
 from django.db.models import Count, F
 from .utils import *
 from .audit_utils import log_api_action
+from .logger import api_logger
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 @csrf_exempt
 @api_view(["POST"])
 def create_tutor_feedback(request):
+    api_logger.info("create_tutor_feedback called")
     """
     Create a new tutor feedback record.
     """
@@ -174,14 +176,14 @@ def create_tutor_feedback(request):
         except Exception as e:
             error = str(e)
             error_type = "feedback_creation_error"
-            print(f"DEBUG: Error creating feedback: {error}")
+            api_logger.error(f"Error creating feedback: {error}")
 
         # Get the tutor's id_id from Tutors using the user_id
-        print(f"DEBUG: User ID: {user_id}")
+        api_logger.debug(f"User ID: {user_id}")
         tutor = Tutors.objects.filter(staff_id=staff_filling_id).first()
-        print(f"DEBUG: Tutor found: {tutor}")
+        api_logger.debug(f"Tutor found: {tutor}")
         if not tutor:
-            print(f"DEBUG: No tutor found for staff ID {staff_filling_id}")
+            api_logger.debug(f"No tutor found for staff ID {staff_filling_id}")
             log_api_action(
                 request=request,
                 action='CREATE_TUTOR_FEEDBACK_FAILED',
@@ -210,14 +212,14 @@ def create_tutor_feedback(request):
                     is_first_visit=data.get("is_first_visit"),
                 )
 
-                print(
-                    f"DEBUG: Tutor feedback created successfully with ID {feedback.feedback_id}"
+                api_logger.info(
+                    f"Tutor feedback created successfully with ID {feedback.feedback_id}"
                 )
             except Exception as e:
                 error = str(e)
                 error_type = "tutor_feedback_creation_error"
-                print(
-                    f"DEBUG: An error occurred while creating tutor feedback: {error}"
+                api_logger.error(
+                    f"An error occurred while creating tutor feedback: {error}"
                 )
 
         if not error:
@@ -233,14 +235,14 @@ def create_tutor_feedback(request):
                         other_information=data.get("other_information", ""),
                     )
 
-                    print(
-                        f"DEBUG: InitialFamilyData created with ID {initial_family_data.initial_family_data_id}"
+                    api_logger.info(
+                        f"InitialFamilyData created with ID {initial_family_data.initial_family_data_id}"
                     )
             except Exception as e:
                 error = str(e)
                 error_type = "initial_family_data_creation_error"
-                print(
-                    f"DEBUG: An error occurred while creating InitialFamilyData: {error}"
+                api_logger.error(
+                    f"An error occurred while creating InitialFamilyData: {error}"
                 )
 
         # FIXED: Only create tasks if initial_family_data was actually created
@@ -250,12 +252,12 @@ def create_tutor_feedback(request):
                 create_tasks_for_technical_coordinators_async(
                     initial_family_data, task_type.id
                 )
-                print("DEBUG: Tasks for Technical Coordinators created successfully.")
+                api_logger.info("Tasks for Technical Coordinators created successfully.")
             except Exception as e:
                 error = str(e)
                 error_type = "task_creation_error"
-                print(
-                    f"DEBUG: An error occurred while creating tasks for Technical Coordinators: {error}"
+                api_logger.error(
+                    f"An error occurred while creating tasks for Technical Coordinators: {error}"
                 )
 
         if error:
@@ -305,7 +307,7 @@ def create_tutor_feedback(request):
             status=201,
         )
     except Exception as e:
-        print(f"DEBUG: An error occurred while creating tutor feedback: {str(e)}")
+        api_logger.error(f"An error occurred while creating tutor feedback: {str(e)}")
         log_api_action(
             request=request,
             action='CREATE_TUTOR_FEEDBACK_FAILED',
@@ -319,6 +321,7 @@ def create_tutor_feedback(request):
 @csrf_exempt
 @api_view(["PUT"])
 def update_tutor_feedback(request, feedback_id):
+    api_logger.info(f"update_tutor_feedback called for feedback_id: {feedback_id}")
     """
     Update an existing tutor feedback record.
     """
@@ -406,9 +409,9 @@ def update_tutor_feedback(request, feedback_id):
         staff_filling_id = data.get("staff_id")
         # Get the tutor's id_id from Tutors using the user_id (which is staff_id in Tutors)
         tutor = Tutors.objects.filter(staff_id=staff_filling_id).first()
-        print(f"DEBUG: Tutor found: {tutor}")  # Log the tutor found
+        api_logger.debug(f"Tutor found: {tutor}")  # Log the tutor found
         if not tutor:
-            print(f"DEBUG: No tutor found for staff ID {staff_filling_id}")
+            api_logger.debug(f"No tutor found for staff ID {staff_filling_id}")
             log_api_action(
                 request=request,
                 action='UPDATE_TUTOR_FEEDBACK_FAILED',
@@ -457,7 +460,7 @@ def update_tutor_feedback(request, feedback_id):
         except Exception as e:
             error = str(e)
             error_type = "feedback_update_error"
-            print(f"DEBUG: Error updating feedback: {error}")
+            api_logger.error(f"Error updating feedback: {error}")
 
         tutor_id_id = tutor.id_id
 
@@ -492,14 +495,14 @@ def update_tutor_feedback(request, feedback_id):
                 tutor_feedback.is_first_visit = data.get("is_first_visit")
                 tutor_feedback.save()
 
-                print(
-                    f"DEBUG: Tutor feedback updated successfully with ID {feedback.feedback_id}"
+                api_logger.info(
+                    f"Tutor feedback updated successfully with ID {feedback.feedback_id}"
                 )
             except Exception as e:
                 error = str(e)
                 error_type = "tutor_feedback_update_error"
-                print(
-                    f"DEBUG: An error occurred while updating tutor feedback: {error}"
+                api_logger.error(
+                    f"An error occurred while updating tutor feedback: {error}"
                 )
 
         if error:
@@ -540,7 +543,7 @@ def update_tutor_feedback(request, feedback_id):
             status=200,
         )
     except Exception as e:
-        print(f"DEBUG: An error occurred while updating tutor feedback: {str(e)}")
+        api_logger.error(f"An error occurred while updating tutor feedback: {str(e)}")
         log_api_action(
             request=request,
             action='UPDATE_TUTOR_FEEDBACK_FAILED',
@@ -556,6 +559,7 @@ def update_tutor_feedback(request, feedback_id):
 @csrf_exempt
 @api_view(["DELETE"])
 def delete_tutor_feedback(request, feedback_id):
+    api_logger.info(f"delete_tutor_feedback called for feedback_id: {feedback_id}")
     """
     Delete a tutor feedback record.
     """
@@ -641,7 +645,7 @@ def delete_tutor_feedback(request, feedback_id):
             }
         )
 
-        print(f"DEBUG: Tutor feedback with ID {feedback_id} deleted successfully.")
+        api_logger.info(f"Tutor feedback with ID {feedback_id} deleted successfully.")
         return JsonResponse(
             {
                 "message": "Tutor feedback deleted successfully",
@@ -650,7 +654,7 @@ def delete_tutor_feedback(request, feedback_id):
             status=200,
         )
     except Exception as e:
-        print(f"DEBUG: An error occurred while deleting the tutor feedback: {str(e)}")
+        api_logger.error(f"An error occurred while deleting the tutor feedback: {str(e)}")
         log_api_action(
             request=request,
             action='DELETE_TUTOR_FEEDBACK_FAILED',
@@ -667,6 +671,7 @@ def delete_tutor_feedback(request, feedback_id):
 @csrf_exempt
 @api_view(["POST"])
 def create_volunteer_feedback(request):
+    api_logger.info("create_volunteer_feedback called")
     """
     Create a new volunteer feedback record.
     """
@@ -772,16 +777,16 @@ def create_volunteer_feedback(request):
         except Exception as e:
             error = str(e)
             error_type = "feedback_creation_error"
-            print(f"DEBUG: Error creating feedback: {error}")
+            api_logger.error(f"Error creating feedback: {error}")
 
         # Get the volunteer's id_id from General_Volunteer
-        print(f"DEBUG: User ID: {user_id}")
+        api_logger.debug(f"User ID: {user_id}")
         volunteer = General_Volunteer.objects.filter(
             staff_id=staff_filling_id
         ).first()
-        print(f"DEBUG: Volunteer found: {volunteer}")
+        api_logger.debug(f"Volunteer found: {volunteer}")
         if not volunteer:
-            print(f"DEBUG: No volunteer found for staff ID {staff_filling_id}")
+            api_logger.debug(f"No volunteer found for staff ID {staff_filling_id}")
             log_api_action(
                 request=request,
                 action='CREATE_VOLUNTEER_FEEDBACK_FAILED',
@@ -806,13 +811,13 @@ def create_volunteer_feedback(request):
                         else "ביקור בבית חולים " + feedback.hospital_name
                     ),
                 )
-                print(
-                    f"DEBUG: Volunteer feedback created successfully with ID {feedback.feedback_id}"
+                api_logger.info(
+                    f"Volunteer feedback created successfully with ID {feedback.feedback_id}"
                 )
             except Exception as e:
                 error = str(e)
                 error_type = "volunteer_feedback_creation_error"
-                print(f"DEBUG: Error creating volunteer feedback: {error}")
+                api_logger.error(f"Error creating volunteer feedback: {error}")
 
         if not error:
             try:
@@ -827,14 +832,14 @@ def create_volunteer_feedback(request):
                         other_information=data.get("other_information", ""),
                     )
 
-                    print(
-                        f"DEBUG: InitialFamilyData created with ID {initial_family_data.initial_family_data_id}"
+                    api_logger.info(
+                        f"InitialFamilyData created with ID {initial_family_data.initial_family_data_id}"
                     )
             except Exception as e:
                 error = str(e)
                 error_type = "initial_family_data_creation_error"
-                print(
-                    f"DEBUG: An error occurred while creating InitialFamilyData: {error}"
+                api_logger.error(
+                    f"An error occurred while creating InitialFamilyData: {error}"
                 )
 
         # FIXED: Only create tasks if initial_family_data was actually created
@@ -844,11 +849,11 @@ def create_volunteer_feedback(request):
                 create_tasks_for_technical_coordinators_async(
                     initial_family_data, task_type.id
                 )
-                print("DEBUG: Tasks for Technical Coordinators created successfully.")
+                api_logger.info("Tasks for Technical Coordinators created successfully.")
             except Exception as e:
                 error = str(e)
                 error_type = "task_creation_error"
-                print(f"DEBUG: An error occurred while creating tasks: {error}")
+                api_logger.error(f"An error occurred while creating tasks: {error}")
 
         if error:
             # Clean up on error
@@ -897,7 +902,7 @@ def create_volunteer_feedback(request):
             status=201,
         )
     except Exception as e:
-        print(f"DEBUG: An error occurred while creating volunteer feedback: {str(e)}")
+        api_logger.error(f"An error occurred while creating volunteer feedback: {str(e)}")
         log_api_action(
             request=request,
             action='CREATE_VOLUNTEER_FEEDBACK_FAILED',
@@ -911,6 +916,7 @@ def create_volunteer_feedback(request):
 @csrf_exempt
 @api_view(["PUT"])
 def update_volunteer_feedback(request, feedback_id):
+    api_logger.info(f"update_volunteer_feedback called for feedback_id: {feedback_id}")
     """
     Update an existing volunteer feedback record.
     """
@@ -1001,9 +1007,9 @@ def update_volunteer_feedback(request, feedback_id):
         volunteer = General_Volunteer.objects.filter(
             staff_id=staff_filling_id
         ).first()  # Fallback to Tutors if not found in General_Volunteer
-        print(f"DEBUG: Volunteer found: {volunteer}")  # Log the volunteer found
+        api_logger.debug(f"Volunteer found: {volunteer}")  # Log the volunteer found
         if not volunteer:
-            print(f"DEBUG: No volunteer found for staff ID {staff_filling_id}")
+            api_logger.debug(f"No volunteer found for staff ID {staff_filling_id}")
             log_api_action(
                 request=request,
                 action='UPDATE_VOLUNTEER_FEEDBACK_FAILED',
@@ -1052,7 +1058,7 @@ def update_volunteer_feedback(request, feedback_id):
         except Exception as e:
             error = str(e)
             error_type = "feedback_update_error"
-            print(f"DEBUG: Error updating feedback: {error}")
+            api_logger.error(f"Error updating feedback: {error}")
 
         if not error:
             try:
@@ -1082,13 +1088,13 @@ def update_volunteer_feedback(request, feedback_id):
                 volunteer_feedback.volunteer_name = data.get("volunteer_name")
                 volunteer_feedback.volunteer = volunteer
                 volunteer_feedback.save()
-                print(
-                    f"DEBUG: Volunteer feedback updated successfully with ID {feedback.feedback_id}"
+                api_logger.info(
+                    f"Volunteer feedback updated successfully with ID {feedback.feedback_id}"
                 )
             except Exception as e:
                 error = str(e)
                 error_type = "volunteer_feedback_update_error"
-                print(f"DEBUG: Error updating volunteer feedback: {error}")
+                api_logger.error(f"Error updating volunteer feedback: {error}")
 
         if error:
             log_api_action(
@@ -1128,7 +1134,7 @@ def update_volunteer_feedback(request, feedback_id):
             status=200,
         )
     except Exception as e:
-        print(f"DEBUG: An error occurred while updating volunteer feedback: {str(e)}")
+        api_logger.error(f"An error occurred while updating volunteer feedback: {str(e)}")
         log_api_action(
             request=request,
             action='UPDATE_VOLUNTEER_FEEDBACK_FAILED',
@@ -1144,6 +1150,7 @@ def update_volunteer_feedback(request, feedback_id):
 @csrf_exempt
 @api_view(["DELETE"])
 def delete_volunteer_feedback(request, feedback_id):
+    api_logger.info(f"delete_volunteer_feedback called for feedback_id: {feedback_id}")
     """
     Delete a volunteer feedback record.
     """
@@ -1231,7 +1238,7 @@ def delete_volunteer_feedback(request, feedback_id):
             }
         )
 
-        print(f"DEBUG: Volunteer feedback with ID {feedback_id} deleted successfully.")
+        api_logger.info(f"Volunteer feedback with ID {feedback_id} deleted successfully.")
         return JsonResponse(
             {
                 "message": "Volunteer feedback deleted successfully",
@@ -1240,9 +1247,7 @@ def delete_volunteer_feedback(request, feedback_id):
             status=200,
         )
     except Exception as e:
-        print(
-            f"DEBUG: An error occurred while deleting the volunteer feedback: {str(e)}"
-        )
+        api_logger.error(f"An error occurred while deleting the volunteer feedback: {str(e)}")
         log_api_action(
             request=request,
             action='DELETE_VOLUNTEER_FEEDBACK_FAILED',

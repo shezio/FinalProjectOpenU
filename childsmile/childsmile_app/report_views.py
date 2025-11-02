@@ -64,12 +64,14 @@ import json
 import os
 from django.db.models import Count, F
 from .utils import *
+from .logger import api_logger
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 @csrf_exempt
 @api_view(["GET"])
 def get_families_per_location_report(request):
+    api_logger.info("get_families_per_location_report called")
     user_id = request.session.get("user_id")
     if not user_id:
         return JsonResponse(
@@ -114,13 +116,14 @@ def get_families_per_location_report(request):
 
         return JsonResponse({"families_per_location": children_data}, status=200)
     except Exception as e:
-        print(f"DEBUG: An error occurred: {str(e)}")  # Log the error for debugging
+        api_logger.error(f"An error occurred: {str(e)}")
         return JsonResponse({"error": str(e)}, status=500)
 
 
 @csrf_exempt
 @api_view(["GET"])
 def families_waiting_for_tutorship_report(request):
+    api_logger.info("families_waiting_for_tutorship_report called")
     """
     Retrieve a report of families waiting for tutorship, ordered by registration date.
     """
@@ -194,13 +197,14 @@ def families_waiting_for_tutorship_report(request):
             {"families_waiting_for_tutorship": children_data}, status=200
         )
     except Exception as e:
-        print(f"DEBUG: An error occurred: {str(e)}")
+        api_logger.error(f"An error occurred: {str(e)}")
         return JsonResponse({"error": str(e)}, status=500)
 
 
 @csrf_exempt
 @api_view(["GET"])
 def get_new_families_report(request):
+    api_logger.info("get_new_families_report called")
     """
     Retrieve a report of new families with child and parent details, filtered by registration date.
     """
@@ -270,13 +274,14 @@ def get_new_families_report(request):
         # Return the data as JSON
         return JsonResponse({"new_families": children_data}, status=200)
     except Exception as e:
-        print(f"DEBUG: An error occurred: {str(e)}")
+        api_logger.error(f"An error occurred: {str(e)}")
         return JsonResponse({"error": str(e)}, status=500)
 
 
 @csrf_exempt
 @api_view(["GET"])
 def active_tutors_report(request):
+    api_logger.info("active_tutors_report called")
     """
     Retrieve a report of active tutors with their assigned children, filtered by date range.
     """
@@ -339,6 +344,7 @@ def active_tutors_report(request):
 @csrf_exempt
 @api_view(["GET"])
 def possible_tutorship_matches_report(request):
+    api_logger.info("possible_tutorship_matches_report called")
     """
     Retrieve a report of all possible tutorship matches.
     """
@@ -360,7 +366,7 @@ def possible_tutorship_matches_report(request):
 
         # Convert the data to a list of dictionaries
         possible_matches_data = list(possible_matches)
-        print(f"DEBUG: Possible matches data: {possible_matches_data}")  # Debug log
+        api_logger.debug(f"Possible matches data: {possible_matches_data}")
 
         # Return the data as JSON
         return JsonResponse(
@@ -373,6 +379,7 @@ def possible_tutorship_matches_report(request):
 # next report is volunteer feedback report@csrf_exempt
 @api_view(["GET"])
 def volunteer_feedback_report(request):
+    api_logger.info("volunteer_feedback_report called")
     """
     Retrieve a report of all volunteer feedback and all the corresponding feedbacks from the feedback table.
     """
@@ -433,12 +440,12 @@ def volunteer_feedback_report(request):
                     }
                 )
             except Exception as e:
-                print(f"DEBUG: Error processing feedback: {feedback}, Error: {str(e)}")
+                api_logger.error(f"Error processing feedback: {feedback}, Error: {str(e)}")
 
         # Return the data as JSON
         return JsonResponse({"volunteer_feedback": feedbacks_data}, status=200)
     except Exception as e:
-        print(f"DEBUG: An error occurred: {str(e)}")  # Log the error for debugging
+        api_logger.error(f"An error occurred: {str(e)}")
         return JsonResponse({"error": str(e)}, status=500)
 
 
@@ -446,6 +453,7 @@ def volunteer_feedback_report(request):
 @csrf_exempt
 @api_view(["GET"])
 def tutor_feedback_report(request):
+    api_logger.info("tutor_feedback_report called")
     """
     Retrieve a report of all tutor feedback.
     """
@@ -507,18 +515,19 @@ def tutor_feedback_report(request):
                     }
                 )
             except Exception as e:
-                print(f"DEBUG: Error processing feedback: {feedback}, Error: {str(e)}")
+                api_logger.error(f"Error processing feedback: {feedback}, Error: {str(e)}")
 
         # Return the data as JSON
         return JsonResponse({"tutor_feedback": feedbacks_data}, status=200)
     except Exception as e:
-        print(f"DEBUG: An error occurred: {str(e)}")  # Log the error for debugging
+        api_logger.error(f"An error occurred: {str(e)}")
         return JsonResponse({"error": str(e)}, status=500)
 
 
 @csrf_exempt
 @api_view(["GET"])
 def families_tutorships_stats(request):
+    api_logger.info("families_tutorships_stats called")
     """
     Get statistics about families with tutorships and those waiting for one.
     """
@@ -556,6 +565,7 @@ def families_tutorships_stats(request):
 @csrf_exempt
 @api_view(["GET"])
 def pending_tutors_stats(request):
+    api_logger.info("pending_tutors_stats called")
     """
     Get statistics about pending tutors vs all tutors.
     """
@@ -590,6 +600,7 @@ def pending_tutors_stats(request):
 @csrf_exempt
 @api_view(["GET"])
 def roles_spread_stats(request):
+    api_logger.info("roles_spread_stats called")
     """
     Get count of staff members per role.
     """
