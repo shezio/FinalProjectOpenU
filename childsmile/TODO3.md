@@ -10,7 +10,10 @@ while true; do LATEST_LOG=$(ls -t childsmile/childsmile_app/logs/*.log | head -n
 Bugs/tasks:
 [] create tests for UI
 [] create tests for BE
-[] create a guest account that can see all data but not change anything - for demo - all buttons to edit/create should be disabled
+[] guest account:
+     - cannot see the children table - should see the table and disable the buttons in actions
+     - same for initial family data
+     - more bugs
 [] test audit  so we have data of each action for UI
 [] need UI for audit - with export to PDF, excel. also need refresh button, sort by date, search in description, filter by user, action, date range,
 [] too many attempts with wrong totp, should have blocked expire the valid one to prevent brute force

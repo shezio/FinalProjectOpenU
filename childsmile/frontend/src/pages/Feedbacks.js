@@ -5,7 +5,7 @@ import "../styles/common.css";
 import "../styles/feedbacks.css";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
-import { hasSomePermissions } from '../components/utils'; // Import utility functions for fetching data
+import { hasSomePermissions, isGuestUser } from '../components/utils'; // Import utility functions for fetching data
 
 
 

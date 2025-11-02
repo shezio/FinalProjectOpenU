@@ -3,7 +3,7 @@ import axios from '../axiosConfig';
 import Sidebar from '../components/Sidebar';
 import InnerPageHeader from '../components/InnerPageHeader';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
-import { getStaff, getChildren, getTutors, getChildFullName, getTutorFullName, getPendingTutors, getGeneralVolunteersNotPending, isTutorOrGeneralVolunteer } from '../components/utils';
+import { getStaff, getChildren, getTutors, getChildFullName, getTutorFullName, getPendingTutors, getGeneralVolunteersNotPending, isTutorOrGeneralVolunteer, isGuestUser } from '../components/utils';
 import '../styles/common.css';
 import '../styles/tasks.css';
 import Select from 'react-select';
@@ -653,13 +653,13 @@ const Tasks = () => {
                   {menuOpen && (
                     <div className="dropdown-menu" ref={menuRef}>
                       <button
-                        disabled={selectedTask.status === "הושלמה"}
-                        className={selectedTask.status === "הושלמה" ? "disabled-btn" : ""}
+                        disabled={selectedTask.status === "הושלמה" || isGuestUser()}
+                        className={selectedTask.status === "הושלמה" || isGuestUser() ? "disabled-btn" : ""}
                         onClick={() => { setMenuOpen(false); handleEditTask(selectedTask); }}
                       >
                         {t('ערוך')}
                       </button>
-                      <button onClick={() => { setMenuOpen(false); openDeleteModal(selectedTask); }}>{t('מחק')}</button>
+                      <button onClick={() => { setMenuOpen(false); openDeleteModal(selectedTask); }} disabled={isGuestUser()}>{t('מחק')}</button>
                     </div>
                   )}
                   <div className="task-details-content">
@@ -911,7 +911,7 @@ const Tasks = () => {
                     {errors.pending_tutor && <p className="error-text">{errors.pending_tutor}</p>}
                   </>
                 )}
-                <button onClick={handleSubmitTask}>צור</button>
+                <button onClick={handleSubmitTask} disabled={isGuestUser()}>צור</button>
               </div>
             </div>
           )}

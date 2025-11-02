@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from '../axiosConfig';
 import Sidebar from '../components/Sidebar';
 import InnerPageHeader from '../components/InnerPageHeader';
+import { isGuestUser } from '../components/utils';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { useTranslation } from 'react-i18next';
@@ -495,7 +496,7 @@ const Families = () => {
             >
               {t('Initial Family Data')}
             </button>
-            <button onClick={openAddModal}>
+            <button onClick={openAddModal} disabled={isGuestUser()}>
               {t('Add New Family')}
             </button>
             <button
@@ -569,10 +570,10 @@ const Families = () => {
                             <button className="info-button" onClick={() => showFamilyDetails(family)}>
                               {t('מידע')}
                             </button>
-                            <button className="edit-button" onClick={() => openEditModal(family)}>
+                            <button className="edit-button" onClick={() => openEditModal(family)} disabled={isGuestUser()}>
                               {t('ערוך')}
                             </button>
-                            <button className="delete-button" onClick={() => openDeleteModal(family.id)}>
+                            <button className="delete-button" onClick={() => openDeleteModal(family.id)} disabled={isGuestUser()}>
                               {t('מחק')}
                             </button>
                           </div>
