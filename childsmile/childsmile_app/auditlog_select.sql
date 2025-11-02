@@ -1,9 +1,9 @@
 SELECT description 
 from public.audit_log
 where timestamp >= now() - interval '1 hour'
---and description LIKE '%Failed%'
+--and description LIKE '%DELETE_%'
 ORDER BY timestamp DESC
-LIMIT 3;
+LIMIT 6;
 
 select * from public.childsmile_app_signedup s , public.childsmile_app_staff st
  where s.email = st.email
@@ -14,7 +14,7 @@ order by st.created_at desc
 select * from public.childsmile_app_pending_tutor
  where pending_tutor_id=86;
 
-select * from public.childsmile_app_staff
+select * from public.childsmile_app_tutorships order by created_date desc limit 3;
 
 
 
@@ -27,10 +27,10 @@ where email = 'childtest021@gmail.com'
 SELECT DISTINCT role_id, r.role_name
 FROM public.childsmile_app_permissions
 JOIN public.childsmile_app_role r ON r.id = public.childsmile_app_permissions.role_id
-WHERE resource = 'childsmile_app_tasks'
+WHERE resource = 'childsmile_app_tutors'
 AND role_id NOT IN (
     SELECT role_id
     FROM public.childsmile_app_permissions
-    WHERE resource = 'childsmile_app_tasks'
-    AND action = 'UPDATE'
+    WHERE resource = 'childsmile_app_tutors'
+    AND action = 'DELETE'   
 );
