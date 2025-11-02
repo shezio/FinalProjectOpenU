@@ -9,7 +9,7 @@ import axios from '../axiosConfig';
 import Modal from 'react-modal';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { hasViewPermissionForTable, hasUpdatePermissionForTable, hasDeletePermissionForTable, hasCreatePermissionForTable, getTutors } from '../components/utils';
+import { hasViewPermissionForTable, hasUpdatePermissionForTable, hasDeletePermissionForTable, hasCreatePermissionForTable, getTutors, isGuestUser } from '../components/utils';
 import { useTranslation } from 'react-i18next'; // Import the translation hook
 import { showErrorToast, showErrorApprovalToast } from '../components/toastUtils'; // Import the toast utility
 import { MapContainer, TileLayer, Marker, Popup, Polyline } from 'react-leaflet';
@@ -701,7 +701,7 @@ const Tutorships = () => {
         />
         <div className="filter-create-container">
           <div className="create-task">
-            <button onClick={openAddWizardModal}>
+            <button onClick={openAddWizardModal} disabled={isGuestUser()}>
               {t('Open Matching Wizard')}
             </button>
           </div>
@@ -959,7 +959,7 @@ const Tutorships = () => {
                   </table>
                   <div className="modal-actions">
                     {isModalOpen && hasCreatePermission && (
-                      <button className="create-tutorship-button" onClick={createTutorship}>
+                      <button className="create-tutorship-button" onClick={createTutorship} disabled={isGuestUser()}>
                         {t('Create Tutorship')}
                       </button>
                     )}
@@ -1256,7 +1256,7 @@ const Tutorships = () => {
           <div className="modal-actions">
             <button className="calc-match-button" onClick={fetchMatches}>{t('Calculate Matches')}</button>
             {hasCreatePermission && (
-              <button className="create-tutorship-button" onClick={createTutorship} disabled={!selectedMatch}>
+              <button className="create-tutorship-button" onClick={createTutorship} disabled={!selectedMatch || isGuestUser()}>
                 {t('Create Tutorship')}
               </button>
             )}

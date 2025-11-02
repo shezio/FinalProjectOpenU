@@ -51,6 +51,15 @@ def login_email(request):
             )
             return JsonResponse({"error": "Invalid email format"}, status=400)
         
+        # ✅ GUEST ACCOUNT - Always send 000000
+        if email == 'guest@childsmile.guest':
+            api_logger.info(f"Guest account login attempt: {email}")
+            return JsonResponse({
+                "message": "Login code sent to your email",
+                "email": email,
+                "is_guest": True
+            })
+        
         # Check if email exists in Staff table
         if not Staff.objects.filter(email=email).exists():
             log_api_action(
@@ -144,6 +153,34 @@ def verify_totp(request):
             else:
                 api_logger.warning(f"User {user_id} attempted to verify TOTP without providing email and code.")
             return JsonResponse({"error": "Email and code are required"}, status=400)
+        
+        # ✅ GUEST ACCOUNT - Accept only 000000
+        if email == 'guest@childsmile.guest':
+            if code != '000000':
+                api_logger.warning(f"Invalid guest code attempt: {code}")
+                return JsonResponse({"error": "Invalid code"}, status=400)
+            
+            try:
+                staff_user = Staff.objects.get(email=email)
+            except Staff.DoesNotExist:
+                api_logger.warning(f"Guest staff not found")
+                return JsonResponse({"error": "Staff member not found"}, status=404)
+            
+            # Create session
+            request.session.create()
+            request.session["user_id"] = staff_user.staff_id
+            request.session["username"] = staff_user.username
+            request.session["is_guest"] = True
+            request.session.set_expiry(86400)
+            
+            api_logger.info(f"Guest user logged in successfully")
+            return JsonResponse({
+                "message": "Login successful!",
+                "user_id": staff_user.staff_id,
+                "username": staff_user.username,
+                "email": staff_user.email,
+                "is_guest": True
+            })
         
         # Find TOTP record
         totp_record = TOTPCode.objects.filter(

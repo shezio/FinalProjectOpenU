@@ -23,3 +23,23 @@ AND role_id NOT IN (
     WHERE resource = 'childsmile_app_children'
     AND action = 'UPDATE'
 );
+
+-- get all tables names used by any API in BE and also any table used by auth or by audit
+SELECT DISTINCT resource
+FROM public.childsmile_app_permissions
+WHERE resource IS NOT NULL
+AND resource <> ''
+ORDER BY resource;
+
+-- get from the DB all tables that are not used by any API in BE and also not used by auth or by audit
+SELECT tablename
+FROM pg_tables
+WHERE schemaname = 'public'
+AND tablename NOT IN (
+    SELECT DISTINCT resource
+    FROM public.childsmile_app_permissions
+    WHERE resource IS NOT NULL
+    AND resource <> ''
+)
+AND tablename NOT IN ('auth_user', 'auth_group', 'auth_permission', 'django_content_type', 'django_session', 'django_migrations', 'childsmile_app_auditlogentry')
+ORDER BY tablename;

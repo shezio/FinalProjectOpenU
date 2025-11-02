@@ -1,19 +1,22 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { hasViewPermissionForTable, hasCreatePermissionForTable, hasViewPermissionForReports, hasDeletePermissionForTable } from './utils'; // Import utility functions for fetching data
+import { hasViewPermissionForTable, hasCreatePermissionForTable, hasViewPermissionForReports, hasDeletePermissionForTable, isGuestUser } from './utils'; // Import utility functions for fetching data
 import '../styles/common.css';
 
 const Sidebar = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const hasPermissionToTasks = hasViewPermissionForTable('tasks');
-  const hasPermissionToFamilies = hasViewPermissionForTable('children');
-  const hasPermissionToFeedbacks = hasViewPermissionForTable('general_v_feedback') || hasViewPermissionForTable('tutor_feedback');
-  const hasPermissionToTutorships = hasViewPermissionForTable('tutorships');
-  const hasPermissionToSystemManagement = hasDeletePermissionForTable('staff');
-  const hasPermissionToAnyReport = hasViewPermissionForReports();
-  const hasPermissionToTutorVolunteerMgmt = hasViewPermissionForTable('tutors') || hasViewPermissionForTable('volunteers');
+  // If guest user, show everything
+  const isGuest = isGuestUser();
+  
+  const hasPermissionToTasks = isGuest || hasViewPermissionForTable('tasks');
+  const hasPermissionToFamilies = isGuest || hasViewPermissionForTable('children');
+  const hasPermissionToFeedbacks = isGuest || hasViewPermissionForTable('general_v_feedback') || hasViewPermissionForTable('tutor_feedback');
+  const hasPermissionToTutorships = isGuest || hasViewPermissionForTable('tutorships');
+  const hasPermissionToSystemManagement = isGuest || hasDeletePermissionForTable('staff');
+  const hasPermissionToAnyReport = isGuest || hasViewPermissionForReports();
+  const hasPermissionToTutorVolunteerMgmt = isGuest || hasViewPermissionForTable('tutors') || hasViewPermissionForTable('volunteers');
 
   return (
     <div className="sidebar">

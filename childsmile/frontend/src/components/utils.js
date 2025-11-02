@@ -194,3 +194,16 @@ export const hasSomePermissions = (requiredPermissions) => {
 
   // Helper to determine if a staff member is a Tutor or General Volunteer
 export const isTutorOrGeneralVolunteer = (staff) => staff.label.includes("חונך") || staff.label.includes("מתנדב כללי");
+
+/**
+ * Check if current user is guest_demo
+ * Guest can view all but cannot edit/create/delete
+ */
+export const isGuestUser = () => {
+  try {
+    const userData = localStorage.getItem('username');
+    return userData === 'guest_demo';
+  } catch (error) {
+    return false;
+  }
+};
