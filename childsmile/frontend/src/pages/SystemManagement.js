@@ -50,6 +50,7 @@ const SystemManagement = () => {
   const [staffTotpCode, setStaffTotpCode] = useState('');
   const [newUserEmail, setNewUserEmail] = useState(''); // Change from adminEmail
   const [totpLoading, setTotpLoading] = useState(false);
+  const [sortOrderCreatedAt, setSortOrderCreatedAt] = useState('desc'); // Default to descending (newest first)
 
   useEffect(() => {
     if (hasPermissionOnSystemManagement) {
@@ -96,9 +97,25 @@ const SystemManagement = () => {
       const response = await axios.get('/api/get_all_staff/', {
         params: { page: 1, page_size: 10000 }, // Assumes 10k is "all"
       });
-      setStaff(response.data.staff);
-      setFilteredStaff(response.data.staff);
-      setTotalCount(response.data.staff.length); // Total now based on filtered set
+      
+      // Filter out guest_demo user
+      let staffList = response.data.staff.filter(user => user.username !== 'guest_demo');
+      
+      // Sort by created_at in descending order (newest first)
+      const parseDate = (dateStr) => {
+        const [day, month, year] = dateStr.split('/');
+        return new Date(year, month - 1, day);
+      };
+      
+      const sortedStaff = staffList.sort((a, b) => {
+        const dateA = parseDate(a.created_at);
+        const dateB = parseDate(b.created_at);
+        return dateB - dateA; // Descending order
+      });
+      
+      setStaff(sortedStaff);
+      setFilteredStaff(sortedStaff);
+      setTotalCount(sortedStaff.length); // Total now based on filtered set
       const rolesResponse = await axios.get('/api/get_roles/');
       setRoles(rolesResponse.data.roles); // Set roles for the dropdown
     } catch (error) {
@@ -150,7 +167,9 @@ const SystemManagement = () => {
 
     const filtered = staff.filter((user) =>
       [user.username, user.email, user.first_name, user.last_name]
-        .some((field) => field.toLowerCase().includes(query))
+        .some((field) => field.toLowerCase().includes(query)) ||
+      // Also search in roles (translate to Hebrew for comparison)
+      user.roles.some((role) => t(role).toLowerCase().includes(query))
     );
     setFilteredStaff(filtered);
     setTotalCount(filtered.length);
@@ -164,6 +183,22 @@ const SystemManagement = () => {
 
   const handleRefresh = () => {
     fetchAllStaff();
+  };
+
+  const toggleSortOrderCreatedAt = () => {
+    const newOrder = sortOrderCreatedAt === 'asc' ? 'desc' : 'asc';
+    setSortOrderCreatedAt(newOrder);
+    const sorted = [...filteredStaff].sort((a, b) => {
+      // Parse DD/MM/YYYY format to Date object
+      const parseDate = (dateStr) => {
+        const [day, month, year] = dateStr.split('/');
+        return new Date(year, month - 1, day);
+      };
+      const dateA = parseDate(a.created_at);
+      const dateB = parseDate(b.created_at);
+      return newOrder === 'asc' ? dateA - dateB : dateB - dateA;
+    });
+    setFilteredStaff(sorted);
   };
 
   const openAddStaffModal = (type, staff = null) => {
@@ -400,7 +435,7 @@ const SystemManagement = () => {
             <div className="controls">
               <input
                 type="text"
-                placeholder={t('Search by name or email')}
+                placeholder={t('Search by name, email or role')}
                 value={searchQuery}
                 onChange={handleSearch}
                 className="search-bar"
@@ -430,7 +465,15 @@ const SystemManagement = () => {
                       <th>{t('Email')}</th>
                       <th>{t('First Name')}</th>
                       <th>{t('Last Name')}</th>
-                      <th>{t('Created At')}</th>
+                      <th>
+                        {t('Created At')}
+                        <button
+                          className="sort-button"
+                          onClick={toggleSortOrderCreatedAt}
+                        >
+                          {sortOrderCreatedAt === 'asc' ? '▲' : '▼'}
+                        </button>
+                      </th>
                       <th>{t('Roles')}</th>
                       <th>{t('Actions')}</th>
                     </tr>

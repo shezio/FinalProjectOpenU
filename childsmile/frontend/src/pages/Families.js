@@ -117,6 +117,7 @@ const Families = () => {
 
   useEffect(() => {
     setTotalCount(filteredFamilies.length);
+    setPage(1); // Reset to page 1 whenever filters change
   }, [filteredFamilies]);
 
   const handleAddFamilyChange = (e) => {

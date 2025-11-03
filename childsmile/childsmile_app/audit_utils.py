@@ -618,7 +618,7 @@ def generate_audit_description(user_email, username, action, timestamp, user_rol
                 old_val = changes.get('old', 'Unknown')
                 new_val = changes.get('new', 'Unknown')
                 field_updates.append(f"{field}: '{old_val}' → '{new_val}'")
-            description += f"Changed: {'; '.join(field_updates)}\n"
+            description += f"Changed:\n{'; '.join(field_updates)}\n"
         
         description += f"Roles: {roles_text}"
         
@@ -640,7 +640,10 @@ def generate_audit_description(user_email, username, action, timestamp, user_rol
         if attempted_fields:
             description += f"Attempted: {', '.join(attempted_fields)}\n"
         
-        description += f"Error: {error_message or 'Unknown error'}\n"
+        error_msg = error_message or 'Unknown error'
+        if '. ' in error_msg:
+            error_msg = error_msg.replace('. ', '.\n')
+        description += f"Error: {error_msg}\n"
         description += f"Roles: {roles_text}"
     
     # **TUTORSHIP OPERATION DESCRIPTIONS**

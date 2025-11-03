@@ -12,7 +12,8 @@ from django.utils.timezone import now
 from .models import (
     Staff, TOTPCode, SignedUp, Pending_Tutor, 
     General_Volunteer, Tutors, Role, Children,
-    Tutorships, PrevTutorshipStatuses, Tasks, Task_Types
+    Tutorships, PrevTutorshipStatuses, Tasks, Task_Types,
+    MaritalStatus
 )
 from .utils import has_permission
 from .audit_utils import log_api_action
@@ -892,6 +893,28 @@ def update_tutor(request, tutor_id):
     if ("relationship_status" in data or "tutee_wellness" in data) and tutorship and child:
         if "relationship_status" in data:
             new_status = data["relationship_status"]
+            # Validate relationship_status against MaritalStatus choices
+            valid_statuses = [choice[0] for choice in MaritalStatus.choices]
+            if new_status not in valid_statuses:
+                log_api_action(
+                    request=request,
+                    action='UPDATE_TUTOR_FAILED',
+                    success=False,
+                    error_message=f"Invalid relationship_status: '{new_status}'. Must be one of: {', '.join(valid_statuses)}",
+                    status_code=400,
+                    entity_type='Tutor',
+                    entity_ids=[tutor_id],
+                    additional_data={
+                        'attempted_value': new_status,
+                        'valid_values': valid_statuses,
+                        'tutor_name': f"{tutor.staff.username if tutor.staff else 'Unknown'}",
+                        'tutor_email': tutor.tutor_email
+                    }
+                )
+                return JsonResponse({
+                    "error": f"Invalid relationship_status: '{new_status}'. Must be one of: {', '.join(valid_statuses)}"
+                }, status=400)
+            
             if new_status != tutor.relationship_status:
                 tutor.relationship_status = new_status
                 child.marital_status = new_status

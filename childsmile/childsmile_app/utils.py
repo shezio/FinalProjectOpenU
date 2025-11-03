@@ -67,6 +67,7 @@ from django.db.models import Count, F
 import tempfile
 import shutil
 from filelock import FileLock
+from .logger import api_logger
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -506,13 +507,13 @@ def create_task_internal(task_data):
             other_information=task_data.get("other_information"),
             initial_family_data_id_fk=initial_family_data,
         )
-        print(f"DEBUG: Task created successfully: {task}")
+        api_logger.debug(f"Task created successfully: {task}")
         return task
     except Task_Types.DoesNotExist:
-        print("DEBUG: Invalid task type ID.")
+        api_logger.error("Invalid task type ID.")
         raise ValueError("Invalid task type ID.")
     except Exception as e:
-        print(f"DEBUG: Error creating task: {str(e)}")
+        api_logger.error(f"Error creating task: {str(e)}")
         raise e
 
 
@@ -568,16 +569,16 @@ def create_tasks_for_tutor_coordinators(pending_tutor_id, task_type_id):
             role_name="Tutors Coordinator"
         ).first()
         if not tutor_coordinator_role:
-            print("DEBUG: Role 'Tutors Coordinator' not found in the database.")
+            api_logger.error("Role 'Tutors Coordinator' not found in the database.")
             return
 
         # Fetch all tutor coordinators
         tutor_coordinators = Staff.objects.filter(roles=tutor_coordinator_role)
         if not tutor_coordinators.exists():
-            print("DEBUG: No Tutors Coordinators found in the database.")
+            api_logger.warning("No Tutors Coordinators found in the database.")
             return
 
-        print(f"DEBUG: Found {tutor_coordinators.count()} Tutors Coordinators.")
+        api_logger.debug(f"Found {tutor_coordinators.count()} Tutors Coordinators.")
 
         # Create tasks for each tutor coordinator
         for coordinator in tutor_coordinators:
@@ -613,16 +614,16 @@ def create_tasks_for_technical_coordinators(initial_family_data, task_type_id):
             role_name="Technical Coordinator"
         ).first()
         if not tech_coordinator_role:
-            print("DEBUG: Role 'Technical Coordinator' not found in the database.")
+            api_logger.debug("Role 'Technical Coordinator' not found in the database.")
             return
 
         # Fetch all Technical Coordinators (roles is a many-to-many field)
         tech_coordinators = Staff.objects.filter(roles=tech_coordinator_role)
         if not tech_coordinators.exists():
-            print("DEBUG: No Technical Coordinators found in the database.")
+            api_logger.warning("No Technical Coordinators found in the database.")
             return
 
-        print(f"DEBUG: Found {tech_coordinators.count()} Technical Coordinators.")
+        api_logger.debug(f"Found {tech_coordinators.count()} Technical Coordinators.")
 
         # Get the task type object
         task_type = Task_Types.objects.get(id=task_type_id)

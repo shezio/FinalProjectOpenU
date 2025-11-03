@@ -158,8 +158,8 @@ def verify_totp(request):
         if email == 'guest@childsmile.guest':
             if code != '000000':
                 api_logger.warning(f"Invalid guest code attempt: {code}")
-                return JsonResponse({"error": "Invalid code"}, status=400)
-            
+                return JsonResponse({"error": "Invalid or expired code"}, status=400)
+
             try:
                 staff_user = Staff.objects.get(email=email)
             except Staff.DoesNotExist:
@@ -182,14 +182,24 @@ def verify_totp(request):
                 "is_guest": True
             })
         
-        # Find TOTP record
+        # Find ANY active TOTP record for this email (regardless of code submitted)
         totp_record = TOTPCode.objects.filter(
             email=email,
-            code=code,
             used=False
         ).order_by('-created_at').first()
         
         if not totp_record:
+            # Check if there's an expired record (used=True) for this email with correct code
+            expired_record = TOTPCode.objects.filter(
+                email=email,
+                code=code,
+                used=True
+            ).order_by('-created_at').first()
+            
+            if expired_record and expired_record.attempts >= 3:
+                # Correct code used AFTER max attempts - BRUTE FORCE ATTACK
+                api_logger.critical(f"BRUTE FORCE ATTACK DETECTED: Correct TOTP code used after {expired_record.attempts} failed attempts for {email}")
+            
             log_api_action(
                 request=request,
                 action='USER_LOGIN_FAILED',
@@ -198,7 +208,7 @@ def verify_totp(request):
                 status_code=400,
                 additional_data={'attempted_email': email}
             )
-            api_logger.warning(f"User {user_id} attempted to verify TOTP with an invalid or expired code.")
+            api_logger.warning(f"Invalid or expired TOTP code attempt for {email}")
             return JsonResponse({"error": "Invalid or expired code"}, status=400)
         
         if not totp_record.is_valid():
@@ -210,13 +220,17 @@ def verify_totp(request):
                 status_code=400,
                 additional_data={'attempted_email': email}
             )
+            api_logger.warning(f"TOTP code expired for {email}")
             return JsonResponse({"error": "Code has expired or too many attempts"}, status=400)
         
-        totp_record.attempts += 1
-        totp_record.save()
-        
+        # Check if code submitted is correct
         if totp_record.code != code:
+            # Wrong code - increment attempts
+            totp_record.attempts += 1
+            totp_record.save()
+            
             if totp_record.attempts >= 3:
+                # Max attempts reached on wrong codes - expire the code to prevent further attempts
                 totp_record.used = True
                 totp_record.save()
                 log_api_action(
@@ -227,19 +241,35 @@ def verify_totp(request):
                     status_code=429,
                     additional_data={'attempted_email': email}
                 )
-                api_logger.critical(f"User {user_id} exceeded maximum TOTP attempts - could be a brute-force attack - check audit logs.")
+                api_logger.critical(f"BRUTE FORCE ATTEMPT: Too many failed TOTP attempts for {email} - code expired")
                 return JsonResponse({"error": "Too many failed attempts"}, status=429)
             
             log_api_action(
                 request=request,
                 action='USER_LOGIN_FAILED',
                 success=False,
-                error_message="Invalid code",
+                error_message="Invalid or expired code",
                 status_code=400,
                 additional_data={'attempted_email': email}
             )
-            api_logger.warning(f"User {user_id} attempted to verify TOTP with an invalid code.")
-            return JsonResponse({"error": "Invalid code"}, status=400)
+            api_logger.warning(f"Invalid TOTP code attempt #{totp_record.attempts} for {email}")
+            return JsonResponse({"error": "Invalid or expired code"}, status=400)
+        
+        # ✅ Correct code submitted
+        # Check if attempts already exceeded (brute force with correct code after max failed attempts)
+        if totp_record.attempts >= 3:
+            totp_record.used = True
+            totp_record.save()
+            log_api_action(
+                request=request,
+                action='USER_LOGIN_FAILED',
+                success=False,
+                error_message="Too many failed attempts",
+                status_code=429,
+                additional_data={'attempted_email': email}
+            )
+            api_logger.critical(f"BRUTE FORCE ATTACK DETECTED: Correct TOTP code used after {totp_record.attempts} failed attempts for {email}")
+            return JsonResponse({"error": "Too many failed attempts"}, status=429)
         
         # Mark code as used
         totp_record.used = True

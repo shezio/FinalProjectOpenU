@@ -8,22 +8,14 @@ while true; do LATEST_LOG=$(ls -t childsmile/childsmile_app/logs/*.log | head -n
 
 
 Bugs/tasks:
-[] too many attempts with wrong totp, should have blocked expire the valid one to prevent brute force
-[] filter healthy works only when u r on the 1st page lol
-[] add role to search in sysmgmt table search
-[] make sysmgmt sort by created_at desc by default and add sort button like in families.js
-[] no validation on updating relationship type - can set to anything  - must be one of predefined types
-[] cannot edit tutor using a volunteer account  - no error to user and no audit about it
 [] created task for user even if totp send failed and user wasnt created
-[] need to widen the delete staff modal to fit any length of email address
 [] showing edit and delete buttons on family view even if user has no permission to edit or delete family - should disable those buttons
 [] need to verify in UI that we see correct order chronologically for this:
 Status: בביצוע → הושלמה when we get to audit log UI
-[] add ID to tutor table, since we have it when the user is still pending tutor - and no one can see it. add to model, migrate. add to UI. update once we move pending tutor to tutor.
+[] add ID (acts as the Israeli ID) to tutor table, since we have it when the user is still pending tutor - and no one can see it. add to model, migrate. add to UI. update once we move pending tutor to tutor.
 [] in tutor UI - need to actually see the relationship status and medical condition - not just have them shown when editing
 [] mail send to tutor on promotion from pending tutor to tutor - now still not sending
 [] all mails must be in hebrew
-[] sort by registration date button in Families grid - looks off - need to do it like     other pages
 
 
 TBD:
