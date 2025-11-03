@@ -11,7 +11,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import { hasAllPermissions } from '../components/utils';
 import { useTranslation } from 'react-i18next'; // Translation hook
 import { showErrorToast } from '../components/toastUtils'; // Toast utility
-import { FaEye, FaEyeSlash } from 'react-icons/fa'; // Or your preferred icon lib
+import { useNavigate } from 'react-router-dom'; // Add this line
 
 const requiredPermissions = [
   { resource: 'childsmile_app_staff', action: 'CREATE' },
@@ -22,6 +22,7 @@ const requiredPermissions = [
 
 
 const SystemManagement = () => {
+  const navigate = useNavigate(); // Add this line
   const { t } = useTranslation(); // Initialize translation
   const hasPermissionOnSystemManagement = hasAllPermissions(requiredPermissions);
   const [staff, setStaff] = useState([]);
@@ -406,6 +407,12 @@ const SystemManagement = () => {
               />
               <button onClick={() => openAddStaffModal('add')} className="add-button">
                 {t('Add New Staff')}
+              </button>
+              <button 
+                onClick={() => navigate('/audit-log')}
+                className="audit-log-data-button"
+              >
+                {t('Audit Log')}
               </button>
               <button onClick={handleRefresh} className="refresh-button">
                 {t('Refresh')}

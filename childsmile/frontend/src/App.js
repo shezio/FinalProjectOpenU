@@ -23,6 +23,7 @@ import TutorFeedbacks from './pages/TutorFeedbacks'; // Import the Tutor Feedbac
 import InitialFamilyData from './pages/InitialFamilyData'; // Import the Initial Family Data component
 import TutorVolunteerMgmt from './pages/TutorVolunteerMgmt'; // Import the Tutor and Volunteer Management component
 import GoogleSuccess from './pages/GoogleSuccess';
+import AuditLog from './pages/AuditLog'; // Import the Audit Log component
 
 // Add this route to your router:
 
@@ -66,6 +67,7 @@ const App = () => {
       <Route path="/tutor-volunteer-mgmt" element={<TutorVolunteerMgmt />} /> {/* Add Tutor and Volunteer Management route */}
       <Route path="/register" element={<Registration />} />
       <Route path="/google-success" element={<GoogleSuccess />} />
+      <Route path="/audit-log" element={<AuditLog />} /> {/* Add Audit Log route */}
     </Routes>
   );
 };
