@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from '../axiosConfig';
 import Sidebar from '../components/Sidebar';
 import InnerPageHeader from '../components/InnerPageHeader';
-import { isGuestUser } from '../components/utils';
+import { isGuestUser, hasUpdatePermissionForTable, hasDeletePermissionForTable } from '../components/utils';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { useTranslation } from 'react-i18next';
@@ -69,7 +69,8 @@ const Families = () => {
   // Validation state
   const [errors, setErrors] = useState({});
   const navigate = useNavigate(); // Add this line
-
+  const canDeleteFamily = hasDeletePermissionForTable('children');
+  const canEditFamily = hasUpdatePermissionForTable('children');
   // Add sorting state for registration date
   const [sortOrderRegistrationDate, setSortOrderRegistrationDate] = useState('desc'); // Default to descending
 
@@ -571,10 +572,10 @@ const Families = () => {
                             <button className="info-button" onClick={() => showFamilyDetails(family)}>
                               {t('מידע')}
                             </button>
-                            <button className="edit-button" onClick={() => openEditModal(family)} disabled={isGuestUser()}>
+                            <button className="edit-button" onClick={() => openEditModal(family)} disabled={!canEditFamily}>
                               {t('ערוך')}
                             </button>
-                            <button className="delete-button" onClick={() => openDeleteModal(family.id)} disabled={isGuestUser()}>
+                            <button className="delete-button" onClick={() => openDeleteModal(family.id)} disabled={!canDeleteFamily}>
                               {t('מחק')}
                             </button>
                           </div>

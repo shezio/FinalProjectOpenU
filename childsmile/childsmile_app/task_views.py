@@ -66,6 +66,8 @@ from django.db.models import Count, F
 from .utils import *
 from .audit_utils import log_api_action
 from .logger import api_logger
+from django.core.mail import send_mail
+from django.conf import settings
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -574,6 +576,40 @@ def update_task_status(request, task_id):
                                 'promoted_from_task_id': task.task_id
                             }
                         )
+                        
+                        # Send congratulation email to the newly promoted tutor
+                        try:
+                            tutor_email = pending_tutor_record.id.email
+                            tutor_name = pending_tutor_volunteer_name
+                            
+                            subject = "!ברוכים הבאים לצוות החונכים שלנו"
+                            message = f"""
+                            שלום {tutor_name},
+
+                            אנו שמחים להודיע לך שעברת את הראיון לחונכות! 
+
+                            כעת יש לך הרשאות חונך ותוכל להתחיל לעזור לילדים בקרוב.
+
+                            תפקידך כחונך הוא ללוות ילד בדרכו החינוכית, להעניק לו תמיכה רגשית וחברתית, ולעזור בהשגת יעדיו.
+
+                            אנו מודים לך על בחירתך להיות חלק מהמשימה החשובה הזו.
+
+                            אם יש לך שאלות, אנא צור קשר עם צוות התמיכה שלנו.
+
+                            בברכה,
+                            צוות חיוך של ילד
+                            """
+                            
+                            send_mail(
+                                subject,
+                                message,
+                                settings.DEFAULT_FROM_EMAIL,
+                                [tutor_email],
+                                fail_silently=False,
+                            )
+                            api_logger.info(f"Congratulation email sent to {tutor_email}")
+                        except Exception as email_error:
+                            api_logger.error(f"Error sending promotion email to {tutor_email}: {str(email_error)}")
 
         log_api_action(
             request=request,
@@ -786,6 +822,40 @@ def update_task(request, task_id):
                                     'promoted_from_task_id': task.task_id
                                 }
                             )
+                            
+                            # Send congratulation email to the newly promoted tutor
+                            try:
+                                tutor_email = pending_tutor_record.id.email
+                                tutor_name = pending_tutor_volunteer_name
+                                
+                                subject = "!ברוכים הבאים לצוות החונכים שלנו"
+                                message = f"""
+                                שלום {tutor_name},
+
+                                אנו שמחים להודיע לך שעברת את הראיון לחונכות! 
+
+                                כעת יש לך הרשאות חונך ותוכל להתחיל לעזור לילדים בקרוב.
+
+                                תפקידך כחונך הוא ללוות ילד בדרכו החינוכית, להעניק לו תמיכה רגשית וחברתית, ולעזור בהשגת יעדיו.
+
+                                אנו מודים לך על בחירתך להיות חלק מהמשימה החשובה הזו.
+
+                                אם יש לך שאלות, אנא צור קשר עם צוות התמיכה שלנו.
+
+                                בברכה,
+                                צוות חיוך של ילד
+                                """
+                                
+                                send_mail(
+                                    subject,
+                                    message,
+                                    settings.DEFAULT_FROM_EMAIL,
+                                    [tutor_email],
+                                    fail_silently=False,
+                                )
+                                api_logger.info(f"Congratulation email sent to {tutor_email}")
+                            except Exception as email_error:
+                                api_logger.error(f"Error sending promotion email to {tutor_email}: {str(email_error)}")
 
         # Get assignee name if exists
         assignee_name = None
