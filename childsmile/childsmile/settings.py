@@ -109,17 +109,41 @@ WSGI_APPLICATION = "childsmile.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
+# DATABASES = {
+#     "default": {
+#         "ENGINE": "django.db.backends.postgresql",
+#         "NAME": "child_smile_db",
+#         "USER": "child_smile_user",
+#         "PASSWORD": os.getenv('DB_PASSWORD'),
+#         "HOST": "localhost",
+#         "PORT": "5432",
+#     }
+# }
+
+import os
+import json
+import boto3
+from django.core.exceptions import ImproperlyConfigured
+
+def get_secret():
+    secret_arn = os.environ.get('DB_SECRET_ARN')
+    if not secret_arn:
+        raise ImproperlyConfigured('DB_SECRET_ARN env var missing')
+    client = boto3.client('secretsmanager', region_name='il-central-1')
+    response = client.get_secret_value(SecretId=secret_arn)
+    secret = json.loads(response['SecretString'])
+    return secret['password']
+
 DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": "child_smile_db",
-        "USER": "child_smile_user",
-        "PASSWORD": os.getenv('DB_PASSWORD'),
-        "HOST": "localhost",
-        "PORT": "5432",
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'child_smile_db',
+        'USER': 'child_smile_user',
+        'PASSWORD': get_secret(),
+        'HOST': os.environ.get('DB_HOST'),
+        'PORT': '5432',
     }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
