@@ -551,3 +551,8 @@ class AuditLog(models.Model):
     
     def __str__(self):
         return f"{self.timestamp} - {self.username} - {self.action} - {self.endpoint}"
+
+class AuditTranslation(models.Model):
+    id = models.AutoField(primary_key=True)
+    action = models.CharField(max_length=100, unique=True)
+    hebrew_translation = models.CharField(max_length=255)

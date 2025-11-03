@@ -1435,5 +1435,151 @@ export const exportTutorFeedbackToPDF = async (feedbacks, t) => {
     showErrorToast(t, '', { message: 'Export failed' });
   }
 };
+export const exportAuditToExcel = async (auditLogs, t) => {
+  const reportName = 'audit_log_report';
+  const format = 'EXCEL';
+  
+  try {
+    // Validate that data is provided
+    if (!auditLogs || auditLogs.length === 0) {
+      const errorMsg = 'אנא בחר לפחות רשומה אחת ליצירת דוח';
+      await auditExportFailure(format, reportName, errorMsg, 'VALIDATION');
+      showErrorToast(t, '', { message: errorMsg });
+      return;
+    }
 
-export { auditExportFailure, auditExportSuccess };
+    // Data is already validated and passed from component
+    const headers = [t('Timestamp'), t('Description'), t('User Roles')];
+    const rows = auditLogs.map(log => [
+      log[t('Timestamp')] || '',
+      log[t('Description')] || '', // This will have actual \n newlines
+      log[t('User Roles')] || '',
+    ]);
+
+    const worksheetData = [headers, ...rows];
+    const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
+
+    // Adjust column widths to fit content
+    const columnWidths = [
+      { wch: 25 }, // Timestamp column
+      { wch: 60 }, // Description column (wider for wrapped text)
+      { wch: 30 }, // User Roles column
+    ];
+    worksheet['!cols'] = columnWidths;
+
+    // Set worksheet direction to RTL
+    worksheet['!dir'] = 'rtl';
+
+    // Enable text wrapping for all cells and set row heights
+    let rowIndex = 0;
+    worksheet['!rows'] = [];
+    
+    for (let cell in worksheet) {
+      if (cell.match(/^[A-Z]/)) {
+        if (!worksheet[cell].s) worksheet[cell].s = {};
+        worksheet[cell].s.alignment = {
+          vertical: 'top',
+          wrapText: true, // Enable text wrapping
+        };
+      }
+      // Extract row number from cell reference (e.g., "A1" -> 1)
+      const match = cell.match(/[A-Z]+(\d+)/);
+      if (match) {
+        const row = parseInt(match[1]) - 1;
+        // Set minimum row height for wrapped content
+        if (!worksheet['!rows']) worksheet['!rows'] = [];
+        worksheet['!rows'][row] = { hpx: 30 }; // 30 pixels minimum height
+      }
+    }
+
+    const workbook = XLSX.utils.book_new();
+    const sheetName = t('Audit Log Report');
+    XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
+    const fileName = t('audit_log_report');
+    XLSX.writeFile(workbook, `${fileName}.xlsx`);
+    toast.success(t('Audit log exported successfully'));
+
+    // Audit the export success
+    await auditExportSuccess(format, auditLogs.length, reportName, ['timestamp', 'description', 'user_roles']);
+    
+  } catch (error) {
+    console.error('Export failed:', error);
+    await auditExportFailure(format, reportName, error.message, 'TECHNICAL');
+    showErrorToast(t, '', { message: 'Export failed' });
+  }
+};
+
+export const exportAuditToPDF = async (auditLogs, t) => {
+  const reportName = 'audit_log_report';
+  const format = 'PDF';
+  
+  try {
+    // Validate that data is provided
+    if (!auditLogs || auditLogs.length === 0) {
+      const errorMsg = 'אנא בחר לפחות רשומה אחת ליצירת דוח';
+      await auditExportFailure(format, reportName, errorMsg, 'VALIDATION');
+      showErrorToast(t, '', { message: errorMsg });
+      return;
+    }
+
+    const doc = new jsPDF('portrait', 'mm', 'a4');
+
+    // Register the Alef-Bold font
+    doc.addFileToVFS('Alef-Bold.ttf', AlefBold);
+    doc.addFont('Alef-Bold.ttf', 'Alef', 'bold');
+    doc.setFont('Alef', 'bold');
+
+    // Add logo
+    doc.addImage(logo, 'PNG', 10, 10, 30, 30);
+
+    // Add report title
+    doc.setFontSize(18);
+    doc.text(reverseText(t('Audit Log Report')), doc.internal.pageSize.getWidth() / 2, 40, { align: 'center' });
+
+    // Prepare table data
+    const headers = [[
+      reverseText(t('Timestamp')),
+      reverseText(t('Description')),
+      reverseText(t('User Roles')),
+    ].reverse()];
+
+    // Reorder timestamp: split and swap date/time order
+    const rows = auditLogs.map(log => {
+      const timestamp = log[t('Timestamp')] || '';
+      const [time, date] = timestamp.split(',').map(s => s.trim());
+      const reorderedTimestamp = date && time ? `${date} ${time}` : timestamp;
+      
+      return [
+        reorderedTimestamp,
+        log[t('Description')] || '',
+        reverseText(log[t('User Roles')] || ''),
+      ].reverse();
+    });
+
+    // Add table with RTL support
+    doc.autoTable({
+      head: headers,
+      body: rows,
+      startY: 50,
+      styles: { font: 'Alef', fontSize: 10, cellPadding: 3, halign: 'center' },
+      headStyles: { fillColor: [76, 175, 80], textColor: 255, halign: 'center' },
+      columnStyles: {
+        0: { halign: 'center' },
+        1: { halign: 'center' , cellWidth: 80 }, // middle column a bit wider
+        2: { halign: 'center' },
+      },
+    });
+
+    doc.save(`${t('audit_log_report')}.pdf`);
+    toast.success(t('Audit log exported successfully'));
+
+    await auditExportSuccess(format, auditLogs.length, reportName, ['timestamp', 'description', 'user_roles']);
+    
+  } catch (error) {
+    console.error('Export failed:', error);
+    await auditExportFailure(format, reportName, error.message, 'TECHNICAL');
+    showErrorToast(t, '', { message: 'Export failed' });
+  }
+};
+
+export { auditExportFailure, auditExportSuccess};
