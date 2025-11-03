@@ -9,15 +9,6 @@ while true; do LATEST_LOG=$(ls -t childsmile/childsmile_app/logs/*.log | head -n
 
 Bugs/tasks:
 [] created task for user even if totp send failed and user wasnt created
-[] showing edit and delete buttons on family view even if user has no permission to edit or delete family - should disable those buttons
-[] need to verify in UI that we see correct order chronologically for this:
-Status: בביצוע → הושלמה when we get to audit log UI
-[] add ID (acts as the Israeli ID) to tutor table, since we have it when the user is still pending tutor - and no one can see it. add to model, migrate. add to UI. update once we move pending tutor to tutor.
-[] in tutor UI - need to actually see the relationship status and medical condition - not just have them shown when editing
-[] mail send to tutor on promotion from pending tutor to tutor - now still not sending
-[] all mails must be in hebrew
-
-
 TBD:
 [] create tests for UI
 [] create tests for BE
@@ -25,3 +16,5 @@ TBD:
      - cannot see the children table - should see the table and disable the buttons in actions
      - same for initial family data
      - more bugs
+[] need to verify in UI that we see correct order chronologically for this:
+Status: בביצוע → הושלמה when we get to audit log UI

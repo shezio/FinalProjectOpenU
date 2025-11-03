@@ -288,6 +288,7 @@ const resources = {
       "Tutoring status is required.": "מצב חונכות הוא שדה חובה.",
       "Select a hospital": "בחר בית חולים מטפל",
       "ID": "תעודת זהות",
+      "Israeli ID": "ת.ז",
       "ID must be 9 digits long.": "תעודת זהות חייבת להיות באורך 9 ספרות.",
       'Select a tutoring status': 'בחר מצב חונכות',
       'Select a marital status': 'בחר מצב משפחתי',

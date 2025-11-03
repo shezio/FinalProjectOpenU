@@ -175,7 +175,7 @@ def update_staff_member(request, staff_id):
                 code = TOTPCode.generate_code()
                 TOTPCode.objects.create(email=new_email, code=code)
                 
-                subject = "Email Change Verification - Child's Smile"
+                subject = "Email Change Verification - חיוך של ילד"
                 message = f"""
                 Hello {data.get('first_name', staff_member.first_name)},
                 
@@ -188,7 +188,7 @@ def update_staff_member(request, staff_id):
                 Please provide this code to verify and complete the email change.
                 
                 Best regards,
-                Child's Smile Team
+                חיוך של ילד Team
                 """
                 
                 try:
@@ -936,20 +936,20 @@ def staff_creation_send_totp(request):
         code = TOTPCode.generate_code()
         TOTPCode.objects.create(email=email, code=code)
 
-        subject = "Staff Account Creation Verification - Child's Smile"
+        subject = "אימות יצירת חשבון צוות - חיוך של ילד"
         message = f"""
-        Hello {first_name},
+        שלום {first_name},
         
-        An admin is creating a staff account for you in the Child's Smile system.
+        מנהל מערכת יוצר לך חשבון צוות ב-חיוך של ילד.
         
-        Your verification code is: {code}
+        קוד האימות שלך הוא: {code}
         
-        This code will expire in 5 minutes.
+        הקוד יפוג בעוד 5 דקות.
         
-        Please provide this code to the admin to complete your account creation.
+        אנא מסור קוד זה למנהל המערכת כדי להשלים את יצירת החשבון.
         
-        Best regards,
-        Child's Smile Team
+        בברכה,
+        צוות חיוך של ילד
         """
         
         try:

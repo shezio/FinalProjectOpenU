@@ -118,20 +118,20 @@ def register_send_totp(request):
         TOTPCode.objects.create(email=email, code=code)
 
         # Send verification email
-        subject = "Verify Your Registration - Child's Smile"
+        subject = "אימות הרשמה - חיוך של ילד"
         message = f"""
-        Hello {first_name},
+        שלום {first_name},
         
-        Thank you for registering with Child's Smile!
+        תודה שנרשמת ל-חיוך של ילד!
         
-        Your verification code is: {code}
+        קוד האימות שלך הוא: {code}
         
-        This code will expire in 5 minutes.
+        הקוד יפוג בעוד 5 דקות.
         
-        Please provide this code to complete your registration.
+        אנא הזן קוד זה כדי להשלים את ההרשמה.
         
-        Best regards,
-        Child's Smile Team
+        בברכה,
+        צוות חיוך של ילד
         """
         
         try:

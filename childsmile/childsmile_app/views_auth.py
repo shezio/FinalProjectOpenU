@@ -80,18 +80,18 @@ def login_email(request):
         totp_record = TOTPCode.objects.create(email=email, code=code)
         
         # Send email
-        subject = "Your Login Code - Child's Smile"
+        subject = "קוד הכניסה שלך - חיוך של ילד"
         message = f"""
-        Hello,
+        שלום,
         
-        Your login code is: {code}
+        קוד הכניסה שלך הוא: {code}
         
-        This code will expire in 5 minutes.
+        הקוד יפוג בעוד 5 דקות.
         
-        If you didn't request this code, please ignore this email.
+        אם לא ביקשת קוד זה, אנא התעלם מהודעה זו.
         
-        Best regards,
-        Child's Smile Team
+        בברכה,
+        צוות חיוך של ילד
         """
         
         send_mail(

@@ -229,6 +229,7 @@ const TutorVolunteerMgmt = () => {
             <tr>
               {showTutors ? (
                 <>
+                  <th>{t("Israeli ID")}</th>
                   <th>{t("Name")}</th>
                   <th>{t("Email")}</th>
                   <th>{t("Tutorship Status")}</th>
@@ -248,6 +249,7 @@ const TutorVolunteerMgmt = () => {
                 </>
               ) : (
                 <>
+                  <th>{t("ID")}</th>
                   <th>{t("Name")}</th>
                   <th>{t("Email")}</th>
                   <th>{t("Comments")}</th>
@@ -267,10 +269,11 @@ const TutorVolunteerMgmt = () => {
           </thead>
           <tbody>
             {paginatedEntities.length === 0 ? (
-              <tr><td colSpan={showTutors ? 8 : 8}>{t("No data to display")}</td></tr>
+              <tr><td colSpan={showTutors ? 9 : 9}>{t("No data to display")}</td></tr>
             ) : (
               paginatedEntities.map((entity, idx) => (
                 <tr key={entity.id_id || entity.id || idx}>
+                  <td>{entity.id}</td>
                   <td>{entity.name || entity.first_name + " " + entity.last_name}</td>
                   <td>{entity.tutor_email || entity.email || "-"}</td>
                   <td>
@@ -387,166 +390,52 @@ const TutorVolunteerMgmt = () => {
         <table className="families-data-grid">
           <thead>
             <tr>
-              {showTutors ? (
-                <>
-                  <th>{t("Name")}</th>
-                  <th>{t("Email")}</th>
-                  <th>{t("Tutorship Status")}</th>
-                  <th>{t("Preferences")}</th>
-                  <th>{t("Relationship Status")}</th>
-                  <th>{t("Tutee Wellness")}</th>
-                  <th>
-                    {t("Updated")}
-                    <button
-                      className="sort-button"
-                      onClick={() => setSortOrderUpdated((prev) => (prev === 'asc' ? 'desc' : 'asc'))}
-                      style={{ marginLeft: "4px" }}
-                    >
-                      {sortOrderUpdated === 'asc' ? '▲' : '▼'}
-                    </button>
-                  </th>
-                </>
-              ) : (
-                <>
-                  <th>{t("Name")}</th>
-                  <th>{t("Email")}</th>
-                  <th>{t("Comments")}</th>
-                  <th>
-                    {t("Updated")}
-                    <button
-                      className="sort-button"
-                      onClick={() => setSortOrderUpdated((prev) => (prev === 'asc' ? 'desc' : 'asc'))}
-                      style={{ marginLeft: "4px" }}
-                    >
-                      {sortOrderUpdated === 'asc' ? '▲' : '▼'}
-                    </button>
-                  </th>
-                </>
-              )}
+              <th>{t("Israeli ID")}</th>
+              <th>{t("Name")}</th>
+              <th>{t("Email")}</th>
+              <th>{t("Comments")}</th>
+              <th>
+                {t("Updated")}
+                <button
+                  className="sort-button"
+                  onClick={() => setSortOrderUpdated((prev) => (prev === 'asc' ? 'desc' : 'asc'))}
+                  style={{ marginLeft: "4px" }}
+                >
+                  {sortOrderUpdated === 'asc' ? '▲' : '▼'}
+                </button>
+              </th>
             </tr>
           </thead>
           <tbody>
             {paginatedEntities.length === 0 ? (
-              <tr><td colSpan={showTutors ? 8 : 8}>{t("No data to display")}</td></tr>
+              <tr><td colSpan={9}>{t("No data to display")}</td></tr>
             ) : (
               paginatedEntities.map((entity, idx) => (
                 <tr key={entity.id_id || entity.id || idx}>
-                  {showTutors ? (
-                    <>
-                      <td>{entity.name || entity.first_name + " " + entity.last_name}</td>
-                      <td>{entity.tutor_email || entity.email || "-"}</td>
-                      <td>
-                        {editingCell?.rowId === entity.id && editingCell?.field === "tutorship_status" ? (
-                          <select
-                            className="form-column"
-                            value={editValue}
-                            onChange={e => setEditValue(e.target.value)}
-                            onBlur={() => confirmEdit(entity, "tutorship_status")}
-                            style={{ minWidth: "220px", height: "30px", fontSize: "24px" }}
-                          >
-                            {tutorshipStatusOptions.map(opt => (
-                              <option key={opt} value={opt}>{opt}</option>
-                            ))}
-                          </select>
-                        ) : (
-                          <>
-                            {entity.tutorship_status}
-                            <button className="edit-pencil" onClick={() => startEdit(entity, "tutorship_status", "tutor")}>✏️</button>
-                          </>
-                        )}
-                      </td>
-                      <td>
-                        {editingCell?.rowId === entity.id && editingCell?.field === "preferences" ? (
-                          <input
-                            type="text"
-                            value={editValue}
-                            onChange={e => setEditValue(e.target.value)}
-                            onBlur={() => confirmEdit(entity, "preferences")}
-                            style={{ minWidth: "220px", height: "30px", fontSize: "24px", overflowX: "auto" }}
-                          />
-                        ) : (
-                          <>
-                            {entity.preferences}
-                            <button className="edit-pencil" onClick={() => startEdit(entity, "preferences", "tutor")}>✏️</button>
-                          </>
-                        )}
-                      </td>
-                      <td>
-                        {entity.in_tutorship ? (
-                          editingCell?.rowId === entity.id && editingCell?.field === "relationship_status" ? (
-                            <select
-                              className="form-column"
-                              value={editValue}
-                              onChange={e => setEditValue(e.target.value)}
-                              onBlur={() => confirmEdit(entity, "relationship_status")}
-                              style={{ minWidth: "220px", height: "30px", fontSize: "24px" }}
-                            >
-                              {maritalStatusOptions.map(opt => (
-                                <option key={opt} value={opt}>{opt}</option>
-                              ))}
-                            </select>
-                          ) : (
-                            <>
-                              {entity.relationship_status}
-                              <button className="edit-pencil" onClick={() => startEdit(entity, "relationship_status", "tutor")}>✏️</button>
-                            </>
-                          )
-                        ) : (
-                          <span className="disabled-cell">{entity.relationship_status || t("no data - see tutorship status")}</span>
-                        )}
-                      </td>
-                      <td>
-                        {entity.in_tutorship ? (
-                          editingCell?.rowId === entity.id && editingCell?.field === "tutee_wellness" ? (
-                            <input
-                              className="form-column"
-                              type="text"
-                              value={editValue}
-                              onChange={e => setEditValue(e.target.value)}
-                              onBlur={() => confirmEdit(entity, "tutee_wellness")}
-                              style={{ minWidth: "220px", height: "30px", fontSize: "24px", overflowX: "auto" }}
-                            />
-                          ) : (
-                            <>
-                              {entity.tutee_wellness}
-                              <button className="edit-pencil" onClick={() => startEdit(entity, "tutee_wellness", "tutor")}>✏️</button>
-                            </>
-                          )
-                        ) : (
-                          <span className="disabled-cell">{entity.tutee_wellness || t("no data - see tutorship status")}</span>
-                        )}
-                      </td>
-                      <td>
-                        {entity.updated ? formatUpdatedDate(entity.updated) : t("No updates yet")}
-                      </td>
+                  <td>{entity.id}</td>
+                  <td>{entity.first_name + " " + entity.last_name}</td>
+                  <td>{entity.email}</td>
+                  <td>
+                    {editingCell?.rowId === entity.id && editingCell?.field === "comments" ? (
+                      <input
+                        type="text"
+                        value={editValue}
+                        onChange={e => setEditValue(e.target.value)}
+                        onBlur={() => confirmEdit(entity, "comments")}
+                        style={{ minWidth: "220px", height: "30px", fontSize: "24px", overflowX: "auto" }}
+                      />
+                    ) : (
+                      <>
+                        {entity.comments}
+                        <button
+                          className="edit-pencil"
+                          onClick={() => startEdit(entity, "comments", "volunteer")}>✏️</button>
                     </>
-                  ) : (
-                    <>
-                      <td>{entity.first_name + " " + entity.last_name}</td>
-                      <td>{entity.email}</td>
-                      <td>
-                        {editingCell?.rowId === entity.id && editingCell?.field === "comments" ? (
-                          <input
-                            type="text"
-                            value={editValue}
-                            onChange={e => setEditValue(e.target.value)}
-                            onBlur={() => confirmEdit(entity, "comments")}
-                            style={{ minWidth: "220px", height: "30px", fontSize: "24px", overflowX: "auto" }}
-                          />
-                        ) : (
-                          <>
-                            {entity.comments}
-                            <button
-                              className="edit-pencil"
-                              onClick={() => startEdit(entity, "comments", "volunteer")}>✏️</button>
-                          </>
-                        )}
-                      </td>
-                      <td>
-                        {entity.updated ? formatUpdatedDate(entity.updated) : entity.signupdate ? formatUpdatedDate(entity.signupdate) : t("No updates yet")}
-                      </td>
-                    </>
-                  )}
+                    )}
+                  </td>
+                  <td>
+                    {entity.updated ? formatUpdatedDate(entity.updated) : entity.signupdate ? formatUpdatedDate(entity.signupdate) : t("No updates yet")}
+                  </td>
                 </tr>
               ))
             )}
