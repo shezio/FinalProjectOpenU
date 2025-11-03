@@ -6,7 +6,7 @@
   align-items: center;
   justify-content: center;
   flex-grow: 1;
-  margin-top: 70px;
+  margin-top: 200px;
 }
 
 .audit-log-container {
@@ -97,7 +97,7 @@
 }
 
 .filter-select {
-  width: 500px;
+  width: 300px;
 }
 
 .filter-select:focus,

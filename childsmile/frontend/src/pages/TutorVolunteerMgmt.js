@@ -46,14 +46,26 @@ const TutorVolunteerMgmt = () => {
             toast.success(t("Tutor updated successfully"));
             fetchGridData();
           })
-          .catch(() => showErrorToast(t("Error updating tutor")));
+          .catch((error) => {
+            if (error.response?.status === 401) {
+              showErrorToast(t, "You do not have permission to update tutors.", error);
+            } else {
+              showErrorToast(t, "Error updating tutor", error);
+            }
+          });
       } else {
         axios.put(`/api/update_general_volunteer/${editingCell.rowId}/`, updatedEntity)
           .then(() => {
             toast.success(t("Volunteer updated successfully"));
             fetchGridData();
           })
-          .catch(() => showErrorToast(t("Error updating volunteer")));
+          .catch((error) => {
+            if (error.response?.status === 401) {
+              showErrorToast(t, "You do not have permission to update volunteers.", error);
+            } else {
+              showErrorToast(t, "Error updating volunteer", error);
+            }
+          });
       }
     }
     // Always reset edit state, even if no change
@@ -122,7 +134,13 @@ const TutorVolunteerMgmt = () => {
           fetchGridData();
           closeEditModal();
         })
-        .catch(() => showErrorToast(t("Error updating tutor")));
+        .catch((error) => {
+          if (error.response?.status === 401) {
+            showErrorToast(t, "You do not have permission to update tutors.", error);
+          } else {
+            showErrorToast(t, "Error updating tutor", error);
+          }
+        });
     } else {
       axios.put(`/api/update_general_volunteer/${editData.id_id}/`, editData)
         .then(() => {
@@ -130,7 +148,13 @@ const TutorVolunteerMgmt = () => {
           fetchGridData();
           closeEditModal();
         })
-        .catch(() => showErrorToast(t("Error updating volunteer")));
+        .catch((error) => {
+          if (error.response?.status === 401) {
+            showErrorToast(t, "You do not have permission to update volunteers.", error);
+          } else {
+            showErrorToast(t, "Error updating volunteer", error);
+          }
+        });
     }
   };
 

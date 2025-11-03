@@ -10,6 +10,8 @@ import os
 from datetime import datetime
 import pytz
 import glob
+import sys
+import traceback
 
 def cleanup_old_logs(log_dir, log_name, backup_count):
     """
@@ -54,7 +56,7 @@ class APILogger:
             log_dir: Directory to store log files (default: childsmile_app/logs)
             max_size: Max size of each log file in bytes (default: 10MB)
             backup_count: Number of backup log files to keep (default: 5)
-            log_level: Logging level (default: DEBUG)
+            log_level: Logging level (default: INFO)
             log_name: Prefix for log files (default: API)
         """
         if log_dir is None:
@@ -73,9 +75,9 @@ class APILogger:
         # before creating new log file, clean up old logs
         cleanup_old_logs(log_dir, log_name, backup_count)
 
-        # Create logger
+        # ✅ Create logger with DEBUG level (capture everything)
         self.logger = logging.getLogger(f"childsmile.{log_name}")
-        self.logger.setLevel(log_level)
+        self.logger.setLevel(logging.DEBUG)  # Logger captures ALL levels
         
         # Remove existing handlers to avoid duplicates
         self.logger.handlers = []
@@ -89,6 +91,7 @@ class APILogger:
             maxBytes=max_size,
             backupCount=backup_count
         )
+        # ✅ Handler level controls what gets written to file
         handler.setLevel(log_level)
         
         # Create formatter with custom timestamp
@@ -141,4 +144,15 @@ class APILogger:
 
 
 # Global logger instance for API calls
-api_logger = APILogger(log_level=logging.ERROR, log_name="API")
+try:
+    api_logger = APILogger(log_level=logging.INFO, log_name="API")
+except Exception as e:
+    print(f"ERROR: Failed to initialize APILogger: {e}")
+    print(f"Traceback: {traceback.format_exc()}")
+    # Fallback to basic logger
+    api_logger = logging.getLogger("childsmile.API")
+    api_logger.setLevel(logging.DEBUG)
+    handler = logging.StreamHandler(sys.stdout)
+    handler.setLevel(logging.INFO)
+    formatter = logging.Formatter('%(message)s')
+    api_logger.addHandler(handler)

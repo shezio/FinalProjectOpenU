@@ -349,7 +349,7 @@ const resources = {
       'Roles': 'תפקידים',
       'Username': 'שם משתמש',
       'No staff members to display': 'אין משתמשים להצגה',
-      'Search by name or email': 'חפש לפי שם או אימייל',
+      'Search by name, email or role': 'חפש לפי שם, אימייל או תפקיד',
       "Are you sure you want to delete this staff member?": 'האם אתה בטוח שברצונך למחוק משתמש זה?',
       "Deleting a staff member will remove all associated data.": 'מחיקת משתמש תסיר את כל הנתונים הקשורים אליו',
       "Deleting a staff member will remove all associated data": 'מחיקת משתמש תסיר את כל הנתונים הקשורים אליו',
@@ -652,6 +652,11 @@ const resources = {
       "across all pages": "בכל הדפים",
       "logs": "רשומות",
       "Selected": "נבחרו",
+      "Too many failed attempts": "יותר מדי ניסיונות כושלים",
+      "You do not have permission to update tutors.": "אין לך הרשאה לעדכן חונכים ",
+      "You do not have permission to update volunteers.": "אין לך הרשאה לעדכן מתנדבים ",
+      "Search by name or email": "חפש לפי שם או אימייל"
+      
     }
   }
 };
