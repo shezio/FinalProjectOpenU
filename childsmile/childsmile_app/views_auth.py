@@ -72,6 +72,26 @@ def login_email(request):
             )
             return JsonResponse({"error": "Email not found in system"}, status=404)
         
+        # CHECK IF USER IS APPROVED FOR REGISTRATION
+        staff_user = Staff.objects.get(email=email)
+        if not staff_user.registration_approved:
+            log_api_action(
+                request=request,
+                action='USER_LOGIN_FAILED',
+                success=False,
+                error_message="Registration not yet approved by administrator",
+                status_code=403,
+                additional_data={
+                    'attempted_email': email,
+                    'reason': 'registration_not_approved'
+                }
+            )
+            api_logger.warning(f"TOTP send attempt by non-approved user {staff_user.staff_id} ({email})")
+            return JsonResponse({
+                "error": "הרשמתך בהמתנה לאישור מנהל המערכת. אנא המתן לאישור.",
+                "pending_approval": True
+            }, status=403)
+        
         # Invalidate any existing codes for this email
         TOTPCode.objects.filter(email=email, used=False).update(used=True)
         
@@ -289,6 +309,25 @@ def verify_totp(request):
             )
             api_logger.warning(f"User {user_id} attempted to log in without providing a staff email.")
             return JsonResponse({"error": "Staff member not found"}, status=404)
+        
+        # CHECK IF USER IS APPROVED FOR REGISTRATION
+        if not staff_user.registration_approved:
+            log_api_action(
+                request=request,
+                action='USER_LOGIN_FAILED',
+                success=False,
+                error_message="Registration not yet approved by administrator",
+                status_code=403,
+                additional_data={
+                    'attempted_email': email,
+                    'reason': 'registration_not_approved'
+                }
+            )
+            api_logger.warning(f"Login attempt by non-approved user {staff_user.staff_id} ({email})")
+            return JsonResponse({
+                "error": "הרשמתך בהמתנה לאישור מנהל המערכת. אנא המתן לאישור.",
+                "pending_approval": True
+            }, status=403)
         
         # **ENHANCED TOTP VERIFICATION SUCCESS**
         log_api_action(

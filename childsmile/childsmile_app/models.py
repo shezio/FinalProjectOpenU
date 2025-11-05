@@ -82,6 +82,7 @@ class Staff(models.Model):
     first_name = models.CharField(max_length=255)
     last_name = models.CharField(max_length=255)
     created_at = models.DateTimeField(auto_now_add=True)
+    registration_approved = models.BooleanField(default=False)
 
     def __str__(self):
         return self.username
@@ -415,6 +416,10 @@ class Tasks(models.Model):
     names = models.CharField(max_length=500, null=True, blank=True)
     phones = models.CharField(max_length=500, null=True, blank=True)
     other_information = models.TextField(max_length=500, null=True, blank=True)
+    # New field for storing user info in registration approval tasks
+    user_info = models.JSONField(null=True, blank=True)
+    # Field for storing rejection reason when registration is rejected
+    rejection_reason = models.TextField(max_length=200, null=True, blank=True)
 
     def __str__(self):
         return f"Task {self.task_id} - {self.task_type}"

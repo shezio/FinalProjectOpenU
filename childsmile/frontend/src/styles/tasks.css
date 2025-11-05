@@ -778,4 +778,28 @@
   pointer-events: none;
   cursor: not-allowed;
 }
+/*Added direction: rtl and text-align: right to the parent container
+Added word-wrap: break-word and overflow-wrap: break-word to the label
+Added display: block and margin-bottom: 10px to the h3 to ensure line breaks between reasons
+Added max-width: 100% to prevent overflow*/
+.rejection-reason {
+  margin-top: 10px;
+  font-weight: bold;
+  font-size: 24px !important;
+  max-width: 100%;
+}
 
+.rejection-reason label {
+  font-weight: bold;
+  display: block;
+  margin-bottom: 8px;
+  text-align: right;
+  direction: rtl;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  font-size: 22px !important;
+}
+
+.rejection-reason h3 {
+  font-size: 26px !important;
+}

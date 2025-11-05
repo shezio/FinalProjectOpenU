@@ -17,6 +17,21 @@ export const getStaff = async () => {
   }
 };
 
+export const getStaffUserNamesAndRoles = async () => {
+  try {
+    const response = await axios.get('/api/staff/');
+    console.log('Staff Usernames and Roles API response:', response.data);
+    const staff = response.data?.staff || [];
+    return staff.map((user) => ({
+      username: user.username,
+      roles: user.roles,  // Keep as array, not joined string
+    }));
+  } catch (error) {
+    console.error('Error fetching staff usernames and roles:', error);
+    return [];
+  }
+};
+
 export const getChildren = async () => {
   const response = await axios.get('/api/children/');
   return response.data.children.map((child) => ({

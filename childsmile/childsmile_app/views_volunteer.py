@@ -21,6 +21,7 @@ from .logger import api_logger
 import json
 import datetime
 import traceback
+from .utils import create_tasks_for_admins_async
 
 
 @csrf_exempt
@@ -502,13 +503,14 @@ def create_volunteer_or_tutor_internal(data, request=None):
         role_name = "General Volunteer"
         role = Role.objects.get(role_name=role_name)
 
-        # Create Staff
+        # Create Staff with registration_approved=False (requires admin approval)
         staff = Staff.objects.create(
             username=username,
             email=email,
             first_name=first_name,
             last_name=surname,
             created_at=now(),
+            registration_approved=False  # NEW: Set to False, requires admin approval
         )
         staff.roles.add(role)
         staff.refresh_from_db()
@@ -516,6 +518,11 @@ def create_volunteer_or_tutor_internal(data, request=None):
         # DEBUG: Verify role was added
         staff_roles = list(staff.roles.all().values_list('role_name', flat=True))
         api_logger.debug(f"Created staff {staff.staff_id} with roles: {staff_roles}")
+        
+        # CREATE REGISTRATION APPROVAL TASK FOR ADMINS
+        full_name = f"{first_name} {surname}"
+        create_tasks_for_admins_async(staff.staff_id, full_name, email)
+        api_logger.info(f"Created registration approval tasks for admins for user {staff.staff_id} ({email})")
 
         # Create volunteer or pending tutor
         if want_tutor:
@@ -524,13 +531,8 @@ def create_volunteer_or_tutor_internal(data, request=None):
                 pending_status="ממתין",  # "Pending" in Hebrew
             )
             
-            # Create interview task for tutor coordinators AFTER successful pending_tutor creation
-            task_type = Task_Types.objects.filter(
-                task_type="ראיון מועמד לחונכות"
-            ).first()
-            if task_type:
-                from .task_views import create_tasks_for_tutor_coordinators_async
-                create_tasks_for_tutor_coordinators_async(pending_tutor.pending_tutor_id, task_type.id)
+            # NOTE: Interview task for tutor coordinators will be created ONLY after admin approves registration
+            # This prevents tasks for users that don't actually exist yet
             
             # Log pending tutor creation with proper user info
             if request:
