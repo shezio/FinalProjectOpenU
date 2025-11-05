@@ -3,7 +3,7 @@ import axios from '../axiosConfig';
 import Sidebar from '../components/Sidebar';
 import InnerPageHeader from '../components/InnerPageHeader';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
-import { getStaff, getChildren, getTutors, getChildFullName, getTutorFullName, getPendingTutors, getGeneralVolunteersNotPending, isTutorOrGeneralVolunteer, isGuestUser } from '../components/utils';
+import { getStaff, getChildren, getTutors, getChildFullName, getTutorFullName, getPendingTutors, getGeneralVolunteersNotPending, isTutorOrGeneralVolunteer, isGuestUser,getStaffUserNamesAndRoles } from '../components/utils';
 import '../styles/common.css';
 import '../styles/tasks.css';
 import Select from 'react-select';
@@ -64,6 +64,10 @@ const Tasks = () => {
   const [isDragging, setIsDragging] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [taskToDelete, setTaskToDelete] = useState(null);
+  const [isRejectRegistrationModalOpen, setIsRejectRegistrationModalOpen] = useState(false);
+  const [rejectionReasonOption, setRejectionReasonOption] = useState('');
+  const [rejectionReasonText, setRejectionReasonText] = useState('');
+  const [staffUserNamesAndRoles, setStaffUserNamesAndRoles] = useState([]);
   const menuRef = useRef();
   const location = useLocation();
 
@@ -144,8 +148,9 @@ const Tasks = () => {
         localStorage.removeItem('tutorsOptions');
         localStorage.removeItem('pendingTutorsOptions');
         localStorage.removeItem('generalVolunteersNotPending');
+        localStorage.removeItem('staffUserNamesAndRoles');
       }
-      const [tasksResponse, staffOptions, childrenOptions, tutorsOptions, pendingTutorsOptions, generalVolunteersNotPending] = await Promise.all([
+      const [tasksResponse, staffOptions, childrenOptions, tutorsOptions, pendingTutorsOptions, generalVolunteersNotPending, staffUserNamesAndRoles] = await Promise.all([
         axios.get('/api/tasks/').catch((error) => {
           console.error('Error fetching tasks:', error);
           showErrorToast(t, 'Error fetching tasks', error);
@@ -176,6 +181,11 @@ const Tasks = () => {
           showErrorToast(t, 'Error fetching general volunteers not pending', error);
           return [];
         }),
+        getStaffUserNamesAndRoles().catch((error) => {
+          console.error('Error fetching staff usernames and roles:', error);
+          showErrorToast(t, 'Error fetching staff usernames and roles', error);
+          return [];
+        }),
       ]);
 
       const newTasks = tasksResponse.data.tasks || [];
@@ -183,6 +193,7 @@ const Tasks = () => {
       const cachedPermissions = JSON.parse(localStorage.getItem('permissions')) || [];
       const newPendingTutors = pendingTutorsOptions;
       const newGeneralVolunteersNotPending = generalVolunteersNotPending;
+      const newStaffUserNamesAndRoles = staffUserNamesAndRoles;
 
       setStaffOptions(staffOptions);
       setChildrenOptions(childrenOptions);
@@ -190,6 +201,7 @@ const Tasks = () => {
       setPendingTutorsOptions(newPendingTutors);
       setGeneralVolunteersNotPending(newGeneralVolunteersNotPending);
       setPermissions(cachedPermissions);
+      setStaffUserNamesAndRoles(newStaffUserNamesAndRoles);
 
       const filteredTypes = newTaskTypes.filter((taskType) =>
         cachedPermissions.some(
@@ -219,6 +231,7 @@ const Tasks = () => {
       localStorage.setItem('tutorsOptions', JSON.stringify(tutorsOptions));
       localStorage.setItem('pendingTutorsOptions', JSON.stringify(newPendingTutors));
       localStorage.setItem('generalVolunteersNotPending', JSON.stringify(newGeneralVolunteersNotPending));
+      localStorage.setItem('staffUserNamesAndRoles', JSON.stringify(newStaffUserNamesAndRoles));
     } catch (error) {
       console.error('Error fetching data:', error);
       showErrorToast(t, 'Error fetching data', error);
@@ -518,7 +531,140 @@ const Tasks = () => {
     return type && type.name === "הוספת משפחה";
   };
 
+  const isRegistrationApprovalTask = (typeId) => {
+    const type = taskTypes.find(t => t.id === typeId);
+    return type && type.name === "אישור הרשמה";
+  };
+
+  // Helper function to check by type_name from task object
+  const isRegistrationApprovalTaskByName = (typeName) => {
+    return typeName === "אישור הרשמה";
+  };
+
+  // Helper function to format ISO datetime
+  const formatISODateTime = (isoString) => {
+    if (!isoString) return '---';
+    try {
+      const date = new Date(isoString);
+      const day = String(date.getDate()).padStart(2, '0');
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const year = date.getFullYear();
+      const hours = String(date.getHours()).padStart(2, '0');
+      const minutes = String(date.getMinutes()).padStart(2, '0');
+      const seconds = String(date.getSeconds()).padStart(2, '0');
+      return `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
+    } catch (e) {
+      return isoString;
+    }
+  };
+
+  // Helper function to translate user_info field names and values
+  const translateUserInfoField = (key, value) => {
+    const fieldTranslations = {
+      'ID': t('ID'),
+      'age': t('Age'),
+      'city': t('City'),
+      'email': t('Email'),
+      'phone': t('Phone'),
+      'gender': t('Gender'),
+      'full_name': t('Full Name'),
+      'created_at': t('Created At'),
+      'want_tutor': t('Wants to be Tutor'),
+    };
+
+    let displayValue = value;
+    
+    // Handle datetime fields
+    if (key === 'created_at') {
+      displayValue = formatISODateTime(value);
+    }
+    // Handle gender (convert false/true to Hebrew)
+    else if (key === 'gender') {
+      if (value === false || value === 'false' || value === '0') {
+        displayValue = t('Male');
+      } else if (value === true || value === 'true' || value === '1') {
+        displayValue = t('Female');
+      }
+    }
+    // Handle boolean fields
+    else if (key === 'want_tutor' && typeof value === 'boolean') {
+      displayValue = value ? t('Yes') : t('No');
+    }
+    // Handle arrays
+    else if (Array.isArray(value)) {
+      displayValue = value.join(', ');
+    }
+    // Handle null/undefined
+    else if (value === null || value === undefined) {
+      displayValue = '---';
+    }
+
+    const translatedKey = fieldTranslations[key] || key;
+    return { key: translatedKey, value: displayValue };
+  };
+
+  const isUserAdmin = () => {
+    const username = localStorage.getItem('username');
+    const staffUser = staffUserNamesAndRoles.find(user => user.username === username);
+    return staffUser && staffUser.roles.includes('System Administrator');
+  };
+
+  const openRejectRegistrationModal = (task) => {
+    if (!isUserAdmin()) {
+      showErrorToast(t, 'Only administrators can reject registrations', '');
+      return;
+    }
+    setTaskToDelete(task);
+    setRejectionReasonOption('');
+    setRejectionReasonText('');
+    setIsRejectRegistrationModalOpen(true);
+  };
+
+  const closeRejectRegistrationModal = () => {
+    setTaskToDelete(null);
+    setRejectionReasonOption('');
+    setRejectionReasonText('');
+    setIsRejectRegistrationModalOpen(false);
+  };
+
+  const confirmRejectRegistration = async () => {
+    if (!taskToDelete) return;
+    
+    let finalReason = rejectionReasonOption;
+    if (rejectionReasonOption === 'other') {
+      finalReason = rejectionReasonText.trim();
+      if (!finalReason || finalReason.length === 0) {
+        toast.error(t('Please provide a rejection reason'));
+        return;
+      }
+      if (finalReason.length > 200) {
+        toast.error(t('Rejection reason must not exceed 200 characters'));
+        return;
+      }
+    } else if (!finalReason) {
+      toast.error(t('Please select a rejection reason'));
+      return;
+    }
+    
+    try {
+      await axios.delete(`/api/tasks/delete/${taskToDelete.id}/`, {
+        data: { rejection_reason: finalReason }
+      });
+      toast.success(t('Registration rejected and user deleted'));
+      closeRejectRegistrationModal();
+      await fetchData(true);
+    } catch (error) {
+      showErrorToast(t, 'Error rejecting registration', error);
+    }
+  };
+
   const openDeleteModal = (task) => {
+    // For registration approval tasks, open rejection modal instead
+    if (isRegistrationApprovalTaskByName(task.type_name)) {
+      openRejectRegistrationModal(task);
+      return;
+    }
+    
     setTaskToDelete(task);
     setIsDeleteModalOpen(true);
   };
@@ -606,13 +752,18 @@ const Tasks = () => {
                                 <div className="no-tasks">{t("No tasks currently displayed for this status")}</div>
                               ) : (
                                 tasksByStatus[col.key].map((task, index) => (
-                                  <Draggable key={task.id} draggableId={task.id.toString()} index={index}>
+                                  <Draggable 
+                                    key={task.id} 
+                                    draggableId={task.id.toString()} 
+                                    index={index}
+                                    isDragDisabled={isRegistrationApprovalTask(task.type) && !isUserAdmin()}
+                                  >
                                     {(provided, snapshot) => (
                                       <div
                                         className="task-card"
                                         ref={provided.innerRef}
                                         {...provided.draggableProps}
-                                        {...provided.dragHandleProps}
+                                        {...(isRegistrationApprovalTask(task.type) && !isUserAdmin() ? {} : provided.dragHandleProps)}
                                         style={{
                                           backgroundColor: getTaskBgColor(task.due_date, task.status),
                                           ...provided.draggableProps.style
@@ -647,19 +798,44 @@ const Tasks = () => {
                   className="task-details-panel"
                   tabIndex={0}
                   onClick={e => e.stopPropagation()}
+                  style={{ height: isRegistrationApprovalTaskByName(selectedTask.type_name) && selectedTask.user_info ? '160%' : '100%', 
+                  overflowY: (isRegistrationApprovalTaskByName(selectedTask.type_name) && selectedTask.user_info) || window.innerHeight < document.documentElement.scrollHeight ? 'scroll' : 'auto'
+                   }}
                 >
                   <button className="close-btn" onClick={handleClosePopup}>×</button>
                   <button className="menu-btn" onClick={() => setMenuOpen(v => !v)}>⋮</button>
                   {menuOpen && (
                     <div className="dropdown-menu" ref={menuRef}>
-                      <button
-                        disabled={selectedTask.status === "הושלמה" || isGuestUser()}
-                        className={selectedTask.status === "הושלמה" || isGuestUser() ? "disabled-btn" : ""}
-                        onClick={() => { setMenuOpen(false); handleEditTask(selectedTask); }}
-                      >
-                        {t('ערוך')}
-                      </button>
-                      <button onClick={() => { setMenuOpen(false); openDeleteModal(selectedTask); }} disabled={isGuestUser()}>{t('מחק')}</button>
+                      {isRegistrationApprovalTaskByName(selectedTask.type_name) ? (
+                        <>
+                          {isUserAdmin() ? (
+                            <>
+                              <button
+                                disabled={selectedTask.status === "הושלמה"}
+                                className={selectedTask.status === "הושלמה" ? "disabled-btn" : ""}
+                                onClick={() => { setMenuOpen(false); openDeleteModal(selectedTask); }}
+                              >
+                                {t('מחק')}
+                              </button>
+                            </>
+                          ) : (
+                            <p style={{ color: '#999', padding: '10px', margin: 0 }}>
+                              {t('Only administrators can manage registration approvals')}
+                            </p>
+                          )}
+                        </>
+                      ) : (
+                        <>
+                          <button
+                            disabled={selectedTask.status === "הושלמה" || isGuestUser()}
+                            className={selectedTask.status === "הושלמה" || isGuestUser() ? "disabled-btn" : ""}
+                            onClick={() => { setMenuOpen(false); handleEditTask(selectedTask); }}
+                          >
+                            {t('ערוך')}
+                          </button>
+                          <button onClick={() => { setMenuOpen(false); openDeleteModal(selectedTask); }} disabled={isGuestUser()}>{t('מחק')}</button>
+                        </>
+                      )}
                     </div>
                   )}
                   <div className="task-details-content">
@@ -670,8 +846,8 @@ const Tasks = () => {
                     <p>עודכנה ב: {selectedTask.updated}</p>
                     <p>סוג משימה: {getTaskTypeName(selectedTask.type)}</p>
                     <p>לביצוע על ידי: {selectedTask.assignee}</p>
-                    {/* Show Child and Tutor only if NOT "ראיון מועמד לחונכות" */}
-                    {!isInterviewTask(selectedTask.type) && !isFamilyAdditionTask(selectedTask.type) && (
+                    {/* Show Child and Tutor only if NOT "ראיון מועמד לחונכות" and NOT "אישור הרשמה" */}
+                    {!isInterviewTask(selectedTask.type) && !isFamilyAdditionTask(selectedTask.type) && !isRegistrationApprovalTaskByName(selectedTask.type_name) && (
                       <>
                         <p>חניך: {getChildFullName(selectedTask.child, childrenOptions)}</p>
                         <p>חונך: {getTutorFullName(selectedTask.tutor, tutorsOptions)}</p>
@@ -694,6 +870,20 @@ const Tasks = () => {
                         <p>שמות: {selectedTask.names ? selectedTask.names : "---"}</p>
                         <p>טלפונים: {selectedTask.phones ? selectedTask.phones : "---"}</p>
                         <p>מידע נוסף: {selectedTask.other_information ? selectedTask.other_information : "---"}</p>
+                      </>
+                    )}
+                    {/* Show user info for "אישור הרשמה" registration approval tasks */}
+                    {isRegistrationApprovalTaskByName(selectedTask.type_name) && selectedTask.user_info && (
+                      <>
+                        <h3>{t("User Information")}</h3>
+                        {Object.entries(selectedTask.user_info).map(([key, value]) => {
+                          const { key: translatedKey, value: translatedValue } = translateUserInfoField(key, value);
+                          return (
+                            <p key={key}>
+                              <strong>{translatedKey}:</strong> {translatedValue}
+                            </p>
+                          );
+                        })}
                       </>
                     )}
                   </div>
@@ -939,6 +1129,92 @@ const Tasks = () => {
                 </button>
                 <button onClick={closeDeleteModal} className="no-button">
                   {t('No')}
+                </button>
+              </div>
+            </Modal>
+          )}
+          {isRejectRegistrationModalOpen && taskToDelete && (
+            <Modal
+              isOpen={isRejectRegistrationModalOpen}
+              onRequestClose={closeRejectRegistrationModal}
+              contentLabel="Reject Registration"
+              className="delete-modal"
+              overlayClassName="delete-modal-overlay"
+            >
+              <h2>{t('Reject Registration')}</h2>
+              <p style={{ color: 'red', fontWeight: 'bold', marginBottom: '20px' }}>
+                {t('Deleting this task will permanently remove the user from the system and delete all associated data.')}
+                <br /><br />
+                {t('This action cannot be undone')}
+              </p>
+
+              <h3 className='rejection-reason'>{t('Rejection Reason')}</h3>
+              <div style={{ marginBottom: '15px' }}>
+                <label className='rejection-reason'>
+                  <input
+                    type="radio"
+                    name="rejection_reason"
+                    value="regret"
+                    checked={rejectionReasonOption === 'regret'}
+                    onChange={(e) => setRejectionReasonOption(e.target.value)}
+                  />
+                  {t('Registered user regrets')}
+                  <br />
+                </label>
+                <label className='rejection-reason'>
+                  <input
+                    type="radio"
+                    name="rejection_reason"
+                    value="breach"
+                    checked={rejectionReasonOption === 'breach'}
+                    onChange={(e) => setRejectionReasonOption(e.target.value)}
+                  />
+                  {t('Unfamiliar activity possible breach/spam/bot attack')}
+                  <br />
+                </label>
+                <label className='rejection-reason'>
+                  <input
+                    type="radio"
+                    name="rejection_reason"
+                    value="other"
+                    checked={rejectionReasonOption === 'other'}
+                    onChange={(e) => setRejectionReasonOption(e.target.value)}
+                  />
+                  {t('Other')}
+                  <br />
+                </label>
+              </div>
+
+              {rejectionReasonOption === 'other' && (
+                <div style={{ marginBottom: '15px' }}>
+                  <textarea
+                    value={rejectionReasonText}
+                    onChange={(e) => setRejectionReasonText(e.target.value)}
+                    placeholder={t('Please provide a reason (max 200 characters)')}
+                    maxLength={200}
+                    style={{
+                      width: '100%',
+                      minHeight: '80px',
+                      padding: '8px',
+                      borderRadius: '4px',
+                      border: '1px solid #ccc',
+                      fontFamily: 'Arial, sans-serif',
+                      resize: 'vertical',
+                      fontSize: '24px',
+                    }}
+                  />
+                  <p style={{ fontSize: '24px', color: '#666', marginTop: '5px' }}>
+                    {rejectionReasonText.length}/200
+                  </p>
+                </div>
+              )}
+
+              <div className="modal-actions">
+                <button onClick={confirmRejectRegistration} className="yes-button">
+                  {t('Yes, Reject')}
+                </button>
+                <button onClick={closeRejectRegistrationModal} className="no-button">
+                  {t('Cancel')}
                 </button>
               </div>
             </Modal>

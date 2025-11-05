@@ -148,7 +148,7 @@ class APILogger:
 
 # Global logger instance for API calls
 try:
-    api_logger = APILogger(log_level=logging.INFO, log_name="API")
+    api_logger = APILogger(log_level=logging.ERROR, log_name="API")
 except Exception as e:
     print(f"ERROR: Failed to initialize APILogger: {e}")
     print(f"Traceback: {traceback.format_exc()}")

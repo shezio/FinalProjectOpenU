@@ -463,7 +463,7 @@ def create_task_internal(task_data):
             )
 
         task = Tasks.objects.create(
-            description=task_type.task_type,  # Use the task type name as the description
+            description=task_data.get("description", task_type.task_type),  # Use provided description or task type name as fallback
             due_date=task_data["due_date"],
             status="לא הושלמה",  # Default status
             created_at=datetime.datetime.now(),
@@ -477,6 +477,7 @@ def create_task_internal(task_data):
             phones=task_data.get("phones"),
             other_information=task_data.get("other_information"),
             initial_family_data_id_fk=initial_family_data,
+            user_info=task_data.get("user_info"),  # Store user information if provided
         )
         api_logger.debug(f"Task created successfully: {task}")
         return task
@@ -812,4 +813,175 @@ def is_valid_date(date_of_birth):
         return 0 <= age <= 100 and birth_date < datetime.datetime.now() and birth_date.year >= 1000
     except (ValueError, TypeError):
         return False
+
+
+def is_user_approved(staff_user):
+    """
+    Check if a staff user has registration_approved = True
+    """
+    return staff_user.registration_approved
+
+
+def create_tasks_for_admins_async(staff_user_id, user_name, user_email):
+    """
+    Async wrapper to create registration approval tasks for all admins
+    """
+    from threading import Thread
+    thread = Thread(
+        target=create_tasks_for_admins,
+        args=(staff_user_id, user_name, user_email),
+        daemon=True
+    )
+    thread.start()
+
+
+def create_tasks_for_admins(staff_user_id, user_name, user_email):
+    """
+    Create registration approval tasks for all admin users.
+    When an admin moves to "in progress", tasks are deleted from other admins.
+    """
+    try:
+        # Fetch the System Manager role (admins)
+        admin_role = Role.objects.filter(role_name="System Administrator").first()
+        if not admin_role:
+            api_logger.debug("Role 'System Administrator' not found in the database.")
+            return
+
+        # Fetch all admins (System Administrators)
+        admins = Staff.objects.filter(roles=admin_role)
+        if not admins.exists():
+            api_logger.warning("No System Administrators found in the database.")
+            return
+
+        api_logger.debug(f"Found {admins.count()} System Administrators for registration approval task.")
+
+        # Get the task type for registration approval
+        task_type = Task_Types.objects.filter(task_type="אישור הרשמה").first()
+        if not task_type:
+            api_logger.error("Task type 'אישור הרשמה' not found in the database.")
+            return
+
+        # Get the staff user and SignedUp record to extract their data
+        user_info = {}
+        try:
+            staff_user = Staff.objects.get(staff_id=staff_user_id)
+            user_info = {
+                "full_name": staff_user.first_name + " " + staff_user.last_name,
+                "email": staff_user.email,
+                "created_at": staff_user.created_at.isoformat() if staff_user.created_at else None,  # Convert to ISO string
+            }
+        except Staff.DoesNotExist:
+            api_logger.error(f"Staff user with ID {staff_user_id} not found")
+        
+        # Also get SignedUp data if available
+        try:
+            signed_up = SignedUp.objects.get(email=user_email)
+            # add more key values to user_info dict
+            # the signed up id, age, gender, phone, city ,want_tutor to user_info dict
+            user_info.update({
+                "ID": signed_up.id,
+                "age": signed_up.age,
+                "gender": signed_up.gender,
+                "phone": signed_up.phone,
+                "city": signed_up.city,
+                "want_tutor": signed_up.want_tutor
+            })
+        except SignedUp.DoesNotExist:
+            api_logger.debug(f"SignedUp record not found for email {user_email}")
+
+        # Create tasks for each admin    
+        for admin in admins:
+            task_data = {
+                "description": f"אישור הרשמה",
+                "due_date": (now().date() + datetime.timedelta(days=3)).strftime("%Y-%m-%d"),
+                "status": "לא הושלמה",
+                "assigned_to": admin.staff_id,
+                "type": task_type.id,
+                "user_info": user_info,  # Include user_info
+            }
+            api_logger.debug(f"DEBUG: Creating registration approval task for admin {admin.staff_id}: {task_data}")
+            try:
+                task = create_task_internal(task_data)
+                api_logger.info(f"Registration approval task created for admin {admin.staff_id}, task ID: {task.task_id}")
+            except Exception as e:
+                api_logger.error(f"ERROR: Error creating registration approval task: {str(e)}")
+    except Exception as e:
+        api_logger.error(f"ERROR: An error occurred while creating registration approval tasks: {str(e)}")
+
+
+def delete_other_registration_approval_tasks_async(task):
+    """
+    Async wrapper to delete other registration approval tasks
+    """
+    from threading import Thread
+    thread = Thread(
+        target=delete_other_registration_approval_tasks,
+        args=(task,),
+        daemon=True
+    )
+    thread.start()
+
+
+def delete_other_registration_approval_tasks(task):
+    """
+    Delete all other registration approval tasks for the same user when one admin moves to "in progress"
+    """
+    try:
+        api_logger.info(f"delete_other_registration_approval_tasks called for task {task.task_id}")
+        
+        # Extract email from user_info if available
+        user_email = None
+        if task.user_info and isinstance(task.user_info, dict):
+            user_email = task.user_info.get("email")
+        
+        # Fallback: try to extract from description
+        if not user_email:
+            description = task.description
+            import re
+            email_match = re.search(r'\(([^)]+)\)', description)
+            if email_match:
+                user_email = email_match.group(1)
+        
+        if not user_email:
+            api_logger.warning(f"Could not extract email from task {task.task_id} - user_info: {task.user_info}, description: {task.description}")
+            return
+        
+        api_logger.debug(f"Looking for other registration approval tasks for email {user_email}")
+        
+        # Find all other registration approval tasks
+        all_reg_tasks = Tasks.objects.filter(
+            task_type__task_type="אישור הרשמה"
+        ).exclude(task_id=task.task_id)
+        
+        # Filter by matching email in user_info
+        other_tasks = []
+        for t in all_reg_tasks:
+            task_email = None
+            if t.user_info and isinstance(t.user_info, dict):
+                task_email = t.user_info.get("email")
+            
+            # Fallback for old tasks
+            if not task_email and t.description:
+                import re
+                email_match = re.search(r'\(([^)]+)\)', t.description)
+                if email_match:
+                    task_email = email_match.group(1)
+            
+            if task_email and task_email == user_email:
+                other_tasks.append(t)
+        
+        api_logger.info(f"Found {len(other_tasks)} other registration approval tasks for {user_email}")
+        
+        deleted_count = 0
+        for other_task in other_tasks:
+            try:
+                other_task.delete()
+                deleted_count += 1
+                api_logger.info(f"Deleted registration approval task {other_task.task_id} after admin {task.assigned_to_id} moved to בביצוע")
+            except Exception as e:
+                api_logger.error(f"Error deleting task {other_task.task_id}: {str(e)}")
+        
+        api_logger.info(f"Successfully deleted {deleted_count} other registration approval tasks for {user_email}")
+    except Exception as e:
+        api_logger.error(f"ERROR: An error occurred while deleting other registration approval tasks: {str(e)}")
 

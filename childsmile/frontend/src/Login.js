@@ -52,7 +52,13 @@ const Login = () => {
       
     } catch (err) {
       console.error('Email login error:', err);
-      setError(t(err.response?.data?.error || 'Failed to send login code'));
+      
+      // Check if it's a pending approval error
+      if (err.response?.status === 403 && err.response?.data?.pending_approval) {
+        setError(t('הרשמתך בהמתנה לאישור מנהל המערכת. אנא המתן לאישור.'));
+      } else {
+        setError(t(err.response?.data?.error || 'Failed to send login code'));
+      }
     } finally {
       setLoading(false);
     }
@@ -102,7 +108,13 @@ const Login = () => {
       
     } catch (err) {
       console.error('TOTP verification error:', err);
-      setError(t(err.response?.data?.error || 'Invalid verification code'));
+      
+      // Check if it's a pending approval error
+      if (err.response?.status === 403 && err.response?.data?.pending_approval) {
+        setError(t('הרשמתך בהמתנה לאישור מנהל המערכת. אנא המתן לאישור.'));
+      } else {
+        setError(t(err.response?.data?.error || 'Invalid verification code'));
+      }
     } finally {
       setLoading(false);
     }

@@ -161,8 +161,7 @@ const Registration = () => {
         setRegistrationButtonDisabled(true);
         setLoading(false);
         toast.success(
-          t("Welcome to Child Smile! You can now log in using email authentication or via your google account."),
-          { autoClose: 5000 }
+          t("Welcome to Child Smile! You will be able to login once your registration is approved by an admin. Check your email for approval and login details.")
         );
 
         setTimeout(() => {
