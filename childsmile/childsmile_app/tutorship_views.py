@@ -78,39 +78,39 @@ def calculate_possible_matches(request):
     try:
         # Step 1: Check user permissions
         check_matches_permissions(request, ["CREATE", "UPDATE", "DELETE", "VIEW"])
-        # print("DEBUG: User has all required permissions.")
+        api_logger.debug("DEBUG: User has all required permissions.")
 
         # Step 2: Fetch possible matches
         possible_matches = fetch_possible_matches()
-        #print(f"DEBUG: Fetched {len(possible_matches)} possible matches.")
+        api_logger.debug(f"DEBUG: Fetched {len(possible_matches)} possible matches.")
 
         # Step 3: Calculate distances and coordinates
         possible_matches = calculate_distances(possible_matches)
-        # print("DEBUG: Calculated distances and coordinates for possible matches.")
+        api_logger.debug(f"DEBUG: Calculated distances and coordinates for possible matches.")
 
         # Step 4: Calculate grades
         graded_matches = calculate_grades(possible_matches)
-        #print(f"DEBUG: Calculated grades for matches.")
+        api_logger.debug(f"DEBUG: Calculated grades for matches.")
 
-        # # --- PRINT ALL TUTORS INCLUDED IN MATCHES ---
-        # tutor_ids = set(match["tutor_id"] for match in graded_matches)
-        # tutors = Tutors.objects.filter(id_id__in=tutor_ids).select_related("staff")
-        # print("DEBUG: Tutors included in matches:")
-        # for t in tutors:
-        #     print(
-        #         f"staff={t.staff.first_name} {t.staff.last_name}, id={t.id_id}"
-        #     )
+        # --- PRINT ALL TUTORS INCLUDED IN MATCHES ---
+        tutor_ids = set(match["tutor_id"] for match in graded_matches)
+        tutors = Tutors.objects.filter(id_id__in=tutor_ids).select_related("staff")
+        api_logger.verbose("VERBOSE: Tutors included in matches:")
+        for t in tutors:
+            api_logger.verbose(
+                f"VERBOSE: staff={t.staff.first_name} {t.staff.last_name}, id={t.id_id}"
+            )
 
-        # Step 5: Clear the possiblematches table
-        # print("DEBUG: Clearing possible matches table.")
+        #Step 5: Clear the possiblematches table
+        api_logger.debug("DEBUG: Clearing possible matches table.")
         clear_possible_matches()
 
         # Step 6: Insert new matches
-        #print(f"DEBUG: Inserting {len(graded_matches)} new matches into the database.")
+        api_logger.debug(f"DEBUG: Inserting {len(graded_matches)} new matches into the database.")
         insert_new_matches(graded_matches)
 
-        # print("DEBUG: New matches inserted successfully.")
-        # print("DEBUG: Possible matches calculation completed.")
+        api_logger.debug("DEBUG: New matches inserted successfully.")
+        api_logger.debug("DEBUG: Possible matches calculation completed.")
 
         return JsonResponse(
             {

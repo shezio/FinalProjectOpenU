@@ -13,6 +13,10 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 from pathlib import Path
 import os
 from dotenv import load_dotenv  # Add this import
+import os
+import json
+import boto3
+from django.core.exceptions import ImproperlyConfigured
 
 # Load environment variables from .env file
 load_dotenv()  # Add this line
@@ -109,23 +113,16 @@ WSGI_APPLICATION = "childsmile.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
-# DATABASES = {
-#     "default": {
-#         "ENGINE": "django.db.backends.postgresql",
-#         "NAME": "child_smile_db",
-#         "USER": "child_smile_user",
-#         "PASSWORD": os.getenv('DB_PASSWORD'),
-#         "HOST": "localhost",
-#         "PORT": "5432",
-#     }
-# }
+# Auto-detect environment
+# If DB_SECRET_ARN is set, we're in production. Otherwise, we're local.
+IS_PRODUCTION = bool(os.getenv('DB_SECRET_ARN'))
+ENVIRONMENT = 'production' if IS_PRODUCTION else 'local'
 
-import os
-import json
-import boto3
-from django.core.exceptions import ImproperlyConfigured
+print(f"🔧 Running in {ENVIRONMENT.upper()} mode")
 
-def get_secret():
+# Database Configuration - Automatically detects local vs production
+def get_aws_secret():
+    """Fetch database password from AWS Secrets Manager"""
     secret_arn = os.environ.get('DB_SECRET_ARN')
     if not secret_arn:
         raise ImproperlyConfigured('DB_SECRET_ARN env var missing')
@@ -134,16 +131,33 @@ def get_secret():
     secret = json.loads(response['SecretString'])
     return secret['password']
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'child_smile_db',
-        'USER': 'child_smile_user',
-        'PASSWORD': get_secret(),
-        'HOST': os.environ.get('DB_HOST'),
-        'PORT': '5432',
+if IS_PRODUCTION:
+    # Production: Use AWS Secrets Manager
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': 'child_smile_db',
+            'USER': 'child_smile_user',
+            'PASSWORD': get_aws_secret(),
+            'HOST': os.environ.get('DB_HOST'),
+            'PORT': '5432',
+        }
     }
-}
+    print("✅ Database: AWS RDS with Secrets Manager")
+else:
+    # Local Development: Use .env file
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': 'child_smile_db',
+            'USER': 'child_smile_user',
+            'PASSWORD': os.getenv('DB_PASSWORD'),
+            'HOST': 'localhost',
+            'PORT': '5432',
+        }
+    }
+    print("✅ Database: Local PostgreSQL")
+
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators

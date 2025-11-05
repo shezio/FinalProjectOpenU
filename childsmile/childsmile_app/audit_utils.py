@@ -4,6 +4,7 @@ from django.utils import timezone
 from django.db import transaction
 from .models import AuditLog, Staff
 from django.http import JsonResponse
+from .logger import api_logger
 
 def get_client_ip(request):
     """Get client IP address from request"""
@@ -763,8 +764,7 @@ def generate_audit_description(user_email, username, action, timestamp, user_rol
             description += f"\nRecord ID: {', '.join(map(str, entity_ids))}"
 
     elif action == 'DELETE_TUTORSHIP_FAILED' and additional_data:
-        # DEBUG print additional_data
-        print(f"DEBUG additional_data: {additional_data}")
+        api_logger.debug(f"DEBUG additional_data: {additional_data}")
         description = f"Timestamp: {timestamp_formatted}\n"
         description += f"User: {username}\n"
         description += f"Email: {user_email}\n"

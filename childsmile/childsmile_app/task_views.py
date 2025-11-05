@@ -384,7 +384,6 @@ def delete_task(request, task_id):
 
         # If task type is "ראיון מועמד לחונכות", delete the associated Pending_Tutor
         if task_type and getattr(task_type, "task_type", None) == "ראיון מועמד לחונכות":
-            # print all task details for debug
             api_logger.debug(f"Deleting task {task_id} of type {task_type}")
             api_logger.debug(f"Assigned to ID {assigned_to_id}")
             api_logger.debug(f"Pending tutor ID {pending_tutor_id}")
