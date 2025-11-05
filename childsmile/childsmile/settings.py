@@ -115,37 +115,35 @@ WSGI_APPLICATION = "childsmile.wsgi.application"
 
 # Auto-detect environment
 # If DB_SECRET_ARN is set, we're in production. Otherwise, we're local.
+import os
+import json
+import boto3
+
 IS_PRODUCTION = bool(os.getenv('DB_SECRET_ARN'))
 ENVIRONMENT = 'production' if IS_PRODUCTION else 'local'
-
 print(f"🔧 Running in {ENVIRONMENT.upper()} mode")
 
-# Database Configuration - Automatically detects local vs production
-def get_aws_secret():
-    """Fetch database password from AWS Secrets Manager"""
+def get_db_password():
+    """Return DB password only if DB_SECRET_ARN exists."""
     secret_arn = os.environ.get('DB_SECRET_ARN')
     if not secret_arn:
-        raise ImproperlyConfigured('DB_SECRET_ARN env var missing')
+        return None  # <-- do NOT raise, Amplify build will continue
     client = boto3.client('secretsmanager', region_name='il-central-1')
-    response = client.get_secret_value(SecretId=secret_arn)
-    secret = json.loads(response['SecretString'])
+    secret = json.loads(client.get_secret_value(SecretId=secret_arn)['SecretString'])
     return secret['password']
 
 if IS_PRODUCTION:
-    # Production: Use AWS Secrets Manager
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',
-            'NAME': 'child_smile_db',
+            'NAME': 'child-smile-db',
             'USER': 'child_smile_user',
-            'PASSWORD': get_aws_secret(),
-            'HOST': os.environ.get('DB_HOST'),
+            'PASSWORD': get_db_password(),
+            'HOST': os.environ.get('DB_HOST', ''),  # only set in IL Lambda
             'PORT': '5432',
         }
     }
-    print("✅ Database: AWS RDS with Secrets Manager")
 else:
-    # Local Development: Use .env file
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',
@@ -156,7 +154,7 @@ else:
             'PORT': '5432',
         }
     }
-    print("✅ Database: Local PostgreSQL")
+
 
 
 # Password validation
