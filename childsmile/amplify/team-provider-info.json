@@ -1,0 +1,15 @@
+{
+  "dev": {
+    "awscloudformation": {
+      "AuthRoleName": "amplify-achildsmile-dev-a2ca9-authRole",
+      "UnauthRoleArn": "arn:aws:iam::618715278719:role/amplify-achildsmile-dev-a2ca9-unauthRole",
+      "AuthRoleArn": "arn:aws:iam::618715278719:role/amplify-achildsmile-dev-a2ca9-authRole",
+      "Region": "us-east-1",
+      "DeploymentBucketName": "amplify-achildsmile-dev-a2ca9-deployment",
+      "UnauthRoleName": "amplify-achildsmile-dev-a2ca9-unauthRole",
+      "StackName": "amplify-achildsmile-dev-a2ca9",
+      "StackId": "arn:aws:cloudformation:us-east-1:618715278719:stack/amplify-achildsmile-dev-a2ca9/4147be40-b96d-11f0-ac8e-12addbd091bf",
+      "AmplifyAppId": "d2fgjtfhcy8tnw"
+    }
+  }
+}
