@@ -142,6 +142,9 @@ class APILogger:
         """Log exception message"""
         self.logger.exception(self._format_message("EXCEPTION", message))
 
+    def verbose(self, message):
+        """Log verbose/debug message"""
+        self.logger.debug(self._format_message("VERBOSE", message))
 
 # Global logger instance for API calls
 try:

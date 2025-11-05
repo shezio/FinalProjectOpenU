@@ -107,7 +107,7 @@ def get_or_update_city_location(city, retries=3, delay=2):
                 )
                 return {"latitude": location.latitude, "longitude": location.longitude}
         except Exception as e:
-            print(f"Geocoding failed for city '{city}': {e} (attempt {attempt+1})")
+            api_logger.exception(f"Error: Geocoding failed for city '{city}': {e} (attempt {attempt+1})")
         time.sleep(delay)
     return None
 
@@ -232,7 +232,7 @@ def clear_possible_matches():
     This function deletes all records from the PossibleMatches table.
     """
     PossibleMatches.objects.all().delete()
-    # print("DEBUG: Emptied the possiblematches table.")
+    api_logger.debug("DEBUG: Emptied the possiblematches table.")
 
 
 def insert_new_matches(matches):
@@ -259,7 +259,7 @@ def insert_new_matches(matches):
         for match in matches
     ]
     PossibleMatches.objects.bulk_create(new_matches)
-    print(f"DEBUG: Inserted {len(new_matches)} new records into possiblematches.")
+    api_logger.debug(f"DEBUG: Inserted {len(new_matches)} new records into possiblematches.")
 
 
 def calculate_distances(matches):
@@ -269,13 +269,13 @@ def calculate_distances(matches):
     :return: List of matches with calculated distances and coordinates.
     """
     for match in matches:
-        # print(f"DEBUG: Processing match: {match}")  # Log the match being processed
+        api_logger.debug(f"DEBUG: Processing match: {match}") 
         result = calculate_distance_between_cities(
             match["child_city"], match["tutor_city"]
         )
-        # print(
-        #     f"DEBUG: Result from calculate_distance_between_cities: {result}"
-        # )  # Log the result
+        api_logger.debug(
+            f"DEBUG: Result from calculate_distance_between_cities: {result}"
+        )
 
         if result:
             try:
@@ -286,7 +286,7 @@ def calculate_distances(matches):
                 match["tutor_longitude"] = result["city2_longitude"]
                 match["distance_pending"] = result.get("distance_pending", False)
             except KeyError as e:
-                print(f"DEBUG: KeyError while accessing result: {e}")
+                api_logger.error(f"DEBUG: KeyError while accessing result: {e}")
                 raise
         else:
             match["distance_between_cities"] = 0
@@ -306,7 +306,7 @@ def calculate_distance_between_cities(city1, city2):
     First, check the CityGeoDistance table for the distance and coordinates.
     If not found or incomplete, trigger async calculation and return pending.
     """
-    print(f"DEBUG: Calculating distance between {city1} and {city2}")
+    api_logger.debug(f"DEBUG: Calculating distance between {city1} and {city2}")
 
     geo = CityGeoDistance.objects.filter(city1=city1, city2=city2).first() or \
           CityGeoDistance.objects.filter(city1=city2, city2=city1).first()
@@ -387,61 +387,32 @@ def calculate_grades(possible_matches):
             else max_grade
         )
 
-        # if tutor_id == 845121544:
-        #     print(f"\nDEBUG: Calculating grade for tutor_id={tutor_id}")
-        #     print(f"  Initial base_grade: {base_grade}")
-
         # Adjust grade based on age difference
         child_age = match.get("child_age")
         tutor_age = match.get("tutor_age")
         age_difference = abs(child_age - tutor_age)
-        # if tutor_id == 845121544:
-        #     print(f"  child_age: {child_age}, tutor_age: {tutor_age}, age_difference: {age_difference}")
 
         if age_difference < low_age_difference:
             base_grade += max_age_bonus
-            # if tutor_id == 845121544:
-            #     print(f"  +{max_age_bonus} (age diff < {low_age_difference}) => {base_grade}")
         elif age_difference < mid_age_difference:
             base_grade += mid_age_bonus
-            # if tutor_id == 845121544:
-            #     print(f"  +{mid_age_bonus} (age diff < {mid_age_difference}) => {base_grade}")
         elif age_difference < high_age_difference:
             base_grade += low_age_bonus
-            # if tutor_id == 845121544:
-            #     print(f"  +{low_age_bonus} (age diff < {high_age_difference}) => {base_grade}")
 
         # Adjust grade based on distance
         distance = match.get("distance_between_cities")
-        # if tutor_id == 845121544:
-        #     print(f"  distance: {distance}")
         if distance < low_distance_diff:
             base_grade += max_distance_bonus
-            # if tutor_id == 845121544:
-            #     print(f"  +{max_distance_bonus} (distance < {low_distance_diff}) => {base_grade}")
         elif distance < mid_distance_diff:
             base_grade += mid_distance_bonus
-            # if tutor_id == 845121544:
-            #     print(f"  +{mid_distance_bonus} (distance < {mid_distance_diff}) => {base_grade}")
         elif distance < high_distance_diff:
             base_grade += low_distance_bonus
-            # if tutor_id == 845121544:
-            #     print(f"  +{low_distance_bonus} (distance < {high_distance_diff}) => {base_grade}")
         elif distance > penalty_distance_diff:
             base_grade = high_distance_penalty
-            # if tutor_id == 845121544:
-            #     print(
-            #         f"  Setting grade to {high_distance_penalty} (distance > {penalty_distance_diff})"
-            #     )
 
         # Ensure the grade is within the allowed range and if its not fix it
         # if its less than -5 we will set it to -5, if its more than 100 we will set it to 100
         base_grade = max(high_distance_penalty, min(base_grade, max_grade))
-
-        # if tutor_id == 845121544:
-        #     print(f"  Final base_grade: {ceil(base_grade)}")
-
-        # Add the calculated grade to the match object - rounded up to the nearest whole number
         match["grade"] = ceil(base_grade)
 
     return possible_matches
@@ -452,14 +423,14 @@ def parse_date_field(date_value, field_name):
     Parse a date field and return a valid date or None if the value is empty or invalid.
     """
     if date_value in [None, "", "null"]:
-        print(f"DEBUG: {field_name} is empty or null.")
+        api_logger.debug(f"DEBUG: {field_name} is empty or null.")
         return None
     try:
         parsed_date = datetime.datetime.strptime(date_value, "%Y-%m-%d").date()
-        print(f"DEBUG: {field_name} parsed successfully: {parsed_date}")
+        api_logger.debug(f"DEBUG: {field_name} parsed successfully: {parsed_date}")
         return parsed_date
     except ValueError:
-        print(f"DEBUG: {field_name} has an invalid date format: {date_value}")
+        api_logger.error(f"DEBUG: {field_name} has an invalid date format: {date_value}")
         return None  # Return None instead of raising an exception
 
 
@@ -468,7 +439,7 @@ def create_task_internal(task_data):
     Internal function to create a task.
     """
     try:
-        print(f"DEBUG: Received task_data: {task_data}")  # Log the incoming data
+        api_logger.debug(f"DEBUG: Received task_data: {task_data}")  # Log the incoming data
 
         # Validate the pending_tutor ID
         pending_tutor_id = task_data.get("pending_tutor")
@@ -482,7 +453,7 @@ def create_task_internal(task_data):
 
         # Fetch the task type to get its name
         task_type = Task_Types.objects.get(id=task_data["type"])
-        print(f"DEBUG: Task type fetched: {task_type.task_type}")
+        api_logger.debug(f"DEBUG: Task type fetched: {task_type.task_type}")
 
         initial_family_data_id = task_data.get("initial_family_data_id_fk")
         initial_family_data = None
@@ -540,18 +511,18 @@ def create_tasks_for_tutor_coordinators_async(pending_tutor_id, task_type_id):
 
         while elapsed_time < max_wait_time:
             if Pending_Tutor.objects.filter(pending_tutor_id=pending_tutor_id).exists():
-                print(
+                api_logger.debug(
                     f"DEBUG: Pending_Tutor with ID {pending_tutor_id} found in the database."
                 )
                 create_tasks_for_tutor_coordinators(pending_tutor_id, task_type_id)
                 return
-            print(
+            api_logger.debug(
                 f"DEBUG: Pending_Tutor with ID {pending_tutor_id} not found. Retrying in {retry_interval} seconds..."
             )
             time.sleep(retry_interval)
             elapsed_time += retry_interval
 
-        print(
+        api_logger.debug(
             f"DEBUG: Pending_Tutor with ID {pending_tutor_id} not found after {max_wait_time} seconds. Aborting task creation."
         )
 
@@ -593,15 +564,15 @@ def create_tasks_for_tutor_coordinators(pending_tutor_id, task_type_id):
                 "type": task_type_id,
             }
 
-            print(f"DEBUG: Task data being sent to create_task_internal: {task_data}")
+            api_logger.debug(f"DEBUG: Task data being sent to create_task_internal: {task_data}")
 
             try:
                 task = create_task_internal(task_data)
-                print(f"DEBUG: Task created successfully with ID {task.task_id}")
+                api_logger.debug(f"DEBUG: Task created successfully with ID {task.task_id}")
             except Exception as e:
-                print(f"DEBUG: Error creating task: {str(e)}")
+                api_logger.error(f"ERROR: Error creating task: {str(e)}")
     except Exception as e:
-        print(f"DEBUG: An error occurred while creating tasks: {str(e)}")
+        api_logger.error(f"ERROR: An error occurred while creating tasks: {str(e)}")
 
 
 def create_tasks_for_technical_coordinators(initial_family_data, task_type_id):
@@ -643,14 +614,14 @@ def create_tasks_for_technical_coordinators(initial_family_data, task_type_id):
                 "other_information": initial_family_data.other_information,
                 "initial_family_data_id_fk": initial_family_data.initial_family_data_id,
             }
-            print(f"DEBUG: Task data being sent to create_task_internal: {task_data}")
+            api_logger.debug(f"DEBUG: Task data being sent to create_task_internal: {task_data}")
             try:
                 task = create_task_internal(task_data)
-                print(f"DEBUG: Task created successfully with ID {task.task_id}")
+                api_logger.debug(f"DEBUG: Task created successfully with ID {task.task_id}")
             except Exception as e:
-                print(f"DEBUG: Error creating task: {str(e)}")
+                api_logger.error(f"ERROR: Error creating task: {str(e)}")
     except Exception as e:
-        print(f"DEBUG: An error occurred while creating tasks: {str(e)}")
+        api_logger.error(f"ERROR: An error occurred while creating tasks: {str(e)}")
 
 
 def is_admin(user):
@@ -659,7 +630,7 @@ def is_admin(user):
     """
     with connection.cursor() as cursor:
         role_ids = list(user.roles.values_list("id", flat=True))  # Convert to a list
-        print(f"DEBUG: Role IDs for user '{user.username}': {role_ids}")  # Debug log
+        api_logger.debug(f"DEBUG: Role IDs for user '{user.username}': {role_ids}")  # Debug log
         if not role_ids:
             role_ids = [
                 -1
@@ -673,7 +644,7 @@ def is_admin(user):
             [role_ids],  # Pass the list directly
         )
         is_admin_result = cursor.fetchone() is not None
-        print(
+        api_logger.debug(
             f"DEBUG: Is user '{user.username}' an admin? {is_admin_result}"
         )  # Debug log
         return is_admin_result
@@ -684,8 +655,7 @@ def has_permission(request, resource, action):
     Check if the user has the required permission for a specific resource and action.
     """
     permissions = request.session.get("permissions", [])
-    # print the permissions for debugging
-    # print(f"DEBUG: Permissions: {permissions}")  # Debug log
+    api_logger.verbose(f"VERBOSE: Permissions: {permissions}")  # Debug log
     prefixed_resource = (
         f"childsmile_app_{resource}"  # Add the prefix to the resource name
     )
@@ -701,8 +671,7 @@ def has_initial_family_data_permission(request, action):
     Check if the user has the required permission for the InitialFamilyData resource and action.
     """
     permissions = request.session.get("permissions", [])
-    # print the permissions for debugging
-    # print(f"DEBUG: Permissions: {permissions}")  # Debug log
+    api_logger.debug(f"DEBUG: Permissions: {permissions}")  # Debug log
     return any(
         permission["resource"] == "initial_family_data"
         and permission["action"] == action
@@ -750,7 +719,7 @@ def calculate_and_store_distance_force(city1, city2):
     Always calculate and store the distance between city1 and city2 if not present.
     This function does NOT call async_calculate_and_store_distance.
     """
-    print(
+    api_logger.debug(
         f"DEBUG: [FORCE] Calculating and storing distance between {city1} and {city2}"
     )
 
@@ -758,7 +727,7 @@ def calculate_and_store_distance_force(city1, city2):
     loc1 = get_or_update_city_location(city1)
     loc2 = get_or_update_city_location(city2)
     if not loc1 or not loc1.get("latitude") or not loc2 or not loc2.get("latitude"):
-        print(f"DEBUG: [FORCE] Could not geocode one or both cities: {city1}, {city2}")
+        api_logger.debug(f"DEBUG: [FORCE] Could not geocode one or both cities: {city1}, {city2}")
         return
 
     lat1, lon1 = loc1["latitude"], loc1["longitude"]
@@ -777,7 +746,7 @@ def calculate_and_store_distance_force(city1, city2):
     # Save city2 data under city1 using the safe updater
     add_city_distance(city1, city2, distance, lat2, lon2)
 
-    print(
+    api_logger.debug(
         f"DEBUG: [FORCE] Calculated and saved distance for {city1} and {city2}: {distance} km"
     )
 
