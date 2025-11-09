@@ -142,8 +142,7 @@ def get_secret_from_aws_or_env():
         import boto3
         session = boto3.session.Session()
         client = session.client(service_name='secretsmanager', region_name='il-central-1')
-
-        secret_name = os.getenv('AWS_SECRET_NAME', 'rds!db-80352b08-ce9e-4274-9c8e-c1f5d9a01192')
+        secret_name = os.getenv('AWS_SECRET_NAME', 'default-placeholder')
         secret_value = client.get_secret_value(SecretId=secret_name)
         secret = json.loads(secret_value['SecretString'])
         return secret
