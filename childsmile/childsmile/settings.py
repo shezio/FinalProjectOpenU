@@ -113,49 +113,74 @@ WSGI_APPLICATION = "childsmile.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
-# Auto-detect environment
-# If DB_SECRET_ARN is set, we're in production. Otherwise, we're local.
+
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql',
+#         'NAME': 'child_smile_db',
+#         'USER': 'child_smile_user',
+#         'PASSWORD': os.getenv('DB_PASSWORD'),
+#         'HOST': 'localhost',
+#         'PORT': '5432',
+#     }
+# }
+
 import os
 import json
-import boto3
+import socket
+from pathlib import Path
 
-IS_PRODUCTION = bool(os.getenv('DB_SECRET_ARN'))
-ENVIRONMENT = 'production' if IS_PRODUCTION else 'local'
-print(f"🔧 Running in {ENVIRONMENT.upper()} mode")
+BASE_DIR = Path(__file__).resolve().parent.parent
 
-def get_db_password():
-    """Return DB password only if DB_SECRET_ARN exists."""
-    secret_arn = os.environ.get('DB_SECRET_ARN')
-    if not secret_arn:
-        return None  # <-- do NOT raise, Amplify build will continue
-    client = boto3.client('secretsmanager', region_name='il-central-1')
-    secret = json.loads(client.get_secret_value(SecretId=secret_arn)['SecretString'])
-    return secret['password']
 
-if IS_PRODUCTION:
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': 'child-smile-db',
-            'USER': 'child_smile_user',
-            'PASSWORD': get_db_password(),
-            'HOST': os.environ.get('DB_HOST', ''),  # only set in IL Lambda
-            'PORT': '5432',
+def get_secret_from_aws_or_env():
+    """
+    Try to get DB credentials from AWS Secrets Manager if running on EC2.
+    Fallback to .env for local development.
+    """
+    try:
+        import boto3
+        session = boto3.session.Session()
+        client = session.client(service_name='secretsmanager', region_name='il-central-1')
+
+        secret_name = os.getenv('AWS_SECRET_NAME', 'rds!db-80352b08-ce9e-4274-9c8e-c1f5d9a01192')
+        secret_value = client.get_secret_value(SecretId=secret_name)
+        secret = json.loads(secret_value['SecretString'])
+        return secret
+    except Exception:
+        # fallback to .env variables
+        return {
+            'username': os.getenv('DB_USER', 'child_smile_user'),
+            'password': os.getenv('DB_PASSWORD'),
         }
-    }
-else:
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': 'child_smile_db',
-            'USER': 'child_smile_user',
-            'PASSWORD': os.getenv('DB_PASSWORD'),
-            'HOST': 'localhost',
-            'PORT': '5432',
-        }
-    }
 
 
+secret = get_secret_from_aws_or_env()
+
+# Detect whether running on EC2 or local
+def is_ec2():
+    """Detect EC2 by looking for the EC2 metadata service."""
+    try:
+        socket.gethostbyname("ec2.internal")
+        return True
+    except Exception:
+        return False
+
+
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'child_smile_db',
+        'USER': 'child_smile_user',
+        'PASSWORD': secret.get('password'),
+        'HOST': (
+            'child-smile-db.cpooguksy04d.il-central-1.rds.amazonaws.com'
+            if is_ec2()
+            else 'localhost'
+        ),
+        'PORT': '5432',
+    }
+}
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
