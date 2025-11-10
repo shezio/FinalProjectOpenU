@@ -30,13 +30,13 @@ IS_PROD = os.environ.get("DJANGO_ENV") == "production"
 ORIG_ALB_URL = "https://child-smile-app-alb-1403896092.il-central-1.elb.amazonaws.com"
 LOCAL_URL = "http://localhost:9000"
 # Temporary CloudFront URL for frontend testing
-CLOUDFRONT_URL = "https://d3s74udzl680jr.cloudfront.net"  # replace with your actual CF URL
+CLOUDFRONT_URL = "https://app.achildssmile.org.il/"  # replace with your actual CF URL
 ALB_URL = CLOUDFRONT_URL
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['172.31.51.180','localhost','127.0.0.1','child-smile-app-alb-1403896092.il-central-1.elb.amazonaws.com']
+ALLOWED_HOSTS = ['172.31.51.180','localhost','127.0.0.1','child-smile-app-alb-1403896092.il-central-1.elb.amazonaws.com','app.achildssmile.org.il']
 
 
 # Application definition
@@ -226,7 +226,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = [ALB_URL] if IS_PROD else [LOCAL_URL]
 SESSION_COOKIE_SAMESITE = "None"
-SESSION_COOKIE_SECURE = False if not IS_PROD else True
+SESSION_COOKIE_SECURE = True #False if not IS_PROD else True
 
 AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',  # legacy login
