@@ -27,7 +27,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.getenv("SECRET_KEY", "fallback-secret")
 
 IS_PROD = os.environ.get("DJANGO_ENV") == "production"
-#ALB_URL = "http://child-smile-app-alb-1403896092.il-central-1.elb.amazonaws.com"
+ORIG_ALB_URL = "http://child-smile-app-alb-1403896092.il-central-1.elb.amazonaws.com"
 LOCAL_URL = "http://localhost:9000"
 # Temporary CloudFront URL for frontend testing
 CLOUDFRONT_URL = "https://d3s74udzl680jr.cloudfront.net"  # replace with your actual CF URL
@@ -233,7 +233,7 @@ AUTHENTICATION_BACKENDS = (
     'allauth.account.auth_backends.AuthenticationBackend',  # allauth
 )
 
-CSRF_TRUSTED_ORIGINS = [LOCAL_URL] if not IS_PROD else [ALB_URL]
+CSRF_TRUSTED_ORIGINS = [LOCAL_URL] if not IS_PROD else [ALB_URL, ORIG_ALB_URL]
 
 LOGIN_REDIRECT_URL = '/tasks'  # Redirect to your app's home page
 # Replace the existing SOCIALACCOUNT_AUTO_SIGNUP line with:
