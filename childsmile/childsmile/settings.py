@@ -24,15 +24,11 @@ load_dotenv()  # Add this line
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-import os
 SECRET_KEY = os.getenv("SECRET_KEY", "fallback-secret")
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
-
-# SECURITY WARNING: keep the secret key used in production secret!
-#SECRET_KEY = os.getenv('SECRET_KEY')
-
+IS_PROD = os.environ.get("DJANGO_ENV") == "production"
+ALB_URL = "http://child-smile-app-alb-1403896092.il-central-1.elb.amazonaws.com"
+LOCAL_URL = "http://localhost:9000"
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
@@ -224,7 +220,7 @@ STATIC_URL = '/static/'
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 CORS_ALLOW_CREDENTIALS = True
-CORS_ALLOWED_ORIGINS = ["http://localhost:9000"]  # Adjust to match frontend URL
+CORS_ALLOWED_ORIGINS = [ALB_URL] if IS_PROD else [LOCAL_URL]
 SESSION_COOKIE_SAMESITE = None
 SESSION_COOKIE_SECURE = False  # Set to True in production with HTTPS
 
@@ -233,9 +229,7 @@ AUTHENTICATION_BACKENDS = (
     'allauth.account.auth_backends.AuthenticationBackend',  # allauth
 )
 
-CSRF_TRUSTED_ORIGINS = [
-    "http://localhost:9000",
-]
+CSRF_TRUSTED_ORIGINS = [LOCAL_URL] if not IS_PROD else [ALB_URL]
 
 LOGIN_REDIRECT_URL = '/tasks'  # Redirect to your app's home page
 # Replace the existing SOCIALACCOUNT_AUTO_SIGNUP line with:
@@ -265,7 +259,7 @@ ACCOUNT_LOGOUT_ON_GET = True  # Optional: allow GET logout
 # Fix the deprecated setting
 ACCOUNT_SIGNUP_FIELDS = ['email*', 'username*', 'password1*', 'password2*']
 # Redirect to React frontend after Google login
-LOGIN_REDIRECT_URL = 'http://localhost:9000/google-success'  # React app URL
+LOGIN_REDIRECT_URL = ALB_URL + "/google-success" if IS_PROD else LOCAL_URL + "/google-success"
 
 
 
