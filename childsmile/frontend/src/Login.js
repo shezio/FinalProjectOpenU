@@ -121,7 +121,7 @@ const Login = () => {
   };
 
   const handleGoogleLogin = () => {
-    window.location.href = `${process.env.API_URL}/accounts/google/login/`;
+    window.location.href = `${process.env.REACT_APP_API_URL}/accounts/google/login/`;
   };
 
   const resetLogin = () => {
