@@ -6,6 +6,7 @@ from django.urls import reverse
 from .models import Staff
 from django.contrib.auth.models import User
 from .audit_utils import log_api_action
+from django.conf import settings
 
 class CustomSocialAccountAdapter(DefaultSocialAccountAdapter):
     
@@ -36,8 +37,9 @@ class CustomSocialAccountAdapter(DefaultSocialAccountAdapter):
             )
             
             # Redirect to React app instead of Django login page
-            raise ImmediateHttpResponse(redirect('http://localhost:9000/?error=no_email'))
-        
+            nomailurl = f"{settings.LOCAL_URL}?error=no_email" if not settings.IS_PROD else f"{settings.ALB_URL}?error=no_email"
+            raise ImmediateHttpResponse(redirect(nomailurl))
+
         # Check if this email exists in our Staff table
         if not Staff.objects.filter(email=email).exists():
             print(f"DEBUG: Email {email} not found in Staff table - redirecting to React app")
@@ -57,8 +59,9 @@ class CustomSocialAccountAdapter(DefaultSocialAccountAdapter):
             )
             
             # Redirect to React app with error message instead of Django login page
-            raise ImmediateHttpResponse(redirect(f'http://localhost:9000/?error=unauthorized&email={email}'))
-        
+            unauthurl = f"{settings.LOCAL_URL}?error=unauthorized&email={email}" if not settings.IS_PROD else f"{settings.ALB_URL}?error=unauthorized&email={email}"
+            raise ImmediateHttpResponse(redirect(unauthurl))
+
         # **Continue with existing user creation logic**
         try:
             # Try to get existing Django User
@@ -148,11 +151,11 @@ class CustomSocialAccountAdapter(DefaultSocialAccountAdapter):
                 'error_details': str(error) if error else 'Unknown error'
             }
         )
-        
-        return redirect('http://localhost:9000/?error=auth_failed')
-    
+        authfailurl = f"{settings.LOCAL_URL}?error=auth_failed" if not settings.IS_PROD else f"{settings.ALB_URL}?error=auth_failed"
+        return redirect(authfailurl)
+
     def get_login_redirect_url(self, request):
         """
         Redirect successful logins to React app
         """
-        return 'http://localhost:9000/'
+        return f"{settings.LOCAL_URL}/" if not settings.IS_PROD else f"{settings.ALB_URL}/"
