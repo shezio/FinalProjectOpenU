@@ -17,6 +17,7 @@ import os
 import json
 import boto3
 from django.core.exceptions import ImproperlyConfigured
+import socket
 
 # Load environment variables from .env file
 load_dotenv()  # Add this line
@@ -114,47 +115,28 @@ WSGI_APPLICATION = "childsmile.wsgi.application"
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
 
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.postgresql',
-#         'NAME': 'child_smile_db',
-#         'USER': 'child_smile_user',
-#         'PASSWORD': os.getenv('DB_PASSWORD'),
-#         'HOST': 'localhost',
-#         'PORT': '5432',
-#     }
-# }
-
-import os
-import json
-import socket
-from pathlib import Path
-
-BASE_DIR = Path(__file__).resolve().parent.parent
-
-
-def get_secret_from_aws_or_env():
-    """
-    Try to get DB credentials from AWS Secrets Manager if running on EC2.
-    Fallback to .env for local development.
-    """
-    try:
-        import boto3
-        session = boto3.session.Session()
-        client = session.client(service_name='secretsmanager', region_name='il-central-1')
-        secret_name = os.getenv('AWS_SECRET_NAME', 'default-placeholder')
-        secret_value = client.get_secret_value(SecretId=secret_name)
-        secret = json.loads(secret_value['SecretString'])
-        return secret
-    except Exception:
-        # fallback to .env variables
-        return {
-            'username': os.getenv('DB_USER', 'child_smile_user'),
-            'password': os.getenv('DB_PASSWORD'),
-        }
+# def get_secret_from_aws_or_env():
+#     """
+#     Try to get DB credentials from AWS Secrets Manager if running on EC2.
+#     Fallback to .env for local development.
+#     """
+#     try:
+#         import boto3
+#         session = boto3.session.Session()
+#         client = session.client(service_name='secretsmanager', region_name='il-central-1')
+#         secret_name = os.getenv('AWS_SECRET_NAME', 'default-placeholder')
+#         secret_value = client.get_secret_value(SecretId=secret_name)
+#         secret = json.loads(secret_value['SecretString'])
+#         return secret
+#     except Exception:
+#         # fallback to .env variables
+#         return {
+#             'username': os.getenv('DB_USER', 'child_smile_user'),
+#             'password': os.getenv('DB_PASSWORD'),
+#         }
 
 
-secret = get_secret_from_aws_or_env()
+# secret = get_secret_from_aws_or_env()
 
 # Detect whether running on EC2 or local
 def is_ec2():
@@ -171,7 +153,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'child_smile_db',
         'USER': 'child_smile_user',
-        'PASSWORD': secret.get('password'),
+        'PASSWORD': os.getenv('DB_PASSWORD'),
         'HOST': (
             'child-smile-db.cpooguksy04d.il-central-1.rds.amazonaws.com'
             if is_ec2()
