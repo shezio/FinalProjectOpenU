@@ -139,12 +139,27 @@ WSGI_APPLICATION = "childsmile.wsgi.application"
 # secret = get_secret_from_aws_or_env()
 
 # Detect whether running on EC2 or local
+import requests
+
 def is_ec2():
-    """Detect EC2 by looking for the EC2 metadata service."""
+    """Detect EC2 instance by querying the metadata service."""
     try:
-        socket.gethostbyname("ec2.internal")
-        return True
-    except Exception:
+        # Get a session token (IMDSv2)
+        token = requests.put(
+            "http://169.254.169.254/latest/api/token",
+            headers={"X-aws-ec2-metadata-token-ttl-seconds": "60"},
+            timeout=0.2
+        ).text
+
+        # Try to get instance-id using that token
+        response = requests.get(
+            "http://169.254.169.254/latest/meta-data/instance-id",
+            headers={"X-aws-ec2-metadata-token": token},
+            timeout=0.2
+        )
+
+        return response.status_code == 200
+    except requests.RequestException:
         return False
 
 
