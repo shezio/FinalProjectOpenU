@@ -2,6 +2,8 @@ const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
+const Dotenv = require('dotenv-webpack');
+const isProduction = process.env.NODE_ENV === 'production';
 const { stat } = require('fs');
 
 module.exports = {
@@ -56,6 +58,9 @@ module.exports = {
       patterns: [
         { from: 'public', to: '', globOptions: { ignore: ['**/index.html'] } } // Exclude index.html
       ]
+    }),
+    new Dotenv({
+      path: isProduction ? './.env.production' : './.env.development',
     })
   ],
   devServer: {
