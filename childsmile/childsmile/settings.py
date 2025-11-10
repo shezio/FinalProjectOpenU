@@ -36,7 +36,7 @@ SECRET_KEY = os.getenv("SECRET_KEY", "fallback-secret")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['172.31.51.180','localhost','127.0.0.1']
+ALLOWED_HOSTS = ['172.31.51.180','localhost','127.0.0.1','child-smile-app-alb-1403896092.il-central-1.elb.amazonaws.com']
 
 
 # Application definition
