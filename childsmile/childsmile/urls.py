@@ -23,3 +23,10 @@ urlpatterns = [
     path('', include('childsmile_app.urls')),  # Exempt all your app URLs
     path('accounts/', include('allauth.urls')),  # Add this line
 ]
+from django.views.generic import TemplateView
+from django.urls import re_path
+
+urlpatterns += [
+    # This will catch all other paths and let React handle them
+    re_path(r'^.*$', TemplateView.as_view(template_name='index.html')),
+]
