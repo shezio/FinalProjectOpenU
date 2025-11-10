@@ -27,7 +27,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.getenv("SECRET_KEY", "fallback-secret")
 
 IS_PROD = os.environ.get("DJANGO_ENV") == "production"
-ORIG_ALB_URL = "http://child-smile-app-alb-1403896092.il-central-1.elb.amazonaws.com"
+ORIG_ALB_URL = "https://child-smile-app-alb-1403896092.il-central-1.elb.amazonaws.com"
 LOCAL_URL = "http://localhost:9000"
 # Temporary CloudFront URL for frontend testing
 CLOUDFRONT_URL = "https://d3s74udzl680jr.cloudfront.net"  # replace with your actual CF URL
