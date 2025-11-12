@@ -11,7 +11,7 @@ const isProd = process.env.NODE_ENV === 'production';
 axios.defaults.withCredentials = true;
 
 if (isProd) {
-  axios.interceptors.request.use(config => {
+  axiosInstance.interceptors.request.use(config => {
     const match = document.cookie.match(/csrftoken=([\w-]+)/);
     const csrfToken = match ? match[1] : '';
     if (csrfToken) config.headers['X-CSRFToken'] = csrfToken;
