@@ -68,7 +68,7 @@ from .logger import api_logger
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-@csrf_exempt
+@conditional_csrf
 @api_view(["GET"])
 def get_families_per_location_report(request):
     api_logger.info("get_families_per_location_report called")
@@ -120,7 +120,7 @@ def get_families_per_location_report(request):
         return JsonResponse({"error": str(e)}, status=500)
 
 
-@csrf_exempt
+@conditional_csrf
 @api_view(["GET"])
 def families_waiting_for_tutorship_report(request):
     api_logger.info("families_waiting_for_tutorship_report called")
@@ -201,7 +201,7 @@ def families_waiting_for_tutorship_report(request):
         return JsonResponse({"error": str(e)}, status=500)
 
 
-@csrf_exempt
+@conditional_csrf
 @api_view(["GET"])
 def get_new_families_report(request):
     api_logger.info("get_new_families_report called")
@@ -278,7 +278,7 @@ def get_new_families_report(request):
         return JsonResponse({"error": str(e)}, status=500)
 
 
-@csrf_exempt
+@conditional_csrf
 @api_view(["GET"])
 def active_tutors_report(request):
     api_logger.info("active_tutors_report called")
@@ -341,7 +341,7 @@ def active_tutors_report(request):
         return JsonResponse({"error": str(e)}, status=500)
 
 
-@csrf_exempt
+@conditional_csrf
 @api_view(["GET"])
 def possible_tutorship_matches_report(request):
     api_logger.info("possible_tutorship_matches_report called")
@@ -376,7 +376,7 @@ def possible_tutorship_matches_report(request):
         return JsonResponse({"error": str(e)}, status=500)
 
 
-# next report is volunteer feedback report@csrf_exempt
+# next report is volunteer feedback report@conditional_csrf
 @api_view(["GET"])
 def volunteer_feedback_report(request):
     api_logger.info("volunteer_feedback_report called")
@@ -450,7 +450,7 @@ def volunteer_feedback_report(request):
 
 
 # next report is tutor feedback report
-@csrf_exempt
+@conditional_csrf
 @api_view(["GET"])
 def tutor_feedback_report(request):
     api_logger.info("tutor_feedback_report called")
@@ -524,7 +524,7 @@ def tutor_feedback_report(request):
         return JsonResponse({"error": str(e)}, status=500)
 
 
-@csrf_exempt
+@conditional_csrf
 @api_view(["GET"])
 def families_tutorships_stats(request):
     api_logger.info("families_tutorships_stats called")
@@ -562,7 +562,7 @@ def families_tutorships_stats(request):
     )
 
 
-@csrf_exempt
+@conditional_csrf
 @api_view(["GET"])
 def pending_tutors_stats(request):
     api_logger.info("pending_tutors_stats called")
@@ -597,7 +597,7 @@ def pending_tutors_stats(request):
     )
 
 
-@csrf_exempt
+@conditional_csrf
 @api_view(["GET"])
 def roles_spread_stats(request):
     api_logger.info("roles_spread_stats called")

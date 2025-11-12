@@ -71,7 +71,7 @@ from .logger import api_logger
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
-@csrf_exempt
+@conditional_csrf
 @api_view(["POST"])
 def calculate_possible_matches(request):
     api_logger.info("calculate_possible_matches called")
@@ -143,7 +143,7 @@ def calculate_possible_matches(request):
         return JsonResponse({"error": str(e)}, status=500)
 
 
-@csrf_exempt
+@conditional_csrf
 @api_view(["GET"])
 def get_tutorships(request):
     api_logger.info("get_tutorships called")
@@ -224,7 +224,7 @@ def get_tutorships(request):
         return JsonResponse({"error": str(e)}, status=500)
 
 
-@csrf_exempt
+@conditional_csrf
 @api_view(["POST"])
 def create_tutorship(request):
     api_logger.info("create_tutorship called")
@@ -475,7 +475,7 @@ def create_tutorship(request):
         return JsonResponse({"error": str(e)}, status=500)
 
 
-@csrf_exempt
+@conditional_csrf
 @api_view(["POST"])
 def update_tutorship(request, tutorship_id):
     api_logger.info(f"update_tutorship called for tutorship_id: {tutorship_id}")
@@ -656,7 +656,7 @@ def update_tutorship(request, tutorship_id):
         )
         return JsonResponse({"error": str(e)}, status=500)
 
-@csrf_exempt
+@conditional_csrf
 @api_view(["DELETE"])
 def delete_tutorship(request, tutorship_id):
     api_logger.info(f"delete_tutorship called for tutorship_id: {tutorship_id}")

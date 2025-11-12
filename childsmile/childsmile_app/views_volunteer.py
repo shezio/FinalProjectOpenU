@@ -15,16 +15,15 @@ from .models import (
     Tutorships, PrevTutorshipStatuses, Tasks, Task_Types,
     MaritalStatus
 )
-from .utils import has_permission
+from .utils import *
 from .audit_utils import log_api_action
 from .logger import api_logger
 import json
 import datetime
 import traceback
-from .utils import create_tasks_for_admins_async
 
 
-@csrf_exempt
+@conditional_csrf
 @api_view(["POST"])
 @ratelimit(key='ip', rate='5/m', method='POST', block=True)
 def register_send_totp(request):
@@ -180,7 +179,7 @@ def register_send_totp(request):
         return JsonResponse({"error": "Registration failed"}, status=500)
 
 
-@csrf_exempt
+@conditional_csrf
 @api_view(["POST"])
 @ratelimit(key='ip', rate='10/m', method='POST', block=True)
 def register_verify_totp(request):
@@ -308,7 +307,7 @@ def register_verify_totp(request):
         return JsonResponse({"error": "Registration failed"}, status=500)
 
 
-@csrf_exempt
+@conditional_csrf
 @api_view(["POST"])
 def create_volunteer_or_tutor(request):
     api_logger.info("create_volunteer_or_tutor called")
@@ -625,7 +624,7 @@ def create_volunteer_or_tutor_internal(data, request=None):
         return JsonResponse({"error": str(e)}, status=500)
 
 
-@csrf_exempt
+@conditional_csrf
 @api_view(["POST"])
 def create_pending_tutor(request):
     api_logger.info("create_pending_tutor called")
@@ -746,7 +745,7 @@ def create_pending_tutor(request):
         return JsonResponse({"error": str(e)}, status=500)
 
 
-@csrf_exempt
+@conditional_csrf
 @api_view(["PUT"])
 def update_general_volunteer(request, volunteer_id):
     api_logger.info(f"update_general_volunteer called for volunteer_id: {volunteer_id}")
@@ -813,7 +812,7 @@ def update_general_volunteer(request, volunteer_id):
     return JsonResponse({"message": "General Volunteer updated successfully."}, status=200)
 
 
-@csrf_exempt
+@conditional_csrf
 @api_view(["PUT"])
 def update_tutor(request, tutor_id):
     api_logger.info(f"update_tutor called for tutor_id: {tutor_id}")

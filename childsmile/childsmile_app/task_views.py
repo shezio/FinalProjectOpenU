@@ -53,6 +53,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.db import transaction
 from django.utils.timezone import now
 import datetime
+from datetime import timezone
 import urllib3
 from django.utils.timezone import make_aware
 from geopy.exc import GeocoderTimedOut
@@ -70,8 +71,16 @@ from django.core.mail import send_mail, send_mass_mail
 from django.conf import settings
                             
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+import warnings
 
-@csrf_exempt
+# Suppress the naive datetime warning for auto_now fields
+warnings.filterwarnings(
+    'ignore',
+    message='.*DateTimeField.*received a naive datetime.*',
+    category=RuntimeWarning
+)
+
+@conditional_csrf
 @api_view(["GET"])
 def get_user_tasks(request):
     api_logger.info("get_user_tasks called")
@@ -185,7 +194,7 @@ def get_user_tasks(request):
         return JsonResponse({"error": str(e)}, status=500)
 
 
-@csrf_exempt
+@conditional_csrf
 @api_view(["POST"])
 def create_task(request):
     api_logger.info("create_task called")
@@ -366,7 +375,7 @@ def create_task(request):
         return JsonResponse({"detail": str(e)}, status=500)
 
 
-@csrf_exempt
+@conditional_csrf
 @api_view(["DELETE"])
 def delete_task(request, task_id):
     api_logger.info(f"delete_task called for task_id: {task_id}")
@@ -648,7 +657,7 @@ def delete_task(request, task_id):
         return JsonResponse({"error": str(e)}, status=500)
 
 
-@csrf_exempt
+@conditional_csrf
 @api_view(["PUT"])
 def update_task_status(request, task_id):
     api_logger.info(f"update_task_status called for task_id: {task_id}")
@@ -924,7 +933,7 @@ def update_task_status(request, task_id):
         return JsonResponse({"error": str(e)}, status=500)
 
 
-@csrf_exempt
+@conditional_csrf
 @api_view(["PUT"])
 def update_task(request, task_id):
     api_logger.info(f"update_task called for task_id: {task_id}")
@@ -992,7 +1001,6 @@ def update_task(request, task_id):
         new_status = request.data.get("status", task.status)
         if new_status:
             task.status = new_status
-        task.updated_at = datetime.datetime.now()
 
         # Handle assigned_to (convert staff_id directly)
         assigned_to = request.data.get("assigned_to")
