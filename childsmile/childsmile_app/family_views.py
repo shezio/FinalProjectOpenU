@@ -70,7 +70,7 @@ from .logger import api_logger
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
-@csrf_exempt
+@conditional_csrf
 @api_view(["GET"])
 def get_complete_family_details(request):
     api_logger.info("get_complete_family_details called")
@@ -199,7 +199,7 @@ def get_complete_family_details(request):
         )
         return JsonResponse({"error": str(e)}, status=500)
 
-@csrf_exempt
+@conditional_csrf
 @api_view(["POST"])
 def create_family(request):
     api_logger.info("create_family called")
@@ -380,7 +380,7 @@ def create_family(request):
         return JsonResponse({"error": str(e)}, status=500)
 
 
-@csrf_exempt
+@conditional_csrf
 @api_view(["PUT"])
 @transaction.atomic
 def update_family(request, child_id):
@@ -681,7 +681,7 @@ def update_family(request, child_id):
         return JsonResponse({"error": str(e)}, status=500)
 
 
-@csrf_exempt
+@conditional_csrf
 @api_view(["DELETE"])
 def delete_family(request, child_id):
     api_logger.info(f"delete_family called for child_id: {child_id}")
@@ -794,7 +794,7 @@ def delete_family(request, child_id):
         return JsonResponse({"error": str(e)}, status=500)
 
 
-@csrf_exempt
+@conditional_csrf
 @api_view(["GET"])
 def get_initial_family_data(request):
     api_logger.info("get_initial_family_data called")
@@ -861,7 +861,7 @@ def get_initial_family_data(request):
 """ create a new view for the InitialFamilyData model that will create a new row"""
 
 
-@csrf_exempt
+@conditional_csrf
 @api_view(["POST"])
 def create_initial_family_data(request):
     api_logger.info("create_initial_family_data called")
@@ -974,7 +974,7 @@ def create_initial_family_data(request):
 """ create a new view for the InitialFamilyData model that will update an existing row by id"""
 
 
-@csrf_exempt
+@conditional_csrf
 @api_view(["PUT"])
 def update_initial_family_data(request, initial_family_data_id):
     api_logger.info(f"update_initial_family_data called for initial_family_data_id: {initial_family_data_id}")
@@ -1097,7 +1097,7 @@ def update_initial_family_data(request, initial_family_data_id):
         return JsonResponse({"error": str(e)}, status=500)
 
 
-@csrf_exempt
+@conditional_csrf
 @api_view(["PUT"])
 def mark_initial_family_complete(request, initial_family_data_id):
     api_logger.info(f"mark_initial_family_complete called for initial_family_data_id: {initial_family_data_id}")
@@ -1253,7 +1253,7 @@ def mark_initial_family_complete(request, initial_family_data_id):
         return JsonResponse({"error": str(e)}, status=500)
 
 
-@csrf_exempt
+@conditional_csrf
 @api_view(["DELETE"])
 def delete_initial_family_data(request, initial_family_data_id):
     api_logger.info(f"delete_initial_family_data called for initial_family_data_id: {initial_family_data_id}")

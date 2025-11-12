@@ -68,6 +68,7 @@ import tempfile
 import shutil
 from filelock import FileLock
 from .logger import api_logger
+from django.views.decorators.csrf import csrf_exempt, csrf_protect
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -985,3 +986,7 @@ def delete_other_registration_approval_tasks(task):
     except Exception as e:
         api_logger.error(f"ERROR: An error occurred while deleting other registration approval tasks: {str(e)}")
 
+
+def conditional_csrf(view_func):
+    is_prod = os.environ.get("DJANGO_ENV") == "production"
+    return csrf_protect(view_func) if is_prod else csrf_exempt(view_func)

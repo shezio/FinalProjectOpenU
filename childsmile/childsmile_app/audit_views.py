@@ -7,6 +7,7 @@ from django.utils.dateparse import parse_datetime
 from django.utils import timezone
 from datetime import timedelta
 from .models import AuditLog, Staff, AuditTranslation
+from .utils import *
 from .audit_utils import is_admin, log_api_action
 from .logger import api_logger
 import csv
@@ -121,7 +122,7 @@ def get_audit_statistics(request):
 
 from django.views.decorators.csrf import csrf_exempt
 
-@csrf_exempt
+@conditional_csrf
 @api_view(["POST"])
 def audit_action(request):
     api_logger.info("audit_action called")

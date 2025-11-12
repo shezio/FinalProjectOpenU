@@ -69,7 +69,7 @@ from .logger import api_logger
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-@csrf_exempt
+@conditional_csrf
 @api_view(["POST"])
 def create_tutor_feedback(request):
     api_logger.info("create_tutor_feedback called")
@@ -318,7 +318,7 @@ def create_tutor_feedback(request):
         return JsonResponse({"error": str(e)}, status=500)
 
 
-@csrf_exempt
+@conditional_csrf
 @api_view(["PUT"])
 def update_tutor_feedback(request, feedback_id):
     api_logger.info(f"update_tutor_feedback called for feedback_id: {feedback_id}")
@@ -556,7 +556,7 @@ def update_tutor_feedback(request, feedback_id):
         return JsonResponse({"error": str(e)}, status=500)
 
 
-@csrf_exempt
+@conditional_csrf
 @api_view(["DELETE"])
 def delete_tutor_feedback(request, feedback_id):
     api_logger.info(f"delete_tutor_feedback called for feedback_id: {feedback_id}")
@@ -668,7 +668,7 @@ def delete_tutor_feedback(request, feedback_id):
 
 
 # create , update delete for general volunteer feedback and also make sure the volunter_feedback_report which is the GET here  - gives us all the fields tutor feedback report gives on the feedback object
-@csrf_exempt
+@conditional_csrf
 @api_view(["POST"])
 def create_volunteer_feedback(request):
     api_logger.info("create_volunteer_feedback called")
@@ -913,7 +913,7 @@ def create_volunteer_feedback(request):
         return JsonResponse({"error": str(e)}, status=500)
 
 
-@csrf_exempt
+@conditional_csrf
 @api_view(["PUT"])
 def update_volunteer_feedback(request, feedback_id):
     api_logger.info(f"update_volunteer_feedback called for feedback_id: {feedback_id}")
@@ -1147,7 +1147,7 @@ def update_volunteer_feedback(request, feedback_id):
         return JsonResponse({"error": str(e)}, status=500)
 
 
-@csrf_exempt
+@conditional_csrf
 @api_view(["DELETE"])
 def delete_volunteer_feedback(request, feedback_id):
     api_logger.info(f"delete_volunteer_feedback called for feedback_id: {feedback_id}")

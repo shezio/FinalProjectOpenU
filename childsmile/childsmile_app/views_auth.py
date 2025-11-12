@@ -8,13 +8,14 @@ from django_ratelimit.decorators import ratelimit
 from django.core.mail import send_mail
 from django.conf import settings
 from .models import Staff, TOTPCode
+from .utils import *
 from .audit_utils import log_api_action
 from .logger import api_logger
 import json
 import traceback
 
 
-@csrf_exempt
+@conditional_csrf
 @api_view(["POST"])
 @ratelimit(key='ip', rate='5/m', method='POST', block=True)
 def login_email(request):
@@ -142,7 +143,7 @@ def login_email(request):
         return JsonResponse({"error": "Failed to send login code"}, status=500)
 
 
-@csrf_exempt
+@conditional_csrf
 @api_view(["POST"])
 @ratelimit(key='ip', rate='10/m', method='POST', block=True)
 def verify_totp(request):
@@ -393,7 +394,7 @@ def verify_totp(request):
         return JsonResponse({"error": "Verification failed"}, status=500)
 
 
-@csrf_exempt
+@conditional_csrf
 @api_view(["POST"])
 def google_login_success(request):
     """

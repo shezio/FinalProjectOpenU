@@ -117,7 +117,7 @@ def get_permissions(request):
     return JsonResponse({"permissions": permissions_data})
 
 
-@csrf_exempt  # Disable CSRF (makes things easier)
+@conditional_csrf  # Disable CSRF (makes things easier)
 @api_view(["POST"])
 def logout_view(request):
     api_logger.info("logout_view called")
@@ -145,7 +145,7 @@ def logout_view(request):
         api_logger.debug(f"Logout failed for user_id: {user_id}")
         return JsonResponse({"error": str(e)}, status=400)
 
-@csrf_exempt
+@conditional_csrf
 @api_view(["GET"])
 def get_staff(request):
     api_logger.info("get_staff called")
@@ -185,7 +185,7 @@ def get_staff(request):
     return JsonResponse({"staff": staff_data})
 
 
-@csrf_exempt
+@conditional_csrf
 @api_view(["GET"])
 def get_children(request):
     api_logger.info("get_children called")
@@ -208,7 +208,7 @@ def get_children(request):
     return JsonResponse({"children": children_data})
 
 
-@csrf_exempt
+@conditional_csrf
 @api_view(["GET"])
 def get_tutors(request):
     api_logger.info("get_tutors called")
@@ -243,7 +243,7 @@ def get_tutors(request):
         "marital_status_options": marital_status_options,
     })
 
-@csrf_exempt
+@conditional_csrf
 @api_view(["GET"])
 def get_pending_tutors(request):
     api_logger.info("get_pending_tutors called")
@@ -272,7 +272,7 @@ def get_pending_tutors(request):
         api_logger.error(f"Error fetching pending tutors: {str(e)}")
         return JsonResponse({"error": str(e)}, status=500)
 
-@csrf_exempt
+@conditional_csrf
 @api_view(["GET"])
 def get_signedup(request):
     """
@@ -312,7 +312,7 @@ def get_signedup(request):
         api_logger.error(f"Error fetching signed-up users: {str(e)}")
         return JsonResponse({"error": str(e)}, status=500)
 
-@csrf_exempt
+@conditional_csrf
 @api_view(["GET"])
 def get_all_staff(request):
     api_logger.info("get_all_staff called")
@@ -385,7 +385,7 @@ def get_all_staff(request):
         },
         status=200,
     )
-@csrf_exempt
+@conditional_csrf
 @api_view(["GET"])
 def get_roles(request):
     api_logger.info("get_roles called")
@@ -415,7 +415,7 @@ def get_roles(request):
         return JsonResponse({"error": str(e)}, status=500)
 
 
-@csrf_exempt
+@conditional_csrf
 @api_view(["POST"])
 def create_staff_member(request):
     api_logger.info("create_staff_member called")
@@ -521,7 +521,7 @@ def create_staff_member(request):
         return JsonResponse({"error": str(e)}, status=500)
 
 
-@csrf_exempt
+@conditional_csrf
 @api_view(["GET"])
 def get_general_volunteers_not_pending(request):
     api_logger.info("get_general_volunteers_not_pending called")
@@ -563,7 +563,7 @@ def get_general_volunteers_not_pending(request):
     api_logger.debug(f"get_general_volunteers_not_pending response: {data}")
     return JsonResponse({"general_volunteers": data}, status=200)
 
-@csrf_exempt
+@conditional_csrf
 @api_view(["POST"])
 def google_login_success(request):
     api_logger.info("google_login_success called in views.py")
@@ -681,7 +681,7 @@ def google_login_success(request):
         api_logger.error(f"Error during Google login for email {attempted_email}: {str(e)}")
         return JsonResponse({"error": str(e)}, status=500)
 
-@csrf_exempt
+@conditional_csrf
 @api_view(["POST"])
 def test_email_setup(request):
     api_logger.info("test_email_setup called")
@@ -716,7 +716,7 @@ def test_email_setup(request):
         api_logger.error(f"Error: {str(e)}")
         return JsonResponse({"error": str(e)}, status=500)
 
-@csrf_exempt
+@conditional_csrf
 @api_view(["POST"])
 def test_gmail_auth(request):
     api_logger.info("test_gmail_auth called")

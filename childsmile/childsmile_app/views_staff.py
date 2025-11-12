@@ -9,7 +9,7 @@ from django.core.mail import send_mail
 from django.conf import settings
 from django.db import DatabaseError, transaction
 from .models import Staff, Role, TOTPCode, SignedUp, Tutors, Pending_Tutor, Tasks
-from .utils import is_admin
+from .utils import *
 from .audit_utils import log_api_action
 from .logger import api_logger
 import json
@@ -17,7 +17,7 @@ import datetime
 import traceback
 
 
-@csrf_exempt
+@conditional_csrf
 @api_view(["PUT"])
 def update_staff_member(request, staff_id):
     """
@@ -453,7 +453,7 @@ def update_staff_member(request, staff_id):
         return JsonResponse({"error": str(e)}, status=500)
 
 
-@csrf_exempt
+@conditional_csrf
 @api_view(["DELETE"])
 def delete_staff_member(request, staff_id):
     api_logger.info(f"delete_staff_member called for staff_id: {staff_id}")
@@ -587,7 +587,7 @@ def delete_staff_member(request, staff_id):
         return JsonResponse({"error": str(e)}, status=500)
 
 
-@csrf_exempt
+@conditional_csrf
 @api_view(["POST"])
 def create_staff_member(request):
     api_logger.info("create_staff_member called in views_staff.py")
@@ -843,7 +843,7 @@ def create_staff_member_internal(data, request=None):
         return JsonResponse({"error": str(e)}, status=500)
 
 
-@csrf_exempt
+@conditional_csrf
 @api_view(["POST"])
 @ratelimit(key='ip', rate='5/m', method='POST', block=True)
 def staff_creation_send_totp(request):
@@ -1006,7 +1006,7 @@ def staff_creation_send_totp(request):
         return JsonResponse({"error": "Failed to send verification code"}, status=500)
 
 
-@csrf_exempt
+@conditional_csrf
 @api_view(["POST"])
 @ratelimit(key='ip', rate='10/m', method='POST', block=True)
 def staff_creation_verify_totp(request):
