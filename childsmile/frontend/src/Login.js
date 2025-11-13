@@ -121,8 +121,10 @@ const Login = () => {
   };
 
   const handleGoogleLogin = () => {
-    window.location.href = `${process.env.REACT_APP_API_URL}/accounts/google/login/`;
+    const loginUrl = process.env.REACT_APP_API_URL.replace(/\/api$/, "");
+    window.location.href = `${loginUrl}/accounts/google/login/`;
   };
+
 
   const resetLogin = () => {
     setShowTotpInput(false);

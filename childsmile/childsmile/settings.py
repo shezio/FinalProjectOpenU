@@ -27,11 +27,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.getenv("SECRET_KEY", "fallback-secret")
 
 IS_PROD = os.environ.get("DJANGO_ENV") == "production"
-ORIG_ALB_URL = "https://child-smile-app-alb-1403896092.il-central-1.elb.amazonaws.com"
+ALB_URL = "http://child-smile-app-alb-1403896092.il-central-1.elb.amazonaws.com"
 LOCAL_URL = "http://localhost:9000"
 # Temporary CloudFront URL for frontend testing
-CLOUDFRONT_URL = "https://app.achildssmile.org.il/"  # replace with your actual CF URL
-ALB_URL = CLOUDFRONT_URL
+CLOUDFRONT_URL = "https://app.achildssmile.org.il"  # replace with your actual CF URL
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -224,7 +223,7 @@ STATIC_URL = '/static/'
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 CORS_ALLOW_CREDENTIALS = True
-CORS_ALLOWED_ORIGINS = [ALB_URL] if IS_PROD else [LOCAL_URL]
+CORS_ALLOWED_ORIGINS = [CLOUDFRONT_URL] if IS_PROD else [LOCAL_URL]
 SESSION_COOKIE_SAMESITE = "None"
 SESSION_COOKIE_SECURE = True #False if not IS_PROD else True
 
@@ -233,7 +232,7 @@ AUTHENTICATION_BACKENDS = (
     'allauth.account.auth_backends.AuthenticationBackend',  # allauth
 )
 
-CSRF_TRUSTED_ORIGINS = [LOCAL_URL] if not IS_PROD else [ALB_URL, ORIG_ALB_URL]
+CSRF_TRUSTED_ORIGINS = [LOCAL_URL] if not IS_PROD else [CLOUDFRONT_URL, ALB_URL]
 
 LOGIN_REDIRECT_URL = '/tasks'  # Redirect to your app's home page
 # Replace the existing SOCIALACCOUNT_AUTO_SIGNUP line with:
@@ -263,7 +262,7 @@ ACCOUNT_LOGOUT_ON_GET = True  # Optional: allow GET logout
 # Fix the deprecated setting
 ACCOUNT_SIGNUP_FIELDS = ['email*', 'username*', 'password1*', 'password2*']
 # Redirect to React frontend after Google login
-LOGIN_REDIRECT_URL = ALB_URL + "/google-success" if IS_PROD else LOCAL_URL + "/google-success"
+LOGIN_REDIRECT_URL = CLOUDFRONT_URL + "/google-success" if IS_PROD else LOCAL_URL + "/google-success"
 
 
 
