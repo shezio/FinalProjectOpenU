@@ -233,6 +233,9 @@ AUTHENTICATION_BACKENDS = (
 )
 
 CSRF_TRUSTED_ORIGINS = [LOCAL_URL] if not IS_PROD else [CLOUDFRONT_URL, ALB_URL]
+USE_X_FORWARDED_HOST = True
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
 
 LOGIN_REDIRECT_URL = '/tasks'  # Redirect to your app's home page
 # Replace the existing SOCIALACCOUNT_AUTO_SIGNUP line with:
