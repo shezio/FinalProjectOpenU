@@ -35,7 +35,7 @@ CLOUDFRONT_URL = "https://app.achildssmile.org.il"  # replace with your actual C
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['172.31.51.180','localhost','127.0.0.1','app.achildssmile.org.il','child-smile-app-alb-1403896092.il-central-1.elb.amazonaws.com']
+ALLOWED_HOSTS = ['172.31.51.180','localhost','127.0.0.1','app.achildssmile.org.il']
 
 
 # Application definition
@@ -232,7 +232,7 @@ AUTHENTICATION_BACKENDS = (
     'allauth.account.auth_backends.AuthenticationBackend',  # allauth
 )
 ACCOUNT_DEFAULT_HTTP_PROTOCOL = "https" if IS_PROD else "http"
-CSRF_TRUSTED_ORIGINS = [LOCAL_URL] if not IS_PROD else [CLOUDFRONT_URL, ALB_URL]
+CSRF_TRUSTED_ORIGINS = [LOCAL_URL] if not IS_PROD else [CLOUDFRONT_URL]
 USE_X_FORWARDED_HOST = True
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
