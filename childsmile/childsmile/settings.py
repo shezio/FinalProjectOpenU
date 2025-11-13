@@ -35,7 +35,7 @@ CLOUDFRONT_URL = "https://app.achildssmile.org.il"  # replace with your actual C
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['172.31.51.180','localhost','127.0.0.1','child-smile-app-alb-1403896092.il-central-1.elb.amazonaws.com','app.achildssmile.org.il']
+ALLOWED_HOSTS = ['172.31.51.180','localhost','127.0.0.1','app.achildssmile.org.il']
 
 
 # Application definition
