@@ -31,12 +31,11 @@ ALB_URL = "http://child-smile-app-alb-1403896092.il-central-1.elb.amazonaws.com"
 LOCAL_URL = "http://localhost:9000"
 # Temporary CloudFront URL for frontend testing
 CLOUDFRONT_URL = "https://app.achildssmile.org.il"  # replace with your actual CF URL
-# New settings to add
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['172.31.51.180','localhost','127.0.0.1','app.achildssmile.org.il']#,'child-smile-app-alb-1403896092.il-central-1.elb.amazonaws.com']
+ALLOWED_HOSTS = ['172.31.51.180','localhost','127.0.0.1','app.achildssmile.org.il','child-smile-app-alb-1403896092.il-central-1.elb.amazonaws.com']
 
 
 # Application definition
@@ -227,16 +226,13 @@ CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = [CLOUDFRONT_URL] if IS_PROD else [LOCAL_URL]
 SESSION_COOKIE_SAMESITE = "None"
 SESSION_COOKIE_SECURE = True #False if not IS_PROD else True
-CSRF_COOKIE_SECURE = True #False if not IS_PROD else True
-SESSION_COOKIE_DOMAIN = 'app.achildssmile.org.il' if IS_PROD else None
-CSRF_COOKIE_DOMAIN = 'app.achildssmile.org.il' if IS_PROD else None
 
 AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',  # legacy login
     'allauth.account.auth_backends.AuthenticationBackend',  # allauth
 )
 ACCOUNT_DEFAULT_HTTP_PROTOCOL = "https" if IS_PROD else "http"
-CSRF_TRUSTED_ORIGINS = [LOCAL_URL] if not IS_PROD else [CLOUDFRONT_URL]
+CSRF_TRUSTED_ORIGINS = [LOCAL_URL] if not IS_PROD else [CLOUDFRONT_URL, ALB_URL]
 USE_X_FORWARDED_HOST = True
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
