@@ -231,7 +231,7 @@ AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',  # legacy login
     'allauth.account.auth_backends.AuthenticationBackend',  # allauth
 )
-
+ACCOUNT_DEFAULT_HTTP_PROTOCOL = "https" if IS_PROD else "http"
 CSRF_TRUSTED_ORIGINS = [LOCAL_URL] if not IS_PROD else [CLOUDFRONT_URL, ALB_URL]
 USE_X_FORWARDED_HOST = True
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
