@@ -606,11 +606,7 @@ const Tutorships = () => {
   };
 
   useEffect(() => {
-    if (hasViewPermission) {
       fetchFullTutorships();
-    } else {
-      setLoading(false);
-    }
   }, []);
 
   // Helper: Fetch all families
