@@ -670,20 +670,6 @@ const Tutorships = () => {
     };
   }, [showStatusDropdown]);
 
-  if (!hasViewPermission) {
-    return (
-      <div className="tutorships-main-content">
-        <Sidebar />
-        <InnerPageHeader title="ניהול חונכויות" />
-        <div className="page-content">
-          <div className="no-permission">
-            <h2>אין לך הרשאה לצפות בדף זה</h2>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="tutorships-main-content">
       <Sidebar />

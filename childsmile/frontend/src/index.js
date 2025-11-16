@@ -11,7 +11,7 @@ import { BrowserRouter, HashRouter } from 'react-router-dom';
 const isProd = process.env.NODE_ENV === 'production';
 
 // If the URL doesn't already have a hash, redirect to one
-if (!window.location.hash && window.location.pathname !== '/') {
+if (!window.location.hash && window.location.pathname !== '/' && isProd) {
   const path = window.location.pathname;
   window.location.replace('/#' + path);
 }

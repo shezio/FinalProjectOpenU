@@ -192,6 +192,15 @@ const Login = () => {
     );
   };
 
+
+  React.useEffect(() => {
+  // Fix Google login redirect in LOCAL development
+  if (window.location.hash.includes("#/google-success") && window.location.hostname === "localhost") {
+    const cleanPath = window.location.hash.replace("#", "");
+    window.history.replaceState({}, "", cleanPath);
+  }
+}, []);
+
   React.useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const error = urlParams.get('error');

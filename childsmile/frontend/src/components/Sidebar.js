@@ -3,6 +3,13 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { hasViewPermissionForTable, hasCreatePermissionForTable, hasViewPermissionForReports, hasDeletePermissionForTable, isGuestUser } from './utils'; // Import utility functions for fetching data
 import '../styles/common.css';
 
+const isProd = !window.location.hostname.includes('localhost');
+
+const goTo = (path) => {
+  window.location.href = isProd ? `/#${path}` : path;
+};
+
+
 const Sidebar = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -24,7 +31,7 @@ const Sidebar = () => {
         <button
           data-path="/tasks"
           className={location.pathname.startsWith('/tasks') ? 'active' : ''}
-          onClick={() => window.location.href = '/tasks'}
+          onClick={() => goTo('/tasks')}
         >
           לוח משימות
         </button>
@@ -33,7 +40,7 @@ const Sidebar = () => {
         <button
           data-path="/families"
           className={location.pathname.startsWith('/families') ? 'active' : ''}
-          onClick={() => window.location.href = '/families'}
+          onClick={() => goTo('/families')  }
         >
           משפחות
         </button>
@@ -43,7 +50,7 @@ const Sidebar = () => {
         <button
           data-path="/tutor-volunteer-mgmt"
           className={location.pathname.startsWith('/tutor-volunteer-mgmt') ? 'active' : ''}
-          onClick={() => window.location.href = '/tutor-volunteer-mgmt'}
+          onClick={() => goTo('/tutor-volunteer-mgmt')}
         >
           ניהול חונכים ומתנדבים
         </button>
@@ -53,7 +60,7 @@ const Sidebar = () => {
         <button
           data-path="/feedbacks"
           className={location.pathname.startsWith('/feedbacks') ? 'active' : ''}
-          onClick={() => window.location.href = '/feedbacks'}
+          onClick={() => goTo('/feedbacks')}
         >
           משובים
         </button>
@@ -62,7 +69,7 @@ const Sidebar = () => {
         <button
           data-path="/tutorships"
           className={location.pathname.startsWith('/tutorships') ? 'active' : ''}
-          onClick={() => window.location.href = '/tutorships'}
+          onClick={() => goTo('/tutorships')}
         >
           חונכות
         </button>
@@ -71,7 +78,7 @@ const Sidebar = () => {
         <button
           data-path="/reports"
           className={location.pathname.startsWith('/reports') ? 'active' : ''}
-          onClick={() => window.location.href = '/reports'}
+          onClick={() => goTo('/reports')}
         >
           דוחות
         </button>
@@ -80,7 +87,7 @@ const Sidebar = () => {
         <button
           data-path="/system-management"
           className={location.pathname.startsWith('/system-management') ? 'active' : ''}
-          onClick={() => window.location.href = '/system-management'}
+          onClick={() => goTo('/system-management')}
         >
           ניהול מערכת
         </button>
