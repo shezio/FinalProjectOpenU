@@ -7,7 +7,7 @@ import './styles.css';
 import { BrowserRouter, HashRouter } from 'react-router-dom';
 //import { HashRouter as Router } from 'react-router-dom'; // Use HashRouter for better compatibility
 
-const isProd = window.location.hostname !== 'localhost';
+const isProd = process.env.NODE_ENV === 'production';
 
 ReactDOM.render(isProd ? (
   <HashRouter>
