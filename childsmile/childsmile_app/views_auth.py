@@ -100,6 +100,8 @@ def login_email(request):
         code = TOTPCode.generate_code()
         totp_record = TOTPCode.objects.create(email=email, code=code)
         
+        api_logger.debug(f"Generated TOTP code {code} for {email}, record ID {totp_record.id}")
+
         # Send email
         subject = "קוד הכניסה שלך - חיוך של ילד"
         message = f"""
