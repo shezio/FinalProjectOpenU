@@ -265,7 +265,7 @@ ACCOUNT_LOGOUT_ON_GET = True  # Optional: allow GET logout
 # Fix the deprecated setting
 ACCOUNT_SIGNUP_FIELDS = ['email*', 'username*', 'password1*', 'password2*']
 # Redirect to React frontend after Google login
-LOGIN_REDIRECT_URL = CLOUDFRONT_URL + "/google-success" if IS_PROD else LOCAL_URL + "/google-success"
+LOGIN_REDIRECT_URL = CLOUDFRONT_URL + "/#/google-success" if IS_PROD else LOCAL_URL + "/google-success"
 
 
 
