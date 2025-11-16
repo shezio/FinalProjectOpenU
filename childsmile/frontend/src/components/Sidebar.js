@@ -1,5 +1,5 @@
 import React from 'react';
-import { useNavigate, useLocation ,NavLink} from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { hasViewPermissionForTable, hasCreatePermissionForTable, hasViewPermissionForReports, hasDeletePermissionForTable, isGuestUser } from './utils'; // Import utility functions for fetching data
 import '../styles/common.css';
 
@@ -21,27 +21,69 @@ const Sidebar = () => {
   return (
     <div className="sidebar">
       {hasPermissionToTasks && (
-        <NavLink  to="/tasks"  className={({ isActive }) => isActive ? "active" : ""  }>לוח משימות</NavLink>
+        <button
+          data-path="/tasks"
+          className={location.pathname.startsWith('/tasks') ? 'active' : ''}
+          onClick={() => window.location.href = '/tasks'}
+        >
+          לוח משימות
+        </button>
       )}
       {hasPermissionToFamilies && ( 
-        <NavLink  to="/families"  className={({ isActive }) => isActive ? "active" : ""  }>משפחות</NavLink>
+        <button
+          data-path="/families"
+          className={location.pathname.startsWith('/families') ? 'active' : ''}
+          onClick={() => window.location.href = '/families'}
+        >
+          משפחות
+        </button>
       )}
       {/* Tutor and Volunteer Management  */}
       {hasPermissionToTutorVolunteerMgmt && (
-        <NavLink  to="/tutor-volunteer-mgmt"  className={({ isActive }) => isActive ? "active" : ""  }>ניהול חונכים ומתנדבים</NavLink>
+        <button
+          data-path="/tutor-volunteer-mgmt"
+          className={location.pathname.startsWith('/tutor-volunteer-mgmt') ? 'active' : ''}
+          onClick={() => window.location.href = '/tutor-volunteer-mgmt'}
+        >
+          ניהול חונכים ומתנדבים
+        </button>
       )}
       {/* End Tutor and Volunteer Management  */}
       {hasPermissionToFeedbacks && (
-        <NavLink  to="/feedbacks"  className={({ isActive }) => isActive ? "active" : ""  }>משובים</NavLink>
+        <button
+          data-path="/feedbacks"
+          className={location.pathname.startsWith('/feedbacks') ? 'active' : ''}
+          onClick={() => window.location.href = '/feedbacks'}
+        >
+          משובים
+        </button>
       )}
       {hasPermissionToTutorships && (
-        <NavLink  to="/tutorships"  className={({ isActive }) => isActive ? "active" : ""  }>חונכות</NavLink>
+        <button
+          data-path="/tutorships"
+          className={location.pathname.startsWith('/tutorships') ? 'active' : ''}
+          onClick={() => window.location.href = '/tutorships'}
+        >
+          חונכות
+        </button>
       )}
       {hasPermissionToAnyReport && (
-        <NavLink  to="/reports"  className={({ isActive }) => isActive ? "active" : ""  }>דוחות</NavLink>
+        <button
+          data-path="/reports"
+          className={location.pathname.startsWith('/reports') ? 'active' : ''}
+          onClick={() => window.location.href = '/reports'}
+        >
+          דוחות
+        </button>
       )}
       {hasPermissionToSystemManagement && (
-        <NavLink  to="/system-management"  className={({ isActive }) => isActive ? "active" : ""  }>ניהול מערכת</NavLink>
+        <button
+          data-path="/system-management"
+          className={location.pathname.startsWith('/system-management') ? 'active' : ''}
+          onClick={() => window.location.href = '/system-management'}
+        >
+          ניהול מערכת
+        </button>
       )}
     </div>
   );

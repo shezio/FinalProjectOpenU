@@ -122,7 +122,7 @@ const Login = () => {
 
   const handleGoogleLogin = () => {
     const loginUrl = process.env.REACT_APP_API_URL.replace(/\/api$/, "");
-    window.location.href = `${loginUrl}/accounts/google/login/`;
+    window.location.href = `${loginUrl}/#/accounts/google/login/`;
   };
 
 
