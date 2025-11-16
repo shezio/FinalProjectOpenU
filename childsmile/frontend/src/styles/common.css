@@ -18,7 +18,8 @@ body {
   }
 }
 
-.sidebar button,a {
+.sidebar button,
+.sidebar a {
     background-color: #333;
     color: white;
     padding: 14px 20px;
@@ -26,16 +27,25 @@ body {
     cursor: pointer;
     text-align: center;
     font-size: 30px;
-    font: Arial, sans-serif;
+    font-family: Arial, sans-serif;
     width: 100%;
     margin-bottom: 1px;
     /* make the buttons be a little lower */
     margin-top: 30px;
     text-decoration: none;
-    
+    display: block;  /* ✅ Add this - make links behave like block elements */
+    border-radius: 4px;  /* ✅ Add this for consistency */
+    transition: background-color 0.3s ease;  /* ✅ Add smooth transition */
 }
 
-.sidebar button.active ,a.active {
+.sidebar button:hover,
+.sidebar a:hover {
+    background-color: #ddd;
+    color: black;
+}
+
+.sidebar button.active,
+.sidebar a.active {
     background-color: #4CAF50;
     /* Green background when active */
     color: black;
@@ -60,13 +70,6 @@ body {
     z-index: 1001;
     padding-top: 150px;
     /* Adjust this value to move all buttons lower */
-}
-
-.sidebar button:hover {
-    background-color: #ddd;
-    /* Gray background on hover */
-    color: black;
-    /* Black text on hover */
 }
 
 .main-content {
