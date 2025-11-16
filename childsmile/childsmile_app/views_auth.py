@@ -99,7 +99,7 @@ def login_email(request):
         # Generate new TOTP code
         code = TOTPCode.generate_code()
         totp_record = TOTPCode.objects.create(email=email, code=code)
-        
+        print(f"Generated TOTP code {code} for {email}, record ID {totp_record.id}")
         api_logger.debug(f"Generated TOTP code {code} for {email}, record ID {totp_record.id}")
 
         # Send email
