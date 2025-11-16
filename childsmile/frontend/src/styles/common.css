@@ -18,7 +18,7 @@ body {
   }
 }
 
-.sidebar button {
+.sidebar button,a {
     background-color: #333;
     color: white;
     padding: 14px 20px;
@@ -31,9 +31,11 @@ body {
     margin-bottom: 1px;
     /* make the buttons be a little lower */
     margin-top: 30px;
+    text-decoration: none;
+    
 }
 
-.sidebar button.active {
+.sidebar button.active ,a.active {
     background-color: #4CAF50;
     /* Green background when active */
     color: black;
