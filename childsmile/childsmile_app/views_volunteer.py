@@ -79,7 +79,7 @@ def register_send_totp(request):
             }, status=400)
 
         # Check if user already registered
-        if SignedUp.objects.filter(email=email).exists() or Staff.objects.filter(email=email).exists() or Tutors.objects.filter(email=email).exists():
+        if SignedUp.objects.filter(email=email).exists() or Staff.objects.filter(email=email).exists() or Tutors.objects.filter(tutor_email=email).exists():
             log_api_action(
                 request=request,
                 action='USER_REGISTRATION_FAILED',
