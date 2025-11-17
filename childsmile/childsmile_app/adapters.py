@@ -37,7 +37,7 @@ class CustomSocialAccountAdapter(DefaultSocialAccountAdapter):
             )
             
             # Redirect to React app instead of Django login page
-            nomailurl = f"{settings.LOCAL_URL}?error=no_email" if not settings.IS_PROD else f"{settings.ALB_URL}?error=no_email"
+            nomailurl = f"{settings.LOCAL_URL}?error=no_email" if not settings.IS_PROD else f"{settings.CLOUDFRONT_URL}?error=no_email"
             raise ImmediateHttpResponse(redirect(nomailurl))
 
         # Check if this email exists in our Staff table
@@ -59,7 +59,7 @@ class CustomSocialAccountAdapter(DefaultSocialAccountAdapter):
             )
             
             # Redirect to React app with error message instead of Django login page
-            unauthurl = f"{settings.LOCAL_URL}?error=unauthorized&email={email}" if not settings.IS_PROD else f"{settings.ALB_URL}?error=unauthorized&email={email}"
+            unauthurl = f"{settings.LOCAL_URL}?error=unauthorized&email={email}" if not settings.IS_PROD else f"{settings.CLOUDFRONT_URL}?error=unauthorized&email={email}"
             raise ImmediateHttpResponse(redirect(unauthurl))
 
         # **Continue with existing user creation logic**
@@ -151,11 +151,11 @@ class CustomSocialAccountAdapter(DefaultSocialAccountAdapter):
                 'error_details': str(error) if error else 'Unknown error'
             }
         )
-        authfailurl = f"{settings.LOCAL_URL}?error=auth_failed" if not settings.IS_PROD else f"{settings.ALB_URL}?error=auth_failed"
+        authfailurl = f"{settings.LOCAL_URL}?error=auth_failed" if not settings.IS_PROD else f"{settings.CLOUDFRONT_URL}?error=auth_failed"
         return redirect(authfailurl)
 
     def get_login_redirect_url(self, request):
         """
         Redirect successful logins to React app
         """
-        return f"{settings.LOCAL_URL}/" if not settings.IS_PROD else f"{settings.ALB_URL}/"
+        return f"{settings.LOCAL_URL}/" if not settings.IS_PROD else f"{settings.CLOUDFRONT_URL}/"
