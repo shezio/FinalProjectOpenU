@@ -79,7 +79,7 @@ def register_send_totp(request):
             }, status=400)
 
         # Check if user already registered
-        if SignedUp.objects.filter(email=email).exists():
+        if SignedUp.objects.filter(email=email).exists() or Staff.objects.filter(email=email).exists() or Tutors.objects.filter(email=email).exists():
             log_api_action(
                 request=request,
                 action='USER_REGISTRATION_FAILED',
@@ -89,7 +89,7 @@ def register_send_totp(request):
                 additional_data={'attempted_email': email}
             )
             return JsonResponse({
-                "error": f"Email '{email}' is already registered"
+                "error": f"This email is already registered"
             }, status=400)
 
         # Format phone with dash

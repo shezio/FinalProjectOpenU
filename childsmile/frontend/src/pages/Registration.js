@@ -121,11 +121,9 @@ const Registration = () => {
   };
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log("DEBUG: Form data being submitted:", formData);
-
+    
     if (validate()) {
       setLoading(true);
-      // Step 1: Send TOTP
       axios
         .post("/api/register-send-totp/", formData)
         .then((response) => {
@@ -137,6 +135,14 @@ const Registration = () => {
         .catch((error) => {
           console.error("Error sending TOTP:", error);
           setLoading(false);
+          
+          // ✅ Handle email already exists error
+          if (error.response?.data?.email_exists) {
+            showErrorToast(t, 'Email is already registered.', error);
+            // Don't move to TOTP screen
+            return;
+          }
+          
           showErrorToast(t, 'Failed to send verification code.', error);
         });
     }
