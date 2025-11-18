@@ -115,35 +115,13 @@ WSGI_APPLICATION = "childsmile.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
-
-# def get_secret_from_aws_or_env():
-#     """
-#     Try to get DB credentials from AWS Secrets Manager if running on EC2.
-#     Fallback to .env for local development.
-#     """
-#     try:
-#         import boto3
-#         session = boto3.session.Session()
-#         client = session.client(service_name='secretsmanager', region_name='il-central-1')
-#         secret_name = os.getenv('AWS_SECRET_NAME', 'default-placeholder')
-#         secret_value = client.get_secret_value(SecretId=secret_name)
-#         secret = json.loads(secret_value['SecretString'])
-#         return secret
-#     except Exception:
-#         # fallback to .env variables
-#         return {
-#             'username': os.getenv('DB_USER', 'child_smile_user'),
-#             'password': os.getenv('DB_PASSWORD'),
-#         }
-
-
-# secret = get_secret_from_aws_or_env()
-
 # Detect whether running on EC2 or local
 import json
 import os
 import boto3
 import requests
+from functools import wraps
+from psycopg2 import OperationalError
 
 def is_ec2():
     """Detect EC2 instance by querying the metadata service."""
@@ -166,9 +144,11 @@ def is_ec2():
     except requests.RequestException:
         return False
 
+on_ec2 = is_ec2()
+
 def get_rds_credentials():
     """Get DB credentials from Secrets Manager if on EC2, else from .env"""
-    if is_ec2():
+    if on_ec2:
         secret_name = os.environ.get("AWS_SECRET_NAME")
         region_name = os.environ.get("AWS_REGION", "il-central-1")
         client = boto3.client("secretsmanager", region_name=region_name)
@@ -180,16 +160,32 @@ def get_rds_credentials():
             "username": os.getenv("DB_USER", "child_smile_user"),
             "password": os.getenv("DB_PASSWORD", "fallback_password"),
         }
+# Lazy fetch callable for Django
+def get_rds_password():
+    return get_rds_credentials()["password"]
+
+# Optional: retry wrapper for auth failures
+def retry_on_auth_failure(fn):
+    @wraps(fn)
+    def wrapper(*args, **kwargs):
+        try:
+            return fn(*args, **kwargs)
+        except OperationalError as e:
+            if "password authentication failed" in str(e):
+                kwargs['password'] = get_rds_password()
+                return fn(*args, **kwargs)
+            raise
+    return wrapper
 
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'child_smile_db',
         'USER': 'child_smile_user',
-        'PASSWORD': os.getenv('DB_PASSWORD') if not is_ec2() else get_rds_credentials().get('password'),
+        'PASSWORD': os.getenv('DB_PASSWORD') if not on_ec2 else get_rds_password,
         'HOST': (
             'child-smile-db.cpooguksy04d.il-central-1.rds.amazonaws.com'
-            if is_ec2()
+            if on_ec2
             else 'localhost'
         ),
         'PORT': '5432',
