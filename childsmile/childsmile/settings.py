@@ -140,6 +140,9 @@ WSGI_APPLICATION = "childsmile.wsgi.application"
 # secret = get_secret_from_aws_or_env()
 
 # Detect whether running on EC2 or local
+import json
+import os
+import boto3
 import requests
 
 def is_ec2():
@@ -162,17 +165,33 @@ def is_ec2():
         return response.status_code == 200
     except requests.RequestException:
         return False
+on_ec2 = is_ec2()
 
+def get_rds_credentials():
+    """Get DB credentials from Secrets Manager if on EC2, else from .env"""
+    if on_ec2:
+        secret_name = os.environ.get("AWS_SECRET_NAME")
+        region_name = os.environ.get("AWS_REGION", "il-central-1")
+        client = boto3.client("secretsmanager", region_name=region_name)
+        secret_value = client.get_secret_value(SecretId=secret_name)
+        secret_dict = json.loads(secret_value["SecretString"])
+        return secret_dict
+    else:
+        return {
+            "username": os.getenv("DB_USER", "child_smile_user"),
+            "password": os.getenv("DB_PASSWORD", "fallback_password"),
+        }
+rds_password = get_rds_credentials().get("password")
 
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'child_smile_db',
         'USER': 'child_smile_user',
-        'PASSWORD': os.getenv('DB_PASSWORD'),
+        'PASSWORD': os.getenv('DB_PASSWORD') if not on_ec2 else rds_password,
         'HOST': (
             'child-smile-db.cpooguksy04d.il-central-1.rds.amazonaws.com'
-            if is_ec2()
+            if on_ec2
             else 'localhost'
         ),
         'PORT': '5432',
