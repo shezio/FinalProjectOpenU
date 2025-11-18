@@ -165,11 +165,10 @@ def is_ec2():
         return response.status_code == 200
     except requests.RequestException:
         return False
-on_ec2 = is_ec2()
 
 def get_rds_credentials():
     """Get DB credentials from Secrets Manager if on EC2, else from .env"""
-    if on_ec2:
+    if is_ec2():
         secret_name = os.environ.get("AWS_SECRET_NAME")
         region_name = os.environ.get("AWS_REGION", "il-central-1")
         client = boto3.client("secretsmanager", region_name=region_name)
@@ -181,20 +180,20 @@ def get_rds_credentials():
             "username": os.getenv("DB_USER", "child_smile_user"),
             "password": os.getenv("DB_PASSWORD", "fallback_password"),
         }
-rds_password = get_rds_credentials().get("password")
 
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'child_smile_db',
         'USER': 'child_smile_user',
-        'PASSWORD': os.getenv('DB_PASSWORD') if not on_ec2 else rds_password,
+        'PASSWORD': os.getenv('DB_PASSWORD') if not is_ec2() else get_rds_credentials().get('password'),
         'HOST': (
             'child-smile-db.cpooguksy04d.il-central-1.rds.amazonaws.com'
-            if on_ec2
+            if is_ec2()
             else 'localhost'
         ),
         'PORT': '5432',
+        'CONN_MAX_AGE': 0,
     }
 }
 
