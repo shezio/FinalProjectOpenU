@@ -182,7 +182,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'child_smile_db',
         'USER': 'child_smile_user',
-        'PASSWORD': os.getenv('DB_PASSWORD') if not on_ec2 else get_rds_password,
+        'PASSWORD': os.getenv('DB_PASSWORD'),# if not on_ec2 else get_rds_password,
         'HOST': (
             'child-smile-db.cpooguksy04d.il-central-1.rds.amazonaws.com'
             if on_ec2
