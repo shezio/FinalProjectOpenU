@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Families Page Mockup</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, rgba(0, 0, 0, 0.8), rgba(36, 36, 36, 0.85)), url('https://source.unsplash.com/random/1920x1080');
+            background-size: cover;
+            font-family: 'Arial', sans-serif;
+            overflow: hidden;
+        }
+        .glass {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        }
+        .hover\:shadow-lg:hover {
+            box-shadow: 0 15px 25px rgba(0, 0, 0, 0.5);
+        }
+    </style>
+</head>
+<body>
+    <div class="flex items-center justify-center min-h-screen">
+        <div class="glass w-full max-w-4xl m-4 p-6">
+            <h1 class="text-3xl font-semibold text-white text-center">Families Page</h1>
+            <div class="flex justify-between items-center my-4">
+                <input type="text" placeholder="Search families..." class="p-2 rounded-lg glass text-black"/>
+                <button class="bg-blue-500 text-white px-4 py-2 rounded-lg shadow-lg hover:shadow-lg">Add Family</button>
+            </div>
+            <table class="min-w-full bg-white border border-gray-200">
+                <thead>
+                    <tr class="bg-gray-300">
+                        <th class="py-2 px-4">Family Name</th>
+                        <th class="py-2 px-4">Members</th>
+                        <th class="py-2 px-4">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="py-2 px-4 text-center">Smith</td>
+                        <td class="py-2 px-4 text-center">4</td>
+                        <td class="py-2 px-4 text-center">
+                            <button class="text-blue-500 hover:text-blue-600">Edit</button>
+                            <button class="text-red-500 hover:text-red-600">Delete</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="py-2 px-4 text-center">Johnson</td>
+                        <td class="py-2 px-4 text-center">3</td>
+                        <td class="py-2 px-4 text-center">
+                            <button class="text-blue-500 hover:text-blue-600">Edit</button>
+                            <button class="text-red-500 hover:text-red-600">Delete</button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</body>
+</html>
