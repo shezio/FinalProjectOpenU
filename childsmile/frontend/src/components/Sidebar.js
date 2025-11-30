@@ -1,6 +1,8 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { hasViewPermissionForTable, hasCreatePermissionForTable, hasViewPermissionForReports, hasDeletePermissionForTable, isGuestUser } from './utils'; // Import utility functions for fetching data
+import { useTranslation } from 'react-i18next';
+import axios from '../axiosConfig';
 import '../styles/common.css';
 
 const isProd = !window.location.hostname.includes('localhost');
@@ -11,8 +13,58 @@ const goTo = (path) => {
 
 
 const Sidebar = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
+  const [currentTime, setCurrentTime] = useState(new Date());
+
+  // Get user info
+  const username = localStorage.getItem("username") || "אורח";
+  const origUsername = localStorage.getItem("origUsername") || "";
+  const staff = JSON.parse(localStorage.getItem("staff") || "[]");
+  const currentStaff = staff.find(s => s.username === origUsername);
+  const roles = currentStaff?.roles || [];
+
+  // Update clock every second
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, []);
+
+  // Format time and date in Israeli format
+  const formatTime = (date) => {
+    return date.toLocaleTimeString('he-IL', {
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit'
+    });
+  };
+
+  const formatDate = (date) => {
+    return date.toLocaleDateString('he-IL', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  };
+
+  const handleLogout = async () => {
+    try {
+      const response = await axios.post("/api/logout/");
+      if (response.status !== 200) {
+        console.error("Logout failed with status:", response.status);
+      }
+    } catch (error) {
+      console.error("Logout exception:", error);
+    } finally {
+      localStorage.clear();
+      window.location.href = "/";
+    }
+  };
 
   // If guest user, show everything
   const isGuest = isGuestUser();
@@ -27,6 +79,35 @@ const Sidebar = () => {
 
   return (
     <div className="sidebar">
+      {/* User Info Section */}
+      <div className="sidebar-user-info">
+        <div className="sidebar-username">
+          {username.replace(/_/g, ' ')}
+        </div>
+        {roles.length > 0 && (
+          <div className="sidebar-roles">
+            {roles.map((role, idx) => (
+              <div key={idx} className="sidebar-role">{t(role)}</div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Clock Section */}
+      <div className="sidebar-clock">
+        <div className="sidebar-time">{formatTime(currentTime)}</div>
+        <div className="sidebar-date">{formatDate(currentTime)}</div>
+      </div>
+
+      {/* Logout Button */}
+      <button className="sidebar-logout-button" onClick={handleLogout}>
+        יציאה מהמערכת
+      </button>
+
+      {/* Navigation Divider */}
+      <div className="sidebar-divider"></div>
+
+      {/* Navigation Buttons */}
       {hasPermissionToTasks && (
         <button
           data-path="/tasks"

@@ -1,171 +1,285 @@
-/* === HEADER ירוק עליון === */
+/* ========================================
+   HEADER - MODERN GLASSMORPHISM DESIGN
+   ======================================== */
+
 .header {
-    background-color: #4CAF50;
+    background: linear-gradient(135deg, 
+      rgba(99, 102, 241, 0.85) 0%,
+      rgba(139, 92, 246, 0.85) 50%,
+      rgba(168, 85, 247, 0.85) 100%);
+    backdrop-filter: blur(25px) saturate(180%);
+    -webkit-backdrop-filter: blur(25px) saturate(180%);
     color: white;
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    /* Push items to edges */
-    padding: 10px 20px;
-    height: 150px;
+    justify-content: center;
+    padding: 20px 30px;
+    height: 200px;
     position: fixed;
     right: 0;
     top: 0;
     left: 0;
     z-index: 1000;
+    border-bottom: 3px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 
+      0 8px 40px rgba(99, 102, 241, 0.35),
+      0 4px 20px rgba(168, 85, 247, 0.25),
+      inset 0 -1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.header::before {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, 
+      rgba(99, 102, 241, 1) 0%,
+      rgba(168, 85, 247, 1) 50%,
+      rgba(236, 72, 153, 1) 100%);
+    box-shadow: 0 2px 15px rgba(99, 102, 241, 0.5);
 }
 
 /* כדי שהתוכן לא יוסתר ע"י ה-Header */
 body {
     padding-top: 100px;
-    /* תמיד משאיר מקום מתחת ל-header */
 }
 
-/* === צד ימין – הלוגו והכותרת יחד === */
-.right-header {
-    display: flex;
-    align-items: center;
-    /* ✅ יישור אנכי ללוגו ולכותרת */
-    justify-content: flex-end;
-    /* ✅ דוחף את הכל לימין */
-    flex-grow: 1;
-    right: 240px;
-    /* ✅ דוחף את הכל ימינה */
-    /* push logo to the right */
-}
-
-
+/* === Logo positioned at rightmost corner (left for RTL) === */
 .logo {
-    width: 150px;
-    margin: 0;
-    /* Remove extra margin */
-    position: relative;
+    width: 180px;
+    height: 180px;
+    position: absolute;
+    right: 310px;
+    /* Account for sidebar */
+    top: 10px;
     flex-shrink: 0;
-    /* Prevent the logo from shrinking */
-    margin-right: 200px;
+    border-radius: 20px;
+    border: 3px solid rgba(255, 255, 255, 0.5);
+    background: white;
+    padding: 10px;
+    box-shadow: 
+      0 6px 30px rgba(0, 0, 0, 0.2),
+      0 0 20px rgba(255, 255, 255, 0.25),
+      inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    transition: all 0.3s ease;
+    object-fit: contain;
+    z-index: 1002;
 }
 
+.logo:hover {
+    transform: scale(1.05);
+    box-shadow: 
+      0 8px 35px rgba(0, 0, 0, 0.25),
+      0 0 25px rgba(255, 255, 255, 0.3),
+      inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+/* === Page Title - Centered === */
 .title {
-    font-size: 3em;
+    font-size: 4em;
+    font-weight: 900;
     margin: 0;
     text-align: center;
-    /* Center title horizontally */
-    position: relative;
-    flex-grow: 1;
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
     white-space: nowrap;
-    /* Prevent text from wrapping */
-    padding-right: 1000px;
-    /* Add some space between the logo and title */
-    left: 60%;
-    transform: translateX(-30%);
+    background: linear-gradient(135deg, 
+      #ffffff 0%,
+      #f0f9ff 25%,
+      #e0f2fe 50%,
+      #bae6fd 75%,
+      #ffffff 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    background-size: 200% 200%;
+    animation: titleGlow 4s ease-in-out infinite;
+    filter: drop-shadow(0 4px 20px rgba(255, 255, 255, 0.4))
+            drop-shadow(0 2px 10px rgba(99, 102, 241, 0.6))
+            drop-shadow(0 0 30px rgba(168, 85, 247, 0.4));
+    letter-spacing: 2px;
+    text-transform: uppercase;
+}
+
+@keyframes titleGlow {
+    0%, 100% {
+        background-position: 0% 50%;
+        filter: drop-shadow(0 4px 20px rgba(255, 255, 255, 0.4))
+                drop-shadow(0 2px 10px rgba(99, 102, 241, 0.6))
+                drop-shadow(0 0 30px rgba(168, 85, 247, 0.4));
+    }
+    50% {
+        background-position: 100% 50%;
+        filter: drop-shadow(0 6px 30px rgba(255, 255, 255, 0.6))
+                drop-shadow(0 3px 15px rgba(99, 102, 241, 0.8))
+                drop-shadow(0 0 40px rgba(168, 85, 247, 0.6));
+    }
+}
+
+/* Right header container no longer needed but keep for compatibility */
+.right-header {
+    display: contents;
 }
 
 /* === תמונת עמית, ציטוט ו-QR === */
 .top-left {
     position: absolute;
-    top: 10px;
-    left: 200px;
+    top: 20px;
+    left: 40px;
     display: flex;
     align-items: center;
-    /* Keep Amit, quote, and QR in line */
     z-index: 1001;
-    gap: 10px;
-    /* Reduce spacing */
+    gap: 25px;
 }
 
 .amit-img {
-    width: 100px !important;
-    /* Adjust the width as needed */
-    height: 150px !important;
-    /* Maintain aspect ratio */
+    width: 130px !important;
+    height: 170px !important;
     object-fit: cover;
+    border-radius: 18px;
+    border: 3px solid rgba(255, 255, 255, 0.5);
+    box-shadow: 
+      0 6px 30px rgba(0, 0, 0, 0.25),
+      0 0 20px rgba(255, 255, 255, 0.2),
+      inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    transition: all 0.3s ease;
+}
+
+.amit-img:hover {
+    transform: scale(1.05);
+    box-shadow: 
+      0 8px 35px rgba(0, 0, 0, 0.3),
+      0 0 25px rgba(255, 255, 255, 0.3),
+      inset 0 1px 0 rgba(255, 255, 255, 0.4);
 }
 
 .qr-code {
-    width: 90px;
-    height: auto;
-    margin-left: 5px;
-    /* Reduce spacing */
+    width: 140px;
+    height: 140px;
+    border-radius: 16px;
+    border: 3px solid rgba(255, 255, 255, 0.5);
+    background: white;
+    padding: 10px;
+    box-shadow: 
+      0 6px 30px rgba(0, 0, 0, 0.2),
+      0 0 20px rgba(255, 255, 255, 0.2);
+    transition: all 0.3s ease;
 }
 
-/* ✅ הציטוט נשאר כמו שהגדרת */
+.qr-code:hover {
+    transform: scale(1.05);
+    box-shadow: 
+      0 8px 35px rgba(0, 0, 0, 0.25),
+      0 0 25px rgba(255, 255, 255, 0.3);
+}
+
 .quote {
-    font-size: 24px;
+    font-size: 26px;
+    font-weight: 600;
     text-align: right;
-    color: black;
-    background-color: white;
-    padding: 8px !important;
-    /* Adjust padding */
-    border-radius: 5px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    width: 200px;
-    line-height: 1.5;
+    color: #1f2937;
+    background: linear-gradient(135deg, 
+      rgba(255, 255, 255, 0.95) 0%,
+      rgba(249, 250, 251, 0.95) 100%);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    padding: 20px 24px;
+    border-radius: 18px;
+    border: 2px solid rgba(255, 255, 255, 0.6);
+    box-shadow: 
+      0 6px 30px rgba(0, 0, 0, 0.15),
+      inset 0 1px 0 rgba(255, 255, 255, 0.8);
+    width: 280px;
+    line-height: 1.6;
     margin: 0;
-    /* Remove any unnecessary margin */
+    transition: all 0.3s ease;
+    letter-spacing: 0.3px;
 }
 
-/* === שלום אורח וכפתור יציאה – תמיד מתחת ל-Header === */
-.user-actions {
-    display: flex;
-    align-items: center;
-    justify-content: left;
-    padding: 10px 20px;
-    position: fixed;
-    top: calc(150px + 30px);
-    /* ✅ תמיד מתחת להדר - אם תשנה גובה, זה יתעדכן לבד */
-    left: 10px;
-    gap: 15px;
+.quote:hover {
+    transform: translateY(-2px);
+    box-shadow: 
+      0 8px 35px rgba(0, 0, 0, 0.2),
+      inset 0 1px 0 rgba(255, 255, 255, 0.9);
 }
 
-.welcome {
-    font-size: 2em;
-    word-break: break-word;
-    /* Use break-word for better word breaking */
-    white-space: normal;
-    /* Allow normal wrapping */
-    max-width: 320px;
-    /* Optional: limit width so long names wrap */
-}
-
-.logout-button {
-    background-color: #d9534f;
-    color: white;
-    border: none;
-    padding: 8px 12px;
-    cursor: pointer;
-    border-radius: 5px;
-    font-size: 2em;
-}
-
-.logout-button:hover {
-    background-color: #c9302c;
-}
+/* User actions removed - now in sidebar */
 
 
 @media (max-width: 2400px) {
-    .logo {
-        width: 150px;
+    .header {
+        height: 180px;
+        padding: 18px 25px;
+    }
 
-        /* Remove extra margin */
-        position: relative;
-        flex-shrink: 1;
-        /* Prevent the logo from shrinking */
-        margin-left: 200px;
-        /* Add some space between the logo and title */
+    .logo {
+        width: 160px;
+        height: 160px;
+        right: 290px;
     }
 
     .title {
-        font-size: 3em;
-        margin: 0;
-        text-align: center;
-        /* Center title horizontally */
-        position: relative;
-        flex-grow: 1;
-        white-space: nowrap;
-        /* Prevent text from wrapping */
-        padding-right: 500px;
-        /* Add some space between the logo and title */
-        left: 50%;
-        transform: translateX(-30%);
+        font-size: 3.2em;
+    }
+
+    .top-left {
+        gap: 20px;
+        left: 35px;
+    }
+
+    .amit-img {
+        width: 120px !important;
+        height: 155px !important;
+    }
+
+    .qr-code {
+        width: 130px;
+        height: 130px;
+    }
+
+    .quote {
+        font-size: 24px;
+        padding: 18px 22px;
+        width: 260px;
+    }
+}
+
+@media (max-width: 1800px) {
+    .header {
+        height: 160px;
+    }
+
+    .logo {
+        width: 140px;
+        height: 140px;
+        right: 370px;
+    }
+
+    .title {
+        font-size: 6.8em;
+    }
+
+    .top-left {
+        gap: 18px;
+        left: 30px;
+    }
+
+    .amit-img {
+        width: 110px !important;
+        height: 140px !important;
+    }
+
+    .qr-code {
+        width: 120px;
+        height: 120px;
+    }
+
+    .quote {
+        font-size: 22px;
+        padding: 16px 20px;
+        width: 240px;
     }
 }

@@ -66,7 +66,8 @@ html {
     /* Increase margin-top for smaller screens */
     margin-bottom: 200px;
     /* Increase margin-bottom for smaller screens */
-    margin-right: 200px;
+    margin-right: 100px;
+    /* Adjusted for wider sidebar */
   }
 }
 
@@ -1468,9 +1469,11 @@ textarea.error {
   flex-wrap: wrap;
   gap: 16px;
   align-items: center;
-  padding: 20px 0;
-  margin: 20px auto;
-  max-width: 95%;
+  padding: 20px 20px 20px 80px;
+  margin: 20px 180px 20px 40px;
+  /* RTL: right margin for sidebar (280px + 40px), left margin for spacing */
+  max-width: calc(100% - 400px);
+  /* Account for wider sidebar and spacing */
 }
 
 .filter-create-container label {

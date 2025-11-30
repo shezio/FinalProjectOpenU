@@ -1,39 +1,11 @@
 import React from "react";
-import { useNavigate } from "react-router-dom";
-import axios from "../axiosConfig";
 import "../styles/innerpageheader.css";
 import logo from "../assets/logo.png";
 import amitImg from "../assets/amit.jpg";
 import qrCode from "../assets/qr-code.png";
-import { useTranslation } from "react-i18next";
 
 // use title prop to set the title of the page
 const InnerPageHeader = ({ title }) => {
-  const { t } = useTranslation();
-  const username = localStorage.getItem("username") || "אורח";
-  const origUsername = localStorage.getItem("origUsername") || "";
-  const staff = JSON.parse(localStorage.getItem("staff") || "[]");
-  const currentStaff = staff.find(s => s.username === origUsername);
-  const roles = currentStaff?.roles || [];
-  const navigate = useNavigate();
-
-  const handleLogout = async () => {
-    try {
-      console.log("Sending logout request...");  // Debugging log
-      const response = await axios.post("/api/logout/");
-      console.log("Logout response:", response);  // Debugging log
-      if (response.status !== 200) {
-        console.error("Logout failed with status:", response.status);
-      }
-    } catch (error) {
-      console.error("Logout exception:", error);
-    }
-    finally {
-      // Optionally, you can redirect to the login page or show a message
-      localStorage.clear();  // Clear all local storage
-      window.location.href = "/";
-    }
-  };
 
   return (
     <>
@@ -55,24 +27,6 @@ const InnerPageHeader = ({ title }) => {
           <img src={logo} alt="חיוך של ילד" className="logo" />
           <h1 className="title">{title}</h1>
         </div>
-      </div>
-
-      {/* שלום משתמש וכפתור יציאה – מתחת להדר */}
-      <div className="user-actions">
-        <div className="welcome">
-          שלום, <br />
-          {username}
-          {roles.length > 0 && (
-            <div className="user-roles-list">
-              {roles.map((role, idx) => (
-                <div key={idx} className="user-role">{t(role)}</div>
-              ))}
-            </div>
-          )}
-        </div>
-        <button className="logout-button" onClick={handleLogout}>
-          יציאה
-        </button>
       </div>
     </>
   );
