@@ -248,7 +248,8 @@ body {
 .main-content {
     flex-grow: 1;
     /* תופס את כל הרוחב הפנוי */
-    padding: 20px;
+    padding: 230px 40px 40px 40px;
+    /* Top padding for header, side padding for content */
     margin-right: 280px;
     /* שומר מקום לסרגל הצד המורחב */
     height: 100vh;
@@ -256,6 +257,8 @@ body {
     /* אם יש גלילה פנימית */
     display: flex;
     flex-direction: column;
+    background: transparent;
+    /* Allow gradient background to show through */
 }
 
 .login-main-content {
@@ -280,10 +283,27 @@ body {
 }
 
 .form-container {
-    background-color: #fff;
-    padding: 20px;
-    border-radius: 10px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    background: linear-gradient(135deg, 
+      rgba(255, 255, 255, 0.95) 0%,
+      rgba(255, 255, 255, 0.9) 100%);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    padding: 30px;
+    border-radius: 20px;
+    border: 2px solid rgba(255, 255, 255, 0.5);
+    box-shadow: 
+      0 15px 50px rgba(0, 0, 0, 0.2),
+      0 8px 25px rgba(99, 102, 241, 0.15),
+      inset 0 2px 0 rgba(255, 255, 255, 0.8);
+    transition: all 0.3s ease;
+}
+
+.form-container:hover {
+    transform: translateY(-2px);
+    box-shadow: 
+      0 20px 60px rgba(0, 0, 0, 0.25),
+      0 10px 30px rgba(99, 102, 241, 0.2),
+      inset 0 2px 0 rgba(255, 255, 255, 0.9);
 }
 
 .form-container h2 {
@@ -298,23 +318,58 @@ body {
 .form-container input,
 .form-container select {
     width: calc(100% - 22px);
-    padding: 10px;
-    margin-bottom: 10px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
+    padding: 14px 16px;
+    margin-bottom: 12px;
+    border: 2px solid rgba(99, 102, 241, 0.3);
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    font-size: 16px;
+    font-weight: 500;
+    color: #1f2937;
+    transition: all 0.3s ease;
+    box-shadow: 
+      0 2px 8px rgba(0, 0, 0, 0.05),
+      inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+.form-container input:focus,
+.form-container select:focus {
+    outline: none;
+    border-color: rgba(99, 102, 241, 0.6);
+    background: rgba(255, 255, 255, 1);
+    box-shadow: 
+      0 4px 15px rgba(99, 102, 241, 0.2),
+      0 0 0 3px rgba(99, 102, 241, 0.1),
+      inset 0 1px 0 rgba(255, 255, 255, 1);
 }
 
 .form-container button {
-    background-color: #4CAF50;
+    background: linear-gradient(135deg, 
+      rgba(16, 185, 129, 0.95) 0%,
+      rgba(5, 150, 105, 0.95) 100%);
     color: white;
-    padding: 10px;
-    border: none;
-    border-radius: 5px;
+    padding: 14px 24px;
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    border-radius: 12px;
     cursor: pointer;
+    font-size: 18px;
+    font-weight: 700;
+    transition: all 0.3s ease;
+    box-shadow: 
+      0 6px 20px rgba(16, 185, 129, 0.3),
+      inset 0 1px 0 rgba(255, 255, 255, 0.3);
 }
 
 .form-container button:hover {
-    background-color: #45a049;
+    background: linear-gradient(135deg, 
+      rgba(5, 150, 105, 1) 0%,
+      rgba(4, 120, 87, 1) 100%);
+    transform: translateY(-2px);
+    box-shadow: 
+      0 10px 30px rgba(16, 185, 129, 0.4),
+      inset 0 1px 0 rgba(255, 255, 255, 0.4);
 }
 
 /* סגנון לשדה טלפון שגוי */
@@ -391,4 +446,227 @@ body {
     color:
         /*white*/
         #fdfbfb;
+}
+
+/* ========================================
+   GLOBAL GLASSMORPHISM CARD STYLES
+   ======================================== */
+
+/* General card/container styling */
+.card,
+.container,
+.content-wrapper {
+    background: linear-gradient(135deg, 
+      rgba(255, 255, 255, 0.95) 0%,
+      rgba(255, 255, 255, 0.9) 100%);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border-radius: 20px;
+    border: 2px solid rgba(255, 255, 255, 0.5);
+    padding: 30px;
+    box-shadow: 
+      0 15px 50px rgba(0, 0, 0, 0.2),
+      0 8px 25px rgba(99, 102, 241, 0.15),
+      inset 0 2px 0 rgba(255, 255, 255, 0.8);
+    transition: all 0.3s ease;
+}
+
+.card:hover,
+.container:hover {
+    transform: translateY(-2px);
+    box-shadow: 
+      0 20px 60px rgba(0, 0, 0, 0.25),
+      0 10px 30px rgba(99, 102, 241, 0.2),
+      inset 0 2px 0 rgba(255, 255, 255, 0.9);
+}
+
+/* Modal backdrop styling - subtle dark transparent overlay */
+.ReactModal__Overlay {
+    background-color: rgba(0, 0, 0, 0.3) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+}
+
+/* Modal content styling */
+.modal-content,
+.ReactModal__Content {
+    background: linear-gradient(135deg, 
+      rgba(255, 255, 255, 0.95) 0%,
+      rgba(249, 250, 251, 0.95) 100%) !important;
+    backdrop-filter: blur(25px) saturate(180%);
+    -webkit-backdrop-filter: blur(25px) saturate(180%);
+    border-radius: 24px !important;
+    border: 2px solid rgba(255, 255, 255, 0.5) !important;
+    box-shadow: 
+      0 20px 60px rgba(0, 0, 0, 0.3),
+      0 10px 30px rgba(99, 102, 241, 0.2),
+      inset 0 2px 0 rgba(255, 255, 255, 0.8) !important;
+}
+
+/* Button variations - Primary (green) */
+button.btn-primary,
+button.btn-success,
+.button-primary {
+    background: linear-gradient(135deg, 
+      rgba(16, 185, 129, 0.95) 0%,
+      rgba(5, 150, 105, 0.95) 100%);
+    color: white;
+    padding: 14px 24px;
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    border-radius: 12px;
+    cursor: pointer;
+    font-size: 18px;
+    font-weight: 700;
+    transition: all 0.3s ease;
+    box-shadow: 
+      0 6px 20px rgba(16, 185, 129, 0.3),
+      inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+button.btn-primary:hover,
+button.btn-success:hover,
+.button-primary:hover {
+    background: linear-gradient(135deg, 
+      rgba(5, 150, 105, 1) 0%,
+      rgba(4, 120, 87, 1) 100%);
+    transform: translateY(-2px);
+    box-shadow: 
+      0 10px 30px rgba(16, 185, 129, 0.4),
+      inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+/* Button variations - Danger (red) */
+button.btn-danger,
+button.btn-delete,
+.button-danger {
+    background: linear-gradient(135deg, 
+      rgba(239, 68, 68, 0.95) 0%,
+      rgba(220, 38, 38, 0.95) 100%);
+    color: white;
+    padding: 14px 24px;
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    border-radius: 12px;
+    cursor: pointer;
+    font-size: 18px;
+    font-weight: 700;
+    transition: all 0.3s ease;
+    box-shadow: 
+      0 6px 20px rgba(239, 68, 68, 0.3),
+      inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+button.btn-danger:hover,
+button.btn-delete:hover,
+.button-danger:hover {
+    background: linear-gradient(135deg, 
+      rgba(220, 38, 38, 1) 0%,
+      rgba(185, 28, 28, 1) 100%);
+    transform: translateY(-2px);
+    box-shadow: 
+      0 10px 30px rgba(239, 68, 68, 0.4),
+      inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+/* Button variations - Info (blue) */
+button.btn-info,
+button.btn-secondary,
+.button-info {
+    background: linear-gradient(135deg, 
+      rgba(99, 102, 241, 0.95) 0%,
+      rgba(139, 92, 246, 0.95) 100%);
+    color: white;
+    padding: 14px 24px;
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    border-radius: 12px;
+    cursor: pointer;
+    font-size: 18px;
+    font-weight: 700;
+    transition: all 0.3s ease;
+    box-shadow: 
+      0 6px 20px rgba(99, 102, 241, 0.3),
+      inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+button.btn-info:hover,
+button.btn-secondary:hover,
+.button-info:hover {
+    background: linear-gradient(135deg, 
+      rgba(79, 70, 229, 1) 0%,
+      rgba(109, 40, 217, 1) 100%);
+    transform: translateY(-2px);
+    box-shadow: 
+      0 10px 30px rgba(99, 102, 241, 0.4),
+      inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+/* Table glassmorphism styles - global */
+table {
+    background: linear-gradient(135deg, 
+      rgba(255, 255, 255, 0.9) 0%,
+      rgba(255, 255, 255, 0.85) 100%);
+    backdrop-filter: blur(15px) saturate(180%);
+    -webkit-backdrop-filter: blur(15px) saturate(180%);
+    border-radius: 16px;
+    border: 2px solid rgba(255, 255, 255, 0.5);
+    overflow: hidden;
+    box-shadow: 
+      0 10px 40px rgba(0, 0, 0, 0.15),
+      inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+table thead th {
+    background: linear-gradient(135deg, 
+      rgba(99, 102, 241, 0.95) 0%,
+      rgba(139, 92, 246, 0.95) 100%);
+    backdrop-filter: blur(15px) saturate(180%);
+    -webkit-backdrop-filter: blur(15px) saturate(180%);
+    color: white;
+    font-weight: 700;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 4px 20px rgba(99, 102, 241, 0.3);
+}
+
+table tbody tr:nth-child(even) {
+    background: linear-gradient(90deg, 
+      rgba(240, 242, 245, 0.8) 0%,
+      rgba(230, 232, 236, 0.8) 100%);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+table tbody tr:hover {
+    background: linear-gradient(90deg, 
+      rgba(165, 180, 252, 0.5) 0%,
+      rgba(192, 132, 252, 0.5) 100%);
+    backdrop-filter: blur(15px) saturate(150%);
+    -webkit-backdrop-filter: blur(15px) saturate(150%);
+    box-shadow: 
+      0 8px 25px rgba(99, 102, 241, 0.3),
+      inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Scrollbar styling for glassmorphism */
+::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+}
+
+::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, 
+      rgba(99, 102, 241, 0.6) 0%,
+      rgba(168, 85, 247, 0.6) 100%);
+    border-radius: 10px;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(135deg, 
+      rgba(99, 102, 241, 0.8) 0%,
+      rgba(168, 85, 247, 0.8) 100%);
 }

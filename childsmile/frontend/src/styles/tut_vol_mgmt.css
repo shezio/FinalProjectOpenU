@@ -26,9 +26,21 @@
   position: relative;
   width: 1600px;
   height: 480px;
-  margin-right: 200px;
-  margin-top: 300px;
+  margin-right: 250px;
+  margin-top: 350px;
   perspective: 2000px;
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.95) 0%,
+    rgba(255, 255, 255, 0.9) 100%);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-radius: 20px;
+  border: 2px solid rgba(255, 255, 255, 0.5);
+  padding: 20px;
+  box-shadow: 
+    0 15px 50px rgba(0, 0, 0, 0.2),
+    0 8px 25px rgba(99, 102, 241, 0.15),
+    inset 0 2px 0 rgba(255, 255, 255, 0.8);
 }
 
 .flip-inner {
@@ -66,4 +78,48 @@
 .flip-back.active {
   pointer-events: auto;   /* 🔑 only the active face is clickable */
   z-index: 2;             /* bring it above the other */
+}
+
+/* Search bar with beautiful blue glassmorphism - matches InitialFamilyData style */
+.search-bar,
+input.search-bar {
+  padding: 10px 15px;
+  width: 300px;
+  height: 30px;
+  border: 3px solid rgba(59, 130, 246, 0.75);
+  background: linear-gradient(135deg, 
+    rgba(240, 242, 245, 0.8) 0%,
+    rgba(255, 255, 255, 0.9) 100%);
+  backdrop-filter: blur(15px) saturate(180%);
+  -webkit-backdrop-filter: blur(15px) saturate(180%);
+  border-radius: 16px;
+  font-size: 24px;
+  font-weight: 500;
+  color: #1f2937;
+  box-shadow: 
+    0 4px 15px rgba(59, 130, 246, 0.2),
+    0 2px 8px rgba(0, 0, 0, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: inline-block;
+  vertical-align: baseline;
+  position: relative;
+  top: 20px;
+}
+
+.search-bar:focus,
+input.search-bar:focus {
+  outline: none;
+  border-color: rgba(59, 130, 246, 0.9);
+  box-shadow: 
+    0 6px 20px rgba(59, 130, 246, 0.3),
+    0 0 0 3px rgba(59, 130, 246, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  transform: translateY(-2px) scale(1.02);
+}
+
+.search-bar::placeholder,
+input.search-bar::placeholder {
+  color: rgba(59, 130, 246, 0.5);
+  font-weight: 500;
 }

@@ -340,7 +340,7 @@ html {
   }
 }
 
-/* Modal styling with stunning vibrant glass effect */
+/* Modal styling - instant appearance with subtle dark overlay */
 .modal {
   position: fixed;
   z-index: 1000;
@@ -349,26 +349,11 @@ html {
   width: 100%;
   height: 100%;
   overflow: auto;
-  background: radial-gradient(circle at center, 
-    rgba(99, 102, 241, 0.15) 0%,
-    rgba(0, 0, 0, 0.6) 100%);
-  backdrop-filter: blur(15px) saturate(150%);
-  -webkit-backdrop-filter: blur(15px) saturate(150%);
+  background-color: rgba(0, 0, 0, 0.3);
+  /* Subtle dark transparent overlay */
   display: flex;
   justify-content: center;
   align-items: center;
-  animation: modalBackdrop 0.3s ease-out;
-}
-
-@keyframes modalBackdrop {
-  from {
-    opacity: 0;
-    backdrop-filter: blur(0px);
-  }
-  to {
-    opacity: 1;
-    backdrop-filter: blur(15px) saturate(150%);
-  }
 }
 
 .modal-content {
@@ -386,7 +371,6 @@ html {
     0 25px 80px rgba(99, 102, 241, 0.3),
     0 15px 40px rgba(168, 85, 247, 0.2),
     inset 0 1px 0 rgba(255, 255, 255, 0.8);
-  animation: modalSlideIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   font-size: 1em;
   margin-right: 30px;
   position: relative;
@@ -404,17 +388,6 @@ html {
     rgba(99, 102, 241, 1) 0%,
     rgba(168, 85, 247, 1) 50%,
     rgba(236, 72, 153, 1) 100%);
-}
-
-@keyframes modalSlideIn {
-  from {
-    opacity: 0;
-    transform: translateY(-50px) scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
 }
 
 .modal-content h2 {

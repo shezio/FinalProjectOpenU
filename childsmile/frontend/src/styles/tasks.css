@@ -22,7 +22,7 @@
   display: flex;
   flex-direction: row;
   margin-top: 250px;
-  padding-right: 250px;
+  padding-right: 320px;
 }
 
 .tasks-page-content {
@@ -89,49 +89,86 @@
 
 /* Style the buttons and dropdowns */
 .create-task button {
-  background-color: #4CAF50;
-  /* Green background */
+  background: linear-gradient(135deg, 
+    rgba(76, 175, 80, 0.95) 0%,
+    rgba(56, 142, 60, 0.95) 100%);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   color: white;
   padding: 10px 15px;
-  border: none;
-  border-radius: 5px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 10px;
   cursor: pointer;
   font-size: 24px;
-  /* Ensure font size is 2em */
   margin-right: 20px;
-  /* Add space between the "Create Task" button and the others */
+  box-shadow: 
+    0 4px 15px rgba(76, 175, 80, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  transition: all 0.3s ease;
 }
 
 .create-task button:hover {
-  background-color: #45a049;
-  /* Slightly darker green on hover */
+  background: linear-gradient(135deg, 
+    rgba(56, 142, 60, 1) 0%,
+    rgba(46, 125, 50, 1) 100%);
+  transform: translateY(-2px);
+  box-shadow: 
+    0 6px 20px rgba(76, 175, 80, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
 }
 
 .refresh button {
-  background-color: #007bff;
-  /* Blue background */
+  background: linear-gradient(135deg, 
+    rgba(0, 123, 255, 0.95) 0%,
+    rgba(0, 86, 179, 0.95) 100%);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   color: white;
   padding: 10px 15px;
-  border: none;
-  border-radius: 5px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 10px;
   cursor: pointer;
   font-size: 24px;
-  /* Ensure font size is 2em */
+  box-shadow: 
+    0 4px 15px rgba(0, 123, 255, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  transition: all 0.3s ease;
 }
 
 .refresh button:hover {
-  background-color: #0056b3;
-  /* Darker blue on hover */
+  background: linear-gradient(135deg, 
+    rgba(0, 86, 179, 1) 0%,
+    rgba(0, 62, 135, 1) 100%);
+  transform: translateY(-2px);
+  box-shadow: 
+    0 6px 20px rgba(0, 123, 255, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
 }
 
 .filter select {
   padding: 10px;
-  border: 1px solid #ccc;
-  border-radius: 5px;
+  border: 2px solid rgba(99, 102, 241, 0.3);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   font-size: 24px;
-  /* Ensure font size is 2em */
   min-width: 150px;
-  /* Ensure dropdown has a minimum width */
+  color: #1f2937;
+  font-weight: 600;
+  box-shadow: 
+    0 2px 8px rgba(0, 0, 0, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.filter select:focus {
+  outline: none;
+  border-color: rgba(99, 102, 241, 0.6);
+  box-shadow: 
+    0 4px 15px rgba(99, 102, 241, 0.2),
+    0 0 0 3px rgba(99, 102, 241, 0.1);
 }
 
 /* Ensure the container doesn't overflow */
@@ -234,16 +271,17 @@
   width: 100%;
   height: 100%;
   overflow: auto;
-  background-color: rgba(0, 0, 0, 0.6);
-  /* Darker background for better contrast */
-  display: flex;
+  background-color: rgba(0, 0, 0, 0.3);
+  /* Subtle shadow - UI visible behind */
+  display: none;
+  /* Hidden by default */
   justify-content: center;
   align-items: center;
 }
 
 .modal.show {
   display: flex;
-  /* Show the modal when the 'show' class is added */
+  /* Show immediately when the 'show' class is added */
 }
 
 .modal-content {
@@ -258,8 +296,6 @@
   /* Limit the maximum width */
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
   /* Stronger shadow for emphasis */
-  animation: fadeIn 0.3s ease-in-out;
-  /* Smooth fade-in animation */
   position: relative;
   /* For draggable functionality */
   /* cursor: move; */
@@ -407,6 +443,7 @@
   overflow-y: auto;
   max-height: 90vh;
   flex: 2;
+  margin-top: 80px;
 }
 
 .kanban-columns {
@@ -438,7 +475,7 @@
   /* Smooth transition for scrollbar opacity */
   flex: 1 1 auto;
   transition: box-shadow 0.2s;
-  height: 350px;
+  height: 550px;
 }
 
 /* Hide scrollbar by default, show on hover/scroll (Webkit browsers) */
@@ -614,7 +651,7 @@
   }
 
   .kanban-cards {
-    height: 450px;
+    height: 550px;
   }
 }
 
