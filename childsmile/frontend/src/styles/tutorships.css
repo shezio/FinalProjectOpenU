@@ -2,33 +2,35 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  /* Center the content vertically */
+  justify-content: flex-start;
   flex-grow: 1;
-  /* Allow it to take up available space */
-  margin-top: 100px;
-  /* Add some spacing below the fixed header */
+  padding: 230px 40px 40px 40px;
+  margin-right: 280px;
+  background: transparent;
 }
 
 .matches-modal {
   top: -72px;
-  background: white;
-  padding: 2rem;
-  border-radius: 8px;
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.98) 0%,
+    rgba(255, 255, 255, 0.95) 100%);
+  backdrop-filter: blur(25px) saturate(180%);
+  -webkit-backdrop-filter: blur(25px) saturate(180%);
+  padding: 3rem;
+  border-radius: 24px;
+  border: 2px solid rgba(255, 255, 255, 0.5);
   width: 90%;
-  /* Limit the modal width */
   height: 800px;
   margin: auto;
-  /* Center the modal horizontally */
-  margin-top: 150px;
-  /* Center the modal vertically */
+  margin-top: 200px;
   display: flex;
   flex-direction: column;
-  gap: 1rem;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-  /* Add a shadow for better visibility */
+  gap: 1.5rem;
+  box-shadow: 
+    0 20px 60px rgba(0, 0, 0, 0.3),
+    0 10px 30px rgba(99, 102, 241, 0.2),
+    inset 0 2px 0 rgba(255, 255, 255, 0.8);
   overflow: hidden;
-  /* Prevent content overflow */
   position: relative;
   z-index: 9999 !important;
   transform: scale(0.9);
@@ -249,31 +251,68 @@
 
 /* Button styles */
 .tutorship-actions button {
-  background-color: #4CAF50;
-  /* Green */
+  background: linear-gradient(135deg, 
+    rgba(76, 175, 80, 0.95) 0%,
+    rgba(56, 142, 60, 0.95) 100%);
+  backdrop-filter: blur(15px) saturate(180%);
+  -webkit-backdrop-filter: blur(15px) saturate(180%);
   color: white;
   padding: 10px 15px;
-  border: none;
-  border-radius: 5px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 12px;
   cursor: pointer;
   font-size: 1em;
-  transition: background-color 0.3s ease, transform 0.2s ease;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  box-shadow: 
+    0 8px 20px rgba(76, 175, 80, 0.3),
+    0 4px 10px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+.tutorship-actions button::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, transparent 70%);
+  transform: translate(-50%, -50%);
+  transition: width 0.4s ease, height 0.4s ease;
+}
+
+.tutorship-actions button:hover::before {
+  width: 300px;
+  height: 300px;
 }
 
 .tutorship-actions button:hover {
-  background-color: #45a049;
-  /* Darker green */
-  transform: scale(1.05);
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: 
+    0 12px 30px rgba(76, 175, 80, 0.4),
+    0 6px 15px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  border-color: rgba(255, 255, 255, 0.5);
 }
 
 .tutorship-actions .delete-button {
-  background-color: #ff4d4d;
-  /* Red */
+  background: linear-gradient(135deg, 
+    rgba(255, 77, 77, 0.95) 0%,
+    rgba(209, 26, 42, 0.95) 100%);
+  box-shadow: 
+    0 8px 20px rgba(255, 77, 77, 0.3),
+    0 4px 10px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
 }
 
 .tutorship-actions .delete-button:hover {
-  background-color: #d11a2a;
-  /* Darker red */
+  box-shadow: 
+    0 12px 30px rgba(255, 77, 77, 0.4),
+    0 6px 15px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
 }
 
 
@@ -481,51 +520,107 @@
 }
 
 .modal-actions .calc-match-button {
-  background-color:
-    /* blue */
-    #007bff;
+  background: linear-gradient(135deg, 
+    rgba(0, 123, 255, 0.95) 0%,
+    rgba(0, 86, 179, 0.95) 100%);
+  backdrop-filter: blur(15px) saturate(180%);
+  -webkit-backdrop-filter: blur(15px) saturate(180%);
   color: white;
   padding: 10px 20px;
-  border: none;
-  border-radius: 4px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 12px;
   cursor: pointer;
   font-size: 2em;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  box-shadow: 
+    0 8px 20px rgba(0, 123, 255, 0.3),
+    0 4px 10px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  position: relative;
+  overflow: hidden;
 }
 
 .modal-actions .create-tutorship-button {
-  background-color:
-    /* green */
-    #4CAF50;
+  background: linear-gradient(135deg, 
+    rgba(76, 175, 80, 0.95) 0%,
+    rgba(56, 142, 60, 0.95) 100%);
+  backdrop-filter: blur(15px) saturate(180%);
+  -webkit-backdrop-filter: blur(15px) saturate(180%);
   color: white;
   padding: 10px 20px;
-  border: none;
-  border-radius: 4px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 12px;
   cursor: pointer;
   font-size: 2em;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  box-shadow: 
+    0 8px 20px rgba(76, 175, 80, 0.3),
+    0 4px 10px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  position: relative;
+  overflow: hidden;
 }
 
 .modal-actions .close-info-button {
-  background-color:
-    /* green */
-    #4CAF50;
+  background: linear-gradient(135deg, 
+    rgba(76, 175, 80, 0.95) 0%,
+    rgba(56, 142, 60, 0.95) 100%);
+  backdrop-filter: blur(15px) saturate(180%);
+  -webkit-backdrop-filter: blur(15px) saturate(180%);
   color: white;
   padding: 10px 20px;
-  border: none;
-  border-radius: 4px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 12px;
   cursor: pointer;
   font-size: 2em;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  box-shadow: 
+    0 8px 20px rgba(76, 175, 80, 0.3),
+    0 4px 10px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  position: relative;
+  overflow: hidden;
 }
 
-.modal-actions .create-tutorship-button:hover {
-  background-color:
-    /* dark green */
-    #45a049;
+.modal-actions .calc-match-button::before,
+.modal-actions .create-tutorship-button::before,
+.modal-actions .close-info-button::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, transparent 70%);
+  transform: translate(-50%, -50%);
+  transition: width 0.4s ease, height 0.4s ease;
+}
+
+.modal-actions .create-tutorship-button:hover,
+.modal-actions .close-info-button:hover {
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: 
+    0 12px 30px rgba(76, 175, 80, 0.4),
+    0 6px 15px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  border-color: rgba(255, 255, 255, 0.5);
 }
 
 .modal-actions .calc-match-button:hover {
-  background-color:
-    /* dark blue */
-    #0056b3;
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: 
+    0 12px 30px rgba(0, 123, 255, 0.4),
+    0 6px 15px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+.modal-actions .calc-match-button:hover::before,
+.modal-actions .create-tutorship-button:hover::before,
+.modal-actions .close-info-button:hover::before {
+  width: 300px;
+  height: 300px;
 }
 
 .info-modal-content .close ,
@@ -543,16 +638,54 @@
 }
 
 .matches-modal-header .matches-close {
-  color: #333;
-  /* Darker color for better visibility */
+  background: linear-gradient(135deg, 
+    rgba(255, 77, 77, 0.95) 0%,
+    rgba(209, 26, 42, 0.95) 100%);
+  backdrop-filter: blur(15px) saturate(180%);
+  -webkit-backdrop-filter: blur(15px) saturate(180%);
+  color: white;
   position: absolute;
   top: 72px !important;
   right: 20px;
   font-size: 3em !important;
   font-weight: bold;
   cursor: pointer;
-  transition: color 0.3s ease;
-  /* Smooth hover effect */
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 12px;
+  padding: 8px 20px;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  box-shadow: 
+    0 8px 20px rgba(255, 77, 77, 0.3),
+    0 4px 10px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  overflow: hidden;
+}
+
+.matches-modal-header .matches-close::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, transparent 70%);
+  transform: translate(-50%, -50%);
+  transition: width 0.4s ease, height 0.4s ease;
+}
+
+.matches-modal-header .matches-close:hover {
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: 
+    0 12px 30px rgba(255, 77, 77, 0.4),
+    0 6px 15px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+.matches-modal-header .matches-close:hover::before {
+  width: 300px;
+  height: 300px;
 }
 
 .info-columns {
@@ -594,21 +727,55 @@
 }
 
 .close-matches-modal-button {
-  color: #333;
-  /* Darker color for better visibility */
+  background: linear-gradient(135deg, 
+    rgba(255, 77, 77, 0.95) 0%,
+    rgba(209, 26, 42, 0.95) 100%);
+  backdrop-filter: blur(15px) saturate(180%);
+  -webkit-backdrop-filter: blur(15px) saturate(180%);
+  color: white;
   position: absolute;
   top: 15px;
   right: 20px;
   font-size: 28px;
   font-weight: bold;
   cursor: pointer;
-  transition: color 0.3s ease;
-  /* Smooth hover effect */
-  border: none;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 12px;
+  padding: 8px 16px;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  box-shadow: 
+    0 8px 20px rgba(255, 77, 77, 0.3),
+    0 4px 10px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+.close-matches-modal-button::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, transparent 70%);
+  transform: translate(-50%, -50%);
+  transition: width 0.4s ease, height 0.4s ease;
 }
 
 .close-matches-modal-button:hover {
-  color: #ff0000;
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: 
+    0 12px 30px rgba(255, 77, 77, 0.4),
+    0 6px 15px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+.close-matches-modal-button:hover::before {
+  width: 300px;
+  height: 300px;
 }
 
 @keyframes flicker {
@@ -797,25 +964,61 @@
 }
 
 .approval-modal yes-button {
-  background-color: #4CAF50;
-  /* Green */
+  background: linear-gradient(135deg, 
+    rgba(76, 175, 80, 0.95) 0%,
+    rgba(56, 142, 60, 0.95) 100%);
+  backdrop-filter: blur(15px) saturate(180%);
+  -webkit-backdrop-filter: blur(15px) saturate(180%);
   color: white;
   padding: 10px 20px;
-  border: none;
-  border-radius: 4px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 12px;
   cursor: pointer;
   font-size: 16px;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  box-shadow: 
+    0 8px 20px rgba(76, 175, 80, 0.3),
+    0 4px 10px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+.approval-modal yes-button:hover {
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: 
+    0 12px 30px rgba(76, 175, 80, 0.4),
+    0 6px 15px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
 }
 
 .approval-modal no-button {
-  background-color: #ff4d4d;
-  /* Red */
+  background: linear-gradient(135deg, 
+    rgba(255, 77, 77, 0.95) 0%,
+    rgba(209, 26, 42, 0.95) 100%);
+  backdrop-filter: blur(15px) saturate(180%);
+  -webkit-backdrop-filter: blur(15px) saturate(180%);
   color: white;
   padding: 10px 20px;
-  border: none;
-  border-radius: 4px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 12px;
   cursor: pointer;
   font-size: 16px;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  box-shadow: 
+    0 8px 20px rgba(255, 77, 77, 0.3),
+    0 4px 10px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+.approval-modal no-button:hover {
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: 
+    0 12px 30px rgba(255, 77, 77, 0.4),
+    0 6px 15px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
 }
 
 /* Style for disabled buttons */
@@ -911,14 +1114,51 @@ button:disabled {
 }
 
 .info-modal-content .magnify-button {
-  background-color: #4CAF50;
+  background: linear-gradient(135deg, 
+    rgba(76, 175, 80, 0.95) 0%,
+    rgba(56, 142, 60, 0.95) 100%);
+  backdrop-filter: blur(15px) saturate(180%);
+  -webkit-backdrop-filter: blur(15px) saturate(180%);
   color: white;
   padding: 10px 15px;
-  border: none;
-  border-radius: 5px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 12px;
   cursor: pointer;
   font-size: 24px;
-  transition: background-color 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  box-shadow: 
+    0 8px 20px rgba(76, 175, 80, 0.3),
+    0 4px 10px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+.info-modal-content .magnify-button::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, transparent 70%);
+  transform: translate(-50%, -50%);
+  transition: width 0.4s ease, height 0.4s ease;
+}
+
+.info-modal-content .magnify-button:hover {
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: 
+    0 12px 30px rgba(76, 175, 80, 0.4),
+    0 6px 15px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+.info-modal-content .magnify-button:hover::before {
+  width: 300px;
+  height: 300px;
 }
 
 .info-column .info-table td {
@@ -1050,13 +1290,51 @@ button:disabled {
 }
 
 .pending-distances-warning button {
-  background: #ffc107;
+  background: linear-gradient(135deg, 
+    rgba(255, 193, 7, 0.95) 0%,
+    rgba(255, 160, 0, 0.95) 100%);
+  backdrop-filter: blur(15px) saturate(180%);
+  -webkit-backdrop-filter: blur(15px) saturate(180%);
   color: white;
-  border: none;
+  border: 2px solid rgba(255, 255, 255, 0.3);
   padding: 8px 12px;
-  border-radius: 4px;
+  border-radius: 12px;
   cursor: pointer;
   font-size: 1em;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  box-shadow: 
+    0 8px 20px rgba(255, 193, 7, 0.3),
+    0 4px 10px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+.pending-distances-warning button::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, transparent 70%);
+  transform: translate(-50%, -50%);
+  transition: width 0.4s ease, height 0.4s ease;
+}
+
+.pending-distances-warning button:hover {
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: 
+    0 12px 30px rgba(255, 193, 7, 0.4),
+    0 6px 15px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+.pending-distances-warning button:hover::before {
+  width: 300px;
+  height: 300px;
 }
 
 
@@ -1177,4 +1455,100 @@ button:disabled {
   background: #add8e6 !important;
   color: #111 !important;
   font-weight: normal !important;
+}
+
+/* Glassmorphism styles for Open Matching Wizard and Refresh buttons */
+.create-task button {
+  background: linear-gradient(135deg, 
+    rgba(76, 175, 80, 0.95) 0%,
+    rgba(56, 142, 60, 0.95) 100%);
+  backdrop-filter: blur(15px) saturate(180%);
+  -webkit-backdrop-filter: blur(15px) saturate(180%);
+  color: white;
+  padding: 12px 24px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 24px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  box-shadow: 
+    0 8px 20px rgba(76, 175, 80, 0.3),
+    0 4px 10px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+.create-task button::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, transparent 70%);
+  transform: translate(-50%, -50%);
+  transition: width 0.4s ease, height 0.4s ease;
+}
+
+.create-task button:hover {
+  transform: translateY(-3px) scale(1.05) !important;
+  box-shadow: 0 12px 30px rgba(76, 175, 80, 0.4), 0 6px 15px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.4) !important;
+  border-color: rgba(255, 255, 255, 0.5) !important;
+}
+
+.create-task button:hover::before {
+  width: 300px !important;
+  height: 300px !important;
+}
+
+.refresh button {
+  background: linear-gradient(135deg, 
+  /* cyan and darker cyan */
+    rgba(3, 169, 244, 0.95) 0%,
+    rgba(66, 165, 245, 0.95) 100%) !important;
+  backdrop-filter: blur(15px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(15px) saturate(180%) !important;
+  color: white !important;
+  padding: 12px 24px !important;
+  border: 2px solid rgba(255, 255, 255, 0.3) !important;
+  border-radius: 12px !important;
+  cursor: pointer !important;
+  font-size: 24px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.5px !important;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+  box-shadow: 0 8px 20px rgba(3, 169, 244, 0.3), 0 4px 10px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.3) !important;
+  position: relative !important;
+  overflow: hidden !important;
+}
+
+.refresh button::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, transparent 70%);
+  transform: translate(-50%, -50%);
+  transition: width 0.4s ease, height 0.4s ease;
+}
+
+.refresh button:hover {
+  background: linear-gradient(135deg, 
+    rgba(3, 169, 244, 0.95) 0%,
+    rgba(66, 165, 245, 0.95) 100%) !important;
+  transform: translateY(-3px) scale(1.05) !important;
+  box-shadow: 0 12px 30px rgba(3, 169, 244, 0.4), 0 6px 15px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.4) !important;
+  border-color: rgba(255, 255, 255, 0.5) !important;
+}
+
+.refresh button:hover::before {
+  width: 300px !important;
+  height: 300px !important;
 }

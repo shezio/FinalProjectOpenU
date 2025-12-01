@@ -317,7 +317,11 @@ const InitialFamilyData = () => {
         />
         <div className="families-added-filter">
           <label>{t('Family Added')}</label>
-          <select value={filterAdded} onChange={handleFilterAdded}>
+          <select
+            value={filterAdded}
+            onChange={handleFilterAdded}
+            style={{ marginRight: '8px' }}
+          >
             <option value="">{t('All')}</option>
             <option value="true">{t('Yes')}</option>
             <option value="false">{t('No')}</option>

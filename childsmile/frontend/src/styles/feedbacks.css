@@ -3,40 +3,35 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
-    /* Center the content vertically */
+    justify-content: flex-start;
     flex-grow: 1;
-    /* Allow it to take up available space */
-    margin-top: 100px;
-    /* Add some spacing below the fixed header */
+    padding: 230px 40px 40px 40px;
+    margin-right: 280px;
+    background: transparent;
 }
 
 .tutor-feedbacks-main-content {
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
-    /* Center the content vertically */
+    justify-content: flex-start;
     flex-grow: 1;
-    /* Allow it to take up available space */
-    margin-top: 30px;
-    /* Add some spacing below the fixed header */
+    padding: 230px 40px 40px 40px;
+    margin-right: 280px;
     width: 90%;
-    padding-right: 250px;
+    background: transparent;
 }
 
 .volunteer-feedbacks-main-content {
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
-    /* Center the content vertically */
+    justify-content: flex-start;
     flex-grow: 1;
-    /* Allow it to take up available space */
-    margin-top: 30px;
-    /* Add some spacing below the fixed header */
+    padding: 230px 40px 40px 40px;
+    margin-right: 280px;
     width: 90%;
-    padding-right: 250px;
+    background: transparent;
 }
 
 .feedbacks-page {
@@ -45,45 +40,75 @@
 }
 
 .feedback-card {
-    width: 800px;
-    height: 300px;
-    background-color: #4CAF50;
+    width: 450px;
+    height: 400px;
+    background: linear-gradient(135deg, 
+        rgba(76, 175, 80, 0.95) 0%,
+        rgba(56, 142, 60, 0.95) 100%);
+    backdrop-filter: blur(25px) saturate(180%);
+    -webkit-backdrop-filter: blur(25px) saturate(180%);
     color: white;
-    border: 1px solid #ddd;
-    border-radius: 8px;
+    border: 3px solid rgba(255, 255, 255, 0.4);
+    border-radius: 30px;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    transition: transform 0.2s, box-shadow 0.2s;
-    flex: 1 1 calc(25% - 1rem);
-    /* Ensure cards take up 25% of the row width */
-    max-width: 25%;
-    /* Prevent cards from exceeding 25% of the row width */
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     box-sizing: border-box;
-    /* Include padding and border in width calculation */
-    margin-bottom: 20px;
+    box-shadow: 
+        0 20px 60px rgba(0, 0, 0, 0.3),
+        0 10px 30px rgba(76, 175, 80, 0.4),
+        inset 0 2px 0 rgba(255, 255, 255, 0.5);
+    position: relative;
+    overflow: hidden;
+}
+
+.feedback-card::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+    opacity: 0;
+    transition: opacity 0.4s ease;
+}
+
+.feedback-card:hover::before {
+    opacity: 1;
 }
 
 .feedback-card:hover {
-    transform: scale(1.05);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    /* hover marker should be arrow */
+    transform: translateY(-15px) scale(1.05);
+    box-shadow: 
+        0 30px 80px rgba(0, 0, 0, 0.4),
+        0 15px 40px rgba(76, 175, 80, 0.5),
+        inset 0 2px 0 rgba(255, 255, 255, 0.6);
+    border-color: rgba(255, 255, 255, 0.6);
+}
+
+.feedback-card:active {
+    transform: translateY(-10px) scale(1.02);
 }
 
 .feedbacks-row {
     display: flex;
-    justify-content: flex-start;
-    /* Align items to the left */
-    gap: 1rem;
-    /* Add spacing between cards */
+    justify-content: center;
+    gap: 60px;
     margin-bottom: 1.5rem;
-    /* Add spacing between rows */
 }
 
 .feedback-card h2 {
-    font-size: 56px;
+    font-size: 48px;
     text-align: center;
+    font-weight: 700;
+    text-shadow: 
+        0 3px 10px rgba(0, 0, 0, 0.3),
+        0 1px 3px rgba(0, 0, 0, 0.2);
+    letter-spacing: 1px;
+    z-index: 1;
 }
 
 /* Parent container for reports */
@@ -214,15 +239,15 @@
 
 .feedbacks-page-content {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     align-items: center;
     justify-content: center;
-    /* Center the content vertically */
+    gap: 60px;
     flex-grow: 1;
-    /* Allow it to take up available space */
-    margin-top: 300px;
-    /* Add some spacing below the fixed header */
+    margin-top: 150px;
     width: 100%;
+    padding: 50px;
+    flex-wrap: wrap;
 }
 
 .tutor-feedbacks-main-content .feedbacks-page-content {
@@ -230,21 +255,13 @@
 }
 
 /* Scoped styles for the grid container in ActiveTutorsReport */
-.feedbacks-page-content .feedbacks-grid-container {
-    width: calc(100% - 100px);
-    /* Adjust width to leave space for the sidebar */
-    margin-left: 900px;
-    /* Remove unnecessary left margin */
+.feedbacks-page-content .feedbacks-grid-container,
+.feedbacks-page-content .feedback-grid-container {
+    width: 90%;
     height: calc(100vh - 400px);
-    top: 50px;
-    /* Adjust height based on available space */
-    padding: 20px;
-    /* Add padding inside the grid container */
+    max-height: 75vh;
+    min-height: 300px;
     direction: rtl;
-    /* Align the grid container to the right */
-    max-width: 100%;
-    /* Ensure the grid does not exceed the visible area */
-    margin-bottom: 200px;
 }
 
 .feedbacks-page-content .feedbacks-data-grid th {
@@ -363,7 +380,11 @@
 }
 
 .pagination {
-    margin-top: 1px !important;
+    margin-top: 20px;
+    flex-basis: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 .loader {
@@ -373,75 +394,114 @@
     margin-top: 20px;
 }
 
-/* Style for the date inputs */
+/* Style for the date inputs with glassmorphism */
 .feedbacks-date-input {
-    padding: 10px;
-    font-size: 16px;
+    padding: 10px 15px;
+    font-size: 20px;
+    font-weight: 500;
     margin: 0 10px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
+    border: 3px solid rgba(99, 102, 241, 0.6);
+    background: linear-gradient(135deg, 
+        rgba(240, 242, 245, 0.9) 0%,
+        rgba(255, 255, 255, 0.95) 100%);
+    backdrop-filter: blur(15px) saturate(180%);
+    -webkit-backdrop-filter: blur(15px) saturate(180%);
+    border-radius: 12px;
+    box-shadow: 
+        0 4px 12px rgba(99, 102, 241, 0.2),
+        inset 0 1px 0 rgba(255, 255, 255, 0.5);
+    transition: all 0.3s ease;
+    color: #333;
 }
 
-/* Style for the filter button */
+.feedbacks-date-input:focus {
+    outline: none;
+    border-color: rgba(99, 102, 241, 0.9);
+    box-shadow: 
+        0 6px 16px rgba(99, 102, 241, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.6);
+    transform: translateY(-1px);
+}
+
+/* Style for the filter button with glassmorphism */
 .feedbacks-filter-button {
-    background-color: #007bff;
+    background: linear-gradient(135deg, 
+        rgba(0, 123, 255, 0.95) 0%,
+        rgba(0, 86, 179, 0.95) 100%);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
     color: white;
     padding: 10px 20px;
-    font-size: 16px;
-    border: none;
-    border-radius: 5px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 12px;
     cursor: pointer;
     margin-left: 10px;
     font-size: 24px;
+    font-weight: 600;
+    box-shadow: 
+        0 4px 15px rgba(0, 123, 255, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    transition: all 0.3s ease;
 }
 
 .feedbacks-filter-button:hover {
-    background-color: #0056b3;
+    background: linear-gradient(135deg, 
+        rgba(0, 86, 179, 1) 0%,
+        rgba(0, 62, 135, 1) 100%);
+    transform: translateY(-2px);
+    box-shadow: 
+        0 6px 20px rgba(0, 123, 255, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.4);
 }
 
-/* Style for the refresh button */
+/* Style for the refresh button with glassmorphism */
 .feedbacks-refresh-button {
-    background-color:
-        /* light blue */
-        #2196f3;
+    background: linear-gradient(135deg, 
+        rgba(33, 150, 243, 0.95) 0%,
+        rgba(11, 125, 218, 0.95) 100%);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
     color: white;
     padding: 10px 20px;
-    font-size: 16px;
-    border: none;
-    border-radius: 5px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 12px;
     cursor: pointer;
     margin-left: 30px;
     font-size: 24px;
+    font-weight: 600;
+    box-shadow: 
+        0 4px 15px rgba(33, 150, 243, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    transition: all 0.3s ease;
 }
 
 .feedbacks-refresh-button:hover {
-    background-color:
-        /* a darker blue */
-        #0b7dda;
+    background: linear-gradient(135deg, 
+        rgba(11, 125, 218, 1) 0%,
+        rgba(8, 95, 165, 1) 100%);
+    transform: translateY(-2px);
+    box-shadow: 
+        0 6px 20px rgba(33, 150, 243, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.4);
 }
 
 
-/* Grid section */
-.feedbacks-grid-container {
-    flex: 2;
-    /* Take up 2 parts of the available space */
+/* Grid section with glassmorphism */
+.feedbacks-grid-container,
+.feedback-grid-container {
     overflow-y: auto;
-    /* Allow horizontal scrolling if needed */
-    background-color: #fff;
-    /* White background for the grid */
-    border: 1px solid #ddd;
-    /* Border for clarity */
-    border-radius: 8px;
-    /* Rounded corners */
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-    /* Subtle shadow for depth */
+    background: linear-gradient(135deg, 
+        rgba(255, 255, 255, 0.95) 0%,
+        rgba(249, 250, 251, 0.95) 100%);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border: 2px solid rgba(255, 255, 255, 0.5);
+    border-radius: 20px;
+    box-shadow: 
+        0 15px 50px rgba(0, 0, 0, 0.2),
+        0 8px 25px rgba(99, 102, 241, 0.15),
+        inset 0 2px 0 rgba(255, 255, 255, 0.8);
     padding: 20px;
-    /* Add padding inside the grid container */
-    max-height: 60vh;
-    min-height: 200px;
-    /* Ensure the grid doesn't overflow vertically */
-    /* overflow-y: auto; */
-    /* Enable vertical scrolling if needed */
 }
 
 
@@ -573,16 +633,14 @@
 .back-to-feedbacks {
     display: flex;
     justify-content: flex-start;
-    /* Align to the right */
-    margin-right: 5px;
-    /* Slightly move it to the left from the edge */
-    margin-bottom: 30px;
-    
+    margin-right: 150px;
+    margin-bottom: 20px;
+    margin-top: 20px;
 }
 
 @media (max-width: 1800px) {
     .feedbacks-filter-create-container {
-        right: 144px;
+        right: 350px;
         top: 250px;
     }
 
@@ -590,23 +648,15 @@
     .volunteer-feedbacks-main-content .back-to-feedbacks {
         display: flex;
         justify-content: flex-start;
-        /* Align to the right */
         margin-top: 10px;
-        /* Add some spacing above */
         margin-right: 0;
         width: 70%;
-        /* Slightly move it to the left from the edge */
     }
 
     .feedbacks-page-content .feedbacks-grid-container {
         width: calc(100% - 1000px);
-        /* Reduce width for smaller screens */
-        margin-left: 300px;
-        /* Adjust margin for smaller screens */
-        /* max zoom out should be 0.8 */
-        /* Zoom out the grid */
+        margin-left: 400px;
         transform-origin: top right;
-        /* Set the origin for scaling */
         margin-right: 0;
         bottom: 200px;
     }
@@ -619,25 +669,37 @@
 
 
 .feedbacks-back-button {
-    background-color: #007bff;
-    /* Blue background */
+    background: linear-gradient(135deg, 
+        rgba(0, 123, 255, 0.95) 0%,
+        rgba(0, 86, 179, 0.95) 100%);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
     color: white;
-    /* White text */
-    border: none;
-    padding: 8px 16px;
-    border-radius: 5px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    padding: 10px 20px;
+    border-radius: 12px;
     font-size: 24px;
-    /* Increase font size */
+    font-weight: 600;
     cursor: pointer;
-    transition: background-color 0.3s ease;
+    transition: all 0.3s ease;
     direction: rtl;
     z-index: 2;
-    /* Ensure proper alignment in RTL */
+    box-shadow: 
+        0 4px 15px rgba(0, 123, 255, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    margin-right: 0;
+    margin-top: 0;
+    height: 45px;
 }
 
 .feedbacks-back-button:hover {
-    background-color: #0056b3;
-    /* Darker blue on hover */
+    background: linear-gradient(135deg, 
+        rgba(0, 86, 179, 1) 0%,
+        rgba(0, 62, 135, 1) 100%);
+    transform: translateY(-2px);
+    box-shadow: 
+        0 6px 20px rgba(0, 123, 255, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.4);
 }
 
 .feedbacks-wide-column {
@@ -649,23 +711,26 @@
 .feedbacks-filter-create-container {
     display: flex;
     justify-content: flex-end;
-    /* Align all buttons and dropdowns to the right */
     align-items: center;
-    /* Vertically align items */
     gap: 15px;
-    /* Reduce spacing between items */
     position: fixed;
-    /* Fix the container in place */
     top: 220px;
-    /* Stick to the top of the page */
-    right: 144px;
-    /* Align to the right side of the page */
+    right: 350px;
+    /* Move a bit to the right from user POV (less to the left in RTL) */
     font-size: 1em;
-    /* Ensure all fonts are 2em */
-    /* מסיר רווחים פנימיים בין הכפתורים */
-    padding: 10px 20px;
-    /* ניתן להתאים לפי הצורך */
+    padding: 20px 30px;
     transform: scale(0.9);
+    background: linear-gradient(135deg, 
+        rgba(255, 255, 255, 0.95) 0%,
+        rgba(249, 250, 251, 0.95) 100%);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border: 2px solid rgba(255, 255, 255, 0.5);
+    border-radius: 20px;
+    box-shadow: 
+        0 10px 40px rgba(0, 0, 0, 0.15),
+        0 5px 20px rgba(99, 102, 241, 0.1),
+        inset 0 2px 0 rgba(255, 255, 255, 0.8);
 }
 
 /* Style the buttons and dropdowns */
@@ -692,42 +757,77 @@
 .feedbacks-edit-button,
 .feedbacks-delete-button,
 .feedbacks-info-button {
-    padding: 6px 12px;
+    padding: 8px 16px;
     margin-right: 5px;
-    border: none;
-    border-radius: 4px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 10px;
     cursor: pointer;
     font-size: 24px;
+    font-weight: 600;
     margin-bottom: 12px;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
 }
 
 .feedbacks-edit-button {
-    background-color: #2196f3;
+    background: linear-gradient(135deg, 
+        rgba(33, 150, 243, 0.95) 0%,
+        rgba(11, 125, 218, 0.95) 100%);
     color: white;
+    box-shadow: 
+        0 4px 12px rgba(33, 150, 243, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.3);
 }
 
 .feedbacks-edit-button:hover {
-    background-color: #0b7dda;
+    background: linear-gradient(135deg, 
+        rgba(11, 125, 218, 1) 0%,
+        rgba(8, 95, 165, 1) 100%);
+    transform: translateY(-2px);
+    box-shadow: 
+        0 6px 16px rgba(33, 150, 243, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.4);
 }
 
 .feedbacks-delete-button {
-    background-color: #f44336;
+    background: linear-gradient(135deg, 
+        rgba(244, 67, 54, 0.95) 0%,
+        rgba(218, 25, 11, 0.95) 100%);
     color: white;
+    box-shadow: 
+        0 4px 12px rgba(244, 67, 54, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.3);
 }
 
 .feedbacks-delete-button:hover {
-    background-color: #da190b;
+    background: linear-gradient(135deg, 
+        rgba(218, 25, 11, 1) 0%,
+        rgba(183, 28, 28, 1) 100%);
+    transform: translateY(-2px);
+    box-shadow: 
+        0 6px 16px rgba(244, 67, 54, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.4);
 }
 
 .feedbacks-info-button {
-    background-color:
-        /* green */
-        #4CAF50;
+    background: linear-gradient(135deg, 
+        rgba(76, 175, 80, 0.95) 0%,
+        rgba(69, 160, 73, 0.95) 100%);
     color: white;
+    box-shadow: 
+        0 4px 12px rgba(76, 175, 80, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.3);
 }
 
 .feedbacks-info-button:hover {
-    background-color: #45a049;
+    background: linear-gradient(135deg, 
+        rgba(69, 160, 73, 1) 0%,
+        rgba(56, 142, 60, 1) 100%);
+    transform: translateY(-2px);
+    box-shadow: 
+        0 6px 16px rgba(76, 175, 80, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.4);
 }
 
 .feedbacks-modal {
@@ -745,14 +845,14 @@
     z-index: 1000;
 }
 
-/* Modal overlay */
+/* Modal overlay with subtle transparent background */
 .feedbacks-modal-overlay {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.5);
+    background-color: rgba(0, 0, 0, 0.3);
     display: flex;
     justify-content: center;
     align-items: center;
@@ -760,12 +860,20 @@
 }
 
 .feedbacks-modal-content {
-    background: #fff;
+    background: linear-gradient(135deg, 
+        rgba(255, 255, 255, 0.95) 0%,
+        rgba(249, 250, 251, 0.95) 100%);
+    backdrop-filter: blur(25px) saturate(180%);
+    -webkit-backdrop-filter: blur(25px) saturate(180%);
     padding: 20px;
-    border-radius: 8px;
+    border-radius: 24px;
+    border: 2px solid rgba(255, 255, 255, 0.5);
     width: 900px;
     max-width: 90%;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    box-shadow: 
+        0 20px 60px rgba(0, 0, 0, 0.3),
+        0 10px 30px rgba(99, 102, 241, 0.2),
+        inset 0 2px 0 rgba(255, 255, 255, 0.8);
     position: relative;
     height: 100%;
     display: flex;
@@ -844,21 +952,55 @@
 }
 
 .feedbacks-form-actions button {
-    padding: 10px 20px;
-    border: none;
-    border-radius: 4px;
+    padding: 12px 24px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 12px;
     cursor: pointer;
     font-size: 24px;
+    font-weight: 600;
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    transition: all 0.3s ease;
 }
 
 .feedbacks-form-actions button:first-child {
-    background-color: #4caf50;
+    background: linear-gradient(135deg, 
+        rgba(76, 175, 80, 0.95) 0%,
+        rgba(56, 142, 60, 0.95) 100%);
     color: white;
+    box-shadow: 
+        0 4px 15px rgba(76, 175, 80, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.feedbacks-form-actions button:first-child:hover {
+    background: linear-gradient(135deg, 
+        rgba(56, 142, 60, 1) 0%,
+        rgba(46, 125, 50, 1) 100%);
+    transform: translateY(-2px);
+    box-shadow: 
+        0 6px 20px rgba(76, 175, 80, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.4);
 }
 
 .feedbacks-form-actions button:last-child {
-    background-color: #f44336;
+    background: linear-gradient(135deg, 
+        rgba(244, 67, 54, 0.95) 0%,
+        rgba(218, 25, 11, 0.95) 100%);
     color: white;
+    box-shadow: 
+        0 4px 15px rgba(244, 67, 54, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.feedbacks-form-actions button:last-child:hover {
+    background: linear-gradient(135deg, 
+        rgba(218, 25, 11, 1) 0%,
+        rgba(183, 28, 28, 1) 100%);
+    transform: translateY(-2px);
+    box-shadow: 
+        0 6px 20px rgba(244, 67, 54, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.4);
 }
 
 /* Form Row for Two-Column Layout */
@@ -892,6 +1034,44 @@
     margin-bottom: 10px;
     font-size: 24px;
     margin-right: 10px;
+    align-items: center;
+}
+
+.feedbacks-filter-row label {
+    font-size: 24px;
+    font-weight: 600;
+    color: rgba(99, 102, 241, 0.9);
+    text-shadow: 0 1px 2px rgba(99, 102, 241, 0.2);
+    margin-left: 10px;
+    white-space: nowrap;
+}
+
+.feedbacks-filter-row select {
+    padding: 8px 15px;
+    font-size: 20px;
+    font-weight: 500;
+    border: 3px solid rgba(99, 102, 241, 0.6);
+    background: linear-gradient(135deg, 
+        rgba(240, 242, 245, 0.9) 0%,
+        rgba(255, 255, 255, 0.95) 100%);
+    backdrop-filter: blur(15px) saturate(180%);
+    -webkit-backdrop-filter: blur(15px) saturate(180%);
+    border-radius: 12px;
+    box-shadow: 
+        0 4px 12px rgba(99, 102, 241, 0.2),
+        inset 0 1px 0 rgba(255, 255, 255, 0.5);
+    transition: all 0.3s ease;
+    color: #333;
+    cursor: pointer;
+}
+
+.feedbacks-filter-row select:focus {
+    outline: none;
+    border-color: rgba(99, 102, 241, 0.9);
+    box-shadow: 
+        0 6px 16px rgba(99, 102, 241, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.6);
+    transform: translateY(-1px);
 }
 
 .feedbacks-type-filter {
@@ -900,6 +1080,7 @@
     margin-bottom: 10px;
     font-size: 24px;
     margin-left: 20px;
+    align-items: center;
 }
 
 .feedbacks-info-grid {
