@@ -10,6 +10,7 @@ import { useTranslation } from "react-i18next";
 import axios from "../../axiosConfig";
 
 const VolunteerFeedbackReport = () => {
+  const PAGE_SIZE = 5;
   const [loading, setLoading] = useState(true);
   const [feedbacks, setFeedbacks] = useState([]);
   const [filteredFeedbacks, setFilteredFeedbacks] = useState([]);
@@ -17,6 +18,7 @@ const VolunteerFeedbackReport = () => {
   const [sortOrderFeedbackDate, setSortOrderFeedbackDate] = useState('desc');
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
   const { t } = useTranslation();
 
   const parseDate = (dateString) => {
@@ -47,8 +49,9 @@ const VolunteerFeedbackReport = () => {
   };
 
   const handleCheckboxChange = (index) => {
+    const actualIndex = (currentPage - 1) * PAGE_SIZE + index;
     const updatedFeedbacks = filteredFeedbacks.map((feedback, i) => {
-      if (i === index) {
+      if (i === actualIndex) {
         return { ...feedback, selected: !feedback.selected };
       }
       return feedback;
@@ -98,11 +101,13 @@ const VolunteerFeedbackReport = () => {
     });
 
     setFilteredFeedbacks(filtered);
+    setCurrentPage(1);
   };
 
   const refreshData = () => {
     setFromDate("");
     setToDate("");
+    setCurrentPage(1);
     fetchData();
   };
 
@@ -192,88 +197,105 @@ const VolunteerFeedbackReport = () => {
                 </button>
               </div>
             )}
-            <div className="grid-container">
+            <div className="volunteer-feedback-report-grid-container">
               {filteredFeedbacks.length === 0 ? (
                 <div className="no-data">{t("No data to display")}</div>
               ) : (
-                <table className="data-grid">
-                  <thead>
-                    <tr>
-                      <th>
-                        <input
-                          type="checkbox"
-                          onChange={(e) => handleSelectAllCheckbox(e.target.checked)}
-                        />
-                      </th>
-                      <th>{t("Volunteer Name")}</th>
-                      <th>{t("Child Name")}</th>
-                      <th className="wide-column">
-                        {t("Event Date")}
-                        <button
-                          className="sort-button"
-                          onClick={toggleSortOrderEventDate}
-                        >
-                          {sortOrderEventDate === 'asc' ? '▲' : '▼'}
-                        </button>
-                      </th>
-                      <th className="wide-column">
-                        {t("Feedback Filled At")}
-                        <button
-                          className="sort-button"
-                          onClick={toggleSortOrderFeedbackDate}
-                        >
-                          {sortOrderFeedbackDate === 'asc' ? '▲' : '▼'}
-                        </button>
-                      </th>
-                      <th>{t("Description")}</th>
-                      <th>{t("Feedback Type")}</th>
-                      <th>{t("Exceptional Events")}</th>
-                      <th>{t("Anything Else")}</th>
-                      <th>{t("Comments")}</th>
-                      <th>{t("Initial Family Data")}</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredFeedbacks.map((feedback, index) => (
-                      <tr key={index}>
-                        <td>
+                <>
+                  <table className="volunteer-feedback-report-data-grid">
+                    <thead>
+                      <tr>
+                        <th>
                           <input
                             type="checkbox"
-                            checked={feedback.selected || false}
-                            onChange={() => handleCheckboxChange(index)}
+                            onChange={(e) => handleSelectAllCheckbox(e.target.checked)}
                           />
-                        </td>
-                        <td>{feedback.volunteer_name}</td>
-                        <td>{feedback.child_name}</td>
-                        <td>{feedback.event_date}</td>
-                        <td>{feedback.feedback_filled_at}</td>
-                        <td><div className="td-scrollable">{feedback.description}</div></td>
-                        <td>{t(feedback.feedback_type)}</td>
-                        <td>{feedback.exceptional_events}</td>
-                        <td>{feedback.anything_else}</td>
-                        <td>{feedback.comments}</td>
-                        <td>
-                          <div className="td-scrollable">
-                            {[
-                              feedback.names,
-                              feedback.phones,
-                              feedback.other_information
-                            ].filter(Boolean).length > 0
-                              ? (
-                                <>
-                                  {feedback.names && <div>{t("Names")}: {feedback.names}</div>}
-                                  {feedback.phones && <div>{t("Phones")}: {feedback.phones}</div>}
-                                  {feedback.other_information && <div>{t("Other Information")}: {feedback.other_information}</div>}
-                                </>
-                              )
-                              : "---"
-                            }
-                          </div>
-                        </td>
+                        </th>
+                        <th>{t("Volunteer Name")}</th>
+                        <th>{t("Child Name")}</th>
+                        <th className="wide-column">
+                          {t("Event Date")}
+                          <button
+                            className="sort-button"
+                            onClick={toggleSortOrderEventDate}
+                          >
+                            {sortOrderEventDate === 'asc' ? '▲' : '▼'}
+                          </button>
+                        </th>
+                        <th className="wide-column">
+                          {t("Feedback Filled At")}
+                          <button
+                            className="sort-button"
+                            onClick={toggleSortOrderFeedbackDate}
+                          >
+                            {sortOrderFeedbackDate === 'asc' ? '▲' : '▼'}
+                          </button>
+                        </th>
+                        <th>{t("Description")}</th>
+                        <th>{t("Feedback Type")}</th>
+                        <th>{t("Exceptional Events")}</th>
+                        <th>{t("Anything Else")}</th>
+                        <th>{t("Comments")}</th>
+                        <th>{t("Initial Family Data")}</th>
                       </tr>
+                    </thead>
+                    <tbody>
+                      {filteredFeedbacks.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE).map((feedback, index) => (
+                        <tr key={index}>
+                          <td>
+                            <input
+                              type="checkbox"
+                              checked={feedback.selected || false}
+                              onChange={() => handleCheckboxChange(index)}
+                            />
+                          </td>
+                          <td>{feedback.volunteer_name}</td>
+                          <td>{feedback.child_name}</td>
+                          <td>{feedback.event_date}</td>
+                          <td>{feedback.feedback_filled_at}</td>
+                          <td><div className="td-scrollable">{feedback.description}</div></td>
+                          <td>{t(feedback.feedback_type)}</td>
+                          <td>{feedback.exceptional_events}</td>
+                          <td>{feedback.anything_else}</td>
+                          <td>{feedback.comments}</td>
+                          <td>
+                            <div className="td-scrollable">
+                              {[
+                                feedback.names,
+                                feedback.phones,
+                                feedback.other_information
+                              ].filter(Boolean).length > 0
+                                ? (
+                                  <>
+                                    {feedback.names && <div>{t("Names")}: {feedback.names}</div>}
+                                    {feedback.phones && <div>{t("Phones")}: {feedback.phones}</div>}
+                                    {feedback.other_information && <div>{t("Other Information")}: {feedback.other_information}</div>}
+                                  </>
+                                )
+                                : "---"
+                              }
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  <div className="pagination">
+                    <button onClick={() => setCurrentPage(1)} disabled={currentPage === 1} className="pagination-arrow">&laquo;</button>
+                    <button onClick={() => setCurrentPage(currentPage - 1)} disabled={currentPage === 1} className="pagination-arrow">&lsaquo;</button>
+                    {Array.from({ length: Math.ceil(filteredFeedbacks.length / PAGE_SIZE) }, (_, i) => (
+                      <button
+                        key={i + 1}
+                        className={currentPage === i + 1 ? "active" : ""}
+                        onClick={() => setCurrentPage(i + 1)}
+                      >
+                        {i + 1}
+                      </button>
                     ))}
-                  </tbody>
-                </table>
+                    <button onClick={() => setCurrentPage(currentPage + 1)} disabled={currentPage === Math.ceil(filteredFeedbacks.length / PAGE_SIZE)} className="pagination-arrow">&rsaquo;</button>
+                    <button onClick={() => setCurrentPage(Math.ceil(filteredFeedbacks.length / PAGE_SIZE))} disabled={currentPage === Math.ceil(filteredFeedbacks.length / PAGE_SIZE)} className="pagination-arrow">&raquo;</button>
+                  </div>
+                </>
               )}
             </div>
           </>
