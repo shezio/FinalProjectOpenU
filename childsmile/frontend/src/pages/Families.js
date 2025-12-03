@@ -541,13 +541,14 @@ const Families = () => {
                 <table className="families-data-grid">
                   <thead>
                     <tr>
-                      <th>{t('Last Name')}</th>
+                      <th>{t('Full Name')}</th>
+                      <th>{t('Age')}</th>
                       <th>{t('Address')}</th>
                       <th>{t('Phone')}</th>
                       <th>{t('Tutorship Status')}</th>
                       <th>{t('Status')}</th>
-                      <th className="wide-column">
-                        {t('Registration Date')}
+                      <th>{t('Responsible Coordinator')}</th>
+                      <th>{t('Registration Date')}
                         <button
                           className="sort-button"
                           onClick={toggleSortOrderRegistrationDate}
@@ -561,11 +562,13 @@ const Families = () => {
                   <tbody>
                     {paginatedFamilies.map((family) => (
                       <tr key={family.id}>
-                        <td>{family.last_name}</td>
+                        <td>{family.first_name} {family.last_name}</td>
+                        <td>{family.age}</td>
                         <td>{family.address}</td>
                         <td>{family.child_phone_number || '---'}</td>
                         <td>{family.tutoring_status || '---'}</td>
                         <td>{family.status}</td>
+                        <td>{family.responsible_coordinator || '---'}</td>
                         <td>{family.registration_date}</td>
                         <td>
                           <div className="family-actions">

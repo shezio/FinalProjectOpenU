@@ -115,7 +115,7 @@ def get_complete_family_details(request):
                 "registration_date": family.registrationdate.strftime("%d/%m/%Y"),
                 "last_updated_date": family.lastupdateddate.strftime("%d/%m/%Y"),
                 "gender": family.gender,
-                "responsible_coordinator": family.responsible_coordinator,
+                "responsible_coordinator": get_staff_name_by_id(family.responsible_coordinator) or "Unknown",
                 "child_phone_number": family.child_phone_number,
                 "treating_hospital": family.treating_hospital,
                 "date_of_birth": family.date_of_birth.strftime("%d/%m/%Y"),
@@ -299,7 +299,14 @@ def create_family(request):
                 {"error": "Invalid child_id - must be exactly 9 digits"},
                 status=400,
             )
-        
+
+        #if "למצוא_חונך" in data.get("tutoring_status", ""):
+            # get the name of the responsible coordinator that has the role of 'Tutored Families Coordinator' else get the name of the responsible coordinator with the role of 'Family Coordinator' using not the user_id but getting it from the Staff table
+                # Get the correct responsible coordinator based on tutoring status
+        tutoring_status = data.get("tutoring_status", "")
+        coordinator_staff_id = get_responsible_coordinator_for_family(tutoring_status)
+        responsible_coordinator = coordinator_staff_id if coordinator_staff_id else user_id
+
         # Create a new family record in the database
         family = Children.objects.create(
             child_id=data["child_id"],
@@ -308,7 +315,7 @@ def create_family(request):
             registrationdate=datetime.datetime.now(),
             lastupdateddate=datetime.datetime.now(),
             gender=True if data["gender"] == "נקבה" else False,
-            responsible_coordinator=user_id,
+            responsible_coordinator=responsible_coordinator,
             city=data["city"],
             child_phone_number=data["child_phone_number"],
             treating_hospital=data["treating_hospital"],
@@ -359,7 +366,7 @@ def create_family(request):
             additional_data={
                 'family_name': f"{data['childfirstname']} {data['childsurname']}",
                 'family_city': data['city'],
-                'responsible_coordinator': user_id
+                'responsible_coordinator': get_staff_name_by_id(responsible_coordinator) or "Unknown"
             }
         )
 

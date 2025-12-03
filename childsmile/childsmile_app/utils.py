@@ -990,3 +990,53 @@ def delete_other_registration_approval_tasks(task):
 def conditional_csrf(view_func):
     is_prod = os.environ.get("DJANGO_ENV") == "production"
     return csrf_protect(view_func) if is_prod else csrf_exempt(view_func)
+
+
+def get_responsible_coordinator_for_family(tutoring_status):
+    """
+    Get the staff_id of the appropriate coordinator based on tutoring status.
+    If tutoring_status contains "למצוא_חונך", tries to get 'Tutored Families Coordinator'.
+    Otherwise, gets 'Families Coordinator' or falls back to 'Family Coordinator'.
+    
+    Returns the staff_id of the coordinator, or None if not found.
+    """
+    try:
+        # Check if tutoring status requires a tutored families coordinator
+        if tutoring_status and "למצוא_חונך" in tutoring_status:
+            # Try to get Tutored Families Coordinator first
+            tutored_coordinator = Staff.objects.filter(
+                roles__role_name='Tutored Families Coordinator'
+            ).first()
+            if tutored_coordinator:
+                return tutored_coordinator.staff_id
+        
+        # Fallback to Families Coordinator
+        families_coordinator = Staff.objects.filter(
+            roles__role_name='Families Coordinator'
+        ).first()
+        if families_coordinator:
+            return families_coordinator.staff_id
+        
+        return None
+    except Exception as e:
+        api_logger.error(f"Error getting responsible coordinator: {str(e)}")
+        return None
+
+
+def get_staff_name_by_id(staff_id):
+    """
+    Get the full name of a staff member by their staff_id.
+    Returns the name in format "first_name last_name" or None if not found.
+    """
+    try:
+        if not staff_id:
+            return None
+        
+        staff = Staff.objects.filter(staff_id=staff_id).first()
+        if staff:
+            return f"{staff.first_name} {staff.last_name}"
+        
+        return None
+    except Exception as e:
+        api_logger.error(f"Error getting staff name for ID {staff_id}: {str(e)}")
+        return None

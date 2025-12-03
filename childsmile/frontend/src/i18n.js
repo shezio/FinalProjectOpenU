@@ -690,6 +690,8 @@ const resources = {
       'Registration rejected and user deleted': 'הרשמה נדחתה והמשתמש נמחק',
       'Registration approval': 'אישור הרשמה',
       "Email Verification": "אימות Email",
+      "Failed to fetch staff.": "שגיאה בטעינת משתמשים",
+      "Tutored Families Coordinator": "רכז משפחות בחונכות",
     }
   }
 };
