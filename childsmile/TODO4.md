@@ -1,5 +1,7 @@
-change the appearance of the logout button
-put the username without _ on the top of the sidebar and the permissions below it as now but on the top of the siderbar with it
+rows in systemManagement.css arent purple on hover as families grid
 
-show a clock on the sidebar with the current time and date israeli format
-and put the logout button below it
+need to move all buttons left
+font weight isnt same as other buttons
+need search bar on same line as buttons
+
+need audit page and registratyion morphed to match system management page style

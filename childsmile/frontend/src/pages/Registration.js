@@ -50,12 +50,22 @@ const Registration = () => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
+    
+    // Clear error for this field if it exists
+    if (errors[name]) {
+      setErrors({ ...errors, [name]: '' });
+    }
   };
 
   // Add this new handler
   const handleToggleChange = (name, value) => {
     console.log(`DEBUG: ${name} changed to ${value}`); // Log the changes
     setFormData({ ...formData, [name]: value });
+    
+    // Clear error for this field if it exists
+    if (errors[name]) {
+      setErrors({ ...errors, [name]: '' });
+    }
   };
 
   // Validate form fields
@@ -115,8 +125,8 @@ const Registration = () => {
     handleDiameter: 60,
     height: 80,
     width: 180,
-    offColor: "#d9534f",
-    onColor: "#0275d8",
+    offColor: "#6e6e6f",
+    onColor: "#7f41ea",
     className: "custom-switch",
   };
   const handleSubmit = (e) => {
@@ -317,7 +327,6 @@ const Registration = () => {
                   maxLength="7"
                   className={errors.phone ? "error" : ""}
                 />
-                <span className="dash">-</span>
                 <select
                   name="phone_prefix"
                   value={formData.phone_prefix || "050"}
