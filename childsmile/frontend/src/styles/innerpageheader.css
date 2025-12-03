@@ -225,6 +225,17 @@ body {
         font-size: 3.2em;
     }
 
+    .new-families-report-main-content .title,
+    .families-waiting-report-main-content .title,
+    .possible-matches-report-main-content .title,
+    .pending-tutors-report-main-content .title {
+        font-size: 4em;
+    }
+
+    .families-waiting-report-main-content .title {
+        margin-left: 20px;
+    }
+
     .top-left {
         gap: 20px;
         left: 35px;

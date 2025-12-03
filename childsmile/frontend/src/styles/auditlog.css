@@ -11,7 +11,7 @@
 
 .audit-log-container {
   flex: unset !important;
-  margin-top: 250px;
+  margin-top: 150px !important;
   border: 1px solid #ddd;
   background-color: white;
   padding: 0;
@@ -34,13 +34,28 @@
 }
 
 /* Filter Create Container - Layout matching Families.js */
-.filter-create-container {
+.audit-log-main-content .filter-create-container {
   display: flex;
   gap: 20px;
   justify-content: space-between;
   align-items: flex-end;
-  margin-bottom: 20px;
   flex-wrap: wrap;
+  position: absolute;
+  top: 400;
+  right: 30;
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.95) 0%,
+    rgba(245, 245, 245, 0.9) 100%);
+  backdrop-filter: blur(25px) saturate(180%);
+  -webkit-backdrop-filter: blur(25px) saturate(180%);
+  border: 2px solid rgba(255, 255, 255, 0.5);
+  border-radius: 16px;
+  padding: 20px 25px;
+  box-shadow: 
+    0 20px 60px rgba(59, 130, 246, 0.2),
+    0 10px 30px rgba(168, 85, 247, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  z-index: 100;
 }
 
 /* Search Bar Group */
@@ -54,16 +69,28 @@
   padding: 0 10px;
   width: 250px;
   height: 50px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
+  border: 2px solid rgba(102, 126, 234, 0.6);
+  border-radius: 8px;
   font-size: 24px;
-  background: white;
+  background: linear-gradient(135deg, 
+    rgba(240, 242, 245, 0.9) 0%,
+    rgba(255, 255, 255, 0.95) 100%);
+  backdrop-filter: blur(15px) saturate(180%);
+  -webkit-backdrop-filter: blur(15px) saturate(180%);
+  box-shadow: 
+    0 4px 12px rgba(102, 126, 234, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  transition: all 0.3s ease;
+  color: #333;
 }
 
 .audit-log-search-bar:focus {
   outline: none;
-  border-color: #007bff;
-  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+  border-color: rgba(102, 126, 234, 0.9);
+  box-shadow: 
+    0 6px 16px rgba(102, 126, 234, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  transform: translateY(-1px);
 }
 
 /* Filter Group for Actions and Dates */
@@ -86,13 +113,22 @@
   font-size: 24px;
 }
 
-.filter-select,
-.date-input {
+.audit-log-filters .filter-select,
+.audit-log-filters .date-input {
   padding: 8px 12px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
+  border: 2px solid rgba(102, 126, 234, 0.6);
+  border-radius: 8px;
   font-size: 24px;
-  background: white;
+  background: linear-gradient(135deg, 
+    rgba(240, 242, 245, 0.9) 0%,
+    rgba(255, 255, 255, 0.95) 100%);
+  backdrop-filter: blur(15px) saturate(180%);
+  -webkit-backdrop-filter: blur(15px) saturate(180%);
+  box-shadow: 
+    0 4px 12px rgba(102, 126, 234, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  transition: all 0.3s ease;
+  color: #333;
   width: 180px;
 }
 
@@ -100,11 +136,14 @@
   width: 300px;
 }
 
-.filter-select:focus,
-.date-input:focus {
+.audit-log-filters .filter-select:focus,
+.audit-log-filters .date-input:focus {
   outline: none;
-  border-color: #007bff;
-  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+  border-color: rgba(102, 126, 234, 0.9);
+  box-shadow: 
+    0 6px 16px rgba(102, 126, 234, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  transform: translateY(-1px);
 }
 
 /* Action Buttons Container */
@@ -114,42 +153,105 @@
   align-items: flex-end;
 }
 
-.refresh-button,
-.select-all-button {
+.audit-log-actions .refresh-button,
+.audit-log-actions .select-all-button {
   padding: 10px 20px;
-  background-color: #007bff;
+  background: linear-gradient(135deg, 
+    rgba(59, 130, 246, 0.95) 0%,
+    rgba(37, 99, 235, 0.95) 100%);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
   color: white;
-  border: none;
-  border-radius: 4px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 8px;
   font-size: 24px;
   cursor: pointer;
-  transition: background-color 0.3s ease;
-  font-weight: 500;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  font-weight: 600;
+  box-shadow: 
+    0 6px 20px rgba(59, 130, 246, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  position: relative;
+  overflow: hidden;
 }
 
-.select-all-button {
-  background-color: #28a745;
-} 
-
-.refresh-button:hover {
-  background-color: #0056b3;
+.audit-log-actions .select-all-button {
+  background: linear-gradient(135deg, 
+    rgba(16, 185, 129, 0.95) 0%,
+    rgba(5, 150, 105, 0.95) 100%);
+  box-shadow: 
+    0 6px 20px rgba(16, 185, 129, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
 }
 
-.export-button {
+.refresh-button::before,
+.select-all-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, 
+    transparent, 
+    rgba(255, 255, 255, 0.3), 
+    transparent);
+  transition: left 0.5s;
+}
+
+.refresh-button:hover::before,
+.select-all-button:hover::before {
+  left: 100%;
+}
+
+.audit-log-actions .refresh-button:hover {
+  background: linear-gradient(135deg, 
+    rgba(59, 130, 246, 1) 0%,
+    rgba(37, 99, 235, 1) 100%);
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: 
+    0 10px 30px rgba(59, 130, 246, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+.select-all-button:hover {
+  background: linear-gradient(135deg, 
+    rgba(16, 185, 129, 1) 0%,
+    rgba(5, 150, 105, 1) 100%);
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: 
+    0 10px 30px rgba(16, 185, 129, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+.audit-log-actions .export-button {
   padding: 8px;
-  background-color: white;
-  border: 1px solid #ddd;
-  border-radius: 4px;
+  background: linear-gradient(135deg, 
+    rgba(240, 242, 245, 0.9) 0%,
+    rgba(255, 255, 255, 0.95) 100%);
+  backdrop-filter: blur(15px) saturate(180%);
+  -webkit-backdrop-filter: blur(15px) saturate(180%);
+  border: 2px solid rgba(102, 126, 234, 0.6);
+  border-radius: 8px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all 0.3s ease;
+  box-shadow: 
+    0 4px 12px rgba(102, 126, 234, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
 }
 
-.export-button:hover {
-  border-color: #007bff;
-  background-color: #f9f9f9;
+.audit-log-actions .export-button:hover {
+  border-color: rgba(102, 126, 234, 0.9);
+  background: linear-gradient(135deg, 
+    rgba(102, 126, 234, 0.1) 0%,
+    rgba(118, 75, 162, 0.1) 100%);
+  box-shadow: 
+    0 6px 16px rgba(102, 126, 234, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  transform: translateY(-1px);
 }
 
 .export-button img {

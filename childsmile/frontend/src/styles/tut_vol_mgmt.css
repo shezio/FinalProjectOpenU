@@ -80,6 +80,10 @@
   z-index: 2;             /* bring it above the other */
 }
 
+.families-main-content .search-bar {
+  margin-bottom: 70px;
+}
+
 /* Search bar with beautiful blue glassmorphism - matches InitialFamilyData style */
 .search-bar,
 input.search-bar {

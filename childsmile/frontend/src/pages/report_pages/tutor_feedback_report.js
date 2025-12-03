@@ -9,6 +9,8 @@ import "react-toastify/dist/ReactToastify.css";
 import { useTranslation } from "react-i18next";
 import axios from "../../axiosConfig";
 
+const PAGE_SIZE = 5;
+
 const TutorFeedbackReport = () => {
   const [loading, setLoading] = useState(true);
   const [feedbacks, setFeedbacks] = useState([]);
@@ -17,6 +19,7 @@ const TutorFeedbackReport = () => {
   const [sortOrderFeedbackDate, setSortOrderFeedbackDate] = useState('asc'); // Default to ascending
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
   const { t } = useTranslation();
 
   const parseDate = (dateString) => {
@@ -47,8 +50,10 @@ const TutorFeedbackReport = () => {
 
   // Checkbox logic
   const handleCheckboxChange = (index) => {
+    // Find the actual index in the full filteredFeedbacks array
+    const actualIndex = (currentPage - 1) * PAGE_SIZE + index;
     const updatedFeedbacks = filteredFeedbacks.map((feedback, i) => {
-      if (i === index) {
+      if (i === actualIndex) {
         return { ...feedback, selected: !feedback.selected };
       }
       return feedback;
@@ -57,6 +62,7 @@ const TutorFeedbackReport = () => {
   };
 
   const handleSelectAllCheckbox = (isChecked) => {
+    // Select ALL feedbacks across ALL pages, not just current page
     const updatedFeedbacks = filteredFeedbacks.map((feedback) => ({
       ...feedback,
       selected: isChecked,
@@ -98,11 +104,13 @@ const TutorFeedbackReport = () => {
     });
 
     setFilteredFeedbacks(filtered);
+    setCurrentPage(1);
   };
 
   const refreshData = () => {
     setFromDate("");
     setToDate("");
+    setCurrentPage(1);
     fetchData();
   };
 
@@ -191,114 +199,131 @@ const TutorFeedbackReport = () => {
                 </button>
               </div>
             )}
-            <div className="grid-container">
+            <div className="tutor-feedback-report-grid-container">
               {filteredFeedbacks.length === 0 ? (
                 <div className="no-data">{t("No data to display")}</div>
               ) : (
-                <table className="data-grid">
-                  <thead>
-                    <tr>
-                      <th>
-                        <input
-                          type="checkbox"
-                          onChange={(e) => handleSelectAllCheckbox(e.target.checked)}
-                        />
-                      </th>
-                      <th>{t("Tutor Name")}</th>
-                      <th>{t("Tutee Name")}</th>
-                      <th>{t("Is It Your Tutee?")}</th>
-                      <th>{t("Is First Visit?")}</th>
-                      <th className="wide-column">
-                        {t("Event Date")}
-                        <button
-                          className="sort-button"
-                          onClick={toggleSortOrderEventDate}
-                        >
-                          {sortOrderEventDate === 'asc' ? '▲' : '▼'}
-                        </button>
-                      </th>
-                      <th className="wide-column">
-                        {t("Feedback Filled At")}
-                        <button
-                          className="sort-button"
-                          onClick={toggleSortOrderFeedbackDate}
-                        >
-                          {sortOrderFeedbackDate === 'asc' ? '▲' : '▼'}
-                        </button>
-                      </th>
-                      <th>{t("Description")}</th>
-                      <th>{t("Feedback Type")}</th>
-                      <th>{t("Exceptional Events")}</th>
-                      <th>{t("Anything Else")}</th>
-                      <th>{t("Comments")}</th>
-                      <th>{t("Initial Family Data")}</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredFeedbacks.map((feedback, index) => (
-                      <tr key={index}>
-                        <td>
+                <>
+                  <table className="tutor-feedback-report-data-grid">
+                    <thead>
+                      <tr>
+                        <th>
                           <input
                             type="checkbox"
-                            checked={feedback.selected || false}
-                            onChange={() => handleCheckboxChange(index)}
+                            onChange={(e) => handleSelectAllCheckbox(e.target.checked)}
                           />
-                        </td>
-                        <td>{feedback.tutor_name}</td>
-                        <td>{feedback.tutee_name}</td>
-                        <td>{feedback.is_it_your_tutee ? t("Yes") : t("No")}</td>
-                        <td>{feedback.is_first_visit ? t("Yes") : t("No")}</td>
-                        <td>{feedback.event_date}</td>
-                        <td>{feedback["feedback_filled_at"]}</td>
-                        <td>
-                          {(feedback.description || "").split(" ").map((word, i) => (
-                            <React.Fragment key={i}>
-                              {word} {(i + 1) % 3 === 0 && <br />}
-                            </React.Fragment>
-                          ))}
-                        </td>
-                        <td>{t(feedback.feedback_type)}</td>
-                        <td>
-                          {(feedback.exceptional_events || "").split(" ").map((word, i) => (
-                            <React.Fragment key={i}>
-                              {word} {(i + 1) % 5 === 0 && <br />}
-                            </React.Fragment>
-                          ))}
-                        </td>
-                        <td>
-                          {(feedback.anything_else || "").split(" ").map((word, i) => (
-                            <React.Fragment key={i}>
-                              {word} {(i + 1) % 5 === 0 && <br />}
-                            </React.Fragment>
-                          ))}
-                        </td>
-                        <td>
-                          {(feedback.comments || "").split(" ").map((word, i) => (
-                            <React.Fragment key={i}>
-                              {word} {(i + 1) % 5 === 0 && <br />}
-                            </React.Fragment>
-                          ))}
-                        </td>
-                        <td>
-                          {[
-                            feedback.names,
-                            feedback.phones,
-                            feedback.other_information
-                          ].filter(Boolean).length > 0
-                            ? (
-                              <>
-                                {feedback.names && <div>{t("Names")}: {feedback.names}</div>}
-                                {feedback.phones && <div>{t("Phones")}: {feedback.phones}</div>}
-                                {feedback.other_information && <div>{t("Other Information")}: {feedback.other_information}</div>}
-                              </>
-                            )
-                            : "---"
-                          }
-                        </td>
+                        </th>
+                        <th>{t("Tutor Name")}</th>
+                        <th>{t("Tutee Name")}</th>
+                        <th>{t("Is It Your Tutee?")}</th>
+                        <th>{t("Is First Visit?")}</th>
+                        <th className="wide-column">
+                          {t("Event Date")}
+                          <button
+                            className="sort-button"
+                            onClick={toggleSortOrderEventDate}
+                          >
+                            {sortOrderEventDate === 'asc' ? '▲' : '▼'}
+                          </button>
+                        </th>
+                        <th className="wide-column">
+                          {t("Feedback Filled At")}
+                          <button
+                            className="sort-button"
+                            onClick={toggleSortOrderFeedbackDate}
+                          >
+                            {sortOrderFeedbackDate === 'asc' ? '▲' : '▼'}
+                          </button>
+                        </th>
+                        <th>{t("Description")}</th>
+                        <th>{t("Feedback Type")}</th>
+                        <th>{t("Exceptional Events")}</th>
+                        <th>{t("Anything Else")}</th>
+                        <th>{t("Comments")}</th>
+                        <th>{t("Initial Family Data")}</th>
                       </tr>
+                    </thead>
+                    <tbody>
+                      {filteredFeedbacks.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE).map((feedback, index) => (
+                        <tr key={index}>
+                          <td>
+                            <input
+                              type="checkbox"
+                              checked={feedback.selected || false}
+                              onChange={() => handleCheckboxChange(index)}
+                            />
+                          </td>
+                          <td>{feedback.tutor_name}</td>
+                          <td>{feedback.tutee_name}</td>
+                          <td>{feedback.is_it_your_tutee ? t("Yes") : t("No")}</td>
+                          <td>{feedback.is_first_visit ? t("Yes") : t("No")}</td>
+                          <td>{feedback.event_date}</td>
+                          <td>{feedback["feedback_filled_at"]}</td>
+                          <td>
+                            {(feedback.description || "").split(" ").map((word, i) => (
+                              <React.Fragment key={i}>
+                                {word} {(i + 1) % 3 === 0 && <br />}
+                              </React.Fragment>
+                            ))}
+                          </td>
+                          <td>{t(feedback.feedback_type)}</td>
+                          <td>
+                            {(feedback.exceptional_events || "").split(" ").map((word, i) => (
+                              <React.Fragment key={i}>
+                                {word} {(i + 1) % 5 === 0 && <br />}
+                              </React.Fragment>
+                            ))}
+                          </td>
+                          <td>
+                            {(feedback.anything_else || "").split(" ").map((word, i) => (
+                              <React.Fragment key={i}>
+                                {word} {(i + 1) % 5 === 0 && <br />}
+                              </React.Fragment>
+                            ))}
+                          </td>
+                          <td>
+                            {(feedback.comments || "").split(" ").map((word, i) => (
+                              <React.Fragment key={i}>
+                                {word} {(i + 1) % 5 === 0 && <br />}
+                              </React.Fragment>
+                            ))}
+                          </td>
+                          <td>
+                            {[
+                              feedback.names,
+                              feedback.phones,
+                              feedback.other_information
+                            ].filter(Boolean).length > 0
+                              ? (
+                                <>
+                                  {feedback.names && <div>{t("Names")}: {feedback.names}</div>}
+                                  {feedback.phones && <div>{t("Phones")}: {feedback.phones}</div>}
+                                  {feedback.other_information && <div>{t("Other Information")}: {feedback.other_information}</div>}
+                                </>
+                              )
+                              : "---"
+                            }
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  <div className="pagination">
+                    <button onClick={() => setCurrentPage(1)} disabled={currentPage === 1} className="pagination-arrow">&laquo;</button>
+                    <button onClick={() => setCurrentPage(currentPage - 1)} disabled={currentPage === 1} className="pagination-arrow">&lsaquo;</button>
+                    {Array.from({ length: Math.ceil(filteredFeedbacks.length / PAGE_SIZE) }, (_, i) => (
+                      <button
+                        key={i + 1}
+                        className={currentPage === i + 1 ? "active" : ""}
+                        onClick={() => setCurrentPage(i + 1)}
+                      >
+                        {i + 1}
+                      </button>
                     ))}
-                  </tbody>
-                </table>
+                    <button onClick={() => setCurrentPage(currentPage + 1)} disabled={currentPage === Math.ceil(filteredFeedbacks.length / PAGE_SIZE)} className="pagination-arrow">&rsaquo;</button>
+                    <button onClick={() => setCurrentPage(Math.ceil(filteredFeedbacks.length / PAGE_SIZE))} disabled={currentPage === Math.ceil(filteredFeedbacks.length / PAGE_SIZE)} className="pagination-arrow">&raquo;</button>
+                  </div>
+                </>
               )}
             </div>
           </>

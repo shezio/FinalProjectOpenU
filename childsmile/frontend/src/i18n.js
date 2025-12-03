@@ -688,7 +688,8 @@ const resources = {
       "Cancel": "ביטול",
       "Wants to be Tutor": "רוצה להיות חונך",
       'Registration rejected and user deleted': 'הרשמה נדחתה והמשתמש נמחק',
-      'Registration approval': 'אישור הרשמה'
+      'Registration approval': 'אישור הרשמה',
+      "Email Verification": "אימות Email",
     }
   }
 };

@@ -1,80 +1,336 @@
+/* ===== MODERN BENTO BOX DASHBOARD DESIGN ===== */
+
+/* 1. The Container - Locked to Screen Height */
+.reports-page {
+    height: calc(100vh - 80px);
+    width: 100%;
+    padding: 40px 60px;
+    box-sizing: border-box;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    direction: rtl;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    position: relative;
+    overflow: hidden;
+}
+
+.reports-page::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: 
+        radial-gradient(circle at 20% 30%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 80% 70%, rgba(0, 0, 0, 0.1) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* 2. The Bento Grid */
+.reports-container {
+    display: grid;
+    width: 100%;
+    max-width: 1800px;
+    height: 100%;
+    grid-template-columns: repeat(4, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+    gap: 20px;
+    position: relative;
+    z-index: 1;
+}
+
+/* 3. The Card Style */
+.reports-container .report,
+.report-card {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border-radius: 24px;
+    padding: 30px;
+    
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    
+    box-shadow: 
+        0 8px 32px rgba(0, 0, 0, 0.15),
+        inset 0 1px 0 rgba(255, 255, 255, 0.8);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    position: relative;
+    overflow: hidden;
+}
+
+/* Glassmorphism shine effect */
+.reports-container .report::before,
+.report-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: radial-gradient(
+        circle at center,
+        rgba(255, 255, 255, 0.2) 0%,
+        transparent 70%
+    );
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+}
+
+/* Hover Effect */
+.reports-container .report:hover,
+.report-card:hover {
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: 
+        0 20px 60px rgba(0, 0, 0, 0.25),
+        inset 0 1px 0 rgba(255, 255, 255, 1);
+    border-color: rgba(143, 117, 239, 0.5);
+    background: rgba(255, 255, 255, 1);
+}
+
+.reports-container .report:hover::before,
+.report-card:hover::before {
+    opacity: 1;
+}
+
+/* Typography */
+.reports-container .report h2,
+.report-card h2 {
+    font-family: 'Rubik', 'Heebo', Arial, sans-serif;
+    font-size: 1.5rem;
+    color: #2d3748;
+    margin: 15px 0 10px 0;
+    font-weight: 600;
+    line-height: 1.4;
+    letter-spacing: -0.02em;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.reports-container .report p {
+    font-size: 0.95rem;
+    color: #718096;
+    margin: 0;
+    line-height: 1.5;
+}
+
+/* Icons (Add icon support) */
+.reports-container .report-icon,
+.report-card .report-icon {
+    font-size: 3rem;
+    color: #8f75ef;
+    margin-bottom: 15px;
+    transition: transform 0.3s ease;
+}
+
+.reports-container .report:hover .report-icon,
+.report-card:hover .report-icon {
+    transform: scale(1.1) rotate(5deg);
+}
+
+/* 4. Special Sizes (The "Bento" Magic) */
+
+/* Make important reports wider */
+.reports-container .report.wide,
+.report-card.wide {
+    grid-column: span 2;
+    background: linear-gradient(135deg, 
+        rgba(143, 117, 239, 0.95) 0%, 
+        rgba(118, 75, 162, 0.95) 100%);
+    border-color: rgba(255, 255, 255, 0.4);
+}
+
+/* Change text color for wide/colored cards */
+.reports-container .report.wide h2,
+.report-card.wide h2,
+.reports-container .report.wide p,
+.report-card.wide p,
+.reports-container .report.wide .report-icon,
+.report-card.wide .report-icon {
+    color: white;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.reports-container .report.wide:hover,
+.report-card.wide:hover {
+    background: linear-gradient(135deg, 
+        rgba(143, 117, 239, 1) 0%, 
+        rgba(118, 75, 162, 1) 100%);
+    box-shadow: 
+        0 20px 60px rgba(118, 75, 162, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+/* Tall cards option */
+.reports-container .report.tall,
+.report-card.tall {
+    grid-row: span 2;
+}
+
+/* Remove button container if present */
+.reports-container .report .actions {
+    display: none;
+}
+
+/* RESPONSIVE DESIGN */
+
+/* Large screens */
+@media (max-width: 2400px) {
+    .reports-container {
+        max-width: 1600px;
+        gap: 18px;
+    }
+    
+    .reports-container .report h2,
+    .report-card h2 {
+        font-size: 1.4rem;
+    }
+}
+
+/* Medium screens - 3 columns */
+@media (max-width: 1800px) {
+    .reports-container {
+        grid-template-columns: repeat(3, 1fr);
+        grid-template-rows: repeat(4, 1fr);
+        max-width: 1400px;
+        gap: 16px;
+    }
+    
+    .reports-page {
+        padding: 30px 40px;
+    }
+}
+
+/* Smaller screens - 2 columns */
+@media (max-width: 1400px) {
+    .reports-container {
+        grid-template-columns: repeat(2, 1fr);
+        grid-template-rows: repeat(5, 1fr);
+        max-width: 1000px;
+    }
+}
+
+/* If screen is too short (laptops) */
+@media (max-height: 900px) {
+    .reports-container .report h2,
+    .report-card h2 {
+        font-size: 1.2rem;
+        margin: 10px 0 8px 0;
+    }
+    
+    .reports-container .report p {
+        font-size: 0.85rem;
+    }
+    
+    .reports-container .report-icon,
+    .report-card .report-icon {
+        font-size: 2.5rem;
+        margin-bottom: 10px;
+    }
+    
+    .reports-page {
+        padding: 20px 30px;
+    }
+    
+    .reports-container {
+        gap: 12px;
+    }
+}
+
+/* Very short screens */
+@media (max-height: 800px) {
+    .reports-container .report h2,
+    .report-card h2 {
+        font-size: 1rem;
+    }
+    
+    .reports-container .report-icon,
+    .report-card .report-icon {
+        font-size: 1.8rem;
+    }
+    
+    .reports-page {
+        padding: 10px 20px;
+    }
+}
+
+/* Clean up old styles */
+.reports-row {
+    display: none;
+}
+
 .sys-mgmt-main-content {
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
-    /* Center the content vertically */
+    justify-content: flex-start;
     flex-grow: 1;
-    /* Allow it to take up available space */
-    margin-top: 200px;
-    /* Add some spacing below the fixed header */
+    padding: 230px 40px 40px 40px;
+    margin-right: 280px;
+    background: transparent;
 }
 
 .reports-main-content {
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
-    /* Center the content vertically */
+    justify-content: flex-start;
     flex-grow: 1;
-    /* Allow it to take up available space */
-    margin-top: 100px;
-    /* Add some spacing below the fixed header */
+    padding: 230px 40px 40px 40px;
+    margin-right: 280px;
+    background: transparent;
 }
 
 .loc-report-main-content {
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
-    /* Center the content vertically */
+    justify-content: flex-start;
     flex-grow: 1;
-    /* Allow it to take up available space */
-    margin-top: 100px;
-    /* Add some spacing below the fixed header */
+    padding: 230px 40px 40px 40px;
+    margin-right: 280px;
+    background: transparent;
 }
 
 .active-tutors-report-main-content {
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
-    /* Center the content vertically */
+    justify-content: flex-start;
     flex-grow: 1;
-    /* Allow it to take up available space */
-    margin-top: 100px;
-    /* Add some spacing below the fixed header */
+    padding: 230px 40px 40px 40px;
+    margin-right: 280px;
+    background: transparent;
 }
 
 .families-waiting-report-main-content {
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
-    /* Center the content vertically */
+    justify-content: flex-start;
     flex-grow: 1;
-    /* Allow it to take up available space */
-    margin-top: 50px;
-    /* Add some spacing below the fixed header */
-}
-
-@media (max-width: 1800px) {
-    .families-waiting-report-main-content {
-        margin-top: 100px;
-        /* Add some spacing below the fixed header */
-    }
+    padding: 230px 40px 40px 40px;
+    margin-right: 280px;
+    background: transparent;
 }
 
 .new-families-report-main-content {
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
-    /* Center the content vertically */
+    justify-content: flex-start;
     flex-grow: 1;
-    /* Allow it to take up available space */
-    margin-top: 100px;
-    /* Add some spacing below the fixed header */
+    padding: 230px 40px 40px 40px;
+    margin-right: 280px;
+    background: transparent;
 }
 
 .possible-matches-report-main-content {
@@ -128,172 +384,197 @@
     width: 90%;
 }
 
-.reports-page {
-    padding: 20px;
-    text-align: center;
+/* Parent container for reports - Bento Box Grid */
+.reports-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 24px;
+    max-width: 2600px;
+    margin: 0 auto;
+    padding: 0;
+    position: relative;
+    z-index: 1;
 }
 
-/* Parent container for reports */
-.reports-container {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 100px;
-    /* Space between reports */
-    padding-right: 50px;
-    /* Avoid sidebar overlap */
-    justify-content: space-between;
-
-    /* Align reports to the left */
-    max-height: calc(100vh - 400px);
-    /* Enable vertical scrolling if needed */
-    overflow-x: hidden;
+@media (max-width: 2400px) {
+    .reports-container {
+        max-width: 2400px;
+        gap: 20px;
+    }
 }
 
 @media (max-width: 1800px) {
     .reports-container {
-        max-height: calc(100vh - 200px);
+        max-width: 1800px;
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        gap: 18px;
     }
 }
 
-/* Scrollbar styles for reports-container */
-.reports-container::-webkit-scrollbar {
-    width: 0px;
-    /* Narrower scrollbar */
-}
-
-.reports-container::-webkit-scrollbar-track {
-    background: transparent;
-}
-
-.reports-container::-webkit-scrollbar-thumb {
-    background-color: rgba(0, 0, 0, 0.5);
-    border-radius: 10px;
-    transition: background-color 0.3s ease;
-}
-
-.reports-container:hover::-webkit-scrollbar-thumb {
-    background-color: rgba(0, 0, 0, 0.8);
-}
-
-/* Individual report card */
+/* Individual report - Bento Box Card */
 .reports-container .report {
-    width: 300px;
-    /* Fixed width for consistency */
-    background-color: #fff;
-    padding: 20px;
-    border-radius: 10px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border-radius: 24px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    padding: 32px;
     cursor: pointer;
-    /* Pointer cursor for interactivity */
-    transition: transform 0.2s ease-in-out;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+    box-shadow: 
+        0 8px 32px rgba(0, 0, 0, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.reports-container .report::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: radial-gradient(
+        circle at center,
+        rgba(255, 255, 255, 0.1) 0%,
+        transparent 70%
+    );
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+}
+
+.reports-container .report:hover {
+    transform: translateY(-8px);
+    box-shadow: 
+        0 20px 60px rgba(0, 0, 0, 0.2),
+        inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    border-color: rgba(255, 255, 255, 0.3);
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.reports-container .report:hover::before {
+    opacity: 1;
 }
 
 .reports-container .report:active {
-    cursor: grabbing;
+    transform: translateY(-4px);
 }
 
 .reports-container .report.dragging {
-    transform: scale(1.05);
-    /* Slightly enlarge when dragging */
-    opacity: 0.8;
+    opacity: 0.7;
+    transform: rotate(2deg);
+}
+
+/* Report content structure */
+.reports-container .report > div {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    height: 100%;
 }
 
 /* report title */
 .reports-container .report h2 {
     margin: 0;
+    color: #ffffff;
+    font-size: 22px;
+    font-weight: 600;
+    line-height: 1.3;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    letter-spacing: -0.02em;
 }
 
 /* report description */
 .reports-container .report p {
-    margin: 5px 0;
+    margin: 0;
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 15px;
+    line-height: 1.6;
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
 }
 
 /* Actions container for buttons */
 .reports-container .report .actions {
-    margin-top: 10px;
     display: flex;
-    /* Use flexbox for button layout */
-    gap: 15px;
-    /* Space between buttons */
+    gap: 12px;
+    margin-top: auto;
     flex-wrap: wrap;
-    /* Allow buttons to wrap if needed */
-    justify-content: flex-start;
-    /* Align buttons to the left */
 }
 
 /* Buttons inside actions */
 .reports-container .report .actions button {
-    background-color: #4CAF50;
-    /* Green background */
-    color: white;
-    /* White text */
-    padding: 10px 15px;
-    /* Increase padding for larger buttons */
-    border: none;
-    /* Remove border */
-    border-radius: 8px;
-    /* Rounded corners */
-    cursor: pointer;
-    /* Pointer cursor on hover */
-    font-size: 1em;
-    /* Increase font size */
-    width: auto;
-    /* Allow the button to adjust its width based on content */
+    flex: 1;
     min-width: 120px;
-    /* Set a minimum width for consistency */
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px);
+    color: white;
+    padding: 12px 20px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 12px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
     text-align: center;
-    /* Center text */
-    transition: transform 0.2s ease, background-color 0.3s ease;
-    /* Smooth hover effect */
+    transition: all 0.2s ease;
+    white-space: nowrap;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
-/* Hover effect for buttons */
 .reports-container .report .actions button:hover {
-    background-color: #45a049;
-    /* Slightly darker green on hover */
-    transform: scale(1.05);
-    /* Slightly enlarge on hover */
+    background: rgba(255, 255, 255, 0.3);
+    border-color: rgba(255, 255, 255, 0.5);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+}
+
+.reports-container .report .actions button:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .report-card {
-    width: 200px;
-    height: 200px;
-    background-color: #4CAF50;
-    color: white;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    background: #8f75ef;
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border-radius: 24px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    padding: 32px;
     cursor: pointer;
-    transition: transform 0.2s, box-shadow 0.2s;
-    flex: 1 1 calc(25% - 1rem);
-    /* Ensure cards take up 25% of the row width */
-    max-width: 75%;
-    /* Prevent cards from exceeding 25% of the row width */
-    box-sizing: border-box;
-    /* Include padding and border in width calculation */
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 
+        0 8px 32px rgba(0, 0, 0, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
 
 .report-card:hover {
-    transform: scale(1.05);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    /* hover marker should be arrow */
+    transform: translateY(-8px);
+    box-shadow: 
+        0 20px 60px rgba(0, 0, 0, 0.2),
+        inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    border-color: rgba(255, 255, 255, 0.3);
+    background: #af9cf0;
+    color: #dedcdc;
 }
 
 .reports-row {
-    display: flex;
-    justify-content: flex-start;
-    /* Align items to the left */
-    gap: 1rem;
-    /* Add spacing between cards */
-    margin-bottom: 1.5rem;
-    /* Add spacing between rows */
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 24px;
+    margin-bottom: 30px;
 }
 
 .report-card h2 {
-    font-size: 30px;
+    font-size: 32px;
+    font-weight: bold;
     text-align: center;
+    align-items: center;
+    color: #ffffff;
+    letter-spacing: -0.02em;
+    line-height: 2.5;
+    margin: 0 0 12px 0;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .no-permission {
@@ -321,6 +602,8 @@
     /* Align the grid container to the right */
     max-width: 100%;
     /* Ensure the grid does not exceed the visible area */
+    overflow-y: hidden !important;
+
 }
 
 /* Styles for medium screens (e.g., laptops) */
@@ -336,6 +619,8 @@
         /* Zoom out the grid */
         transform-origin: top right;
         /* Set the origin for scaling */
+        overflow-y: hidden !important;
+
     }
 
     .reports-container {
@@ -349,6 +634,7 @@
         height: 800px;
         margin-right: 100px;
         margin-left: 10px;
+        overflow-y: hidden !important;
 
         /* Add some spacing below the fixed header */
     }
@@ -357,6 +643,11 @@
     }
     .volunteer-feedback-report-main-content .page-content {
         margin-right: 200px;
+        overflow: hidden;
+    }
+    
+    .tutor-feedback-report-main-content .page-content {
+        overflow: hidden;
     }
 }
 
@@ -375,14 +666,19 @@
     /* Add a subtle shadow for depth */
     border-radius: 8px;
     /* Rounded corners for the table */
-    overflow: hidden;
+    overflow: hidden !important;
     /* Ensure rounded corners are visible */
     max-height: 80vh;
     /* Limit height to avoid overflow */
-    overflow-y: auto;
     direction: rtl;
     transform: scale(0.9);
     /* Align the grid to the right for right-to-left languages */
+}
+
+.volunteer-feedback-report-main-content .data-grid,
+.tutor-feedback-report-main-content .data-grid {
+    overflow-y: auto!important;
+
 }
 
 .page-content .data-grid th,
@@ -620,11 +916,11 @@
         height: calc(100vh - 200px);
         transform: scale(0.95);
         width: 1700px;
-        margin-right: 200px;
+        margin-right: 20px;
     }
 
     .back-to-reports {
-        margin-right: 300px !important;
+        margin-right: 20px !important;
         /* Slightly move it to the left from the edge */
     }
 
@@ -885,7 +1181,7 @@
     display: flex;
     justify-content: flex-start;
     /* Align to the right */
-    margin-top: 10px;
+    margin-top: -80px;
     /* Add some spacing above */
     margin-right: 100px;
     /* Slightly move it to the left from the edge */
@@ -903,23 +1199,42 @@
 
 @media (max-width: 2400px) {
 
-    .families-waiting-report-main-content .back-to-reports,
+    
     .possible-matches-report-main-content .back-to-reports,
     .new-families-report-main-content .back-to-reports,
     .active-tutors-report-main-content .back-to-reports {
         display: flex;
         justify-content: flex-start;
         /* Align to the right */
-        margin-top: 10px;
+        margin-top: 50px;
+        margin-right: 50px;
         /* Add some spacing above */
         /* Slightly move it to the left from the edge */
     }
 
-    .active-tutors-report-main-content .active-tutors-back-to-reports,
+
     .tutor-feedback-report-main-content .back-to-reports,
     .volunteer-feedback-report-main-content .back-to-reports {
-        /* Add some spacing above */
+        margin-right: 500px !important;
+        margin-top: 50px;
+        margin-bottom: -100px;
+    }
+
+
+    .active-tutors-report-main-content .active-tutors-back-to-reports {
+        margin-right: 20px;
+        margin-top: -80px;
+    }
+
+    .families-waiting-report-main-content .families-tutorship-stats-back-to-reports {
         margin-right: 200px !important;
+        margin-top: -150px;
+        /* Slightly move it to the left from the edge */
+    }
+
+    .pending-tutors-report-main-content .pending-tutors-stats-back-to-reports {
+        margin-right: 550px !important;
+        margin-top: 100px;
         /* Slightly move it to the left from the edge */
     }
 }
@@ -949,7 +1264,7 @@
 }
 
 .wide-column {
-    width: 300px;
+    width: 300px !important;
     /* Adjust width as needed */
 }
 
@@ -1011,6 +1326,7 @@
     white-space: pre-line;
     line-height: 1.2em;
     padding-right: 4px;
+    width: 250px;
 }
 
 .td-x-scrollable {
@@ -1027,4 +1343,261 @@
     display: flex;
     align-items: flex-start;
     /* Align content to the bottom */
+}
+
+/* ===== TUTOR FEEDBACK REPORT GRID STYLES ===== */
+.page-content .tutor-feedback-report-grid-container {
+    width: 100%;
+    margin-right: 30px !important;
+    height: calc(100vh - 400px);
+    padding: 20px;
+    direction: rtl;
+    max-width: 100%;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    top: auto;
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    transform: scale(0.9) !important;
+
+}
+
+@media (max-width: 1920px) {
+    .page-content .tutor-feedback-report-grid-container {
+        padding: 10px;
+        height: calc(100vh - 300px);
+        width: 100%;
+        margin-left: 0;
+        overflow-y: auto;
+        top: auto;
+        transform: scale(0.75) !important;
+        margin-right: 30px !important;
+        margin-top: 50px !important;
+
+    }
+
+    .page-content .tutor-feedback-report-data-grid {
+        font-size: 10px;
+        overflow-y: auto !important;
+    }
+
+    .page-content .tutor-feedback-report-data-grid th,
+    .page-content .tutor-feedback-report-data-grid td {
+        padding: 6px;
+        font-size: 10px;
+    }
+}
+
+@media (max-width: 2400px) {
+    .page-content .tutor-feedback-report-grid-container {
+        height: auto;
+        width: 100%;
+        margin-right: 0;
+        transform: scale(0.9);
+        margin-right: 30px;
+
+    }
+
+    .page-content .tutor-feedback-report-data-grid {
+        font-size: 12px;
+    }
+
+    .page-content .tutor-feedback-report-data-grid th,
+    .page-content .tutor-feedback-report-data-grid td {
+        padding: 4px;
+    }
+}
+
+.page-content .tutor-feedback-report-data-grid {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 16px;
+    font-family: Arial, sans-serif;
+    background-color: #fff;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    overflow-y: auto !important;
+    direction: rtl;
+    table-layout: auto;
+}
+
+.page-content .tutor-feedback-report-data-grid th,
+.page-content .tutor-feedback-report-data-grid td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: right;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.page-content .tutor-feedback-report-data-grid th {
+    background-color: #4CAF50;
+    color: white;
+    font-weight: bold;
+    font-size: 30px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.page-content .tutor-feedback-report-data-grid td {
+    position: relative;
+    z-index: 0;
+    color: #333;
+    font-size: 20px;
+    font-weight: normal;
+}
+
+.page-content .tutor-feedback-report-data-grid input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+    margin-right: 10px;
+    position: relative;
+    z-index: 1;
+}
+
+.page-content .tutor-feedback-report-data-grid label {
+    cursor: pointer;
+}
+
+.page-content .tutor-feedback-report-grid-container::-webkit-scrollbar {
+    width: 12px;
+}
+
+.page-content .tutor-feedback-report-grid-container::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, #8f75ef 0%, #764ba2 100%);
+    border-radius: 10px;
+}
+
+.page-content .tutor-feedback-report-grid-container::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.1);
+}
+
+
+/* ===== VOLUNTEER FEEDBACK REPORT GRID STYLES ===== */
+.page-content .volunteer-feedback-report-grid-container {
+    width: 100%;
+    margin-left: 0;
+    height: calc(100vh - 400px);
+    padding: 20px;
+    direction: rtl;
+    max-width: 100%;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    top: auto;
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+}
+
+@media (max-width: 1920px) {
+    .page-content .volunteer-feedback-report-grid-container {
+        padding: 10px;
+        height: calc(100vh - 300px);
+        width: 100%;
+        margin-left: 0;
+        overflow-y: auto;
+        margin-top: -150px  !important;
+        transform: scale(0.85) !important;
+        margin-right: 200px !important;
+        margin-top: 100px !important;
+    }
+
+    .page-content .volunteer-feedback-report-data-grid {
+        font-size: 10px;
+        width: 100%;
+    }
+
+    .page-content .volunteer-feedback-report-data-grid th,
+    .page-content .volunteer-feedback-report-data-grid td {
+        padding: 6px;
+        font-size: 10px;
+    }
+}
+
+@media (max-width: 2400px) {
+    .page-content .volunteer-feedback-report-grid-container {
+        height: auto;
+        width: 100%;
+        margin-right: 0;
+    }
+
+    .page-content .volunteer-feedback-report-data-grid {
+        font-size: 12px;
+    }
+
+    .page-content .volunteer-feedback-report-data-grid th,
+    .page-content .volunteer-feedback-report-data-grid td {
+        padding: 4px;
+    }
+}
+
+.page-content .volunteer-feedback-report-data-grid {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 16px;
+    font-family: Arial, sans-serif;
+    background-color: #fff;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    overflow-y: auto !important;
+    direction: rtl;
+    table-layout: auto;
+}
+
+.page-content .volunteer-feedback-report-data-grid th,
+.page-content .volunteer-feedback-report-data-grid td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: right;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.page-content .volunteer-feedback-report-data-grid th {
+    background-color: #4CAF50;
+    color: white;
+    font-weight: bold;
+    font-size: 30px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.page-content .volunteer-feedback-report-data-grid td {
+    position: relative;
+    z-index: 0;
+    color: #333;
+    font-size: 20px;
+    font-weight: normal;
+}
+
+.page-content .volunteer-feedback-report-data-grid input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+    margin-right: 10px;
+    position: relative;
+    z-index: 1;
+}
+
+.page-content .volunteer-feedback-report-data-grid label {
+    cursor: pointer;
+}
+
+.page-content .volunteer-feedback-report-grid-container::-webkit-scrollbar {
+    width: 12px;
+}
+
+.page-content .volunteer-feedback-report-grid-container::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, #8f75ef 0%, #764ba2 100%);
+    border-radius: 10px;
+}
+
+.page-content .volunteer-feedback-report-grid-container::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.1);
 }

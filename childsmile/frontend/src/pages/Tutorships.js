@@ -86,7 +86,7 @@ const Tutorships = () => {
   const [currentUserRoleId, setCurrentUserRoleId] = useState(null);
   const [currentRoleName, setCurrentRoleName] = useState('');
   const [page, setPage] = useState(1); // Current page
-  const [pageSize] = useState(5); // Number of tutorships per page
+  const [pageSize] = useState(6); // Number of tutorships per page
   const [totalCount, setTotalCount] = useState(0); // Total number of tutorships
   const [isMagnifyActive, setIsMagnifyActive] = useState(false);
   const [matchSearchQuery, setMatchSearchQuery] = useState('');
