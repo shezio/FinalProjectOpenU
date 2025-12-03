@@ -229,11 +229,11 @@ body {
     .families-waiting-report-main-content .title,
     .possible-matches-report-main-content .title,
     .pending-tutors-report-main-content .title {
-        font-size: 4em;
+        font-size: 4em !important;
     }
 
     .families-waiting-report-main-content .title {
-        margin-left: 20px;
+        margin-left: 20px !important;
     }
 
     .top-left {
@@ -270,7 +270,7 @@ body {
     }
 
     .title {
-        font-size: 6.8em;
+        font-size: 6.8em !important;
     }
 
     .top-left {
