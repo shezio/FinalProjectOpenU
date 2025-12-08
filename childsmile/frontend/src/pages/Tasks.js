@@ -475,6 +475,16 @@ const Tasks = () => {
     setIsEditModalOpen(true);
   };
 
+  const handleMoveBackToTodo = async (task) => {
+    try {
+      await axios.put(`/api/tasks/update-status/${task.id}/`, { status: 'לא הושלמה' });
+      toast.success(t('Task moved back to Todo'));
+      await fetchData(true);
+    } catch (error) {
+      showErrorToast(t, 'Error moving task back to Todo', error);
+    }
+  };
+
   const handleUpdateTask = async () => {
     const newErrors = {};
     if (!selectedTaskType) {
@@ -498,7 +508,6 @@ const Tasks = () => {
       due_date: document.getElementById('due_date').value,
       assigned_to: selectedStaff?.value,
       type: selectedTaskType?.value,
-      status: taskToEdit.status,
     };
     if (taskTypeName !== "הוספת משפחה") {
       updatedTaskData.child = selectedChild?.value;
@@ -833,6 +842,18 @@ const Tasks = () => {
                           >
                             {t('ערוך')}
                           </button>
+                          {selectedTask.status === "בביצוע" && (
+                            <button
+                              disabled={isGuestUser()}
+                              className={isGuestUser() ? "disabled-btn" : ""}
+                              onClick={() => {
+                                setMenuOpen(false);
+                                handleMoveBackToTodo(selectedTask);
+                              }}
+                            >
+                              {t('back to Todo')}
+                            </button>
+                          )}
                           <button onClick={() => { setMenuOpen(false); openDeleteModal(selectedTask); }} disabled={isGuestUser()}>{t('מחק')}</button>
                         </>
                       )}
