@@ -654,6 +654,7 @@ const Families = () => {
               <div className="family-details-grid">
                 <p>{t('ID')}: {selectedFamily.id}</p>
                 <p>{t('Full Name')}: {selectedFamily.first_name} {selectedFamily.last_name}</p>
+                <p>{t('Age')}: {selectedFamily.age || '---'}</p>
                 <p>{t('Status')}: {selectedFamily.status || 'טיפולים'}</p>
                 <p>{t('Address')}: {selectedFamily.address}</p>
                 <p>{t('Phone')}: {selectedFamily.child_phone_number || '---'}</p>
