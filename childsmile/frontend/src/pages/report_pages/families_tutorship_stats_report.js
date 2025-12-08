@@ -4,7 +4,7 @@ import InnerPageHeader from "../../components/InnerPageHeader";
 import "../../styles/common.css";
 import "../../styles/reports.css";
 import "../../styles/families_tutorship_stats.css";
-import { hasViewPermissionForTable } from "../../components/utils";
+import { hasViewPermissionForTable, navigateTo } from "../../components/utils";
 import axios from "../../axiosConfig";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -94,7 +94,7 @@ const FamiliesTutorshipStatsReport = () => {
           <div className="families-tutorship-stats-back-to-reports">
             <button
               className="families-tutorship-stats-back-button"
-              onClick={() => (window.location.href = '/reports')}
+              onClick={() => navigateTo('/reports')}
             >
               → {t('Click to return to Report page')}
             </button>

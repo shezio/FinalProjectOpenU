@@ -4,7 +4,7 @@ import InnerPageHeader from "../../components/InnerPageHeader";
 import "../../styles/common.css";
 import "../../styles/reports.css";
 import "../../styles/pending_tutors_stats.css";
-import { hasViewPermissionForTable } from "../../components/utils";
+import { hasViewPermissionForTable, navigateTo } from "../../components/utils";
 import axios from "../../axiosConfig";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -94,7 +94,7 @@ const PendingTutorsStatsReport = () => {
           <div className="pending-tutors-stats-back-to-reports">
             <button
               className="pending-tutors-stats-back-button"
-              onClick={() => (window.location.href = '/reports')}
+              onClick={() => navigateTo('/reports')}
             >
               → {t('Click to return to Report page')}
             </button>
