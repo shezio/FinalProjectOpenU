@@ -40,6 +40,7 @@ from .task_views import (
     delete_task,
     update_task,
     update_task_status,
+    revert_task_status,
 )
 from .report_views import (
     get_families_per_location_report,
@@ -136,6 +137,11 @@ urlpatterns = [
         "api/tasks/update-status/<int:task_id>/",
         update_task_status,
         name="update_task_status",
+    ),
+    path(
+        "api/tasks/revert-status/<int:task_id>/",
+        revert_task_status,
+        name="revert_task_status",
     ),
     path(
         "api/reports/families-per-location-report/",

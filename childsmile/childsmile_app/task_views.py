@@ -717,10 +717,50 @@ def update_task_status(request, task_id):
         
         old_status = task.status
         new_status = request.data.get("status", task.status)
-        task.status = new_status
-        task.save()
+        
+        # Only proceed if status actually changed
+        if old_status != new_status:
+            # Create a snapshot of the task before updating status
+            from .models import PrevTaskStatuses
+            task_snapshot = {
+                'task_id': task.task_id,
+                'description': task.description,
+                'due_date': task.due_date.isoformat() if task.due_date else None,
+                'status': task.status,
+                'assigned_to_id': task.assigned_to_id,
+                'assigned_to_username': task.assigned_to.username if task.assigned_to else None,
+                'task_type_id': task.task_type_id,
+                'task_type_name': task.task_type.task_type if task.task_type else None,
+                'related_child_id': task.related_child_id,
+                'related_tutor_id': task.related_tutor_id,
+                'pending_tutor_id': task.pending_tutor_id,
+                'names': task.names,
+                'phones': task.phones,
+                'other_information': task.other_information,
+                'user_info': task.user_info,
+                'created_at': task.created_at.isoformat() if task.created_at else None,
+                'updated_at': task.updated_at.isoformat() if task.updated_at else None,
+            }
+            
+            # Save the previous status record with full task snapshot
+            try:
+                user = Staff.objects.get(staff_id=user_id)
+                PrevTaskStatuses.objects.create(
+                    task_id=task_id,
+                    previous_status=old_status,
+                    new_status=new_status,
+                    task_snapshot=task_snapshot,
+                    changed_by=user
+                )
+                api_logger.debug(f"Saved previous status for task {task_id}: {old_status} → {new_status}")
+            except Exception as e:
+                api_logger.error(f"Error saving previous task status: {str(e)}")
+            
+            # Now update the task status
+            task.status = new_status
+            task.save()
 
-        api_logger.debug(f"Task {task_id} status updated to {new_status}")
+            api_logger.debug(f"Task {task_id} status updated to {new_status}")
 
         # If status changed to "בביצוע" and task has initial_family_data_id_fk
         if new_status == "בביצוע" and task.initial_family_data_id_fk:
@@ -735,6 +775,14 @@ def update_task_status(request, task_id):
             # task_type is a FK to Task_Types, so you can access task.task_type.task_type
             if task.task_type:
                 api_logger.debug(f"task_type = {task.task_type.task_type}")
+            
+            # Delete all previous status records for this task since it's now completed
+            try:
+                from .models import PrevTaskStatuses
+                deleted_count, _ = PrevTaskStatuses.objects.filter(task_id=task_id).delete()
+                api_logger.debug(f"Deleted {deleted_count} previous status records for completed task {task_id}")
+            except Exception as e:
+                api_logger.error(f"Error deleting previous status records for task {task_id}: {str(e)}")
             
             # HANDLE REGISTRATION APPROVAL
             if task.task_type and task.task_type.task_type == "אישור הרשמה":
@@ -926,6 +974,168 @@ def update_task_status(request, task_id):
         log_api_action(
             request=request,
             action='UPDATE_TASK_FAILED',
+            success=False,
+            error_message=str(e),
+            status_code=500
+        )
+        return JsonResponse({"error": str(e)}, status=500)
+
+
+@conditional_csrf
+@api_view(["POST"])
+def revert_task_status(request, task_id):
+    """
+    Revert task to its previous status and state.
+    Restores all fields from the most recent PrevTaskStatuses snapshot.
+    """
+    api_logger.info(f"revert_task_status called for task_id: {task_id}")
+    
+    user_id = request.session.get("user_id")
+    if not user_id:
+        log_api_action(
+            request=request,
+            action='REVERT_TASK_STATUS_FAILED',
+            success=False,
+            error_message="Authentication credentials were not provided",
+            status_code=403
+        )
+        return JsonResponse({"error": "Authentication credentials were not provided"}, status=403)
+    
+    try:
+        user = Staff.objects.get(user_id=user_id)
+    except Staff.DoesNotExist:
+        log_api_action(
+            request=request,
+            action='REVERT_TASK_STATUS_FAILED',
+            success=False,
+            error_message="User not found",
+            status_code=404
+        )
+        return JsonResponse({"error": "User not found"}, status=404)
+    
+    # Check UPDATE_TASK permission
+    has_perm = Permissions.objects.filter(
+        role_id=user.role_id,
+        resource="tasks",
+        action="UPDATE_TASK"
+    ).exists()
+    
+    if not has_perm:
+        log_api_action(
+            request=request,
+            action='REVERT_TASK_STATUS_FAILED',
+            success=False,
+            error_message="User does not have permission to revert task status",
+            status_code=403
+        )
+        return JsonResponse({"error": "User does not have permission to revert task status"}, status=403)
+    
+    try:
+        # Get the task
+        task = Tasks.objects.get(task_id=task_id)
+        
+        # Get the most recent status change record
+        prev_status_record = PrevTaskStatuses.objects.filter(
+            task_id=task_id
+        ).order_by('-changed_at').first()
+        
+        if not prev_status_record:
+            log_api_action(
+                request=request,
+                action='REVERT_TASK_STATUS_FAILED',
+                success=False,
+                error_message=f"No previous status found for task {task_id}",
+                status_code=404
+            )
+            return JsonResponse({
+                "error": "No previous status found for this task"
+            }, status=404)
+        
+        # Get the snapshot
+        snapshot = prev_status_record.task_snapshot
+        current_status = task.status
+        
+        # Restore all fields from snapshot
+        task.description = snapshot.get('description')
+        task.due_date = snapshot.get('due_date')
+        task.status = snapshot.get('status')  # Revert to previous status
+        task.assigned_to_id = snapshot.get('assigned_to_id')
+        task.task_type_id = snapshot.get('task_type_id')
+        task.related_child_id = snapshot.get('related_child_id')
+        task.related_tutor_id = snapshot.get('related_tutor_id')
+        task.pending_tutor_id = snapshot.get('pending_tutor_id')
+        task.names = snapshot.get('names')
+        task.phones = snapshot.get('phones')
+        task.other_information = snapshot.get('other_information')
+        task.user_info = snapshot.get('user_info')
+        
+        # Save the task
+        task.save()
+        
+        # Create a record of this revert action
+        # Create snapshot of current state before revert
+        revert_snapshot = {
+            'task_id': task.task_id,
+            'description': snapshot.get('description'),
+            'due_date': snapshot.get('due_date'),
+            'status': snapshot.get('status'),
+            'assigned_to_id': snapshot.get('assigned_to_id'),
+            'assigned_to_username': snapshot.get('assigned_to_username'),
+            'task_type_id': snapshot.get('task_type_id'),
+            'task_type_name': snapshot.get('task_type_name'),
+            'related_child_id': snapshot.get('related_child_id'),
+            'related_tutor_id': snapshot.get('related_tutor_id'),
+            'pending_tutor_id': snapshot.get('pending_tutor_id'),
+            'names': snapshot.get('names'),
+            'phones': snapshot.get('phones'),
+            'other_information': snapshot.get('other_information'),
+            'user_info': snapshot.get('user_info'),
+            'created_at': snapshot.get('created_at'),
+            'updated_at': snapshot.get('updated_at'),
+        }
+        
+        # Record the revert action
+        PrevTaskStatuses.objects.create(
+            task_id=task_id,
+            previous_status=current_status,
+            new_status=snapshot.get('status'),
+            task_snapshot=revert_snapshot,
+            changed_by=user
+        )
+        
+        # Delete the reverted record
+        prev_status_record.delete()
+        
+        log_api_action(
+            request=request,
+            action='REVERT_TASK_STATUS_SUCCESS',
+            success=True,
+            object_id=str(task_id),
+            object_type="Task",
+            status_code=200
+        )
+        
+        return JsonResponse({
+            "message": "Task reverted successfully",
+            "task_id": task_id,
+            "previous_status": current_status,
+            "reverted_to_status": task.status
+        }, status=200)
+        
+    except Tasks.DoesNotExist:
+        log_api_action(
+            request=request,
+            action='REVERT_TASK_STATUS_FAILED',
+            success=False,
+            error_message=f"Task {task_id} not found",
+            status_code=404
+        )
+        return JsonResponse({"error": f"Task {task_id} not found"}, status=404)
+    except Exception as e:
+        api_logger.error(f"Error reverting task {task_id}: {str(e)}")
+        log_api_action(
+            request=request,
+            action='REVERT_TASK_STATUS_FAILED',
             success=False,
             error_message=str(e),
             status_code=500

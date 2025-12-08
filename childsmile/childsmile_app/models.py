@@ -493,6 +493,26 @@ class TOTPCode(models.Model):
     def generate_code():
         return ''.join(random.choices(string.digits, k=6))
 
+class PrevTaskStatuses(models.Model):
+    prev_task_id = models.AutoField(primary_key=True, serialize=False)
+    task_id = models.BigIntegerField()  # FK to Tasks.task_id (not a direct FK to allow soft deletes)
+    previous_status = models.CharField(max_length=255)
+    new_status = models.CharField(max_length=255)
+    task_snapshot = models.JSONField()  # Stores entire task details before status change for reverting
+    changed_by = models.ForeignKey(Staff, on_delete=models.CASCADE)
+    changed_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"PrevTaskStatus {self.prev_task_id} - Task {self.task_id} - {self.previous_status} → {self.new_status}"
+
+    class Meta:
+        db_table = "childsmile_app_prevtaskstatuses"
+        indexes = [
+            models.Index(fields=["task_id"], name="idx_prevtaskstatus_task_id"),
+            models.Index(fields=["changed_at"], name="idx_prevtaskstatus_changed_at"),
+        ]
+
+
 class AuditLog(models.Model):
     # Primary key
     audit_id = models.AutoField(primary_key=True)
