@@ -3,7 +3,7 @@ import Sidebar from "../../components/Sidebar";
 import InnerPageHeader from "../../components/InnerPageHeader";
 import "../../styles/common.css";
 import "../../styles/reports.css";
-import { hasViewPermissionForTable } from "../../components/utils";
+import { hasViewPermissionForTable, navigateTo } from "../../components/utils";
 import axios from "../../axiosConfig";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -359,7 +359,7 @@ const FamiliesPerLocationReport = () => {
           <div className="back-to-reports">
             <button
               className="back-button"
-              onClick={() => (window.location.href = '/reports')}
+              onClick={() => navigateTo('/reports')}
             >
               → {t('Click to return to Report page')}
             </button>

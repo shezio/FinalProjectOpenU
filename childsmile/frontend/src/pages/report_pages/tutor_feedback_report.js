@@ -8,6 +8,7 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useTranslation } from "react-i18next";
 import axios from "../../axiosConfig";
+import { navigateTo } from "../../components/utils";
 
 const PAGE_SIZE = 5;
 
@@ -193,7 +194,7 @@ const TutorFeedbackReport = () => {
               <div className="back-to-reports">
                 <button
                   className="back-button"
-                  onClick={() => (window.location.href = '/reports')}
+                  onClick={() => navigateTo('/reports')}
                 >
                   → {t('Click to return to Report page')}
                 </button>

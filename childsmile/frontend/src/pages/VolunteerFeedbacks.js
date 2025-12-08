@@ -9,7 +9,7 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useTranslation } from "react-i18next";
 import axios from "../axiosConfig";
-import { hasAllPermissions, hasViewPermissionForTable } from '../components/utils';
+import { hasAllPermissions, hasViewPermissionForTable, navigateTo } from '../components/utils';
 import { feedbackShowErrorToast } from "../components/toastUtils";
 
 const PAGE_SIZE = 2;
@@ -456,7 +456,7 @@ const VolunteerFeedbacks = () => {
         {!loading && (
           <div className="feedback-grid-container">
             <div className="back-to-feedbacks">
-              <button className="feedbacks-back-button" onClick={() => (window.location.href = '/feedbacks')}>{t("Back to Feedbacks")}</button>
+              <button className="feedbacks-back-button" onClick={() => navigateTo('/feedbacks')}>{t("Back to Feedbacks")}</button>
             </div>
             {paginatedFeedbacks.length === 0 ? (
               <div className="no-data">{t("No data to display")}</div>

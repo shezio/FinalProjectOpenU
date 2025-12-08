@@ -2,6 +2,19 @@
 import axios from '../axiosConfig';  // Import the configured Axios instance
 import i18n from '../i18n';
 
+/**
+ * Check if the app is running in production
+ */
+export const isProd = process.env.NODE_ENV === 'production';
+
+/**
+ * Navigate to a path, adding hash prefix in production
+ */
+export const navigateTo = (path) => {
+  const fullPath = isProd ? `/#${path}` : path;
+  window.location.href = fullPath;
+};
+
 export const getStaff = async () => {
   try {
     const response = await axios.get('/api/staff/');
