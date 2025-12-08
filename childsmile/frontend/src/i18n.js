@@ -692,6 +692,7 @@ const resources = {
       "Email Verification": "אימות Email",
       "Failed to fetch staff.": "שגיאה בטעינת משתמשים",
       "Tutored Families Coordinator": "רכז משפחות בחונכות",
+      "Current user was not found in active volunteers, cannot create feedback": "המשתמש הנוכחי לא נמצא במתנדבים פעילים, לא ניתן ליצור משוב",
     }
   }
 };
