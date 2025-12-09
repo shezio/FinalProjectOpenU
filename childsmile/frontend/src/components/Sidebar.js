@@ -69,13 +69,17 @@ const Sidebar = () => {
   // If guest user, show everything
   const isGuest = isGuestUser();
   
+  // Check if user has only tutor or volunteer role
+  // roles is an array like ['General Volunteer'] or ['Tutor']
+  const isOnlyTutorOrVolunteer = roles && roles.length === 1 && (roles[0] === 'General Volunteer' || roles[0] === 'Tutor');
+  
   const hasPermissionToTasks = isGuest || hasViewPermissionForTable('tasks');
-  const hasPermissionToFamilies = isGuest || hasViewPermissionForTable('children');
+  const hasPermissionToFamilies = !isOnlyTutorOrVolunteer && (isGuest || hasViewPermissionForTable('children'));
   const hasPermissionToFeedbacks = isGuest || hasViewPermissionForTable('general_v_feedback') || hasViewPermissionForTable('tutor_feedback');
   const hasPermissionToTutorships = isGuest || hasViewPermissionForTable('tutorships');
   const hasPermissionToSystemManagement = isGuest || hasDeletePermissionForTable('staff');
-  const hasPermissionToAnyReport = isGuest || hasViewPermissionForReports();
-  const hasPermissionToTutorVolunteerMgmt = isGuest || hasViewPermissionForTable('tutors') || hasViewPermissionForTable('volunteers');
+  const hasPermissionToAnyReport = !isOnlyTutorOrVolunteer && (isGuest || hasViewPermissionForReports());
+  const hasPermissionToTutorVolunteerMgmt = !isOnlyTutorOrVolunteer && (isGuest || hasViewPermissionForTable('tutors') || hasViewPermissionForTable('volunteers'));
 
   return (
     <div className="sidebar">

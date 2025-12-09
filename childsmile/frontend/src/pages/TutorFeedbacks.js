@@ -11,8 +11,11 @@ import { useTranslation } from "react-i18next";
 import axios from "../axiosConfig";
 import { hasAllPermissions, hasViewPermissionForTable, navigateTo } from '../components/utils';
 import { feedbackShowErrorToast } from "../components/toastUtils";
+import hospitals from "../components/hospitals.json";
 
 const PAGE_SIZE = 2;
+
+const hospitalsList = hospitals.map((hospital) => hospital.trim()).filter((hospital) => hospital !== "");
 
 const hasTutorFeedbacksViewPermission = hasViewPermissionForTable("tutor_feedback");
 
@@ -736,12 +739,29 @@ const TutorFeedbacks = () => {
                   {modalData.feedback_type === "general_volunteer_hospital_visit" && (
                     <div className="feedbacks-form-row">
                       <label hidden={!!modalData.id}>{t("Hospital Name")}</label>
-                      <input
-                        type="text"
-                        value={modalData.hospital_name || ""}
-                        onChange={e => setModalData({ ...modalData, hospital_name: e.target.value })}
-                        hidden={!!modalData.id}
-                      />
+                      {modalData.id ? (
+                        <input
+                          type="text"
+                          value={modalData.hospital_name || ""}
+                          disabled
+                          className="feedbacks-readonly-input"
+                        />
+                      ) : (
+                        <Select
+                          options={hospitalsList.map((hospital) => ({ value: hospital, label: hospital }))}
+                          value={hospitalsList.map((hospital) => ({ value: hospital, label: hospital })).find((option) => option.value === modalData.hospital_name)}
+                          onChange={(selectedOption) => {
+                            setModalData((prev) => ({
+                              ...prev,
+                              hospital_name: selectedOption ? selectedOption.value : "",
+                            }));
+                          }}
+                          placeholder={t('Select a hospital')}
+                          isClearable
+                          classNamePrefix={"feedbacks-select"}
+                          noOptionsMessage={() => t('No hospital available')}
+                        />
+                      )}
                     </div>
                   )}
 
