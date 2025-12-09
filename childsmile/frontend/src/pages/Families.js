@@ -73,6 +73,8 @@ const Families = () => {
   const canEditFamily = hasUpdatePermissionForTable('children');
   // Add sorting state for registration date
   const [sortOrderRegistrationDate, setSortOrderRegistrationDate] = useState('desc'); // Default to descending
+  // Age range filter state
+  const [ageRange, setAgeRange] = useState([0, 100]);
 
   const fetchFamilies = async () => {
     setLoading(true);
@@ -109,6 +111,8 @@ const Families = () => {
   if (selectedStatus) {
     filteredFamilies = filteredFamilies.filter((family) => family.status === selectedStatus);
   }
+  // Apply age range filter
+  filteredFamilies = filteredFamilies.filter((family) => family.age >= ageRange[0] && family.age <= ageRange[1]);
   const paginatedFamilies = filteredFamilies.slice((page - 1) * pageSize, page * pageSize);
 
 
@@ -525,6 +529,33 @@ const Families = () => {
                 <option key={idx} value={status}>{status}</option>
               ))}
             </select>
+          </div>
+          <div className="age-range-filter">
+            <label>{t('Age Range')}: {ageRange[0]} - {ageRange[1]}</label>
+            <div className="age-slider-container">
+              <input
+                type="range"
+                min="0"
+                max="100"
+                value={ageRange[0]}
+                onChange={(e) => {
+                  const newMin = Math.min(parseInt(e.target.value), ageRange[1]);
+                  setAgeRange([newMin, ageRange[1]]);
+                }}
+                className="age-slider age-slider-min"
+              />
+              <input
+                type="range"
+                min="0"
+                max="100"
+                value={ageRange[1]}
+                onChange={(e) => {
+                  const newMax = Math.max(parseInt(e.target.value), ageRange[0]);
+                  setAgeRange([ageRange[0], newMax]);
+                }}
+                className="age-slider age-slider-max"
+              />
+            </div>
           </div>
           <div className="refresh">
             <button onClick={fetchFamilies}>

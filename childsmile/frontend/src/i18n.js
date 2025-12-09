@@ -186,7 +186,7 @@ const resources = {
       "Task created successfully": "המשימה נוצרה בהצלחה!",
       "Task deleted successfully": "המשימה נמחקה בהצלחה!",
       "Task updated successfully": "המשימה עודכנה בהצלחה!",
-      "Technical Coordinator": "רכז טכני",
+      "Technical Coordinator": "מנהלת משרד",
       "TEST REPORT NAME": "שם דוח לדוגמה",
       "To Date": "עד תאריך",
       "Tutor": "חונך",
@@ -216,7 +216,7 @@ const resources = {
       "משהו נוסף": "משהו נוסף",
       "Matures Coordinator": "רכז בוגרים",
       "רכז חונכים": "רכז חונכים",
-      "רכז טכני": "רכז טכני",
+      "מנהלת משרד": "מנהלת משרד",
       "Families Coordinator": "רכז משפחות",
       "רכז מתנדבים": "רכז מתנדבים",
       "רכז בריאים": "רכז בריאים",
@@ -347,7 +347,7 @@ const resources = {
       "Are you sure you want to delete this tutorship?": "האם אתה בטוח שברצונך למחוק חונכות זו?",
       'Tutorship deleted successfully!': 'חונכות נמחקה בהצלחה!',
       "System Administrator": "מנהל מערכת",
-      "Technical Coordinator": "רכז טכני",
+      "Technical Coordinator": "מנהלת משרד",
       "Volunteer Coordinator": "רכז מתנדבים",
       "Families Coordinator": "רכז משפחות",
       "Tutors Coordinator": "רכז חונכים",
@@ -540,7 +540,7 @@ const resources = {
        "האם אתה בטוח שברצונך למחוק נתוני משפחה ראשוניים אלה?",
       "Initial Family Data deleted successfully": "נתוני משפחה ראשוניים נמחקו בהצלחה",
       "Deleting will remove all associated data and the tasks for tech coordinator will be deleted as well. This action cannot be undone.": 
-      "מחיקה תסיר את כל הנתונים הקשורים אליה, והמשימות לרכז טכני יימחקו גם הן. פעולה זו אינה ניתנת לביטול.",
+      "מחיקה תסיר את כל הנתונים הקשורים אליה, והמשימות למנהלת משרד יימחקו גם הן. פעולה זו אינה ניתנת לביטול.",
       "This will auto update the task status to \"הושלמה\" and delete the task if it was \"הושלמה\".": "הפעולה תעדכן אוטומטית את סטטוס המשימה ל\"הושלמה\" ותמחק את המשימה אם היא הייתה \"הושלמה\".",
       "Initial Family ID": "#",
       'Family marked as added!': 'המשפחה סומנה כנוספה!',
@@ -694,6 +694,7 @@ const resources = {
       "Tutored Families Coordinator": "רכז משפחות בחונכות",
       "Current user was not found in active volunteers, cannot create feedback": "המשתמש הנוכחי לא נמצא במתנדבים פעילים, לא ניתן ליצור משוב",
       "back to Todo": "בטל התחלת ביצוע משימה",
+      "Age Range": "טווח גילאים",
     }
   }
 };
