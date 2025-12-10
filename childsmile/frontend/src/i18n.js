@@ -696,6 +696,7 @@ const resources = {
       "back to Todo": "בטל התחלת ביצוע משימה",
       "Age Range": "טווח גילאים",
       "All Tutorship Statuses": "כל מצבי החונכות",
+      'Max Age': 'גיל מקסימלי'
     }
   }
 };

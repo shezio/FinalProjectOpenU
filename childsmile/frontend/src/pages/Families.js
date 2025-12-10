@@ -75,8 +75,10 @@ const Families = () => {
   const canEditFamily = hasUpdatePermissionForTable('children');
   // Add sorting state for registration date
   const [sortOrderRegistrationDate, setSortOrderRegistrationDate] = useState('desc'); // Default to descending
-  // Age range filter state
-  const [ageRange, setAgeRange] = useState([0, 100]);
+  // Max age filter state
+  const [maxAge, setMaxAge] = useState(30);
+  // Age sorting state
+  const [sortOrderAge, setSortOrderAge] = useState('asc'); // Default to ascending
 
   const fetchFamilies = async () => {
     setIsRefreshing(true);
@@ -118,8 +120,8 @@ const Families = () => {
   if (selectedStatus) {
     filteredFamilies = filteredFamilies.filter((family) => family.status === selectedStatus);
   }
-  // Apply age range filter
-  filteredFamilies = filteredFamilies.filter((family) => family.age >= ageRange[0] && family.age <= ageRange[1]);
+  // Apply max age filter
+  filteredFamilies = filteredFamilies.filter((family) => family.age <= maxAge);
   const paginatedFamilies = filteredFamilies.slice((page - 1) * pageSize, page * pageSize);
 
 
@@ -129,8 +131,8 @@ const Families = () => {
 
   useEffect(() => {
     setTotalCount(filteredFamilies.length);
-    setPage(1); // Reset to page 1 whenever filters change
-  }, [filteredFamilies]);
+    setPage(1); // Reset to page 1 only when filters actually change
+  }, [showHealthyOnly, showMatureOnly, selectedStatus, maxAge, families]);
 
   const handleAddFamilyChange = (e) => {
     const { name, value } = e.target;
@@ -210,12 +212,12 @@ const Families = () => {
     if (!newFamily.date_of_birth) {
       newErrors.date_of_birth = t("Date of birth is required.");
     }
-    // need to add validation that the date is valid and that the age doesnt exceed 100 years for the given date
+    // need to add validation that the date is valid and that the age doesnt exceed 30 years for the given date
     const today = new Date();
     const birthDate = new Date(newFamily.date_of_birth);
     const age = today.getFullYear() - birthDate.getFullYear();
-    if (age < 0 || age > 100) {
-      newErrors.date_of_birth = t("Date of birth must be a valid date and the age must be between 0 and 100.");
+    if (age < 0 || age > 30) {
+      newErrors.date_of_birth = t("Date of birth must be a valid date and the age must be between 0 and 30.");
     }
     if (!newFamily.marital_status) {
       newErrors.marital_status = t("Marital status is required.");
@@ -487,6 +489,15 @@ const Families = () => {
     setFamilies(sorted); // Update the main families array with sorted data
   };
 
+  // Add the toggle sort function for age
+  const toggleSortOrderAge = () => {
+    setSortOrderAge((prevOrder) => (prevOrder === 'asc' ? 'desc' : 'asc'));
+    const sorted = [...filteredFamilies].sort((a, b) => {
+      return sortOrderAge === 'asc' ? b.age - a.age : a.age - b.age; // Reverse the logic
+    });
+    setFamilies(sorted); // Update the main families array with sorted data
+  };
+
   return (
     <div className="families-main-content">
       <Sidebar />
@@ -549,32 +560,17 @@ const Families = () => {
               ))}
             </select>
           </div>
-          <div className="age-range-filter">
-            <label>{t('Age Range')}: {ageRange[0]} - {ageRange[1]}</label>
-            <div className="age-slider-container">
-              <input
-                type="range"
-                min="0"
-                max="100"
-                value={ageRange[0]}
-                onChange={(e) => {
-                  const newMin = Math.min(parseInt(e.target.value), ageRange[1]);
-                  setAgeRange([newMin, ageRange[1]]);
-                }}
-                className="age-slider age-slider-min"
-              />
-              <input
-                type="range"
-                min="0"
-                max="100"
-                value={ageRange[1]}
-                onChange={(e) => {
-                  const newMax = Math.max(parseInt(e.target.value), ageRange[0]);
-                  setAgeRange([ageRange[0], newMax]);
-                }}
-                className="age-slider age-slider-max"
-              />
-            </div>
+          <div className="max-age-filter">
+            <label>{t('Max Age')}: {maxAge}</label>
+            <input
+              type="range"
+              name="maxAge"
+              min="0"
+              max="30"
+              value={maxAge}
+              onChange={(e) => setMaxAge(parseInt(e.target.value))}
+              className="age-slider-input"
+            />
           </div>
         </div>
         {loading ? (
@@ -587,7 +583,12 @@ const Families = () => {
                   <thead>
                     <tr>
                       <th>{t('Full Name')}</th>
-                      <th>{t('Age')}</th>
+                      <th>
+                        {t('Age')}
+                        <button className="sort-button" onClick={toggleSortOrderAge}>
+                          {sortOrderAge === 'asc' ? '▲' : '▼'}
+                        </button>
+                      </th>
                       <th>{t('Address')}</th>
                       <th>{t('Phone')}</th>
                       <th>{t('Tutorship Status')}</th>

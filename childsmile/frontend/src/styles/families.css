@@ -1645,218 +1645,155 @@ textarea.error {
    AGE RANGE FILTER - GLASSMORPHISM DESIGN
    ======================================== */
 
-.age-range-filter {
+/* Age Range Filter Wrapper */
+.age-range-filter-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+/* Toggle Button for Age Filter */
+.age-filter-toggle-btn {
+  background: linear-gradient(135deg, 
+    rgba(99, 102, 241, 0.95) 0%,
+    rgba(168, 85, 247, 0.95) 100%);
+  color: white;
+  padding: 12px 24px;
+  font-size: 16px;
+  font-weight: 600;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 14px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  white-space: nowrap;
+  box-shadow: 0 8px 20px rgba(99, 102, 241, 0.3);
+}
+
+.age-filter-toggle-btn:hover {
+  background: linear-gradient(135deg, 
+    rgba(99, 102, 241, 1) 0%,
+    rgba(168, 85, 247, 1) 100%);
+  box-shadow: 0 12px 30px rgba(99, 102, 241, 0.4);
+  border-color: rgba(255, 255, 255, 0.5);
+  transform: translateY(-2px);
+}
+
+.age-filter-toggle-btn:active {
+  transform: translateY(0);
+}
+
+.age-filter-toggle-btn .arrow {
+  display: inline-block;
+  transition: transform 0.3s ease;
+  font-size: 12px;
+}
+
+.age-filter-toggle-btn .arrow.open {
+  transform: rotate(180deg);
+}
+
+/* Max Age Filter */
+.max-age-filter {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 12px;
-  padding: 18px 28px;
+  gap: 8px;
+  padding: 12px 24px;
   background: linear-gradient(135deg,
-    rgba(168, 85, 247, 0.15) 0%,
-    rgba(99, 102, 241, 0.15) 100%);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 2px solid rgba(255, 255, 255, 0.25);
-  border-radius: 20px;
+    rgba(20, 184, 166, 0.95) 0%,
+    rgba(13, 148, 136, 0.95) 100%);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 14px;
+  min-width: 220px;
   box-shadow: 
-    0 8px 32px rgba(31, 38, 135, 0.15),
-    inset 0 2px 4px rgba(255, 255, 255, 0.4),
-    inset 0 -2px 4px rgba(0, 0, 0, 0.05);
+    0 6px 20px rgba(20, 184, 166, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  min-width: 280px;
-  cursor: grab;
 }
 
-.age-range-filter:hover {
+.max-age-filter:hover {
   background: linear-gradient(135deg,
-    rgba(168, 85, 247, 0.2) 0%,
-    rgba(99, 102, 241, 0.2) 100%);
+    rgba(20, 184, 166, 1) 0%,
+    rgba(13, 148, 136, 1) 100%);
+  transform: translateY(-2px) scale(1.02);
   box-shadow: 
-    0 12px 40px rgba(31, 38, 135, 0.2),
-    inset 0 2px 4px rgba(255, 255, 255, 0.5),
-    inset 0 -2px 4px rgba(0, 0, 0, 0.08);
-  border-color: rgba(255, 255, 255, 0.35);
+    0 8px 30px rgba(20, 184, 166, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
 }
 
-.age-range-filter label {
-  font-size: 16px;
-  font-weight: 700;
-  color: #1f2937;
-  background: linear-gradient(135deg, 
-    rgba(99, 102, 241, 0.9) 0%,
-    rgba(168, 85, 247, 0.9) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  letter-spacing: 0.4px;
-  text-shadow: 0 2px 8px rgba(99, 102, 241, 0.2);
+.max-age-filter label {
+  font-size: 24px;
+  font-family: 'Arial', sans-serif;
+  font-weight: 600;
+  color: white;
+  letter-spacing: 0.3px;
 }
 
-.age-slider-container {
-  position: relative;
-  width: 100%;
-  height: 50px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-/* Track background styling */
-.age-slider-container::before {
-  content: '';
-  position: absolute;
+.age-slider-input {
   width: 100%;
   height: 6px;
-  background: linear-gradient(90deg,
-    rgba(59, 130, 246, 0.3) 0%,
-    rgba(139, 92, 246, 0.3) 50%,
-    rgba(236, 72, 153, 0.3) 100%);
-  border-radius: 10px;
-  top: 50%;
-  left: 0;
-  transform: translateY(-50%);
-  z-index: 0;
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-/* Range input styling */
-.age-slider {
-  position: absolute;
-  width: 100%;
-  height: 6px;
-  background: transparent;
-  pointer-events: none;
-  -webkit-appearance: none;
-  appearance: none;
-  z-index: 5;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 8px;
   outline: none;
-}
-
-/* Allow pointer events on thumbs */
-.age-slider::-webkit-slider-thumb {
-  pointer-events: auto;
-}
-
-.age-slider::-moz-range-thumb {
-  pointer-events: auto;
-}
-
-/* Chrome/Safari thumb styling */
-.age-slider::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 22px;
-  height: 22px;
+  cursor: grab;
+}
+
+/* Chrome/Safari slider thumb */
+.age-slider-input::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
   background: linear-gradient(135deg,
-    rgba(168, 85, 247, 1) 0%,
-    rgba(99, 102, 241, 1) 100%);
-  border: 3px solid rgba(255, 255, 255, 0.8);
+    rgba(255, 255, 255, 1) 0%,
+    rgba(200, 240, 240, 1) 100%);
+  border: 2px solid rgba(20, 184, 166, 0.8);
   border-radius: 50%;
   cursor: grab;
-  box-shadow: 
-    0 6px 20px rgba(168, 85, 247, 0.5),
-    0 0 0 8px rgba(168, 85, 247, 0.15),
-    inset 0 1px 3px rgba(255, 255, 255, 0.6);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  position: relative;
-  z-index: 6;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
-.age-slider::-webkit-slider-thumb:hover {
-  transform: scale(1.25);
-  box-shadow: 
-    0 10px 30px rgba(168, 85, 247, 0.7),
-    0 0 0 12px rgba(168, 85, 247, 0.2),
-    inset 0 1px 3px rgba(255, 255, 255, 0.8);
-  border-color: rgba(255, 255, 255, 1);
-  background: linear-gradient(135deg,
-    rgba(168, 85, 247, 1) 0%,
-    rgba(99, 102, 241, 1) 100%);
+.age-slider-input::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
 }
 
-.age-slider::-webkit-slider-thumb:active {
+.age-slider-input::-webkit-slider-thumb:active {
   cursor: grabbing;
-  transform: scale(1.15);
 }
 
-/* Firefox thumb styling */
-.age-slider::-moz-range-thumb {
-  width: 22px;
-  height: 22px;
+/* Firefox slider thumb */
+.age-slider-input::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
   background: linear-gradient(135deg,
-    rgba(168, 85, 247, 1) 0%,
-    rgba(99, 102, 241, 1) 100%);
-  border: 3px solid rgba(255, 255, 255, 0.8);
+    rgba(255, 255, 255, 1) 0%,
+    rgba(200, 240, 240, 1) 100%);
+  border: 2px solid rgba(20, 184, 166, 0.8);
   border-radius: 50%;
   cursor: grab;
-  box-shadow: 
-    0 6px 20px rgba(168, 85, 247, 0.5),
-    0 0 0 8px rgba(168, 85, 247, 0.15),
-    inset 0 1px 3px rgba(255, 255, 255, 0.6);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
-.age-slider::-moz-range-thumb:hover {
-  transform: scale(1.25);
-  box-shadow: 
-    0 10px 30px rgba(168, 85, 247, 0.7),
-    0 0 0 12px rgba(168, 85, 247, 0.2),
-    inset 0 1px 3px rgba(255, 255, 255, 0.8);
-  border-color: rgba(255, 255, 255, 1);
-  background: linear-gradient(135deg,
-    rgba(168, 85, 247, 1) 0%,
-    rgba(99, 102, 241, 1) 100%);
+.age-slider-input::-moz-range-thumb:hover {
+  transform: scale(1.2);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
 }
 
-.age-slider::-moz-range-thumb:active {
+.age-slider-input::-moz-range-thumb:active {
   cursor: grabbing;
-  transform: scale(1.15);
 }
 
 /* Firefox track styling */
-.age-slider::-moz-range-track {
+.age-slider-input::-moz-range-track {
   background: transparent;
   border: none;
 }
 
-.age-slider::-moz-range-progress {
-  background: linear-gradient(90deg,
-    rgba(168, 85, 247, 0.5) 0%,
-    rgba(99, 102, 241, 0.5) 100%);
-  border-radius: 10px;
-  box-shadow: 0 0 8px rgba(168, 85, 247, 0.4);
-}
-
-/* Max slider Z-index handling */
-.age-slider-max {
-  z-index: 6;
-}
-
-.age-slider-min {
-  z-index: 5;
-}
-
-/* Responsive design */
-@media (max-width: 1024px) {
-  .age-range-filter {
-    min-width: 240px;
-    padding: 14px 20px;
-  }
-
-  .age-slider::-webkit-slider-thumb {
-    width: 20px;
-    height: 20px;
-  }
-
-  .age-slider::-moz-range-thumb {
-    width: 20px;
-    height: 20px;
-  }
-}
-
-@media (max-width: 768px) {
-  .age-range-filter {
-    min-width: 100%;
-    max-width: 320px;
-  }
+.age-slider-input::-moz-range-progress {
+  background: rgba(255, 255, 255, 0.4);
+  border-radius: 8px;
 }
