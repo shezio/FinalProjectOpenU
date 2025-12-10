@@ -695,6 +695,7 @@ const resources = {
       "Current user was not found in active volunteers, cannot create feedback": "המשתמש הנוכחי לא נמצא במתנדבים פעילים, לא ניתן ליצור משוב",
       "back to Todo": "בטל התחלת ביצוע משימה",
       "Age Range": "טווח גילאים",
+      "All Tutorship Statuses": "כל מצבי החונכות",
     }
   }
 };

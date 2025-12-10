@@ -30,6 +30,7 @@ const TutorVolunteerMgmt = () => {
   const [sortOrderUpdated, setSortOrderUpdated] = useState('desc');
   const [searchTerm, setSearchTerm] = useState("");
   const [maritalStatusOptions, setMaritalStatusOptions] = useState([]);
+  const [tutorshipStatusFilter, setTutorshipStatusFilter] = useState("");
 
   const startEdit = (entity, field, type) => {
     const rowId = entity.id; // Always use id for tutors and volunteers
@@ -168,11 +169,24 @@ const TutorVolunteerMgmt = () => {
 
   const filterEntities = (entities) => {
     const term = searchTerm.trim().toLowerCase();
-    if (!term) return entities;
     return entities.filter(entity => {
-      const name = (entity.name || (entity.first_name + " " + entity.last_name) || "").toLowerCase();
-      const email = (entity.tutor_email || entity.email || "").toLowerCase();
-      return name.includes(term) || email.includes(term);
+      // Apply search term filter
+      if (term) {
+        const name = (entity.name || (entity.first_name + " " + entity.last_name) || "").toLowerCase();
+        const email = (entity.tutor_email || entity.email || "").toLowerCase();
+        if (!name.includes(term) && !email.includes(term)) {
+          return false;
+        }
+      }
+      
+      // Apply tutorship status filter (only for tutors)
+      if (showTutors && tutorshipStatusFilter) {
+        if (entity.tutorship_status !== tutorshipStatusFilter) {
+          return false;
+        }
+      }
+      
+      return true;
     });
   };
 
@@ -485,13 +499,27 @@ const TutorVolunteerMgmt = () => {
           <button onClick={refreshGrid} className="refresh-volunteers-tutors-btn">
             {showTutors ? t("Refresh Tutors List") : t("Refresh Volunteers List")}
           </button>
+          {showTutors && (
+            <select
+              className="tutorship-status-filter"
+              value={tutorshipStatusFilter}
+              onChange={(e) => {
+                setTutorshipStatusFilter(e.target.value);
+                setCurrentPage(1);
+              }}
+            >
+              <option value="">{t("All Tutorship Statuses")}</option>
+              {tutorshipStatusOptions.map(status => (
+                <option key={status} value={status}>{status}</option>
+              ))}
+            </select>
+          )}
           <input
             className="search-bar"
             type="text"
             placeholder={t("Search by name or email")}
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
-            style={{ marginTop: "25px" }}
           />
         </div>
         <div className="families-grid-wrapper">
