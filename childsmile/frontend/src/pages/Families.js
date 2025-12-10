@@ -15,6 +15,7 @@ import settlementsAndStreets from "../components/settlements_n_streets.json";
 import Select from "react-select";
 import Modal from "react-modal";
 import { useNavigate } from 'react-router-dom'; // Add this import at the top with other imports
+import { RotateCcw, LoaderCircle } from 'lucide-react';
 
 Modal.setAppElement('#root'); // Replace '#root' with the ID of your app's root element
 const Families = () => {
@@ -22,6 +23,7 @@ const Families = () => {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [familyToDelete, setFamilyToDelete] = useState(null);
   const [streets, setStreets] = useState([]);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const { t } = useTranslation();
   const [loading, setLoading] = useState(true);
   const [families, setFamilies] = useState([]);
@@ -77,6 +79,7 @@ const Families = () => {
   const [ageRange, setAgeRange] = useState([0, 100]);
 
   const fetchFamilies = async () => {
+    setIsRefreshing(true);
     setLoading(true);
     try {
       const response = await axios.get('/api/get_complete_family_details/');
@@ -98,6 +101,10 @@ const Families = () => {
       setFamilies([]);
     } finally {
       setLoading(false);
+      // Keep spinner spinning for 2 seconds
+      setTimeout(() => {
+        setIsRefreshing(false);
+      }, 1000);
     }
   };
 
@@ -496,6 +503,18 @@ const Families = () => {
           rtl={true}
         />
         <div className="filter-create-container">
+            <button 
+              className="refresh-icon-button"
+              onClick={fetchFamilies}
+              disabled={isRefreshing}
+              title={t('Refresh Families List')}
+            >
+              {isRefreshing ? (
+                <LoaderCircle size={20} className="spinning" />
+              ) : (
+                <RotateCcw size={20} strokeWidth={2} />
+              )}
+            </button>
           <div className="create-task init-family-data-button">
             <button
               onClick={() => navigate('/initial-family-data')}
@@ -556,11 +575,6 @@ const Families = () => {
                 className="age-slider age-slider-max"
               />
             </div>
-          </div>
-          <div className="refresh">
-            <button onClick={fetchFamilies}>
-              {t('Refresh Families List')}
-            </button>
           </div>
         </div>
         {loading ? (
