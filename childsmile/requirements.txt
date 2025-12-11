@@ -31,3 +31,11 @@ XlsxWriter==3.1.2
 # add boto3
 boto3==1.28.39
 botocore==1.31.39
+
+# Video Generation and Presentation
+gTTS==2.5.1
+moviepy==1.0.3
+python-pptx==0.6.21
+
+# Application Server
+gunicorn==23.0.0

@@ -19,7 +19,10 @@ module.exports = {
         test: /\.js$/,
         exclude: /node_modules/,
         use: {
-          loader: 'babel-loader'
+          loader: 'babel-loader',
+          options: {
+            ignore: ['./node_modules/pptxgenjs']
+          }
         }
       },
       {
@@ -43,10 +46,21 @@ module.exports = {
         test: /\.(ttf|woff|woff2|eot|otf)$/,
         type: 'asset/resource',
         generator: {
-          filename: 'fonts/[name][ext]', // Output fonts to the 'fonts' folder
+          filename: 'fonts/[name][ext]',
         },
       },
     ]
+  },
+  ignoreWarnings: [
+    (warning) => warning.module?.name?.includes('pptxgenjs') && warning.message?.includes('node:'),
+  ],
+  externals: {
+    'fs': 'null',
+    'https': 'null',
+    'http': 'null',
+    'stream': 'null',
+    'crypto': 'null',
+    'path': 'null',
   },
   plugins: [
     new HtmlWebpackPlugin({

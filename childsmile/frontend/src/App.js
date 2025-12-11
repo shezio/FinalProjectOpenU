@@ -24,6 +24,7 @@ import InitialFamilyData from './pages/InitialFamilyData'; // Import the Initial
 import TutorVolunteerMgmt from './pages/TutorVolunteerMgmt'; // Import the Tutor and Volunteer Management component
 import GoogleSuccess from './pages/GoogleSuccess';
 import AuditLog from './pages/AuditLog'; // Import the Audit Log component
+import Dashboard from './pages/Dashboard'; // Import the Dashboard component
 
 // Add this route to your router:
 
@@ -45,6 +46,7 @@ const App = () => {
   return (
     <Routes>
       <Route path="/" element={<Login />} />
+      <Route path="/dashboard" element={<Dashboard />} />
       <Route path="/tasks" element={<Tasks />} />
       <Route path="/families" element={<Families />} />
       <Route path="/feedbacks" element={<Feedbacks />} />

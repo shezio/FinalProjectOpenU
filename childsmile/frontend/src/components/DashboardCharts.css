@@ -1,0 +1,175 @@
+/* Dashboard Charts Styles */
+.charts-section {
+  margin-bottom: 40px;
+}
+
+.charts-section h2 {
+  font-size: 24px;
+  color: #333;
+  margin-bottom: 20px;
+  font-weight: 700;
+}
+
+.charts-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 30px;
+  margin-bottom: 30px;
+}
+
+.chart-card {
+  background: white;
+  border-radius: 15px;
+  padding: 25px;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+}
+
+.chart-card:hover {
+  box-shadow: 0 10px 35px rgba(0, 0, 0, 0.15);
+}
+
+.chart-card h3 {
+  font-size: 18px;
+  color: #333;
+  margin-bottom: 20px;
+  font-weight: 700;
+}
+
+.chart-container {
+  position: relative;
+  height: 350px;
+  width: 100%;
+}
+
+/* Timeframe Selector */
+.timeframe-selector {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 15px;
+  justify-content: center;
+}
+
+.timeframe-btn {
+  background: #f0f0f0;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.timeframe-btn.active {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.timeframe-btn:hover {
+  background: #e0e0e0;
+}
+
+.timeframe-btn.active:hover {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+/* New Families Card */
+.new-families-card {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 40px;
+  border-radius: 10px;
+  text-align: center;
+  height: 350px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.big-number {
+  font-size: 72px;
+  font-weight: 700;
+}
+
+.subtitle {
+  font-size: 18px;
+  margin-top: 15px;
+  opacity: 0.9;
+}
+
+.growth {
+  font-size: 14px;
+  margin-top: 10px;
+  opacity: 0.8;
+}
+
+/* Data Visualization Section */
+.data-viz-section {
+  margin-top: 50px;
+}
+
+.data-viz-section h2 {
+  font-size: 24px;
+  color: #333;
+  margin-bottom: 20px;
+  font-weight: 700;
+}
+
+.full-width-chart {
+  background: white;
+  border-radius: 15px;
+  padding: 25px;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+  margin-bottom: 30px;
+}
+
+.full-width-chart h3 {
+  font-size: 18px;
+  color: #333;
+  margin-bottom: 20px;
+  font-weight: 700;
+}
+
+.chart-container-large {
+  position: relative;
+  height: 400px;
+  width: 100%;
+}
+
+/* Badge */
+.new-badge {
+  background: #ff6b6b;
+  color: white;
+  padding: 3px 8px;
+  border-radius: 5px;
+  font-size: 11px;
+  font-weight: 700;
+  margin-left: 8px;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .charts-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .chart-container {
+    height: 250px;
+  }
+
+  .chart-container-large {
+    height: 300px;
+  }
+
+  .new-families-card {
+    height: 250px;
+    padding: 30px;
+  }
+
+  .big-number {
+    font-size: 48px;
+  }
+}
