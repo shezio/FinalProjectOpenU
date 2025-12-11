@@ -444,6 +444,45 @@ const SystemManagement = () => {
                 {t('Add New Staff')}
               </button>
               <button 
+                onClick={() => navigate('/dashboard')}
+                className="dashboard-button"
+              >
+                <svg 
+                  width="24" 
+                  height="24" 
+                  viewBox="0 0 24 24" 
+                  fill="none" 
+                  stroke="currentColor" 
+                  strokeWidth="2.5" 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round"
+                  style={{ marginLeft: '8px' }}
+                >
+                  {/* Bar chart with gradient colors */}
+                  <defs>
+                    <linearGradient id="barGradient1" x1="0%" y1="0%" x2="0%" y2="100%">
+                      <stop offset="0%" style={{ stopColor: '#ef4444', stopOpacity: 1 }} />
+                      <stop offset="100%" style={{ stopColor: '#dc2626', stopOpacity: 1 }} />
+                    </linearGradient>
+                    <linearGradient id="barGradient2" x1="0%" y1="0%" x2="0%" y2="100%">
+                      <stop offset="0%" style={{ stopColor: '#10b981', stopOpacity: 1 }} />
+                      <stop offset="100%" style={{ stopColor: '#059669', stopOpacity: 1 }} />
+                    </linearGradient>
+                    <linearGradient id="barGradient3" x1="0%" y1="0%" x2="0%" y2="100%">
+                      <stop offset="0%" style={{ stopColor: '#3b82f6', stopOpacity: 1 }} />
+                      <stop offset="100%" style={{ stopColor: '#2563eb', stopOpacity: 1 }} />
+                    </linearGradient>
+                  </defs>
+                  {/* Three colorful bars */}
+                  <rect x="3" y="13" width="4" height="8" rx="1" fill="url(#barGradient1)" />
+                  <rect x="10" y="8" width="4" height="13" rx="1" fill="url(#barGradient2)" />
+                  <rect x="17" y="4" width="4" height="17" rx="1" fill="url(#barGradient3)" />
+                  {/* Base line */}
+                  <line x1="2" y1="22" x2="22" y2="22" stroke="currentColor" strokeWidth="2" />
+                </svg>
+                {t('dashboard')}
+              </button>
+              <button 
                 onClick={() => navigate('/audit-log')}
                 className="audit-log-data-button"
               >

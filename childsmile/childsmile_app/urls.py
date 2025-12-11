@@ -374,4 +374,6 @@ urlpatterns = [
     path("api/audit-logs/", get_audit_logs, name="get_audit_logs"),
     path("api/audit-statistics/", get_audit_statistics, name="get_audit_statistics"),
     path("api/audit-action/", audit_action, name="audit_action"),
+    # Dashboard endpoints
+    path("api/dashboard/", include("childsmile_app.urls_dashboard")),
 ]

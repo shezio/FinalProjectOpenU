@@ -258,10 +258,11 @@
 .feedbacks-page-content .feedbacks-grid-container,
 .feedbacks-page-content .feedback-grid-container {
     width: 90%;
-    height: calc(100vh - 400px);
-    max-height: 75vh;
+    height: calc(100vh - 345px);
+    max-height: 95vh;
     min-height: 300px;
     direction: rtl;
+    margin-bottom: -72px;
 }
 
 .feedbacks-page-content .feedbacks-data-grid th {
