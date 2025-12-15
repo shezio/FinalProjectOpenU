@@ -309,7 +309,9 @@ def active_tutors_report(request):
             to_date = make_aware(datetime.strptime(to_date, "%Y-%m-%d"))
 
         # Base queryset
-        tutorships = Tutorships.objects.select_related("child", "tutor__staff").values(
+        tutorships = Tutorships.objects.select_related("child", "tutor__staff").filter(
+            tutor__staff__is_active=True
+        ).values(
             "child__childfirstname",
             "child__childsurname",
             "tutor__staff__first_name",

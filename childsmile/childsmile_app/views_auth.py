@@ -52,15 +52,6 @@ def login_email(request):
             )
             return JsonResponse({"error": "Invalid email format"}, status=400)
         
-        # ✅ GUEST ACCOUNT - Always send 000000
-        if email == 'guest@childsmile.guest':
-            api_logger.info(f"Guest account login attempt: {email}")
-            return JsonResponse({
-                "message": "Login code sent to your email",
-                "email": email,
-                "is_guest": True
-            })
-        
         # Check if email exists in Staff table
         if not Staff.objects.filter(email=email).exists():
             log_api_action(
@@ -73,8 +64,31 @@ def login_email(request):
             )
             return JsonResponse({"error": "Email not found in system"}, status=404)
         
-        # CHECK IF USER IS APPROVED FOR REGISTRATION
+        # Get staff user
         staff_user = Staff.objects.get(email=email)
+        
+        # INACTIVE STAFF FEATURE: Check if user is ACTIVE FIRST - before sending any emails
+        if not staff_user.is_active:
+            log_api_action(
+                request=request,
+                action='USER_LOGIN_FAILED',
+                success=False,
+                error_message="User account is inactive",
+                status_code=403,
+                additional_data={
+                    'attempted_email': email,
+                    'staff_id': staff_user.staff_id,
+                    'reason': 'account_inactive',
+                    'deactivation_reason': staff_user.deactivation_reason or 'Not specified'
+                }
+            )
+            api_logger.warning(f"Login attempt by inactive user {staff_user.staff_id} ({email})")
+            return JsonResponse({
+                "error": "Your account is inactive. Please contact the administrator.",
+                "account_inactive": True
+            }, status=403)
+        
+        # CHECK IF USER IS APPROVED FOR REGISTRATION
         if not staff_user.registration_approved:
             log_api_action(
                 request=request,
@@ -176,34 +190,6 @@ def verify_totp(request):
             else:
                 api_logger.warning(f"User {user_id} attempted to verify TOTP without providing email and code.")
             return JsonResponse({"error": "Email and code are required"}, status=400)
-        
-        # ✅ GUEST ACCOUNT - Accept only 000000
-        if email == 'guest@childsmile.guest':
-            if code != '000000':
-                api_logger.warning(f"Invalid guest code attempt: {code}")
-                return JsonResponse({"error": "Invalid or expired code"}, status=400)
-
-            try:
-                staff_user = Staff.objects.get(email=email)
-            except Staff.DoesNotExist:
-                api_logger.warning(f"Guest staff not found")
-                return JsonResponse({"error": "Staff member not found"}, status=404)
-            
-            # Create session
-            request.session.create()
-            request.session["user_id"] = staff_user.staff_id
-            request.session["username"] = staff_user.username
-            request.session["is_guest"] = True
-            request.session.set_expiry(86400)
-            
-            api_logger.info(f"Guest user logged in successfully")
-            return JsonResponse({
-                "message": "Login successful!",
-                "user_id": staff_user.staff_id,
-                "username": staff_user.username,
-                "email": staff_user.email,
-                "is_guest": True
-            })
         
         # Find ANY active TOTP record for this email (regardless of code submitted)
         totp_record = TOTPCode.objects.filter(

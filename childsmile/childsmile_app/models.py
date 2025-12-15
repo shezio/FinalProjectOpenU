@@ -83,6 +83,10 @@ class Staff(models.Model):
     last_name = models.CharField(max_length=255)
     created_at = models.DateTimeField(auto_now_add=True)
     registration_approved = models.BooleanField(default=False)
+    # INACTIVE STAFF FEATURE: Track active/inactive status
+    is_active = models.BooleanField(default=True)
+    previous_roles = models.JSONField(default=None, null=True, blank=True)  # {"role_ids": [1, 3, 5]}
+    deactivation_reason = models.CharField(max_length=200, null=True, blank=True)
 
     def __str__(self):
         return self.username
@@ -233,6 +237,16 @@ class Tutorships(models.Model):
     updated_at = models.DateTimeField(auto_now=True, null=True)
     approval_counter = models.SmallIntegerField(default=0)
     last_approver = models.JSONField(default=list)  # Store role IDs as a list
+    # INACTIVE STAFF FEATURE: Track tutorship activation status
+    tutorship_activation = models.CharField(
+        max_length=50,
+        choices=[
+            ('pending_first_approval', 'Pending First Approval'),
+            ('active', 'Active'),
+            ('inactive', 'Inactive'),
+        ],
+        default='pending_first_approval'
+    )
 
     def __str__(self):
         return f"Tutorship {self.id} - Child {self.child.child_id} - Tutor {self.tutor.id} - Created on {self.created_date}"

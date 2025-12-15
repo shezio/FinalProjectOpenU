@@ -835,6 +835,7 @@ const resources = {
       "video_preview": "תצוגה מקדימה",
       "download_video": "הורד סרטון",
       "close": "סגור",
+      "Inactive": "עזב",
     }
   }
 };
