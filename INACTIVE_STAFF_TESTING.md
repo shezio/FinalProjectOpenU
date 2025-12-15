@@ -44,6 +44,38 @@
    - "Activate" button appears instead of settings
    - Roles saved (no longer show Manager/Tutor)
 
+### Scenario 2.2: Deactivate admin requires TOTP verification
+**Setup**: Create admin staff member "מנהל" with role: System Administrator
+1. Go to System Management → Staff grid
+2. Find מנהל
+3. Click settings/edit button
+4. Fill in deactivation reason: "משאבי אנוש מקוצצים"
+5. Click "Save/Deactivate"
+6. **Expected**: 
+   - No immediate deactivation
+   - Popup/dialog says "קוד האימות נשלח לדוא"ל שלך" (Verification code sent to your email)
+   - Can see message about code expiring in 5 minutes
+
+**Verify email received**:
+1. Check מנהל's email for code (code looks like: 123456)
+2. **Expected**: Email contains Hebrew message with code
+
+**Enter verification code**:
+1. In the verification dialog, enter the code received
+2. Click confirm
+3. **Expected**:
+   - Dialog closes
+   - מנהל's row becomes grayed out
+   - Deactivation completed successfully
+
+**Test invalid code**:
+1. Go back and try again
+2. Fill in reason again: "בדיקה בלבד"
+3. Click save
+4. When asked for code, enter wrong code (e.g., "000000")
+5. **Expected**: Error message "Invalid code" and can retry
+6. After 3 wrong attempts: Error "Too many failed attempts"
+
 ---
 
 ## 3. System Management - Reactivation
