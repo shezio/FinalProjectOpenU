@@ -86,7 +86,7 @@ const Tutorships = () => {
   const [currentUserRoleId, setCurrentUserRoleId] = useState(null);
   const [currentRoleName, setCurrentRoleName] = useState('');
   const [page, setPage] = useState(1); // Current page
-  const [pageSize] = useState(6); // Number of tutorships per page
+  const [pageSize] = useState(5); // Number of tutorships per page
   const [totalCount, setTotalCount] = useState(0); // Total number of tutorships
   const [isMagnifyActive, setIsMagnifyActive] = useState(false);
   const [matchSearchQuery, setMatchSearchQuery] = useState('');
@@ -99,6 +99,13 @@ const Tutorships = () => {
   const [statusFilter, setStatusFilter] = useState('');
   const [showStatusDropdown, setShowStatusDropdown] = useState(false);
   const statusFilterRef = useRef();
+  const [tutorshipActivationFilters, setTutorshipActivationFilters] = useState({
+    'pending_first_approval': true,
+    'active': true,
+    'inactive': false
+  });
+  const [showTutorshipActivationDropdown, setShowTutorshipActivationDropdown] = useState(false);
+  const tutorshipActivationFilterRef = useRef();
 
   const toggleMagnify = () => {
     setIsMagnifyActive((prevState) => !prevState);
@@ -287,6 +294,24 @@ const Tutorships = () => {
   };
 
   const sortedAndFilteredMatches = matches
+    .filter((match) => {
+      // Exclude matches that have existing tutorships
+      const hasExistingTutorship = enrichedTutorships.some(tutorship => 
+        tutorship.child_id === match.child_id && 
+        tutorship.tutor_id === match.tutor_id
+      );
+      
+      // Include only if no existing tutorship, OR if the existing one is inactive
+      if (hasExistingTutorship) {
+        const inactiveTutorship = enrichedTutorships.find(tutorship => 
+          tutorship.child_id === match.child_id && 
+          tutorship.tutor_id === match.tutor_id &&
+          tutorship.tutorship_activation === 'inactive'
+        );
+        return inactiveTutorship !== undefined; // Only include if the tutorship is inactive
+      }
+      return true; // No existing tutorship, include it
+    })
     .filter((match) => match.grade >= filterThreshold)
     .filter((match) => {
       if (!matchSearchQuery.trim()) return true;
@@ -330,8 +355,12 @@ const Tutorships = () => {
     return new Date(`${year}-${month}-${day}`); // Convert to a valid Date object
   };
 
-  // Sort the tutorships by created_date
-  const sortedTutorships = [...enrichedTutorships].sort((a, b) => {
+  // Filter and sort the tutorships by created_date
+  const filteredTutorships = enrichedTutorships.filter(tutorship => {
+    return tutorshipActivationFilters[tutorship.tutorship_activation] === true;
+  });
+
+  const sortedTutorships = [...filteredTutorships].sort((a, b) => {
     const dateA = parseDate(a.created_date); // Parse the date
     const dateB = parseDate(b.created_date); // Parse the date
     return sortOrder === 'asc' ? dateA - dateB : dateB - dateA; // Ascending or descending order
@@ -339,6 +368,7 @@ const Tutorships = () => {
 
   // Paginate the sorted tutorships
   const paginatedTutorships = sortedTutorships.slice((page - 1) * pageSize, page * pageSize);
+  const displayTotalCount = filteredTutorships.length; // Use filtered count for pagination
 
   // Function to toggle the sorting order
   const toggleSortOrder = () => {
@@ -525,7 +555,7 @@ const Tutorships = () => {
 
       setEnrichedTutorships(enrichedTutorships);
       setTutorships(tutorshipsRaw);
-      setTotalCount(enrichedTutorships.length); // Set the total count for pagination
+      setTotalCount(filteredTutorships.length); // Set the total count for pagination with filtered data
       // Do NOT overwrite families/tutors here if you want to keep CRUD-safe originals!
       // setFamilies(familiesData);
       // setTutors(tutorsWithDetails);
@@ -655,8 +685,14 @@ const Tutorships = () => {
       ) {
         setShowStatusDropdown(false);
       }
+      if (
+        tutorshipActivationFilterRef.current &&
+        !tutorshipActivationFilterRef.current.contains(event.target)
+      ) {
+        setShowTutorshipActivationDropdown(false);
+      }
     }
-    if (showStatusDropdown) {
+    if (showStatusDropdown || showTutorshipActivationDropdown) {
       document.addEventListener("mousedown", handleClickOutside);
     } else {
       document.removeEventListener("mousedown", handleClickOutside);
@@ -664,7 +700,7 @@ const Tutorships = () => {
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [showStatusDropdown]);
+  }, [showStatusDropdown, showTutorshipActivationDropdown]);
 
   return (
     <div className="tutorships-main-content">
@@ -687,12 +723,67 @@ const Tutorships = () => {
               {t('Open Matching Wizard')}
             </button>
           </div>
+          
+          {/* Tutorship Activation Status Filter - Dropdown Style */}
+          <div className="tutorship-activation-filter-container" ref={tutorshipActivationFilterRef}>
+            <button
+              className="tutorship-activation-filter-button"
+              onClick={() => setShowTutorshipActivationDropdown(!showTutorshipActivationDropdown)}
+            >
+              {t('Filter by Activation Status')}
+            </button>
+            {showTutorshipActivationDropdown && (
+              <div className="tutorship-activation-filter-dropdown">
+                <div className="tutorship-activation-filter-item">
+                  <label>
+                    <input
+                      type="checkbox"
+                      checked={tutorshipActivationFilters['pending_first_approval']}
+                      onChange={(e) => setTutorshipActivationFilters({
+                        ...tutorshipActivationFilters,
+                        'pending_first_approval': e.target.checked
+                      })}
+                    />
+                    {t('Pending Approval')}
+                  </label>
+                </div>
+                <div className="tutorship-activation-filter-item">
+                  <label>
+                    <input
+                      type="checkbox"
+                      checked={tutorshipActivationFilters['active']}
+                      onChange={(e) => setTutorshipActivationFilters({
+                        ...tutorshipActivationFilters,
+                        'active': e.target.checked
+                      })}
+                    />
+                    {t('Active')}
+                  </label>
+                </div>
+                <div className="tutorship-activation-filter-item">
+                  <label>
+                    <input
+                      type="checkbox"
+                      checked={tutorshipActivationFilters['inactive']}
+                      onChange={(e) => setTutorshipActivationFilters({
+                        ...tutorshipActivationFilters,
+                        'inactive': e.target.checked
+                      })}
+                    />
+                    {t('Not Active')}
+                  </label>
+                </div>
+              </div>
+            )}
+          </div>
+          
           <div className="refresh">
             <button onClick={fetchFullTutorships}>
               {t('Refresh Tutorships')}
             </button>
           </div>
         </div>
+        
         {loading ? (
           <div className="loader">{t('Loading data...')}</div>
         ) : (
@@ -720,7 +811,10 @@ const Tutorships = () => {
                 </thead>
                 <tbody>
                   {paginatedTutorships.map((tutorship, index) => (
-                    <tr key={tutorship.id}>
+                    <tr 
+                      key={tutorship.id}
+                      className={tutorship.tutorship_activation === 'inactive' ? 'inactive-tutorship-row' : ''}
+                    >
                       <td>
                         <div className="info-icon-container" onClick={() => openInfoModal(tutorship)}>
                           <i className="info-icon" title={t('Press to see full info')}>i</i>
@@ -779,10 +873,10 @@ const Tutorships = () => {
               </button>
 
               {/* Page Numbers */}
-              {totalCount <= pageSize ? (
+              {displayTotalCount <= pageSize ? (
                 <button className="active">1</button> // Display only "1" if there's only one page
               ) : (
-                Array.from({ length: Math.ceil(totalCount / pageSize) }, (_, i) => (
+                Array.from({ length: Math.ceil(displayTotalCount / pageSize) }, (_, i) => (
                   <button
                     key={i + 1}
                     onClick={() => setPage(i + 1)}
@@ -796,14 +890,14 @@ const Tutorships = () => {
               {/* Right Arrows */}
               <button
                 onClick={() => setPage(page + 1)} // Go to the next page
-                disabled={page === Math.ceil(totalCount / pageSize) || totalCount <= 1}
+                disabled={page === Math.ceil(displayTotalCount / pageSize) || displayTotalCount <= 1}
                 className="pagination-arrow"
               >
                 &rsaquo; {/* Single right arrow */}
               </button>
               <button
-                onClick={() => setPage(Math.ceil(totalCount / pageSize))} // Go to the last page
-                disabled={page === Math.ceil(totalCount / pageSize) || totalCount <= 1}
+                onClick={() => setPage(Math.ceil(displayTotalCount / pageSize))} // Go to the last page
+                disabled={page === Math.ceil(displayTotalCount / pageSize) || displayTotalCount <= 1}
                 className="pagination-arrow"
               >
                 &raquo; {/* Double right arrow */}

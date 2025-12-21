@@ -113,6 +113,18 @@
   font-weight: normal;
 }
 
+/* Inactive user row styling */
+.inactive-user-row td {
+  background-color: #84848b !important; 
+  color: #363434;
+}
+
+/* Buttons in inactive rows should look normal */
+.inactive-user-row .edit-button,
+.inactive-user-row .delete-button {
+  opacity: 1 !important;
+}
+
 
 .staff-modal {
   background: linear-gradient(135deg, 
@@ -502,6 +514,76 @@
   transform: translateY(-3px) scale(1.05);
   box-shadow: 
     0 10px 30px rgba(16, 185, 129, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+.filter-inactive-button {
+  background: linear-gradient(135deg, 
+    rgba(107, 114, 128, 0.95) 0%,
+    rgba(75, 85, 99, 0.95) 100%);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  color: white;
+  padding: 12px 20px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 24px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 
+    0 6px 20px rgba(107, 114, 128, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  position: relative;
+  overflow: hidden;
+  margin-left: 0;
+}
+
+.filter-inactive-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, 
+    transparent, 
+    rgba(255, 255, 255, 0.3), 
+    transparent);
+  transition: left 0.5s;
+}
+
+.filter-inactive-button:hover::before {
+  left: 100%;
+}
+
+.filter-inactive-button:hover {
+  background: linear-gradient(135deg, 
+    rgba(107, 114, 128, 1) 0%,
+    rgba(75, 85, 99, 1) 100%);
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: 
+    0 10px 30px rgba(107, 114, 128, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+.filter-inactive-button.active {
+  background: linear-gradient(135deg, 
+    rgba(239, 68, 68, 0.95) 0%,
+    rgba(220, 38, 38, 0.95) 100%);
+  box-shadow: 
+    0 6px 20px rgba(239, 68, 68, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+.filter-inactive-button.active:hover {
+  background: linear-gradient(135deg, 
+    rgba(239, 68, 68, 1) 0%,
+    rgba(220, 38, 38, 1) 100%);
+  box-shadow: 
+    0 10px 30px rgba(239, 68, 68, 0.5),
     inset 0 1px 0 rgba(255, 255, 255, 0.4);
 }
 
@@ -1087,5 +1169,148 @@
   display: flex;
   gap: 10px;
   justify-content: center;
+  margin-top: 20px;
+}
+
+/* Modal Overlay for Deactivation and Reactivation Modals */
+.modal-overlay {
+  z-index: 1000 !important;
+  background: transparent !important;
+}
+
+/* Modal Portal for proper z-index stacking */
+.modal-portal {
+  position: fixed;
+  z-index: 1000 !important;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  margin-right: 500px;
+  font-size: 24px;
+}
+
+/* Ensure modal content is visible and focusable */
+.modal-portal .ReactModal__Content {
+  z-index: 1001 !important;
+  position: relative;
+  outline: none;
+  font-size: 24px;
+  box-shadow: none !important;
+}
+
+/* Deactivation Modal Styles */
+.deactivation-modal-header {
+  margin-bottom: 15px;
+}
+
+.deactivation-modal-warning {
+  color: #d32f2f;
+  margin-top: 10px;
+  font-weight: bold;
+  line-height: 1.5;
+}
+
+.deactivation-reason-container {
+  margin-top: 20px;
+}
+
+.deactivation-reason-label {
+  display: block;
+  margin-bottom: 5px;
+}
+
+.deactivation-reason-label span {
+  color: red;
+  margin-left: 3px;
+}
+
+.deactivation-reason-textarea {
+  width: 100%;
+  padding: 8px;
+  margin-top: 5px;
+  margin-bottom: 5px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  font-family: Arial, sans-serif;
+  font-size: 24px;
+  resize: vertical;
+  min-height: 100px;
+}
+
+.deactivation-reason-counter {
+  font-size: 24px;
+  color: #666;
+}
+
+.deactivation-reason-error {
+  color: #d32f2f;
+  margin-top: 10px;
+  font-size: 24px;
+}
+
+.deactivation-button {
+  background: linear-gradient(135deg, 
+    rgba(211, 47, 47, 0.95) 0%,
+    rgba(192, 0, 0, 0.95) 100%);
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(211, 47, 47, 0.3);
+}
+
+.deactivation-button:hover {
+  background: linear-gradient(135deg, 
+    rgba(192, 0, 0, 1) 0%,
+    rgba(155, 0, 0, 1) 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(211, 47, 47, 0.4);
+}
+
+/* Reactivation Modal Styles */
+.reactivation-modal-header {
+  margin-bottom: 15px;
+}
+
+.reactivation-modal-info {
+  margin-top: 50px;
+  color: #666;
+  font-size: 24px;
+  line-height: 1.6;
+}
+
+.reactivation-button {
+  background: linear-gradient(135deg, 
+    rgba(76, 175, 80, 0.95) 0%,
+    rgba(56, 142, 60, 0.95) 100%);
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+}
+
+.reactivation-button:hover {
+  background: linear-gradient(135deg, 
+    rgba(56, 142, 60, 1) 0%,
+    rgba(27, 94, 32, 1) 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(76, 175, 80, 0.4);
+}
+
+/* Modal Actions Container */
+.modal-actions-deactivation {
+  display: flex;
+  justify-content: space-around;
+  gap: 10px;
   margin-top: 20px;
 }

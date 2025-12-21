@@ -32,7 +32,7 @@ const AuditLog = () => {
   const [endDate, setEndDate] = useState('');
   const [sortBy, setSortBy] = useState('desc'); // 'asc' or 'desc'
   const [page, setPage] = useState(1);
-  const [pageSize] = useState(2);
+  const [pageSize] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [actions, setActions] = useState([]);

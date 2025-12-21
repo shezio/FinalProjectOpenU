@@ -191,6 +191,7 @@ def get_tutorships(request):
             "updated_at",
             "approval_counter",
             "last_approver",
+            "tutorship_activation",
         )
 
         # Prepare the data
@@ -208,6 +209,7 @@ def get_tutorships(request):
                 "updated_at": tutorship["updated_at"],
                 "approval_counter": tutorship["approval_counter"],
                 "last_approver": tutorship["last_approver"],
+                "tutorship_activation": tutorship["tutorship_activation"],
             }
             for tutorship in tutorships
         ]
@@ -308,7 +310,9 @@ def create_tutorship(request):
             tutor_id=tutor_id
         ).first()
         
-        if existing_tutorship:
+        # Only raise error if existing tutorship is NOT inactive
+        # Allow creation if existing tutorship is inactive (it will be cleaned up later)
+        if existing_tutorship and existing_tutorship.tutorship_activation != 'inactive':
             # Get names for audit
             try:
                 child_name = f"{Children.objects.get(child_id=child_id).childfirstname} {Children.objects.get(child_id=child_id).childsurname}"
@@ -336,6 +340,7 @@ def create_tutorship(request):
                     'tutor_name': tutor_name,
                     'tutor_email': tutor_email,
                     'existing_tutorship_id': existing_tutorship.id,
+                    'existing_tutorship_status': existing_tutorship.tutorship_activation,
                     'reason': 'duplicate_tutorship'
                 }
             )

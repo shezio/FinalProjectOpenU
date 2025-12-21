@@ -842,6 +842,52 @@ def generate_audit_description(user_email, username, action, timestamp, user_rol
         if entity_type and entity_ids:
             description += f"\nRecord ID: {', '.join(map(str, entity_ids))}"
     
+    # **INACTIVE STAFF DEACTIVATION LOGGING**
+    elif action == 'DEACTIVATE_STAFF' and additional_data:
+        staff_email = additional_data.get('staff_email', 'Unknown')
+        staff_full_name = additional_data.get('staff_full_name', 'Unknown')
+        staff_id = additional_data.get('staff_id', 'Unknown')
+        previous_roles = additional_data.get('previous_roles', [])
+        deactivation_reason = additional_data.get('deactivation_reason', 'Not provided')
+        tutorships_affected = additional_data.get('tutorships_affected', 0)
+        
+        description = f"Timestamp: {timestamp_formatted}\n"
+        description += f"User: {username}\n"
+        description += f"Email: {user_email}\n"
+        description += f"Action: Deactivated staff member\n"
+        description += f"Staff name: {staff_full_name}\n"
+        description += f"Staff email: {staff_email}\n"
+        description += f"Staff ID: {staff_id}\n"
+        description += f"Previous roles: {', '.join(previous_roles) if previous_roles else 'None'}\n"
+        description += f"New role: Inactive\n"
+        description += f"Deactivation reason: {deactivation_reason}\n"
+        description += f"Tutorships affected: {tutorships_affected}\n"
+        description += f"Admin roles: {roles_text}"
+        
+        if entity_type and entity_ids:
+            description += f"\nRecord ID: {', '.join(map(str, entity_ids))}"
+    
+    # **INACTIVE STAFF REACTIVATION LOGGING**
+    elif action == 'ACTIVATE_STAFF' and additional_data:
+        staff_email = additional_data.get('staff_email', 'Unknown')
+        staff_full_name = additional_data.get('staff_full_name', 'Unknown')
+        staff_id = additional_data.get('staff_id', 'Unknown')
+        restored_roles = additional_data.get('restored_roles', [])
+        
+        description = f"Timestamp: {timestamp_formatted}\n"
+        description += f"User: {username}\n"
+        description += f"Email: {user_email}\n"
+        description += f"Action: Reactivated staff member\n"
+        description += f"Staff name: {staff_full_name}\n"
+        description += f"Staff email: {staff_email}\n"
+        description += f"Staff ID: {staff_id}\n"
+        description += f"Removed role: Inactive\n"
+        description += f"Restored roles: {', '.join(restored_roles) if restored_roles else 'None'}\n"
+        description += f"Admin roles: {roles_text}"
+        
+        if entity_type and entity_ids:
+            description += f"\nRecord ID: {', '.join(map(str, entity_ids))}"
+    
     # **STAFF DELETION DESCRIPTIONS - GDPR COMPLIANCE**
     elif action == 'DELETE_STAFF_SUCCESS' and additional_data:
         deleted_email = additional_data.get('deleted_staff_email', 'Unknown')

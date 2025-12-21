@@ -371,6 +371,8 @@ def get_all_staff(request):
                 "last_name": user.last_name,
                 "created_at": user.created_at.strftime("%d/%m/%Y"),
                 "roles": roles,
+                "is_active": user.is_active,
+                "deactivation_reason": user.deactivation_reason or "",
             }
         )
 
