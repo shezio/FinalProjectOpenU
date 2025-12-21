@@ -53,6 +53,8 @@ from django.db import connection
 from django.views.decorators.csrf import csrf_exempt
 from django.db import transaction
 from django.utils.timezone import now
+from django.core.exceptions import ValidationError
+from .audit_utils import log_api_action
 import datetime
 import urllib3
 from django.utils.timezone import make_aware
@@ -174,6 +176,10 @@ def check_matches_permissions(request, required_permissions):
 def fetch_possible_matches():
     """
     Fetch possible matches from the database.
+    Logic:
+    - Exclude any CHILD that has a NON-INACTIVE tutorship (child must not be actively matched)
+    - Exclude ANY TUTOR that has ANY tutorship ONLY if they are ACTIVE in staff table
+    - Allow INACTIVE tutors (is_active = False) with only inactive tutorships to be matched again
     """
     query = """
     SELECT
@@ -195,11 +201,24 @@ def fetch_possible_matches():
         ON child.gender = signedup.gender
     JOIN childsmile_app_tutors tutor
         ON signedup.id = tutor.id_id
-    WHERE NOT EXISTS (
-        SELECT 1
-        FROM childsmile_app_tutorships tutorship
-        WHERE tutorship.child_id = child.child_id or tutorship.tutor_id = tutor.id_id
-    )
+    JOIN childsmile_app_staff staff
+        ON tutor.staff_id = staff.staff_id
+    WHERE 
+        -- Exclude children with non-inactive tutorships
+        NOT EXISTS (
+            SELECT 1
+            FROM childsmile_app_tutorships tutorship
+            WHERE tutorship.child_id = child.child_id 
+            AND tutorship.tutorship_activation <> 'inactive'
+        )
+        -- Exclude tutors that have ANY tutorship ONLY if they are ACTIVE
+        AND NOT EXISTS (
+            SELECT 1
+            FROM childsmile_app_tutorships tutorship
+            WHERE tutorship.tutor_id = tutor.id_id
+            AND staff.is_active = TRUE
+            AND tutorship.tutorship_activation <> 'inactive'
+        )
     AND child.status <> 'בריא';
     """
     with connection.cursor() as cursor:
@@ -1040,3 +1059,188 @@ def get_staff_name_by_id(staff_id):
     except Exception as e:
         api_logger.error(f"Error getting staff name for ID {staff_id}: {str(e)}")
         return None
+
+
+# INACTIVE STAFF FEATURE: Core functions for staff deactivation/reactivation
+
+def deactivate_staff(staff, performed_by_user, deactivation_reason, request=None):
+    """
+    Deactivate a staff member and preserve their tutorships as historical records.
+    
+    Steps:
+    1. Validate deactivation reason
+    2. Save current role IDs to JSON
+    3. Clear all current roles
+    4. Add Inactive role
+    5. Set is_active flag to False
+    6. Handle tutorships - create exact duplicates with tutorship_activation='inactive'
+    7. Log to audit
+    
+    Args:
+        staff: Staff object to deactivate
+        performed_by_user: Staff object who is performing the deactivation
+        deactivation_reason: String reason for deactivation (required, max 200 chars)
+        request: Django request object for audit logging (optional)
+    
+    Returns:
+        dict with status and message
+    """
+    # Step 1: Validate deactivation_reason
+    if not deactivation_reason or not deactivation_reason.strip():
+        raise ValidationError("Deactivation reason required")
+    
+    if len(deactivation_reason.strip()) > 200:
+        raise ValidationError("Reason must be 200 chars or less")
+    
+    deactivation_reason = deactivation_reason.strip()
+    
+    # Step 2: Save current role IDs to JSON
+    current_roles = staff.roles.all()
+    role_ids = list(current_roles.values_list('id', flat=True))
+    
+    staff.previous_roles = {"role_ids": role_ids}
+    staff.deactivation_reason = deactivation_reason
+    staff.save()
+    
+    # Step 3: Clear all current roles
+    staff.roles.clear()
+    
+    # Step 4: Add Inactive role
+    try:
+        inactive_role = Role.objects.get(role_name='Inactive')
+        staff.roles.add(inactive_role)
+    except Role.DoesNotExist:
+        api_logger.error(f"Inactive role not found in database")
+        raise ValidationError("Inactive role does not exist in system. Please contact administrator.")
+    
+    # Step 5: Set is_active flag
+    staff.is_active = False
+    staff.save()
+    
+    # Step 6: Handle tutorships - EXACT DUPLICATE with ALL fields
+    active_tutorships = Tutorships.objects.filter(tutor__staff=staff)
+    tutorship_count = active_tutorships.count()
+    
+    for tutorship in active_tutorships:
+        # Create EXACT duplicate with ALL fields from original
+        Tutorships.objects.create(
+            child=tutorship.child,
+            tutor=tutorship.tutor,
+            approval_counter=tutorship.approval_counter,  # Keep same counter
+            last_approver=tutorship.last_approver,
+            created_date=tutorship.created_date,  # Keep original created date
+            updated_at=datetime.datetime.now(),  # Set updated_at to now
+            tutorship_activation='inactive'  # Mark only this field as inactive
+        )
+        
+        # DELETE original tutorship (make room for the inactive copy)
+        tutorship.delete()
+    
+    # Step 7: Log to audit
+    log_api_action(
+        request=request,
+        action='DEACTIVATE_STAFF',
+        success=True,
+        additional_data={
+            'staff_email': staff.email,
+            'staff_full_name': f"{staff.first_name} {staff.last_name}",
+            'staff_id': staff.staff_id,
+            'previous_roles': [Role.objects.get(id=rid).role_name for rid in role_ids],
+            'deactivation_reason': deactivation_reason,
+            'tutorships_affected': tutorship_count
+        },
+        entity_type='Staff',
+        entity_ids=[staff.staff_id]
+    )
+    
+    api_logger.info(f"Staff deactivated: {staff.email} (ID: {staff.staff_id}) by {performed_by_user.email}. Reason: {deactivation_reason}")
+    
+    return {
+        'status': 'success',
+        'message': f'Staff {staff.first_name} {staff.last_name} deactivated successfully',
+        'staff_id': staff.staff_id,
+        'tutorships_affected': tutorship_count
+    }
+
+
+def activate_staff(staff, performed_by_user, request=None):
+    """
+    Reactivate a deactivated staff member and restore their previous roles.
+    
+    Steps:
+    1. Verify staff is inactive
+    2. Extract role IDs from JSON
+    3. Query roles from database
+    4. Remove Inactive role
+    5. Restore all roles atomically
+    6. Set active flag (DO NOT clear deactivation_reason)
+    7. Log to audit
+    
+    Args:
+        staff: Staff object to reactivate (must have is_active=False)
+        performed_by_user: Staff object who is performing the reactivation
+        request: Django request object for audit logging (optional)
+    
+    Returns:
+        dict with status and message
+    """
+    # Step 1: Verify inactive
+    if staff.is_active == True:
+        raise ValidationError("Staff already active")
+    
+    if staff.previous_roles is None:
+        raise ValidationError("No previous roles found to restore")
+    
+    # Step 2: Extract role IDs from JSON
+    role_ids = staff.previous_roles.get('role_ids', [])
+    
+    if not role_ids:
+        raise ValidationError("No roles to restore")
+    
+    # Step 3: Query roles from database (get available roles)
+    roles_to_restore = Role.objects.filter(id__in=role_ids)
+    
+    # Handle case where some roles were deleted from system
+    if len(roles_to_restore) != len(role_ids):
+        api_logger.warning(f"Some roles no longer exist for {staff.username}. Using available roles.")
+    
+    # Step 4: Remove Inactive role
+    try:
+        inactive_role = Role.objects.get(role_name='Inactive')
+        staff.roles.remove(inactive_role)
+    except Role.DoesNotExist:
+        api_logger.warning(f"Inactive role not found during reactivation")
+    
+    # Step 5: Restore all roles atomically
+    staff.roles.set(roles_to_restore)
+    
+    # Step 6: Set active flag (DO NOT clear deactivation_reason - keep for audit trail)
+    staff.is_active = True
+    staff.previous_roles = None  # Clear the JSON backup
+    staff.save()
+    
+    # Step 7: Log to audit
+    restored_role_names = [r.role_name for r in roles_to_restore]
+    
+    log_api_action(
+        request=request,
+        action='ACTIVATE_STAFF',
+        success=True,
+        additional_data={
+            'staff_email': staff.email,
+            'staff_full_name': f"{staff.first_name} {staff.last_name}",
+            'staff_id': staff.staff_id,
+            'restored_roles': restored_role_names
+        },
+        entity_type='Staff',
+        entity_ids=[staff.staff_id]
+    )
+    
+    api_logger.info(f"Staff reactivated: {staff.email} (ID: {staff.staff_id}) by {performed_by_user.email}. Roles restored: {restored_role_names}")
+    
+    return {
+        'status': 'success',
+        'message': f'Staff {staff.first_name} {staff.last_name} reactivated successfully',
+        'staff_id': staff.staff_id,
+        'restored_roles': restored_role_names
+    }

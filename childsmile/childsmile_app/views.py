@@ -154,7 +154,7 @@ def get_staff(request):
     """
     Retrieve all staff along with their roles.
     """
-    staff = Staff.objects.all()
+    staff = Staff.objects.filter(is_active=True)
     staff_data = []
 
     for user in staff:
@@ -215,7 +215,7 @@ def get_tutors(request):
     """
     Retrieve all tutors along with their tutorship status.
     """
-    tutors = Tutors.objects.select_related("staff").all()
+    tutors = Tutors.objects.select_related("staff").filter(staff__is_active=True)
     tutors_data = [
         {
             "id": t.id_id,  # ה-ID של המדריך בטבלת Tutors
@@ -371,6 +371,8 @@ def get_all_staff(request):
                 "last_name": user.last_name,
                 "created_at": user.created_at.strftime("%d/%m/%Y"),
                 "roles": roles,
+                "is_active": user.is_active,
+                "deactivation_reason": user.deactivation_reason or "",
             }
         )
 

@@ -91,15 +91,16 @@ def get_dashboard_data(request):
             tutorships__isnull=True
         ).count()
         
-        # Active tutorships (families that have a tutorship)
-        active_tutorships = Tutorships.objects.count()
+        # Active tutorships (families that have a tutorship with active tutors)
+        active_tutorships = Tutorships.objects.filter(tutor__staff__is_active=True).count()
         
-        # Pending tutors (tutors without tutees)
+        # Pending tutors (active tutors without tutees)
         pending_tutors = Tutors.objects.filter(
+            staff__is_active=True,
             tutorship_status='אין_חניך'  # No Tutee
         ).count()
         
-        staff_count = Staff.objects.filter(registration_approved=True).count()
+        staff_count = Staff.objects.filter(registration_approved=True, is_active=True).count()
         
         # Tutorship Status Distribution
         tutorship_with = active_tutorships
@@ -107,7 +108,10 @@ def get_dashboard_data(request):
         
         # Tutors Status
         tutors_pending = pending_tutors
-        tutors_active = Tutors.objects.filter(tutorship_status='יש_חניך').count()  # Has Tutee
+        tutors_active = Tutors.objects.filter(
+            staff__is_active=True,
+            tutorship_status='יש_חניך'  # Has Tutee
+        ).count()
         
         # Feedback by Type
         feedback_query = Feedback.objects.all()
@@ -136,7 +140,7 @@ def get_dashboard_data(request):
         # Recent tutorships
         recent_tutorships = Tutorships.objects.select_related(
             'child', 'tutor', 'tutor__id'
-        ).order_by('-created_date')[:10]
+        ).filter(tutor__staff__is_active=True).order_by('-created_date')[:10]
         
         recent_data = []
         for t in recent_tutorships:

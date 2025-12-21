@@ -191,6 +191,7 @@ def get_tutorships(request):
             "updated_at",
             "approval_counter",
             "last_approver",
+            "tutorship_activation",
         )
 
         # Prepare the data
@@ -208,6 +209,7 @@ def get_tutorships(request):
                 "updated_at": tutorship["updated_at"],
                 "approval_counter": tutorship["approval_counter"],
                 "last_approver": tutorship["last_approver"],
+                "tutorship_activation": tutorship["tutorship_activation"],
             }
             for tutorship in tutorships
         ]
@@ -308,7 +310,9 @@ def create_tutorship(request):
             tutor_id=tutor_id
         ).first()
         
-        if existing_tutorship:
+        # Only raise error if existing tutorship is NOT inactive
+        # Allow creation if existing tutorship is inactive (it will be cleaned up later)
+        if existing_tutorship and existing_tutorship.tutorship_activation != 'inactive':
             # Get names for audit
             try:
                 child_name = f"{Children.objects.get(child_id=child_id).childfirstname} {Children.objects.get(child_id=child_id).childsurname}"
@@ -336,6 +340,7 @@ def create_tutorship(request):
                     'tutor_name': tutor_name,
                     'tutor_email': tutor_email,
                     'existing_tutorship_id': existing_tutorship.id,
+                    'existing_tutorship_status': existing_tutorship.tutorship_activation,
                     'reason': 'duplicate_tutorship'
                 }
             )
@@ -364,7 +369,18 @@ def create_tutorship(request):
             updated_at=datetime.datetime.now(),
             last_approver=[staff_role_id],  # Initialize with the creator's role ID
             approval_counter=1,  # Start with 1 approver
+            tutorship_activation='pending_first_approval',  # INACTIVE STAFF FEATURE: Initially pending approval
         )
+
+        # INACTIVE STAFF FEATURE: Clean up inactive tutorships for this tutor
+        # When a new active tutorship is created, delete any tutorships with tutorship_activation='inactive'
+        try:
+            Tutorships.objects.filter(
+                tutor_id=tutor_id,
+                tutorship_activation='inactive'
+            ).delete()
+        except Exception as e:
+            api_logger.warning(f"Failed to clean up inactive tutorships for tutor {tutor_id}: {str(e)}")
 
         # 4. Update the prev_status record to set tutorship FK
         prev_status.tutorship_id = tutorship
@@ -577,6 +593,11 @@ def update_tutorship(request, tutorship_id):
             tutorship.approval_counter = len(tutorship.last_approver)
         else:
             raise ValueError("Approval counter cannot exceed 2")
+        
+        # INACTIVE STAFF FEATURE: Set tutorship_activation to 'active' when final approval is reached
+        if tutorship.approval_counter == 2:
+            tutorship.tutorship_activation = 'active'
+        
         tutorship.updated_at = datetime.datetime.now()  # Updated to use datetime now()
         tutorship.save()
 

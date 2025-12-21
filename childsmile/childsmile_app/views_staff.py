@@ -155,6 +155,332 @@ def update_staff_member(request, staff_id):
                 {"error": f"Email '{data['email']}' already exists."}, status=400
             )
 
+        # INACTIVE STAFF FEATURE: Handle deactivation/reactivation FIRST - prioritized before email changes
+        # This ensures admins can't modify staff details if they're being deactivated
+        
+        # HANDLE DEACTIVATION
+        if request.data.get("is_active") == False and staff_member.is_active == True:
+            # Staff member is being deactivated
+            if is_admin(staff_member):
+                # Two-step TOTP verification required for admin deactivation
+                totp_code = request.data.get("totp_code", "").strip()
+                
+                if not totp_code:
+                    # First call: send TOTP to admin's email
+                    TOTPCode.objects.filter(email=staff_member.email, used=False).update(used=True)
+                    code = TOTPCode.generate_code()
+                    TOTPCode.objects.create(email=staff_member.email, code=code)
+                    
+                    subject = "אישור כיבוי חשבון - חיוך של ילד"
+                    message = f"""
+                    בקשה לכיבוי חשבון במערכת חיוך של ילד.
+                    
+                    קוד האימות שלך: {code}
+                    
+                    הקוד יפוג תוקף בעוד 5 דקות.
+                    
+                    אם לא ביקשת זאת, אנא צור קשר עם מנהלי המערכת בדחיפות!
+                    """
+                    
+                    try:
+                        send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [staff_member.email])
+                        return JsonResponse({
+                            "message": "Verification code sent to your email",
+                            "requires_verification": True
+                        })
+                    except Exception as e:
+                        log_api_action(
+                            request=request,
+                            action='DEACTIVATE_STAFF_FAILED',
+                            success=False,
+                            error_message=f"Failed to send verification email: {str(e)}",
+                            status_code=500,
+                            entity_type='Staff',
+                            entity_ids=[staff_id]
+                        )
+                        api_logger.error(f"Failed to send TOTP: {str(e)}")
+                        return JsonResponse(
+                            {"error": "Failed to send verification code"},
+                            status=500
+                        )
+                
+                else:
+                    # Second call: verify TOTP code
+                    totp_record = TOTPCode.objects.filter(
+                        email=staff_member.email,
+                        used=False
+                    ).order_by('-created_at').first()
+                    
+                    if not totp_record:
+                        log_api_action(
+                            request=request,
+                            action='DEACTIVATE_STAFF_FAILED',
+                            success=False,
+                            error_message="Invalid or expired code",
+                            status_code=400,
+                            entity_type='Staff',
+                            entity_ids=[staff_id]
+                        )
+                        return JsonResponse(
+                            {"error": "Invalid or expired code"},
+                            status=400
+                        )
+                    
+                    if not totp_record.is_valid():
+                        log_api_action(
+                            request=request,
+                            action='DEACTIVATE_STAFF_FAILED',
+                            success=False,
+                            error_message="Code has expired or too many attempts",
+                            status_code=400,
+                            entity_type='Staff',
+                            entity_ids=[staff_id]
+                        )
+                        return JsonResponse(
+                            {"error": "Code has expired or too many attempts"},
+                            status=400
+                        )
+                    
+                    totp_record.attempts += 1
+                    totp_record.save()
+                    
+                    if totp_record.code != totp_code:
+                        if totp_record.attempts >= 3:
+                            totp_record.used = True
+                            totp_record.save()
+                            log_api_action(
+                                request=request,
+                                action='DEACTIVATE_STAFF_FAILED',
+                                success=False,
+                                error_message="Too many failed attempts",
+                                status_code=429,
+                                entity_type='Staff',
+                                entity_ids=[staff_id]
+                            )
+                            return JsonResponse(
+                                {"error": "Too many failed attempts"},
+                                status=429
+                            )
+                        
+                        log_api_action(
+                            request=request,
+                            action='DEACTIVATE_STAFF_FAILED',
+                            success=False,
+                            error_message="Invalid code",
+                            status_code=400,
+                            entity_type='Staff',
+                            entity_ids=[staff_id]
+                        )
+                        return JsonResponse(
+                            {"error": "Invalid code"},
+                            status=400
+                        )
+                    
+                    # Mark TOTP as used - verified, continue to deactivation below
+                    totp_record.used = True
+                    totp_record.save()
+            
+            # Get deactivation reason
+            deactivation_reason = request.data.get("deactivation_reason", "").strip()
+            
+            if not deactivation_reason:
+                return JsonResponse(
+                    {"error": "Deactivation reason required"},
+                    status=400
+                )
+            
+            if len(deactivation_reason) > 200:
+                return JsonResponse(
+                    {"error": "Reason must be 200 characters or less"},
+                    status=400
+                )
+            
+            try:
+                deactivate_staff(staff_member, user, deactivation_reason, request)
+                
+                return JsonResponse({
+                    "message": "Staff deactivated successfully",
+                    "staff_id": staff_member.staff_id
+                })
+            except Exception as e:
+                log_api_action(
+                    request=request,
+                    action='DEACTIVATE_STAFF_FAILED',
+                    success=False,
+                    error_message=str(e),
+                    status_code=400,
+                    additional_data={'staff_id': staff_id}
+                )
+                return JsonResponse(
+                    {"error": str(e)},
+                    status=400
+                )
+        
+        # HANDLE REACTIVATION
+        if request.data.get("is_active") == True and staff_member.is_active == False:
+            # TOTP verification required for ALL users on reactivation
+            totp_code = request.data.get("totp_code", "").strip()
+            
+            if not totp_code:
+                # First call: send TOTP to staff member's email
+                TOTPCode.objects.filter(email=staff_member.email, used=False).update(used=True)
+                code = TOTPCode.generate_code()
+                TOTPCode.objects.create(email=staff_member.email, code=code)
+                
+                subject = "אישור הפעלה של חשבון - חיוך של ילד"
+                message = f"""
+                בקשה להפעלה של חשבון במערכת חיוך של ילד.
+                
+                קוד האימות שלך: {code}
+                
+                הקוד יפוג תוקף בעוד 5 דקות.
+                
+                אם לא ביקשת זאת, אנא צור קשר עם מנהלי המערכת בדחיפות!
+                """
+                
+                try:
+                    send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [staff_member.email])
+                    return JsonResponse({
+                        "message": "Verification code sent to your email",
+                        "requires_verification": True
+                    })
+                except Exception as e:
+                    log_api_action(
+                        request=request,
+                        action='ACTIVATE_STAFF_FAILED',
+                        success=False,
+                        error_message=f"Failed to send verification email: {str(e)}",
+                        status_code=500,
+                        entity_type='Staff',
+                        entity_ids=[staff_id]
+                    )
+                    api_logger.error(f"Failed to send TOTP: {str(e)}")
+                    return JsonResponse(
+                        {"error": "Failed to send verification code"},
+                        status=500
+                    )
+            
+            else:
+                # Second call: verify TOTP code
+                totp_record = TOTPCode.objects.filter(
+                    email=staff_member.email,
+                    used=False
+                ).order_by('-created_at').first()
+                
+                if not totp_record:
+                    log_api_action(
+                        request=request,
+                        action='ACTIVATE_STAFF_FAILED',
+                        success=False,
+                        error_message="Invalid or expired code",
+                        status_code=400,
+                        entity_type='Staff',
+                        entity_ids=[staff_id]
+                    )
+                    return JsonResponse(
+                        {"error": "Invalid or expired code"},
+                        status=400
+                    )
+                
+                if not totp_record.is_valid():
+                    log_api_action(
+                        request=request,
+                        action='ACTIVATE_STAFF_FAILED',
+                        success=False,
+                        error_message="Code has expired or too many attempts",
+                        status_code=400,
+                        entity_type='Staff',
+                        entity_ids=[staff_id]
+                    )
+                    return JsonResponse(
+                        {"error": "Code has expired or too many attempts"},
+                        status=400
+                    )
+                
+                totp_record.attempts += 1
+                totp_record.save()
+                
+                if totp_record.code != totp_code:
+                    if totp_record.attempts >= 3:
+                        totp_record.used = True
+                        totp_record.save()
+                        log_api_action(
+                            request=request,
+                            action='ACTIVATE_STAFF_FAILED',
+                            success=False,
+                            error_message="Too many failed attempts",
+                            status_code=429,
+                            entity_type='Staff',
+                            entity_ids=[staff_id]
+                        )
+                        return JsonResponse(
+                            {"error": "Too many failed attempts"},
+                            status=429
+                        )
+                    
+                    log_api_action(
+                        request=request,
+                        action='ACTIVATE_STAFF_FAILED',
+                        success=False,
+                        error_message="Invalid code",
+                        status_code=400,
+                        entity_type='Staff',
+                        entity_ids=[staff_id]
+                    )
+                    return JsonResponse(
+                        {"error": "Invalid code"},
+                        status=400
+                    )
+                
+                # Mark TOTP as used - verified, continue to reactivation below
+                totp_record.used = True
+                totp_record.save()
+            
+            try:
+                activate_staff(staff_member, user, request)
+                
+                # Send email to staff member (only Hebrew)
+                subject = "חשבונך הופעל - חיוך של ילד"
+                message = f"""
+                שלום {staff_member.first_name},
+                
+                חשבונך בחיוך של ילד הופעל מחדש.
+                
+                תוכל להתחבר למערכת כעת.
+                
+                בברכה,
+                צוות חיוך של ילד
+                """
+                
+                try:
+                    send_mail(
+                        subject,
+                        message,
+                        settings.DEFAULT_FROM_EMAIL,
+                        [staff_member.email],
+                        fail_silently=False
+                    )
+                except Exception as e:
+                    api_logger.error(f"Failed to send reactivation email: {str(e)}")
+                
+                return JsonResponse({
+                    "message": "Staff reactivated successfully",
+                    "staff_id": staff_member.staff_id
+                })
+            except Exception as e:
+                log_api_action(
+                    request=request,
+                    action='ACTIVATE_STAFF_FAILED',
+                    success=False,
+                    error_message=str(e),
+                    status_code=400,
+                    additional_data={'staff_id': staff_id}
+                )
+                return JsonResponse(
+                    {"error": str(e)},
+                    status=400
+                )
+
         # IF EMAIL IS BEING CHANGED - Require TOTP verification
         new_email = data.get("email", "").strip().lower()
         if new_email and new_email != original_email:
