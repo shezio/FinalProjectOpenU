@@ -1,5 +1,5 @@
 # File: .github/workflows/azure-deploy.yml
-name: Build and Deploy Python App to Azure Web App
+name: Deploy Django App to Azure Web App
 
 on:
   push:
@@ -8,44 +8,18 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-and-deploy:
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
-      # Step 1: Checkout your code
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-      # Step 2: Set up Python 3.11
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-
-      # Step 3: Install dependencies locally (skip Oryx on Azure)
-      - name: Build dependencies
-        run: |
-          python -m venv venv
-          source venv/bin/activate
-          pip install --upgrade pip
-          pip install -r requirements.txt
-          deactivate
-
-      # Step 4: Upload only app code (exclude local venv)
-      - name: Upload artifact for deployment
-        uses: actions/upload-artifact@v4
-        with:
-          name: python-app
-          path: |
-            .
-            !venv/
-
-      # Step 5: Login to Azure
-      - name: 'Login to Azure'
+      - name: Login to Azure
         uses: azure/login@v2
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      # Step 6: Deploy pre-built app (Oryx disabled)
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
         with:
@@ -54,4 +28,3 @@ jobs:
           package: '.'
           startup-command: >
             gunicorn childsmile.childsmile.wsgi:application --bind 0.0.0.0:8000
-
