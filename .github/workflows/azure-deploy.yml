@@ -25,7 +25,7 @@ jobs:
           app-name: 'child-smile-app'
           slot-name: 'Production'
           package: '.'
-          enable-oryx-build: false   # <-- disables Oryx caching
+          clean: true        # <-- deletes wwwroot before deploy
           startup-command: |
             # Remove previous artifacts/venv
             rm -rf /home/site/wwwroot/output.tar.gz
