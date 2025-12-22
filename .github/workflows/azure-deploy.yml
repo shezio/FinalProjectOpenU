@@ -12,14 +12,42 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # Step 1: Checkout code
       - name: Checkout code
         uses: actions/checkout@v4
 
+      # Step 2: Set up Python 3.11
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      # Step 3: Build local venv and install packages (skip macOS-only packages)
+      - name: Build dependencies locally
+        run: |
+          python -m venv antenv
+          source antenv/bin/activate
+          pip install --upgrade pip
+          # Install only packages compatible with Linux
+          pip install -r requirements.txt --no-deps
+          deactivate
+
+      # Step 4: Upload artifact for deployment
+      - name: Upload app + venv for deployment
+        uses: actions/upload-artifact@v4
+        with:
+          name: python-app
+          path: |
+            .
+            !venv/
+
+      # Step 5: Login to Azure
       - name: Login to Azure
         uses: azure/login@v2
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
+      # Step 6: Deploy to Azure Web App
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
         with:
@@ -28,3 +56,5 @@ jobs:
           package: '.'
           startup-command: >
             gunicorn childsmile.childsmile.wsgi:application --bind 0.0.0.0:8000
+          configuration-strings: |
+            PYTHONPATH=/home/site/wwwroot/childsmile
