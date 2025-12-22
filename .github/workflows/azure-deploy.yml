@@ -30,16 +30,25 @@ jobs:
           pip install -r requirements.txt
           deactivate
 
-      # Step 4: Login to Azure
+      # Step 4: Upload only app code (exclude local venv)
+      - name: Upload artifact for deployment
+        uses: actions/upload-artifact@v4
+        with:
+          name: python-app
+          path: |
+            .
+            !venv/
+
+      # Step 5: Login to Azure
       - name: 'Login to Azure'
         uses: azure/login@v2
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      # Step 5: Deploy pre-built package (Oryx disabled)
+      # Step 6: Deploy pre-built app (Oryx disabled)
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
         with:
           app-name: 'child-smile-app'
-          slot-name: 'Production'  # remove if only using default slot
-          package: '.'  # deploy the root of your repo
+          slot-name: 'Production'
+          package: '.'  # deploy the root of your repo (without venv)
