@@ -22,21 +22,9 @@ jobs:
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
         with:
-          app-name: 'child-smile-app'
-          slot-name: 'Production'
-          package: '.'
-          clean: true        # <-- deletes wwwroot before deploy
-          startup-command: |
-            # Remove previous artifacts/venv
-            rm -rf /home/site/wwwroot/output.tar.gz
-            rm -rf /home/site/wwwroot/antenv
-
-            # Ensure pip is installed & upgraded
-            python3 -m ensurepip --upgrade
-            python3 -m pip install --upgrade pip
-
-            # Install requirements fresh
-            python3 -m pip install --no-cache-dir -r /home/site/wwwroot/childsmile/requirements.txt
-
-            # Start Gunicorn
-            PYTHONPATH=/home/site/wwwroot/childsmile gunicorn childsmile.wsgi:application --bind 0.0.0.0:8000
+          app-name: child-smile-app
+          package: .
+          clean: true
+          startup-command: >
+            PYTHONPATH=/home/site/wwwroot/childsmile
+            gunicorn childsmile.wsgi:application --bind 0.0.0.0:8000
