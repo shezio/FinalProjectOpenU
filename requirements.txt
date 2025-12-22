@@ -51,10 +51,7 @@ tqdm==4.67.1
 pytest==8.4.2
 pytest-django==4.11.1
 
-# macOS-only dependencies (excluded for Azure Linux production)
-pyobjc-core==11.1; sys_platform == "darwin"
-pyobjc-framework-Cocoa==11.1; sys_platform == "darwin"
-pyobjc-framework-Quartz==11.1; sys_platform == "darwin"
+
 
 # Transitive dependencies (kept for compatibility)
 click==8.1.7
