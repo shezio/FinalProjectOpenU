@@ -26,4 +26,8 @@ jobs:
           slot-name: 'Production'
           package: '.'
           startup-command: >
-            PYTHONPATH=/home/site/wwwroot/childsmile gunicorn childsmile.wsgi:application --bind 0.0.0.0:8000
+              python3 -m ensurepip --upgrade &&
+              python3 -m pip install --upgrade pip &&
+              python3 -m pip install -r /home/site/wwwroot/childsmile/requirements.txt &&
+              PYTHONPATH=/home/site/wwwroot/childsmile gunicorn childsmile.wsgi:application --bind 0.0.0.0:8000
+
