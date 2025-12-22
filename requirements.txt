@@ -68,9 +68,12 @@ pyinstaller==5.13.2
 pyinstaller-hooks-contrib==2023.8
 PyJWT==2.10.1
 pyluach==0.3.0.dev1
-pyobjc-core==11.1
-pyobjc-framework-Cocoa==11.1
-pyobjc-framework-Quartz==11.1
+
+# macOS-only
+pyobjc-core==11.1; sys_platform == "darwin"
+pyobjc-framework-Cocoa==11.1; sys_platform == "darwin"
+pyobjc-framework-Quartz==11.1; sys_platform == "darwin"
+
 pyparsing==3.0.9
 PySocks==1.7.1
 pystray==0.19.4
