@@ -24,7 +24,7 @@ ALLOWED_HOSTS = [
 ]
 
 if IS_PROD:
-    ALLOWED_HOSTS.append('child-smile-app-fraah4arh5hrhvcq.canadacentral-01.azurewebsites.net')
+    ALLOWED_HOSTS.append('child-smile-app-fraah4arh5hrhvcq.israelcentral-01.azurewebsites.net')
 
 
 # Application definition
