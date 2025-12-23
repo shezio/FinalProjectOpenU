@@ -31,4 +31,5 @@ jobs:
           package: .
           clean: true
           startup-command: >
+            export PYTHONPATH=$PYTHONPATH:/home/site/wwwroot/childsmile:/home/site/wwwroot/childsmile/childsmile_app
             gunicorn childsmile.wsgi:application --bind 0.0.0.0:8000
