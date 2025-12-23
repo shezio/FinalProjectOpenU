@@ -21,11 +21,9 @@ DEBUG = os.getenv("DEBUG","True") == "True"
 ALLOWED_HOSTS = [
     'localhost',
     '127.0.0.1',
+    'app.achildssmile.org.il',
+    'child-smile-app-fraah4arh5hrhvcq.israelcentral-01.azurewebsites.net'
 ]
-
-if IS_PROD:
-    ALLOWED_HOSTS.append('child-smile-app-fraah4arh5hrhvcq.israelcentral-01.azurewebsites.net')
-
 
 # Application definition
 
