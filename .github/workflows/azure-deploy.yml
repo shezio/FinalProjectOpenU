@@ -2,8 +2,7 @@ name: Deploy Django App to Azure Web App
 
 on:
   push:
-    branches:
-      - main
+    branches: [ main ]
   workflow_dispatch:
 
 jobs:
@@ -19,6 +18,12 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
+      # 🧠 מתקין תלויות לפני העלאה (לא בזמן ריצה)
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
         with:
@@ -26,5 +31,4 @@ jobs:
           package: .
           clean: true
           startup-command: >
-            PYTHONPATH=/home/site/wwwroot/childsmile
             gunicorn childsmile.wsgi:application --bind 0.0.0.0:8000
