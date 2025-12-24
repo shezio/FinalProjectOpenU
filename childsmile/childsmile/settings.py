@@ -14,7 +14,7 @@ IS_PROD = os.environ.get("DJANGO_ENV") == "production"
 
 LOCAL_URL = "http://localhost:9000"
 # Temporary FRONTEND URL for frontend testing
-FRONTEND_URL = "https://app.achildssmile.org.il"  # replace with your actual CF URL
+FRONTEND_URL = "https://white-bush-0b90a3603.2.azurestaticapps.net" #"https://app.achildssmile.org.il"  # replace with your actual CF URL
 
 DEBUG = os.getenv("DEBUG","False") == "True"
 
