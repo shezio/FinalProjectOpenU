@@ -23,6 +23,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
+          pip install whitenoise
 
       - name: Build React Frontend
         run: |
@@ -38,6 +39,16 @@ jobs:
             exit 1
           fi
           echo "✅ React build verified: index.html exists"
+
+      - name: Collect Django Static Files
+        run: |
+          cd childsmile
+          python manage.py collectstatic --noinput --settings=childsmile.settings
+          if [ ! -f "staticfiles/index.html" ]; then
+            echo "❌ ERROR: index.html not in staticfiles after collectstatic"
+            exit 1
+          fi
+          echo "✅ Static files collected successfully"
 
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
