@@ -15,11 +15,27 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path, include
+from django.urls import path, include, re_path
 from django.views.decorators.csrf import csrf_exempt
+from django.conf import settings
+from django.conf.urls.static import static
+from django.http import FileResponse
+import os
+
+def react_index(request):
+    index_path = os.path.join(settings.BASE_DIR, "frontend", "dist", "index.html")
+    return FileResponse(open(index_path, "rb"))
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', include('childsmile_app.urls')),  # Exempt all your app URLs
-    path('accounts/', include('allauth.urls')),  # Add this line
+    path('accounts/', include('allauth.urls')),
+
+    # 🔵 API — בלי /api, בדיוק כמו שאתה רוצה
+    path('', include('childsmile_app.urls')),
 ]
+
+# 🔴 React SPA fallback — תמיד אחרון
+if os.environ.get("DJANGO_ENV") == "production":
+    urlpatterns += [
+        re_path(r'^.*$', react_index),
+    ]

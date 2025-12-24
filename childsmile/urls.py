@@ -17,26 +17,26 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include, re_path
 from django.views.decorators.csrf import csrf_exempt
-from django.views.generic import TemplateView
 from django.conf import settings
 from django.conf.urls.static import static
+from django.http import FileResponse
+import os
 
-class ReactIndexView(TemplateView):
-    template_name = "index.html"
+def react_index(request):
+    index_path = os.path.join(settings.BASE_DIR, "frontend", "dist", "index.html")
+    return FileResponse(open(index_path, "rb"))
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', ReactIndexView.as_view()),  # Serve React index.html at root
-    path('', include('childsmile_app.urls')),  # API routes and DRF root
     path('accounts/', include('allauth.urls')),
+
+    # 🔵 API — בלי /api, בדיוק כמו שאתה רוצה
+    path('', include('childsmile_app.urls')),
 ]
 
-# SPA fallback – MUST be last
-urlpatterns += [
-    re_path(r'^.*$', TemplateView.as_view(template_name='index.html')),
-]
-
-# Serve static and media files in DEBUG
-if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+# 🔴 React SPA fallback — תמיד אחרון
+if os.environ.get("DJANGO_ENV") == "production":
+    urlpatterns += [
+        re_path(r'^.*$', react_index),
+    ]
+# DEBUG is always False so no serve static files at all
