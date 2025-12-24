@@ -57,13 +57,6 @@ REST_FRAMEWORK = {
 
 MIDDLEWARE = [
    "django.middleware.security.SecurityMiddleware",
-]
-
-# Add WhiteNoise only in production
-if IS_PROD:
-    MIDDLEWARE.insert(1, "whitenoise.middleware.WhiteNoiseMiddleware")
-
-MIDDLEWARE += [
     "django.contrib.sessions.middleware.SessionMiddleware",
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -148,9 +141,7 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'frontend', 'dist'),
-]
+STATICFILES_DIRS = []  # Frontend on separate service
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
