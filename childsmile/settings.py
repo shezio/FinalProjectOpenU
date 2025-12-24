@@ -83,7 +83,7 @@ ROOT_URLCONF = "childsmile.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [os.path.join(BASE_DIR, 'childsmile', 'frontend', 'dist')],
+        "DIRS": [os.path.join(BASE_DIR, 'frontend', 'dist')],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -140,12 +140,12 @@ USE_I18N = True
 USE_TZ = True
 
 STATIC_URL = '/static/'
-STATIC_ROOT = os.path.join(BASE_DIR, 'childsmile', 'staticfiles')
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'childsmile', 'frontend', 'dist'),
-]
+    os.path.join(BASE_DIR, 'frontend', 'dist'),
+] if os.path.exists(os.path.join(BASE_DIR, 'frontend', 'dist')) else []
 MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'childsmile', 'media')
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 CORS_ALLOW_CREDENTIALS = True
