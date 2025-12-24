@@ -16,6 +16,7 @@ cryptography==46.0.2
 
 # Environment & Configuration
 python-dotenv==1.0.1
+whitenoise==6.6.0
 
 # HTTP & Requests
 requests==2.31.0
