@@ -16,16 +16,14 @@ LOCAL_URL = "http://localhost:9000"
 # Temporary CloudFront URL for frontend testing
 CLOUDFRONT_URL = "https://app.achildssmile.org.il"  # replace with your actual CF URL
 
-DEBUG = os.getenv("DEBUG","True") == "True"
+DEBUG = os.getenv("DEBUG","False") == "True"
 
 ALLOWED_HOSTS = [
     'localhost',
     '127.0.0.1',
+    'app.achildssmile.org.il',
+    'child-smile-app-fraah4arh5hrhvcq.israelcentral-01.azurewebsites.net'
 ]
-
-if IS_PROD:
-    ALLOWED_HOSTS.append('child-smile-app-fraah4arh5hrhvcq.israelcentral-01.azurewebsites.net')
-
 
 # Application definition
 
@@ -85,7 +83,7 @@ ROOT_URLCONF = "childsmile.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [os.path.join(BASE_DIR, 'frontend', 'dist')],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -93,6 +91,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "django.template.context_processors.static",
             ],
         },
     },
@@ -141,6 +140,12 @@ USE_I18N = True
 USE_TZ = True
 
 STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'frontend', 'dist'),
+]
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 CORS_ALLOW_CREDENTIALS = True
