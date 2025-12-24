@@ -15,7 +15,7 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path, include
+from django.urls import path, include, re_path
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import TemplateView
 from django.conf import settings
@@ -25,10 +25,11 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('childsmile_app.urls')),  # Already has /api/ prefixed routes
     path('accounts/', include('allauth.urls')),
-    
-    # Serve React for all other routes (SPA fallback)
-    path('<path:resource>', TemplateView.as_view(template_name='index.html')),
-    path('', TemplateView.as_view(template_name='index.html')),
+]
+
+# SPA fallback – MUST be last
+urlpatterns += [
+    re_path(r'^.*$', TemplateView.as_view(template_name='index.html')),
 ]
 
 # Serve static and media files in DEBUG

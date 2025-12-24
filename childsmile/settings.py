@@ -16,7 +16,7 @@ LOCAL_URL = "http://localhost:9000"
 # Temporary CloudFront URL for frontend testing
 CLOUDFRONT_URL = "https://app.achildssmile.org.il"  # replace with your actual CF URL
 
-DEBUG = os.getenv("DEBUG","True") == "True"
+DEBUG = os.getenv("DEBUG","False") == "True"
 
 ALLOWED_HOSTS = [
     'localhost',
