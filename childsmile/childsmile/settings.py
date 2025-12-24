@@ -13,15 +13,15 @@ SECRET_KEY = os.getenv("SECRET_KEY", "fallback-secret")
 IS_PROD = os.environ.get("DJANGO_ENV") == "production"
 
 LOCAL_URL = "http://localhost:9000"
-# Temporary CloudFront URL for frontend testing
-CLOUDFRONT_URL = "https://app.achildssmile.org.il"  # replace with your actual CF URL
+# Temporary FRONTEND URL for frontend testing
+FRONTEND_URL = "https://app.achildssmile.org.il"  # replace with your actual CF URL
 
 DEBUG = os.getenv("DEBUG","False") == "True"
 
 ALLOWED_HOSTS = [
     'localhost',
     '127.0.0.1',
-    'app.achildssmile.org.il',
+    FRONTEND_URL,
     'child-smile-app-fraah4arh5hrhvcq.israelcentral-01.azurewebsites.net'
 ]
 
@@ -147,7 +147,7 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 CORS_ALLOW_CREDENTIALS = True
-CORS_ALLOWED_ORIGINS = [CLOUDFRONT_URL] if IS_PROD else [LOCAL_URL]
+CORS_ALLOWED_ORIGINS = [FRONTEND_URL] if IS_PROD else [LOCAL_URL]
 SESSION_COOKIE_SAMESITE = "None"
 SESSION_COOKIE_SECURE = True #False if not IS_PROD else True
 
@@ -156,7 +156,7 @@ AUTHENTICATION_BACKENDS = (
     'allauth.account.auth_backends.AuthenticationBackend',  # allauth
 )
 ACCOUNT_DEFAULT_HTTP_PROTOCOL = "https" if IS_PROD else "http"
-CSRF_TRUSTED_ORIGINS = [LOCAL_URL] if not IS_PROD else [CLOUDFRONT_URL]
+CSRF_TRUSTED_ORIGINS = [LOCAL_URL] if not IS_PROD else [FRONTEND_URL]
 USE_X_FORWARDED_HOST = True
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
@@ -189,7 +189,7 @@ ACCOUNT_LOGOUT_ON_GET = True  # Optional: allow GET logout
 # Fix the deprecated setting
 ACCOUNT_SIGNUP_FIELDS = ['email*', 'username*', 'password1*', 'password2*']
 # Redirect to React frontend after Google login
-LOGIN_REDIRECT_URL = CLOUDFRONT_URL + "/#/google-success" if IS_PROD else LOCAL_URL + "/google-success"
+LOGIN_REDIRECT_URL = FRONTEND_URL + "/#/google-success" if IS_PROD else LOCAL_URL + "/google-success"
 
 # Replace your gmail settings with an App Password
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
