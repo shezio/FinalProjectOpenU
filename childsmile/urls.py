@@ -21,9 +21,13 @@ from django.views.generic import TemplateView
 from django.conf import settings
 from django.conf.urls.static import static
 
+class ReactIndexView(TemplateView):
+    template_name = "index.html"
+
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', include('childsmile_app.urls')),  # Already has /api/ prefixed routes
+    path('', ReactIndexView.as_view()),  # Serve React index.html at root
+    path('', include('childsmile_app.urls')),  # API routes and DRF root
     path('accounts/', include('allauth.urls')),
 ]
 
