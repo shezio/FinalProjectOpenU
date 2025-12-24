@@ -17,9 +17,21 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from django.views.decorators.csrf import csrf_exempt
+from django.views.generic import TemplateView
+from django.conf import settings
+from django.conf.urls.static import static
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', include('childsmile_app.urls')),  # Exempt all your app URLs
-    path('accounts/', include('allauth.urls')),  # Add this line
+    path('', include('childsmile_app.urls')),  # Already has /api/ prefixed routes
+    path('accounts/', include('allauth.urls')),
+    
+    # Serve React for all other routes (SPA fallback)
+    path('<path:resource>', TemplateView.as_view(template_name='index.html')),
+    path('', TemplateView.as_view(template_name='index.html')),
 ]
+
+# Serve static and media files in DEBUG
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
