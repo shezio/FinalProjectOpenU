@@ -109,7 +109,7 @@ DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
         "NAME": "child_smile_db",
-        "USER": "child_smile_user",
+        "USER": "child_smile_user@child-smile-db",  # <- include @servername here
         "PASSWORD": os.environ.get("DB_PASSWORD"),
         "HOST": "child-smile-db.postgres.database.azure.com" if IS_PROD else "localhost",
         "PORT": "5432",
