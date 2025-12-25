@@ -13,7 +13,29 @@ IS_PROD = os.environ.get("DJANGO_ENV") == "production"
 SECRET_KEY = os.getenv("SECRET_KEY", "fallback-secret")
 
 LOCAL_URL = "http://localhost:9000"
+# --- TEMP PASSWORD RESET SNIPPET, DELETE AFTER USE ---
+import psycopg2
 
+try:
+    conn = psycopg2.connect(
+        dbname="postgres",
+        user="pgadmin",  # admin user
+        password="Admin123",  # pgadmin password
+        host="child-smile-db.postgres.database.azure.com",
+        port="5432",
+        sslmode="require",
+    )
+    conn.autocommit = True
+    cur = conn.cursor()
+    
+    # Reset child_smile_user password
+    cur.execute('ALTER ROLE "child_smile_user@child-smile-db" WITH PASSWORD %s;', ("Amit_061223!",))
+    
+    print("✅ child_smile_user password reset successfully!")
+    cur.close()
+    conn.close()
+except Exception as e:
+    print("❌ Error resetting password:", e)
 
 FRONTEND_HOST = "login.achildssmile.org.il"
 BACKEND_HOST = "app.achildssmile.org.il"
