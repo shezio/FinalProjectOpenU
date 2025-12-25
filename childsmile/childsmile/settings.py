@@ -9,7 +9,6 @@ load_dotenv()  # Add this line
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = os.getenv("SECRET_KEY", "fallback-secret")
 IS_PROD = os.environ.get("DJANGO_ENV") == "production"
 
 LOCAL_URL = "http://localhost:9000"
@@ -18,7 +17,7 @@ FRONTEND_HOST = "login.achildssmile.org.il"
 BACKEND_HOST = "app.achildssmile.org.il"
 FRONTEND_URL = f"https://{FRONTEND_HOST}"
 BACKEND_URL = f"https://{BACKEND_HOST}"
-DEBUG = os.getenv("DEBUG","False") == "True"
+DEBUG = not IS_PROD
 
 
 ALLOWED_HOSTS = [
@@ -109,7 +108,7 @@ DATABASES = {
         "ENGINE": "django.db.backends.postgresql",
         "NAME": "child_smile_db",
         "USER": "child_smile_user"
-        "PASSWORD": os.getenv("DB_PASSWORD"),
+        "PASSWORD": os.environ.get("DB_PASSWORD"),
         "HOST": "child-smile-db.postgres.database.azure.com" if IS_PROD else "localhost",
         "PORT": "5432",
         "CONN_MAX_AGE": 0,
@@ -200,8 +199,8 @@ EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
-EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
 DEFAULT_FROM_EMAIL = 'noreply@send.amitssmile.com'
 
 # TOTP Settings
