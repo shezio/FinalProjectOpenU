@@ -102,7 +102,11 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = "childsmile.wsgi.application"
-
+print("############################################")
+print("############################################")
+print("DB_PASSWORD =", os.environ.get("DB_PASSWORD"))
+print("############################################")
+print("############################################")
 
 DATABASES = {
     "default": {
