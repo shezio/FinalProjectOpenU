@@ -10,6 +10,7 @@ load_dotenv()  # Add this line
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 IS_PROD = os.environ.get("DJANGO_ENV") == "production"
+SECRET_KEY = os.getenv("SECRET_KEY", "fallback-secret")
 
 LOCAL_URL = "http://localhost:9000"
 
