@@ -14,8 +14,8 @@ IS_PROD = os.environ.get("DJANGO_ENV") == "production"
 
 LOCAL_URL = "http://localhost:9000"
 
-FRONTEND_URL = "https://login.achildssmile.org.il"
-BACKEND_URL = "https://app.achildssmile.org.il" 
+FRONTEND_URL = "login.achildssmile.org.il"
+BACKEND_URL = "app.achildssmile.org.il" 
 DEBUG = os.getenv("DEBUG","False") == "True"
 
 
