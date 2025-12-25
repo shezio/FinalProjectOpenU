@@ -17,7 +17,7 @@ FRONTEND_HOST = "login.achildssmile.org.il"
 BACKEND_HOST = "app.achildssmile.org.il"
 FRONTEND_URL = f"https://{FRONTEND_HOST}"
 BACKEND_URL = f"https://{BACKEND_HOST}"
-DEBUG = not IS_PROD
+DEBUG = os.environ.get("DEBUG","False") == "True"
 
 
 ALLOWED_HOSTS = [
