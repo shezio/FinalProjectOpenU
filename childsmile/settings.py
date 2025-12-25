@@ -19,7 +19,7 @@ BACKEND_HOST = "app.achildssmile.org.il"
 FRONTEND_URL = f"https://{FRONTEND_HOST}"
 BACKEND_URL = f"https://{BACKEND_HOST}"
 DEBUG = os.environ.get("DEBUG","False") == "True"
-
+CLOUDFRONT_URL = FRONTEND_URL
 
 ALLOWED_HOSTS = [
     'localhost',
