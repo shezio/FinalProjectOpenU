@@ -13,9 +13,9 @@ SECRET_KEY = os.getenv("SECRET_KEY", "fallback-secret")
 IS_PROD = os.environ.get("DJANGO_ENV") == "production"
 
 LOCAL_URL = "http://localhost:9000"
-# Temporary FRONTEND URL for frontend testing
-FRONTEND_URL = "https://login.achildssmile.org.il"  # replace with your actual CF URL
 
+FRONTEND_URL = "https://login.achildssmile.org.il"
+BACKEND_URL = "https://app.achildssmile.org.il" 
 DEBUG = os.getenv("DEBUG","False") == "True"
 
 ALLOWED_HOSTS = [
