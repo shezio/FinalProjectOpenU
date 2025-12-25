@@ -14,15 +14,19 @@ IS_PROD = os.environ.get("DJANGO_ENV") == "production"
 
 LOCAL_URL = "http://localhost:9000"
 
-FRONTEND_URL = "login.achildssmile.org.il"
-BACKEND_URL = "app.achildssmile.org.il" 
+
+FRONTEND_HOST = "login.achildssmile.org.il"
+BACKEND_HOST = "app.achildssmile.org.il"
+FRONTEND_URL = f"https://{FRONTEND_HOST}"
+BACKEND_URL = f"https://{BACKEND_HOST}"
 DEBUG = os.getenv("DEBUG","False") == "True"
+
 
 ALLOWED_HOSTS = [
     'localhost',
     '127.0.0.1',
-    FRONTEND_URL,
-    BACKEND_URL,
+    FRONTEND_HOST,
+    BACKEND_HOST,
     'child-smile-app-fraah4arh5hrhvcq.israelcentral-01.azurewebsites.net'
 ]
 
@@ -148,7 +152,7 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 CORS_ALLOW_CREDENTIALS = True
-CORS_ALLOWED_ORIGINS = [FRONTEND_URL,BACKEND_URL] if IS_PROD else [LOCAL_URL]
+CORS_ALLOWED_ORIGINS = [FRONTEND_URL] if IS_PROD else [LOCAL_URL]
 SESSION_COOKIE_SAMESITE = "None"
 SESSION_COOKIE_SECURE = True #False if not IS_PROD else True
 
@@ -157,12 +161,12 @@ AUTHENTICATION_BACKENDS = (
     'allauth.account.auth_backends.AuthenticationBackend',  # allauth
 )
 ACCOUNT_DEFAULT_HTTP_PROTOCOL = "https" if IS_PROD else "http"
-CSRF_TRUSTED_ORIGINS = [LOCAL_URL] if not IS_PROD else [FRONTEND_URL,BACKEND_URL]
+CSRF_TRUSTED_ORIGINS = [LOCAL_URL] if not IS_PROD else [FRONTEND_URL]
 USE_X_FORWARDED_HOST = True
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 
-LOGIN_REDIRECT_URL = '/tasks'  # Redirect to your app's home page
+#LOGIN_REDIRECT_URL = '/tasks'  # Redirect to your app's home page
 # Replace the existing SOCIALACCOUNT_AUTO_SIGNUP line with:
 SOCIALACCOUNT_ADAPTER = 'childsmile_app.adapters.CustomSocialAccountAdapter'
 SOCIALACCOUNT_AUTO_SIGNUP = False  # Don't auto-create accounts
