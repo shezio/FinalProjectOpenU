@@ -23,6 +23,7 @@ ALLOWED_HOSTS = [
     'localhost',
     '127.0.0.1',
     FRONTEND_URL,
+    BACKEND_URL,
     'child-smile-app-fraah4arh5hrhvcq.israelcentral-01.azurewebsites.net'
 ]
 
