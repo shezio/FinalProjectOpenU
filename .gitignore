@@ -177,3 +177,4 @@ childsmile/myenv/Scripts/pip3.exe
 childsmile/myenv/Scripts/sqlformat.exe
 childsmile/myenv/Scripts/django-admin.exe
 childsmile/myenv/Scripts/django-admin.exe
+client_secret_*.json

@@ -2,10 +2,11 @@ name: Deploy Backend to Azure Web App
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main ]  # Deploy from desktop branch for testing
     paths:
       - 'childsmile/**'
       - '!childsmile/frontend/**'
+      - '!childsmile/postgres remote'
       - '.github/workflows/azure-deploy.yml'
   workflow_dispatch:
 
