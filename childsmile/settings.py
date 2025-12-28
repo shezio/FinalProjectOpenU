@@ -106,11 +106,11 @@ WSGI_APPLICATION = "childsmile.wsgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": "child_smile_db",
-        "USER": "child_smile_user",  # <- include @servername here
+        "NAME": os.environ.get("DB_NAME"),
+        "USER": os.environ.get("DB_USER"),
         "PASSWORD": os.environ.get("DB_PASSWORD"),
-        "HOST": "child-smile-db.postgres.database.azure.com" if IS_PROD else "localhost",
-        "PORT": "5432",
+        "HOST": os.environ.get("DB_HOST", "localhost"),
+        "PORT": os.environ.get("DB_PORT", "5432"),
         "CONN_MAX_AGE": 0,
         "OPTIONS": {
             "sslmode": "require" if IS_PROD else "disable",
