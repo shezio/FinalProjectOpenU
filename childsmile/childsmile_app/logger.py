@@ -1,161 +1,97 @@
-"""
-API Logger Module
-Centralized logging for all backend API calls
-Supports multiple log levels, file rotation, and future CloudWatch integration
-"""
-
 import logging
 import logging.handlers
 import os
+import sys
 from datetime import datetime
 import pytz
 import glob
-import sys
 import traceback
 
+# ---------- ENV DETECTION ----------
+IS_AZURE = "DJANGO_ENV" in os.environ and os.environ.get("DJANGO_ENV") == "production"
+
+# ---------- LOG LEVEL ----------
+LOG_LEVEL = os.environ.get("LOG_LEVEL", "INFO").upper()
+
+# ---------- LOG DIR ----------
+if IS_AZURE:
+    LOG_DIR = "/home/logs"
+else:
+    LOG_DIR = os.path.join(os.path.dirname(__file__), "logs")
+
+# ---------- TIMEZONE ----------
+TIMEZONE = pytz.timezone("Asia/Jerusalem")
+
+
 def cleanup_old_logs(log_dir, log_name, backup_count):
-    """
-    Clean up old log files, keeping only the most recent 'backup_count' files.
-    
-    Args:
-        log_dir: Directory containing log files
-        log_name: Prefix for log files
-        backup_count: Number of log files to keep
-    """
     pattern = os.path.join(log_dir, f"{log_name}_*.log")
     files = sorted(glob.glob(pattern), key=os.path.getmtime, reverse=True)
-    if len(files) > backup_count:
-        for f in files[backup_count:]:
-            try:
-                os.remove(f)
-            except OSError:
-                # log the failed removal in logger error
-                api_logger.error(f"Failed to remove log file: {f}")
+    for f in files[backup_count:]:
+        try:
+            os.remove(f)
+        except OSError:
+            pass
+
 
 class APILogger:
-    """
-    Centralized logger for API calls with support for:
-    - Multiple log levels (DEBUG, INFO, WARNING, ERROR, CRITICAL)
-    - Rotating file handler (prevents logs from growing too large)
-    - Custom timestamp format (dd/mm/yyyy HH:MM:SS in Asia/Jerusalem timezone)
-    - Future CloudWatch integration
-    """
-    
     def __init__(
         self,
-        log_dir=None,
-        max_size=10 * 1024 * 1024,  # 10MB default
-        backup_count=5,
-        log_level=logging.INFO,
-        log_name="API"
+        log_name="API",
+        max_size=10 * 1024 * 1024,
+        backup_count=5
     ):
-        """
-        Initialize the API Logger
-        
-        Args:
-            log_dir: Directory to store log files (default: childsmile_app/logs)
-            max_size: Max size of each log file in bytes (default: 10MB)
-            backup_count: Number of backup log files to keep (default: 5)
-            log_level: Logging level (default: INFO)
-            log_name: Prefix for log files (default: API)
-        """
-        if log_dir is None:
-            log_dir = os.path.join(os.path.dirname(__file__), "logs")
-        
-        self.log_dir = log_dir
-        self.max_size = max_size
-        self.backup_count = backup_count
-        self.log_name = log_name
-        self.timezone = pytz.timezone("Asia/Jerusalem")
-        
-        # Create logs directory if it doesn't exist
-        if not os.path.exists(log_dir):
-            os.makedirs(log_dir)
-        
-        # before creating new log file, clean up old logs
-        cleanup_old_logs(log_dir, log_name, backup_count)
+        os.makedirs(LOG_DIR, exist_ok=True)
+        cleanup_old_logs(LOG_DIR, log_name, backup_count)
 
-        # ✅ Create logger with DEBUG level (capture everything)
         self.logger = logging.getLogger(f"childsmile.{log_name}")
-        self.logger.setLevel(logging.DEBUG)  # Logger captures ALL levels
-        
-        # Remove existing handlers to avoid duplicates
-        self.logger.handlers = []
-        
-        # Create rotating file handler
+        self.logger.setLevel(logging.DEBUG)  # capture all
+        self.logger.handlers.clear()
+        self.logger.propagate = False
+
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        log_file = os.path.join(log_dir, f"{log_name}_{timestamp}.log")
-        
-        handler = logging.handlers.RotatingFileHandler(
+        log_file = os.path.join(LOG_DIR, f"{log_name}_{timestamp}.log")
+
+        formatter = logging.Formatter('%(message)s')
+
+        # 📁 File handler (local + Azure)
+        file_handler = logging.handlers.RotatingFileHandler(
             log_file,
             maxBytes=max_size,
-            backupCount=backup_count
+            backupCount=backup_count,
+            encoding="utf-8"
         )
-        # ✅ Handler level controls what gets written to file
-        handler.setLevel(log_level)
-        
-        # Create formatter with custom timestamp
-        formatter = logging.Formatter(
-            fmt='%(message)s',
-            datefmt='%d/%m/%Y %H:%M:%S'
-        )
-        handler.setFormatter(formatter)
-        
-        # Add handler to logger
-        self.logger.addHandler(handler)
-    
-    def _format_message(self, level, message):
-        """
-        Format log message with timestamp and level
-        
-        Args:
-            level: Log level string (DEBUG, INFO, WARNING, ERROR, CRITICAL)
-            message: Message to log
-            
-        Returns:
-            Formatted message with timestamp
-        """
-        formatted_time = datetime.now(self.timezone).strftime("%d/%m/%Y %H:%M:%S")
-        return f"{formatted_time} [{level}] {message}"
-    
-    def debug(self, message):
-        """Log debug message"""
-        self.logger.debug(self._format_message("DEBUG", message))
-    
-    def info(self, message):
-        """Log info message"""
-        self.logger.info(self._format_message("INFO", message))
-    
-    def warning(self, message):
-        """Log warning message"""
-        self.logger.warning(self._format_message("WARNING", message))
-    
-    def error(self, message):
-        """Log error message"""
-        self.logger.error(self._format_message("ERROR", message))
-    
-    def critical(self, message):
-        """Log critical message"""
-        self.logger.critical(self._format_message("CRITICAL", message))
-    
-    def exception(self, message):
-        """Log exception message"""
-        self.logger.exception(self._format_message("EXCEPTION", message))
+        file_handler.setLevel(LOG_LEVEL)
+        file_handler.setFormatter(formatter)
 
-    def verbose(self, message):
-        """Log verbose/debug message"""
-        self.logger.debug(self._format_message("VERBOSE", message))
+        # 📺 Console handler (local terminal + Azure log stream)
+        console_handler = logging.StreamHandler(sys.stdout)
+        console_handler.setLevel(LOG_LEVEL)
+        console_handler.setFormatter(formatter)
 
-# Global logger instance for API calls
+        self.logger.addHandler(file_handler)
+        self.logger.addHandler(console_handler)
+
+        env = "AZURE" if IS_AZURE else "LOCAL"
+        self.info(f"Logger initialized ({env}) level={LOG_LEVEL}")
+
+    def _fmt(self, level, msg):
+        ts = datetime.now(TIMEZONE).strftime("%d/%m/%Y %H:%M:%S")
+        return f"{ts} [{level}] {msg}"
+
+    def debug(self, msg): self.logger.debug(self._fmt("DEBUG", msg))
+    def verbose(self, msg): self.logger.debug(self._fmt("VERBOSE", msg))
+    def info(self, msg): self.logger.info(self._fmt("INFO", msg))
+    def warning(self, msg): self.logger.warning(self._fmt("WARNING", msg))
+    def error(self, msg): self.logger.error(self._fmt("ERROR", msg))
+    def critical(self, msg): self.logger.critical(self._fmt("CRITICAL", msg))
+    def exception(self, msg): self.logger.exception(self._fmt("EXCEPTION", msg))
+
+
+# 🌍 Global instance
 try:
-    api_logger = APILogger(log_level=logging.ERROR, log_name="API")
+    api_logger = APILogger()
 except Exception as e:
-    print(f"ERROR: Failed to initialize APILogger: {e}")
-    print(f"Traceback: {traceback.format_exc()}")
-    # Fallback to basic logger
+    print(f"Failed to initialize API logger: {e}")
+    traceback.print_exc()
     api_logger = logging.getLogger("childsmile.API")
-    api_logger.setLevel(logging.DEBUG)
-    handler = logging.StreamHandler(sys.stdout)
-    handler.setLevel(logging.INFO)
-    formatter = logging.Formatter('%(message)s')
-    api_logger.addHandler(handler)
+    api_logger.addHandler(logging.StreamHandler(sys.stdout))

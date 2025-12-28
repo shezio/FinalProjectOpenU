@@ -7,12 +7,55 @@ from rest_framework.decorators import api_view
 from django_ratelimit.decorators import ratelimit
 from django.core.mail import send_mail
 from django.conf import settings
+from django.contrib.sessions.models import Session
+from django.utils import timezone
 from .models import Staff, TOTPCode
 from .utils import *
 from .audit_utils import log_api_action
 from .logger import api_logger
 import json
 import traceback
+
+
+def logout_all_other_sessions(user_id, current_session_key):
+    """
+    Delete all sessions for a user except the current one.
+    This logs the user out from all other devices.
+    """
+    try:
+        # Get the user's email from Staff model for logging
+        try:
+            api_logger.debug("Fetching user email for logging")
+            api_logger.debug(f"User ID: {user_id}")
+            staff_user = Staff.objects.get(staff_id=user_id)
+            user_email = staff_user.email
+            api_logger.debug(f"User email: {user_email}")
+        except Staff.DoesNotExist:
+            user_email = 'unknown'
+        
+        # Get all non-expired sessions
+        all_sessions = Session.objects.filter(expire_date__gte=timezone.now())
+        deleted_count = 0
+        
+        for session in all_sessions:
+            try:
+                session_data = session.get_decoded()
+                # Check if this session belongs to the same user
+                if session_data.get('user_id') == user_id:
+                    # Don't delete the current session
+                    if session.session_key != current_session_key:
+                        session.delete()
+                        deleted_count += 1
+            except Exception:
+                # Skip invalid sessions
+                continue
+
+        if deleted_count > 0:
+            api_logger.info(f"Logged out {deleted_count} other session(s) for user {user_id} with email {user_email}")
+        return deleted_count
+    except Exception as e:
+        api_logger.error(f"Error logging out other sessions: {e}")
+        return 0
 
 
 @conditional_csrf
@@ -344,6 +387,12 @@ def verify_totp(request):
         request.session["username"] = staff_user.username
         request.session.set_expiry(86400)
         
+        # Logout all other sessions for this user (single device login)
+        other_sessions_count = logout_all_other_sessions(
+            staff_user.staff_id, 
+            request.session.session_key
+        )
+        
         # **ENHANCED USER LOGIN SUCCESS**
         log_api_action(
             request=request,
@@ -440,6 +489,12 @@ def google_login_success(request):
         request.session["user_id"] = staff_user.staff_id
         request.session["username"] = staff_user.username
         request.session.set_expiry(86400)
+        
+        # Logout all other sessions for this user (single device login)
+        other_sessions_count = logout_all_other_sessions(
+            staff_user.staff_id, 
+            request.session.session_key
+        )
         
         # **ENHANCED GOOGLE LOGIN SUCCESS**
         log_api_action(

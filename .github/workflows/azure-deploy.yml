@@ -2,7 +2,7 @@ name: Deploy Backend to Azure Web App
 
 on:
   push:
-    branches: [ main ]
+    branches: [ desktop ]  # Deploy from desktop branch for testing
     paths:
       - 'childsmile/**'
       - '!childsmile/frontend/**'
