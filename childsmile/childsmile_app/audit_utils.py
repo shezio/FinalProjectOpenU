@@ -7,13 +7,39 @@ from django.http import JsonResponse
 from .logger import api_logger
 
 def get_client_ip(request):
-    """Get client IP address from request"""
-    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
-    if x_forwarded_for:
-        ip = x_forwarded_for.split(',')[0]
+    """Get client IP address from request - handles Azure proxies"""
+    ip = None
+    
+    # Azure-specific headers (highest priority)
+    # X-Client-IP is set by Azure Front Door/Application Gateway
+    if request.META.get('HTTP_X_CLIENT_IP'):
+        ip = request.META.get('HTTP_X_CLIENT_IP')
+    # X-Forwarded-For is standard proxy header
+    elif request.META.get('HTTP_X_FORWARDED_FOR'):
+        # Can contain multiple IPs: "client, proxy1, proxy2" - get the first (real client)
+        ip = request.META.get('HTTP_X_FORWARDED_FOR').split(',')[0].strip()
+    # X-Real-IP is sometimes used by Nginx
+    elif request.META.get('HTTP_X_REAL_IP'):
+        ip = request.META.get('HTTP_X_REAL_IP')
+    # Fallback to REMOTE_ADDR
     else:
         ip = request.META.get('REMOTE_ADDR')
-    return ip
+    
+    if not ip:
+        return None
+    
+    # Remove port if present (e.g., '79.177.147.153:8922' -> '79.177.147.153')
+    # Azure sometimes includes the source port
+    if ':' in ip:
+        # Check if it's IPv6 (contains multiple colons) or IPv4 with port
+        if ip.count(':') == 1:
+            # IPv4 with port - extract just the IP
+            ip = ip.split(':')[0]
+        elif ip.startswith('['):
+            # IPv6 with port format: [::1]:8080
+            ip = ip.split(']')[0][1:]
+    
+    return ip.strip() if ip else None
 
 def get_user_info(request):
     """Extract user information from request"""
