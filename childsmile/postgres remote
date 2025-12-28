@@ -3,7 +3,7 @@ shlomosmac@Shlomoss-MacBook-Pro ~ % export PGHOST=child-smile-db.postgres.databa
 export PGUSER=child_smile_user
 export PGPORT=5432
 export PGDATABASE=child_smile_db
-export PGPASSWORD="Amit_061223\!"
+export PGPASSWORD equals (not = so gitguardian isnt angry) The name and  _ and date and ! with quotes
 shlomosmac@Shlomoss-MacBook-Pro ~ % psql
 psql (14.18 (Homebrew), server 14.20)
 SSL connection (protocol: TLSv1.3, cipher: TLS_AES_256_GCM_SHA384, bits: 256, compression: off)

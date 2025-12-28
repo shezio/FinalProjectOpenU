@@ -6,6 +6,7 @@ on:
     paths:
       - 'childsmile/**'
       - '!childsmile/frontend/**'
+      - '!childsmile/postgres remote'
       - '.github/workflows/azure-deploy.yml'
   workflow_dispatch:
 
