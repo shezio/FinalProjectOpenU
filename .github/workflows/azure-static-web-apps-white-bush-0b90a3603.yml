@@ -3,20 +3,14 @@ name: Deploy Frontend to Azure Static Web Apps
 on:
   push:
     branches:
-      - main
+      - main  # Only deploy after merge to main
     paths:
       - 'childsmile/frontend/**'
       - '.github/workflows/azure-static-web-apps-white-bush-0b90a3603.yml'
-  pull_request:
-    types: [opened, synchronize, reopened, closed]
-    branches:
-      - main
-    paths:
-      - 'childsmile/frontend/**'
+  # Removed pull_request trigger - we only want to deploy AFTER merge, not on PR open/sync
 
 jobs:
   build_and_deploy_job:
-    if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed')
     runs-on: ubuntu-latest
     name: Build and Deploy Job
     permissions:
@@ -50,14 +44,3 @@ jobs:
           output_location: "dist" # Built app content directory - optional
           github_id_token: ${{ steps.idtoken.outputs.result }}
           ###### End of Repository/Build Configurations ######
-
-  close_pull_request_job:
-    if: github.event_name == 'pull_request' && github.event.action == 'closed'
-    runs-on: ubuntu-latest
-    name: Close Pull Request Job
-    steps:
-      - name: Close Pull Request
-        id: closepullrequest
-        uses: Azure/static-web-apps-deploy@v1
-        with:
-          action: "close"
