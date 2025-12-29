@@ -41,6 +41,7 @@ from .task_views import (
     update_task,
     update_task_status,
     revert_task_status,
+    check_monthly_review_tasks,
 )
 from .report_views import (
     get_families_per_location_report,
@@ -142,6 +143,11 @@ urlpatterns = [
         "api/tasks/revert-status/<int:task_id>/",
         revert_task_status,
         name="revert_task_status",
+    ),
+    path(
+        "api/tasks/check-monthly-review/",
+        check_monthly_review_tasks,
+        name="check_monthly_review_tasks",
     ),
     path(
         "api/reports/families-per-location-report/",

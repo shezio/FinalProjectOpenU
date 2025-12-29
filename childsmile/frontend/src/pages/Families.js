@@ -723,7 +723,7 @@ const Families = () => {
                 <p>{t('Expected End Treatment by Protocol')}: {selectedFamily.expected_end_treatment_by_protocol || '---'}</p>
                 <p>{t('Has Completed Treatments')}: {selectedFamily.has_completed_treatments ? t('Yes') : t('No')}</p>
                 <p>{t('Details for Tutoring')}: {selectedFamily.details_for_tutoring || '---'}</p>
-                <p>{t('Status')}: {selectedFamily.status || 'טיפולים'}</p>
+                <p>{t('Last Review Talk Conducted')}: {selectedFamily.last_review_talk_conducted || '---'}</p>
               </div>
               <button onClick={closeFamilyDetails}>{t('Close')}</button>
             </div>

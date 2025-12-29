@@ -24,6 +24,11 @@ AND role_id NOT IN (
     AND action = 'UPDATE'
 );
 
+
+-- Replace 'your_enum_name' with your actual enum name
+SELECT UNNEST(enum_range(NULL::task_t)) AS enum_value;
+
+
 -- get all tables names used by any API in BE and also any table used by auth or by audit
 SELECT DISTINCT resource
 FROM public.childsmile_app_permissions

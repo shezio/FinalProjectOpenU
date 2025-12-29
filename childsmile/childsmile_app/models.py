@@ -208,6 +208,8 @@ class Children(models.Model):
         null=False,
         blank=False,
     )
+    # Track last review talk conducted date for monthly follow-up tasks
+    last_review_talk_conducted = models.DateField(null=True, blank=True)
 
     def __str__(self):
         return f"{self.childfirstname} {self.childsurname}"

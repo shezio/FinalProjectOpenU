@@ -891,6 +891,9 @@ const resources = {
       "Reactivation Verification": "אימות הפעלה מחדש",
       "Verify & Reactivate": "אמת והפעל מחדש",
       "Verification code sent to your email": "קוד האימות נשלח לכתובת ה-Email שלך",
+      "Last Review Talk Conducted": "תאריך שיחת ביקורת אחרונה",
+      "Monthly family review talk for": "שיחת ביקורת חודשית עבור",
+      "Last review date": "תאריך שיחה אחרונה",
 
     }
   }
