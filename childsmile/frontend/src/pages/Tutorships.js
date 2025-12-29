@@ -420,6 +420,7 @@ const Tutorships = () => {
         expected_end_treatment_by_protocol: row.expected_end_treatment_by_protocol ?? "---",
         has_completed_treatments: row.has_completed_treatments ?? false,
         details_for_tutoring: row.details_for_tutoring ?? "---",
+        last_review_talk_conducted: row.last_review_talk_conducted ?? "---",
         tutor_city: row.tutor_city ?? "---",
         tutor_age: row.tutor_age ?? "---",
         tutor_gender: row.tutor_gender ?? null,
@@ -535,6 +536,7 @@ const Tutorships = () => {
           expected_end_treatment_by_protocol: family.expected_end_treatment_by_protocol ?? "---",
           has_completed_treatments: family.has_completed_treatments ?? false,
           details_for_tutoring: family.details_for_tutoring ?? "---",
+          last_review_talk_conducted: family.last_review_talk_conducted ?? "---",
           status: family.status ?? "---",
           // Tutor fields
           tutor_full_name: `${tutorship.tutor_firstname ?? tutor.first_name ?? "---"} ${tutorship.tutor_lastname ?? tutor.last_name ?? "---"}`,
@@ -980,6 +982,7 @@ const Tutorships = () => {
                         <tr><td>{t('Expected End Treatment by Protocol')}</td><td> {selectedMatchForInfo.expected_end_treatment_by_protocol || '---'}</td></tr>
                         <tr><td>{t('Has Completed Treatments')}</td><td> {selectedMatchForInfo.has_completed_treatments ? t('Yes') : t('No')}</td></tr>
                         <tr><td>{t('Details for Tutoring')}</td><td> {selectedMatchForInfo.details_for_tutoring || '---'}</td></tr>
+                        <tr><td>{t('Last Review Talk Conducted')}</td><td> {selectedMatchForInfo.last_review_talk_conducted || '---'}</td></tr>
                         <tr><td>{t('Status')}</td><td> {selectedMatchForInfo.status}</td></tr>
                       </tbody>
                     </table>

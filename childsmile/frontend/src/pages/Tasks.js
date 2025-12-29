@@ -327,6 +327,49 @@ const Tasks = () => {
     return taskType ? taskType.name : '';
   };
 
+  // Check if task is a monthly family review task
+  const isMonthlyReviewTask = (taskDescription) => {
+    return taskDescription && taskDescription.includes('Monthly family review talk for');
+  };
+
+  // Extract child name and last review date from monthly review task description
+  const parseMonthlyReviewTask = (taskDescription) => {
+    // Description format: "Monthly family review talk for {child_name} - Last talk: {date} - Conduct check-up call with family"
+    const regex = /Monthly family review talk for (.+?) - Last talk: (.+?) - Conduct check-up call with family/;
+    const match = taskDescription.match(regex);
+    
+    if (match) {
+      return {
+        childName: match[1],
+        lastReviewDate: match[2],
+        isMonthly: true
+      };
+    }
+    return { isMonthly: false };
+  };
+
+  // Get display description for monthly review tasks
+  const getDisplayDescription = (task) => {
+    if (isMonthlyReviewTask(task.description)) {
+      const parsed = parseMonthlyReviewTask(task.description);
+      if (parsed.isMonthly) {
+        return `${t('Monthly family review talk for')} ${parsed.childName}`;
+      }
+    }
+    return task.description;
+  };
+
+  // Get last review date for monthly review tasks
+  const getLastReviewDate = (task) => {
+    if (isMonthlyReviewTask(task.description)) {
+      const parsed = parseMonthlyReviewTask(task.description);
+      if (parsed.isMonthly) {
+        return parsed.lastReviewDate;
+      }
+    }
+    return null;
+  };
+
   const handleTaskClick = (task) => {
     setSelectedTask(task);
   };
@@ -782,8 +825,11 @@ const Tasks = () => {
                                           setSelectedTask(task);
                                         }}
                                       >
-                                        <h2>{task.description}</h2>
+                                        <h2>{getDisplayDescription(task)}</h2>
                                         <p>יש לבצע עד: {task.due_date}</p>
+                                        {isMonthlyReviewTask(task.description) && getLastReviewDate(task) && (
+                                          <p>{t('Last review date')}: {getLastReviewDate(task)}</p>
+                                        )}
                                         {!snapshot.isDragging && (
                                           <p>סטטוס: {task.status}</p>
                                         )}
@@ -860,8 +906,11 @@ const Tasks = () => {
                     </div>
                   )}
                   <div className="task-details-content">
-                    <h2>{selectedTask.description}</h2>
+                    <h2>{getDisplayDescription(selectedTask)}</h2>
                     <p>יש לבצע עד: {selectedTask.due_date}</p>
+                    {isMonthlyReviewTask(selectedTask.description) && getLastReviewDate(selectedTask) && (
+                      <p>{t('Last review date')}: {getLastReviewDate(selectedTask)}</p>
+                    )}
                     <p>סטטוס: {selectedTask.status}</p>
                     <p>נוצרה ב: {selectedTask.created}</p>
                     <p>עודכנה ב: {selectedTask.updated}</p>

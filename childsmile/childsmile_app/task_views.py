@@ -14,7 +14,7 @@ from .models import (
     General_V_Feedback,
     Tasks,
     Task_Types,
-    PossibleMatches,  # Add this line
+    PossibleMatches,
     InitialFamilyData,
 )
 from .unused_views import (
@@ -84,6 +84,7 @@ warnings.filterwarnings(
 @api_view(["GET"])
 def get_user_tasks(request):
     api_logger.info("get_user_tasks called")
+    
     user_id = request.session.get("user_id")
     if not user_id:
         log_api_action(
@@ -100,10 +101,11 @@ def get_user_tasks(request):
     try:
         # Fetch the user
         user = Staff.objects.get(staff_id=user_id)
-        api_logger.debug(f"Logged-in user: {user.username}")
-
-        # Check if the user is an admin
+        
+        # SECURITY: Only admin users can trigger monthly task creation
         user_is_admin = is_admin(user)
+        
+        api_logger.debug(f"Logged-in user: {user.username}")
         api_logger.debug(f"Is user '{user.username}' an admin? {user_is_admin}")
 
         # Always fetch tasks from DB, no cache
@@ -776,6 +778,15 @@ def update_task_status(request, task_id):
             if task.task_type:
                 api_logger.debug(f"task_type = {task.task_type.task_type}")
             
+            # UPDATE: If this is a monthly family review task, update last_review_talk_conducted
+            if task.task_type and task.task_type.task_type == "MONTHLY_FAMILY_REVIEW_TALK" and task.related_child:
+                try:
+                    task.related_child.last_review_talk_conducted = timezone.now().date()
+                    task.related_child.save()
+                    api_logger.info(f"Updated last_review_talk_conducted for child {task.related_child.child_id} to {timezone.now().date()}")
+                except Exception as e:
+                    api_logger.error(f"Error updating last_review_talk_conducted for child {task.related_child_id}: {str(e)}")
+            
             # Delete all previous status records for this task since it's now completed
             try:
                 from .models import PrevTaskStatuses
@@ -1417,3 +1428,47 @@ def update_task(request, task_id):
             status_code=500
         )
         return JsonResponse({"error": str(e)}, status=500)
+
+
+@api_view(["POST"])
+def check_monthly_review_tasks(request):
+    """
+    Check and create monthly family review tasks.
+    
+    This endpoint can be called by Azure Scheduler, Logic App, or any external service.
+    It checks all families and creates review tasks for those needing follow-up.
+    
+    Authentication: Optional (can use API key or webhook secret in header)
+    
+    Returns:
+        - families_checked: Total active families
+        - tasks_created: New tasks created
+        - tasks_skipped: Families skipped (recent review or existing task)
+        - status: 'completed', 'disabled', or 'error'
+    """
+    api_logger.info("check_monthly_review_tasks endpoint called")
+    
+    try:
+        from .monthly_tasks import check_and_create_monthly_review_tasks
+        
+        # Call the main logic
+        result = check_and_create_monthly_review_tasks()
+        
+        api_logger.info(f"Monthly review check result: {result}")
+        
+        return JsonResponse({
+            "status": result.get('status'),
+            "families_checked": result.get('families_checked'),
+            "tasks_created": result.get('tasks_created'),
+            "tasks_skipped": result.get('tasks_skipped'),
+            "errors": result.get('errors'),
+            "message": f"Families checked: {result.get('families_checked')}, Tasks created: {result.get('tasks_created')}"
+        }, status=200)
+        
+    except Exception as e:
+        api_logger.error(f"Error in check_monthly_review_tasks endpoint: {str(e)}")
+        return JsonResponse({
+            "status": "error",
+            "error": str(e),
+            "message": "Failed to check monthly review tasks"
+        }, status=500)

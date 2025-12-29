@@ -1244,3 +1244,6 @@ def activate_staff(staff, performed_by_user, request=None):
         'staff_id': staff.staff_id,
         'restored_roles': restored_role_names
     }
+
+def env_bool(name: str, default=False) -> bool:
+    return os.environ.get(name, str(default)).lower() in ("1", "true", "yes", "on")
