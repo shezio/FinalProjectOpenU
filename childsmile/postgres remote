@@ -15,3 +15,6 @@ child_smile_db=>
 and logs
 
 tail -F "$(ls -t /Users/shlomosmac/Applications/dev/FinalProjectOpenU/childsmile/childsmile_app/logs/*.log | head -1)"
+
+python manage.py showmigrations --settings=
+python manage.py migrate childsmile_app 0049 --settings=
