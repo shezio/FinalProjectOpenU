@@ -59,4 +59,4 @@ jobs:
           app-name: child-smile-app
           package: .
           clean: true
-          startup-command: bash -c "cd /home/site/wwwroot/childsmile && python manage.py migrate --noinput && export PYTHONPATH=\$PYTHONPATH:/home/site/wwwroot/childsmile:/home/site/wwwroot/childsmile/childsmile_app && gunicorn childsmile.wsgi:application --workers 1 --timeout 300 --bind 0.0.0.0:8000"
+          startup-command: bash -c "cd /home/site/wwwroot/childsmile && export PYTHONPATH=\$PYTHONPATH:/home/site/wwwroot/childsmile:/home/site/wwwroot/childsmile/childsmile_app && timeout 600 python manage.py migrate --noinput || true && gunicorn childsmile.wsgi:application --workers 1 --timeout 600 --bind 0.0.0.0:8000"
