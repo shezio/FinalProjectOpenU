@@ -2,6 +2,7 @@ import React, { useEffect, useState, useMemo } from 'react';
 import axios from '../axiosConfig';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+const isProd = process.env.NODE_ENV === 'production';
 
 const GoogleSuccess = () => {
   const { t } = useTranslation();
@@ -29,9 +30,10 @@ const GoogleSuccess = () => {
           setProgress(prev => Math.min(prev + Math.random() * 8, 90));
         }, 500);
 
+        const loginAnimationDelay = isProd ? 2500 : 500;
         setStatusText('מכינים חיוך...');
-        await new Promise(resolve => setTimeout(resolve, 3000));
-        
+        await new Promise(resolve => setTimeout(resolve, loginAnimationDelay));
+
         setProgress(20);
         setStatusText('מתחברים...');
         
@@ -39,8 +41,8 @@ const GoogleSuccess = () => {
         const response = await axios.post('/api/google-login-success/');
         
         if (response.data.user_id) {
-          await new Promise(resolve => setTimeout(resolve, 3000));
-          
+          await new Promise(resolve => setTimeout(resolve, loginAnimationDelay));
+
           setProgress(40);
           setStatusText('אוספים את הכוכבים...');
           
@@ -51,9 +53,8 @@ const GoogleSuccess = () => {
           // Get permissions
           const permissionsResponse = await axios.get('/api/permissions/');
           localStorage.setItem('permissions', JSON.stringify(permissionsResponse.data.permissions));
-          
-          await new Promise(resolve => setTimeout(resolve, 3000));
-          
+          await new Promise(resolve => setTimeout(resolve, loginAnimationDelay));
+
           setProgress(70);
           setStatusText('מכינים קסם...');
           
@@ -66,7 +67,7 @@ const GoogleSuccess = () => {
           }));
           localStorage.setItem('staff', JSON.stringify(staffs));
           
-          await new Promise(resolve => setTimeout(resolve, 3000));
+          await new Promise(resolve => setTimeout(resolve, loginAnimationDelay));
           
           setProgress(100);
           setStatusText('הכל מוכן ✨');
@@ -74,7 +75,7 @@ const GoogleSuccess = () => {
           clearInterval(progressInterval);
           
           // Final delay to show completion
-          await new Promise(resolve => setTimeout(resolve, 3000));
+          await new Promise(resolve => setTimeout(resolve, loginAnimationDelay));
           
           // Navigate to tasks
           navigate('/tasks');

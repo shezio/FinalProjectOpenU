@@ -71,6 +71,12 @@ html {
   }
 }
 
+@media (max-width: 2400px) {
+  .families-grid-container {
+    margin-right: 300px;
+    /* Further adjust for even wider sidebar */
+  }
+}
 /* Table styling - THE ACTUAL GRID WITH GLASSMORPHISM BUBBLE EFFECT */
 .families-data-grid {
   width: 100%;

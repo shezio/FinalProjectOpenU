@@ -57,7 +57,7 @@ def generate_ai_video(video_id, dashboard_data, timeframe, duration, pages, styl
     except ImportError as e:
         print(f"❌ Import error: {e}")
         raise Exception(f"Missing dependency: {e}")
-    
+
     # Create temp directory
     temp_dir = Path(tempfile.gettempdir()) / 'childsmile_videos'
     temp_dir.mkdir(exist_ok=True)
@@ -235,27 +235,54 @@ def generate_marketing_script(dashboard_data, timeframe, style):
 def create_professional_slides(dashboard_data, timeframe):
     """Create beautiful slides with system data using Pillow"""
     from PIL import Image, ImageDraw, ImageFont
-    
+    import os
+
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+    FONT_DIR = os.path.join(BASE_DIR, "fonts")
+
+    FONTS = {
+        "regular": os.path.join(FONT_DIR, "Alef-Regular.ttf"),
+        "bold": os.path.join(FONT_DIR, "Alef-Bold.ttf"),
+    }
+
+    def load_font(kind: str, size: int) -> ImageFont.FreeTypeFont:
+        path = FONTS[kind]
+        if not os.path.exists(path):
+            raise RuntimeError(f"Font missing: {path}")
+        return ImageFont.truetype(path, size)
+
     slides = []
     width, height = 1280, 720
     
-    # Try to load a Hebrew-supporting font
-    try:
-        # macOS Hebrew fonts
-        font_large = ImageFont.truetype('/System/Library/Fonts/Supplemental/Arial Unicode.ttf', 60)
-        font_medium = ImageFont.truetype('/System/Library/Fonts/Supplemental/Arial Unicode.ttf', 40)
-        font_small = ImageFont.truetype('/System/Library/Fonts/Supplemental/Arial Unicode.ttf', 32)
-    except:
+    use_system_fonts = os.environ.get("USE_SYSTEM_FONTS", "false").lower() == "true"
+
+    if use_system_fonts:
         try:
-            font_large = ImageFont.truetype('/System/Library/Fonts/Supplemental/Arial.ttf', 60)
-            font_medium = ImageFont.truetype('/System/Library/Fonts/Supplemental/Arial.ttf', 40)
-            font_small = ImageFont.truetype('/System/Library/Fonts/Supplemental/Arial.ttf', 32)
-        except:
-            # Fallback to default
-            font_large = ImageFont.load_default()
-            font_medium = ImageFont.load_default()
-            font_small = ImageFont.load_default()
-    
+            font_large = ImageFont.truetype(
+                "/System/Library/Fonts/Supplemental/Arial Unicode.ttf", 60
+            )
+            font_medium = ImageFont.truetype(
+                "/System/Library/Fonts/Supplemental/Arial Unicode.ttf", 40
+            )
+            font_small = ImageFont.truetype(
+                "/System/Library/Fonts/Supplemental/Arial Unicode.ttf", 32
+            )
+        except Exception:
+            try:
+                font_large = ImageFont.truetype('/System/Library/Fonts/Supplemental/Arial.ttf', 60)
+                font_medium = ImageFont.truetype('/System/Library/Fonts/Supplemental/Arial.ttf', 40)
+                font_small = ImageFont.truetype('/System/Library/Fonts/Supplemental/Arial.ttf', 32)
+            except Exception:
+                # Fallback to bundled fonts if system fonts fail
+                font_large = load_font("bold", 60)
+                font_medium = load_font("regular", 40)
+                font_small = load_font("regular", 32)
+    else:
+        # ✅ Production-safe, deterministic path
+        font_large = load_font("bold", 60)
+        font_medium = load_font("regular", 40)
+        font_small = load_font("regular", 32)
+
     # Slide 1: Title Slide
     img1 = Image.new('RGB', (width, height), color='#667EEA')
     draw1 = ImageDraw.Draw(img1)
