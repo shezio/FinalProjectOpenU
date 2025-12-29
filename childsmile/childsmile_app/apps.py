@@ -10,5 +10,9 @@ class ChildsmileAppConfig(AppConfig):
         Initialize background scheduler when Django app is ready.
         This will run the monthly task check at 4:00 AM Israel time daily.
         """
-        from .scheduler import start_scheduler
-        start_scheduler()
+        try:
+            from .scheduler import start_scheduler
+            start_scheduler()
+        except ImportError:
+            # apscheduler not installed - this is OK for test/CI environments
+            pass
