@@ -19,6 +19,8 @@ const hospitalsList = hospitals.map((hospital) => hospital.trim()).filter((hospi
 
 const hasTutorFeedbacksViewPermission = hasViewPermissionForTable("tutor_feedback");
 
+const ENABLE_BULK_DELETE = process.env.REACT_APP_ENABLE_BULK_DELETE === 'true';
+
 const TutorFeedbacks = () => {
   const { t } = useTranslation();
   const [loading, setLoading] = useState(true);
@@ -26,6 +28,7 @@ const TutorFeedbacks = () => {
   const [filteredFeedbacks, setFilteredFeedbacks] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [canDelete, setCanDelete] = useState(false);
+  const [selectedFeedbacks, setSelectedFeedbacks] = useState([]);
 
 
   // Filters
@@ -387,6 +390,25 @@ const TutorFeedbacks = () => {
       });
   };
 
+  const handleBulkDelete = () => {
+    if (selectedFeedbacks.length === 0) {
+      toast.warn(t("No feedbacks selected for deletion"));
+      return;
+    }
+    if (window.confirm(t("Are you sure you want to delete the selected feedbacks?"))) {
+      Promise.all(selectedFeedbacks.map(id => axios.delete(`/api/delete_tutor_feedback/${id}/`)))
+        .then(() => {
+          toast.success(t("Selected feedbacks deleted successfully"));
+          setSelectedFeedbacks([]);
+          fetchData();
+        })
+        .catch((error) => {
+          feedbackShowErrorToast(t, "Error deleting feedbacks", error);
+          console.error("Error deleting feedbacks:", error);
+        });
+    }
+  };
+
 
   /* if user doesn't have permission to view the page, show a message */
   if (!hasTutorFeedbacksViewPermission) {
@@ -500,6 +522,19 @@ const TutorFeedbacks = () => {
               <table className="feedbacks-data-grid">
                 <thead>
                   <tr>
+                    {ENABLE_BULK_DELETE && <th className="feedbacks-checkbox-column">
+                      <input
+                        type="checkbox"
+                        checked={selectedFeedbacks.length === filteredFeedbacks.length}
+                        onChange={e => {
+                          if (e.target.checked) {
+                            setSelectedFeedbacks(filteredFeedbacks.map(fb => fb.feedback_id));
+                          } else {
+                            setSelectedFeedbacks([]);
+                          }
+                        }}
+                      />
+                    </th>}
                     <th>{t("Tutor Name")}</th>
                     <th>{t("Tutee Name / Hospital Name")}</th>
                     <th>{t("Is It Your Tutee?")}</th>
@@ -524,6 +559,19 @@ const TutorFeedbacks = () => {
                 <tbody>
                   {paginatedFeedbacks.map((feedback, index) => (
                     <tr key={index}>
+                      {ENABLE_BULK_DELETE && <td className="feedbacks-checkbox-column">
+                        <input
+                          type="checkbox"
+                          checked={selectedFeedbacks.includes(feedback.feedback_id)}
+                          onChange={e => {
+                            if (e.target.checked) {
+                              setSelectedFeedbacks(prev => [...prev, feedback.feedback_id]);
+                            } else {
+                              setSelectedFeedbacks(prev => prev.filter(id => id !== feedback.feedback_id));
+                            }
+                          }}
+                        />
+                      </td>}
                       <td>{feedback.tutor_name}</td>
                       <td>{feedback.tutee_name}</td>
                       <td>{feedback.is_it_your_tutee ? t("Yes") : t("No")}</td>
@@ -557,6 +605,16 @@ const TutorFeedbacks = () => {
                   ))}
                 </tbody>
               </table>
+            )}
+            {ENABLE_BULK_DELETE && (
+              <div className="bulk-delete-container">
+                <button
+                  className="bulk-delete-button"
+                  onClick={handleBulkDelete}
+                >
+                  {t("Delete Selected Feedbacks")}
+                </button>
+              </div>
             )}
           </div>
         )}

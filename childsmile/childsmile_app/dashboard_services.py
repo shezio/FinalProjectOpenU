@@ -159,7 +159,9 @@ def generate_ai_video(video_id, dashboard_data, timeframe, duration, pages, styl
             codec='libx264',
             audio_codec='aac',
             temp_audiofile=str(temp_dir / f"{video_id}_temp_audio.m4a"),
-            remove_temp=True
+            remove_temp=True,
+            verbose=False,
+            logger=None
         )
         print(f"✅ Video file created: {video_path}")
         
@@ -233,9 +235,16 @@ def generate_marketing_script(dashboard_data, timeframe, style):
 
 
 def create_professional_slides(dashboard_data, timeframe):
-    """Create beautiful slides with system data using Pillow"""
+    """Create beautiful slides with system data using Pillow with RTL support"""
     from PIL import Image, ImageDraw, ImageFont
     import os
+
+    try:
+        from bidi.algorithm import get_display
+        rtl_support = True
+    except ImportError:
+        rtl_support = False
+        print("⚠️  Warning: python-bidi not installed, Hebrew text may be mirrored")
 
     BASE_DIR = os.path.dirname(os.path.abspath(__file__))
     FONT_DIR = os.path.join(BASE_DIR, "fonts")
@@ -250,6 +259,12 @@ def create_professional_slides(dashboard_data, timeframe):
         if not os.path.exists(path):
             raise RuntimeError(f"Font missing: {path}")
         return ImageFont.truetype(path, size)
+
+    def fix_hebrew_text(text):
+        """Convert Hebrew text to display-ready format (RTL support)"""
+        if rtl_support:
+            return get_display(text)
+        return text
 
     slides = []
     width, height = 1280, 720
@@ -287,19 +302,19 @@ def create_professional_slides(dashboard_data, timeframe):
     img1 = Image.new('RGB', (width, height), color='#667EEA')
     draw1 = ImageDraw.Draw(img1)
     draw1.text((640, 280), 'ChildSmile', font=font_large, fill='white', anchor='mm')
-    draw1.text((640, 380), f'סקירת מערכת - {timeframe}', font=font_medium, fill='#E0E7FF', anchor='mm')
+    draw1.text((640, 380), fix_hebrew_text(f'סקירת מערכת - {timeframe}'), font=font_medium, fill='#E0E7FF', anchor='mm')
     slides.append(img1)
     
     # Slide 2: KPIs
     img2 = Image.new('RGB', (width, height), color='#1E293B')
     draw2 = ImageDraw.Draw(img2)
-    draw2.text((640, 80), 'מדדים עיקריים', font=font_medium, fill='#667EEA', anchor='mm')
+    draw2.text((640, 80), fix_hebrew_text('מדדים עיקריים'), font=font_medium, fill='#667EEA', anchor='mm')
     
     kpis = [
-        (f"סה\"כ משפחות: {dashboard_data.get('total_families', 0)}", '#3B82F6'),
-        (f"חונכויות פעילות: {dashboard_data.get('active_tutorships', 0)}", '#10B981'),
-        (f"משפחות ממתינות: {dashboard_data.get('waiting_families', 0)}", '#F59E0B'),
-        (f"חונכים ממתינים: {dashboard_data.get('pending_tutors', 0)}", '#8B5CF6'),
+        (fix_hebrew_text(f"סה\"כ משפחות: {dashboard_data.get('total_families', 0)}"), '#3B82F6'),
+        (fix_hebrew_text(f"חונכויות פעילות: {dashboard_data.get('active_tutorships', 0)}"), '#10B981'),
+        (fix_hebrew_text(f"משפחות ממתינות: {dashboard_data.get('waiting_families', 0)}"), '#F59E0B'),
+        (fix_hebrew_text(f"חונכים ממתינים: {dashboard_data.get('pending_tutors', 0)}"), '#8B5CF6'),
     ]
     
     y_pos = 200
@@ -312,17 +327,17 @@ def create_professional_slides(dashboard_data, timeframe):
     # Slide 3: New Families
     img3 = Image.new('RGB', (width, height), color='#0F172A')
     draw3 = ImageDraw.Draw(img3)
-    draw3.text((640, 250), 'משפחות חדשות', font=font_medium, fill='#667EEA', anchor='mm')
+    draw3.text((640, 250), fix_hebrew_text('משפחות חדשות'), font=font_medium, fill='#667EEA', anchor='mm')
     new_fam = dashboard_data.get('new_families', 0)
     draw3.text((640, 380), f'{new_fam}', font=font_large, fill='#10B981', anchor='mm')
-    draw3.text((640, 480), 'הצטרפו לאחרונה', font=font_small, fill='white', anchor='mm')
+    draw3.text((640, 480), fix_hebrew_text('הצטרפו לאחרונה'), font=font_small, fill='white', anchor='mm')
     slides.append(img3)
     
     # Slide 4: Thank You
     img4 = Image.new('RGB', (width, height), color='#667EEA')
     draw4 = ImageDraw.Draw(img4)
-    draw4.text((640, 320), 'תודה רבה!', font=font_large, fill='white', anchor='mm')
-    draw4.text((640, 420), 'יחד אנחנו עושים את ההבדל', font=font_small, fill='#E0E7FF', anchor='mm')
+    draw4.text((640, 320), fix_hebrew_text('תודה רבה!'), font=font_large, fill='white', anchor='mm')
+    draw4.text((640, 420), fix_hebrew_text('יחד אנחנו עושים את ההבדל'), font=font_small, fill='#E0E7FF', anchor='mm')
     slides.append(img4)
     
     return slides

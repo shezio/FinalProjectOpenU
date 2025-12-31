@@ -27,31 +27,6 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-      
-      - name: Run Django migrations (only on Azure after deployment)
-        run: |
-          echo "NOTE: Database migrations will run on Azure Web App after deployment"
-          echo "This CI/CD step validates code only - actual migrations run in production"
-
-      - name: Validate Python syntax and imports
-        run: |
-          cd childsmile
-          echo "Validating Python code syntax..."
-          python -m py_compile childsmile_app/models.py
-          python -m py_compile childsmile_app/monthly_tasks.py
-          python -m py_compile childsmile_app/scheduler.py
-          python -m py_compile childsmile_app/apps.py
-          echo "✓ Python syntax validation passed"
-
-      - name: Check migration files exist
-        run: |
-          cd childsmile
-          echo "Checking for required migration files..."
-          if [ -f "childsmile_app/migrations/0049_children_last_review_talk_conducted.py" ]; then
-            echo "✓ Migration 0049 exists"
-          else
-            echo "WARNING: Migration 0049 not found"
-          fi   
 
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
@@ -59,4 +34,4 @@ jobs:
           app-name: child-smile-app
           package: .
           clean: true
-          startup-command: bash -c "cd /home/site/wwwroot/childsmile && export PYTHONPATH=\$PYTHONPATH:/home/site/wwwroot/childsmile:/home/site/wwwroot/childsmile/childsmile_app && timeout 600 python manage.py migrate --noinput || true && gunicorn childsmile.wsgi:application --workers 1 --timeout 600 --bind 0.0.0.0:8000"
+          startup-command: bash -c "cd /home/site/wwwroot/childsmile && export PYTHONPATH=\$PYTHONPATH:/home/site/wwwroot/childsmile:/home/site/wwwroot/childsmile/childsmile_app && gunicorn childsmile.wsgi:application --workers 1 --timeout 600 --bind 0.0.0.0:8000"

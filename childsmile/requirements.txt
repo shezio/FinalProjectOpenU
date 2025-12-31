@@ -3,6 +3,7 @@ asgiref==3.8.1
 apscheduler==3.10.4
 beautifulsoup4==4.12.3
 blinker==1.7.0
+python-bidi==0.4.2
 boto3==1.40.64
 botocore==1.40.64
 certifi==2023.11.17

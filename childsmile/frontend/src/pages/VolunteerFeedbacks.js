@@ -19,6 +19,8 @@ const hospitalsList = hospitals.map((hospital) => hospital.trim()).filter((hospi
 
 const hasGeneralVolunteerFeedbacksViewPermission = hasViewPermissionForTable("general_v_feedback");
 
+const ENABLE_BULK_DELETE = process.env.REACT_APP_ENABLE_BULK_DELETE === 'true';
+
 const VolunteerFeedbacks = () => {
   const { t } = useTranslation();
   const [loading, setLoading] = useState(true);
@@ -56,6 +58,9 @@ const VolunteerFeedbacks = () => {
   const [currentStaffid, setCurrentStaffid] = useState(null);
   const [currentUserRoles, setCurrentUserRoles] = useState([]);
   const [isAdmin, setIsAdmin] = useState(false);
+
+  // For bulk delete
+  const [selectedFeedbacks, setSelectedFeedbacks] = useState([]);
 
   useEffect(() => {
     fetchData();
@@ -372,6 +377,25 @@ const VolunteerFeedbacks = () => {
       });
   };
 
+  const handleBulkDelete = () => {
+    if (selectedFeedbacks.length === 0) {
+      toast.warn(t("No feedbacks selected for deletion"));
+      return;
+    }
+    if (window.confirm(t("Are you sure you want to delete the selected feedbacks?"))) {
+      Promise.all(selectedFeedbacks.map(id => axios.delete(`/api/delete_volunteer_feedback/${id}/`)))
+        .then(() => {
+          toast.success(t("Selected feedbacks deleted successfully"));
+          setSelectedFeedbacks([]);
+          fetchData();
+        })
+        .catch((error) => {
+          feedbackShowErrorToast(t, "Error deleting feedbacks", error);
+          console.error("Error deleting feedbacks:", error);
+        });
+    }
+  };
+
   // Set zoom level when component mounts
   useEffect(() => {
     document.body.style.zoom = "80%";
@@ -454,6 +478,16 @@ const VolunteerFeedbacks = () => {
             <button className="feedbacks-refresh-button" onClick={handleRefresh}>
               {t("Refresh")}
             </button>
+            {ENABLE_BULK_DELETE && (
+              <button
+                className="bulk-delete-button"
+                onClick={handleBulkDelete}
+                disabled={selectedFeedbacks.length === 0}
+                style={{ marginLeft: '1em', background: 'red', color: 'white' }}
+              >
+                {t('Delete Selected Feedbacks')}
+              </button>
+            )}
           </div>
         </div>
         {!loading && (
@@ -467,6 +501,19 @@ const VolunteerFeedbacks = () => {
               <table className="feedbacks-data-grid">
                 <thead>
                   <tr>
+                    {ENABLE_BULK_DELETE && <th className="feedbacks-checkbox-column">
+                      <input
+                        type="checkbox"
+                        checked={selectedFeedbacks.length === filteredFeedbacks.length}
+                        onChange={e => {
+                          if (e.target.checked) {
+                            setSelectedFeedbacks(filteredFeedbacks.map(fb => fb.feedback_id));
+                          } else {
+                            setSelectedFeedbacks([]);
+                          }
+                        }}
+                      />
+                    </th>}
                     <th>{t("Volunteer Name")}</th>
                     <th>{t("Child Name / Hospital Name")}</th>
                     <th className="feedbacks-wide-column">
@@ -489,6 +536,19 @@ const VolunteerFeedbacks = () => {
                 <tbody>
                   {paginatedFeedbacks.map((feedback, index) => (
                     <tr key={index}>
+                      {ENABLE_BULK_DELETE && <td className="feedbacks-checkbox-column">
+                        <input
+                          type="checkbox"
+                          checked={selectedFeedbacks.includes(feedback.feedback_id)}
+                          onChange={e => {
+                            if (e.target.checked) {
+                              setSelectedFeedbacks(prev => [...prev, feedback.feedback_id]);
+                            } else {
+                              setSelectedFeedbacks(prev => prev.filter(id => id !== feedback.feedback_id));
+                            }
+                          }}
+                        />
+                      </td>}
                       <td>{feedback.volunteer_name}</td>
                       <td>{feedback.child_name}</td>
                       <td>{feedback.event_date}</td>

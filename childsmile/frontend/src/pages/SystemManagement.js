@@ -20,6 +20,7 @@ const requiredPermissions = [
   { resource: 'childsmile_app_staff', action: 'VIEW' },
 ];
 
+const ENABLE_BULK_DELETE = process.env.REACT_APP_ENABLE_BULK_DELETE === 'true';
 
 const SystemManagement = () => {
   const navigate = useNavigate(); // Add this line
@@ -59,6 +60,7 @@ const SystemManagement = () => {
   const [deactivationReason, setDeactivationReason] = useState('');
   const [isDeactivationLoading, setIsDeactivationLoading] = useState(false);
   const [showInactiveOnly, setShowInactiveOnly] = useState(false);
+  const [selectedStaff, setSelectedStaff] = useState([]); // For bulk delete
 
   useEffect(() => {
     if (hasPermissionOnSystemManagement) {
@@ -578,6 +580,33 @@ const SystemManagement = () => {
     }
   };
 
+  // New function to handle bulk delete
+  const handleBulkDelete = async () => {
+    if (selectedStaff.length === 0) {
+      toast.error(t('No staff members selected for deletion.'));
+      return;
+    }
+
+    const confirmed = window.confirm(t('Are you sure you want to delete the selected staff members?'));
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      setLoading(true);
+      // Send DELETE request for each selected staff member
+      await Promise.all(selectedStaff.map(staffId => axios.delete(`/api/delete_staff_member/${staffId}/`)));
+      toast.success(t('Selected staff members deleted successfully.'));
+      setSelectedStaff([]); // Clear selection
+      fetchAllStaff(); // Refresh the staff list
+    } catch (error) {
+      console.error('Error deleting staff members:', error);
+      showErrorToast(t, 'Failed to delete staff members.', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   if (!hasPermissionOnSystemManagement) {
     return (
       <div className="sys-mgmt-main-content">
@@ -692,6 +721,24 @@ const SystemManagement = () => {
                 <table className="staff-data-grid">
                   <thead>
                     <tr>
+                      {ENABLE_BULK_DELETE && <th className="bulk-delete-column">
+                        <input
+                          type="checkbox"
+                          style={{ width: '22px', height: '22px' }}
+                          className="bulk-delete-checkbox large-checkbox"
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              // Add all visible staff IDs to selection, but avoid duplicates
+                              setSelectedStaff(prev => Array.from(new Set([...prev, ...filteredStaff.map(user => user.id)])));
+                            } else {
+                              // Remove only visible staff IDs from selection
+                              setSelectedStaff(prev => prev.filter(id => !filteredStaff.map(user => user.id).includes(id)));
+                            }
+                          }}
+                          checked={filteredStaff.length > 0 && filteredStaff.every(user => selectedStaff.includes(user.id))}
+                          indeterminate={selectedStaff.length > 0 && !filteredStaff.every(user => selectedStaff.includes(user.id))}
+                        />
+                      </th>}
                       <th>{t('Username')}</th>
                       <th>{t('Email')}</th>
                       <th>{t('First Name')}</th>
@@ -715,6 +762,21 @@ const SystemManagement = () => {
                         key={user.id}
                         className={user.is_active ? '' : 'inactive-user-row'}
                       >
+                        {ENABLE_BULK_DELETE && <td className="bulk-delete-column">
+                          <input
+                            type="checkbox"
+                            style={{ width: '22px', height: '22px' }}
+                            className="bulk-delete-checkbox large-checkbox"
+                            checked={selectedStaff.includes(user.id)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setSelectedStaff(prev => Array.from(new Set([...prev, user.id])));
+                              } else {
+                                setSelectedStaff(prev => prev.filter(id => id !== user.id));
+                              }
+                            }}
+                          />
+                        </td>}
                         <td>{user.username}</td>
                         <td>{user.email}</td>
                         <td>{user.first_name}</td>
@@ -799,6 +861,18 @@ const SystemManagement = () => {
                 &raquo; {/* Double right arrow */}
               </button>
             </div>
+
+            {ENABLE_BULK_DELETE && (
+              <div className="bulk-delete-container">
+                <button
+                  onClick={handleBulkDelete}
+                  className="bulk-delete-button"
+                  disabled={selectedStaff.length === 0 || loading}
+                >
+                  {loading ? t('Deleting...') : t('Delete Selected Staff')}
+                </button>
+              </div>
+            )}
           </>
         )}
       </div>

@@ -26,3 +26,19 @@ psql -U child_smile_user -h localhost -p 5432 -c "CREATE DATABASE child_smile_db
 
 3. Restore the database
 pg_restore -U child_smile_user -h localhost -p 5432 -d child_smile_db < backup_20251028.sql
+
+# clear cache of visual studio code all the rm -rf commands we tried since they were awesome and need them again
+rm -rf ~/Library/Application\ Support/Code/Cache
+rm -rf ~/Library/Application\ Support/Code/CachedData
+rm -rf ~/Library/Application\ Support/Code/Code\ Cache
+rm -rf ~/Library/Application\ Support/Code/User/workspaceStorage  
+
+ - test data removal
+DELETE FROM auditlog;
+DELETE FROM childsmile_app_tasks;
+DELETE FROM childsmile_app_healthy;
+
+then delete from ui - tutorships, children, tutors, tasks
+then from DB  - tables like PrevTutorshipStatuses, Prev
+DELETE FROM PrevTaskStatuses;
+DELETE FROM PrevTutorshipStatuses;
