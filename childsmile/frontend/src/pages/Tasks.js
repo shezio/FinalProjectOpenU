@@ -766,7 +766,10 @@ const Tasks = () => {
               <div className="filter">
                 <select
                   value={selectedFilter}
-                  onChange={(e) => setSelectedFilter(e.target.value)}
+                  onChange={(e) => {
+                    handleClosePopup(); // Close split view when filter changes
+                    setSelectedFilter(e.target.value);
+                  }}
                 >
                   <option value="">{t("All Tasks - Click to filter by type")}</option>
                   {filteredTaskTypes.map((type) => (
