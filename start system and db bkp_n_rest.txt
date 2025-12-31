@@ -4,15 +4,11 @@ python .\childsmile\manage.py shell
 -- quickly start FE
 cd .\childsmile\frontend\ ; npm start 
 
-
-
 on macos
 FE
 cd /Users/shlomosmac/Applications/dev/FinalProjectOpenU/childsmile/frontend && npm start
 BE
 cd /Users/shlomosmac/Applications/dev/FinalProjectOpenU/childsmile && python manage.py runserver
-
-
 
   git config --global user.email "shlezi0@gmail.com"
   git config --global user.name "shezio"
@@ -21,11 +17,6 @@ steps to db bkp and restore:
 1. Backup the database
 pg_dump -U child_smile_user -h localhost -p 5432 child_smile_db > backup_20251028.sql
 
-2. Create new db on RDS
-psql -U child_smile_user -h localhost -p 5432 -c "CREATE DATABASE child_smile_db;"
-
-3. Restore the database
-pg_restore -U child_smile_user -h localhost -p 5432 -d child_smile_db < backup_20251028.sql
 
 # clear cache of visual studio code all the rm -rf commands we tried since they were awesome and need them again
 rm -rf ~/Library/Application\ Support/Code/Cache
@@ -42,3 +33,21 @@ then delete from ui - tutorships, children, tutors, tasks
 then from DB  - tables like PrevTutorshipStatuses, Prev
 DELETE FROM PrevTaskStatuses;
 DELETE FROM PrevTutorshipStatuses;
+
+
+RESTORE:
+
+1. psql -U shlomosmac -h localhost -p 5432 -d postgres
+
+2. then run the following SQL commands when inside the postgres prompt:
+DROP DATABASE IF EXISTS child_smile_db;
+DROP OWNED BY child_smile_user CASCADE;
+DROP ROLE IF EXISTS child_smile_user;
+CREATE ROLE child_smile_user WITH LOGIN PASSWORD '0192pqowL@!';
+CREATE DATABASE child_smile_db OWNER child_smile_user;
+ALTER SCHEMA public OWNER TO child_smile_user;
+GRANT USAGE, CREATE ON SCHEMA public TO child_smile_user;
+ALTER ROLE child_smile_user SET search_path TO public;
+
+3. finally, exit the psql prompt and run the restore command:
+psql -U child_smile_user -h localhost -p 5432 -d child_smile_db < backup_20251231.sql
