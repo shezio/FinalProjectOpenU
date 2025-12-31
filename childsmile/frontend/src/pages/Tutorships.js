@@ -35,6 +35,8 @@ const hasCreatePermission = hasCreatePermissionForTable('tutorships');
 const hasUpdatePermission = hasUpdatePermissionForTable('tutorships');
 const hasViewPermission = hasViewPermissionForTable('tutorships');
 
+const ENABLE_BULK_DELETE = process.env.REACT_APP_ENABLE_BULK_DELETE === 'true';
+
 const HourglassSpinner = () => {
   const [rotation, setRotation] = useState(0);
   useEffect(() => {
@@ -106,6 +108,7 @@ const Tutorships = () => {
   });
   const [showTutorshipActivationDropdown, setShowTutorshipActivationDropdown] = useState(false);
   const tutorshipActivationFilterRef = useRef();
+  const [selectedTutorships, setSelectedTutorships] = useState([]);
 
   const toggleMagnify = () => {
     setIsMagnifyActive((prevState) => !prevState);
@@ -704,6 +707,27 @@ const Tutorships = () => {
     };
   }, [showStatusDropdown, showTutorshipActivationDropdown]);
 
+  const handleBulkDelete = async () => {
+    if (selectedTutorships.length === 0) {
+      toast.warn(t('No tutorships selected for deletion.'));
+      return;
+    }
+    const confirmed = window.confirm(t('Are you sure you want to delete the selected tutorships?'));
+    if (!confirmed) return;
+
+    try {
+      await Promise.all(selectedTutorships.map(tutorshipId => 
+        axios.delete(`/api/delete_tutorship/${tutorshipId}/`)
+      ));
+      toast.success(t('Selected tutorships deleted successfully!'));
+      setTutorships(tutorships.filter(tutorship => !selectedTutorships.includes(tutorship.id)));
+      setSelectedTutorships([]); // Clear selection after deletion
+    } catch (error) {
+      console.error('Error deleting tutorships:', error);
+      showErrorToast(t, 'Error deleting tutorships', error);
+    }
+  };
+
   return (
     <div className="tutorships-main-content">
       <Sidebar />
@@ -796,6 +820,19 @@ const Tutorships = () => {
               <table className="tutorship-matching-data-grid">
                 <thead>
                   <tr>
+                    {ENABLE_BULK_DELETE && <th>
+                      <input
+                        type="checkbox"
+                        checked={selectedTutorships.length === tutorships.length}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedTutorships(tutorships.map(t => t.id));
+                          } else {
+                            setSelectedTutorships([]);
+                          }
+                        }}
+                      />
+                    </th>}
                     <th>{t('Info')}</th>
                     <th>{t('Child Name')}</th>
                     <th>{t('Tutor Name')}</th>
@@ -817,6 +854,19 @@ const Tutorships = () => {
                       key={tutorship.id}
                       className={tutorship.tutorship_activation === 'inactive' ? 'inactive-tutorship-row' : ''}
                     >
+                      {ENABLE_BULK_DELETE && <td>
+                        <input
+                          type="checkbox"
+                          checked={selectedTutorships.includes(tutorship.id)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setSelectedTutorships([...selectedTutorships, tutorship.id]);
+                            } else {
+                              setSelectedTutorships(selectedTutorships.filter(id => id !== tutorship.id));
+                            }
+                          }}
+                        />
+                      </td>}
                       <td>
                         <div className="info-icon-container" onClick={() => openInfoModal(tutorship)}>
                           <i className="info-icon" title={t('Press to see full info')}>i</i>
@@ -905,6 +955,17 @@ const Tutorships = () => {
                 &raquo; {/* Double right arrow */}
               </button>
             </div>
+            {ENABLE_BULK_DELETE && (
+              <div className="bulk-delete-container">
+                <button
+                  className="bulk-delete-button"
+                  onClick={handleBulkDelete}
+                  disabled={selectedTutorships.length === 0 || isGuestUser()}
+                >
+                  {t('Delete Selected Tutorships')}
+                </button>
+              </div>
+            )}
           </>
         )}
         {isApprovalModalOpen && selectedTutorship && (

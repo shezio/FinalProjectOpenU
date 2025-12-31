@@ -80,6 +80,9 @@ const Families = () => {
   // Age sorting state
   const [sortOrderAge, setSortOrderAge] = useState('asc'); // Default to ascending
 
+  // Bulk delete feature flag
+  const ENABLE_BULK_DELETE = process.env.REACT_APP_ENABLE_BULK_DELETE === 'true';
+
   const fetchFamilies = async () => {
     setIsRefreshing(true);
     setLoading(true);
@@ -498,6 +501,29 @@ const Families = () => {
     setFamilies(sorted); // Update the main families array with sorted data
   };
 
+  // Add state for selected rows
+  const [selectedFamilies, setSelectedFamilies] = useState([]);
+
+  // Implement handleBulkDelete function to send selected IDs to backend
+  const handleBulkDelete = async () => {
+    if (selectedFamilies.length === 0) {
+      toast.warn(t('No families selected for deletion.'));
+      return;
+    }
+    if (!window.confirm(t('Are you sure you want to delete the selected families?'))) {
+      return;
+    }
+    try {
+      // Bulk delete: send individual DELETE requests for each selected family
+      await Promise.all(selectedFamilies.map(id => axios.delete(`/api/delete_family/${id}/`)));
+      toast.success(t('Selected families deleted successfully!'));
+      setFamilies(families.filter(family => !selectedFamilies.includes(family.id)));
+      setSelectedFamilies([]);
+    } catch (error) {
+      showErrorToast(t, 'Error deleting families', error);
+    }
+  };
+
   return (
     <div className="families-main-content">
       <Sidebar />
@@ -582,6 +608,15 @@ const Families = () => {
                 <table className="families-data-grid">
                   <thead>
                     <tr>
+                      {ENABLE_BULK_DELETE && <th className="checkbox-column">
+                        <input
+                          type="checkbox"
+                          checked={selectedFamilies.length === families.length}
+                          onChange={(e) => {
+                            setSelectedFamilies(e.target.checked ? families.map((family) => family.id) : []);
+                          }}
+                        />
+                      </th>}
                       <th>{t('Full Name')}</th>
                       <th>
                         {t('Age')}
@@ -608,6 +643,19 @@ const Families = () => {
                   <tbody>
                     {paginatedFamilies.map((family) => (
                       <tr key={family.id}>
+                        {ENABLE_BULK_DELETE && <td className="checkbox-column">
+                          <input
+                            type="checkbox"
+                            checked={selectedFamilies.includes(family.id)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setSelectedFamilies((prev) => [...prev, family.id]);
+                              } else {
+                                setSelectedFamilies((prev) => prev.filter((id) => id !== family.id));
+                              }
+                            }}
+                          />
+                        </td>}
                         <td>{family.first_name} {family.last_name}</td>
                         <td>{family.age}</td>
                         <td>{family.address}</td>
@@ -683,6 +731,19 @@ const Families = () => {
                     &raquo; {/* Double right arrow */}
                   </button>
                 </div>
+
+                {/* Bulk Delete button */}
+                {ENABLE_BULK_DELETE && (
+                  <div className="bulk-delete-container">
+                    <button
+                      className="bulk-delete-button"
+                      onClick={handleBulkDelete}
+                      disabled={selectedFamilies.length === 0}
+                    >
+                      {t('Delete Selected Families')}
+                    </button>
+                  </div>
+                )}
               </>
             ) : (
               <div className="no-data">
@@ -1417,7 +1478,6 @@ const Families = () => {
                   {errors.details_for_tutoring && <span className="families-error-message">{errors.details_for_tutoring}</span>}
 
                   <label>{t('Tutoring Status')}</label>
-                  <span className="families-mandatory-span">{t("*This is a mandatory field")}</span>
                   <select
                     name="tutoring_status"
                     value={newFamily.tutoring_status}

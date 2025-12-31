@@ -29,6 +29,8 @@ function stripTime(date) {
   return new Date(date.getFullYear(), date.getMonth(), date.getDate());
 }
 
+const ENABLE_BULK_DELETE = process.env.REACT_APP_ENABLE_BULK_DELETE === 'true';
+
 const InitialFamilyData = () => {
   const { t } = useTranslation();
   const navigate = useNavigate(); // Add this line
@@ -61,6 +63,9 @@ const InitialFamilyData = () => {
   const [roles, setRoles] = useState([]);
   const [currentUser, setCurrentUser] = useState(null);
   const [currentUserRoles, setCurrentUserRoles] = useState([]);
+
+  // Selected families for bulk actions
+  const [selectedFamilies, setSelectedFamilies] = useState([]);
 
   function parseDate(dateStr) {
     if (!dateStr) return null;
@@ -282,6 +287,22 @@ const InitialFamilyData = () => {
     }
   };
 
+  // Bulk delete
+  const handleBulkDelete = async () => {
+    if (window.confirm(t('Are you sure you want to delete the selected families? This action cannot be undone.'))) {
+      try {
+        await Promise.all(selectedFamilies.map(familyId =>
+          axios.delete(`/api/delete_initial_family_data/${familyId}/`)
+        ));
+        toast.success(t('Selected families deleted!'));
+        setSelectedFamilies([]);
+        fetchFamilies();
+      } catch (error) {
+        showErrorToast(t, 'Error deleting families', error);
+      }
+    }
+  };
+
   // Table row color
   const getRowClass = (family) =>
     family.family_added ? "families-row-added" : "";
@@ -350,6 +371,17 @@ const InitialFamilyData = () => {
           <table className="families-data-grid">
             <thead>
               <tr>
+                {ENABLE_BULK_DELETE && <th>
+                  <input
+                    type="checkbox"
+                    onChange={(e) => {
+                      const checked = e.target.checked;
+                      setSelectedFamilies(checked ? families.map(f => f.initial_family_data_id) : []);
+                    }}
+                    checked={selectedFamilies.length === families.length && families.length > 0}
+                    indeterminate={selectedFamilies.length > 0 && selectedFamilies.length < families.length}
+                  />
+                </th>}
                 <th>{t('Initial Family ID')}</th>
                 <th>{t('Names')}</th>
                 <th>{t('Phones')}</th>
@@ -372,6 +404,19 @@ const InitialFamilyData = () => {
               ) : (
                 paginatedFamilies.map((family) => (
                   <tr key={family.initial_family_id} className={getRowClass(family)}>
+                    {ENABLE_BULK_DELETE && <td>
+                      <input
+                        type="checkbox"
+                        checked={selectedFamilies.includes(family.initial_family_data_id)}
+                        onChange={(e) => {
+                          const checked = e.target.checked;
+                          setSelectedFamilies(checked ?
+                            [...selectedFamilies, family.initial_family_data_id] :
+                            selectedFamilies.filter(id => id !== family.initial_family_data_id)
+                          );
+                        }}
+                      />
+                    </td>}
                     <td>{family.initial_family_data_id}</td>
                     <td>
                       <div className="td-scrollable">
@@ -466,6 +511,19 @@ const InitialFamilyData = () => {
               className="pagination-arrow"
             >&raquo;</button>
           </div>
+
+          {/* Bulk Delete button */}
+          {ENABLE_BULK_DELETE && (
+            <div className="bulk-delete-container">
+              <button
+                className="bulk-delete-button"
+                onClick={handleBulkDelete}
+                disabled={selectedFamilies.length === 0 || !canManage}
+              >
+                {t('Delete Selected')}
+              </button>
+            </div>
+          )}
         </div>
       )}
 
