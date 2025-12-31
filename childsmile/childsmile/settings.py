@@ -182,7 +182,9 @@ SOCIALACCOUNT_PROVIDERS = {
         'OAUTH_PKCE_ENABLED': True,
     }
 }
-
+# Session expires after 30 minutes of inactivity
+SESSION_COOKIE_AGE = 1800  # 30 minutes in seconds
+SESSION_SAVE_EVERY_REQUEST = True  # Reset timeout on each request
 # Add these settings to skip the ugly confirmation page
 SOCIALACCOUNT_LOGIN_ON_GET = True  # Skip confirmation page
 ACCOUNT_EMAIL_VERIFICATION = 'none'  # You already have this
