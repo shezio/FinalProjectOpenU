@@ -770,8 +770,8 @@ def delete_tutorship(request, tutorship_id):
             tutor.save()
             child.save()
             PrevTutorshipStatuses.objects.create(
-                tutor=tutor,
-                child=child,
+                tutor_id=tutor,
+                child_id=child,
                 tutor_tut_status="אין_חניך",
                 child_tut_status="אין_חונך",
                 tutorship_id=None
