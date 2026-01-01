@@ -51,6 +51,7 @@ from django.views import View
 from django.db import connection
 from django.views.decorators.csrf import csrf_exempt
 from django.db import transaction
+from django.db.models import Q
 from django.utils.timezone import now
 import datetime
 import urllib3
@@ -157,8 +158,15 @@ def families_waiting_for_tutorship_report(request):
         if to_date:
             to_date = make_aware(datetime.datetime.strptime(to_date, "%Y-%m-%d"))
 
-        # Fetch children with the specified tutoring statuses, ordered by registration date
-        children = Children.objects.filter(tutoring_status__in=waiting_statuses)
+        # Fetch children that either:
+        # 1. Have waiting status AND do NOT have active tutorships
+        # 2. Have ANY pending tutorship (regardless of tutoring status)
+        children = Children.objects.filter(
+            Q(tutoring_status__in=waiting_statuses) |  # Children with waiting status
+            Q(tutorships__tutorship_activation__in=['pending_first_approval', 'pending_second_approval'])  # OR children with pending tutorships
+        ).exclude(
+            tutorships__tutorship_activation='active'  # But exclude those with active tutorships
+        ).distinct()
 
         # Apply date filters if provided
         if from_date:
@@ -167,6 +175,7 @@ def families_waiting_for_tutorship_report(request):
             children = children.filter(registrationdate__lte=to_date)
 
         children = children.order_by("registrationdate").values(
+            "child_id",
             "childfirstname",
             "childsurname",
             "father_name",
@@ -180,6 +189,7 @@ def families_waiting_for_tutorship_report(request):
         # Prepare the data
         children_data = [
             {
+                "child_id": child["child_id"],
                 "first_name": child["childfirstname"],  # Access using dictionary keys
                 "last_name": child["childsurname"],
                 "father_name": child["father_name"],

@@ -187,3 +187,31 @@
   .distance-slider + span {
     margin-left: 20px; /* Add spacing after the slider's span */
   }
+/* Manual Match Button Styling */
+.actions .filter-button {
+  padding: 10px 20px;
+  background: linear-gradient(135deg, #183ee8 0%, #764ba2 100%);
+  border: none;
+  border-radius: 8px;
+  color: white;
+  font-size: 24px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+}
+
+.actions .filter-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+}
+
+.actions .filter-button:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 3px 10px rgba(102, 126, 234, 0.3);
+}
+
+.actions .filter-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

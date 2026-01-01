@@ -349,6 +349,19 @@ def create_tutorship(request):
                 status=409,
             )
 
+        # MANUAL MATCH OVERRIDE: Delete any pending tutorships for this child
+        # Manual match is a stronger action and overrides pending tutorships
+        pending_tutorships = Tutorships.objects.filter(
+            child_id=child_id,
+            tutorship_activation__in=['pending_first_approval', 'pending_second_approval']
+        )
+        
+        if pending_tutorships.exists():
+            api_logger.warning(f"DEBUG: Manual match override - deleting {pending_tutorships.count()} pending tutorship(s) for child {child_id}")
+            for pending in pending_tutorships:
+                api_logger.warning(f"DEBUG: Deleting pending tutorship ID {pending.id} - Child: {pending.child_id}, Tutor: {pending.tutor_id}")
+            pending_tutorships.delete()
+
         # Retrieve child and tutor objects
         child = Children.objects.get(child_id=child_id)
         tutor = Tutors.objects.get(id_id=tutor_id)
@@ -822,4 +835,277 @@ def delete_tutorship(request, tutorship_id):
                 'tutor_email': tutor_email if 'tutor_email' in locals() else 'Unknown - Error'
             }
         )
+        return JsonResponse({"error": str(e)}, status=500)
+
+
+@conditional_csrf
+@api_view(["GET"])
+def get_available_tutors(request):
+    """
+    Get all available tutors (those who can be matched) for manual matching.
+    Returns tutor name and city for combo box display.
+    Uses the same filtering logic as fetch_possible_matches() for consistency.
+    """
+    api_logger.info("get_available_tutors called")
+    try:
+        # Check permissions
+        check_matches_permissions(request, ["VIEW"])
+        
+        child_id = request.GET.get('child_id')
+        if not child_id:
+            return JsonResponse(
+                {"error": "Missing child_id parameter"},
+                status=400
+            )
+        
+        # SQL to get available tutors (same filtering logic as fetch_possible_matches)
+        # Match gender requirement
+        query = """
+        SELECT DISTINCT
+            tutor.id_id AS tutor_id,
+            CONCAT(signedup.first_name, ' ', signedup.surname) AS tutor_full_name,
+            signedup.city AS tutor_city,
+            staff.is_active,
+            signedup.age AS tutor_age,
+            signedup.gender,
+            signedup.first_name,
+            signedup.surname
+        FROM childsmile_app_tutors tutor
+        JOIN childsmile_app_signedup signedup
+            ON signedup.id = tutor.id_id
+        JOIN childsmile_app_staff staff
+            ON tutor.staff_id = staff.staff_id
+        JOIN childsmile_app_children child
+            ON child.gender = signedup.gender
+        WHERE
+            child.child_id = %s
+            -- Exclude tutors that have ACTIVE tutorships
+            AND NOT EXISTS (
+                SELECT 1
+                FROM childsmile_app_tutorships tutorship
+                WHERE tutorship.tutor_id = tutor.id_id
+                AND tutorship.tutorship_activation = 'active'
+            )
+            -- Only include staff members who are ACTIVE
+            AND staff.is_active = TRUE
+        ORDER BY signedup.first_name, signedup.surname;
+        """
+        
+        with connection.cursor() as cursor:
+            cursor.execute(query, [child_id])
+            rows = cursor.fetchall()
+            
+        tutors_list = [
+            {
+                "tutor_id": row[0],
+                "tutor_full_name": row[1],
+                "tutor_city": row[2],
+                "is_active": row[3],
+                "tutor_age": row[4],
+                "tutor_gender": row[5],
+            }
+            for row in rows
+        ]
+        
+        api_logger.debug(f"DEBUG: Found {len(tutors_list)} available tutors for manual matching for child {child_id}")
+        return JsonResponse({"tutors": tutors_list}, status=200)
+        
+    except PermissionError as e:
+        api_logger.error(f"Permission error in get_available_tutors: {str(e)}")
+        return JsonResponse({"error": str(e)}, status=403)
+    except Exception as e:
+        api_logger.error(f"Error fetching available tutors: {str(e)}")
+        return JsonResponse({"error": str(e)}, status=500)
+
+
+@conditional_csrf
+@api_view(["POST"])
+def calculate_manual_match(request):
+    """
+    Calculate a match for a manually selected tutor-child pair.
+    Takes child_id and tutor_id, runs the full matching algorithm,
+    and returns the single match with all details (grade, distances, coordinates).
+    """
+    api_logger.info("calculate_manual_match called")
+    try:
+        # Check permissions
+        check_matches_permissions(request, ["VIEW"])
+        
+        data = request.data
+        child_id = data.get("child_id")
+        tutor_id = data.get("tutor_id")
+        
+        if not child_id or not tutor_id:
+            return JsonResponse(
+                {"error": "Missing child_id or tutor_id"},
+                status=400
+            )
+        
+        api_logger.debug(f"DEBUG: Calculating match for child {child_id} and tutor {tutor_id}")
+        
+        # Use the same SQL logic as fetch_possible_matches but for this specific pair
+        query = """
+        SELECT
+            child.child_id,
+            tutor.id_id AS tutor_id,
+            CONCAT(child.childfirstname, ' ', child.childsurname) AS child_full_name,
+            CONCAT(signedup.first_name, ' ', signedup.surname) AS tutor_full_name,
+            child.city AS child_city,
+            signedup.city AS tutor_city,
+            EXTRACT(YEAR FROM AGE(current_date, child.date_of_birth))::int AS child_age,
+            signedup.age AS tutor_age,
+            child.gender AS child_gender,
+            signedup.gender AS tutor_gender,
+            0 AS distance_between_cities,
+            100 AS grade,
+            FALSE AS is_used,
+            child.tutoring_status AS child_tutoring_status,
+            CONCAT(signedup.first_name, ' ', signedup.surname) AS child_responsible_coordinator,
+            child.medical_diagnosis,
+            child.child_phone_number,
+            child.date_of_birth,
+            child.treating_hospital,
+            child.marital_status,
+            child.num_of_siblings,
+            child.details_for_tutoring,
+            child.additional_info,
+            signedup.age,
+            signedup.gender,
+            child.registrationdate,
+            signedup.phone,
+            signedup.email,
+            staff.is_active
+        FROM childsmile_app_children child
+        JOIN childsmile_app_signedup signedup
+            ON child.gender = signedup.gender
+        JOIN childsmile_app_tutors tutor
+            ON signedup.id = tutor.id_id
+        JOIN childsmile_app_staff staff
+            ON tutor.staff_id = staff.staff_id
+        WHERE 
+            child.child_id = %s
+            AND tutor.id_id = %s
+            -- Manual match can override pending tutorships, only check for ACTIVE tutorships
+            AND NOT EXISTS (
+                SELECT 1
+                FROM childsmile_app_tutorships tutorship
+                WHERE tutorship.child_id = child.child_id 
+                AND tutorship.tutorship_activation = 'active'
+            )
+            AND NOT EXISTS (
+                SELECT 1
+                FROM childsmile_app_tutorships tutorship
+                WHERE tutorship.tutor_id = tutor.id_id
+                AND tutorship.tutorship_activation = 'active'
+            )
+            -- Only allow ACTIVE staff members
+            AND staff.is_active = TRUE
+            AND child.status <> 'בריא';
+        """
+        
+        with connection.cursor() as cursor:
+            cursor.execute(query, [child_id, tutor_id])
+            row = cursor.fetchone()
+        
+        if not row:
+            # Log detailed debugging info
+            api_logger.warning(f"DEBUG: No match found for child {child_id} and tutor {tutor_id}")
+            
+            # Check if child and tutor exist
+            try:
+                child = Children.objects.get(child_id=child_id)
+                api_logger.warning(f"DEBUG: Child exists - ID: {child_id}, Status: {child.status}, Tutoring Status: {child.tutoring_status}, Gender: {child.gender}")
+            except Children.DoesNotExist:
+                api_logger.warning(f"DEBUG: Child does not exist - ID: {child_id}")
+                return JsonResponse(
+                    {"error": f"Child with ID {child_id} does not exist"},
+                    status=404
+                )
+            
+            try:
+                tutor = Tutors.objects.get(id_id=tutor_id)
+                tutor_signedup = SignedUp.objects.get(id=tutor_id)
+                api_logger.warning(f"DEBUG: Tutor exists - ID: {tutor_id}, Gender: {tutor_signedup.gender}, Active: {tutor.staff.is_active}")
+            except (Tutors.DoesNotExist, SignedUp.DoesNotExist):
+                api_logger.warning(f"DEBUG: Tutor does not exist - ID: {tutor_id}")
+                return JsonResponse(
+                    {"error": f"Tutor with ID {tutor_id} does not exist"},
+                    status=404
+                )
+            
+            # Check if there are conflicting tutorships
+            conflicting_child_tutorship = Tutorships.objects.filter(
+                child_id=child_id,
+                tutorship_activation='active'
+            ).exists()
+            api_logger.warning(f"DEBUG: Child has active tutorship: {conflicting_child_tutorship}")
+            
+            conflicting_tutor_tutorship = Tutorships.objects.filter(
+                tutor_id=tutor_id,
+                tutorship_activation='active'
+            ).exists()
+            api_logger.warning(f"DEBUG: Tutor has active tutorship: {conflicting_tutor_tutorship}")
+            
+            return JsonResponse(
+                {"error": "No valid match found for this child-tutor pair"},
+                status=404
+            )
+        
+        # Build the match dict
+        match = {
+            "child_id": row[0],
+            "tutor_id": row[1],
+            "child_full_name": row[2],
+            "tutor_full_name": row[3],
+            "child_city": row[4],
+            "tutor_city": row[5],
+            "child_age": row[6],
+            "tutor_age": row[7],
+            "child_gender": row[8],
+            "tutor_gender": row[9],
+            "distance_between_cities": row[10],
+            "grade": row[11],
+            "is_used": row[12],
+            "child_tutoring_status": row[13],
+            "child_responsible_coordinator": row[14],
+            "medical_diagnosis": row[15],
+            "child_phone_number": row[16],
+            "date_of_birth": row[17].strftime("%d/%m/%Y") if row[17] else None,
+            "treating_hospital": row[18],
+            "marital_status": row[19],
+            "num_of_siblings": row[20],
+            "details_for_tutoring": row[21],
+            "additional_info": row[22],
+            "tutor_age": row[23],
+            "tutor_gender": row[24],
+            "registrationdate": row[25].strftime("%d/%m/%Y") if row[25] else None,
+            "tutor_phone": row[26],
+            "tutor_email": row[27],
+            "tutor_is_active": row[28],
+        }
+        
+        # Wrap in a list so we can use the same distance/grade calculation logic
+        matches = [match]
+        
+        # Calculate distances using the same helper function
+        matches = calculate_distances(matches)
+        api_logger.debug(f"DEBUG: Calculated distance for match")
+        
+        # Calculate grades using the same helper function
+        matches = calculate_grades(matches)
+        api_logger.debug(f"DEBUG: Calculated grade for match: {matches[0]['grade']}")
+        
+        return JsonResponse(
+            {
+                "message": "Manual match calculated successfully",
+                "match": matches[0]
+            },
+            status=200
+        )
+        
+    except PermissionError as e:
+        api_logger.error(f"Permission error in calculate_manual_match: {str(e)}")
+        return JsonResponse({"error": str(e)}, status=403)
+    except Exception as e:
+        api_logger.error(f"Error calculating manual match: {str(e)}")
         return JsonResponse({"error": str(e)}, status=500)

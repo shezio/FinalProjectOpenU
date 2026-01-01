@@ -80,6 +80,8 @@ from .tutorship_views import (
     create_tutorship,
     update_tutorship,
     delete_tutorship,
+    get_available_tutors,
+    calculate_manual_match,
 )
 
 from .unused_views import (
@@ -268,6 +270,16 @@ urlpatterns = [
         "api/update_tutorship/<int:tutorship_id>/",
         update_tutorship,
         name="update_tutorship",
+    ),
+    path(
+        "api/get_available_tutors/",
+        get_available_tutors,
+        name="get_available_tutors",
+    ),
+    path(
+        "api/calculate_manual_match/",
+        calculate_manual_match,
+        name="calculate_manual_match",
     ),
     path(
         "api/families_tutorships_stats/",
