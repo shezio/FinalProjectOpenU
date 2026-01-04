@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Sidebar from "../../components/Sidebar";
 import InnerPageHeader from "../../components/InnerPageHeader";
 import "../../styles/common.css";
 import "../../styles/reports.css";
 import "../../styles/tutorship_pending.css";
-import { hasViewPermissionForTable, navigateTo } from "../../components/utils";
+import { hasViewPermissionForTable, hasCreatePermissionForTable, navigateTo } from "../../components/utils";
 import axios from "../../axiosConfig";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -12,12 +13,15 @@ import { exportTutorshipPendingToExcel, exportTutorshipPendingToPDF } from "../.
 import { useTranslation } from "react-i18next";
 
 const FamiliesWaitingForTutorshipReport = () => {
+  const navigate = useNavigate();
   const [families, setFamilies] = useState([]);
   const [loading, setLoading] = useState(true);
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
   const { t } = useTranslation();
   const [sortOrderRegistrationDate, setSortOrderRegistrationDate] = useState('asc'); // Default to ascending
+  const hasCreatePermission = hasCreatePermissionForTable("tutorships");
+  const [selectedFamily, setSelectedFamily] = useState(null);
 
   const parseDate = (dateString) => {
     if (!dateString) return new Date(0); // Handle missing dates
@@ -43,6 +47,14 @@ const FamiliesWaitingForTutorshipReport = () => {
       return family;
     });
     setFamilies(updatedFamilies);
+    
+    // Update selectedFamily when checkbox changes
+    const selectedCount = updatedFamilies.filter(f => f.selected).length;
+    if (selectedCount === 1) {
+      setSelectedFamily(updatedFamilies.find(f => f.selected));
+    } else {
+      setSelectedFamily(null);
+    }
   };
 
   const handleSelectAllCheckbox = (isChecked) => {
@@ -51,6 +63,21 @@ const FamiliesWaitingForTutorshipReport = () => {
       selected: isChecked,
     }));
     setFamilies(updatedFamilies);
+    setSelectedFamily(isChecked && families.length === 1 ? families[0] : null);
+  };
+
+  const handleManualMatch = () => {
+    if (!selectedFamily) {
+      toast.error(t("Please select exactly one family"));
+      return;
+    }
+    // Navigate to Tutorships page with the selected child ID using React Router
+    navigate("/tutorships", { 
+      state: {
+        manualMatchChildId: selectedFamily.child_id,
+        childName: `${selectedFamily.first_name} ${selectedFamily.last_name}`
+      }
+    });
   };
 
 
@@ -132,6 +159,16 @@ const FamiliesWaitingForTutorshipReport = () => {
             >
               <img src="/assets/pdf-icon.png" alt="PDF" />
             </button>
+            {hasCreatePermission && (
+              <button
+                className="filter-button"
+                onClick={handleManualMatch}
+                disabled={!selectedFamily}
+                title={selectedFamily ? t("Create manual tutorship match for selected family") : t("Select exactly one family to create a manual match")}
+              >
+                {t("Manual Match")}
+              </button>
+            )}
             <label htmlFor="date-from">{t("From Date")}:</label>
             <input
               type="date"

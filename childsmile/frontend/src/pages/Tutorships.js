@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import ReactSlider from 'react-slider';
 import Sidebar from '../components/Sidebar';
 import InnerPageHeader from '../components/InnerPageHeader';
@@ -109,6 +110,16 @@ const Tutorships = () => {
   const [showTutorshipActivationDropdown, setShowTutorshipActivationDropdown] = useState(false);
   const tutorshipActivationFilterRef = useRef();
   const [selectedTutorships, setSelectedTutorships] = useState([]);
+  const location = useLocation();
+  const [isManualMatchMode, setIsManualMatchMode] = useState(false);
+  const [manualMatchChildId, setManualMatchChildId] = useState(null);
+  const [manualMatchChildName, setManualMatchChildName] = useState(null);
+  const [availableTutors, setAvailableTutors] = useState([]);
+  const [selectedTutorForMatch, setSelectedTutorForMatch] = useState(null);
+  const [isCalculatingManualMatch, setIsCalculatingManualMatch] = useState(false);
+  const [manualMatchResult, setManualMatchResult] = useState(null);
+  const [isManualMatchModalOpen, setIsManualMatchModalOpen] = useState(false);
+  const [isManualMatchConfirmationOpen, setIsManualMatchConfirmationOpen] = useState(false);
 
   const toggleMagnify = () => {
     setIsMagnifyActive((prevState) => !prevState);
@@ -640,9 +651,119 @@ const Tutorships = () => {
       });
   };
 
+  const fetchAvailableTutors = async () => {
+    try {
+      const response = await axios.get(`/api/get_available_tutors/?child_id=${manualMatchChildId}`);
+      setAvailableTutors(response.data.tutors || []);
+    } catch (error) {
+      console.error('Error fetching available tutors:', error);
+      showErrorToast(t, 'Failed to fetch available tutors', error);
+    }
+  };
+
+  const calculateManualMatch = async () => {
+    if (!manualMatchChildId || !selectedTutorForMatch) {
+      toast.error(t('Please select a tutor'));
+      return;
+    }
+
+    setIsCalculatingManualMatch(true);
+    try {
+      const response = await axios.post('/api/calculate_manual_match/', {
+        child_id: manualMatchChildId,
+        tutor_id: selectedTutorForMatch.tutor_id,
+      });
+      
+      const matchData = response.data.match;
+      setManualMatchResult(matchData);
+      console.log('Manual match calculated:', matchData);
+    } catch (error) {
+      console.error('Error calculating manual match:', error);
+      showErrorToast(t, 'Failed to calculate match', error);
+    } finally {
+      setIsCalculatingManualMatch(false);
+    }
+  };
+
+  const confirmManualMatch = () => {
+    if (!manualMatchResult || !currentUserRoleId) {
+      toast.error(t('Unable to create tutorship'));
+      return;
+    }
+
+    // Show confirmation dialog before creating
+    setIsManualMatchConfirmationOpen(true);
+  };
+
+  const proceedWithManualMatch = () => {
+    if (!manualMatchResult || !currentUserRoleId) {
+      toast.error(t('Unable to create tutorship'));
+      return;
+    }
+
+    setIsManualMatchConfirmationOpen(false);
+
+    axios
+      .post('/api/create_tutorship/', {
+        match: manualMatchResult,
+        staff_role_id: currentUserRoleId,
+      })
+      .then(() => {
+        toast.success(t('Tutorship created successfully!'));
+        setIsManualMatchModalOpen(false);
+        setIsManualMatchMode(false);
+        setManualMatchChildId(null);
+        setManualMatchChildName(null);
+        setSelectedTutorForMatch(null);
+        setManualMatchResult(null);
+        fetchFullTutorships();
+      })
+      .catch((error) => {
+        console.error('Error creating tutorship:', error);
+        showErrorToast(t, 'Failed to create tutorship', error);
+      });
+  };
+
+  const closeManualMatchModal = () => {
+    setIsManualMatchModalOpen(false);
+    setIsManualMatchMode(false);
+    setManualMatchChildId(null);
+    setManualMatchChildName(null);
+    setSelectedTutorForMatch(null);
+    setManualMatchResult(null);
+  };
+
   useEffect(() => {
       fetchFullTutorships();
   }, []);
+
+  // Check if coming from manual match flow
+  useEffect(() => {
+    if (location.state && location.state.manualMatchChildId) {
+      console.log('DEBUG: Detected manual match navigation with child ID:', location.state.manualMatchChildId);
+      setIsManualMatchMode(true);
+      setManualMatchChildId(location.state.manualMatchChildId);
+      setManualMatchChildName(location.state.childName || `Child ID: ${location.state.manualMatchChildId}`);
+      
+      // Fetch tutors and then open modal - pass child_id to the API
+      axios.get(`/api/get_available_tutors/?child_id=${location.state.manualMatchChildId}`)
+        .then((response) => {
+          console.log('DEBUG: Available tutors fetched:', response.data.tutors);
+          setAvailableTutors(response.data.tutors || []);
+          // Open modal after fetching tutors
+          setIsManualMatchModalOpen(true);
+        })
+        .catch((error) => {
+          console.error('Error fetching available tutors:', error);
+          showErrorToast(t, 'Failed to fetch available tutors', error);
+          // Still open modal even if tutors fail to load
+          setIsManualMatchModalOpen(true);
+        });
+      
+      // Clear location state to prevent reactivation
+      window.history.replaceState({}, document.title);
+    }
+  }, [location, t]);
 
   // Helper: Fetch all families
   const fetchAllFamilies = async () => {
@@ -1400,6 +1521,173 @@ const Tutorships = () => {
                 {t('Create Tutorship')}
               </button>
             )}
+          </div>
+        </Modal>
+
+        {/* Manual Match Modal */}
+        <Modal
+          isOpen={isManualMatchModalOpen}
+          onRequestClose={closeManualMatchModal}
+          className="modal-content"
+          overlayClassName="modal-overlay"
+        >
+          <div className="modal-header">
+            <h2>{t('Create Manual Tutorship Match')}</h2>
+            <button className="close-button" onClick={closeManualMatchModal}>✕</button>
+          </div>
+
+          {!manualMatchResult ? (
+            // Step 1: Select tutor
+            <div className="modal-body">
+              <div className="manual-match-info">
+                <p>{manualMatchChildName}</p>
+              </div>
+
+              <div className="tutor-selection">
+                <label htmlFor="tutor-select">{t('Select Tutor')}:</label>
+                <select
+                  id="tutor-select"
+                  value={selectedTutorForMatch ? selectedTutorForMatch.tutor_id : ''}
+                  onChange={(e) => {
+                    const tutorId = parseInt(e.target.value);
+                    const tutor = availableTutors.find(t => t.tutor_id === tutorId);
+                    setSelectedTutorForMatch(tutor);
+                  }}
+                  className="tutor-dropdown"
+                >
+                  <option value="">{t('Choose a tutor...')}</option>
+                  {availableTutors.map((tutor) => (
+                    <option key={tutor.tutor_id} value={tutor.tutor_id}>
+                      {tutor.tutor_full_name}, {tutor.tutor_city}, {t('age')} {tutor.tutor_age}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {selectedTutorForMatch && (
+                <div className="selected-tutor-info">
+                  <h4>{t('Selected Tutor')}:</h4>
+                  <p>{selectedTutorForMatch.tutor_full_name}, {selectedTutorForMatch.tutor_city}, {t('age')} {selectedTutorForMatch.tutor_age}</p>
+                </div>
+              )}
+
+              <div className="modal-actions">
+                <button
+                  className="calc-match-button"
+                  onClick={calculateManualMatch}
+                  disabled={!selectedTutorForMatch || isCalculatingManualMatch}
+                >
+                  {isCalculatingManualMatch ? t('Calculating...') : t('Calculate Match')}
+                </button>
+                <button className="cancel-button" onClick={closeManualMatchModal}>
+                  {t('Cancel')}
+                </button>
+              </div>
+            </div>
+          ) : (
+            // Step 2: Review match and create tutorship
+            <div className="modal-body">
+              <div className="match-preview">
+                <h4>{t('Match Preview')}:</h4>
+                <table className="match-details-table">
+                  <tbody>
+                    <tr>
+                      <td><strong>{t('Child')}:</strong></td>
+                      <td>{manualMatchResult.child_full_name}</td>
+                    </tr>
+                    <tr>
+                      <td><strong>{t('Tutor')}:</strong></td>
+                      <td>{manualMatchResult.tutor_full_name}</td>
+                    </tr>
+                    <tr>
+                      <td><strong>{t('Grade')}:</strong></td>
+                      <td>{manualMatchResult.grade}</td>
+                    </tr>
+                    <tr>
+                      <td><strong>{t('Distance')}:</strong></td>
+                      <td>{manualMatchResult.distance_between_cities} {t('km')}</td>
+                    </tr>
+                    <tr>
+                      <td><strong>{t('Child City')}:</strong></td>
+                      <td>{manualMatchResult.child_city}</td>
+                    </tr>
+                    <tr>
+                      <td><strong>{t('Tutor City')}:</strong></td>
+                      <td>{manualMatchResult.tutor_city}</td>
+                    </tr>
+                    <tr>
+                      <td><strong>{t('Child Age')}:</strong></td>
+                      <td>{manualMatchResult.child_age}</td>
+                    </tr>
+                    <tr>
+                      <td><strong>{t('Tutor Age')}:</strong></td>
+                      <td>{manualMatchResult.tutor_age}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="modal-actions">
+                <button
+                  className="create-tutorship-button"
+                  onClick={confirmManualMatch}
+                  disabled={!currentUserRoleId}
+                >
+                  {t('Create Tutorship')}
+                </button>
+                <button
+                  className="calc-match-button"
+                  onClick={() => setManualMatchResult(null)}
+                >
+                  {t('Back')}
+                </button>
+                <button className="cancel-button" onClick={closeManualMatchModal}>
+                  {t('Cancel')}
+                </button>
+              </div>
+            </div>
+          )}
+        </Modal>
+
+        {/* Manual Match Confirmation Modal */}
+        <Modal
+          isOpen={isManualMatchConfirmationOpen}
+          onRequestClose={() => setIsManualMatchConfirmationOpen(false)}
+          className="modal-content"
+          overlayClassName="modal-overlay"
+          style={{
+            content: {
+              width: '85%',
+              maxWidth: '600px',
+              height: 'auto',
+              margin: 'auto',
+            }
+          }}
+        >
+          <div className="modal-header">
+            <h2>{t('Confirm Manual Match')}</h2>
+            <button className="close-button" onClick={() => setIsManualMatchConfirmationOpen(false)}>✕</button>
+          </div>
+
+          <div className="modal-body" style={{ textAlign: 'center', padding: '30px' }}>
+            <p style={{ fontSize: '24px', marginBottom: '20px', lineHeight: '1.6' }}>
+              {t('Creating this tutorship will remove any pending tutorships for this child. Do you want to proceed?')}
+            </p>
+            
+            <div className="modal-actions" style={{ justifyContent: 'center', gap: '15px' }}>
+              <button
+                className="create-tutorship-button"
+                onClick={proceedWithManualMatch}
+              >
+                {t('Yes, Create Tutorship')}
+              </button>
+              <button
+                className="cancel-button"
+                onClick={() => setIsManualMatchConfirmationOpen(false)}
+              >
+                {t('Cancel')}
+              </button>
+            </div>
           </div>
         </Modal>
       </div>
