@@ -188,6 +188,12 @@ const resources = {
       "Confirm Manual Match": "Confirm Manual Match",
       "Creating this tutorship will remove any pending tutorships for this child. Do you want to proceed?": "Creating this tutorship will remove any pending tutorships for this child. Do you want to proceed?",
       "Yes, Create Tutorship": "Yes, Create Tutorship",
+      "tutor_fun_day": "Tutor Fun Day",
+      "general_volunteer_fun_day": "General Volunteer Fun Day",
+      "general_volunteer_hospital_visit": "General Volunteer Hospital Visit",
+      "general_house_visit": "General House Visit",
+      "tutorship": "Tutorship",
+      "All Roles": "All Roles",
     }
   },
   he: {
@@ -470,6 +476,7 @@ const resources = {
       'Delete': 'מחק',
       'System Management': 'ניהול מערכת',
       'Roles': 'תפקידים',
+      'All Roles': 'כל התפקידים',
       'Username': 'שם משתמש',
       'No staff members to display': 'אין משתמשים להצגה',
       'Search by name, email or role': 'חפש לפי שם, אימייל או תפקיד',
@@ -586,6 +593,7 @@ const resources = {
       "tutor_fun_day": "יום כיף בחונכות",
       "general_volunteer_fun_day": "יום כיף בהתנדבות כללית",
       "general_volunteer_hospital_visit": "ביקור בית חולים בהתנדבות כללית",
+      "general_house_visit": "ביקור בית כללי",
       "tutorship": "ביקור בחונכות",
       "Feedback Type": "סוג משוב",
       "Hospital Name": "שם בית חולים",

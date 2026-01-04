@@ -8,7 +8,7 @@ on macos
 FE
 cd /Users/shlomosmac/Applications/dev/FinalProjectOpenU/childsmile/frontend && npm start
 BE
-cd /Users/shlomosmac/Applications/dev/FinalProjectOpenU/childsmile && python manage.py runserver
+cd /Users/shlomosmac/Applications/dev/FinalProjectOpenU/childsmile && source myenv/bin/activate && python manage.py runserver
 
   git config --global user.email "shlezi0@gmail.com"
   git config --global user.name "shezio"
@@ -51,3 +51,8 @@ ALTER ROLE child_smile_user SET search_path TO public;
 
 3. finally, exit the psql prompt and run the restore command:
 psql -U child_smile_user -h localhost -p 5432 -d child_smile_db < backup_20251231.sql
+
+
+\dT+  -- to see enums in psql
+-- to see enum values
+SELECT unnest(enum_range(NULL::your_enum_name)) AS enum_value;
