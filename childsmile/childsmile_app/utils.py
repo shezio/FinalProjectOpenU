@@ -1014,27 +1014,56 @@ def conditional_csrf(view_func):
 def get_responsible_coordinator_for_family(tutoring_status):
     """
     Get the staff_id of the appropriate coordinator based on tutoring status.
-    If tutoring_status contains "למצוא_חונך", tries to get 'Tutored Families Coordinator'.
-    Otherwise, gets 'Families Coordinator' or falls back to 'Family Coordinator'.
+    
+    Coordinator Assignment Rules:
+    - Family Coordinator: For non-tutored statuses (לא_רוצים, לא_רלוונטי, בוגר)
+    - Tutored Families Coordinator: For tutored/searching statuses (למצוא_חונך, יש_חונך, 
+                                    למצוא_חונך_אין_באיזור_שלו, למצוא_חונך_בעדיפות_גבוה, 
+                                    שידוך_בסימן_שאלה)
     
     Returns the staff_id of the coordinator, or None if not found.
     """
     try:
-        # Check if tutoring status requires a tutored families coordinator
-        if tutoring_status and "למצוא_חונך" in tutoring_status:
-            # Try to get Tutored Families Coordinator first
-            tutored_coordinator = Staff.objects.filter(
+        # Normalize status - convert spaces to underscores just in case
+        normalized_status = tutoring_status.replace(' ', '_') if tutoring_status else ''
+        
+        # Define status categories
+        NON_TUTORED_STATUSES = {
+            "לא_רוצים",      # NOT_WANTED
+            "לא_רלוונטי",    # NOT_RELEVANT
+            "בוגר"           # MATURE
+        }
+        
+        TUTORED_STATUSES = {
+            "למצוא_חונך",                    # FIND_TUTOR
+            "יש_חונך",                       # HAS_TUTOR
+            "למצוא_חונך_אין_באיזור_שלו",  # FIND_TUTOR_NO_AREA
+            "למצוא_חונך_בעדיפות_גבוה",     # FIND_TUTOR_HIGH_PRIORITY
+            "שידוך_בסימן_שאלה"               # MATCH_QUESTIONABLE
+        }
+        
+        # Determine which coordinator to assign based on status
+        if normalized_status in TUTORED_STATUSES:
+            # Get Tutored Families Coordinator
+            coordinator = Staff.objects.filter(
                 roles__role_name='Tutored Families Coordinator'
             ).first()
-            if tutored_coordinator:
-                return tutored_coordinator.staff_id
+            if coordinator:
+                return coordinator.staff_id
+        elif normalized_status in NON_TUTORED_STATUSES:
+            # Get Families Coordinator
+            coordinator = Staff.objects.filter(
+                roles__role_name='Families Coordinator'
+            ).first()
+            if coordinator:
+                return coordinator.staff_id
         
-        # Fallback to Families Coordinator
-        families_coordinator = Staff.objects.filter(
+        # Fallback: Try Families Coordinator if status doesn't match any category
+        coordinator = Staff.objects.filter(
             roles__role_name='Families Coordinator'
         ).first()
-        if families_coordinator:
-            return families_coordinator.staff_id
+        if coordinator:
+            return coordinator.staff_id
         
         return None
     except Exception as e:

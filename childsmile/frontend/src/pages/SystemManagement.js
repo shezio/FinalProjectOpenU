@@ -61,6 +61,7 @@ const SystemManagement = () => {
   const [isDeactivationLoading, setIsDeactivationLoading] = useState(false);
   const [showInactiveOnly, setShowInactiveOnly] = useState(false);
   const [selectedStaff, setSelectedStaff] = useState([]); // For bulk delete
+  const [selectedRoleFilter, setSelectedRoleFilter] = useState(''); // For role filtering
 
   useEffect(() => {
     if (hasPermissionOnSystemManagement) {
@@ -177,6 +178,11 @@ const SystemManagement = () => {
       baseList = staff.filter(user => !user.is_active);
     }
 
+    // Apply role filter
+    if (selectedRoleFilter) {
+      baseList = baseList.filter(user => user.roles.includes(selectedRoleFilter));
+    }
+
     if (!query) {
       setFilteredStaff(baseList);
       setTotalCount(baseList.length);
@@ -206,6 +212,34 @@ const SystemManagement = () => {
     } else {
       // If turning off, show all
       filtered = staff;
+    }
+    
+    // Apply role filter if set
+    if (selectedRoleFilter) {
+      filtered = filtered.filter(user => user.roles.includes(selectedRoleFilter));
+    }
+    
+    setFilteredStaff(filtered);
+    setTotalCount(filtered.length);
+  };
+
+  const handleRoleFilterChange = (e) => {
+    const selectedRole = e.target.value;
+    setSelectedRoleFilter(selectedRole);
+    setPage(1); // Reset to page 1 when toggling filter
+    setSearchQuery(''); // Clear search when toggling filter
+    
+    // Apply filters
+    let filtered = staff;
+    
+    // Apply inactive filter
+    if (showInactiveOnly) {
+      filtered = staff.filter(user => !user.is_active);
+    }
+    
+    // Apply role filter
+    if (selectedRole) {
+      filtered = filtered.filter(user => user.roles.includes(selectedRole));
     }
     
     setFilteredStaff(filtered);
@@ -642,6 +676,9 @@ const SystemManagement = () => {
         ) : (
           <>
             <div className="controls">
+              <button onClick={handleRefresh} className="refresh-button">
+                {t('Refresh')}
+              </button>
               <input
                 type="text"
                 placeholder={t('Search by name, email or role')}
@@ -649,6 +686,18 @@ const SystemManagement = () => {
                 onChange={handleSearch}
                 className="search-bar"
               />
+              <select 
+                value={selectedRoleFilter} 
+                onChange={handleRoleFilterChange}
+                className="role-filter-select"
+              >
+                <option value="">{t('All Roles')}</option>
+                {roles.map((role) => (
+                  <option key={role.id} value={role.role_name}>
+                    {t(role.role_name)}
+                  </option>
+                ))}
+              </select>
               <button onClick={() => openAddStaffModal('add')} className="add-button">
                 {t('Add New Staff')}
               </button>
@@ -703,9 +752,6 @@ const SystemManagement = () => {
                 className="audit-log-data-button"
               >
                 {t('Audit Log')}
-              </button>
-              <button onClick={handleRefresh} className="refresh-button">
-                {t('Refresh')}
               </button>
             </div>
 

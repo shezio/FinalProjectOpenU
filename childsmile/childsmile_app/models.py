@@ -290,6 +290,7 @@ class Feedback(models.Model):
             ("tutor_fun_day", "Tutor Fun Day"),
             ("general_volunteer_fun_day", "General Volunteer Fun Day"),
             ("general_volunteer_hospital_visit", "General Volunteer Hospital Visit"),
+            ("general_house_visit", "General House Visit"),
             ("tutorship", "Tutorship"),
         ],
         default="tutorship",

@@ -448,6 +448,7 @@ const VolunteerFeedbacks = () => {
                 <option value="">{t("All Feedbacks Types")}</option>
                 <option value="general_volunteer_fun_day">{t("general_volunteer_fun_day")}</option>
                 <option value="general_volunteer_hospital_visit">{t("general_volunteer_hospital_visit")}</option>
+                <option value="general_house_visit">{t("general_house_visit")}</option>
               </select>
             </div>
             <div className="feedbacks-filter-pairs">
@@ -749,6 +750,7 @@ const VolunteerFeedbacks = () => {
                       >
                         <option value="general_volunteer_fun_day">{t("general_volunteer_fun_day")}</option>
                         <option value="general_volunteer_hospital_visit">{t("general_volunteer_hospital_visit")}</option>
+                        <option value="general_house_visit">{t("general_house_visit")}</option>
                       </select>
                     )}
                   </div>

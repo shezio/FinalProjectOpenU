@@ -30,7 +30,8 @@ def check_and_create_monthly_review_tasks():
     - For each child:
       - Check if last_review_talk_conducted is more than 30 days ago (or null)
       - If yes, create ONE task per Technical Coordinator
-      - Prevent duplicates by checking if task already exists
+      - Prevent duplicates by checking if INCOMPLETE task already exists FOR THAT COORDINATOR
+      - If a task was completed (הושלמה), a new one will be created after 30 days
     - Update last_review_talk_conducted when task is completed (in task_views.py)
     
     Returns:
@@ -112,28 +113,30 @@ def check_and_create_monthly_review_tasks():
             # Check if month has passed since last talk (or never had one)
             if child.last_review_talk_conducted is None or child.last_review_talk_conducted <= one_month_ago:
                 
-                # For each Technical Coordinator, create ONE task
+                # Create ONE task per coordinator for this child
+                child_full_name = f"{child.childfirstname} {child.childsurname}".strip()
+                last_talk_date = child.last_review_talk_conducted.strftime('%d/%m/%Y') if child.last_review_talk_conducted else 'Never'
+                
+                # Due date: 30 days from now (gives time to conduct the call)
+                due_date = today + timedelta(days=30)
+                
+                # Task description includes child name and last talk date
+                description = f'Monthly family review talk for {child_full_name} - Last talk: {last_talk_date} - Conduct check-up call with family'
+                
+                # Create one task per coordinator
                 for coordinator in coordinator_list:
-                    # Check if task already exists for this child and coordinator
+                    # Check if task already exists for THIS child AND this coordinator
+                    # This prevents duplicate tasks per child per coordinator
+                    # Only check for INCOMPLETE tasks (לא הושלמה or בביצוע) - completed ones (הושלמה) are done
                     existing_task = Tasks.objects.filter(
                         related_child=child,
                         task_type=task_type,
                         assigned_to=coordinator,
-                        status__in=['בביצוע', 'לא הושלמה']  # Don't create if task already exists
+                        status__in=['לא הושלמה', 'בביצוע']  # Only incomplete tasks
                     ).exists()
                     
                     if not existing_task:
-                        # Create new task for this family and coordinator
-                        child_full_name = f"{child.childfirstname} {child.childsurname}".strip()
-                        last_talk_date = child.last_review_talk_conducted.strftime('%d/%m/%Y') if child.last_review_talk_conducted else 'Never'
-                        
-                        # Due date: 7 days from now (gives time to conduct the call)
-                        due_date = today + timedelta(days=30)
-                        
-                        # Task description includes child name and last talk date
-                        description = f'Monthly family review talk for {child_full_name} - Last talk: {last_talk_date} - Conduct check-up call with family'
-                        
-                        Tasks.objects.create(
+                        task = Tasks.objects.create(
                             task_type=task_type,
                             description=description,
                             due_date=due_date,
@@ -147,7 +150,7 @@ def check_and_create_monthly_review_tasks():
                     else:
                         tasks_skipped += 1
             else:
-                tasks_skipped += len(coordinator_list)
+                tasks_skipped += 1
         
         # Log summary
         log_message = f'✅ Monthly review task check completed | Families checked: {total_families} | Created: {tasks_created} | Skipped: {tasks_skipped} | Coordinators: {coordinators.count()}'

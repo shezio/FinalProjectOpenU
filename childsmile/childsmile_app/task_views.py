@@ -51,9 +51,8 @@ from django.views import View
 from django.db import connection
 from django.views.decorators.csrf import csrf_exempt
 from django.db import transaction
-from django.utils.timezone import now
+from django.utils import timezone
 import datetime
-from datetime import timezone
 import urllib3
 from django.utils.timezone import make_aware
 from geopy.exc import GeocoderTimedOut
@@ -113,14 +112,14 @@ def get_user_tasks(request):
             api_logger.debug("Fetching all tasks for admin user.")
             tasks = (
                 Tasks.objects.all()
-                .select_related("task_type", "assigned_to", "pending_tutor__id")
+                .select_related("task_type", "assigned_to", "pending_tutor__id", "related_child")
                 .order_by("-updated_at")
             )
         else:
             api_logger.debug(f"Fetching tasks assigned to user '{user.username}'.")
             tasks = (
                 Tasks.objects.filter(assigned_to_id=user_id)
-                .select_related("task_type", "assigned_to", "pending_tutor__id")
+                .select_related("task_type", "assigned_to", "pending_tutor__id", "related_child")
                 .order_by("-updated_at")
             )
 
@@ -135,6 +134,11 @@ def get_user_tasks(request):
                 "updated": task.updated_at.strftime("%d/%m/%Y"),
                 "assignee": task.assigned_to.username,
                 "child": task.related_child_id,
+                "child_last_review_talk_conducted": (
+                    task.related_child.last_review_talk_conducted.strftime("%d/%m/%Y")
+                    if task.related_child and task.related_child.last_review_talk_conducted
+                    else None
+                ),
                 "tutor": task.related_tutor_id,
                 "type": task.task_type_id,
                 "type_name": task.task_type.task_type if task.task_type else None,  # ADD: task type name for frontend
@@ -720,6 +724,8 @@ def update_task_status(request, task_id):
         old_status = task.status
         new_status = request.data.get("status", task.status)
         
+        api_logger.debug(f"update_task_status: task_id={task_id}, old_status='{old_status}', new_status='{new_status}', task_type={task.task_type.task_type if task.task_type else None}")
+        
         # Only proceed if status actually changed
         if old_status != new_status:
             # Create a snapshot of the task before updating status
@@ -764,30 +770,65 @@ def update_task_status(request, task_id):
 
             api_logger.debug(f"Task {task_id} status updated to {new_status}")
 
+        # ALWAYS CHECK: If this is a monthly family review task (שיחת ביקורת) being completed, update last_review_talk_conducted
+        if new_status == "הושלמה" and task.task_type and task.task_type.task_type == "שיחת ביקורת" and task.related_child:
+            try:
+                api_logger.info(f"🔴 AUDIT CALL TASK COMPLETED: task_id={task_id}, child_id={task.related_child.child_id}")
+                updated_date = timezone.now().date()
+                api_logger.info(f"🔴 Setting last_review_talk_conducted to {updated_date} for child {task.related_child.child_id}")
+                task.related_child.last_review_talk_conducted = updated_date
+                task.related_child.save()
+                api_logger.info(f"✅ Updated last_review_talk_conducted for child {task.related_child.child_id} to {updated_date}")
+                
+                # REGENERATE descriptions of pending audit-call tasks for this child
+                # so they show the updated date instead of "Never" or the old date
+                try:
+                    child_full_name = f"{task.related_child.childfirstname} {task.related_child.childsurname}".strip()
+                    date_str = updated_date.strftime('%d/%m/%Y') if updated_date else 'Never'
+                    new_description = f'Monthly family review talk for {child_full_name} - Last talk: {date_str} - Conduct check-up call with family'
+                    
+                    # Update all pending (לא הושלמה) audit-call tasks for this child
+                    pending_audit_tasks = Tasks.objects.filter(
+                        related_child=task.related_child,
+                        task_type__task_type="שיחת ביקורת",
+                        status="לא הושלמה"
+                    ).exclude(task_id=task_id)  # Don't update the current task (already completed)
+                    
+                    updated_count = pending_audit_tasks.update(description=new_description)
+                    if updated_count > 0:
+                        api_logger.info(f"✅ Updated descriptions of {updated_count} pending audit-call tasks for child {task.related_child.child_id} with new date {date_str}")
+                except Exception as e:
+                    api_logger.error(f"Error regenerating audit-call task descriptions for child {task.related_child.child_id}: {str(e)}")
+            except Exception as e:
+                api_logger.error(f"Error updating last_review_talk_conducted for child {task.related_child_id}: {str(e)}")
+
         # If status changed to "בביצוע" and task has initial_family_data_id_fk
         if new_status == "בביצוע" and task.initial_family_data_id_fk:
             # Delete all other tasks with the same initial_family_data_id_fk
             delete_other_tasks_with_initial_family_data_async(task)
+        # If status changed to "בביצוע" and task is audit call task (שיחת ביקורת), delete other audit call tasks for same child
+        elif new_status == "בביצוע" and task.task_type and task.task_type.task_type == "שיחת ביקורת":
+            # Delete all other audit call tasks for this child (so only one coordinator calls the family)
+            if task.related_child:
+                try:
+                    other_audit_tasks = Tasks.objects.filter(
+                        related_child=task.related_child,
+                        task_type__task_type="שיחת ביקורת"
+                    ).exclude(task_id=task_id)
+                    deleted_count = other_audit_tasks.count()
+                    other_audit_tasks.delete()
+                    if deleted_count > 0:
+                        api_logger.info(f"Deleted {deleted_count} other audit call tasks for child {task.related_child.child_id} after coordinator {task.assigned_to.username} took task {task_id}")
+                except Exception as e:
+                    api_logger.error(f"Error deleting other audit call tasks: {str(e)}")
         # If status changed to "בביצוע" and task is registration approval, delete other admin tasks
         elif new_status == "בביצוע" and task.task_type and task.task_type.task_type == "אישור הרשמה":
             from .utils import delete_other_registration_approval_tasks_async
             delete_other_registration_approval_tasks_async(task)
             api_logger.info(f"Triggering async deletion of other registration approval tasks for task {task_id}")
-        elif new_status == "הושלמה":
-            # task_type is a FK to Task_Types, so you can access task.task_type.task_type
-            if task.task_type:
-                api_logger.debug(f"task_type = {task.task_type.task_type}")
-            
-            # UPDATE: If this is a monthly family review task, update last_review_talk_conducted
-            if task.task_type and task.task_type.task_type == "MONTHLY_FAMILY_REVIEW_TALK" and task.related_child:
-                try:
-                    task.related_child.last_review_talk_conducted = timezone.now().date()
-                    task.related_child.save()
-                    api_logger.info(f"Updated last_review_talk_conducted for child {task.related_child.child_id} to {timezone.now().date()}")
-                except Exception as e:
-                    api_logger.error(f"Error updating last_review_talk_conducted for child {task.related_child_id}: {str(e)}")
-            
-            # Delete all previous status records for this task since it's now completed
+        
+        # Delete all previous status records for this task since it's now completed
+        if new_status == "הושלמה":
             try:
                 from .models import PrevTaskStatuses
                 deleted_count, _ = PrevTaskStatuses.objects.filter(task_id=task_id).delete()
@@ -876,7 +917,7 @@ def update_task_status(request, task_id):
                     api_logger.warning(f"Could not extract email from registration approval task {task_id}")
             
             # HANDLE TUTOR INTERVIEW
-            elif task.task_type.task_type == "ראיון מועמד לחונכות":
+            elif task.task_type and task.task_type.task_type == "ראיון מועמד לחונכות":
                 # pending_tutor is a FK to Pending_Tutor
                 if task.pending_tutor:
                     pending_tutor_record = task.pending_tutor
@@ -1298,6 +1339,39 @@ def update_task(request, task_id):
         # Save the updated task
         task.save()
 
+        # Ensure last_review_talk_conducted is updated when a monthly review task (שיחת ביקורת) is completed.
+        # Some frontend flows call the generic update_task endpoint instead of update_task_status,
+        # so update here as well to avoid missing the date update.
+        if new_status == "הושלמה" and task.task_type and task.task_type.task_type == "שיחת ביקורת" and task.related_child:
+            try:
+                api_logger.info(f"🔴 AUDIT CALL TASK COMPLETED (via update_task): task_id={task_id}, child_id={task.related_child.child_id}")
+                updated_date = timezone.now().date()
+                api_logger.info(f"🔴 Setting last_review_talk_conducted to {updated_date} for child {task.related_child.child_id}")
+                task.related_child.last_review_talk_conducted = updated_date
+                task.related_child.save()
+                api_logger.info(f"✅ Updated last_review_talk_conducted for child {task.related_child.child_id} to {updated_date}")
+                
+                # REGENERATE descriptions of pending audit-call tasks for this child
+                try:
+                    child_full_name = f"{task.related_child.childfirstname} {task.related_child.childsurname}".strip()
+                    date_str = updated_date.strftime('%d/%m/%Y') if updated_date else 'Never'
+                    new_description = f'Monthly family review talk for {child_full_name} - Last talk: {date_str} - Conduct check-up call with family'
+                    
+                    # Update all pending (לא הושלמה) audit-call tasks for this child
+                    pending_audit_tasks = Tasks.objects.filter(
+                        related_child=task.related_child,
+                        task_type__task_type="שיחת ביקורת",
+                        status="לא הושלמה"
+                    ).exclude(task_id=task_id)
+                    
+                    updated_count = pending_audit_tasks.update(description=new_description)
+                    if updated_count > 0:
+                        api_logger.info(f"✅ Updated descriptions of {updated_count} pending audit-call tasks for child {task.related_child.child_id} with new date {date_str}")
+                except Exception as e:
+                    api_logger.error(f"Error regenerating audit-call task descriptions for child {task.related_child.child_id}: {str(e)}")
+            except Exception as e:
+                api_logger.error(f"Error updating last_review_talk_conducted in update_task for child {task.related_child_id}: {str(e)}")
+        
         if new_status == "הושלמה":
             task_type = getattr(task, "task_type", None)
             if task_type and getattr(task_type, "name", "") == "ראיון מועמד לחונכות":

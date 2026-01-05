@@ -122,6 +122,7 @@ def get_dashboard_data(request):
             'tutor_fun_day': feedback_query.filter(feedback_type='tutor_fun_day').count(),
             'general_volunteer_fun_day': feedback_query.filter(feedback_type='general_volunteer_fun_day').count(),
             'general_volunteer_hospital_visit': feedback_query.filter(feedback_type='general_volunteer_hospital_visit').count(),
+            'general_house_visit': feedback_query.filter(feedback_type='general_house_visit').count(),
             'tutorship': feedback_query.filter(feedback_type='tutorship').count()
         }
         
@@ -570,6 +571,7 @@ def get_feedback_data(request):
             'tutor_fun_day': feedback_query.filter(feedback_type='tutor_fun_day').count(),
             'general_volunteer_fun_day': feedback_query.filter(feedback_type='general_volunteer_fun_day').count(),
             'general_volunteer_hospital_visit': feedback_query.filter(feedback_type='general_volunteer_hospital_visit').count(),
+            'general_house_visit': feedback_query.filter(feedback_type='general_house_visit').count(),
             'tutorship': feedback_query.filter(feedback_type='tutorship').count(),
         }
         

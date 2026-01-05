@@ -9,6 +9,7 @@ from .views import (
     get_pending_tutors,
     get_signedup,
     get_all_staff,
+    get_available_coordinators,
     get_roles,
     get_general_volunteers_not_pending,
     test_email_setup,
@@ -245,6 +246,11 @@ urlpatterns = [
         "api/get_all_staff/",
         get_all_staff,
         name="get_all_staff",
+    ),
+    path(
+        "api/get_available_coordinators/",
+        get_available_coordinators,
+        name="get_available_coordinators",
     ),
     path(
         "api/update_staff_member/<int:staff_id>/",
