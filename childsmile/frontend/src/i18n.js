@@ -194,6 +194,8 @@ const resources = {
       "general_house_visit": "General House Visit",
       "tutorship": "Tutorship",
       "All Roles": "All Roles",
+      "Filter by Family": "Filter by Family",
+      "Monthly review tasks updated": "Monthly review tasks updated",
     }
   },
   he: {
@@ -615,6 +617,9 @@ const resources = {
       "All Tasks - Click to filter by type": "כל המשימות - לחץ לסינון לפי סוג",
       "Filter by Status": "סנן לפי סטטוס משימה",
       'Create New Task': 'צור משימה חדשה',
+
+      "Filter by Family": "סנן לפי משפחה",
+      "Monthly review tasks updated": "משימות שיחת ביקורת חודשית עודכנו",
       "All Statuses - Click to filter by status": "לחץ לסינון לפי סטטוס",
       "No tutorships to display": "אין חונכויות להצגה",
       "General Volunteer Feedbacks": "משובי מתנדבים כלליים",

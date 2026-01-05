@@ -54,6 +54,7 @@ const Tasks = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [errors, setErrors] = useState({});
   const [selectedFilter, setSelectedFilter] = useState('');
+  const [selectedChildFilter, setSelectedChildFilter] = useState('');
   const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState('');
   const [taskToUpdate, setTaskToUpdate] = useState(null);
@@ -196,7 +197,12 @@ const Tasks = () => {
       const newStaffUserNamesAndRoles = staffUserNamesAndRoles;
 
       setStaffOptions(staffOptions);
-      setChildrenOptions(childrenOptions);
+      // Trim children labels to the part before the first ' - ' so the dropdown shows only the name
+      const trimmedChildrenOptions = (childrenOptions || []).map(c => ({
+        ...c,
+        label: (c.label || '').split(' - ')[0].trim(),
+      }));
+      setChildrenOptions(trimmedChildrenOptions);
       setTutorsOptions(tutorsOptions);
       setPendingTutorsOptions(newPendingTutors);
       setGeneralVolunteersNotPending(newGeneralVolunteersNotPending);
@@ -227,7 +233,7 @@ const Tasks = () => {
         localStorage.setItem('taskTypes', JSON.stringify(newTaskTypes));
       }
       localStorage.setItem('staffOptions', JSON.stringify(staffOptions));
-      localStorage.setItem('childrenOptions', JSON.stringify(childrenOptions));
+      localStorage.setItem('childrenOptions', JSON.stringify(trimmedChildrenOptions));
       localStorage.setItem('tutorsOptions', JSON.stringify(tutorsOptions));
       localStorage.setItem('pendingTutorsOptions', JSON.stringify(newPendingTutors));
       localStorage.setItem('generalVolunteersNotPending', JSON.stringify(newGeneralVolunteersNotPending));
@@ -269,6 +275,7 @@ const Tasks = () => {
       .filter(
         (task) =>
           (!selectedFilter || task.type === parseInt(selectedFilter)) &&
+          (!selectedChildFilter || task.child === parseInt(selectedChildFilter)) &&
           task.status === col.key
       );
     return acc;
@@ -314,6 +321,7 @@ const Tasks = () => {
       try {
         await axios.put(`/api/tasks/update-status/${taskId}/`, { status: destination.droppableId });
         toast.success(t('Task updated successfully')); // <-- Add this line
+        
         await fetchData(true);
       } catch (error) {
         showErrorToast(t, 'Error updating task status', error);
@@ -359,8 +367,13 @@ const Tasks = () => {
     return task.description;
   };
 
-  // Get last review date for monthly review tasks
+  // Get last review date for monthly review tasks or from API field for audit call tasks
   const getLastReviewDate = (task) => {
+    // First, try to use the API field for any audit call task
+    if (task.child_last_review_talk_conducted) {
+      return task.child_last_review_talk_conducted;
+    }
+    // Fallback: parse from monthly review task description
     if (isMonthlyReviewTask(task.description)) {
       const parsed = parseMonthlyReviewTask(task.description);
       if (parsed.isMonthly) {
@@ -480,6 +493,7 @@ const Tasks = () => {
       await axios.put(`/api/tasks/update-status/${taskToUpdate.id}/`, { status: selectedStatus });
       toast.success(t('Task updated successfully'));
       setIsStatusModalOpen(false);
+      
       await fetchData(true);
     } catch (error) {
       showErrorToast(t, 'Error updating task', error);
@@ -769,6 +783,7 @@ const Tasks = () => {
                   onChange={(e) => {
                     handleClosePopup(); // Close split view when filter changes
                     setSelectedFilter(e.target.value);
+                    setSelectedChildFilter(''); // Reset child filter when task type changes
                   }}
                 >
                   <option value="">{t("All Tasks - Click to filter by type")}</option>
@@ -782,6 +797,24 @@ const Tasks = () => {
               <div className="refresh">
                 <button onClick={() => fetchData(true)}>{t("Refresh Task List")}</button>
               </div>
+              {/* Child filter - only show for audit call tasks (שיחת ביקורת) - render after Refresh as requested */}
+              {selectedFilter && taskTypes.find(type => type.id === parseInt(selectedFilter))?.name === 'שיחת ביקורת' && (
+                <div className="filter">
+                  <select
+                    value={selectedChildFilter}
+                    onChange={(e) => {
+                      setSelectedChildFilter(e.target.value);
+                    }}
+                  >
+                    <option value="">{t("Filter by Family")}</option>
+                    {[...childrenOptions].sort((a, b) => a.label.localeCompare(b.label, 'he')).map((child) => (
+                      <option key={child.value} value={child.value}>
+                        {child.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
             </div>
             {/* Kanban Board */}
             <div className="split-view"
@@ -830,7 +863,7 @@ const Tasks = () => {
                                       >
                                         <h2>{getDisplayDescription(task)}</h2>
                                         <p>יש לבצע עד: {task.due_date}</p>
-                                        {isMonthlyReviewTask(task.description) && getLastReviewDate(task) && (
+                                        {getLastReviewDate(task) && (
                                           <p>{t('Last review date')}: {getLastReviewDate(task)}</p>
                                         )}
                                         {!snapshot.isDragging && (
@@ -911,7 +944,7 @@ const Tasks = () => {
                   <div className="task-details-content">
                     <h2>{getDisplayDescription(selectedTask)}</h2>
                     <p>יש לבצע עד: {selectedTask.due_date}</p>
-                    {isMonthlyReviewTask(selectedTask.description) && getLastReviewDate(selectedTask) && (
+                    {getLastReviewDate(selectedTask) && (
                       <p>{t('Last review date')}: {getLastReviewDate(selectedTask)}</p>
                     )}
                     <p>סטטוס: {selectedTask.status}</p>
