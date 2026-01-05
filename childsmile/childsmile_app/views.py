@@ -749,3 +749,61 @@ def test_gmail_auth(request):
             "error": str(e),
             "message": "Gmail SMTP authentication failed - need App Password"
         }, status=400)
+
+@conditional_csrf
+@api_view(["GET"])
+def get_available_coordinators(request):
+    api_logger.info("get_available_coordinators called")
+    """
+    Retrieve all staff members with coordinator roles (Families Coordinator or Tutored Families Coordinator).
+    Returns coordinators grouped by role for proper assignment based on tutoring status.
+    """
+    user_id = request.session.get("user_id")
+    if not user_id:
+        return JsonResponse({"detail": "Authentication credentials were not provided."}, status=403)
+
+    try:
+        # Get Families Coordinators (for non-tutored families)
+        families_coordinators = Staff.objects.filter(
+            roles__role_name='Families Coordinator',
+            is_active=True
+        ).distinct().values('staff_id', 'first_name', 'last_name', 'email')
+
+        # Get Tutored Families Coordinators (for tutored families)
+        tutored_coordinators = Staff.objects.filter(
+            roles__role_name='Tutored Families Coordinator',
+            is_active=True
+        ).distinct().values('staff_id', 'first_name', 'last_name', 'email')
+
+        # Format coordinator data with role information
+        families_coord_data = []
+        for coordinator in families_coordinators:
+            families_coord_data.append({
+                'staff_id': coordinator['staff_id'],
+                'name': f"{coordinator['first_name']} {coordinator['last_name']}",
+                'email': coordinator['email'],
+                'role': 'families'
+            })
+
+        tutored_coord_data = []
+        for coordinator in tutored_coordinators:
+            tutored_coord_data.append({
+                'staff_id': coordinator['staff_id'],
+                'name': f"{coordinator['first_name']} {coordinator['last_name']}",
+                'email': coordinator['email'],
+                'role': 'tutored'
+            })
+
+        api_logger.info(f"get_available_coordinators completed successfully for user_id: {user_id}")
+        return JsonResponse(
+            {
+                "families_coordinators": families_coord_data,
+                "tutored_coordinators": tutored_coord_data,
+                "families_count": len(families_coord_data),
+                "tutored_count": len(tutored_coord_data)
+            },
+            status=200,
+        )
+    except Exception as e:
+        api_logger.error(f"Error fetching available coordinators: {str(e)}")
+        return JsonResponse({"error": str(e)}, status=500)

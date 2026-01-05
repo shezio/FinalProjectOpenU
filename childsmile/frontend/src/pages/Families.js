@@ -66,7 +66,12 @@ const Families = () => {
     expected_end_treatment_by_protocol: '',
     has_completed_treatments: false, // Default to false
     status: 'טיפולים', // Default status
+    responsible_coordinator: '', // Auto-assigned coordinator
   });
+  const [familiesCoordinators, setFamiliesCoordinators] = useState([]); // For non-tutored families
+  const [tutoredCoordinators, setTutoredCoordinators] = useState([]); // For tutored families
+  const [availableCoordinators, setAvailableCoordinators] = useState([]); // All coordinators for dropdown
+  const [autoAssignedCoordinator, setAutoAssignedCoordinator] = useState(null); // Track auto-assigned coordinator
 
   // Validation state
   const [errors, setErrors] = useState({});
@@ -130,6 +135,7 @@ const Families = () => {
 
   useEffect(() => {
     fetchFamilies();
+    fetchAvailableCoordinators();
   }, []);
 
   useEffect(() => {
@@ -269,7 +275,7 @@ const Families = () => {
       child_id: '',
       childfirstname: '',
       childsurname: '',
-      gender: 'נקבה', // Default to נקבה
+      gender: 'נקבה',
       city: '',
       street: '',
       apartment_number: '',
@@ -290,11 +296,13 @@ const Families = () => {
       mother_name: '',
       mother_phone: '',
       expected_end_treatment_by_protocol: '',
-      has_completed_treatments: false, // Default to false
-      status: 'טיפולים', // Default status
+      has_completed_treatments: false,
+      status: 'טיפולים',
+      responsible_coordinator: '', // Reset coordinator
     });
-    setErrors({}); // Clear any previous validation errors
-    setShowAddModal(true); // Open the modal
+    setAutoAssignedCoordinator(null); // Reset auto-assigned flag
+    setErrors({});
+    setShowAddModal(true);
   };
 
   const closeAddModal = () => {
@@ -353,12 +361,11 @@ const Families = () => {
     };
 
     const newFamily = {
-      child_id: family.id.toString() || '', // Convert ID to string
+      child_id: family.id.toString() || '',
       childfirstname: family.first_name || '',
       childsurname: family.last_name || '',
       gender: family.gender ? 'נקבה' : 'זכר',
       city: family.city || '',
-      // Extract street and apartment number
       street: street || '',
       apartment_number: apartmentNumber || '',
       child_phone_number: family.child_phone_number || '',
@@ -379,17 +386,18 @@ const Families = () => {
       mother_phone: family.mother_phone || '',
       expected_end_treatment_by_protocol: formatDate(family.expected_end_treatment_by_protocol) || '',
       has_completed_treatments: family.has_completed_treatments || false,
-      status: family.status || 'טיפולים', // Default to 'טיפולים' if not provided
+      status: family.status || 'טיפולים',
+      responsible_coordinator: family.responsible_coordinator || '', // Load current coordinator
     };
 
     const cityKey = family.city ? family.city.trim() : '';
     const cityStreets = processedSettlementsAndStreets[cityKey] || [];
     setStreets(cityStreets);
 
-
+    setAutoAssignedCoordinator(null); // Clear auto-assigned flag when editing
     console.log("New Family State:", newFamily);
     setNewFamily(newFamily);
-    setEditFamily(family); // Set the family being edited
+    setEditFamily(family);
   };
 
 
@@ -523,6 +531,70 @@ const Families = () => {
       showErrorToast(t, 'Error deleting families', error);
     }
   };
+
+  const fetchAvailableCoordinators = async () => {
+    try {
+      const response = await axios.get('/api/get_available_coordinators/');
+      const familiesCoords = response.data.families_coordinators || [];
+      const tutoredCoords = response.data.tutored_coordinators || [];
+      
+      setFamiliesCoordinators(familiesCoords);
+      setTutoredCoordinators(tutoredCoords);
+      
+      // Combine all coordinators for the dropdown display
+      const allCoordinators = [...familiesCoords, ...tutoredCoords];
+      setAvailableCoordinators(allCoordinators);
+      
+      console.log('Families Coordinators:', familiesCoords);
+      console.log('Tutored Coordinators:', tutoredCoords);
+    } catch (error) {
+      console.error('Error fetching available coordinators:', error);
+      showErrorToast(t, 'Error fetching available coordinators', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchFamilies();
+    fetchAvailableCoordinators();
+  }, []);
+
+  useEffect(() => {
+    setTotalCount(filteredFamilies.length);
+    setPage(1);
+  }, [showHealthyOnly, showMatureOnly, selectedStatus, maxAge, families]);
+
+  // Auto-assign coordinator based on tutoring status
+  useEffect(() => {
+    if (newFamily.tutoring_status) {
+      // Define status categories - matching enum definition (with underscores)
+      const NON_TUTORED_STATUSES = ['לא_רוצים', 'לא_רלוונטי', 'בוגר'];
+      const TUTORED_STATUSES = [
+        'למצוא_חונך',
+        'יש_חונך',
+        'למצוא_חונך_אין_באיזור_שלו',
+        'למצוא_חונך_בעדיפות_גבוה',
+        'שידוך_בסימן_שאלה'
+      ];
+
+      let assignedCoordinator = null;
+      
+      // Assign the appropriate coordinator based on tutoring status
+      if (TUTORED_STATUSES.includes(newFamily.tutoring_status) && tutoredCoordinators.length > 0) {
+        assignedCoordinator = tutoredCoordinators[0];
+      } else if (NON_TUTORED_STATUSES.includes(newFamily.tutoring_status) && familiesCoordinators.length > 0) {
+        assignedCoordinator = familiesCoordinators[0];
+      }
+
+      // Force update when status changes
+      if (assignedCoordinator) {
+        setAutoAssignedCoordinator(assignedCoordinator.staff_id);
+        setNewFamily(prev => ({
+          ...prev,
+          responsible_coordinator: String(assignedCoordinator.staff_id)
+        }));
+      }
+    }
+  }, [newFamily.tutoring_status, familiesCoordinators, tutoredCoordinators]);
 
   return (
     <div className="families-main-content">
@@ -1126,6 +1198,27 @@ const Families = () => {
                   </select>
                   {errors.tutoring_status && <span className="families-error-message">{errors.tutoring_status}</span>}
 
+                  <label>{t('Responsible Coordinator')}</label>
+                  {autoAssignedCoordinator && (
+                    <div className="families-auto-assigned-note">
+                      ✨ {t('Auto-assigned based on tutoring status')}
+                    </div>
+                  )}
+                  <select
+                    name="responsible_coordinator"
+                    value={newFamily.responsible_coordinator}
+                    onChange={handleAddFamilyChange}
+                    className={errors.responsible_coordinator ? "error" : ""}
+                  >
+                    <option value="">{t('Select a coordinator')}</option>
+                    {availableCoordinators.map((coordinator, index) => (
+                      <option key={index} value={coordinator.staff_id}>
+                        {coordinator.name}
+                      </option>
+                    ))}
+                  </select>
+                  {errors.responsible_coordinator && <span className="families-error-message">{errors.responsible_coordinator}</span>}
+
                   <label>{t('Status')}</label>
                   <select
                     name="status"
@@ -1492,6 +1585,27 @@ const Families = () => {
                     ))}
                   </select>
                   {errors.tutoring_status && <span className="families-error-message">{errors.tutoring_status}</span>}
+
+                  <label>{t('Responsible Coordinator')}</label>
+                  {autoAssignedCoordinator && (
+                    <div className="families-auto-assigned-note">
+                      ✨ {t('Auto-assigned based on tutoring status')}
+                    </div>
+                  )}
+                  <select
+                    name="responsible_coordinator"
+                    value={newFamily.responsible_coordinator}
+                    onChange={handleAddFamilyChange}
+                    className={errors.responsible_coordinator ? "error" : ""}
+                  >
+                    <option value="">{t('Select a coordinator')}</option>
+                    {availableCoordinators.map((coordinator, index) => (
+                      <option key={index} value={coordinator.staff_id}>
+                        {coordinator.name}
+                      </option>
+                    ))}
+                  </select>
+                  {errors.responsible_coordinator && <span className="families-error-message">{errors.responsible_coordinator}</span>}
 
                   <label>{t('Status')}</label>
                   <select

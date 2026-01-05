@@ -155,21 +155,17 @@ def get_complete_family_details(request):
         # Fetch marital statuses only once
         marital_statuses_data = cache.get("marital_statuses_data")
         if not marital_statuses_data:
-            marital_statuses = Children.objects.values_list(
-                "marital_status", flat=True
-            ).distinct()
-            marital_statuses_data = [{"status": status} for status in marital_statuses]
+            # Get marital statuses from enum definition (not from actual data)
+            marital_statuses = get_enum_values("marital_status")
+            marital_statuses_data = [{"status": status} for status in marital_statuses if status]
             cache.set("marital_statuses_data", marital_statuses_data, timeout=300)
 
         # Fetch tutoring statuses only once
         tutoring_statuses_data = cache.get("tutoring_statuses_data")
         if not tutoring_statuses_data:
-            tutoring_statuses = Children.objects.values_list(
-                "tutoring_status", flat=True
-            ).distinct()
-            tutoring_statuses_data = [
-                {"status": status} for status in tutoring_statuses
-            ]
+            # Get tutoring statuses from enum definition (not from actual data)
+            tutoring_statuses = get_enum_values("tutoring_status")
+            tutoring_statuses_data = [{"status": status} for status in tutoring_statuses if status]
             cache.set("tutoring_statuses_data", tutoring_statuses_data, timeout=300)
 
         # Fetch statuses only once
@@ -592,7 +588,30 @@ def update_family(request, child_id):
         family.num_of_siblings = data.get("num_of_siblings", family.num_of_siblings)
         family.details_for_tutoring = data.get("details_for_tutoring", family.details_for_tutoring)
         family.additional_info = data.get("additional_info", family.additional_info)
-        family.tutoring_status = data.get("tutoring_status", family.tutoring_status)
+        
+        # Handle tutoring_status change and auto-update coordinator
+        old_tutoring_status = family.tutoring_status
+        new_tutoring_status = data.get("tutoring_status", family.tutoring_status)
+        family.tutoring_status = new_tutoring_status
+        
+        # Auto-update responsible_coordinator if tutoring_status changed
+        # Only auto-update if coordinator wasn't manually set in the request
+        if old_tutoring_status != new_tutoring_status and "responsible_coordinator" not in data:
+            new_coordinator_id = get_responsible_coordinator_for_family(new_tutoring_status)
+            if new_coordinator_id:
+                old_coordinator_name = get_staff_name_by_id(family.responsible_coordinator)
+                family.responsible_coordinator = new_coordinator_id
+                new_coordinator_name = get_staff_name_by_id(new_coordinator_id)
+                field_changes.append(f"Responsible Coordinator (auto-updated): '{old_coordinator_name}' → '{new_coordinator_name}' (due to tutoring status change)")
+        elif "responsible_coordinator" in data:
+            # Allow manual override of responsible_coordinator
+            new_coordinator = data.get("responsible_coordinator")
+            if family.responsible_coordinator != new_coordinator:
+                old_coordinator_name = get_staff_name_by_id(family.responsible_coordinator)
+                family.responsible_coordinator = new_coordinator
+                new_coordinator_name = get_staff_name_by_id(new_coordinator)
+                field_changes.append(f"Responsible Coordinator (manual): '{old_coordinator_name}' → '{new_coordinator_name}'")
+        
         family.current_medical_state = data.get("current_medical_state", family.current_medical_state)
         family.when_completed_treatments = parse_date_field(data.get("when_completed_treatments"), "when_completed_treatments")
         family.father_name = data.get("father_name", family.father_name)
