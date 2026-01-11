@@ -420,6 +420,8 @@ const resources = {
       "ID": "תעודת זהות",
       "Israeli ID": "ת.ז",
       "ID must be 9 digits long.": "תעודת זהות חייבת להיות באורך 9 ספרות.",
+      "Invalid date. Please use a valid date.": "תאריך לא תקין. אנא השתמש בתאריך תקין.",
+      "Registration date cannot be in the future.": "תאריך הרישום לא יכול להיות בעתיד.",
       'Select a tutoring status': 'בחר מצב חונכות',
       'Select a marital status': 'בחר מצב משפחתי',
       "No city available": "לא נמצאה עיר",
