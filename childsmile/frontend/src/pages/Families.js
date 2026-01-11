@@ -241,6 +241,23 @@ const Families = () => {
       newErrors.status = t("Status is required.");
     }
 
+    // Validate registration_date if provided - must be valid date and not in future
+    if (newFamily.registration_date) {
+      const [year, month, day] = newFamily.registration_date.split('-');
+      const regDate = new Date(year, parseInt(month) - 1, day);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      // Check if it's a valid date
+      if (isNaN(regDate.getTime()) || regDate.getFullYear() !== parseInt(year) || regDate.getMonth() !== parseInt(month) - 1 || regDate.getDate() !== parseInt(day)) {
+        newErrors.registration_date = t("Invalid date. Please use a valid date.");
+      }
+      // Check if date is in the future
+      else if (regDate > today) {
+        newErrors.registration_date = t("Registration date cannot be in the future.");
+      }
+    }
+
     console.log("Validation errors:", newErrors); // Debugging
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -371,6 +388,7 @@ const Families = () => {
       child_phone_number: family.child_phone_number || '',
       treating_hospital: family.treating_hospital || '',
       date_of_birth: formatDate(family.date_of_birth) || '',
+      registration_date: formatDate(family.registration_date) || '',
       marital_status: family.marital_status || '',
       num_of_siblings: family.num_of_siblings || '',
       details_for_tutoring: family.details_for_tutoring || '',
@@ -1045,6 +1063,16 @@ const Families = () => {
                     className=""
                     disabled
                   />
+
+                  <label>{t('Registration Date')}</label>
+                  <input
+                    type="date"
+                    name="registration_date"
+                    value={newFamily.registration_date}
+                    onChange={handleAddFamilyChange}
+                    className={errors.registration_date ? "error" : ""}
+                  />
+                  {errors.registration_date && <span className="families-error-message">{errors.registration_date}</span>}
                 </div> {/* End of third form-column */}
 
                 {/* Fourth form-column */}

@@ -561,6 +561,10 @@ def update_family(request, child_id):
         new_date_of_birth = parse_date_field(data.get("date_of_birth"), "date_of_birth")
         if family.date_of_birth != new_date_of_birth:
             field_changes.append(f"Birth Date: '{family.date_of_birth}' → '{new_date_of_birth}'")
+        
+        new_registration_date = parse_date_field(data.get("registration_date"), "registration_date")
+        if family.registrationdate != new_registration_date:
+            field_changes.append(f"Registration Date: '{family.registrationdate}' → '{new_registration_date}'")
             
         new_diagnosis_date = parse_date_field(data.get("diagnosis_date"), "diagnosis_date")
         if family.diagnosis_date != new_diagnosis_date:
@@ -582,6 +586,7 @@ def update_family(request, child_id):
         family.child_phone_number = data.get("child_phone_number", family.child_phone_number)
         family.treating_hospital = data.get("treating_hospital", family.treating_hospital)
         family.date_of_birth = parse_date_field(data.get("date_of_birth"), "date_of_birth")
+        family.registrationdate = parse_date_field(data.get("registration_date"), "registration_date") or family.registrationdate
         family.medical_diagnosis = data.get("medical_diagnosis", family.medical_diagnosis)
         family.diagnosis_date = parse_date_field(data.get("diagnosis_date"), "diagnosis_date")
         family.marital_status = data.get("marital_status", family.marital_status)
