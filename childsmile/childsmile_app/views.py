@@ -215,12 +215,13 @@ def get_tutors(request):
     """
     Retrieve all tutors along with their tutorship status.
     """
-    tutors = Tutors.objects.select_related("staff").filter(staff__is_active=True)
+    tutors = Tutors.objects.select_related("staff", "id").filter(staff__is_active=True)
     tutors_data = [
         {
             "id": t.id_id,  # ה-ID של המדריך בטבלת Tutors
             "first_name": t.staff.first_name,  # נתונים מטבלת Staff
             "last_name": t.staff.last_name,
+            "phone": t.id.phone if t.id else "",  # Phone from SignedUp model
             "tutorship_status": t.tutorship_status,
             "preferences": t.preferences,
             "tutor_email": t.tutor_email,
@@ -547,7 +548,7 @@ def get_general_volunteers_not_pending(request):
     pending_ids = Pending_Tutor.objects.values_list("id_id", flat=True)
     volunteers = General_Volunteer.objects.exclude(
         id_id__in=pending_ids
-    ).select_related("staff")
+    ).select_related("staff", "id")
     data = [
         {
             "id": gv.id_id,
@@ -555,6 +556,7 @@ def get_general_volunteers_not_pending(request):
             "first_name": gv.staff.first_name,
             "last_name": gv.staff.last_name,
             "email": gv.staff.email,
+            "phone": gv.id.phone if gv.id else "",  # Phone from SignedUp model
             "signupdate": gv.signupdate,
             "comments": gv.comments,
             "updated": gv.updated,

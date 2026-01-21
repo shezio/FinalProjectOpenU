@@ -38,8 +38,97 @@ const TutorVolunteerMgmt = () => {
     setEditValue(entity[field] || "");
   };
 
+  const validateIsraeliId = (id) => {
+    const idStr = String(id).trim();
+    if (!/^\d{9}$/.test(idStr)) {
+      return false;
+    }
+    return true;
+  };
+
+  const validatePhone = (phone) => {
+    // Remove dashes and spaces from phone number before validation
+    const phoneStr = String(phone).trim().replace(/[-\s]/g, '');
+    if (!/^0\d{9}$/.test(phoneStr)) {
+      return false;
+    }
+    return true;
+  };
+
+  // Normalize phone number - remove dashes and spaces
+  const normalizePhone = (phone) => {
+    if (!phone) return '';
+    return String(phone).replace(/[-\s]/g, '');
+  };
+
+  // Format phone for display: XXX-XXXXXXX
+  const formatPhoneDisplay = (phone) => {
+    if (!phone) return null;
+    const normalized = String(phone).replace(/[-\s]/g, '');
+    if (normalized.length === 10) {
+      return `${normalized.slice(0, 3)}-${normalized.slice(3)}`;
+    }
+    return phone; // Return as-is if invalid format
+  };
+
   const confirmEdit = (entity, field) => {
     if (editValue !== entity[field]) {
+      // Handle special case for ID update
+      if (field === "id") {
+        if (!validateIsraeliId(editValue)) {
+          toast.error(t("Invalid ID format. Israeli ID must be exactly 9 digits."));
+          setEditingCell(null);
+          setEditValue("");
+          return;
+        }
+        axios.put(`/api/update_volunteer_id/${entity.id}/`, { new_id: editValue })
+          .then((response) => {
+            toast.success(t("ID updated successfully"));
+            fetchGridData();
+          })
+          .catch((error) => {
+            if (error.response?.data?.error) {
+              showErrorToast(t, '', error);  // Pass empty key to show only backend message
+            } else if (error.response?.status === 401) {
+              showErrorToast(t, "You do not have permission to update IDs.", error);
+            } else {
+              showErrorToast(t, "Error updating ID", error);
+            }
+          });
+        setEditingCell(null);
+        setEditValue("");
+        return;
+      }
+      
+      // Handle special case for phone update
+      if (field === "phone") {
+        if (!validatePhone(editValue)) {
+          toast.error(t("Invalid phone format. Phone must be exactly 10 digits starting with 0."));
+          setEditingCell(null);
+          setEditValue("");
+          return;
+        }
+        // Send normalized phone (without dashes)
+        const normalizedPhone = normalizePhone(editValue);
+        axios.put(`/api/update_volunteer_phone/${entity.id}/`, { phone: normalizedPhone })
+          .then((response) => {
+            toast.success(t("Phone updated successfully"));
+            fetchGridData();
+          })
+          .catch((error) => {
+            if (error.response?.data?.error) {
+              showErrorToast(t, '', error);  // Pass empty key to show only backend message
+            } else if (error.response?.status === 401) {
+              showErrorToast(t, "You do not have permission to update phone numbers.", error);
+            } else {
+              showErrorToast(t, "Error updating phone", error);
+            }
+          });
+        setEditingCell(null);
+        setEditValue("");
+        return;
+      }
+      
       const updatedEntity = { ...entity, [field]: editValue };
       if (editingCell.type === "tutor") {
         axios.put(`/api/update_tutor/${editingCell.rowId}/`, updatedEntity)
@@ -169,12 +258,25 @@ const TutorVolunteerMgmt = () => {
 
   const filterEntities = (entities) => {
     const term = searchTerm.trim().toLowerCase();
+    // Normalize search term for phone matching (remove dashes and spaces)
+    const normalizedTerm = term.replace(/[-\s]/g, '');
+    
     return entities.filter(entity => {
       // Apply search term filter
       if (term) {
         const name = (entity.name || (entity.first_name + " " + entity.last_name) || "").toLowerCase();
         const email = (entity.tutor_email || entity.email || "").toLowerCase();
-        if (!name.includes(term) && !email.includes(term)) {
+        const phone = (entity.phone || "").toLowerCase();
+        // Normalize phone for comparison (remove dashes and spaces)
+        const normalizedPhone = phone.replace(/[-\s]/g, '');
+        const id = String(entity.id || "").toLowerCase();
+        
+        // Check if term matches any field - for phone, check both with and without dashes
+        if (!name.includes(term) && 
+            !email.includes(term) && 
+            !phone.includes(term) && 
+            !normalizedPhone.includes(normalizedTerm) &&
+            !id.includes(term)) {
           return false;
         }
       }
@@ -244,6 +346,7 @@ const TutorVolunteerMgmt = () => {
               {showTutors ? (
                 <>
                   <th>{t("Israeli ID")}</th>
+                  <th>{t("Phone")}</th>
                   <th>{t("Name")}</th>
                   <th>{t("Email")}</th>
                   <th>{t("Tutorship Status")}</th>
@@ -283,89 +386,121 @@ const TutorVolunteerMgmt = () => {
           </thead>
           <tbody>
             {paginatedEntities.length === 0 ? (
-              <tr><td colSpan={showTutors ? 9 : 9}>{t("No data to display")}</td></tr>
+              <tr><td colSpan={showTutors ? 10 : 10}>{t("No data to display")}</td></tr>
             ) : (
               paginatedEntities.map((entity, idx) => (
                 <tr key={entity.id_id || entity.id || idx}>
-                  <td>{entity.id}</td>
+                  <td
+                    className="editable-cell"
+                    onClick={() => !editingCell && startEdit(entity, "id", "tutor")}
+                  >
+                    {editingCell?.rowId === entity.id && editingCell?.field === "id" ? (
+                      <input
+                        type="text"
+                        value={editValue}
+                        onChange={e => setEditValue(e.target.value)}
+                        onBlur={() => confirmEdit(entity, "id")}
+                        onKeyPress={e => e.key === 'Enter' && confirmEdit(entity, "id")}
+                        autoFocus
+                      />
+                    ) : (
+                      entity.id
+                    )}
+                  </td>
+                  <td
+                    className="editable-cell"
+                    onClick={() => !editingCell && startEdit(entity, "phone", "tutor")}
+                  >
+                    {editingCell?.rowId === entity.id && editingCell?.field === "phone" ? (
+                      <input
+                        type="text"
+                        value={editValue}
+                        onChange={e => setEditValue(e.target.value)}
+                        onBlur={() => confirmEdit(entity, "phone")}
+                        onKeyPress={e => e.key === 'Enter' && confirmEdit(entity, "phone")}
+                        autoFocus
+                      />
+                    ) : (
+                      formatPhoneDisplay(entity.phone) || "-"
+                    )}
+                  </td>
                   <td>{entity.name || entity.first_name + " " + entity.last_name}</td>
                   <td>{entity.tutor_email || entity.email || "-"}</td>
-                  <td>
+                  <td
+                    className="editable-cell"
+                    onClick={() => !editingCell && startEdit(entity, "tutorship_status", "tutor")}
+                  >
                     {editingCell?.rowId === entity.id && editingCell?.field === "tutorship_status" ? (
                       <select
-                        className="form-column"
                         value={editValue}
                         onChange={e => setEditValue(e.target.value)}
                         onBlur={() => confirmEdit(entity, "tutorship_status")}
-                        style={{ minWidth: "220px", height: "30px", fontSize: "24px" }}
+                        autoFocus
                       >
                         {tutorshipStatusOptions.map(opt => (
                           <option key={opt} value={opt}>{opt}</option>
                         ))}
                       </select>
                     ) : (
-                      <>
-                        {entity.tutorship_status}
-                        <button className="edit-pencil" onClick={() => startEdit(entity, "tutorship_status", "tutor")}>✏️</button>
-                      </>
+                      entity.tutorship_status
                     )}
                   </td>
-                  <td>
+                  <td
+                    className="editable-cell"
+                    onClick={() => !editingCell && startEdit(entity, "preferences", "tutor")}
+                  >
                     {editingCell?.rowId === entity.id && editingCell?.field === "preferences" ? (
                       <input
                         type="text"
                         value={editValue}
                         onChange={e => setEditValue(e.target.value)}
                         onBlur={() => confirmEdit(entity, "preferences")}
-                        style={{ minWidth: "220px", height: "30px", fontSize: "24px", overflowX: "auto" }}
+                        onKeyPress={e => e.key === 'Enter' && confirmEdit(entity, "preferences")}
+                        autoFocus
                       />
                     ) : (
-                      <>
-                        {entity.preferences}
-                        <button className="edit-pencil" onClick={() => startEdit(entity, "preferences", "tutor")}>✏️</button>
-                      </>
+                      entity.preferences || "-"
                     )}
                   </td>
-                  <td>
+                  <td
+                    className={entity.in_tutorship ? "editable-cell" : ""}
+                    onClick={() => entity.in_tutorship && !editingCell && startEdit(entity, "relationship_status", "tutor")}
+                  >
                     {entity.in_tutorship ? (
                       editingCell?.rowId === entity.id && editingCell?.field === "relationship_status" ? (
                         <select
-                          className="form-column"
                           value={editValue}
                           onChange={e => setEditValue(e.target.value)}
                           onBlur={() => confirmEdit(entity, "relationship_status")}
-                          style={{ minWidth: "220px", height: "30px", fontSize: "24px" }}
+                          autoFocus
                         >
                           {maritalStatusOptions.map(opt => (
                             <option key={opt} value={opt}>{opt}</option>
                           ))}
                         </select>
                       ) : (
-                        <>
-                          {entity.relationship_status}
-                          <button className="edit-pencil" onClick={() => startEdit(entity, "relationship_status", "tutor")}>✏️</button>
-                        </>
+                        entity.relationship_status || "-"
                       )
                     ) : (
                       <span className="disabled-cell">{entity.relationship_status || t("no data - see tutorship status")}</span>
                     )}
                   </td>
-                  <td>
+                  <td
+                    className={entity.in_tutorship ? "editable-cell" : ""}
+                    onClick={() => entity.in_tutorship && !editingCell && startEdit(entity, "tutee_wellness", "tutor")}
+                  >
                     {entity.in_tutorship ? (
                       editingCell?.rowId === entity.id && editingCell?.field === "tutee_wellness" ? (
                         <input
-                          className="form-column"
                           type="text"
                           value={editValue}
                           onChange={e => setEditValue(e.target.value)}
                           onBlur={() => confirmEdit(entity, "tutee_wellness")}
-                          style={{ minWidth: "220px", height: "30px", fontSize: "24px", overflowX: "auto" }}
+                          onKeyPress={e => e.key === 'Enter' && confirmEdit(entity, "tutee_wellness")}
+                          autoFocus
                         />
                       ) : (
-                        <>
-                          {entity.tutee_wellness}
-                          <button className="edit-pencil" onClick={() => startEdit(entity, "tutee_wellness", "tutor")}>✏️</button>
-                        </>
+                        entity.tutee_wellness || "-"
                       )
                     ) : (
                       <span className="disabled-cell">{entity.tutee_wellness || t("no data - see tutorship status")}</span>
@@ -405,6 +540,7 @@ const TutorVolunteerMgmt = () => {
           <thead>
             <tr>
               <th>{t("Israeli ID")}</th>
+              <th>{t("Phone")}</th>
               <th>{t("Name")}</th>
               <th>{t("Email")}</th>
               <th>{t("Comments")}</th>
@@ -422,29 +558,61 @@ const TutorVolunteerMgmt = () => {
           </thead>
           <tbody>
             {paginatedEntities.length === 0 ? (
-              <tr><td colSpan={9}>{t("No data to display")}</td></tr>
+              <tr><td colSpan={6}>{t("No data to display")}</td></tr>
             ) : (
               paginatedEntities.map((entity, idx) => (
                 <tr key={entity.id_id || entity.id || idx}>
-                  <td>{entity.id}</td>
+                  <td
+                    className="editable-cell"
+                    onClick={() => !editingCell && startEdit(entity, "id", "volunteer")}
+                  >
+                    {editingCell?.rowId === entity.id && editingCell?.field === "id" ? (
+                      <input
+                        type="text"
+                        value={editValue}
+                        onChange={e => setEditValue(e.target.value)}
+                        onBlur={() => confirmEdit(entity, "id")}
+                        onKeyPress={e => e.key === 'Enter' && confirmEdit(entity, "id")}
+                        autoFocus
+                      />
+                    ) : (
+                      entity.id
+                    )}
+                  </td>
+                  <td
+                    className="editable-cell"
+                    onClick={() => !editingCell && startEdit(entity, "phone", "volunteer")}
+                  >
+                    {editingCell?.rowId === entity.id && editingCell?.field === "phone" ? (
+                      <input
+                        type="text"
+                        value={editValue}
+                        onChange={e => setEditValue(e.target.value)}
+                        onBlur={() => confirmEdit(entity, "phone")}
+                        onKeyPress={e => e.key === 'Enter' && confirmEdit(entity, "phone")}
+                        autoFocus
+                      />
+                    ) : (
+                      formatPhoneDisplay(entity.phone) || "-"
+                    )}
+                  </td>
                   <td>{entity.first_name + " " + entity.last_name}</td>
                   <td>{entity.email}</td>
-                  <td>
+                  <td
+                    className="editable-cell"
+                    onClick={() => !editingCell && startEdit(entity, "comments", "volunteer")}
+                  >
                     {editingCell?.rowId === entity.id && editingCell?.field === "comments" ? (
                       <input
                         type="text"
                         value={editValue}
                         onChange={e => setEditValue(e.target.value)}
                         onBlur={() => confirmEdit(entity, "comments")}
-                        style={{ minWidth: "220px", height: "30px", fontSize: "24px", overflowX: "auto" }}
+                        onKeyPress={e => e.key === 'Enter' && confirmEdit(entity, "comments")}
+                        autoFocus
                       />
                     ) : (
-                      <>
-                        {entity.comments}
-                        <button
-                          className="edit-pencil"
-                          onClick={() => startEdit(entity, "comments", "volunteer")}>✏️</button>
-                    </>
+                      entity.comments || "-"
                     )}
                   </td>
                   <td>
@@ -517,7 +685,7 @@ const TutorVolunteerMgmt = () => {
           <input
             className="search-bar"
             type="text"
-            placeholder={t("Search by name or email")}
+            placeholder={t("Search by name, email, phone or ID")}
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
           />
