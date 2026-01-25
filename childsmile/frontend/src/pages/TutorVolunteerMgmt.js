@@ -450,16 +450,21 @@ const TutorVolunteerMgmt = () => {
                     onClick={() => !editingCell && startEdit(entity, "preferences", "tutor")}
                   >
                     {editingCell?.rowId === entity.id && editingCell?.field === "preferences" ? (
-                      <input
-                        type="text"
+                      <textarea
                         value={editValue}
                         onChange={e => setEditValue(e.target.value)}
                         onBlur={() => confirmEdit(entity, "preferences")}
-                        onKeyPress={e => e.key === 'Enter' && confirmEdit(entity, "preferences")}
+                        onKeyDown={e => {
+                          if (e.key === 'Escape') {
+                            e.preventDefault();
+                            setEditingCell(null);
+                            setEditValue("");
+                          }
+                        }}
                         autoFocus
                       />
                     ) : (
-                      entity.preferences || "-"
+                      <span className="text-cell-content">{entity.preferences || "-"}</span>
                     )}
                   </td>
                   <td
@@ -491,16 +496,21 @@ const TutorVolunteerMgmt = () => {
                   >
                     {entity.in_tutorship ? (
                       editingCell?.rowId === entity.id && editingCell?.field === "tutee_wellness" ? (
-                        <input
-                          type="text"
+                        <textarea
                           value={editValue}
                           onChange={e => setEditValue(e.target.value)}
                           onBlur={() => confirmEdit(entity, "tutee_wellness")}
-                          onKeyPress={e => e.key === 'Enter' && confirmEdit(entity, "tutee_wellness")}
+                          onKeyDown={e => {
+                            if (e.key === 'Escape') {
+                              e.preventDefault();
+                              setEditingCell(null);
+                              setEditValue("");
+                            }
+                          }}
                           autoFocus
                         />
                       ) : (
-                        entity.tutee_wellness || "-"
+                        <span className="text-cell-content">{entity.tutee_wellness || "-"}</span>
                       )
                     ) : (
                       <span className="disabled-cell">{entity.tutee_wellness || t("no data - see tutorship status")}</span>
@@ -603,16 +613,21 @@ const TutorVolunteerMgmt = () => {
                     onClick={() => !editingCell && startEdit(entity, "comments", "volunteer")}
                   >
                     {editingCell?.rowId === entity.id && editingCell?.field === "comments" ? (
-                      <input
-                        type="text"
+                      <textarea
                         value={editValue}
                         onChange={e => setEditValue(e.target.value)}
                         onBlur={() => confirmEdit(entity, "comments")}
-                        onKeyPress={e => e.key === 'Enter' && confirmEdit(entity, "comments")}
+                        onKeyDown={e => {
+                          if (e.key === 'Escape') {
+                            e.preventDefault();
+                            setEditingCell(null);
+                            setEditValue("");
+                          }
+                        }}
                         autoFocus
                       />
                     ) : (
-                      entity.comments || "-"
+                      <span className="text-cell-content">{entity.comments || "-"}</span>
                     )}
                   </td>
                   <td>
