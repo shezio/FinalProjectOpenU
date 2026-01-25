@@ -13,7 +13,7 @@ from .models import (
     Staff, TOTPCode, SignedUp, Pending_Tutor, 
     General_Volunteer, Tutors, Role, Children,
     Tutorships, PrevTutorshipStatuses, Tasks, Task_Types,
-    MaritalStatus
+    MaritalStatus, Tutor_Feedback, General_V_Feedback, PossibleMatches
 )
 from .utils import *
 from .audit_utils import log_api_action
@@ -94,6 +94,25 @@ def register_send_totp(request):
 
         # Format phone with dash
         phone = f"{phone_prefix}-{phone_suffix}"
+        
+        # Check if phone already exists (normalize for comparison)
+        import re
+        phone_normalized = re.sub(r'[-\s]', '', phone)
+        existing_phones = SignedUp.objects.values_list('phone', flat=True)
+        for existing_phone in existing_phones:
+            existing_normalized = re.sub(r'[-\s]', '', str(existing_phone or ''))
+            if existing_normalized == phone_normalized:
+                log_api_action(
+                    request=request,
+                    action='USER_REGISTRATION_FAILED',
+                    success=False,
+                    error_message=f"Phone number is already registered",
+                    status_code=400,
+                    additional_data={'attempted_email': email, 'attempted_phone': phone}
+                )
+                return JsonResponse({
+                    "error": "This phone number is already registered"
+                }, status=400)
 
         # Store registration data in session
         request.session['pending_registration'] = {
@@ -810,6 +829,280 @@ def update_general_volunteer(request, volunteer_id):
     )
 
     return JsonResponse({"message": "General Volunteer updated successfully."}, status=200)
+
+
+@conditional_csrf
+@api_view(["PUT"])
+def update_volunteer_id(request, old_id):
+    """
+    Update a volunteer/tutor Israeli ID (ת.ז) across all related tables.
+    This performs a cascading update of the ID in SignedUp and all FK references.
+    """
+    api_logger.info(f"update_volunteer_id called for old_id: {old_id}")
+    
+    user_id = request.session.get("user_id")
+    if not user_id:
+        log_api_action(
+            request=request,
+            action='UPDATE_TUTOR_FAILED',
+            success=False,
+            error_message="Authentication credentials were not provided",
+            status_code=403,
+            entity_type='SignedUp',
+            entity_ids=[old_id]
+        )
+        return JsonResponse({"detail": "Authentication credentials were not provided."}, status=403)
+    
+    # Check permission for both tutors and general_volunteer
+    if not (has_permission(request, "tutors", "UPDATE") or has_permission(request, "general_volunteer", "UPDATE")):
+        log_api_action(
+            request=request,
+            action='UPDATE_TUTOR_FAILED',
+            success=False,
+            error_message="You do not have permission to update IDs",
+            status_code=401,
+            entity_type='SignedUp',
+            entity_ids=[old_id]
+        )
+        return JsonResponse({"error": "You do not have permission to update IDs."}, status=401)
+
+    data = request.data
+    new_id = data.get("new_id")
+    
+    if not new_id:
+        return JsonResponse({"error": "New ID is required."}, status=400)
+    
+    # Validate new ID format (9 digits for Israeli ID)
+    new_id_str = str(new_id).strip()
+    if not new_id_str.isdigit() or len(new_id_str) != 9:
+        return JsonResponse({"error": "Invalid ID format. Israeli ID must be exactly 9 digits."}, status=400)
+    
+    new_id = int(new_id_str)
+    
+    # Check if new ID already exists
+    if SignedUp.objects.filter(id=new_id).exists():
+        return JsonResponse({"error": "This ID already exists in the system."}, status=400)
+    
+    try:
+        signedup = SignedUp.objects.get(id=old_id)
+    except SignedUp.DoesNotExist:
+        return JsonResponse({"error": "Volunteer/Tutor not found."}, status=404)
+    
+    try:
+        with transaction.atomic():
+            # Store original data for new record
+            original_data = {
+                'first_name': signedup.first_name,
+                'surname': signedup.surname,
+                'age': signedup.age,
+                'gender': signedup.gender,
+                'phone': signedup.phone,
+                'city': signedup.city,
+                'comment': signedup.comment,
+                'email': signedup.email,
+                'want_tutor': signedup.want_tutor,
+            }
+            
+            affected_tables = ['childsmile_app_signedup']
+            
+            # Create new SignedUp record with new ID
+            new_signedup = SignedUp.objects.create(
+                id=new_id,
+                **original_data
+            )
+            
+            # IMPORTANT: Update tables in correct order - child tables before parent tables
+            # to avoid FK constraint violations
+            
+            # 1. Update PrevTutorshipStatuses FK (references Tutors) - MUST be before Tutors update
+            prev_status_updated = PrevTutorshipStatuses.objects.filter(tutor_id_id=old_id).update(tutor_id_id=new_id)
+            if prev_status_updated:
+                affected_tables.append('childsmile_app_prevtutorshipstatuses')
+            
+            # 2. Update Tutorships FK (references Tutors) - MUST be before Tutors update
+            tutorship_updated = Tutorships.objects.filter(tutor_id=old_id).update(tutor_id=new_id)
+            if tutorship_updated:
+                affected_tables.append('childsmile_app_tutorships')
+            
+            # 3. Update Tasks related_tutor FK (references Tutors) - MUST be before Tutors update
+            tasks_updated = Tasks.objects.filter(related_tutor_id=old_id).update(related_tutor_id=new_id)
+            if tasks_updated:
+                affected_tables.append('childsmile_app_tasks')
+            
+            # 4. Update Tutor_Feedback FK (references Tutors) - MUST be before Tutors update
+            tutor_feedback_updated = Tutor_Feedback.objects.filter(tutor_id=old_id).update(tutor_id=new_id)
+            if tutor_feedback_updated:
+                affected_tables.append('childsmile_app_tutor_feedback')
+            
+            # 5. Update General_V_Feedback FK (references General_Volunteer) - MUST be before General_Volunteer update
+            gv_feedback_updated = General_V_Feedback.objects.filter(volunteer_id=old_id).update(volunteer_id=new_id)
+            if gv_feedback_updated:
+                affected_tables.append('childsmile_app_general_v_feedback')
+            
+            # 6. Update PossibleMatches (stores tutor_id as IntegerField, not FK)
+            possible_matches_updated = PossibleMatches.objects.filter(tutor_id=old_id).update(tutor_id=new_id)
+            if possible_matches_updated:
+                affected_tables.append('childsmile_app_possiblematches')
+            
+            # 7. Now update Tutors FK (references SignedUp) - after all child tables
+            tutor_updated = Tutors.objects.filter(id_id=old_id).update(id_id=new_id)
+            if tutor_updated:
+                affected_tables.append('childsmile_app_tutors')
+            
+            # 8. Update General_Volunteer FK (references SignedUp) - after all child tables
+            gv_updated = General_Volunteer.objects.filter(id_id=old_id).update(id_id=new_id)
+            if gv_updated:
+                affected_tables.append('childsmile_app_general_volunteer')
+            
+            # 9. Update Pending_Tutor FK (references SignedUp)
+            pending_updated = Pending_Tutor.objects.filter(id_id=old_id).update(id_id=new_id)
+            if pending_updated:
+                affected_tables.append('childsmile_app_pending_tutor')
+            
+            # 10. Finally delete old SignedUp record
+            signedup.delete()
+            
+            # Determine if this was a tutor or volunteer for proper action name
+            action_name = 'UPDATE_TUTOR_SUCCESS' if tutor_updated else 'UPDATE_GENERAL_VOLUNTEER_SUCCESS'
+            
+            log_api_action(
+                request=request,
+                action=action_name,
+                affected_tables=affected_tables,
+                entity_type='SignedUp',
+                entity_ids=[old_id, new_id],
+                success=True,
+                additional_data={
+                    'update_type': 'ID_CHANGE',
+                    'old_id': old_id,
+                    'new_id': new_id,
+                    'volunteer_name': f"{original_data['first_name']} {original_data['surname']}",
+                    'volunteer_email': original_data['email']
+                }
+            )
+            
+            return JsonResponse({
+                "message": "ID updated successfully across all related tables.",
+                "old_id": old_id,
+                "new_id": new_id,
+                "affected_tables": affected_tables
+            }, status=200)
+            
+    except Exception as e:
+        api_logger.error(f"Error updating volunteer ID: {str(e)}\n{traceback.format_exc()}")
+        log_api_action(
+            request=request,
+            action='UPDATE_TUTOR_FAILED',
+            success=False,
+            error_message=str(e),
+            status_code=500,
+            entity_type='SignedUp',
+            entity_ids=[old_id],
+            additional_data={'attempted_new_id': new_id}
+        )
+        return JsonResponse({"error": f"Error updating ID: {str(e)}"}, status=500)
+
+
+@conditional_csrf
+@api_view(["PUT"])
+def update_volunteer_phone(request, volunteer_id):
+    """
+    Update a volunteer/tutor phone number in the SignedUp table.
+    Validates phone format (10 digits) and uniqueness.
+    """
+    api_logger.info(f"update_volunteer_phone called for volunteer_id: {volunteer_id}")
+    
+    user_id = request.session.get("user_id")
+    if not user_id:
+        log_api_action(
+            request=request,
+            action='UPDATE_TUTOR_FAILED',
+            success=False,
+            error_message="Authentication credentials were not provided",
+            status_code=403,
+            entity_type='SignedUp',
+            entity_ids=[volunteer_id]
+        )
+        return JsonResponse({"detail": "Authentication credentials were not provided."}, status=403)
+    
+    # Check permission for both tutors and general_volunteer
+    if not (has_permission(request, "tutors", "UPDATE") or has_permission(request, "general_volunteer", "UPDATE")):
+        log_api_action(
+            request=request,
+            action='UPDATE_TUTOR_FAILED',
+            success=False,
+            error_message="You do not have permission to update phone numbers",
+            status_code=401,
+            entity_type='SignedUp',
+            entity_ids=[volunteer_id]
+        )
+        return JsonResponse({"error": "You do not have permission to update phone numbers."}, status=401)
+
+    data = request.data
+    new_phone = data.get("phone")
+    
+    if not new_phone:
+        return JsonResponse({"error": "Phone number is required."}, status=400)
+    
+    # Normalize phone - remove dashes and spaces for validation
+    import re
+    new_phone_normalized = re.sub(r'[-\s]', '', str(new_phone).strip())
+    
+    # Validate phone format (10 digits, starts with 0)
+    if not new_phone_normalized.isdigit() or len(new_phone_normalized) != 10:
+        return JsonResponse({"error": "Invalid phone format. Phone must be exactly 10 digits."}, status=400)
+    
+    if not new_phone_normalized.startswith('0'):
+        return JsonResponse({"error": "Invalid phone format. Phone must start with 0."}, status=400)
+    
+    # Format phone with dash for storage (XXX-XXXXXXX)
+    new_phone_formatted = f"{new_phone_normalized[:3]}-{new_phone_normalized[3:]}"
+    
+    try:
+        signedup = SignedUp.objects.get(id=volunteer_id)
+    except SignedUp.DoesNotExist:
+        return JsonResponse({"error": "Volunteer/Tutor not found."}, status=404)
+    
+    # Check if phone already exists (excluding current volunteer)
+    # Normalize all existing phones for comparison
+    existing_phones = SignedUp.objects.exclude(id=volunteer_id).values_list('phone', flat=True)
+    for existing_phone in existing_phones:
+        existing_normalized = re.sub(r'[-\s]', '', str(existing_phone or ''))
+        if existing_normalized == new_phone_normalized:
+            return JsonResponse({"error": "This phone number already exists in the system."}, status=400)
+    
+    old_phone = signedup.phone
+    signedup.phone = new_phone_formatted
+    signedup.save()
+    
+    # Also update the related volunteer/tutor updated timestamp
+    is_tutor = Tutors.objects.filter(id_id=volunteer_id).exists()
+    General_Volunteer.objects.filter(id_id=volunteer_id).update(updated=now())
+    Tutors.objects.filter(id_id=volunteer_id).update(updated=now())
+    
+    # Log with appropriate action name based on user type
+    action_name = 'UPDATE_TUTOR_SUCCESS' if is_tutor else 'UPDATE_GENERAL_VOLUNTEER_SUCCESS'
+    log_api_action(
+        request=request,
+        action=action_name,
+        affected_tables=['childsmile_app_signedup'],
+        entity_type='SignedUp',
+        entity_ids=[volunteer_id],
+        success=True,
+        additional_data={
+            'update_type': 'PHONE_CHANGE',
+            'old_phone': old_phone,
+            'new_phone': new_phone_formatted,
+            'volunteer_name': f"{signedup.first_name} {signedup.surname}",
+            'volunteer_email': signedup.email
+        }
+    )
+    
+    return JsonResponse({
+        "message": "Phone number updated successfully.",
+        "old_phone": old_phone,
+        "new_phone": new_phone_formatted
+    }, status=200)
 
 
 @conditional_csrf

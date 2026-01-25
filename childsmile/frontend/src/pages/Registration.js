@@ -146,14 +146,15 @@ const Registration = () => {
           console.error("Error sending TOTP:", error);
           setLoading(false);
           
-          // ✅ Handle email already exists error
-          if (error.response?.data?.email_exists) {
-            showErrorToast(t, 'Email is already registered.', error);
-            // Don't move to TOTP screen
+          // Show the specific error from the backend (email/phone already exists, etc.)
+          // The form data is preserved so user can fix just the problematic field
+          
+          if (error.response?.data?.error) {
+            showErrorToast(t, '', error);
             return;
           }
-          
-          showErrorToast(t, 'Failed to send verification code.', error);
+
+          showErrorToast(t, 'Failed to send verification code.', '');
         });
     }
   };

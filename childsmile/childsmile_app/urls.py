@@ -34,6 +34,8 @@ from .views_volunteer import (
     create_pending_tutor,
     update_general_volunteer,
     update_tutor,
+    update_volunteer_id,
+    update_volunteer_phone,
 )
 from .task_views import (
     get_user_tasks,
@@ -371,6 +373,16 @@ urlpatterns = [
         "api/update_tutor/<int:tutor_id>/",
         update_tutor,
         name="update_tutor",
+    ),
+    path(
+        "api/update_volunteer_id/<int:old_id>/",
+        update_volunteer_id,
+        name="update_volunteer_id",
+    ),
+    path(
+        "api/update_volunteer_phone/<int:volunteer_id>/",
+        update_volunteer_phone,
+        name="update_volunteer_phone",
     ),
     path(
         "api/google-login-success/",

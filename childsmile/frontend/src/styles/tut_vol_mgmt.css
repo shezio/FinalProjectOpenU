@@ -22,10 +22,39 @@
   min-width: 200px; /* keep same size as editable */
 }
 
+/* Editable cell - click to edit styling */
+.editable-cell {
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.editable-cell:hover {
+  background-color: rgba(59, 130, 246, 0.1);
+}
+
+.editable-cell input,
+.editable-cell select {
+  width: 100%;
+  padding: 4px 8px;
+  font-size: inherit;
+  font-family: inherit;
+  border: 2px solid rgba(59, 130, 246, 0.5);
+  border-radius: 4px;
+  background: white;
+  box-sizing: border-box;
+}
+
+.editable-cell input:focus,
+.editable-cell select:focus {
+  outline: none;
+  border-color: rgba(59, 130, 246, 0.8);
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+
 .flip-wrapper {
   position: relative;
   width: 1600px;
-  height: 480px;
+  height: 550px;
   margin-right: 250px;
   margin-top: 350px;
   perspective: 2000px;
@@ -88,7 +117,7 @@
 .search-bar,
 input.search-bar {
   padding: 10px 15px;
-  width: 300px;
+  width: 350px;
   height: 30px;
   border: 3px solid rgba(59, 130, 246, 0.75);
   background: linear-gradient(135deg, 
