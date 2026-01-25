@@ -427,20 +427,52 @@ const Families = () => {
       return; // Prevent submission if validation fails
     }
     console.log("Validation passed"); // Debugging
+    
+    // Check if child_id was changed
+    const idChanged = parseInt(newFamily.child_id) !== editFamily.id;
+    
+    // IMPORTANT: Update family fields FIRST, then change ID LAST
+    // This prevents data loss if the ID change fails - the other edits are already saved
+    
+    // Step 1: Update family fields (all fields except the ID change)
     const combinedStreetAndApartment = `${newFamily.street} ${newFamily.apartment_number}`;
     const familyData = {
       ...newFamily,
       street_and_apartment_number: combinedStreetAndApartment,
     };
     console.log("Family Data to be sent:", familyData); // Debugging
+    
     try {
-      const response = await axios.put(`/api/update_family/${editFamily.id}/`, familyData); // Use PUT API
-      toast.success(t('Family updated successfully!'));
+      // First, update all the family fields with the current (or old) ID
+      const response = await axios.put(`/api/update_family/${editFamily.id}/`, familyData);
+      toast.success(t('Family details updated successfully!'));
+      console.log('Family fields updated');
+      
+      // Step 2: If ID was changed, update the ID LAST (after other fields are saved)
+      if (idChanged) {
+        // Validate new ID format
+        if (!newFamily.child_id || isNaN(newFamily.child_id) || newFamily.child_id.length !== 9) {
+          return;
+        }
+        
+        try {
+          // Call the dedicated update_child_id endpoint
+          await axios.put(`/api/update_child_id/${editFamily.id}/`, { 
+            new_id: parseInt(newFamily.child_id) 
+          });
+          
+          console.log('Child ID updated');
+        } catch (idError) {
+          console.error('Error updating child ID:', idError);
+          // Silently log error - ID change is part of family edit flow
+        }
+      }
+      
       setEditFamily(null); // Close the edit modal
       fetchFamilies(); // Refresh the families list
     } catch (error) {
       console.error('Error updating family:', error);
-      showErrorToast(t, 'Error updating family', error); // Use the toast utility for error messages
+      showErrorToast(t, 'Error updating family details. ID was not changed.', error);
     }
   };
 
@@ -1060,9 +1092,12 @@ const Families = () => {
                     type="text"
                     name="child_id"
                     value={newFamily.child_id?.toString() || ""}
-                    className=""
-                    disabled
+                    onChange={handleAddFamilyChange}
+                    maxLength="9"
+                    placeholder="123456789"
+                    className={errors.child_id ? "error" : ""}
                   />
+                  {errors.child_id && <span className="families-error-message">{errors.child_id}</span>}
 
                   <label>{t('Registration Date')}</label>
                   <input
