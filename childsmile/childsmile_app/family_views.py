@@ -16,6 +16,7 @@ from .models import (
     Task_Types,
     PossibleMatches,  # Add this line
     InitialFamilyData,
+    PrevTutorshipStatuses,
 )
 from .unused_views import (
     PermissionsViewSet,
@@ -62,6 +63,7 @@ from time import sleep
 from math import sin, cos, sqrt, atan2, radians, ceil
 import json
 import os
+import traceback
 from django.db.models import Count, F
 from .utils import *
 from .audit_utils import log_api_action
@@ -434,36 +436,46 @@ def update_family(request, child_id):
                 status_code=404,
                 entity_type='Children',
                 entity_ids=[child_id],
-                additional_data={'family_name': 'Unknown - Family not found'}  # **UPDATE THIS LINE**
+                additional_data={'family_name': 'Unknown - Family not found'}
             )
             return JsonResponse({"error": "Family not found."}, status=404)
 
         # Extract data from the request
         data = request.data
+        
+        # Initialize field_changes early so it's available in all error handlers
+        field_changes = []
 
         # Validate that the child_id in the request matches the existing child_id
+        # UNLESS the user is intentionally changing the ID (will be handled by update_child_id endpoint)
         request_child_id = data.get("child_id")
         if request_child_id and str(request_child_id) != str(child_id):
-            log_api_action(
-                request=request,
-                action='UPDATE_FAMILY_FAILED',
-                success=False,
-                error_message="The child_id in the request does not match the existing child_id",
-                status_code=400,
-                entity_type='Children',
-                entity_ids=[child_id],
-                additional_data={
-                    'family_name': f"{family.childfirstname} {family.childsurname}",
-                    'attempted_changes': field_changes,  # **ADD THIS**
-                    'changes_count': len(field_changes)  # **ADD THIS**
-                }
-            )
-            return JsonResponse(
-                {
-                    "error": "The child_id in the request does not match the existing child_id."
-                },
-                status=400,
-            )
+            # Check if this is an intentional ID change
+            # If the IDs are different and both are valid 9-digit numbers, allow it
+            # (the actual ID change will be handled by the update_child_id endpoint after other fields are saved)
+            request_child_id_str = str(request_child_id).strip()
+            if not (request_child_id_str.isdigit() and len(request_child_id_str) == 9):
+                log_api_action(
+                    request=request,
+                    action='UPDATE_FAMILY_FAILED',
+                    success=False,
+                    error_message="The child_id in the request does not match the existing child_id",
+                    status_code=400,
+                    entity_type='Children',
+                    entity_ids=[child_id],
+                    additional_data={
+                        'family_name': f"{family.childfirstname} {family.childsurname}",
+                        'attempted_changes': field_changes,
+                        'changes_count': len(field_changes)
+                    }
+                )
+                return JsonResponse(
+                    {
+                        "error": "The child_id in the request does not match the existing child_id."
+                    },
+                    status=400,
+                )
+            # If it's a valid ID format change, allow it to proceed (will be changed later via update_child_id endpoint)
 
         required_fields = [
             "child_id",
@@ -494,8 +506,8 @@ def update_family(request, child_id):
                 entity_ids=[child_id],
                 additional_data={
                     'family_name': f"{family.childfirstname} {family.childsurname}",
-                    'attempted_changes': field_changes,  # **ADD THIS**
-                    'changes_count': len(field_changes)  # **ADD THIS**
+                    'attempted_changes': field_changes,
+                    'changes_count': len(field_changes)
                 }
             )
             return JsonResponse(
@@ -506,9 +518,7 @@ def update_family(request, child_id):
         # Store original values for audit
         original_name = f"{family.childfirstname} {family.childsurname}"
         
-        # **ADD: Track what fields are being changed - BEFORE updating**
-        field_changes = []
-        
+        # Track what fields are being changed - BEFORE updating
         # Check each field for changes and track them
         if family.childfirstname != data.get("childfirstname", family.childfirstname):
             field_changes.append(f"First Name: '{family.childfirstname}' → '{data.get('childfirstname')}'")
@@ -1409,3 +1419,182 @@ def delete_initial_family_data(request, initial_family_data_id):
             }
         )
         return JsonResponse({"error": str(e)}, status=500)
+
+
+@conditional_csrf
+@api_view(["PUT"])
+def update_child_id(request, old_id):
+    """
+    Update a child's ID (Israeli ID) across all related tables.
+    This performs a cascading update of the ID in Children table and all FK references.
+    """
+    api_logger.info(f"update_child_id called for old_id: {old_id}")
+    
+    user_id = request.session.get("user_id")
+    if not user_id:
+        log_api_action(
+            request=request,
+            action='UPDATE_FAMILY_FAILED',
+            success=False,
+            error_message="Authentication credentials were not provided",
+            status_code=403,
+            entity_type='Children',
+            entity_ids=[old_id]
+        )
+        return JsonResponse({"detail": "Authentication credentials were not provided."}, status=403)
+    
+    # Check permission for children table updates
+    if not has_permission(request, "children", "UPDATE"):
+        log_api_action(
+            request=request,
+            action='UPDATE_FAMILY_FAILED',
+            success=False,
+            error_message="You do not have permission to update child IDs",
+            status_code=401,
+            entity_type='Children',
+            entity_ids=[old_id]
+        )
+        return JsonResponse({"error": "You do not have permission to update child IDs."}, status=401)
+
+    data = request.data
+    new_id = data.get("new_id")
+    
+    if not new_id:
+        return JsonResponse({"error": "New ID is required."}, status=400)
+    
+    # Validate new ID format (9 digits for Israeli ID)
+    new_id_str = str(new_id).strip()
+    if not new_id_str.isdigit() or len(new_id_str) != 9:
+        return JsonResponse({"error": "Invalid ID format. Israeli ID must be exactly 9 digits."}, status=400)
+    
+    new_id = int(new_id_str)
+    
+    # Check if new ID already exists
+    if Children.objects.filter(child_id=new_id).exists():
+        return JsonResponse({"error": "This child ID already exists in the system."}, status=400)
+    
+    try:
+        child = Children.objects.get(child_id=old_id)
+    except Children.DoesNotExist:
+        return JsonResponse({"error": "Child/Family not found."}, status=404)
+    
+    try:
+        with transaction.atomic():
+            # Store original data for audit log
+            original_data = {
+                'child_name': f"{child.childfirstname} {child.childsurname}",
+                'city': child.city,
+                'status': child.status
+            }
+            
+            affected_tables = ['childsmile_app_children']
+            
+            # IMPORTANT: Update tables in correct order - child tables before parent tables
+            # to avoid FK constraint violations
+            
+            # 1. Update PrevTutorshipStatuses FK (references Children via child_id)
+            prev_status_updated = PrevTutorshipStatuses.objects.filter(child_id=old_id).update(child_id=new_id)
+            if prev_status_updated:
+                affected_tables.append('childsmile_app_prevtutorshipstatuses')
+                api_logger.debug(f"Updated {prev_status_updated} PrevTutorshipStatuses records")
+            
+            # 2. Update Tutorships FK (references Children via child)
+            tutorship_updated = Tutorships.objects.filter(child_id=old_id).update(child_id=new_id)
+            if tutorship_updated:
+                affected_tables.append('childsmile_app_tutorships')
+                api_logger.debug(f"Updated {tutorship_updated} Tutorships records")
+            
+            # 3. Update Tasks related_child FK (references Children)
+            tasks_updated = Tasks.objects.filter(related_child_id=old_id).update(related_child_id=new_id)
+            if tasks_updated:
+                affected_tables.append('childsmile_app_tasks')
+                api_logger.debug(f"Updated {tasks_updated} Tasks records")
+            
+            # 4. Finally update Children record - change the primary key
+            # Delete the old record and create a new one with new ID
+            # Store all fields from old record
+            child_data = {
+                'child_id': new_id,
+                'childfirstname': child.childfirstname,
+                'childsurname': child.childsurname,
+                'registrationdate': child.registrationdate,
+                'lastupdateddate': datetime.datetime.now().date(),
+                'gender': child.gender,
+                'responsible_coordinator': child.responsible_coordinator,
+                'city': child.city,
+                'child_phone_number': child.child_phone_number,
+                'treating_hospital': child.treating_hospital,
+                'date_of_birth': child.date_of_birth,
+                'medical_diagnosis': child.medical_diagnosis,
+                'diagnosis_date': child.diagnosis_date,
+                'marital_status': child.marital_status,
+                'num_of_siblings': child.num_of_siblings,
+                'details_for_tutoring': child.details_for_tutoring,
+                'additional_info': child.additional_info,
+                'tutoring_status': child.tutoring_status,
+                'current_medical_state': child.current_medical_state,
+                'when_completed_treatments': child.when_completed_treatments,
+                'father_name': child.father_name,
+                'father_phone': child.father_phone,
+                'mother_name': child.mother_name,
+                'mother_phone': child.mother_phone,
+                'street_and_apartment_number': child.street_and_apartment_number,
+                'expected_end_treatment_by_protocol': child.expected_end_treatment_by_protocol,
+                'has_completed_treatments': child.has_completed_treatments,
+                'status': child.status,
+                'last_review_talk_conducted': child.last_review_talk_conducted,
+            }
+            
+            # Delete the old record
+            child.delete()
+            
+            # Create new record with new ID
+            new_child = Children.objects.create(**child_data)
+            api_logger.debug(f"Created new Children record with new_id: {new_id}")
+            
+            # Log successful ID update
+            log_api_action(
+                request=request,
+                action='UPDATE_FAMILY_SUCCESS',
+                affected_tables=affected_tables,
+                entity_type='Children',
+                entity_ids=[old_id, new_id],
+                success=True,
+                additional_data={
+                    'update_type': 'CHILD_ID_CHANGE',
+                    'old_id': old_id,
+                    'new_id': new_id,
+                    'child_name': original_data['child_name'],
+                    'child_city': original_data['city'],
+                    'child_status': original_data['status'],
+                    'tutorships_updated': tutorship_updated,
+                    'tasks_updated': tasks_updated,
+                    'prev_statuses_updated': prev_status_updated
+                }
+            )
+            
+            return JsonResponse({
+                "message": "Child ID updated successfully across all related tables.",
+                "old_id": old_id,
+                "new_id": new_id,
+                "affected_tables": affected_tables,
+                "summary": {
+                    "tutorships_updated": tutorship_updated,
+                    "tasks_updated": tasks_updated,
+                    "prev_statuses_updated": prev_status_updated
+                }
+            }, status=200)
+            
+    except Exception as e:
+        api_logger.error(f"Error updating child ID: {str(e)}\n{traceback.format_exc()}")
+        log_api_action(
+            request=request,
+            action='UPDATE_FAMILY_FAILED',
+            success=False,
+            error_message=str(e),
+            status_code=500,
+            entity_type='Children',
+            entity_ids=[old_id],
+            additional_data={'attempted_new_id': new_id}
+        )
+        return JsonResponse({"error": f"Error updating child ID: {str(e)}"}, status=500)

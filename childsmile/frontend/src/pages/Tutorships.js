@@ -93,6 +93,7 @@ const Tutorships = () => {
   const [totalCount, setTotalCount] = useState(0); // Total number of tutorships
   const [isMagnifyActive, setIsMagnifyActive] = useState(false);
   const [matchSearchQuery, setMatchSearchQuery] = useState('');
+  const [tutorshipSearchQuery, setTutorshipSearchQuery] = useState('');
   const [enrichedTutorships, setEnrichedTutorships] = useState([]);
   const [wizardFamilies, setWizardFamilies] = useState([]);
   const [wizardTutors, setWizardTutors] = useState([]);
@@ -371,7 +372,21 @@ const Tutorships = () => {
 
   // Filter and sort the tutorships by created_date
   const filteredTutorships = enrichedTutorships.filter(tutorship => {
-    return tutorshipActivationFilters[tutorship.tutorship_activation] === true;
+    // Filter by activation status
+    if (tutorshipActivationFilters[tutorship.tutorship_activation] !== true) {
+      return false;
+    }
+    
+    // Filter by search query
+    if (tutorshipSearchQuery.trim()) {
+      const query = tutorshipSearchQuery.toLowerCase();
+      return (
+        (tutorship.child_full_name && tutorship.child_full_name.toLowerCase().includes(query)) ||
+        (tutorship.tutor_full_name && tutorship.tutor_full_name.toLowerCase().includes(query))
+      );
+    }
+    
+    return true;
   });
 
   const sortedTutorships = [...filteredTutorships].sort((a, b) => {
@@ -928,6 +943,16 @@ const Tutorships = () => {
             <button onClick={fetchFullTutorships}>
               {t('Refresh Tutorships')}
             </button>
+          </div>
+          
+          <div className="tutorship-search-container">
+            <input
+              type="text"
+              className="tutorship-search-bar"
+              placeholder={t('Search by tutor or tutee name')}
+              value={tutorshipSearchQuery}
+              onChange={e => setTutorshipSearchQuery(e.target.value)}
+            />
           </div>
         </div>
         

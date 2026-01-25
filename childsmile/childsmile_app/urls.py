@@ -68,6 +68,7 @@ from .family_views import (
     update_initial_family_data,
     delete_initial_family_data,
     mark_initial_family_complete,
+    update_child_id,
 )
 from .feedback_views import (
     create_tutor_feedback,
@@ -213,6 +214,11 @@ urlpatterns = [
         "api/update_family/<int:child_id>/",
         update_family,
         name="update_family",
+    ),
+    path(
+        "api/update_child_id/<int:old_id>/",
+        update_child_id,
+        name="update_child_id",
     ),
     path(
         "api/delete_family/<int:child_id>/",
