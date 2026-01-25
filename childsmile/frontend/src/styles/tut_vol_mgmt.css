@@ -22,6 +22,108 @@
   min-width: 200px; /* keep same size as editable */
 }
 
+/* Free text cells - preferences, comments, tutee wellness, etc. */
+.families-data-grid td.text-cell,
+.families-data-grid td:nth-child(6), /* Preferences column in tutors */
+.families-data-grid td:nth-child(8), /* Tutee Wellness column in tutors */
+.flip-back .families-data-grid td:nth-child(5) /* Comments column in volunteers */
+{
+  max-width: 120px;
+  min-width: 80px;
+  height: 45px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: middle;
+  padding: 6px 8px;
+  position: relative;
+}
+
+/* Text cell content span - shows ellipsis properly */
+.text-cell-content {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  width: 100%;
+  padding: 0;
+  margin: 0;
+}
+
+/* Edit textareas for these cells should show scrollbars when focused */
+.families-data-grid td:nth-child(6) textarea,
+.families-data-grid td:nth-child(8) textarea,
+.flip-back .families-data-grid td:nth-child(5) textarea {
+  width: 100%;
+  max-width: 300px;
+  height: 120px;
+  padding: 8px 10px;
+  border: 2px solid rgba(59, 130, 246, 0.5);
+  border-radius: 4px;
+  font-family: inherit;
+  font-size: inherit;
+  resize: none;
+  overflow-y: auto;
+  word-wrap: break-word;
+  white-space: normal;
+  background: white;
+  box-sizing: border-box;
+  
+  /* Scrollbar styling */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(59, 130, 246, 0.4) rgba(59, 130, 246, 0.1);
+}
+
+.families-data-grid td:nth-child(6) textarea:focus,
+.families-data-grid td:nth-child(8) textarea:focus,
+.flip-back .families-data-grid td:nth-child(5) textarea:focus {
+  outline: none;
+  border-color: rgba(59, 130, 246, 0.8);
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+
+/* Webkit scrollbar for edit textareas */
+.families-data-grid td:nth-child(6) textarea::-webkit-scrollbar,
+.families-data-grid td:nth-child(8) textarea::-webkit-scrollbar,
+.flip-back .families-data-grid td:nth-child(5) textarea::-webkit-scrollbar {
+  width: 6px;
+}
+
+.families-data-grid td:nth-child(6) textarea::-webkit-scrollbar-track,
+.families-data-grid td:nth-child(8) textarea::-webkit-scrollbar-track,
+.flip-back .families-data-grid td:nth-child(5) textarea::-webkit-scrollbar-track {
+  background: rgba(59, 130, 246, 0.1);
+  border-radius: 3px;
+}
+
+.families-data-grid td:nth-child(6) textarea::-webkit-scrollbar-thumb,
+.families-data-grid td:nth-child(8) textarea::-webkit-scrollbar-thumb,
+.flip-back .families-data-grid td:nth-child(5) textarea::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, 
+    rgba(59, 130, 246, 0.5) 0%,
+    rgba(99, 102, 241, 0.5) 100%);
+  border-radius: 3px;
+}
+
+.families-data-grid td:nth-child(6) textarea::-webkit-scrollbar-thumb:hover,
+.families-data-grid td:nth-child(8) textarea::-webkit-scrollbar-thumb:hover,
+.flip-back .families-data-grid td:nth-child(5) textarea::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, 
+    rgba(59, 130, 246, 0.8) 0%,
+    rgba(99, 102, 241, 0.8) 100%);
+}
+
+/* Wrapper span inside the cell - simple ellipsis display */
+.text-cell-content {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  width: 100%;
+  padding: 0;
+  margin: 0;
+}
+
 /* Editable cell - click to edit styling */
 .editable-cell {
   cursor: pointer;
@@ -53,9 +155,9 @@
 
 .flip-wrapper {
   position: relative;
-  width: 1600px;
+  width: 1700px;
   height: 550px;
-  margin-right: 250px;
+  margin-right: 230px;
   margin-top: 350px;
   perspective: 2000px;
   background: linear-gradient(135deg, 
