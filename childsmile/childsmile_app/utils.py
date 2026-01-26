@@ -14,7 +14,8 @@ from .models import (
     General_V_Feedback,
     Tasks,
     Task_Types,
-    PossibleMatches,  # Add this line
+    PossibleMatches,
+    PrevTutorshipStatuses,
     InitialFamilyData,
     CityGeoDistance,
 )
@@ -176,10 +177,15 @@ def check_matches_permissions(request, required_permissions):
 def fetch_possible_matches():
     """
     Fetch possible matches from the database.
-    Logic:
-    - Exclude any CHILD that has a NON-INACTIVE tutorship (child must not be actively matched)
-    - Exclude ANY TUTOR that has ANY tutorship ONLY if they are ACTIVE in staff table
-    - Allow INACTIVE tutors (is_active = False) with only inactive tutorships to be matched again
+    
+    This populates the PossibleMatches table used by BOTH:
+    - Wizard (will be filtered to show only children with 0 tutors)
+    - Report (shows ALL matches for manual multi-tutor matching)
+    
+    RULES:
+    - Include ALL children (even those with existing tutors) for the report
+    - Only exclude specific child+tutor pairs that already have a non-inactive tutorship
+    - Only show tutors who do NOT have any active/pending tutorship (tutor = 1 tutee max)
     """
     query = """
     SELECT
@@ -204,25 +210,30 @@ def fetch_possible_matches():
     JOIN childsmile_app_staff staff
         ON tutor.staff_id = staff.staff_id
     WHERE 
-        -- Exclude children with non-inactive tutorships
+        -- Only exclude THIS SPECIFIC child+tutor pair if already matched (allows multi-tutor via report)
         NOT EXISTS (
             SELECT 1
             FROM childsmile_app_tutorships tutorship
             WHERE tutorship.child_id = child.child_id 
+            AND tutorship.tutor_id = tutor.id_id
             AND tutorship.tutorship_activation <> 'inactive'
         )
-        -- Exclude tutors that have ANY tutorship ONLY if they are ACTIVE
+        -- Exclude tutors that have ANY active/pending tutorship (tutor can only have ONE tutee)
         AND NOT EXISTS (
             SELECT 1
             FROM childsmile_app_tutorships tutorship
             WHERE tutorship.tutor_id = tutor.id_id
-            AND staff.is_active = TRUE
             AND tutorship.tutorship_activation <> 'inactive'
         )
-    AND child.status <> 'בריא';
+        -- Only include active staff members
+        AND staff.is_active = TRUE
+        -- Exclude deceased and healthy children (use parameterized query to avoid encoding issues)
+        AND child.status NOT IN (%s, %s);
     """
+    # Use parameterized query for Hebrew values to avoid encoding issues with special characters
+    excluded_statuses = ('ז״ל', 'בריא')
     with connection.cursor() as cursor:
-        cursor.execute(query)
+        cursor.execute(query, excluded_statuses)
         rows = cursor.fetchall()
         if not rows:
             return []  # Ensure it returns a list
@@ -1150,7 +1161,13 @@ def deactivate_staff(staff, performed_by_user, deactivation_reason, request=None
     active_tutorships = Tutorships.objects.filter(tutor__staff=staff)
     tutorship_count = active_tutorships.count()
     
+    # Track children who may need status update (MULTI-TUTOR SUPPORT)
+    affected_children = []
+    
     for tutorship in active_tutorships:
+        # Track the child for later status check
+        affected_children.append(tutorship.child)
+        
         # Create EXACT duplicate with ALL fields from original
         Tutorships.objects.create(
             child=tutorship.child,
@@ -1164,6 +1181,29 @@ def deactivate_staff(staff, performed_by_user, deactivation_reason, request=None
         
         # DELETE original tutorship (make room for the inactive copy)
         tutorship.delete()
+    
+    # MULTI-TUTOR SUPPORT: Update child status if they have no remaining active tutors
+    for child in affected_children:
+        remaining_active_tutorships = Tutorships.objects.filter(
+            child=child,
+            tutorship_activation__in=['pending_first_approval', 'active']
+        ).count()
+        
+        if remaining_active_tutorships == 0:
+            # No active tutors left - try to restore from PrevTutorshipStatuses
+            prev_status = PrevTutorshipStatuses.objects.filter(
+                child_id=child
+            ).order_by('-last_updated').first()
+            
+            if prev_status and prev_status.child_tut_status:
+                # Restore the original status before any tutorship was created
+                child.tutoring_status = prev_status.child_tut_status
+                api_logger.info(f"Child {child.child_id} status restored to '{prev_status.child_tut_status}' from PrevTutorshipStatuses")
+            else:
+                # Fallback to "looking for tutor" if no prev status found
+                child.tutoring_status = 'למצוא_חונך'
+                api_logger.info(f"Child {child.child_id} status set to 'למצוא_חונך' - no PrevTutorshipStatuses found")
+            child.save()
     
     # Step 7: Log to audit
     log_api_action(

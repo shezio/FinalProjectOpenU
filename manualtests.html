@@ -1,0 +1,994 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>בדיקות ידניות - תמיכה ברב-חונכים</title>
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --primary-light: #dbeafe;
+            --success-color: #16a34a;
+            --success-light: #dcfce7;
+            --warning-color: #d97706;
+            --warning-light: #fef3c7;
+            --danger-color: #dc2626;
+            --danger-light: #fee2e2;
+            --gray-50: #f9fafb;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-300: #d1d5db;
+            --gray-600: #4b5563;
+            --gray-800: #1f2937;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ec 100%);
+            min-height: 100vh;
+            padding: 2rem;
+            line-height: 1.6;
+            color: var(--gray-800);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            color: var(--primary-color);
+            font-size: 2.5rem;
+            margin-bottom: 2rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .summary-card {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            border-right: 5px solid var(--primary-color);
+        }
+
+        .summary-card h2 {
+            color: var(--primary-color);
+            margin-bottom: 1.5rem;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .summary-card h2::before {
+            content: "📋";
+        }
+
+        .files-list {
+            list-style: none;
+            margin-bottom: 1.5rem;
+        }
+
+        .files-list li {
+            padding: 0.75rem 1rem;
+            margin-bottom: 0.5rem;
+            background: var(--gray-50);
+            border-radius: 8px;
+            border-right: 3px solid var(--warning-color);
+        }
+
+        .files-list code {
+            background: var(--primary-light);
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            color: var(--primary-color);
+            font-weight: bold;
+        }
+
+        .logic-box {
+            background: var(--success-light);
+            border-radius: 12px;
+            padding: 1.5rem;
+            border-right: 4px solid var(--success-color);
+        }
+
+        .logic-box h3 {
+            color: var(--success-color);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .logic-box h3::before {
+            content: "💡";
+        }
+
+        .logic-box ul {
+            list-style: none;
+        }
+
+        .logic-box li {
+            padding: 0.5rem 0;
+            border-bottom: 1px dashed var(--gray-300);
+        }
+
+        .logic-box li:last-child {
+            border-bottom: none;
+        }
+
+        .logic-box strong {
+            color: var(--success-color);
+        }
+
+        .section {
+            background: white;
+            border-radius: 16px;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .section-header {
+            background: linear-gradient(135deg, var(--primary-color), #1d4ed8);
+            color: white;
+            padding: 1rem 1.5rem;
+            font-size: 1.3rem;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.3s;
+        }
+
+        .section-header:hover {
+            background: linear-gradient(135deg, #1d4ed8, #1e40af);
+        }
+
+        .section-header .toggle {
+            font-size: 1.5rem;
+            transition: transform 0.3s;
+        }
+
+        .section.collapsed .section-header .toggle {
+            transform: rotate(180deg);
+        }
+
+        .section.collapsed .section-content {
+            display: none;
+        }
+
+        .section-content {
+            padding: 1.5rem;
+        }
+
+        .test-case {
+            background: var(--gray-50);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            border-right: 4px solid var(--warning-color);
+        }
+
+        .test-case:last-child {
+            margin-bottom: 0;
+        }
+
+        .test-case h4 {
+            color: var(--gray-800);
+            margin-bottom: 0.5rem;
+            font-size: 1.1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .test-status {
+            display: flex;
+            gap: 0.75rem;
+            align-items: center;
+            font-size: 0.9rem;
+            flex-shrink: 0;
+        }
+
+        .test-status label {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .test-status input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .test-status select {
+            padding: 0.4rem 0.6rem;
+            border-radius: 6px;
+            border: 1px solid var(--gray-300);
+            background: white;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        .test-notes {
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px dashed var(--gray-300);
+        }
+
+        .test-notes input {
+            width: 100%;
+            padding: 0.5rem;
+            border-radius: 6px;
+            border: 1px solid var(--gray-300);
+            font-size: 0.9rem;
+        }
+
+        .precondition {
+            background: var(--warning-light);
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+        }
+
+        .precondition strong {
+            color: var(--warning-color);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 0.5rem;
+        }
+
+        th {
+            background: var(--primary-light);
+            color: var(--primary-color);
+            padding: 0.75rem;
+            text-align: right;
+            font-weight: 600;
+        }
+
+        td {
+            padding: 0.75rem;
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        tr:hover td {
+            background: var(--gray-100);
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        .step-num {
+            background: var(--primary-color);
+            color: white;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.85rem;
+        }
+
+        code {
+            background: var(--gray-200);
+            padding: 0.15rem 0.4rem;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            color: var(--danger-color);
+        }
+
+        .checklist {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .checklist h2 {
+            color: var(--primary-color);
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+
+        .checklist table {
+            background: var(--gray-50);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .checklist th {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .checklist td:first-child {
+            font-weight: 500;
+        }
+
+        .checkbox-cell {
+            text-align: center;
+        }
+
+        .checkbox-cell input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        .status-cell {
+            text-align: center;
+        }
+
+        .status-cell select {
+            padding: 0.5rem;
+            border-radius: 6px;
+            border: 1px solid var(--gray-300);
+            background: white;
+            cursor: pointer;
+        }
+
+        .notes-cell input {
+            width: 100%;
+            padding: 0.5rem;
+            border-radius: 6px;
+            border: 1px solid var(--gray-300);
+        }
+
+        @media print {
+            body {
+                background: white;
+                padding: 1rem;
+            }
+            
+            .section.collapsed .section-content {
+                display: block;
+            }
+            
+            .section-header .toggle {
+                display: none;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+            
+            h1 {
+                font-size: 1.8rem;
+            }
+            
+            table {
+                font-size: 0.85rem;
+            }
+            
+            th, td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 בדיקות ידניות - תמיכה ברב-חונכים</h1>
+
+        <!-- Summary Card -->
+        <div class="summary-card">
+            <h2>סיכום שינויים בקוד</h2>
+            
+            <h3 style="margin-bottom: 1rem; color: var(--gray-600);">קבצים שהשתנו:</h3>
+            <ol class="files-list">
+                <li><code>utils.py</code> - <code>fetch_possible_matches()</code>: SQL משונה להכיל את כל הילדים (גם עם חונכים) לטובת הדוח</li>
+                <li><code>utils.py</code> - <code>deactivate_staff()</code>: שימוש ב-PrevTutorshipStatuses לשחזור סטטוס ילד</li>
+                <li><code>tutorship_views.py</code> - <code>calculate_possible_matches()</code>: סינון לאשף - מחזיר רק ילדים עם 0 חונכים</li>
+                <li><code>tutorship_views.py</code> - <code>create_tutorship()</code>: הסרת מחיקת חונכויות ממתינות, PrevTutorshipStatuses רק לחונכות ראשונה</li>
+                <li><code>tutorship_views.py</code> - <code>delete_tutorship()</code>: שחזור סטטוס ילד רק אם זו החונכות האחרונה</li>
+                <li><code>family_views.py</code> - <code>update_family()</code>: מחיקת חונכויות (לא inactive) כשילד נפטר/בריא</li>
+            </ol>
+
+            <div class="logic-box">
+                <h3>לוגיקה חדשה</h3>
+                <ul>
+                    <li><strong>ילד יכול</strong> להיות עם מספר חונכים</li>
+                    <li><strong>חונך מוגבל</strong> לחניך אחד בלבד</li>
+                    <li><strong>PrevTutorshipStatuses</strong> נשמר רק לחונכות הראשונה, משוחזר רק כשמוחקים את האחרונה</li>
+                    <li><strong>חונכות inactive</strong> היא רק לזרימת השבתת צוות (לא לנפטר/בריא)</li>
+                    <li><strong>אשף</strong> מציג רק ילדים עם 0 חונכים, <strong>דוח</strong> מציג את כולם</li>
+                    <li><strong>עריכת ידנית (שיבוץ ידני)</strong>: אם חונך קיים בחונכות PENDING עם ילד אחר, החונכות הממתינה נמחקת (התנהגות "קטיפה" - ניתן לשנות את ההעדפה של החונך לילד אחר)</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Section 1 -->
+        <div class="section">
+            <div class="section-header" onclick="toggleSection(this)">
+                <span>1. יצירת חונכות ורב-חונכים</span>
+                <span class="toggle">▼</span>
+            </div>
+            <div class="section-content">
+                <div class="test-case">
+                    <h4>בדיקה 1.1: יצירת חונכות ראשונה לילד
+                        <div class="test-status">
+                            <label><input type="checkbox"> בדוק</label>
+                            <select>
+                                <option value="">-</option>
+                                <option value="pass">✅ עבר</option>
+                                <option value="fail">❌ נכשל</option>
+                            </select>
+                        </div>
+                    </h4>
+                    <div class="precondition"><strong>תנאי קדם:</strong> ילד קיים עם סטטוס <code>למצוא_חונך</code></div>
+                    <table>
+                        <tr><th>שלב</th><th>פעולה</th><th>תוצאה צפויה</th></tr>
+                        <tr><td><span class="step-num">1</span></td><td>נווט לאשף החונכויות</td><td>האשף נפתח</td></tr>
+                        <tr><td><span class="step-num">2</span></td><td>הרץ "חשב התאמות"</td><td>התאמות חושבו, הילד מופיע ברשימה</td></tr>
+                        <tr><td><span class="step-num">3</span></td><td>בחר התאמה וצור חונכות</td><td>חונכות נוצרה עם סטטוס <code>pending_first_approval</code></td></tr>
+                        <tr><td><span class="step-num">4</span></td><td>בדוק סטטוס ילד</td><td>השתנה ל-<code>יש_חונך</code></td></tr>
+                        <tr><td><span class="step-num">5</span></td><td>בדוק סטטוס חונך</td><td>השתנה ל-<code>יש_חניך</code></td></tr>
+                        <tr><td><span class="step-num">6</span></td><td>בדוק PrevTutorshipStatuses</td><td>רשומה נוצרה עם הסטטוסים המקוריים</td></tr>
+                    </table>
+                </div>
+
+                <div class="test-case">
+                    <h4>בדיקה 1.2: יצירת חונכות שנייה לאותו ילד (רב-חונכים)
+                        <div class="test-status">
+                            <label><input type="checkbox"> בדוק</label>
+                            <select>
+                                <option value="">-</option>
+                                <option value="pass">✅ עבר</option>
+                                <option value="fail">❌ נכשל</option>
+                            </select>
+                        </div>
+                    </h4>
+                    <div class="precondition"><strong>תנאי קדם:</strong> לילד יש חונך פעיל אחד, סטטוס <code>יש_חונך</code></div>
+                    <table>
+                        <tr><th>שלב</th><th>פעולה</th><th>תוצאה צפויה</th></tr>
+                        <tr><td><span class="step-num">1</span></td><td>נווט לדוח התאמות אפשריות</td><td>הדוח נפתח</td></tr>
+                        <tr><td><span class="step-num">2</span></td><td>וודא שהילד מופיע בדוח</td><td>ילד עם חונך כן מופיע (לשיבוץ רב-חונכים)</td></tr>
+                        <tr><td><span class="step-num">3</span></td><td>בחר חונך אחר לאותו ילד</td><td>דיאלוג שיבוץ ידני נפתח</td></tr>
+                        <tr><td><span class="step-num">4</span></td><td>צור חונכות דרך שיבוץ ידני</td><td>חונכות נוצרה</td></tr>
+                        <tr><td><span class="step-num">5</span></td><td>בדוק סטטוס ילד</td><td>נשאר <code>יש_חונך</code></td></tr>
+                        <tr><td><span class="step-num">6</span></td><td>בדוק סטטוס חונך חדש</td><td>השתנה ל-<code>יש_חניך</code></td></tr>
+                        <tr><td><span class="step-num">7</span></td><td>בדוק PrevTutorshipStatuses</td><td>לא נוצרה רשומה חדשה (רק לחונכות ראשונה)</td></tr>
+                        <tr><td><span class="step-num">8</span></td><td>בדוק חונכות קיימת</td><td>החונכות המקורית לא נמחקה (תמיכה ברב-חונכים)</td></tr>
+                    </table>
+                </div>
+
+                <div class="test-case">
+                    <h4>בדיקה 1.3: וידוא שהאשף מסנן ילדים עם חונכים
+                        <div class="test-status">
+                            <label><input type="checkbox"> בדוק</label>
+                            <select>
+                                <option value="">-</option>
+                                <option value="pass">✅ עבר</option>
+                                <option value="fail">❌ נכשל</option>
+                            </select>
+                        </div>
+                    </h4>
+                    <div class="precondition"><strong>תנאי קדם:</strong> חלק מהילדים עם חונכים, חלק בלי</div>
+                    <table>
+                        <tr><th>שלב</th><th>פעולה</th><th>תוצאה צפויה</th></tr>
+                        <tr><td><span class="step-num">1</span></td><td>נווט לאשף החונכויות</td><td>האשף נפתח</td></tr>
+                        <tr><td><span class="step-num">2</span></td><td>הרץ "חשב התאמות"</td><td>התאמות חושבו</td></tr>
+                        <tr><td><span class="step-num">3</span></td><td>בדוק אילו ילדים מוצגים</td><td>רק ילדים עם 0 חונכים מופיעים באשף</td></tr>
+                        <tr><td><span class="step-num">4</span></td><td>בדוק שהדוח מציג את כולם</td><td>הדוח מציג את כל הילדים (כולל עם חונכים)</td></tr>
+                    </table>
+                </div>
+
+                <div class="test-case">
+                    <h4>בדיקה 1.4: שיבוץ ידני - "קטיפת" חונך מחונכות ממתינה אחרת
+                        <div class="test-status">
+                            <label><input type="checkbox"> בדוק</label>
+                            <select>
+                                <option value="">-</option>
+                                <option value="pass">✅ עבר</option>
+                                <option value="fail">❌ נכשל</option>
+                            </select>
+                        </div>
+                    </h4>
+                    <div class="precondition"><strong>תנאי קדם:</strong> חונך עם חונכות PENDING עם ילד A, ילד B זמין לשיבוץ</div>
+                    <table>
+                        <tr><th>שלב</th><th>פעולה</th><th>תוצאה צפויה</th></tr>
+                        <tr><td><span class="step-num">1</span></td><td>בחר חונך ויל דB בשיבוץ ידני</td><td>דיאלוג שיבוץ נפתח</td></tr>
+                        <tr><td><span class="step-num">2</span></td><td>אשר ויצור חונכות</td><td>חונכות חדשה נוצרה עם ילד B</td></tr>
+                        <tr><td><span class="step-num">3</span></td><td>בדוק חונכות PENDING ישנה עם ילד A</td><td>נמחקה אוטומטית (קטיפה - חונך מוקדש לילד B עכשיו)</td></tr>
+                        <tr><td><span class="step-num">4</span></td><td>בדוק סטטוס ילד A</td><td>חזר ל-"למצוא_חונך" (הוא עדיין צריך חונך)</td></tr>
+                        <tr><td><span class="step-num">5</span></td><td>בדוק סטטוס חונך</td><td>עדיין "יש_חניך" (אחד בלבד - עם ילד B)</td></tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 2 -->
+        <div class="section">
+            <div class="section-header" onclick="toggleSection(this)">
+                <span>2. מחיקת חונכות</span>
+                <span class="toggle">▼</span>
+            </div>
+            <div class="section-content">
+                <div class="test-case">
+                    <h4>בדיקה 2.1: מחיקת חונכות כשיש לילד מספר חונכים
+                        <div class="test-status">
+                            <label><input type="checkbox"> בדוק</label>
+                            <select>
+                                <option value="">-</option>
+                                <option value="pass">✅ עבר</option>
+                                <option value="fail">❌ נכשל</option>
+                            </select>
+                        </div>
+                    </h4>
+                    <div class="precondition"><strong>תנאי קדם:</strong> לילד יש 2+ חונכים פעילים</div>
+                    <table>
+                        <tr><th>שלב</th><th>פעולה</th><th>תוצאה צפויה</th></tr>
+                        <tr><td><span class="step-num">1</span></td><td>נווט לרשימת החונכויות</td><td>הרשימה נפתחת</td></tr>
+                        <tr><td><span class="step-num">2</span></td><td>מחק אחת מהחונכויות</td><td>החונכות נמחקה</td></tr>
+                        <tr><td><span class="step-num">3</span></td><td>בדוק סטטוס ילד</td><td>נשאר <code>יש_חונך</code> (עדיין יש חונכים אחרים)</td></tr>
+                        <tr><td><span class="step-num">4</span></td><td>בדוק סטטוס החונך שנמחק</td><td>חזר ל-<code>אין_חניך</code></td></tr>
+                        <tr><td><span class="step-num">5</span></td><td>בדוק חונכויות שנשארו</td><td>ללא שינוי</td></tr>
+                    </table>
+                </div>
+
+                <div class="test-case">
+                    <h4>בדיקה 2.2: מחיקת החונכות האחרונה לילד
+                        <div class="test-status">
+                            <label><input type="checkbox"> בדוק</label>
+                            <select>
+                                <option value="">-</option>
+                                <option value="pass">✅ עבר</option>
+                                <option value="fail">❌ נכשל</option>
+                            </select>
+                        </div>
+                    </h4>
+                    <div class="precondition"><strong>תנאי קדם:</strong> לילד יש בדיוק חונך אחד פעיל עם רשומת PrevTutorshipStatuses</div>
+                    <table>
+                        <tr><th>שלב</th><th>פעולה</th><th>תוצאה צפויה</th></tr>
+                        <tr><td><span class="step-num">1</span></td><td>מחק את החונכות</td><td>החונכות נמחקה</td></tr>
+                        <tr><td><span class="step-num">2</span></td><td>בדוק סטטוס ילד</td><td>שוחזר מ-PrevTutorshipStatuses (למשל <code>למצוא_חונך</code>)</td></tr>
+                        <tr><td><span class="step-num">3</span></td><td>בדוק סטטוס חונך</td><td>שוחזר מ-PrevTutorshipStatuses (<code>אין_חניך</code>)</td></tr>
+                        <tr><td><span class="step-num">4</span></td><td>בדוק PrevTutorshipStatuses</td><td>הרשומה נמחקה אחרי השחזור</td></tr>
+                    </table>
+                </div>
+
+                <div class="test-case">
+                    <h4>בדיקה 2.3: מחיקת חונכות ללא PrevTutorshipStatuses
+                        <div class="test-status">
+                            <label><input type="checkbox"> בדוק</label>
+                            <select>
+                                <option value="">-</option>
+                                <option value="pass">✅ עבר</option>
+                                <option value="fail">❌ נכשל</option>
+                            </select>
+                        </div>
+                    </h4>
+                    <div class="precondition"><strong>תנאי קדם:</strong> לילד יש חונך אחד, אין רשומת PrevTutorshipStatuses</div>
+                    <table>
+                        <tr><th>שלב</th><th>פעולה</th><th>תוצאה צפויה</th></tr>
+                        <tr><td><span class="step-num">1</span></td><td>מחק את החונכות</td><td>החונכות נמחקה</td></tr>
+                        <tr><td><span class="step-num">2</span></td><td>בדוק סטטוס ילד</td><td>ברירת מחדל <code>למצוא_חונך</code></td></tr>
+                        <tr><td><span class="step-num">3</span></td><td>בדוק סטטוס חונך</td><td>ברירת מחדל <code>אין_חניך</code></td></tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 3 -->
+        <div class="section">
+            <div class="section-header" onclick="toggleSection(this)">
+                <span>3. השבתת והפעלת צוות</span>
+                <span class="toggle">▼</span>
+            </div>
+            <div class="section-content">
+                <div class="test-case">
+                    <h4>בדיקה 3.1: השבתת צוות עם חונכות יחידה
+                        <div class="test-status">
+                            <label><input type="checkbox"> בדוק</label>
+                            <select>
+                                <option value="">-</option>
+                                <option value="pass">✅ עבר</option>
+                                <option value="fail">❌ נכשל</option>
+                            </select>
+                        </div>
+                    </h4>
+                    <div class="precondition"><strong>תנאי קדם:</strong> איש צוות הוא חונך עם חונכות פעילה אחת, לילד יש רק חונך זה</div>
+                    <table>
+                        <tr><th>שלב</th><th>פעולה</th><th>תוצאה צפויה</th></tr>
+                        <tr><td><span class="step-num">1</span></td><td>נווט לניהול צוות</td><td>רשימת הצוות נפתחת</td></tr>
+                        <tr><td><span class="step-num">2</span></td><td>השבת את החונך</td><td>דיאלוג השבתה נפתח</td></tr>
+                        <tr><td><span class="step-num">3</span></td><td>הכנס סיבה ואשר</td><td>הצוות הושבת</td></tr>
+                        <tr><td><span class="step-num">4</span></td><td>בדוק תפקידי הצוות</td><td>תפקידים נמחקו, רק תפקיד "Inactive" מוקצה</td></tr>
+                        <tr><td><span class="step-num">5</span></td><td>בדוק חונכות</td><td>החונכות המקורית נמחקה, עותק INACTIVE נוצר</td></tr>
+                        <tr><td><span class="step-num">6</span></td><td>בדוק סטטוס ילד</td><td>שוחזר מ-PrevTutorshipStatuses או ברירת מחדל <code>למצוא_חונך</code></td></tr>
+                        <tr><td><span class="step-num">7</span></td><td>בדוק שהחונך עדיין זמין</td><td>החונך מופיע בהתאמות (יש לו חונכות inactive, לא active)</td></tr>
+                    </table>
+                </div>
+
+                <div class="test-case">
+                    <h4>בדיקה 3.2: השבתת צוות כשלילד יש מספר חונכים
+                        <div class="test-status">
+                            <label><input type="checkbox"> בדוק</label>
+                            <select>
+                                <option value="">-</option>
+                                <option value="pass">✅ עבר</option>
+                                <option value="fail">❌ נכשל</option>
+                            </select>
+                        </div>
+                    </h4>
+                    <div class="precondition"><strong>תנאי קדם:</strong> איש צוות הוא חונך, לילד יש 2 חונכים (זה + אחר)</div>
+                    <table>
+                        <tr><th>שלב</th><th>פעולה</th><th>תוצאה צפויה</th></tr>
+                        <tr><td><span class="step-num">1</span></td><td>השבת את החונך</td><td>הצוות הושבת</td></tr>
+                        <tr><td><span class="step-num">2</span></td><td>בדוק חונכות</td><td>עותק inactive נוצר</td></tr>
+                        <tr><td><span class="step-num">3</span></td><td>בדוק סטטוס ילד</td><td>נשאר <code>יש_חונך</code> (עדיין יש חונך פעיל)</td></tr>
+                        <tr><td><span class="step-num">4</span></td><td>בדוק חונך אחר</td><td>החונכות שלו ללא שינוי</td></tr>
+                    </table>
+                </div>
+
+                <div class="test-case">
+                    <h4>בדיקה 3.3: הפעלת צוות מחדש
+                        <div class="test-status">
+                            <label><input type="checkbox"> בדוק</label>
+                            <select>
+                                <option value="">-</option>
+                                <option value="pass">✅ עבר</option>
+                                <option value="fail">❌ נכשל</option>
+                            </select>
+                        </div>
+                    </h4>
+                    <div class="precondition"><strong>תנאי קדם:</strong> צוות הושבת, יש לו חונכות inactive</div>
+                    <table>
+                        <tr><th>שלב</th><th>פעולה</th><th>תוצאה צפויה</th></tr>
+                        <tr><td><span class="step-num">1</span></td><td>הפעל מחדש את הצוות</td><td>הצוות הופעל</td></tr>
+                        <tr><td><span class="step-num">2</span></td><td>בדוק תפקידים</td><td>התפקידים הקודמים שוחזרו</td></tr>
+                        <tr><td><span class="step-num">3</span></td><td>בדוק חונכות</td><td>החונכות ה-inactive נשארת (ניתן להפעיל ידנית)</td></tr>
+                        <tr><td><span class="step-num">4</span></td><td>בדוק שהצוות יכול להיות משובץ</td><td>הצוות מופיע בחונכים זמינים</td></tr>
+                    </table>
+                </div>
+
+                <div class="test-case">
+                    <h4>בדיקה 3.4: אי אפשר ליצור חונכות פעילה לצוות מושבת
+                        <div class="test-status">
+                            <label><input type="checkbox"> בדוק</label>
+                            <select>
+                                <option value="">-</option>
+                                <option value="pass">✅ עבר</option>
+                                <option value="fail">❌ נכשל</option>
+                            </select>
+                        </div>
+                    </h4>
+                    <div class="precondition"><strong>תנאי קדם:</strong> צוות מושבת (יש לו תפקיד Inactive)</div>
+                    <table>
+                        <tr><th>שלב</th><th>פעולה</th><th>תוצאה צפויה</th></tr>
+                        <tr><td><span class="step-num">1</span></td><td>נסה ליצור חונכות דרך האשף</td><td>צוות מושבת לא אמור להופיע בהתאמות</td></tr>
+                        <tr><td><span class="step-num">2</span></td><td>נסה שיבוץ ידני עם צוות מושבת</td><td>אמור להימנע (בדיקת staff.is_active = FALSE)</td></tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 4 -->
+        <div class="section">
+            <div class="section-header" onclick="toggleSection(this)">
+                <span>4. שינוי סטטוס ילד (נפטר/בריא)</span>
+                <span class="toggle">▼</span>
+            </div>
+            <div class="section-content">
+                <div class="test-case">
+                    <h4>בדיקה 4.1: ילד נפטר
+                        <div class="test-status">
+                            <label><input type="checkbox"> בדוק</label>
+                            <select>
+                                <option value="">-</option>
+                                <option value="pass">✅ עבר</option>
+                                <option value="fail">❌ נכשל</option>
+                            </select>
+                        </div>
+                    </h4>
+                    <div class="precondition"><strong>תנאי קדם:</strong> לילד יש 1+ חונכים פעילים</div>
+                    <table>
+                        <tr><th>שלב</th><th>פעולה</th><th>תוצאה צפויה</th></tr>
+                        <tr><td><span class="step-num">1</span></td><td>נווט לעריכת משפחה</td><td>פרטי המשפחה נפתחים</td></tr>
+                        <tr><td><span class="step-num">2</span></td><td>שנה סטטוס ל-<code>ז״ל</code> או <code>ז"ל</code></td><td>הסטטוס השתנה</td></tr>
+                        <tr><td><span class="step-num">3</span></td><td>שמור שינויים</td><td>המשפחה נשמרה</td></tr>
+                        <tr><td><span class="step-num">4</span></td><td>בדוק חונכויות</td><td>כל החונכויות נמחקו (לא inactive)</td></tr>
+                        <tr><td><span class="step-num">5</span></td><td>בדוק חונכים</td><td>סטטוס כל החונכים חזר ל-<code>אין_חניך</code></td></tr>
+                        <tr><td><span class="step-num">6</span></td><td>בדוק PrevTutorshipStatuses</td><td>רשומות לילד זה נמחקו</td></tr>
+                        <tr><td><span class="step-num">7</span></td><td>בדוק שהילד לא בהתאמות</td><td>הילד מוחרג מהאשף ומהדוח</td></tr>
+                    </table>
+                </div>
+
+                <div class="test-case">
+                    <h4>בדיקה 4.2: ילד הבריא
+                        <div class="test-status">
+                            <label><input type="checkbox"> בדוק</label>
+                            <select>
+                                <option value="">-</option>
+                                <option value="pass">✅ עבר</option>
+                                <option value="fail">❌ נכשל</option>
+                            </select>
+                        </div>
+                    </h4>
+                    <div class="precondition"><strong>תנאי קדם:</strong> לילד יש 1+ חונכים פעילים</div>
+                    <table>
+                        <tr><th>שלב</th><th>פעולה</th><th>תוצאה צפויה</th></tr>
+                        <tr><td><span class="step-num">1</span></td><td>נווט לעריכת משפחה</td><td>פרטי המשפחה נפתחים</td></tr>
+                        <tr><td><span class="step-num">2</span></td><td>שנה סטטוס ל-<code>בריא</code></td><td>הסטטוס השתנה</td></tr>
+                        <tr><td><span class="step-num">3</span></td><td>שמור שינויים</td><td>המשפחה נשמרה</td></tr>
+                        <tr><td><span class="step-num">4</span></td><td>בדוק חונכויות</td><td>כל החונכויות נמחקו (לא inactive)</td></tr>
+                        <tr><td><span class="step-num">5</span></td><td>בדוק חונכים</td><td>סטטוס כל החונכים חזר ל-<code>אין_חניך</code></td></tr>
+                        <tr><td><span class="step-num">6</span></td><td>בדוק PrevTutorshipStatuses</td><td>רשומות לילד זה נמחקו</td></tr>
+                        <tr><td><span class="step-num">7</span></td><td>בדוק שהילד לא בהתאמות</td><td>הילד מוחרג מהאשף ומהדוח</td></tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 5 -->
+        <div class="section">
+            <div class="section-header" onclick="toggleSection(this)">
+                <span>5. זרימת אישור חונכות</span>
+                <span class="toggle">▼</span>
+            </div>
+            <div class="section-content">
+                <div class="test-case">
+                    <h4>בדיקה 5.1: מאשר ראשון
+                        <div class="test-status">
+                            <label><input type="checkbox"> בדוק</label>
+                            <select>
+                                <option value="">-</option>
+                                <option value="pass">✅ עבר</option>
+                                <option value="fail">❌ נכשל</option>
+                            </select>
+                        </div>
+                    </h4>
+                    <div class="precondition"><strong>תנאי קדם:</strong> חונכות בסטטוס <code>pending_first_approval</code></div>
+                    <table>
+                        <tr><th>שלב</th><th>פעולה</th><th>תוצאה צפויה</th></tr>
+                        <tr><td><span class="step-num">1</span></td><td>אשר חונכות כמאשר ראשון</td><td>approval_counter = 1</td></tr>
+                        <tr><td><span class="step-num">2</span></td><td>בדוק סטטוס</td><td>עדיין <code>pending_first_approval</code></td></tr>
+                    </table>
+                </div>
+
+                <div class="test-case">
+                    <h4>בדיקה 5.2: מאשר שני (תפקיד שונה)
+                        <div class="test-status">
+                            <label><input type="checkbox"> בדוק</label>
+                            <select>
+                                <option value="">-</option>
+                                <option value="pass">✅ עבר</option>
+                                <option value="fail">❌ נכשל</option>
+                            </select>
+                        </div>
+                    </h4>
+                    <div class="precondition"><strong>תנאי קדם:</strong> לחונכות יש approval_counter = 1</div>
+                    <table>
+                        <tr><th>שלב</th><th>פעולה</th><th>תוצאה צפויה</th></tr>
+                        <tr><td><span class="step-num">1</span></td><td>אשר עם תפקיד שונה</td><td>approval_counter = 2</td></tr>
+                        <tr><td><span class="step-num">2</span></td><td>בדוק סטטוס</td><td>השתנה ל-<code>active</code></td></tr>
+                        <tr><td><span class="step-num">3</span></td><td>בדוק תפקיד חונך</td><td>תפקיד "Tutor" נוסף לצוות</td></tr>
+                    </table>
+                </div>
+
+                <div class="test-case">
+                    <h4>בדיקה 5.3: אותו תפקיד לא יכול לאשר פעמיים
+                        <div class="test-status">
+                            <label><input type="checkbox"> בדוק</label>
+                            <select>
+                                <option value="">-</option>
+                                <option value="pass">✅ עבר</option>
+                                <option value="fail">❌ נכשל</option>
+                            </select>
+                        </div>
+                    </h4>
+                    <div class="precondition"><strong>תנאי קדם:</strong> לחונכות יש approval_counter = 1, אותו תפקיד מנסה לאשר</div>
+                    <table>
+                        <tr><th>שלב</th><th>פעולה</th><th>תוצאה צפויה</th></tr>
+                        <tr><td><span class="step-num">1</span></td><td>נסה לאשר עם אותו תפקיד</td><td>שגיאה: "תפקיד זה כבר אישר"</td></tr>
+                        <tr><td><span class="step-num">2</span></td><td>בדוק approval_counter</td><td>ללא שינוי</td></tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 6 -->
+        <div class="section">
+            <div class="section-header" onclick="toggleSection(this)">
+                <span>6. מקרי קצה</span>
+                <span class="toggle">▼</span>
+            </div>
+            <div class="section-content">
+                <div class="test-case">
+                    <h4>בדיקה 6.1: חונך יכול להיות עם חניך אחד בלבד
+                        <div class="test-status">
+                            <label><input type="checkbox"> בדוק</label>
+                            <select>
+                                <option value="">-</option>
+                                <option value="pass">✅ עבר</option>
+                                <option value="fail">❌ נכשל</option>
+                            </select>
+                        </div>
+                    </h4>
+                    <div class="precondition"><strong>תנאי קדם:</strong> לחונך יש חונכות פעילה</div>
+                    <table>
+                        <tr><th>שלב</th><th>פעולה</th><th>תוצאה צפויה</th></tr>
+                        <tr><td><span class="step-num">1</span></td><td>הרץ חישוב התאמות</td><td>החונך לא אמור להופיע בחונכים זמינים</td></tr>
+                        <tr><td><span class="step-num">2</span></td><td>בדוק בדוח</td><td>החונך לא מוצג לשום ילד אחר</td></tr>
+                    </table>
+                </div>
+
+                <div class="test-case">
+                    <h4>בדיקה 6.2: זוג ילד-חונך כבר קיים
+                        <div class="test-status">
+                            <label><input type="checkbox"> בדוק</label>
+                            <select>
+                                <option value="">-</option>
+                                <option value="pass">✅ עבר</option>
+                                <option value="fail">❌ נכשל</option>
+                            </select>
+                        </div>
+                    </h4>
+                    <div class="precondition"><strong>תנאי קדם:</strong> חונכות פעילה קיימת לזוג ילד+חונך</div>
+                    <table>
+                        <tr><th>שלב</th><th>פעולה</th><th>תוצאה צפויה</th></tr>
+                        <tr><td><span class="step-num">1</span></td><td>נסה ליצור חונכות כפולה</td><td>שגיאה: "חונכות כבר קיימת"</td></tr>
+                        <tr><td><span class="step-num">2</span></td><td>בדוק מסד נתונים</td><td>לא נוצר כפול</td></tr>
+                    </table>
+                </div>
+
+                <div class="test-case">
+                    <h4>בדיקה 6.3: חונכות inactive לא חוסמת חונכות חדשה
+                        <div class="test-status">
+                            <label><input type="checkbox"> בדוק</label>
+                            <select>
+                                <option value="">-</option>
+                                <option value="pass">✅ עבר</option>
+                                <option value="fail">❌ נכשל</option>
+                            </select>
+                        </div>
+                    </h4>
+                    <div class="precondition"><strong>תנאי קדם:</strong> לחונך יש חונכות INACTIVE (מהשבתת צוות), הצוות עכשיו פעיל שוב</div>
+                    <table>
+                        <tr><th>שלב</th><th>פעולה</th><th>תוצאה צפויה</th></tr>
+                        <tr><td><span class="step-num">1</span></td><td>הפעל מחדש צוות</td><td>הצוות פעיל</td></tr>
+                        <tr><td><span class="step-num">2</span></td><td>הרץ חישוב התאמות</td><td>החונך מופיע בחונכים זמינים</td></tr>
+                        <tr><td><span class="step-num">3</span></td><td>צור חונכות חדשה</td><td>הצלחה - חונכות inactive לא חוסמת</td></tr>
+                        <tr><td><span class="step-num">4</span></td><td>בדוק חונכות inactive ישנה</td><td>נוקתה (נמחקה) בזמן יצירת החונכות החדשה</td></tr>
+                    </table>
+                </div>
+
+                <div class="test-case">
+                    <h4>בדיקה 6.4: התאמת מגדר
+                        <div class="test-status">
+                            <label><input type="checkbox"> בדוק</label>
+                            <select>
+                                <option value="">-</option>
+                                <option value="pass">✅ עבר</option>
+                                <option value="fail">❌ נכשל</option>
+                            </select>
+                        </div>
+                    </h4>
+                    <div class="precondition"><strong>תנאי קדם:</strong> ילד זכר, חונכת נקבה (או להפך)</div>
+                    <table>
+                        <tr><th>שלב</th><th>פעולה</th><th>תוצאה צפויה</th></tr>
+                        <tr><td><span class="step-num">1</span></td><td>הרץ חישוב התאמות</td><td>רק התאמות מאותו מגדר מוצגות</td></tr>
+                        <tr><td><span class="step-num">2</span></td><td>בדוק התאמת מגדר</td><td>מגדר ילד = מגדר חונך</td></tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 7 -->
+        <div class="section">
+            <div class="section-header" onclick="toggleSection(this)">
+                <span>7. אימות דוחות</span>
+                <span class="toggle">▼</span>
+            </div>
+            <div class="section-content">
+                <div class="test-case">
+                    <h4>בדיקה 7.1: דוח התאמות אפשריות מציג את כל הילדים
+                        <div class="test-status">
+                            <label><input type="checkbox"> בדוק</label>
+                            <select>
+                                <option value="">-</option>
+                                <option value="pass">✅ עבר</option>
+                                <option value="fail">❌ נכשל</option>
+                            </select>
+                        </div>
+                    </h4>
+                    <div class="precondition"><strong>תנאי קדם:</strong> תערובת של ילדים עם/בלי חונכים</div>
+                    <table>
+                        <tr><th>שלב</th><th>פעולה</th><th>תוצאה צפויה</th></tr>
+                        <tr><td><span class="step-num">1</span></td><td>נווט לדוח התאמות אפשריות</td><td>הדוח נפתח</td></tr>
+                        <tr><td><span class="step-num">2</span></td><td>בדוק אילו ילדים מוצגים</td><td>כל הילדים מוצגים (עם ובלי חונכים)</td></tr>
+                        <tr><td><span class="step-num">3</span></td><td>בדוק ילדים עם חונכים</td><td>מסומנים/מצוין שיש להם חונכים קיימים</td></tr>
+                    </table>
+                </div>
+
+                <div class="test-case">
+                    <h4>בדיקה 7.2: טבלת PossibleMatches מכילה את כל ההתאמות
+                        <div class="test-status">
+                            <label><input type="checkbox"> בדוק</label>
+                            <select>
+                                <option value="">-</option>
+                                <option value="pass">✅ עבר</option>
+                                <option value="fail">❌ נכשל</option>
+                            </select>
+                        </div>
+                    </h4>
+                    <div class="precondition"><strong>תנאי קדם:</strong> חישוב התאמות הורץ</div>
+                    <table>
+                        <tr><th>שלב</th><th>פעולה</th><th>תוצאה צפויה</th></tr>
+                        <tr><td><span class="step-num">1</span></td><td>שאל את טבלת PossibleMatches</td><td>מכילה התאמות לכל הילדים</td></tr>
+                        <tr><td><span class="step-num">2</span></td><td>בדוק ילדים עם חונכים</td><td>נכללים בטבלה (לטובת הדוח)</td></tr>
+                        <tr><td><span class="step-num">3</span></td><td>בדוק סינון האשף</td><td>האשף מציג תת-קבוצה (רק 0 חונכים)</td></tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 8 -->
+        <div class="section">
+            <div class="section-header" onclick="toggleSection(this)">
+                <span>8. תצוגת משפחה</span>
+                <span class="toggle">▼</span>
+            </div>
+            <div class="section-content">
+                <div class="test-case">
+                    <h4>בדיקה 8.1: הצגת מספר חונכים
+                        <div class="test-status">
+                            <label><input type="checkbox"> בדוק</label>
+                            <select>
+                                <option value="">-</option>
+                                <option value="pass">✅ עבר</option>
+                                <option value="fail">❌ נכשל</option>
+                            </select>
+                        </div>
+                    </h4>
+                    <div class="precondition"><strong>תנאי קדם:</strong> לילד יש 2+ חונכים</div>
+                    <table>
+                        <tr><th>שלב</th><th>פעולה</th><th>תוצאה צפויה</th></tr>
+                        <tr><td><span class="step-num">1</span></td><td>נווט לכרטיס משפחה</td><td>פרטי המשפחה נפתחים</td></tr>
+                        <tr><td><span class="step-num">2</span></td><td>צפה בסעיף חונכים</td><td>כל החונכים מוצגים (רשימה, לא בודד)</td></tr>
+                        <tr><td><span class="step-num">3</span></td><td>בדוק פרטי חונכים</td><td>שם וסטטוס של כל חונך מוצג</td></tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <p style="text-align: center; margin-top: 2rem; color: var(--gray-600);">
+            📅 עודכן לאחרונה: ינואר 2026
+        </p>
+    </div>
+
+    <script>
+        function toggleSection(header) {
+            const section = header.parentElement;
+            section.classList.toggle('collapsed');
+        }
+    </script>
+</body>
+</html>

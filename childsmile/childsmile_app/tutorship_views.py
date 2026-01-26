@@ -63,7 +63,7 @@ from time import sleep
 from math import sin, cos, sqrt, atan2, radians, ceil
 import json
 import os
-from django.db.models import Count, F
+from django.db.models import Count, F, Q , Prefetch
 from .utils import *
 from .audit_utils import log_api_action
 from .logger import api_logger
@@ -105,17 +105,30 @@ def calculate_possible_matches(request):
         api_logger.debug("DEBUG: Clearing possible matches table.")
         clear_possible_matches()
 
-        # Step 6: Insert new matches
+        # Step 6: Insert new matches (ALL matches - for the report to use)
         api_logger.debug(f"DEBUG: Inserting {len(graded_matches)} new matches into the database.")
         insert_new_matches(graded_matches)
 
         api_logger.debug("DEBUG: New matches inserted successfully.")
         api_logger.debug("DEBUG: Possible matches calculation completed.")
 
+        # Step 7: Filter matches for wizard UI - only show children with 0 active/pending tutors
+        # The full data is in PossibleMatches table for the report to use
+        children_with_tutors = set(
+            Tutorships.objects.filter(
+                ~Q(tutorship_activation='inactive')
+            ).values_list('child_id', flat=True)
+        )
+        wizard_matches = [
+            match for match in graded_matches 
+            if match['child_id'] not in children_with_tutors
+        ]
+        api_logger.debug(f"DEBUG: Filtered to {len(wizard_matches)} matches for wizard (children with 0 tutors).")
+
         return JsonResponse(
             {
                 "message": "Possible matches calculated successfully.",
-                "matches": graded_matches,
+                "matches": wizard_matches,
             },
             status=200,
         )
@@ -310,69 +323,96 @@ def create_tutorship(request):
             tutor_id=tutor_id
         ).first()
         
-        # Only raise error if existing tutorship is NOT inactive
-        # Allow creation if existing tutorship is inactive (it will be cleaned up later)
-        if existing_tutorship and existing_tutorship.tutorship_activation != 'inactive':
-            # Get names for audit
-            try:
-                child_name = f"{Children.objects.get(child_id=child_id).childfirstname} {Children.objects.get(child_id=child_id).childsurname}"
-            except Children.DoesNotExist:
-                child_name = f"Unknown (ID: {child_id})"
-            
-            try:
-                tutor = Tutors.objects.get(id_id=tutor_id)
-                tutor_name = f"{tutor.staff.first_name} {tutor.staff.last_name}"
-                tutor_email = tutor.staff.email
-            except (Tutors.DoesNotExist, AttributeError):
-                tutor_name = f"Unknown (ID: {tutor_id})"
-                tutor_email = "Unknown"
-            
-            log_api_action(
-                request=request,
-                action='CREATE_TUTORSHIP_FAILED',
-                success=False,
-                error_message=f"Tutorship already exists for \n\tchild: ID: {child_id}, Name: {child_name} and \n\ttutor: ID: {tutor_id}, Name: {tutor_name}",
-                status_code=409,  # Conflict status code
-                additional_data={
-                    'child_id': child_id,
-                    'child_name': child_name,
-                    'tutor_id': tutor_id,
-                    'tutor_name': tutor_name,
-                    'tutor_email': tutor_email,
-                    'existing_tutorship_id': existing_tutorship.id,
-                    'existing_tutorship_status': existing_tutorship.tutorship_activation,
-                    'reason': 'duplicate_tutorship'
-                }
-            )
-            return JsonResponse(
-                {"error": f"Tutorship already exists for this child and tutor combination. Existing tutorship ID: {existing_tutorship.id}"},
-                status=409,
-            )
-
-        # MANUAL MATCH OVERRIDE: Delete any pending tutorships for this child
-        # Manual match is a stronger action and overrides pending tutorships
-        pending_tutorships = Tutorships.objects.filter(
-            child_id=child_id,
-            tutorship_activation__in=['pending_first_approval', 'pending_second_approval']
-        )
-        
-        if pending_tutorships.exists():
-            api_logger.warning(f"DEBUG: Manual match override - deleting {pending_tutorships.count()} pending tutorship(s) for child {child_id}")
-            for pending in pending_tutorships:
-                api_logger.warning(f"DEBUG: Deleting pending tutorship ID {pending.id} - Child: {pending.child_id}, Tutor: {pending.tutor_id}")
-            pending_tutorships.delete()
+        # Handle existing tutorship
+        if existing_tutorship:
+            if existing_tutorship.tutorship_activation == 'inactive':
+                # MANUAL MATCH OVERRIDE: Delete the inactive tutorship to allow re-creation
+                api_logger.info(f"Deleting inactive tutorship {existing_tutorship.id} to allow re-creation")
+                # Also delete associated PrevTutorshipStatuses
+                PrevTutorshipStatuses.objects.filter(tutorship_id=existing_tutorship).delete()
+                existing_tutorship.delete()
+            else:
+                # Only raise error if existing tutorship is NOT inactive
+                # Get names for audit
+                try:
+                    child_name = f"{Children.objects.get(child_id=child_id).childfirstname} {Children.objects.get(child_id=child_id).childsurname}"
+                except Children.DoesNotExist:
+                    child_name = f"Unknown (ID: {child_id})"
+                
+                try:
+                    tutor = Tutors.objects.get(id_id=tutor_id)
+                    tutor_name = f"{tutor.staff.first_name} {tutor.staff.last_name}"
+                    tutor_email = tutor.staff.email
+                except (Tutors.DoesNotExist, AttributeError):
+                    tutor_name = f"Unknown (ID: {tutor_id})"
+                    tutor_email = "Unknown"
+                
+                log_api_action(
+                    request=request,
+                    action='CREATE_TUTORSHIP_FAILED',
+                    success=False,
+                    error_message=f"Tutorship already exists for \n\tchild: ID: {child_id}, Name: {child_name} and \n\ttutor: ID: {tutor_id}, Name: {tutor_name}",
+                    status_code=409,  # Conflict status code
+                    additional_data={
+                        'child_id': child_id,
+                        'child_name': child_name,
+                        'tutor_id': tutor_id,
+                        'tutor_name': tutor_name,
+                        'tutor_email': tutor_email,
+                        'existing_tutorship_id': existing_tutorship.id,
+                        'existing_tutorship_status': existing_tutorship.tutorship_activation,
+                        'reason': 'duplicate_tutorship'
+                    }
+                )
+                return JsonResponse(
+                    {"error": f"Tutorship already exists for this child and tutor combination. Existing tutorship ID: {existing_tutorship.id}"},
+                    status=409,
+                )
 
         # Retrieve child and tutor objects
         child = Children.objects.get(child_id=child_id)
         tutor = Tutors.objects.get(id_id=tutor_id)
 
-        # Save current statuses in PrevTutorshipStatuses
-        prev_status = PrevTutorshipStatuses.objects.create(
-            tutor_id=tutor,
-            child_id=child,
-            tutor_tut_status=tutor.tutorship_status,  # or the correct field name
-            child_tut_status=child.tutoring_status,   # or the correct field name
-        )
+        # MULTI-TUTOR SUPPORT: Check if child already has active or pending tutorships
+        # We check for 'active' and 'pending_first_approval' only (no second approval state)
+        existing_child_tutorships = Tutorships.objects.filter(
+            child_id=child_id,
+            tutorship_activation__in=['active', 'pending_first_approval']
+        ).exists()
+
+        # Clean up any stale/incomplete PrevTutorshipStatuses records for this child
+        # This can happen if earlier tutorships were created in dev/test with NULL values
+        # We only want ONE PrevTutorshipStatuses per child (for the first tutorship)
+        if existing_child_tutorships:
+            # Child already has tutorships, so delete any PrevTutorshipStatuses records
+            # (they should have been cleaned up when the first tutorship was deleted)
+            PrevTutorshipStatuses.objects.filter(child_id=child_id).delete()
+
+        # MANUAL MATCH OVERRIDE: If tutor has PENDING tutorships with OTHER children, delete them
+        # This is the "snatching" behavior - reassigning a pending tutor to a new child via manual match
+        # But only delete pending tutorships - NOT if we're just adding a second tutor to this child
+        pending_other_tutorships = Tutorships.objects.filter(
+            tutor_id=tutor_id,
+            tutorship_activation='pending_first_approval'
+        ).exclude(child_id=child_id)
+        
+        if pending_other_tutorships.exists():
+            api_logger.info(
+                f"Deleting {pending_other_tutorships.count()} pending tutorships for tutor {tutor_id} "
+                f"with other children (manual match override)"
+            )
+            pending_other_tutorships.delete()
+
+        # MULTI-TUTOR SUPPORT: Save current statuses in PrevTutorshipStatuses ONLY for FIRST tutorship
+        # This ensures we can restore the original status when the LAST tutorship is deleted
+        prev_status = None
+        if not existing_child_tutorships:
+            prev_status = PrevTutorshipStatuses.objects.create(
+                tutor_id=tutor,
+                child_id=child,
+                tutor_tut_status=tutor.tutorship_status,
+                child_tut_status=child.tutoring_status,
+            )
 
         # Create a new tutorship record in the database
         tutorship = Tutorships.objects.create(
@@ -395,14 +435,18 @@ def create_tutorship(request):
         except Exception as e:
             api_logger.warning(f"Failed to clean up inactive tutorships for tutor {tutor_id}: {str(e)}")
 
-        # 4. Update the prev_status record to set tutorship FK
-        prev_status.tutorship_id = tutorship
-        prev_status.save()
+        # Link the prev_status record to the tutorship (only if prev_status was created for FIRST tutorship)
+        if prev_status:
+            prev_status.tutorship_id = tutorship
+            prev_status.save()
         
-        # After tutorship creation
-        child.tutoring_status = "יש_חונך"
-        child.save()
+        # MULTI-TUTOR SUPPORT: Only update child status if this is the FIRST tutorship
+        if not existing_child_tutorships:
+            child.tutoring_status = "יש_חונך"
+            child.save()
+        # If child already has tutorships, their status is already "יש_חונך", no need to change
 
+        # Tutor status always changes (tutor can only have one tutee)
         tutor.tutorship_status = "יש_חניך"
         tutor.save()
 
@@ -765,33 +809,45 @@ def delete_tutorship(request, tutorship_id):
             )
 
         # Find the PrevTutorshipStatuses record for this tutorship
+        # NOTE: prev_status only exists for the FIRST tutorship (multi-tutor support)
         prev_status = PrevTutorshipStatuses.objects.filter(
             tutorship_id=tutorship
         ).order_by('-last_updated').first()
 
+        # MULTI-TUTOR SUPPORT: Check if child has OTHER active or pending tutorships
+        # Only 'active' and 'pending_first_approval' exist (no second approval state)
+        other_child_tutorships = Tutorships.objects.filter(
+            child_id=child_id,
+            tutorship_activation__in=['active', 'pending_first_approval']
+        ).exclude(id=tutorship_id).exists()
+
         status_restored = False
+        
+        # Always restore tutor status (tutor only has one tutee)
         if prev_status:
             tutor.tutorship_status = prev_status.tutor_tut_status
-            child.tutoring_status = prev_status.child_tut_status
-            tutor.save()
-            child.save()
-            prev_status.delete()
-            status_restored = True
         else:
             tutor.tutorship_status = "אין_חניך"
-            child.tutoring_status = "אין_חונך"
-            tutor.save()
+        tutor.save()
+        
+        # MULTI-TUTOR SUPPORT: Only restore child status if this is the LAST tutorship
+        if not other_child_tutorships:
+            if prev_status:
+                child.tutoring_status = prev_status.child_tut_status
+            else:
+                # Use "למצוא_חונך" which is the valid enum value (not "מחפש_חונך")
+                child.tutoring_status = "למצוא_חונך"
             child.save()
-            PrevTutorshipStatuses.objects.create(
-                tutor_id=tutor,
-                child_id=child,
-                tutor_tut_status="אין_חניך",
-                child_tut_status="אין_חונך",
-                tutorship_id=None
-            )
-
-        # Delete the tutorship record
+            status_restored = True
+        # If child has other tutorships, keep status as "יש_חונך"
+        
+        # Delete the tutorship record FIRST (before deleting prev_status, so the FK isn't violated)
         tutorship.delete()
+
+        # Delete ALL PrevTutorshipStatuses records for this child if this was the last tutorship
+        # This ensures we don't accumulate stale records (especially important if first tutorship had NULL values)
+        if not other_child_tutorships:
+            PrevTutorshipStatuses.objects.filter(child_id=child_id).delete()
 
         log_api_action(
             request=request,
@@ -886,6 +942,13 @@ def get_available_tutors(request):
                 WHERE tutorship.tutor_id = tutor.id_id
                 AND tutorship.tutorship_activation = 'active'
             )
+            -- Exclude tutors that already have ANY tutorship with this child (even inactive)
+            AND NOT EXISTS (
+                SELECT 1
+                FROM childsmile_app_tutorships tutorship
+                WHERE tutorship.tutor_id = tutor.id_id
+                AND tutorship.child_id = child.child_id
+            )
             -- Only include staff members who are ACTIVE
             AND staff.is_active = TRUE
         ORDER BY signedup.first_name, signedup.surname;
@@ -944,6 +1007,8 @@ def calculate_manual_match(request):
         api_logger.debug(f"DEBUG: Calculating match for child {child_id} and tutor {tutor_id}")
         
         # Use the same SQL logic as fetch_possible_matches but for this specific pair
+        # IMPORTANT: Manual match does NOT allow re-creating inactive tutorships
+        # Only the wizard allows that via fetch_possible_matches filtering
         query = """
         SELECT
             child.child_id,
@@ -976,35 +1041,33 @@ def calculate_manual_match(request):
             signedup.email,
             staff.is_active
         FROM childsmile_app_children child
-        JOIN childsmile_app_signedup signedup
-            ON child.gender = signedup.gender
-        JOIN childsmile_app_tutors tutor
+        INNER JOIN childsmile_app_tutors tutor
+            ON tutor.id_id = %s
+        INNER JOIN childsmile_app_signedup signedup
             ON signedup.id = tutor.id_id
-        JOIN childsmile_app_staff staff
+        INNER JOIN childsmile_app_staff staff
             ON tutor.staff_id = staff.staff_id
         WHERE 
             child.child_id = %s
-            AND tutor.id_id = %s
-            -- Manual match can override pending tutorships, only check for ACTIVE tutorships
+            -- Gender must match
+            AND child.gender = signedup.gender
+            -- Prevent ANY tutorship with this pair (manual match is strict, only wizard allows re-creation)
             AND NOT EXISTS (
                 SELECT 1
                 FROM childsmile_app_tutorships tutorship
-                WHERE tutorship.child_id = child.child_id 
-                AND tutorship.tutorship_activation = 'active'
-            )
-            AND NOT EXISTS (
-                SELECT 1
-                FROM childsmile_app_tutorships tutorship
-                WHERE tutorship.tutor_id = tutor.id_id
-                AND tutorship.tutorship_activation = 'active'
+                WHERE tutorship.child_id = child.child_id
+                AND tutorship.tutor_id = tutor.id_id
             )
             -- Only allow ACTIVE staff members
             AND staff.is_active = TRUE
-            AND child.status <> 'בריא';
+            -- Exclude deceased and healthy children
+            AND child.status NOT IN (%s, %s)
         """
         
+        # Use parameterized query for Hebrew values to avoid encoding issues
+        excluded_statuses = ('בריא', 'ז״ל')
         with connection.cursor() as cursor:
-            cursor.execute(query, [child_id, tutor_id])
+            cursor.execute(query, [tutor_id, child_id] + list(excluded_statuses))
             row = cursor.fetchone()
         
         if not row:
@@ -1034,17 +1097,27 @@ def calculate_manual_match(request):
                 )
             
             # Check if there are conflicting tutorships
+            all_tutorships = Tutorships.objects.filter(
+                child_id=child_id,
+                tutor_id=tutor_id
+            )
+            api_logger.warning(f"DEBUG: Existing tutorships for this pair: {all_tutorships.count()}")
+            for ts in all_tutorships:
+                api_logger.warning(f"  - Tutorship ID {ts.id}: Status = {ts.tutorship_activation}")
+            
             conflicting_child_tutorship = Tutorships.objects.filter(
                 child_id=child_id,
-                tutorship_activation='active'
-            ).exists()
-            api_logger.warning(f"DEBUG: Child has active tutorship: {conflicting_child_tutorship}")
+                tutorship_activation__in=['active', 'pending_first_approval']
+            ).exclude(tutor_id=tutor_id)
+            api_logger.warning(f"DEBUG: Child has other active/pending tutorships: {conflicting_child_tutorship.count()}")
             
             conflicting_tutor_tutorship = Tutorships.objects.filter(
                 tutor_id=tutor_id,
                 tutorship_activation='active'
-            ).exists()
-            api_logger.warning(f"DEBUG: Tutor has active tutorship: {conflicting_tutor_tutorship}")
+            )
+            api_logger.warning(f"DEBUG: Tutor has active tutorship with other children: {conflicting_tutor_tutorship.count()}")
+            for ts in conflicting_tutor_tutorship:
+                api_logger.warning(f"  - Tutorship ID {ts.id}: Child {ts.child_id}, Status = {ts.tutorship_activation}")
             
             return JsonResponse(
                 {"error": "No valid match found for this child-tutor pair"},

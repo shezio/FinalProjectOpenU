@@ -1128,16 +1128,10 @@ const SystemManagement = () => {
 
       {/* Deactivation Modal */}
       {isDeactivationModalOpen && (
-        <Modal
-          isOpen={isDeactivationModalOpen}
-          onRequestClose={closeDeactivationModal}
-          className="modal-content"
-          overlayClassName="modal-overlay"
-          portalClassName="modal-portal"
-          shouldCloseOnOverlayClick={true}
-          ariaHideApp={false}
-        >
-          <h2 className="deactivation-modal-header">{t('Deactivate Staff Member')}</h2>
+        <div className="staff-modal-overlay">
+          <div className="staff-modal-content">
+            <span className="staff-close" onClick={closeDeactivationModal}>&times;</span>
+            <h2 className="deactivation-modal-header">{t('Deactivate Staff Member')}</h2>
           <p>{t('Staff')} <strong>{staffToModify?.first_name} {staffToModify?.last_name}</strong></p>
           <p className="deactivation-modal-warning">
             {t('Warning: This action will disable the account and prevent login')}<br />{t('If they were a tutor, their tutorships will be marked as inactive and the student will be available for reassignment.')}
@@ -1178,21 +1172,16 @@ const SystemManagement = () => {
               {t('Cancel')}
             </button>
           </div>
-        </Modal>
+          </div>
+        </div>
       )}
 
       {/* Reactivation Modal */}
       {isReactivationModalOpen && (
-        <Modal
-          isOpen={isReactivationModalOpen}
-          onRequestClose={closeReactivationModal}
-          className="modal-content"
-          overlayClassName="modal-overlay"
-          portalClassName="modal-portal"
-          shouldCloseOnOverlayClick={true}
-          ariaHideApp={false}
-        >
-          <h2 className="reactivation-modal-header">{t('Reactivate Staff Member')}</h2>
+        <div className="staff-modal-overlay">
+          <div className="staff-modal-content">
+            <span className="staff-close" onClick={closeReactivationModal}>&times;</span>
+            <h2 className="reactivation-modal-header">{t('Reactivate Staff Member')}</h2>
           <p>
             {t('Are you sure you want to reactivate')} <strong>{staffToModify?.first_name} {staffToModify?.last_name}</strong>?
           </p>
@@ -1213,7 +1202,8 @@ const SystemManagement = () => {
               {t('Cancel')}
             </button>
           </div>
-        </Modal>
+          </div>
+        </div>
       )}
 
       {/* Staff TOTP Modal */}
