@@ -86,6 +86,7 @@ from .tutorship_views import (
     delete_tutorship,
     get_available_tutors,
     calculate_manual_match,
+    update_tutorship_created_date,
 )
 
 from .unused_views import (
@@ -294,6 +295,11 @@ urlpatterns = [
         "api/calculate_manual_match/",
         calculate_manual_match,
         name="calculate_manual_match",
+    ),
+    path(
+        "api/update_tutorship_created_date/<int:tutorship_id>/",
+        update_tutorship_created_date,
+        name="update_tutorship_created_date",
     ),
     path(
         "api/families_tutorships_stats/",

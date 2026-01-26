@@ -205,6 +205,12 @@ const resources = {
       "ID update failed, but family details were saved": "ID update failed, but family details were saved",
       "Error updating family details. ID was not changed.": "Error updating family details. ID was not changed.",
       "Invalid ID format. Israeli ID must be exactly 9 digits.": "Invalid ID format. Israeli ID must be exactly 9 digits.",
+      "Invalid date format. Please use DD/MM/YYYY": "Invalid date format. Please use DD/MM/YYYY",
+      "Month must be between 01 and 12": "Month must be between 01 and 12",
+      "Invalid day for the selected month": "Invalid day for the selected month",
+      "Date cannot be in the future": "Date cannot be in the future",
+      "Date cannot be more than 20 years ago": "Date cannot be more than 20 years ago",
+      "Failed to update tutorship": "Failed to update tutorship",
     }
   },
   he: {
@@ -980,6 +986,15 @@ const resources = {
       "No tutorships selected for deletion.": "לא נבחרו חונכויות למחיקה",
       "Are you sure you want to delete the selected tutorships?": "האם אתה בטוח שברצונך למחוק את החונכויות שנבחרו?",
       "Selected tutorships deleted successfully!": "החונכויות שנבחרו נמחקו בהצלחה!",
+      "Invalid date format. Use ISO format (YYYY-MM-DD or YYYY-MM-DDTHH:mm:ss)": "תאריך לא תקין, השתמש בפורמט dd/mm/yyyy",
+      'Tutorship updated successfully': 'החונכות עודכנה בהצלחה',
+      'Error updating tutorship': 'שגיאה בעדכון חונכות',
+      'Invalid date format. Please use DD/MM/YYYY': 'פורמט תאריך לא תקין. אנא השתמש ב- DD/MM/YYYY',
+      'Month must be between 01 and 12': 'החודש חייב להיות בין 01 ל- 12',
+      'Invalid day for the selected month': 'יום לא תקין לחודש שנבחר',
+      'Date cannot be in the future': 'התאריך לא יכול להיות בעתיד',
+      'Date cannot be more than 20 years ago': 'התאריך לא יכול להיות לפני יותר מ- 20 שנה',
+      'Failed to update tutorship': 'שגיאה בעדכון החונכות'
     }
   }
 };

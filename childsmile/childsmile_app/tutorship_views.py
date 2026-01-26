@@ -1182,3 +1182,149 @@ def calculate_manual_match(request):
     except Exception as e:
         api_logger.error(f"Error calculating manual match: {str(e)}")
         return JsonResponse({"error": str(e)}, status=500)
+
+
+@conditional_csrf
+@api_view(["PATCH"])
+def update_tutorship_created_date(request, tutorship_id):
+    """
+    Update the created_date of a tutorship record.
+    Useful for correcting the date when a tutorship was manually created.
+    Only users with UPDATE permission on tutorships can use this.
+    """
+    api_logger.info(f"update_tutorship_created_date called for tutorship_id: {tutorship_id}")
+    
+    user_id = request.session.get("user_id")
+    if not user_id:
+        log_api_action(
+            request=request,
+            action='UPDATE_TUTORSHIP_FAILED',
+            success=False,
+            error_message="Authentication credentials were not provided",
+            status_code=403
+        )
+        return JsonResponse(
+            {"detail": "Authentication credentials were not provided."}, status=403
+        )
+
+    # Check if the user has UPDATE permission on tutorships
+    if not has_permission(request, "tutorships", "UPDATE"):
+        log_api_action(
+            request=request,
+            action='UPDATE_TUTORSHIP_FAILED',
+            success=False,
+            error_message="You do not have permission to update tutorship created date",
+            status_code=401,
+            entity_type='Tutorship',
+            entity_ids=[tutorship_id]
+        )
+        return JsonResponse(
+            {"error": "You do not have permission to update this tutorship."}, status=401
+        )
+
+    try:
+        # Fetch the tutorship
+        tutorship = Tutorships.objects.get(id=tutorship_id)
+        
+        # Get request data
+        data = request.data
+        new_created_date = data.get("created_date")
+        
+        if not new_created_date:
+            return JsonResponse(
+                {"error": "created_date is required in the request body"},
+                status=400
+            )
+        
+        # Parse the date - accept ISO format or common datetime formats
+        try:
+            # Try parsing as ISO datetime first
+            if 'T' in str(new_created_date):
+                from dateutil import parser as date_parser
+                parsed_date = date_parser.isoparse(str(new_created_date))
+            else:
+                # Try common datetime formats
+                from django.utils.dateparse import parse_datetime, parse_date
+                parsed_date = parse_datetime(str(new_created_date))
+                if not parsed_date:
+                    parsed_date = parse_date(str(new_created_date))
+                    if parsed_date:
+                        from datetime import datetime
+                        parsed_date = datetime.combine(parsed_date, datetime.min.time())
+            
+            if not parsed_date:
+                return JsonResponse(
+                    {"error": "Invalid date format. Use ISO format (YYYY-MM-DD or YYYY-MM-DDTHH:mm:ss)"},
+                    status=400
+                )
+        except Exception as e:
+            return JsonResponse(
+                {"error": f"Date parsing error: {str(e)}"},
+                status=400
+            )
+        
+        # Store old date for audit log
+        old_created_date = tutorship.created_date
+        
+        # Update the created_date
+        tutorship.created_date = parsed_date
+        tutorship.save()
+        
+        # Get child and tutor names for audit
+        child_name = f"{tutorship.child.childfirstname} {tutorship.child.childsurname}" if tutorship.child else "Unknown"
+        tutor_name = f"{tutorship.tutor.staff.first_name} {tutorship.tutor.staff.last_name}" if tutorship.tutor and tutorship.tutor.staff else "Unknown"
+        tutor_email = tutorship.tutor.staff.email if tutorship.tutor and tutorship.tutor.staff else "Unknown"
+        
+        log_api_action(
+            request=request,
+            action='UPDATE_TUTORSHIP_SUCCESS',
+            affected_tables=['childsmile_app_tutorships'],
+            entity_type='Tutorship',
+            entity_ids=[tutorship.id],
+            success=True,
+            additional_data={
+                'child_id': tutorship.child_id,
+                'child_name': child_name,
+                'tutor_id': tutorship.tutor_id,
+                'tutor_name': tutor_name,
+                'tutor_email': tutor_email,
+                'old_created_date': old_created_date.isoformat() if old_created_date else None,
+                'new_created_date': parsed_date.isoformat() if parsed_date else None,
+            }
+        )
+        
+        api_logger.debug(f"Tutorship {tutorship_id} created_date updated from {old_created_date} to {parsed_date}")
+        
+        return JsonResponse(
+            {
+                "message": "Tutorship created date updated successfully",
+                "tutorship_id": tutorship.id,
+                "old_created_date": old_created_date.isoformat() if old_created_date else None,
+                "new_created_date": parsed_date.isoformat() if parsed_date else None
+            },
+            status=200
+        )
+        
+    except Tutorships.DoesNotExist:
+        log_api_action(
+            request=request,
+            action='UPDATE_TUTORSHIP_FAILED',
+            success=False,
+            error_message="Tutorship not found",
+            status_code=404,
+            entity_type='Tutorship',
+            entity_ids=[tutorship_id]
+        )
+        return JsonResponse({"error": "Tutorship not found"}, status=404)
+    except Exception as e:
+        api_logger.error(f"Error updating tutorship created_date: {str(e)}")
+        log_api_action(
+            request=request,
+            action='UPDATE_TUTORSHIP_FAILED',
+            success=False,
+            error_message=str(e),
+            status_code=500,
+            entity_type='Tutorship',
+            entity_ids=[tutorship_id]
+        )
+        return JsonResponse({"error": str(e)}, status=500)
