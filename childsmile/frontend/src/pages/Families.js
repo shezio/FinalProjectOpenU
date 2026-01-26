@@ -894,6 +894,12 @@ const Families = () => {
                 <p>{t('Marital Status')}: {selectedFamily.marital_status || '---'}</p>
                 <p>{t('Number of Siblings')}: {selectedFamily.num_of_siblings}</p>
                 <p>{t('Tutoring Status')}: {selectedFamily.tutoring_status || '---'}</p>
+                {/* MULTI-TUTOR SUPPORT: Display list of tutors */}
+                {selectedFamily.tutors && selectedFamily.tutors.length > 0 ? (
+                  <p>{t('Tutors')}: {selectedFamily.tutors.map((tutor) => tutor.tutor_name).join(', ')}</p>
+                ) : (
+                  <p>{t('Tutors')}: {t('No tutors assigned')}</p>
+                )}
                 <p>{t('Responsible Coordinator')}: {selectedFamily.responsible_coordinator || '---'}</p>
                 <p>{t('Additional Info')}: {selectedFamily.additional_info || '---'}</p>
                 <p>{t('Current Medical State')}: {selectedFamily.current_medical_state || '---'}</p>

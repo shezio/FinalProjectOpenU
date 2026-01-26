@@ -1696,7 +1696,7 @@ const Tutorships = () => {
 
           <div className="modal-body" style={{ textAlign: 'center', padding: '30px' }}>
             <p style={{ fontSize: '24px', marginBottom: '20px', lineHeight: '1.6' }}>
-              {t('Creating this tutorship will remove any pending tutorships for this child. Do you want to proceed?')}
+              {t('Creating this tutorship will remove any pending tutorship this tutor has with another child. Do you want to proceed?')}
             </p>
             
             <div className="modal-actions" style={{ justifyContent: 'center', gap: '15px' }}>

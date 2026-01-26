@@ -631,6 +631,47 @@ textarea.error {
   line-height: 1.5;
 }
 
+/* MULTI-TUTOR SUPPORT: Tutors section styling */
+.tutors-section {
+  grid-column: span 2;
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.1) 0%, rgba(59, 130, 246, 0.1) 100%);
+  border-radius: 12px;
+  padding: 15px;
+  margin: 10px 0;
+  border: 1px solid rgba(168, 85, 247, 0.3);
+}
+
+.tutors-section p {
+  margin-bottom: 10px;
+  color: #6b21a8;
+}
+
+.tutors-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.tutors-list li {
+  padding: 8px 12px;
+  margin: 5px 0;
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 8px;
+  font-size: 1.3em;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.tutors-list li .pending-badge {
+  background: #fef3c7;
+  color: #92400e;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.8em;
+  margin-left: 10px;
+}
+
 /* Modal overlay */
 .delete-modal-overlay {
   background-color: rgba(0, 0, 0, 0.6);

@@ -64,7 +64,7 @@ from math import sin, cos, sqrt, atan2, radians, ceil
 import json
 import os
 import traceback
-from django.db.models import Count, F
+from django.db.models import Count, F, Q , Prefetch
 from .utils import *
 from .audit_utils import log_api_action
 from .logger import api_logger
@@ -106,6 +106,29 @@ def get_complete_family_details(request):
         )
     try:
         families = Children.objects.all()
+        
+        # MULTI-TUTOR SUPPORT: Prefetch all tutorships for efficiency
+        # Only 'active' and 'pending_first_approval' exist (no second approval state)
+        all_tutorships = Tutorships.objects.filter(
+            tutorship_activation__in=['active', 'pending_first_approval']
+        ).select_related('tutor__staff', 'tutor__id')
+        
+        # Build a dict of child_id -> list of tutors
+        child_tutors_map = {}
+        for tutorship in all_tutorships:
+            child_id = tutorship.child_id
+            if child_id not in child_tutors_map:
+                child_tutors_map[child_id] = []
+            if tutorship.tutor and tutorship.tutor.staff:
+                child_tutors_map[child_id].append({
+                    'tutor_id': tutorship.tutor.id_id,
+                    'tutor_name': f"{tutorship.tutor.staff.first_name} {tutorship.tutor.staff.last_name}",
+                    'tutor_phone': tutorship.tutor.id.phone if tutorship.tutor.id else None,  # Phone is on SignedUp, not Staff
+                    'tutor_email': tutorship.tutor.staff.email,
+                    'tutorship_id': tutorship.id,
+                    'tutorship_status': tutorship.tutorship_activation,
+                })
+        
         families_data = [
             {
                 "id": family.child_id,
@@ -150,6 +173,9 @@ def get_complete_family_details(request):
                 "has_completed_treatments": family.has_completed_treatments,
                 "status": family.status,
                 "age": family.age,
+                # MULTI-TUTOR SUPPORT: Add list of tutors
+                "tutors": child_tutors_map.get(family.child_id, []),
+                "tutors_count": len(child_tutors_map.get(family.child_id, [])),
             }
             for family in families
         ]
@@ -636,8 +662,44 @@ def update_family(request, child_id):
         family.street_and_apartment_number = data.get("street_and_apartment_number", family.street_and_apartment_number)
         family.expected_end_treatment_by_protocol = parse_date_field(data.get("expected_end_treatment_by_protocol"), "expected_end_treatment_by_protocol")
         family.has_completed_treatments = data.get("has_completed_treatments", family.has_completed_treatments)
-        family.status = data.get("status", family.status)
+        
+        # Track old status for deceased handling
+        old_status = family.status
+        new_status = data.get("status", family.status)
+        family.status = new_status
         family.lastupdateddate = datetime.datetime.now()
+        
+        # DECEASED/HEALTHY HANDLING: When child status changes to deceased or healthy, 
+        # DELETE all tutorships (not make inactive - that's for inactive staff flow only)
+        deceased_statuses = ['ז״ל']  # Only the correct enum value with Hebrew gershayim
+        exit_statuses = deceased_statuses + ['בריא']  # Include healthy
+        tutors_freed = []
+        if new_status in exit_statuses and old_status not in exit_statuses:
+            # Child is deceased or healthy - DELETE tutorships and free tutors
+            active_tutorships = Tutorships.objects.filter(
+                child_id=child_id,
+                tutorship_activation__in=['active', 'pending_first_approval']
+            )
+            for tutorship in active_tutorships:
+                tutor = tutorship.tutor
+                if tutor:
+                    # Mark tutor as available
+                    tutor.tutorship_status = 'אין_חניך'
+                    tutor.save()
+                    tutors_freed.append({
+                        'tutor_id': tutor.id_id,
+                        'tutor_name': f"{tutor.staff.first_name} {tutor.staff.last_name}" if tutor.staff else 'Unknown'
+                    })
+                # DELETE the tutorship (not inactive - that's for staff deactivation only)
+                tutorship.delete()
+            
+            # Also clean up PrevTutorshipStatuses for this child
+            PrevTutorshipStatuses.objects.filter(child_id=child_id).delete()
+            
+            if tutors_freed:
+                status_reason = "deceased" if new_status in deceased_statuses else "healthy"
+                field_changes.append(f"Tutors freed due to {status_reason} status: {[t['tutor_name'] for t in tutors_freed]}")
+                api_logger.info(f"Child {child_id} status changed to {status_reason}. Freed {len(tutors_freed)} tutors: {tutors_freed}")
         
         # Save the updated family record
         try:
@@ -669,18 +731,28 @@ def update_family(request, child_id):
         )
 
         # Update tutor's tutee_wellness and relationship_status if tutorship exists
-        tutorship = Tutorships.objects.filter(child_id=child_id).first()
-        if tutorship and tutorship.tutor_id:
-            Tutors.objects.filter(id_id=tutorship.tutor_id).update(
-                tutee_wellness=family.current_medical_state,
-                relationship_status=family.marital_status
-            )
+        # MULTI-TUTOR SUPPORT: Update ALL tutors for this child
+        # Only 'active' and 'pending_first_approval' exist (no second approval state)
+        tutorships = Tutorships.objects.filter(
+            child_id=child_id,
+            tutorship_activation__in=['active', 'pending_first_approval']
+        )
+        for tutorship in tutorships:
+            if tutorship.tutor_id:
+                Tutors.objects.filter(id_id=tutorship.tutor_id).update(
+                    tutee_wellness=family.current_medical_state,
+                    relationship_status=family.marital_status
+                )
 
         # Log successful family update
+        affected_tables_list = ['childsmile_app_children', 'childsmile_app_tasks', 'childsmile_app_tutors']
+        if tutors_freed:
+            affected_tables_list.append('childsmile_app_tutorships')
+        
         log_api_action(
             request=request,
             action='UPDATE_FAMILY_SUCCESS',
-            affected_tables=['childsmile_app_children', 'childsmile_app_tasks', 'childsmile_app_tutors'],
+            affected_tables=affected_tables_list,
             entity_type='Children',
             entity_ids=[family.child_id],
             success=True,
@@ -690,7 +762,8 @@ def update_family(request, child_id):
                 'family_city': family.city,
                 'family_status': family.status,
                 'field_changes': field_changes,  # **ADD THIS**
-                'changes_count': len(field_changes)  # **ADD THIS**
+                'changes_count': len(field_changes),  # **ADD THIS**
+                'tutors_freed': tutors_freed if tutors_freed else None
             }
         )
 

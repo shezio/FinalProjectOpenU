@@ -171,6 +171,9 @@ def update_staff_member(request, staff_id):
                     code = TOTPCode.generate_code()
                     TOTPCode.objects.create(email=staff_member.email, code=code)
                     
+                    # DEBUG: Print the code for deactivation testing
+                    print(f"[DEACTIVATION DEBUG] Verification code for {staff_member.email}: {code}")
+                    
                     subject = "אישור כיבוי חשבון - חיוך של ילד"
                     message = f"""
                     בקשה לכיבוי חשבון במערכת חיוך של ילד.
@@ -326,6 +329,9 @@ def update_staff_member(request, staff_id):
                 TOTPCode.objects.filter(email=staff_member.email, used=False).update(used=True)
                 code = TOTPCode.generate_code()
                 TOTPCode.objects.create(email=staff_member.email, code=code)
+                
+                # DEBUG: Print the code for reactivation testing
+                print(f"[REACTIVATION DEBUG] Verification code for {staff_member.email}: {code}")
                 
                 subject = "אישור הפעלה של חשבון - חיוך של ילד"
                 message = f"""

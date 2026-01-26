@@ -126,7 +126,14 @@ def get_families_per_location_report(request):
 def families_waiting_for_tutorship_report(request):
     api_logger.info("families_waiting_for_tutorship_report called")
     """
-    Retrieve a report of families waiting for tutorship, ordered by registration date.
+    Retrieve a report of families waiting for tutorship (including those with existing tutors).
+    
+    MULTI-TUTOR SUPPORT: This report now includes:
+    - Families with waiting status (לא מכולא חונך yet)
+    - Families with pending tutorships
+    - Families with ACTIVE tutors who want additional tutors (יש_חונך status)
+    
+    This allows the NPO to add MORE tutors to families that already have one.
     """
     user_id = request.session.get("user_id")
     if not user_id:
@@ -142,10 +149,12 @@ def families_waiting_for_tutorship_report(request):
 
     try:
         # Define the tutoring statuses that indicate waiting for tutorship
+        # MULTI-TUTOR: Now includes יש_חונך (has tutor) so we can add more tutors
         waiting_statuses = [
-            "למצוא_חונך",
-            "למצוא_חונך_אין_באיזור_שלו",
-            "למצוא_חונך_בעדיפות_גבוה",
+            "למצוא_חונך",                    # Looking for tutor (no tutor yet)
+            "למצוא_חונך_אין_באיזור_שלו",  # Looking, none in area
+            "למצוא_חונך_בעדיפות_גבוה",     # Looking, high priority
+            "יש_חונך",                       # HAS tutor - but may want MORE (multi-tutor)
         ]
 
         # Get date filters from query parameters
@@ -158,14 +167,18 @@ def families_waiting_for_tutorship_report(request):
         if to_date:
             to_date = make_aware(datetime.datetime.strptime(to_date, "%Y-%m-%d"))
 
-        # Fetch children that either:
-        # 1. Have waiting status AND do NOT have active tutorships
-        # 2. Have ANY pending tutorship (regardless of tutoring status)
+        # MULTI-TUTOR: Fetch children that:
+        # 1. Have waiting status (with or without tutors) 
+        # 2. Have pending tutorships
+        # Exclude ONLY those with non-tutoring statuses (לא רוצים, לא רלוונטי, בוגר)
+        # Exclude deceased and healthy children
+        excluded_statuses = ['לא_רוצים', 'לא_רלוונטי', 'בוגר', 'ז״ל', 'בריא']
+        
         children = Children.objects.filter(
-            Q(tutoring_status__in=waiting_statuses) |  # Children with waiting status
-            Q(tutorships__tutorship_activation__in=['pending_first_approval', 'pending_second_approval'])  # OR children with pending tutorships
+            Q(tutoring_status__in=waiting_statuses) |  # Children with waiting/tutor status
+            Q(tutorships__tutorship_activation='pending_first_approval')  # OR children with pending tutorships
         ).exclude(
-            tutorships__tutorship_activation='active'  # But exclude those with active tutorships
+            tutoring_status__in=excluded_statuses  # Exclude non-tutoring statuses
         ).distinct()
 
         # Apply date filters if provided
