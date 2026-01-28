@@ -123,6 +123,7 @@ const Tutorships = () => {
   const [isManualMatchConfirmationOpen, setIsManualMatchConfirmationOpen] = useState(false);
   const [editingDateId, setEditingDateId] = useState(null);
   const [editingDateValue, setEditingDateValue] = useState('');
+  const dateInputRef = useRef(null);
 
   const toggleMagnify = () => {
     setIsMagnifyActive((prevState) => !prevState);
@@ -178,12 +179,20 @@ const Tutorships = () => {
 
   const handleDateClick = (tutorship) => {
     setEditingDateId(tutorship.id);
-    setEditingDateValue(tutorship.created_date);
+    // Ensure we're working with the date in DD/MM/YYYY format
+    const dateStr = tutorship.created_date;
+    setEditingDateValue(dateStr);
+  };
+
+  const handleDateChange = (e) => {
+    // Allow free typing without validation
+    setEditingDateValue(e.target.value);
   };
 
   const handleDateSave = async (tutorshipId) => {
     if (!editingDateValue.trim()) {
       setEditingDateId(null);
+      setEditingDateValue('');
       return;
     }
 
@@ -218,6 +227,7 @@ const Tutorships = () => {
 
       toast.success(t('Tutorship updated successfully'));
       setEditingDateId(null);
+      setEditingDateValue('');
     } catch (error) {
       console.error('Error updating tutorship date:', error);
       const errorMsg = error.response?.data?.error || t('Failed to update tutorship');
@@ -227,9 +237,12 @@ const Tutorships = () => {
 
   const handleDateKeyPress = (e, tutorshipId) => {
     if (e.key === 'Enter') {
+      e.preventDefault();
       handleDateSave(tutorshipId);
     } else if (e.key === 'Escape') {
+      e.preventDefault();
       setEditingDateId(null);
+      setEditingDateValue('');
     }
   };
 
@@ -1129,16 +1142,22 @@ const Tutorships = () => {
                       <td>{`${tutorship.tutor_firstname} ${tutorship.tutor_lastname}`}</td>
                       <td
                         className={editingDateId === tutorship.id ? 'editing-date-cell' : 'editable-date-cell'}
-                        onClick={() => hasUpdatePermission && handleDateClick(tutorship)}
-                        style={{ cursor: hasUpdatePermission ? 'pointer' : 'default' }}
+                        onClick={(e) => {
+                          // Prevent click handler if already in edit mode or click is on the input
+                          if (editingDateId !== tutorship.id && hasUpdatePermission) {
+                            handleDateClick(tutorship);
+                          }
+                        }}
+                        style={{ cursor: hasUpdatePermission && editingDateId !== tutorship.id ? 'pointer' : editingDateId === tutorship.id ? 'text' : 'default' }}
                       >
                         {editingDateId === tutorship.id ? (
                           <input
+                            ref={dateInputRef}
                             type="text"
                             value={editingDateValue}
                             onChange={(e) => setEditingDateValue(e.target.value)}
                             onKeyDown={(e) => handleDateKeyPress(e, tutorship.id)}
-                            onBlur={() => setEditingDateId(null)}
+                            onClick={(e) => e.stopPropagation()}
                             placeholder="DD/MM/YYYY"
                             autoFocus
                             className="date-input"
