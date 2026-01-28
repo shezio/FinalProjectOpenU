@@ -121,9 +121,129 @@ const Tutorships = () => {
   const [manualMatchResult, setManualMatchResult] = useState(null);
   const [isManualMatchModalOpen, setIsManualMatchModalOpen] = useState(false);
   const [isManualMatchConfirmationOpen, setIsManualMatchConfirmationOpen] = useState(false);
+  const [editingDateId, setEditingDateId] = useState(null);
+  const [editingDateValue, setEditingDateValue] = useState('');
+  const dateInputRef = useRef(null);
 
   const toggleMagnify = () => {
     setIsMagnifyActive((prevState) => !prevState);
+  };
+
+  const validateDate = (dateStr) => {
+    // Validate DD/MM/YYYY format
+    const parts = dateStr.split('/');
+    if (parts.length !== 3 || parts[0].length !== 2 || parts[1].length !== 2 || parts[2].length !== 4) {
+      return { valid: false, error: t('Invalid date format. Please use DD/MM/YYYY') };
+    }
+
+    const day = parseInt(parts[0], 10);
+    const month = parseInt(parts[1], 10);
+    const year = parseInt(parts[2], 10);
+
+    // Validate month range
+    if (month < 1 || month > 12) {
+      return { valid: false, error: t('Month must be between 01 and 12') };
+    }
+
+    // Validate day range based on month
+    const daysInMonth = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+    
+    // Check for leap year
+    if (year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0)) {
+      daysInMonth[1] = 29;
+    }
+
+    if (day < 1 || day > daysInMonth[month - 1]) {
+      return { valid: false, error: t('Invalid day for the selected month') };
+    }
+
+    // Create date object
+    const inputDate = new Date(`${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Reset time to midnight for fair comparison
+
+    // Check if date is in the future
+    if (inputDate > today) {
+      return { valid: false, error: t('Date cannot be in the future') };
+    }
+
+    // Check if date is too old (more than 20 years ago)
+    const twentyYearsAgo = new Date();
+    twentyYearsAgo.setFullYear(twentyYearsAgo.getFullYear() - 20);
+    if (inputDate < twentyYearsAgo) {
+      return { valid: false, error: t('Date cannot be more than 20 years ago') };
+    }
+
+    return { valid: true, error: null };
+  };
+
+  const handleDateClick = (tutorship) => {
+    setEditingDateId(tutorship.id);
+    // Ensure we're working with the date in DD/MM/YYYY format
+    const dateStr = tutorship.created_date;
+    setEditingDateValue(dateStr);
+  };
+
+  const handleDateChange = (e) => {
+    // Allow free typing without validation
+    setEditingDateValue(e.target.value);
+  };
+
+  const handleDateSave = async (tutorshipId) => {
+    if (!editingDateValue.trim()) {
+      setEditingDateId(null);
+      setEditingDateValue('');
+      return;
+    }
+
+    // Validate date format and value
+    const validation = validateDate(editingDateValue);
+    if (!validation.valid) {
+      showErrorToast(t, validation.error, '');
+      return;
+    }
+
+    try {
+      // Convert DD/MM/YYYY to YYYY-MM-DD format for backend
+      const parts = editingDateValue.split('/');
+      let dateToSend = editingDateValue;
+      
+      if (parts.length === 3 && parts[0].length === 2 && parts[1].length === 2 && parts[2].length === 4) {
+        // It's DD/MM/YYYY format, convert to YYYY-MM-DD
+        dateToSend = `${parts[2]}-${parts[1]}-${parts[0]}`;
+      }
+
+      const response = await axios.patch(
+        `/api/update_tutorship_created_date/${tutorshipId}/`,
+        { created_date: dateToSend }
+      );
+
+      // Update the local state with the new date
+      setEnrichedTutorships(prevTutorships =>
+        prevTutorships.map(t =>
+          t.id === tutorshipId ? { ...t, created_date: editingDateValue } : t
+        )
+      );
+
+      toast.success(t('Tutorship updated successfully'));
+      setEditingDateId(null);
+      setEditingDateValue('');
+    } catch (error) {
+      console.error('Error updating tutorship date:', error);
+      const errorMsg = error.response?.data?.error || t('Failed to update tutorship');
+      showErrorToast(t, errorMsg, '');
+    }
+  };
+
+  const handleDateKeyPress = (e, tutorshipId) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleDateSave(tutorshipId);
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      setEditingDateId(null);
+      setEditingDateValue('');
+    }
   };
 
   const fetchStaffAndRoles = async () => {
@@ -1020,7 +1140,32 @@ const Tutorships = () => {
                       </td>
                       <td>{`${tutorship.child_firstname} ${tutorship.child_lastname}`}</td>
                       <td>{`${tutorship.tutor_firstname} ${tutorship.tutor_lastname}`}</td>
-                      <td>{tutorship.created_date}</td>
+                      <td
+                        className={editingDateId === tutorship.id ? 'editing-date-cell' : 'editable-date-cell'}
+                        onClick={(e) => {
+                          // Prevent click handler if already in edit mode or click is on the input
+                          if (editingDateId !== tutorship.id && hasUpdatePermission) {
+                            handleDateClick(tutorship);
+                          }
+                        }}
+                        style={{ cursor: hasUpdatePermission && editingDateId !== tutorship.id ? 'pointer' : editingDateId === tutorship.id ? 'text' : 'default' }}
+                      >
+                        {editingDateId === tutorship.id ? (
+                          <input
+                            ref={dateInputRef}
+                            type="text"
+                            value={editingDateValue}
+                            onChange={(e) => setEditingDateValue(e.target.value)}
+                            onKeyDown={(e) => handleDateKeyPress(e, tutorship.id)}
+                            onClick={(e) => e.stopPropagation()}
+                            placeholder="DD/MM/YYYY"
+                            autoFocus
+                            className="date-input"
+                          />
+                        ) : (
+                          tutorship.created_date
+                        )}
+                      </td>
                       <td>
                         <div className="tutorship-actions">
                           <button

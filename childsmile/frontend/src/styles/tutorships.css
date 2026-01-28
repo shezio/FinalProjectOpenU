@@ -2015,3 +2015,40 @@ margin-right: 150px;
   align-items: center !important;
   z-index: 9998 !important;
 }
+
+/* Inline Date Editing Styles */
+.editable-date-cell {
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.editable-date-cell:hover {
+  background-color: rgba(59, 130, 246, 0.1);
+  border-radius: 4px;
+}
+
+.editing-date-cell {
+  padding: 0;
+  background-color: rgba(59, 130, 246, 0.15);
+  border-radius: 4px;
+}
+
+.date-input {
+  width: 100%;
+  padding: 8px;
+  border: 2px solid rgb(59, 130, 246);
+  border-radius: 4px;
+  font-size: inherit;
+  font-family: inherit;
+  outline: none;
+  background-color: white;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.date-input:focus {
+  border-color: rgb(37, 99, 235);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+}
