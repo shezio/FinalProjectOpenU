@@ -322,6 +322,10 @@
   text-align: right;
 }
 
+.tasks-main-content .modal-content {
+  max-height: 150vh;
+  /* Ensure labels are on their own line */
+}
 .modal-content input,
 .modal-content select {
   width: 100%;

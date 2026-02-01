@@ -216,12 +216,17 @@ def get_tutors(request):
     Retrieve all tutors along with their tutorship status.
     """
     tutors = Tutors.objects.select_related("staff", "id").filter(staff__is_active=True)
+    
+    # Get all pending tutor IDs for eligibility check
+    pending_tutor_ids = set(Pending_Tutor.objects.values_list('id_id', flat=True))
+    
     tutors_data = [
         {
             "id": t.id_id,  # ה-ID של המדריך בטבלת Tutors
             "first_name": t.staff.first_name,  # נתונים מטבלת Staff
             "last_name": t.staff.last_name,
             "phone": t.id.phone if t.id else "",  # Phone from SignedUp model
+            "city": t.id.city if t.id else "",  # City from SignedUp model (via join)
             "tutorship_status": t.tutorship_status,
             "preferences": t.preferences,
             "tutor_email": t.tutor_email,
@@ -229,12 +234,28 @@ def get_tutors(request):
             "tutee_wellness": t.tutee_wellness,
             "updated": t.updated,  # The new 'updated' field
             "in_tutorship": Tutorships.objects.filter(tutor_id=t.id_id, child__isnull=False).exists(),  # Add this flag
+            "eligibility": "ממתין לראיון" if t.id_id in pending_tutor_ids else "עבר ראיון",  # Eligibility based on Pending_Tutor
         }
         for t in tutors
     ]
     # Get marital status options from Children model
     marital_status_options = [choice[0] for choice in MaritalStatus.choices]
     status_options = [choice[0] for choice in TutorshipStatus.choices]
+    
+    # Get cities list
+    import json
+    import os
+    cities_options = []
+    try:
+        settlements_path = os.path.join(os.path.dirname(__file__), '..', 'frontend', 'src', 'components', 'settlements.json')
+        if os.path.exists(settlements_path):
+            with open(settlements_path, 'r', encoding='utf-8') as f:
+                cities_options = json.load(f)
+    except Exception as e:
+        api_logger.error(f"Error loading cities: {e}")
+        # Fallback to getting unique cities from database
+        cities_options = list(Tutors.objects.values_list('city', flat=True).distinct())
+    
     user_id = request.session.get("user_id")
     api_logger.info(f"get_tutors completed successfully for user_id: {user_id}")
     api_logger.debug(f"get_tutors response: {tutors_data}")
@@ -242,6 +263,7 @@ def get_tutors(request):
         "tutors": tutors_data,
         "tutorship_status_options": status_options,
         "marital_status_options": marital_status_options,
+        "cities_options": cities_options,
     })
 
 @conditional_csrf
@@ -557,6 +579,7 @@ def get_general_volunteers_not_pending(request):
             "last_name": gv.staff.last_name,
             "email": gv.staff.email,
             "phone": gv.id.phone if gv.id else "",  # Phone from SignedUp model
+            "city": gv.id.city if gv.id else "",  # City from SignedUp model
             "signupdate": gv.signupdate,
             "comments": gv.comments,
             "updated": gv.updated,

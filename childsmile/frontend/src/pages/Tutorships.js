@@ -872,7 +872,7 @@ const Tutorships = () => {
       fetchFullTutorships();
   }, []);
 
-  // Check if coming from manual match flow
+  // Check if coming from manual match flow or city change
   useEffect(() => {
     if (location.state && location.state.manualMatchChildId) {
       console.log('DEBUG: Detected manual match navigation with child ID:', location.state.manualMatchChildId);
@@ -897,6 +897,11 @@ const Tutorships = () => {
       
       // Clear location state to prevent reactivation
       window.history.replaceState({}, document.title);
+    }
+    
+    // Check if coming from city change in TutorVolunteerMgmt
+    if (location.state && location.state.filterByName) {
+      setTutorshipSearchQuery(location.state.filterByName);
     }
   }, [location, t]);
 
@@ -1074,6 +1079,21 @@ const Tutorships = () => {
               onChange={e => setTutorshipSearchQuery(e.target.value)}
             />
           </div>
+          
+          {tutorshipSearchQuery && (
+            <div className="filter-chip-container">
+              <span className="filter-chip">
+                {t('Filtering by')}: <strong>{tutorshipSearchQuery}</strong>
+                <button 
+                  className="filter-chip-close"
+                  onClick={() => setTutorshipSearchQuery('')}
+                  title={t('Clear filter')}
+                >
+                  ×
+                </button>
+              </span>
+            </div>
+          )}
         </div>
         
         {loading ? (

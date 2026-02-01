@@ -85,6 +85,10 @@ const Families = () => {
   // Age sorting state
   const [sortOrderAge, setSortOrderAge] = useState('asc'); // Default to ascending
 
+  // City change modal state for Families
+  const [showCityChangeModal, setShowCityChangeModal] = useState(false);
+  const [cityChangeData, setCityChangeData] = useState(null);
+
   // Bulk delete feature flag
   const ENABLE_BULK_DELETE = process.env.REACT_APP_ENABLE_BULK_DELETE === 'true';
 
@@ -431,6 +435,9 @@ const Families = () => {
     // Check if child_id was changed
     const idChanged = parseInt(newFamily.child_id) !== editFamily.id;
     
+    // Check if city was changed
+    const cityChanged = newFamily.city !== editFamily.city;
+    
     // IMPORTANT: Update family fields FIRST, then change ID LAST
     // This prevents data loss if the ID change fails - the other edits are already saved
     
@@ -468,8 +475,24 @@ const Families = () => {
         }
       }
       
-      setEditFamily(null); // Close the edit modal
-      fetchFamilies(); // Refresh the families list
+      // Step 3: Close the edit modal first
+      setEditFamily(null);
+      
+      // Step 4: If city was changed AND child has tutorships, show the city change modal
+      if (cityChanged && editFamily.tutors && editFamily.tutors.length > 0) {
+        // Add a small delay to ensure edit modal closes first
+        setTimeout(() => {
+          setCityChangeData({
+            family: newFamily,
+            oldCity: editFamily.city,
+            newCity: newFamily.city,
+          });
+          setShowCityChangeModal(true);
+        }, 100);
+      } else {
+        // No city change or no tutorships, just refresh the list
+        fetchFamilies();
+      }
     } catch (error) {
       console.error('Error updating family:', error);
       showErrorToast(t, 'Error updating family details. ID was not changed.', error);
@@ -530,6 +553,22 @@ const Families = () => {
     } finally {
       closeDeleteModal();
     }
+  };
+
+  // City change modal handlers
+  const handleCityChangeYes = () => {
+    const tuteeName = `${newFamily.childfirstname} ${newFamily.childsurname}`;
+    setShowCityChangeModal(false);
+    setEditFamily(null);
+    fetchFamilies(); // Refresh the list
+    // Navigate to tutorships with tutee name filter
+    navigate('/tutorships', { state: { filterByName: tuteeName } });
+  };
+
+  const handleCityChangeNo = () => {
+    setShowCityChangeModal(false);
+    setEditFamily(null);
+    fetchFamilies(); // Refresh the list and return to grid
   };
 
   // Add the parseDate function (if not already present)
@@ -958,7 +997,8 @@ const Families = () => {
                         return {
                           ...prev,
                           city,
-                          street: prev.street, // Keep the current street when city changes
+                          street: "", // Clear street when city changes
+                          apartment_number: "", // Clear apartment when city changes
                         };
                       });
                     }}
@@ -973,7 +1013,7 @@ const Families = () => {
                   <label>{t("Street")}</label>
                   <Select
                     options={streetOptions}
-                    value={streetOptions.find((option) => option.value === newFamily.street)}
+                    value={newFamily.street ? streetOptions.find((option) => option.value === newFamily.street) : null}
                     onChange={(selectedOption) => {
                       const street = selectedOption ? selectedOption.value : "";
                       setNewFamily((prev) => ({
@@ -1723,6 +1763,33 @@ const Families = () => {
             </button>
           </div>
         </Modal>
+
+        {/* City Change Modal */}
+        {showCityChangeModal && cityChangeData && (
+          <>
+            {console.log("Rendering city change modal with data:", cityChangeData)}
+            <div className="tutor-vol-modal-overlay" onClick={handleCityChangeNo}>
+              <div className="tutor-vol-modal-content" onClick={(e) => e.stopPropagation()}>
+                <div className="tutor-vol-modal-header">
+                  <h2>{t("City Change")}</h2>
+                  <span className="tutor-vol-modal-close" onClick={handleCityChangeNo}>&times;</span>
+                </div>
+                <div className="tutor-vol-modal-body">
+                  <p>{t("Changing a city of residence can have an actual effect on current matches")}</p>
+                  <p>{t("Would you like to delete current tutorships for rematching?")}</p>
+                </div>
+                <div className="tutor-vol-modal-footer">
+                  <button className="tutor-vol-btn-cancel" onClick={handleCityChangeNo}>
+                    {t("No")}
+                  </button>
+                  <button className="tutor-vol-btn-confirm" onClick={handleCityChangeYes}>
+                    {t("Yes")}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

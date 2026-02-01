@@ -112,20 +112,21 @@ def get_user_tasks(request):
             api_logger.debug("Fetching all tasks for admin user.")
             tasks = (
                 Tasks.objects.all()
-                .select_related("task_type", "assigned_to", "pending_tutor__id", "related_child")
+                .select_related("task_type", "assigned_to", "pending_tutor__id", "related_child", "related_tutor", "related_tutor__id")
                 .order_by("-updated_at")
             )
         else:
             api_logger.debug(f"Fetching tasks assigned to user '{user.username}'.")
             tasks = (
                 Tasks.objects.filter(assigned_to_id=user_id)
-                .select_related("task_type", "assigned_to", "pending_tutor__id", "related_child")
+                .select_related("task_type", "assigned_to", "pending_tutor__id", "related_child", "related_tutor", "related_tutor__id")
                 .order_by("-updated_at")
             )
 
         # Build tasks_data for the response
-        tasks_data = [
-            {
+        tasks_data = []
+        for task in tasks:
+            task_dict = {
                 "id": task.task_id,
                 "description": task.description,
                 "due_date": task.due_date.strftime("%d/%m/%Y"),
@@ -161,8 +162,28 @@ def get_user_tasks(request):
                     else None
                 ),
             }
-            for task in tasks
-        ]
+            
+            # Add extra info for "התאמת חניך" tasks
+            if task.task_type and task.task_type.task_type == "התאמת חניך":
+                # Get tutor info
+                if task.related_tutor:
+                    tutor = task.related_tutor
+                    signedup = tutor.id  # SignedUp instance
+                    task_dict["tutee_match_info"] = {
+                        "tutor_name": f"{signedup.first_name} {signedup.surname}" if signedup else "לא ידוע",
+                        "tutor_phone": signedup.phone if signedup else "לא ידוע",
+                        "tutor_email": tutor.tutor_email or (signedup.email if signedup else "לא ידוע"),
+                        # "כשירות" - eligibility: check if tutor is still in Pending_Tutor table
+                        "eligibility": "ממתין לראיון" if Pending_Tutor.objects.filter(id_id=tutor.id_id).exists() else "עבר ראיון",
+                    }
+                # Get child info
+                if task.related_child:
+                    child = task.related_child
+                    task_dict["tutee_match_info"] = task_dict.get("tutee_match_info", {})
+                    task_dict["tutee_match_info"]["child_name"] = f"{child.childfirstname} {child.childsurname}"
+            
+            tasks_data.append(task_dict)
+            
         api_logger.debug(f"Fetched tasks: {tasks_data}")
         # Always fetch all task types, EXCLUDING internal-only types (registration approval)
         task_types = Task_Types.objects.all() # exclude(task_type="אישור הרשמה") --- IGNORE ---
@@ -486,6 +507,56 @@ def delete_task(request, task_id):
                 except Pending_Tutor.DoesNotExist:
                     api_logger.debug(f"Pending_Tutor with ID {pending_tutor_id} does not exist")
         
+        # If task type is "התאמת חניך", delete from Pending_Tutor, delete pending tutorship, and set tutor to אין_חניך
+        if task_type and getattr(task_type, "task_type", None) == "התאמת חניך":
+            api_logger.debug(f"Deleting tutee match task {task_id}")
+            if task.related_tutor:
+                tutor = task.related_tutor
+                tutor_id = tutor.id_id
+                
+                # 1. Delete from Pending_Tutor if exists
+                try:
+                    pending_tutor = Pending_Tutor.objects.get(id_id=tutor_id)
+                    pending_tutor.delete()
+                    api_logger.info(f"Deleted Pending_Tutor with id_id {tutor_id} after tutee match task deletion")
+                except Pending_Tutor.DoesNotExist:
+                    api_logger.debug(f"Pending_Tutor with id_id {tutor_id} does not exist (already deleted or never existed)")
+                
+                # 2. Delete pending tutorship (pending_first_approval) for this tutor
+                try:
+                    from .models import Tutorships, PrevTutorshipStatuses
+                    pending_tutorship = Tutorships.objects.filter(
+                        tutor=tutor,
+                        tutorship_activation='pending_first_approval'
+                    ).first()
+                    if pending_tutorship:
+                        # Restore child status if this was their only tutorship
+                        child = pending_tutorship.child
+                        other_child_tutorships = Tutorships.objects.filter(
+                            child=child,
+                            tutorship_activation__in=['active', 'pending_first_approval']
+                        ).exclude(id=pending_tutorship.id).exists()
+                        
+                        if not other_child_tutorships:
+                            # Restore child to searching for tutor
+                            child.tutoring_status = "למצוא_חונך"
+                            child.save()
+                            api_logger.info(f"Restored child {child.child_id} tutoring_status to למצוא_חונך")
+                        
+                        # Delete PrevTutorshipStatuses for this tutorship
+                        PrevTutorshipStatuses.objects.filter(tutorship_id=pending_tutorship).delete()
+                        
+                        tutorship_id = pending_tutorship.id
+                        pending_tutorship.delete()
+                        api_logger.info(f"Deleted pending tutorship {tutorship_id} after tutee match task deletion")
+                except Exception as e:
+                    api_logger.error(f"Error deleting pending tutorship: {str(e)}")
+                
+                # 3. Set tutor status to "אין_חניך"
+                tutor.tutorship_status = "אין_חניך"
+                tutor.save()
+                api_logger.info(f"Set tutor {tutor_id} tutorship_status to אין_חניך after tutee match task deletion")
+        
         # If task type is "אישור הרשמה", handle rejection workflow
         rejected_email = None
         if is_registration_approval:
@@ -806,6 +877,23 @@ def update_task_status(request, task_id):
         if new_status == "בביצוע" and task.initial_family_data_id_fk:
             # Delete all other tasks with the same initial_family_data_id_fk
             delete_other_tasks_with_initial_family_data_async(task)
+        # If status changed to "בביצוע" and task is tutee match task (התאמת חניך), delete other tutee match tasks for same tutor
+        elif new_status == "בביצוע" and task.task_type and task.task_type.task_type == "התאמת חניך":
+            # Delete all other tutee match tasks for this tutor (so only one coordinator handles the match)
+            # IMPORTANT: Only delete the task records, DO NOT delete the tutorships or pending tutors
+            if task.related_tutor:
+                try:
+                    other_tutee_match_tasks = Tasks.objects.filter(
+                        related_tutor=task.related_tutor,
+                        task_type__task_type="התאמת חניך"
+                    ).exclude(task_id=task_id)
+                    deleted_count = other_tutee_match_tasks.count()
+                    # Simply delete the task records without triggering tutorship cleanup
+                    other_tutee_match_tasks.delete()
+                    if deleted_count > 0:
+                        api_logger.info(f"Deleted {deleted_count} other tutee match task records (only tasks, not tutorships) for tutor {task.related_tutor.id_id} after coordinator {task.assigned_to.username} took task {task_id}")
+                except Exception as e:
+                    api_logger.error(f"Error deleting other tutee match tasks: {str(e)}")
         # If status changed to "בביצוע" and task is audit call task (שיחת ביקורת), delete other audit call tasks for same child
         elif new_status == "בביצוע" and task.task_type and task.task_type.task_type == "שיחת ביקורת":
             # Delete all other audit call tasks for this child (so only one coordinator calls the family)
@@ -884,25 +972,39 @@ def update_task_status(request, task_id):
                         except Exception as email_error:
                             api_logger.error(f"Error sending approval email to {user_email}: {str(email_error)}")
                         
-                        # NOW CHECK IF THIS USER WANTED TO BE A TUTOR - CREATE INTERVIEW TASK
-                        # Find the SignedUp record to check if they wanted to be a tutor
+                        # NOW CHECK IF THIS USER WANTED TO BE A TUTOR - DIRECTLY PROMOTE TO TUTOR
+                        # No more interview task - the "התאמת חניך" task will be created when tutorship is created
                         try:
                             signed_up = SignedUp.objects.get(email=user_email)
                             api_logger.debug(f"Found SignedUp record for {user_email}, want_tutor={signed_up.want_tutor}")
                             if signed_up.want_tutor:
-                                # Check if pending tutor exists
+                                # Check if pending tutor exists (they should be here from registration)
                                 pending_tutor = Pending_Tutor.objects.filter(id_id=signed_up.id).first()
                                 if pending_tutor:
-                                    api_logger.debug(f"Found pending tutor for {user_email}, creating interview task")
-                                    # Create interview task for tutor coordinators
-                                    task_type_interview = Task_Types.objects.filter(
-                                        task_type="ראיון מועמד לחונכות"
-                                    ).first()
-                                    if task_type_interview:
-                                        create_tasks_for_tutor_coordinators_async(pending_tutor.pending_tutor_id, task_type_interview.id)
-                                        api_logger.info(f"Created tutor interview task for approved user {staff_user.staff_id} ({user_email})")
-                                    else:
-                                        api_logger.warning(f"Interview task type not found")
+                                    api_logger.debug(f"Found pending tutor for {user_email}, promoting directly to Tutor")
+                                    
+                                    # Remove "General Volunteer" role if present
+                                    general_vol_role = Role.objects.filter(role_name="General Volunteer").first()
+                                    if general_vol_role and general_vol_role in staff_user.roles.all():
+                                        staff_user.roles.remove(general_vol_role)
+                                    
+                                    # Add "Tutor" role
+                                    tutor_role = Role.objects.filter(role_name="Tutor").first()
+                                    if tutor_role and tutor_role not in staff_user.roles.all():
+                                        staff_user.roles.add(tutor_role)
+                                    
+                                    # Create Tutor record if not exists
+                                    if not Tutors.objects.filter(id_id=signed_up.id).exists():
+                                        Tutors.objects.create(
+                                            id_id=signed_up.id,
+                                            staff=staff_user,
+                                            tutorship_status="אין_חניך",
+                                            tutor_email=signed_up.email,
+                                        )
+                                        api_logger.info(f"Created Tutor record for {user_email}")
+                                    
+                                    # NOTE: Don't delete from Pending_Tutor yet - will be deleted when "התאמת חניך" task is completed
+                                    api_logger.info(f"Promoted user {staff_user.staff_id} ({user_email}) to Tutor role (pending tutee match)")
                                 else:
                                     api_logger.debug(f"No pending tutor found for {user_email}")
                             else:
@@ -910,41 +1012,24 @@ def update_task_status(request, task_id):
                         except SignedUp.DoesNotExist:
                             api_logger.debug(f"SignedUp record not found for {user_email}")
                         except Exception as e:
-                            api_logger.error(f"Error creating tutor interview task for {user_email}: {str(e)}")
+                            api_logger.error(f"Error promoting tutor for {user_email}: {str(e)}")
                     except Staff.DoesNotExist:
                         api_logger.error(f"Staff user not found for email {user_email} during registration approval")
                 else:
                     api_logger.warning(f"Could not extract email from registration approval task {task_id}")
-            
-            # HANDLE TUTOR INTERVIEW
-            elif task.task_type and task.task_type.task_type == "ראיון מועמד לחונכות":
-                # pending_tutor is a FK to Pending_Tutor
-                if task.pending_tutor:
-                    pending_tutor_record = task.pending_tutor
-                    api_logger.debug(
-                        f"pending_tutor_id = {task.pending_tutor.pending_tutor_id}"
-                    )
-                    ok, msg = promote_pending_tutor_to_tutor(task)
-                    api_logger.debug(f"Promotion called, result: {ok}, {msg}")
-                    if not ok:
-                        log_api_action(
-                            request=request,
-                            action='UPDATE_TASK_FAILED',
-                            success=False,
-                            error_message=f"Error promoting pending tutor: {msg}",
-                            status_code=400
-                        )
-                        return JsonResponse(
-                            {"Error promoting pending tutor": msg}, status=400
-                        )
-                    else:
-                        # Promotion successful - delete the pending tutor record
-                        pending_tutor_volunteer_name = f"{pending_tutor_record.id.first_name} {pending_tutor_record.id.surname}"
-                        pending_tutor_id_val = pending_tutor_record.pending_tutor_id
-                        pending_tutor_record.delete()
-                        api_logger.debug(f"Deleted Pending_Tutor record with ID {pending_tutor_id_val}")
+
+            # HANDLE TUTEE MATCH TASK COMPLETION ("התאמת חניך")
+            elif task.task_type and task.task_type.task_type == "התאמת חניך":
+                # When tutee match task is completed, delete from Pending_Tutor if exists
+                if task.related_tutor:
+                    tutor_id = task.related_tutor.id_id
+                    pending_tutor = Pending_Tutor.objects.filter(id_id=tutor_id).first()
+                    if pending_tutor:
+                        pending_tutor_volunteer_name = f"{pending_tutor.id.first_name} {pending_tutor.id.surname}"
+                        pending_tutor_id_val = pending_tutor.pending_tutor_id
+                        pending_tutor.delete()
+                        api_logger.info(f"Deleted Pending_Tutor record with ID {pending_tutor_id_val} after tutee match completion")
                         
-                        # Log the deletion of pending tutor due to promotion
                         log_api_action(
                             request=request,
                             action='DELETE_PENDING_TUTOR_SUCCESS',
@@ -953,45 +1038,11 @@ def update_task_status(request, task_id):
                             entity_ids=[pending_tutor_id_val],
                             success=True,
                             additional_data={
-                                'reason': 'Promoted to Tutor',
+                                'reason': 'Tutee match task completed',
                                 'volunteer_name': pending_tutor_volunteer_name,
-                                'promoted_from_task_id': task.task_id
+                                'completed_task_id': task.task_id
                             }
                         )
-                        
-                        # Send congratulation email to the newly promoted tutor
-                        try:
-                            tutor_email = pending_tutor_record.id.email
-                            tutor_name = pending_tutor_volunteer_name
-                            
-                            subject = "!ברוכים הבאים לצוות החונכים שלנו"
-                            message = f"""
-                            שלום {tutor_name},
-
-                            אנו שמחים להודיע לך שעברת את הראיון לחונכות! 
-
-                            כעת יש לך הרשאות חונך ותוכל להתחיל לעזור לילדים בקרוב.
-
-                            תפקידך כחונך הוא ללוות ילד בדרכו החינוכית, להעניק לו תמיכה רגשית וחברתית, ולעזור בהשגת יעדיו.
-
-                            אנו מודים לך על בחירתך להיות חלק מהמשימה החשובה הזו.
-
-                            אם יש לך שאלות, אנא צור קשר עם צוות התמיכה שלנו.
-
-                            בברכה,
-                            צוות חיוך של ילד
-                            """
-                            
-                            send_mail(
-                                subject,
-                                message,
-                                settings.DEFAULT_FROM_EMAIL,
-                                [tutor_email],
-                                fail_silently=False,
-                            )
-                            api_logger.info(f"Congratulation email sent to {tutor_email}")
-                        except Exception as email_error:
-                            api_logger.error(f"Error sending promotion email to {tutor_email}: {str(email_error)}")
 
         log_api_action(
             request=request,
@@ -1270,12 +1321,14 @@ def update_task(request, task_id):
         if assigned_to:
             try:
                 # Check if assigned_to is a username or staff_id
-                if assigned_to.isdigit():
+                # Convert to string first in case it comes as an integer
+                assigned_to_str = str(assigned_to)
+                if assigned_to_str.isdigit():
                     # If it's a numeric value, treat it as staff_id
                     staff_member = Staff.objects.get(staff_id=assigned_to)
                 else:
                     # Otherwise, treat it as a username
-                    staff_member = Staff.objects.get(username=assigned_to)
+                    staff_member = Staff.objects.get(username=assigned_to_str)
 
                 task.assigned_to_id = staff_member.staff_id
             except Staff.DoesNotExist:
