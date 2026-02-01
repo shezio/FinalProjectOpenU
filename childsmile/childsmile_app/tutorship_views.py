@@ -453,6 +453,38 @@ def create_tutorship(request):
         # Get names for audit
         child_name = f"{child.childfirstname} {child.childsurname}" if child else "Unknown"
         tutor_name = f"{tutor.staff.first_name} {tutor.staff.last_name}" if tutor and tutor.staff else "Unknown"
+        
+        # NEW WORKFLOW: Create "התאמת חניך" (Tutee Match) task for family coordinators
+        tutee_match_task_created = False
+        try:
+            tutee_match_task_type = Task_Types.objects.filter(task_type="התאמת חניך").first()
+            if tutee_match_task_type:
+                # Get family coordinators
+                family_coordinator_role = Role.objects.filter(role_name="Families Coordinator").first()
+                if family_coordinator_role:
+                    family_coordinators = Staff.objects.filter(roles=family_coordinator_role)
+                    for coordinator in family_coordinators:
+                        # Get tutor phone from SignedUp
+                        tutor_phone = tutor.id.phone if tutor.id else "לא ידוע"
+                        
+                        task_data = {
+                            "description": f"התאמת חניך - {tutor_name} ← {child_name}",
+                            "due_date": (now().date() + datetime.timedelta(days=7)).strftime("%Y-%m-%d"),
+                            "status": "לא הושלמה",
+                            "assigned_to": coordinator.staff_id,
+                            "tutor": tutor_id,
+                            "child": child_id,
+                            "type": tutee_match_task_type.id,
+                        }
+                        task = create_task_internal(task_data)
+                        api_logger.info(f"Created tutee match task {task.task_id} for tutorship {tutorship.id}")
+                        tutee_match_task_created = True
+                else:
+                    api_logger.warning("Families Coordinator role not found, skipping tutee match task creation")
+            else:
+                api_logger.warning("Task type 'התאמת חניך' not found in database")
+        except Exception as e:
+            api_logger.error(f"Error creating tutee match task: {str(e)}")
 
         log_api_action(
             request=request,
@@ -645,6 +677,43 @@ def update_tutorship(request, tutorship_id):
         )
     try:
         old_approval_counter = tutorship.approval_counter
+        
+        # NEW WORKFLOW: Block final approval if "התאמת חניך" task is not completed
+        would_be_final_approval = (old_approval_counter == 1)  # Next approval would make it 2
+        if would_be_final_approval:
+            # Check if there's an incomplete "התאמת חניך" task for this tutor
+            tutee_match_task_type = Task_Types.objects.filter(task_type="התאמת חניך").first()
+            if tutee_match_task_type:
+                incomplete_tutee_match_task = Tasks.objects.filter(
+                    related_tutor_id=tutorship.tutor_id,
+                    task_type=tutee_match_task_type,
+                    status__in=["לא הושלמה", "בביצוע"]
+                ).first()
+                if incomplete_tutee_match_task:
+                    child_name = f"{tutorship.child.childfirstname} {tutorship.child.childsurname}" if tutorship.child else "Unknown"
+                    tutor_name = f"{tutorship.tutor.staff.first_name} {tutorship.tutor.staff.last_name}" if tutorship.tutor and tutorship.tutor.staff else "Unknown"
+                    
+                    log_api_action(
+                        request=request,
+                        action='UPDATE_TUTORSHIP_FAILED',
+                        success=False,
+                        error_message="Cannot final approve: Tutee match task not completed",
+                        status_code=400,
+                        entity_type='Tutorship',
+                        entity_ids=[tutorship_id],
+                        additional_data={
+                            'child_name': child_name,
+                            'tutor_name': tutor_name,
+                            'reason': 'tutee_match_task_incomplete',
+                            'incomplete_task_id': incomplete_tutee_match_task.task_id
+                        }
+                    )
+                    return JsonResponse({
+                        "error": "לא ניתן לאשר סופית - משימת התאמת חניך לא הושלמה",
+                        "error_code": "TUTEE_MATCH_INCOMPLETE",
+                        "task_id": incomplete_tutee_match_task.task_id
+                    }, status=400)
+        
         tutorship.last_approver.append(staff_role_id)
         if tutorship.approval_counter <= 2:
             tutorship.approval_counter = len(tutorship.last_approver)
@@ -840,6 +909,22 @@ def delete_tutorship(request, tutorship_id):
             child.save()
             status_restored = True
         # If child has other tutorships, keep status as "יש_חונך"
+        
+        # Delete the "התאמת חניך" task for this tutor if exists
+        try:
+            tutee_match_task_type = Task_Types.objects.filter(task_type="התאמת חניך").first()
+            if tutee_match_task_type:
+                tutee_match_tasks = Tasks.objects.filter(
+                    task_type=tutee_match_task_type,
+                    related_tutor=tutor,
+                    related_child=child
+                )
+                deleted_task_count = tutee_match_tasks.count()
+                tutee_match_tasks.delete()
+                if deleted_task_count > 0:
+                    api_logger.info(f"Deleted tutee match task for tutor {tutor_id} and child {child_id} after tutorship deletion")
+        except Exception as e:
+            api_logger.error(f"Error deleting tutee match task: {str(e)}")
         
         # Delete the tutorship record FIRST (before deleting prev_status, so the FK isn't violated)
         tutorship.delete()

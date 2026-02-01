@@ -597,6 +597,17 @@ const Tasks = () => {
     return type && type.name === "הוספת משפחה";
   };
 
+  // NEW: Helper function to check if task is "התאמת חניך" (Tutee Match)
+  const isTuteeMatchTask = (typeId) => {
+    const type = taskTypes.find(t => t.id === typeId);
+    return type && type.name === "התאמת חניך";
+  };
+
+  // Helper to check by type_name directly
+  const isTuteeMatchTaskByName = (typeName) => {
+    return typeName === "התאמת חניך";
+  };
+
   const isRegistrationApprovalTask = (typeId) => {
     const type = taskTypes.find(t => t.id === typeId);
     return type && type.name === "אישור הרשמה";
@@ -952,8 +963,8 @@ const Tasks = () => {
                     <p>עודכנה ב: {selectedTask.updated}</p>
                     <p>סוג משימה: {getTaskTypeName(selectedTask.type)}</p>
                     <p>לביצוע על ידי: {selectedTask.assignee}</p>
-                    {/* Show Child and Tutor only if NOT "ראיון מועמד לחונכות" and NOT "אישור הרשמה" */}
-                    {!isInterviewTask(selectedTask.type) && !isFamilyAdditionTask(selectedTask.type) && !isRegistrationApprovalTaskByName(selectedTask.type_name) && (
+                    {/* Show Child and Tutor only if NOT special task types */}
+                    {!isInterviewTask(selectedTask.type) && !isFamilyAdditionTask(selectedTask.type) && !isRegistrationApprovalTaskByName(selectedTask.type_name) && !isTuteeMatchTaskByName(selectedTask.type_name) && (
                       <>
                         <p>חניך: {getChildFullName(selectedTask.child, childrenOptions)}</p>
                         <p>חונך: {getTutorFullName(selectedTask.tutor, tutorsOptions)}</p>
@@ -968,6 +979,19 @@ const Tasks = () => {
                           generalVolunteersNotPending,
                           t)}
                       </p>
+                    )}
+                    {/* NEW: Show Tutee Match info for "התאמת חניך" tasks */}
+                    {isTuteeMatchTaskByName(selectedTask.type_name) && (
+                      <>
+                        <h3>{t("Tutee Match Details")}</h3>
+                        <p><strong>חונך:</strong> {selectedTask.tutee_match_info?.tutor_name || "---"}</p>
+                        <p><strong>טלפון חונך:</strong> {selectedTask.tutee_match_info?.tutor_phone || "---"}</p>
+                        <p><strong>חניך:</strong> {selectedTask.tutee_match_info?.child_name || "---"}</p>
+                        <p><strong>כשירות:</strong> <span style={{ 
+                          color: selectedTask.tutee_match_info?.eligibility === "עבר ראיון" ? "green" : "orange",
+                          fontWeight: "bold"
+                        }}>{selectedTask.tutee_match_info?.eligibility || "---"}</span></p>
+                      </>
                     )}
                     {/* Show initial family data fields only for "הוספת משפחה" */}
                     {isFamilyAdditionTask(selectedTask.type) && (

@@ -813,6 +813,18 @@ def update_general_volunteer(request, volunteer_id):
     volunteer.comments = data.get("comments", volunteer.comments)
     volunteer.save()
 
+    # Handle city update
+    if "city" in data:
+        new_city = data["city"]
+        # Update city in SignedUp table
+        try:
+            signedup = SignedUp.objects.get(id=volunteer_id)
+            if new_city != signedup.city:
+                signedup.city = new_city
+                signedup.save()
+        except SignedUp.DoesNotExist:
+            pass
+
     log_api_action(
         request=request,
         action='UPDATE_GENERAL_VOLUNTEER_SUCCESS',
@@ -1282,6 +1294,21 @@ def update_tutor(request, tutor_id):
     if "preferences" in data:
         tutor.preferences = data["preferences"]
         updated = True
+
+    # Handle city update
+    if "city" in data:
+        new_city = data["city"]
+        # Update city in SignedUp table via the tutor's id relationship
+        try:
+            signedup = SignedUp.objects.get(id=tutor.id_id)
+            if new_city != signedup.city:
+                signedup.city = new_city
+                signedup.save()
+                affected_tables.append('childsmile_app_signedup')
+                original_data['city'] = signedup.city
+                updated = True
+        except SignedUp.DoesNotExist:
+            pass
 
     if updated:
         tutor.save()

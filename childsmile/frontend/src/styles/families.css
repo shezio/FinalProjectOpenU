@@ -364,6 +364,7 @@ html {
 
 .families-main-content .modal-content {
   max-width: 1500px;
+  max-height: 110vh;
   /* Center vertically */
 }
 
@@ -606,7 +607,6 @@ textarea.error {
 }
 
 .form-actions {
-  margin-top: 20px;
   display: flex;
   justify-content: flex-end;
   gap: 5px;
