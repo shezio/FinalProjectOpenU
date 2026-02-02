@@ -1,6 +1,6 @@
 /* common.css */
 body {
-    font-family: Arial, sans-serif;
+    font-family: Rubik, sans-serif;
     background-color: #f0f0f0;
     direction: rtl;
     margin: 0;
@@ -118,7 +118,7 @@ body {
     color: white;
     text-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
     letter-spacing: 2px;
-    font-family: 'Courier New', monospace;
+    font-family: Rubik, sans-serif;
     margin-bottom: 8px;
 }
 
@@ -432,7 +432,7 @@ body {
     /* Set text direction to Right-to-Left */
     text-align: right;
     /* Align text to the right */
-    font-family: Arial, sans-serif;
+    font-family: Rubik, sans-serif;
     /* Optional: Set a font that supports RTL */
 }
 

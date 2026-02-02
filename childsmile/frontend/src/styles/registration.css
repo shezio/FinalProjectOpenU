@@ -465,7 +465,7 @@
     inset 0 1px 0 rgba(255, 255, 255, 0.5);
   transition: all 0.3s ease;
   color: #333;
-  font-family: 'Courier New', monospace;
+  font-family: Rubik, sans-serif;
 }
 
 .totp-input-box:focus {

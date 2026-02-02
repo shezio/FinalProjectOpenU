@@ -6,13 +6,12 @@ import "../styles/common.css";
 import "../styles/families.css";
 import '../styles/systemManagement.css'; // Special CSS for this page
 import '../styles/tut_vol_mgmt.css'; // Special CSS for this page
-import { ToastContainer, toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import { toast } from "react-toastify";
 import { useTranslation } from "react-i18next";
 import axios from "../axiosConfig";
 import { showErrorToast } from "../components/toastUtils";
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 8;
 
 const TutorVolunteerMgmt = () => {
   const { t } = useTranslation();
@@ -36,6 +35,10 @@ const TutorVolunteerMgmt = () => {
   const [tutorshipStatusFilter, setTutorshipStatusFilter] = useState("");
   const [showCityChangeModal, setShowCityChangeModal] = useState(false);
   const [cityChangeData, setCityChangeData] = useState(null);
+  
+  // Tutorship Details Modal state
+  const [showTutorshipDetailsModal, setShowTutorshipDetailsModal] = useState(false);
+  const [tutorshipDetailsData, setTutorshipDetailsData] = useState(null);
 
   const startEdit = (entity, field, type) => {
     const rowId = entity.id; // Always use id for tutors and volunteers
@@ -58,6 +61,60 @@ const TutorVolunteerMgmt = () => {
       return false;
     }
     return true;
+  };
+
+  // Validate birth date in dd/mm/yyyy format and return { valid, error, date }
+  const validateBirthDate = (dateStr) => {
+    if (!dateStr || dateStr.trim() === "" || dateStr === "-") {
+      return { valid: true, date: null }; // Allow empty/clearing the field
+    }
+    
+    const trimmed = dateStr.trim();
+    // Check format dd/mm/yyyy
+    const dateRegex = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/;
+    const match = trimmed.match(dateRegex);
+    
+    if (!match) {
+      return { valid: false, error: t("Invalid date format. Please use DD/MM/YYYY") };
+    }
+    
+    const day = parseInt(match[1], 10);
+    const month = parseInt(match[2], 10);
+    const year = parseInt(match[3], 10);
+    
+    // Validate month
+    if (month < 1 || month > 12) {
+      return { valid: false, error: t("Month must be between 01 and 12") };
+    }
+    
+    // Validate day for month
+    const daysInMonth = new Date(year, month, 0).getDate();
+    if (day < 1 || day > daysInMonth) {
+      return { valid: false, error: t("Invalid day for the selected month") };
+    }
+    
+    // Create date object
+    const date = new Date(year, month - 1, day);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    // Cannot be in the future
+    if (date > today) {
+      return { valid: false, error: t("Date cannot be in the future") };
+    }
+    
+    // Calculate age - must be between 18 and 120
+    const age = Math.floor((today - date) / (365.25 * 24 * 60 * 60 * 1000));
+    if (age < 18) {
+      return { valid: false, error: t("Age must be at least 18") };
+    }
+    if (age > 120) {
+      return { valid: false, error: t("Date cannot be more than 120 years ago") };
+    }
+    
+    // Return formatted date string dd/mm/yyyy
+    const formattedDate = `${String(day).padStart(2, '0')}/${String(month).padStart(2, '0')}/${year}`;
+    return { valid: true, date: formattedDate };
   };
 
   // Normalize phone number - remove dashes and spaces
@@ -106,23 +163,27 @@ const TutorVolunteerMgmt = () => {
     const cellData = editingCellData || editingCell;
     
     if (newValue !== entity[field]) {
-      // Handle special case for city update - save first, then show modal
+      // Handle special case for city update - save first, then show modal only if tutor has active tutorship
       if (field === "city") {
         // First save the city - send only the city field, not the whole entity
         const updatePayload = { city: newValue };
         if (cellData.type === "tutor") {
           axios.put(`/api/update_tutor/${cellData.rowId}/`, updatePayload)
             .then(() => {
-              // Don't show toast - let the modal be the only feedback
-              // Show the modal immediately after save
-              const updatedEntity = { ...entity, city: newValue };
-              setCityChangeData({
-                entity: updatedEntity,
-                field,
-                newValue: newValue,
-                type: cellData.type
-              });
-              setShowCityChangeModal(true);
+              // Only show modal if tutor has active tutorship (יש_חניך)
+              if (entity.tutorship_status === "יש_חניך") {
+                const updatedEntity = { ...entity, city: newValue };
+                setCityChangeData({
+                  entity: updatedEntity,
+                  field,
+                  newValue: newValue,
+                  type: cellData.type
+                });
+                setShowCityChangeModal(true);
+              } else {
+                // No active tutorship - just show success toast
+                toast.success(t("City updated successfully"));
+              }
               
               // Then refresh grid
               setTimeout(() => fetchGridData(), 300);
@@ -135,19 +196,10 @@ const TutorVolunteerMgmt = () => {
               }
             });
         } else {
+          // Volunteers don't have tutorships, just save and show toast
           axios.put(`/api/update_general_volunteer/${cellData.rowId}/`, updatePayload)
             .then(() => {
-              // Don't show toast - let the modal be the only feedback
-              // Show the modal immediately after save
-              const updatedEntity = { ...entity, city: newValue };
-              setCityChangeData({
-                entity: updatedEntity,
-                field,
-                newValue: newValue,
-                type: cellData.type
-              });
-              setShowCityChangeModal(true);
-              
+              toast.success(t("Volunteer updated successfully"));
               // Then refresh grid
               setTimeout(() => fetchGridData(), 300);
             })
@@ -220,6 +272,43 @@ const TutorVolunteerMgmt = () => {
         return;
       }
       
+      // Handle special case for birth_date update
+      if (field === "birth_date") {
+        const validation = validateBirthDate(editValue);
+        if (!validation.valid) {
+          toast.error(validation.error);
+          setEditingCell(null);
+          setEditValue("");
+          return;
+        }
+        
+        // Send birth_date to backend - it will recalculate age
+        const updatePayload = { birth_date: validation.date };
+        const endpoint = cellData.type === "tutor" 
+          ? `/api/update_tutor/${cellData.rowId}/`
+          : `/api/update_general_volunteer/${cellData.rowId}/`;
+        
+        axios.put(endpoint, updatePayload)
+          .then(() => {
+            toast.success(t("Birth date updated successfully"));
+            fetchGridData();
+          })
+          .catch((error) => {
+            if (error.response?.data?.error) {
+              showErrorToast(t, '', error);
+            } else if (error.response?.status === 401) {
+              showErrorToast(t, cellData.type === "tutor" 
+                ? "You do not have permission to update tutors." 
+                : "You do not have permission to update volunteers.", error);
+            } else {
+              showErrorToast(t, "Error updating birth date", error);
+            }
+          });
+        setEditingCell(null);
+        setEditValue("");
+        return;
+      }
+      
       const updatedEntity = { ...entity, [field]: newValue };
       if (cellData.type === "tutor") {
         axios.put(`/api/update_tutor/${cellData.rowId}/`, updatedEntity)
@@ -275,6 +364,28 @@ const TutorVolunteerMgmt = () => {
     // User clicked "No" - city is already saved, just close modal and return to grid
     setShowCityChangeModal(false);
     setCityChangeData(null);
+  };
+
+  const handleSaveTutorshipDetails = async () => {
+    if (!tutorshipDetailsData) return;
+    
+    try {
+      await axios.put(`/api/update_tutor/${tutorshipDetailsData.tutorId}/`, {
+        preferences: tutorshipDetailsData.preferences,
+        relationship_status: tutorshipDetailsData.relationship_status,
+        tutee_wellness: tutorshipDetailsData.tutee_wellness
+      });
+      toast.success(t("Tutorship details saved successfully"));
+      fetchGridData();
+      setShowTutorshipDetailsModal(false);
+      setTutorshipDetailsData(null);
+    } catch (error) {
+      if (error.response?.status === 401) {
+        showErrorToast(t, "You do not have permission to update tutors.", error);
+      } else {
+        showErrorToast(t, "Error saving tutorship details", error);
+      }
+    }
   };
 
   useEffect(() => {
@@ -470,14 +581,14 @@ const TutorVolunteerMgmt = () => {
               {showTutors ? (
                 <>
                   <th>{t("Israeli ID")}</th>
+                  <th>{t("Birth Date")}</th>
+                  <th>{t("Age")}</th>
                   <th>{t("Phone")}</th>
                   <th>{t("Name")}</th>
                   <th>{t("Email")}</th>
                   <th>{t("City")}</th>
                   <th>{t("Tutorship Status")}</th>
-                  <th>{t("Preferences")}</th>
-                  <th>{t("Relationship Status")}</th>
-                  <th>{t("Tutee Wellness")}</th>
+                  <th>{t("Tutorship")}</th>
                   <th>
                     {t("Updated")}
                     <button
@@ -511,7 +622,7 @@ const TutorVolunteerMgmt = () => {
           </thead>
           <tbody>
             {paginatedEntities.length === 0 ? (
-              <tr><td colSpan={showTutors ? 11 : 10}>{t("No data to display")}</td></tr>
+              <tr><td colSpan={showTutors ? 10 : 10}>{t("No data to display")}</td></tr>
             ) : (
               paginatedEntities.map((entity, idx) => (
                 <tr key={entity.id_id || entity.id || idx}>
@@ -539,6 +650,32 @@ const TutorVolunteerMgmt = () => {
                       entity.id
                     )}
                   </td>
+                  <td
+                    className="tutor-vol-editable-cell"
+                    onClick={() => !editingCell && startEdit(entity, "birth_date", "tutor")}
+                  >
+                    {editingCell?.rowId === entity.id && editingCell?.field === "birth_date" ? (
+                      <input
+                        type="text"
+                        placeholder="dd/mm/yyyy"
+                        value={editValue}
+                        onChange={e => setEditValue(e.target.value)}
+                        onBlur={() => confirmEdit(entity, "birth_date")}
+                        onKeyPress={e => e.key === 'Enter' && confirmEdit(entity, "birth_date")}
+                        onKeyDown={e => {
+                          if (e.key === 'Escape') {
+                            e.preventDefault();
+                            setEditingCell(null);
+                            setEditValue("");
+                          }
+                        }}
+                        autoFocus
+                      />
+                    ) : (
+                      entity.birth_date || "-"
+                    )}
+                  </td>
+                  <td>{entity.age || "-"}</td>
                   <td
                     className="tutor-vol-editable-cell"
                     onClick={() => !editingCell && startEdit(entity, "phone", "tutor")}
@@ -631,92 +768,24 @@ const TutorVolunteerMgmt = () => {
                       </span>
                     )}
                   </td>
-                  <td
-                    className="tutor-vol-editable-cell"
-                    onClick={() => !editingCell && startEdit(entity, "preferences", "tutor")}
-                  >
-                    {editingCell?.rowId === entity.id && editingCell?.field === "preferences" ? (
-                      <textarea
-                        value={editValue}
-                        onChange={e => setEditValue(e.target.value)}
-                        onBlur={() => confirmEdit(entity, "preferences")}
-                        onKeyDown={e => {
-                          if (e.key === 'Escape') {
-                            e.preventDefault();
-                            setEditingCell(null);
-                            setEditValue("");
-                          } else if (e.key === 'Enter' && (e.altKey || e.metaKey || e.ctrlKey)) {
-                            e.preventDefault();
-                            setEditValue(editValue + '\n');
-                          } else if (e.key === 'Enter' && !e.altKey && !e.metaKey && !e.ctrlKey) {
-                            e.preventDefault();
-                            confirmEdit(entity, "preferences");
-                          }
+                  <td>
+                    {/* Show Details button only for tutors with active/pending tutorship */}
+                    {(entity.tutorship_status === "יש_חניך") && (
+                      <button
+                        className="details-button"
+                        onClick={() => {
+                          setTutorshipDetailsData({
+                            tutorId: entity.id,
+                            entity: entity,
+                            preferences: entity.preferences || "",
+                            relationship_status: entity.relationship_status || "",
+                            tutee_wellness: entity.tutee_wellness || "",
+                          });
+                          setShowTutorshipDetailsModal(true);
                         }}
-                        autoFocus
-                      />
-                    ) : (
-                      <span className="tutor-vol-text-cell-content">{entity.preferences || "-"}</span>
-                    )}
-                  </td>
-                  <td
-                    className={entity.in_tutorship ? "tutor-vol-editable-cell" : ""}
-                    onClick={() => entity.in_tutorship && !editingCell && startEdit(entity, "relationship_status", "tutor")}
-                  >
-                    {entity.in_tutorship ? (
-                      editingCell?.rowId === entity.id && editingCell?.field === "relationship_status" ? (
-                        <input
-                          type="text"
-                          value={editValue}
-                          onChange={e => setEditValue(e.target.value)}
-                          onBlur={() => confirmEdit(entity, "relationship_status")}
-                          onKeyPress={e => e.key === 'Enter' && confirmEdit(entity, "relationship_status")}
-                          onKeyDown={e => {
-                            if (e.key === 'Escape') {
-                              e.preventDefault();
-                              setEditingCell(null);
-                              setEditValue("");
-                            }
-                          }}
-                          autoFocus
-                        />
-                      ) : (
-                        entity.relationship_status || "-"
-                      )
-                    ) : (
-                      <span className="tutor-vol-disabled-cell">{entity.relationship_status || t("no data - see tutorship status")}</span>
-                    )}
-                  </td>
-                  <td
-                    className={entity.in_tutorship ? "tutor-vol-editable-cell" : ""}
-                    onClick={() => entity.in_tutorship && !editingCell && startEdit(entity, "tutee_wellness", "tutor")}
-                  >
-                    {entity.in_tutorship ? (
-                      editingCell?.rowId === entity.id && editingCell?.field === "tutee_wellness" ? (
-                        <textarea
-                          value={editValue}
-                          onChange={e => setEditValue(e.target.value)}
-                          onBlur={() => confirmEdit(entity, "tutee_wellness")}
-                          onKeyDown={e => {
-                            if (e.key === 'Escape') {
-                              e.preventDefault();
-                              setEditingCell(null);
-                              setEditValue("");
-                            } else if (e.key === 'Enter' && (e.altKey || e.metaKey || e.ctrlKey)) {
-                              e.preventDefault();
-                              setEditValue(editValue + '\n');
-                            } else if (e.key === 'Enter' && !e.altKey && !e.metaKey && !e.ctrlKey) {
-                              e.preventDefault();
-                              confirmEdit(entity, "tutee_wellness");
-                            }
-                          }}
-                          autoFocus
-                        />
-                      ) : (
-                        <span className="tutor-vol-text-cell-content">{entity.tutee_wellness || "-"}</span>
-                      )
-                    ) : (
-                      <span className="tutor-vol-disabled-cell">{entity.tutee_wellness || t("no data - see tutorship status")}</span>
+                      >
+                        {t("Show Details")}
+                      </button>
                     )}
                   </td>
                   <td>
@@ -755,6 +824,8 @@ const TutorVolunteerMgmt = () => {
               <th>{t("Israeli ID")}</th>
               <th>{t("Phone")}</th>
               <th>{t("Name")}</th>
+              <th>{t("Birth Date")}</th>
+              <th>{t("Age")}</th>
               <th>{t("Email")}</th>
               <th>{t("City")}</th>
               <th>{t("Comments")}</th>
@@ -772,7 +843,7 @@ const TutorVolunteerMgmt = () => {
           </thead>
           <tbody>
             {paginatedEntities.length === 0 ? (
-              <tr><td colSpan={7}>{t("No data to display")}</td></tr>
+              <tr><td colSpan={9}>{t("No data to display")}</td></tr>
             ) : (
               paginatedEntities.map((entity, idx) => (
                 <tr key={entity.id_id || entity.id || idx}>
@@ -825,6 +896,32 @@ const TutorVolunteerMgmt = () => {
                     )}
                   </td>
                   <td>{entity.first_name + " " + entity.last_name}</td>
+                  <td
+                    className="tutor-vol-editable-cell"
+                    onClick={() => !editingCell && startEdit(entity, "birth_date", "volunteer")}
+                  >
+                    {editingCell?.rowId === entity.id && editingCell?.field === "birth_date" ? (
+                      <input
+                        type="text"
+                        placeholder="dd/mm/yyyy"
+                        value={editValue}
+                        onChange={e => setEditValue(e.target.value)}
+                        onBlur={() => confirmEdit(entity, "birth_date")}
+                        onKeyPress={e => e.key === 'Enter' && confirmEdit(entity, "birth_date")}
+                        onKeyDown={e => {
+                          if (e.key === 'Escape') {
+                            e.preventDefault();
+                            setEditingCell(null);
+                            setEditValue("");
+                          }
+                        }}
+                        autoFocus
+                      />
+                    ) : (
+                      entity.birth_date || "-"
+                    )}
+                  </td>
+                  <td>{entity.age || "-"}</td>
                   <td>{entity.email}</td>
                   <td
                     className="tutor-vol-editable-cell"
@@ -921,16 +1018,6 @@ const TutorVolunteerMgmt = () => {
       <Sidebar />
       <div className="content">
         <InnerPageHeader title={showTutors ? t("Tutors Management") : t("Volunteers Management")} />
-        <ToastContainer
-          position="top-center"
-          autoClose={2000}
-          hideProgressBar={false}
-          closeOnClick
-          pauseOnFocusLoss
-          draggable
-          pauseOnHover
-          rtl={true}
-        />
         <div className="filter-create-container">
           <button onClick={toggleGrid} className="toggle-healthy-btn">
             {showTutors ? t("Show Tutors") : t("Show Volunteers")}
@@ -978,6 +1065,68 @@ const TutorVolunteerMgmt = () => {
           </div>
         </div>
       </div>
+      
+      {/* Tutorship Details Modal */}
+      {showTutorshipDetailsModal && tutorshipDetailsData && (
+        <div className="tutor-vol-modal-overlay" onClick={() => setShowTutorshipDetailsModal(false)}>
+          <div className="tutor-vol-modal-content tutorship-details-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="tutor-vol-modal-header tutorship-details-header">
+              <h2>{t("Tutorship Details")}</h2>
+              <span className="tutor-vol-modal-close" onClick={() => setShowTutorshipDetailsModal(false)}>&times;</span>
+            </div>
+            <div className="tutor-vol-modal-body tutorship-details-body">
+              <div className="tutorship-detail-row">
+                <h3>{t("Preferences")}</h3>
+                <textarea
+                  className="tutorship-detail-textarea"
+                  value={tutorshipDetailsData.preferences}
+                  onChange={(e) => setTutorshipDetailsData({
+                    ...tutorshipDetailsData,
+                    preferences: e.target.value
+                  })}
+                  placeholder={t("Enter preferences...")}
+                />
+              </div>
+              <div className="tutorship-detail-row">
+                <h3>{t("Relationship Status")}</h3>
+                <select
+                  className="tutorship-detail-select"
+                  value={tutorshipDetailsData.relationship_status}
+                  onChange={(e) => setTutorshipDetailsData({
+                    ...tutorshipDetailsData,
+                    relationship_status: e.target.value
+                  })}
+                >
+                  <option value="">{t("Select a marital status")}</option>
+                  {maritalStatusOptions.map(status => (
+                    <option key={status} value={status}>{status}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="tutorship-detail-row">
+                <h3>{t("Tutee Wellness")}</h3>
+                <textarea
+                  className="tutorship-detail-textarea"
+                  value={tutorshipDetailsData.tutee_wellness}
+                  onChange={(e) => setTutorshipDetailsData({
+                    ...tutorshipDetailsData,
+                    tutee_wellness: e.target.value
+                  })}
+                  placeholder={t("Enter tutee wellness info...")}
+                />
+              </div>
+            </div>
+            <div className="tutor-vol-modal-footer">
+              <button className="tutor-vol-btn-cancel" onClick={() => setShowTutorshipDetailsModal(false)}>
+                {t("Close")}
+              </button>
+              <button className="tutor-vol-btn-save" onClick={handleSaveTutorshipDetails}>
+                {t("Save and Close")}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       
       {/* City Change Modal - MOVED OUTSIDE content div */}
       {showCityChangeModal && cityChangeData && (

@@ -26,12 +26,37 @@ const Registration = () => {
   const [totpCode, setTotpCode] = useState('');
   const [userEmail, setUserEmail] = useState('');
   const [loading, setLoading] = useState(false);
+  
+  // Helper function to calculate age from birth date
+  const calculateAge = (birthDate) => {
+    if (!birthDate) return 0;
+    const today = new Date();
+    const birth = new Date(birthDate);
+    let age = today.getFullYear() - birth.getFullYear();
+    const monthDiff = today.getMonth() - birth.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+      age--;
+    }
+    return age;
+  };
+  
+  // Helper function to format date to dd/mm/yyyy
+  const formatDateToDDMMYYYY = (dateString) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    return `${day}/${month}/${year}`;
+  };
+  
   // Form state
   const [formData, setFormData] = useState({
     id: '',
     first_name: "",
     surname: "",
-    age: 18,
+    birth_date: "", // Birth date in yyyy-mm-dd format (HTML date input format)
+    age: 0, // Age calculated from birth_date
     gender: "Male", // Default value for the switch
     phone_prefix: "050", // Default prefix
     phone_suffix: "", // Suffix for the phone number
@@ -49,7 +74,14 @@ const Registration = () => {
   // Handle input changes
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
+    
+    // Special handling for birth_date - calculate age automatically
+    if (name === 'birth_date') {
+      const age = calculateAge(value);
+      setFormData({ ...formData, [name]: value, age: age });
+    } else {
+      setFormData({ ...formData, [name]: value });
+    }
     
     // Clear error for this field if it exists
     if (errors[name]) {
@@ -83,9 +115,16 @@ const Registration = () => {
       newErrors.surname = t("Surname must be in Hebrew and cannot be empty.");
     }
 
-    // Validate age (18-100)
-    if (formData.age < 18 || formData.age > 100) {
-      newErrors.age = t("Age must be between 18 and 100.");
+    // Validate birth_date and age (must be 18-100 years old)
+    if (!formData.birth_date) {
+      newErrors.birth_date = t("Birth date is required.");
+    } else {
+      const age = calculateAge(formData.birth_date);
+      if (age < 18) {
+        newErrors.birth_date = t("גיל מינימלי להרשמה הוא 18");
+      } else if (age > 100) {
+        newErrors.birth_date = t("Age must be between 18 and 100.");
+      }
     }
 
     // Validate gender (must be selected)
@@ -134,8 +173,16 @@ const Registration = () => {
     
     if (validate()) {
       setLoading(true);
+      
+      // Prepare form data with birth_date in dd/mm/yyyy format
+      const submitData = {
+        ...formData,
+        birth_date: formatDateToDDMMYYYY(formData.birth_date), // Convert to dd/mm/yyyy
+        age: calculateAge(formData.birth_date), // Ensure age is calculated
+      };
+      
       axios
-        .post("/api/register-send-totp/", formData)
+        .post("/api/register-send-totp/", submitData)
         .then((response) => {
           setUserEmail(response.data.email);
           setShowTotpInput(true);
@@ -270,16 +317,15 @@ const Registration = () => {
               />
 
               <div className="label-error-row">
-                <label>{t("Age")}: {formData.age}</label>
-                {errors.age && <span className="error-message">{errors.age}</span>}
+                <label>{t("Birth Date")} {formData.age > 0 && `(${t("Age")}: ${formData.age})`}</label>
+                {errors.birth_date && <span className="error-message">{errors.birth_date}</span>}
               </div>
               <input
-                type="range"
-                name="age"
-                min="18"
-                max="100"
-                value={formData.age}
+                type="date"
+                name="birth_date"
+                value={formData.birth_date}
                 onChange={handleChange}
+                className={errors.birth_date ? "error" : ""}
               />
 
               <div className="label-error-row">

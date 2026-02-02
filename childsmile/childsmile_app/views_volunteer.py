@@ -36,7 +36,8 @@ def register_send_totp(request):
         email = data.get("email", "").strip().lower()
         first_name = data.get("first_name", "").strip()
         surname = data.get("surname", data.get("last_name", "")).strip()
-        age = data.get("age", 0)
+        birth_date = data.get("birth_date", "").strip()  # Birth date in dd/mm/yyyy format
+        age = data.get("age", 0)  # Age calculated from birth_date on frontend
         gender = data.get("gender", "").strip()
         phone_prefix = data.get("phone_prefix", "").strip()
         phone_suffix = data.get("phone_suffix", "").strip()
@@ -53,8 +54,8 @@ def register_send_totp(request):
             missing_fields.append("first_name")
         if not surname:
             missing_fields.append("surname")
-        if not age:
-            missing_fields.append("age")
+        if not birth_date:
+            missing_fields.append("birth_date")
         if not gender:
             missing_fields.append("gender")
         if not phone_prefix or not phone_suffix:
@@ -120,7 +121,8 @@ def register_send_totp(request):
             "email": email,
             "first_name": first_name,
             "surname": surname,
-            "age": age,
+            "birth_date": birth_date,  # Store birth_date in dd/mm/yyyy format
+            "age": age,  # Age calculated from birth_date on frontend
             "gender": gender,
             "phone": phone,
             "city": city,
@@ -333,6 +335,8 @@ def create_volunteer_or_tutor(request):
     """
     Create a new volunteer or tutor user via direct API call (not via registration flow)
     """
+    from .utils import parse_date_string, calculate_age_from_birth_date
+    
     try:
         user_id = request.session.get("user_id")
         if not user_id:
@@ -354,7 +358,17 @@ def create_volunteer_or_tutor(request):
         email = data.get("email", "").strip().lower()
         first_name = data.get("first_name", "").strip()
         surname = data.get("surname", data.get("last_name", "")).strip()
-        age = data.get("age", 0)
+        
+        # Parse birth_date and calculate age from it
+        birth_date_str = data.get("birth_date", "").strip()
+        birth_date = parse_date_string(birth_date_str) if birth_date_str else None
+        
+        # Use calculated age from birth_date, or fallback to provided age
+        if birth_date:
+            age = calculate_age_from_birth_date(birth_date)
+        else:
+            age = int(data.get("age", 0)) if data.get("age") else 0
+        
         gender = data.get("gender", "")
         phone = data.get("phone", "").strip()
         city = data.get("city", "").strip()
@@ -392,7 +406,8 @@ def create_volunteer_or_tutor(request):
             email=email,
             first_name=first_name,
             surname=surname,
-            age=age,
+            birth_date=birth_date,  # Store birth_date
+            age=age,  # Store calculated age
             gender=gender,
             phone=phone,
             city=city,
@@ -479,12 +494,24 @@ def create_volunteer_or_tutor_internal(data, request=None):
     """
     Internal function to create volunteer/tutor - ORIGINAL WORKING VERSION with audit improvements
     """
+    from .utils import parse_date_string, calculate_age_from_birth_date
+    
     try:
         # Extract ID from data (Israeli ID from registration)
         user_id = data.get("id")
         first_name = data.get("first_name")
         surname = data.get("surname")
-        age = int(data.get("age"))
+        
+        # Parse birth_date and calculate age from it
+        birth_date_str = data.get("birth_date")
+        birth_date = parse_date_string(birth_date_str) if birth_date_str else None
+        
+        # Use calculated age from birth_date, or fallback to provided age
+        if birth_date:
+            age = calculate_age_from_birth_date(birth_date)
+        else:
+            age = int(data.get("age", 0))
+        
         gender = data.get("gender") == "Female"
         phone = data.get("phone")  # Already formatted in register_send_totp
         city = data.get("city")
@@ -492,7 +519,7 @@ def create_volunteer_or_tutor_internal(data, request=None):
         email = data.get("email")
         want_tutor = data.get("want_tutor") == "true" or data.get("want_tutor") is True
 
-        api_logger.debug(f"Extracted user_id={user_id}, email={email}, want_tutor={want_tutor}")
+        api_logger.debug(f"Extracted user_id={user_id}, email={email}, want_tutor={want_tutor}, birth_date={birth_date}, age={age}")
 
         # Create username
         username = f"{first_name}_{surname}"
@@ -507,7 +534,8 @@ def create_volunteer_or_tutor_internal(data, request=None):
             id=int(user_id),
             first_name=first_name,
             surname=surname,
-            age=age,
+            birth_date=birth_date,  # Store birth_date
+            age=age,  # Store calculated age
             gender=gender,
             phone=phone,
             city=city,
@@ -515,7 +543,7 @@ def create_volunteer_or_tutor_internal(data, request=None):
             email=email,
             want_tutor=want_tutor,
         )
-        api_logger.debug(f"Created SignedUp with id={signedup.id}")
+        api_logger.debug(f"Created SignedUp with id={signedup.id}, birth_date={birth_date}")
 
         # Get role
         role_name = "General Volunteer"
@@ -825,6 +853,23 @@ def update_general_volunteer(request, volunteer_id):
         except SignedUp.DoesNotExist:
             pass
 
+    # Handle birth_date update - also recalculate age
+    if "birth_date" in data:
+        from .utils import parse_date_string, calculate_age_from_birth_date
+        new_birth_date_str = data["birth_date"]
+        new_birth_date = parse_date_string(new_birth_date_str) if new_birth_date_str else None
+        
+        try:
+            signedup = SignedUp.objects.get(id=volunteer_id)
+            if new_birth_date != signedup.birth_date:
+                signedup.birth_date = new_birth_date
+                # Recalculate age from new birth_date
+                if new_birth_date:
+                    signedup.age = calculate_age_from_birth_date(new_birth_date)
+                signedup.save()
+        except SignedUp.DoesNotExist:
+            pass
+
     log_api_action(
         request=request,
         action='UPDATE_GENERAL_VOLUNTEER_SUCCESS',
@@ -906,6 +951,7 @@ def update_volunteer_id(request, old_id):
             original_data = {
                 'first_name': signedup.first_name,
                 'surname': signedup.surname,
+                'birth_date': signedup.birth_date,  # Include birth_date
                 'age': signedup.age,
                 'gender': signedup.gender,
                 'phone': signedup.phone,
@@ -1306,6 +1352,27 @@ def update_tutor(request, tutor_id):
                 signedup.save()
                 affected_tables.append('childsmile_app_signedup')
                 original_data['city'] = signedup.city
+                updated = True
+        except SignedUp.DoesNotExist:
+            pass
+
+    # Handle birth_date update - also recalculate age
+    if "birth_date" in data:
+        from .utils import parse_date_string, calculate_age_from_birth_date
+        new_birth_date_str = data["birth_date"]
+        new_birth_date = parse_date_string(new_birth_date_str) if new_birth_date_str else None
+        
+        try:
+            signedup = SignedUp.objects.get(id=tutor.id_id)
+            if new_birth_date != signedup.birth_date:
+                signedup.birth_date = new_birth_date
+                # Recalculate age from new birth_date
+                if new_birth_date:
+                    signedup.age = calculate_age_from_birth_date(new_birth_date)
+                signedup.save()
+                if 'childsmile_app_signedup' not in affected_tables:
+                    affected_tables.append('childsmile_app_signedup')
+                original_data['birth_date'] = signedup.birth_date
                 updated = True
         except SignedUp.DoesNotExist:
             pass
