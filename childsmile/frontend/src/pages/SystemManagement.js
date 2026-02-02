@@ -876,20 +876,36 @@ const SystemManagement = () => {
                 &lsaquo; {/* Single left arrow */}
               </button>
 
-              {/* Page Numbers */}
-              {totalCount <= pageSize ? (
-                <button className="active">1</button> // Display only "1" if there's only one page
-              ) : (
-                Array.from({ length: Math.ceil(totalCount / pageSize) }, (_, i) => (
-                  <button
-                    key={i + 1}
-                    onClick={() => handlePageChange(i + 1)}
-                    className={page === i + 1 ? 'active' : ''}
-                  >
-                    {i + 1}
-                  </button>
-                ))
-              )}
+              {/* Page Numbers - Show max 5 pages */}
+              {(() => {
+                const totalPages = Math.ceil(totalCount / pageSize);
+                if (totalPages <= 1) {
+                  return <button className="active">1</button>;
+                }
+                
+                const maxButtons = 5;
+                let startPage = Math.max(1, page - Math.floor(maxButtons / 2));
+                let endPage = Math.min(totalPages, startPage + maxButtons - 1);
+                
+                // Adjust start if we're near the end
+                if (endPage - startPage + 1 < maxButtons) {
+                  startPage = Math.max(1, endPage - maxButtons + 1);
+                }
+                
+                const pages = [];
+                for (let i = startPage; i <= endPage; i++) {
+                  pages.push(
+                    <button
+                      key={i}
+                      onClick={() => handlePageChange(i)}
+                      className={page === i ? 'active' : ''}
+                    >
+                      {i}
+                    </button>
+                  );
+                }
+                return pages;
+              })()}
 
               {/* Right Arrows */}
               <button

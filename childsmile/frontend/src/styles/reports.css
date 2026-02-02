@@ -617,7 +617,6 @@
         width: calc(100% - 50px);
         height: calc(100% - 3000px);
         /* Reduce width for smaller screens */
-        margin-right: 300px;
         /* Adjust margin for smaller screens */
         /* max zoom out should be 0.8 */
         transform: scale(0.95);
@@ -1398,9 +1397,9 @@
     .page-content .tutor-feedback-report-grid-container {
         height: auto;
         width: 100%;
-        margin-right: 0;
         transform: scale(0.9);
         margin-right: 30px;
+        margin-top: 100px !important;
 
     }
 
@@ -1527,7 +1526,8 @@
     .page-content .volunteer-feedback-report-grid-container {
         height: auto;
         width: 100%;
-        margin-right: 0;
+        margin-right: 300px !important;
+        margin-top: 150px !important;
     }
 
     .page-content .volunteer-feedback-report-data-grid {

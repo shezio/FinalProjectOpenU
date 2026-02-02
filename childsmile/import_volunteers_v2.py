@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Volunteer Import Script v2
-==========================
+Volunteer Import Script
+=======================
 Imports volunteers from the production Excel file into the system.
 Creates records in: SignedUp, Staff, General_Volunteer/Pending_Tutor/Tutors tables.
 
@@ -10,25 +10,27 @@ IMPORTANT:
 - NO registration approval tasks created
 - NO emails sent
 - All imported users are set as registration_approved=True
+- Uses birth_date field (system calculates age automatically)
 
-Logic based on want_tutor and status:
+Logic based on want_tutor and status from Excel:
 - want_tutor=False → General Volunteer (General_Volunteer table, role=General Volunteer)
-- want_tutor=True + status="יש חניך" → Approved Tutor with tutee (Tutors table, status=יש_חניך, role=Tutor)
-- want_tutor=True + status="אין חניך" → Approved Tutor without tutee (Tutors table, status=אין_חניך, role=Tutor)
-- want_tutor=True + status="ממתין לראיון" or None → Pending Tutor (Tutors + Pending_Tutor tables, role=Tutor)
+- want_tutor=True + status="יש חניך" → Tutor with tutee (Tutors table, tutorship_status=יש_חניך)
+- want_tutor=True + status="אין חניך" → Tutor without tutee (Tutors table, tutorship_status=אין_חניך)
+- want_tutor=True + status="ממתין לראיון" or None → Pending Tutor (Tutors + Pending_Tutor tables)
 
-Notes on data handling:
-- הערות המתנדב → preferences (if want_tutor=True) OR comment in SignedUp (if want_tutor=False)
-- הערות הרכז → always appended to comment field in SignedUp
-- Birth date is ignored, only age is used
-- Phone numbers are used as-is (no auto-fixing)
-- Emails are cleaned (trimmed, newlines removed)
+Duplicate Handling:
+- Skips records with existing ID (in SignedUp)
+- Skips records with existing email (in Staff)
 
 Usage:
-    python import_volunteers_v2.py <excel_file_path>
+    python import_volunteers.py <excel_file_path> [--dry-run] [--limit N]
 
-Example:
-    python import_volunteers_v2.py "../מתנדבים עלייה למערכת ללא עזבו מורחב.xlsx"
+Examples:
+    # Dry run first 10 records:
+    python import_volunteers.py "../מתנדבים.xlsx" --dry-run --limit 10
+    
+    # Import all records:
+    python import_volunteers.py "../מתנדבים.xlsx" --limit 99999
 
 Output:
     Creates an Excel file with import results in the same directory as the input file.
@@ -88,20 +90,41 @@ def parse_want_tutor(val):
 
 
 def parse_status(status_val):
-    """Parse status value from Excel."""
+    """Parse status value from Excel - keep original value."""
     if not status_val or pd.isna(status_val) or str(status_val).lower() == 'nan':
         return None
     return str(status_val).strip()
 
 
-def parse_age(age_val):
-    """Parse age from Excel."""
-    if not age_val or pd.isna(age_val) or str(age_val).lower() == 'nan':
-        return 0
+def parse_birth_date(date_val):
+    """Parse birth date from Excel. Returns date object or None."""
+    if not date_val or pd.isna(date_val) or str(date_val).lower() == 'nan':
+        return None
     try:
-        return int(float(age_val))
-    except (ValueError, TypeError):
+        # Try various date formats
+        if isinstance(date_val, datetime):
+            return date_val.date()
+        date_str = str(date_val).strip()
+        # Try different formats including datetime with time component
+        for fmt in ['%Y-%m-%d %H:%M:%S', '%Y-%m-%d', '%d/%m/%Y', '%d-%m-%Y', '%d.%m.%Y']:
+            try:
+                return datetime.strptime(date_str, fmt).date()
+            except ValueError:
+                continue
+        return None
+    except Exception:
+        return None
+
+
+def calculate_age_from_birth_date(birth_date):
+    """Calculate age from birth date."""
+    if not birth_date:
         return 0
+    today = datetime.now().date()
+    age = today.year - birth_date.year
+    if (today.month, today.day) < (birth_date.month, birth_date.day):
+        age -= 1
+    return max(0, age)
 
 
 def get_clean_string(val):
@@ -109,6 +132,20 @@ def get_clean_string(val):
     if val is None or pd.isna(val) or str(val).lower() == 'nan':
         return ''
     return str(val).strip()
+
+
+def clean_city(city_val):
+    """Clean city value - take only the first city if multiple are provided."""
+    city = get_clean_string(city_val)
+    if not city:
+        return ''
+    # Handle multiple cities separated by / or ,
+    for separator in ['/', ',']:
+        if separator in city:
+            city = city.split(separator)[0].strip()
+    # Remove any newlines
+    city = city.replace('\n', ' ').replace('\r', '').strip()
+    return city
 
 
 def find_available_id(base_id):
@@ -190,28 +227,35 @@ def create_result_excel(results, input_file_path):
     return output_path
 
 
-def import_volunteers(excel_path, dry_run=False):
+def import_volunteers(excel_path, dry_run=False, limit=99999):
     """
     Main import function.
     
     Args:
         excel_path: Path to the Excel file
         dry_run: If True, don't actually create records, just validate
+        limit: Maximum number of rows to process (99999 = all)
     """
     print(f"\n{'='*70}")
     print(f"{'DRY RUN - ' if dry_run else ''}ייבוא מתנדבים מקובץ: {excel_path}")
+    print(f"מגבלת שורות: {limit if limit < 99999 else 'הכל'}")
     print(f"{'='*70}\n")
     
     # Read Excel file - all as strings to preserve leading zeros
     df = pd.read_excel(excel_path, dtype=str)
     
-    print(f"נמצאו {len(df)} רשומות בקובץ")
+    # Apply limit
+    actual_rows = min(len(df), limit)
+    df = df.head(actual_rows)
+    
+    print(f"נמצאו {len(df)} רשומות לעיבוד (מתוך סה\"כ {actual_rows} בקובץ)")
     print(f"עמודות: {list(df.columns)}\n")
     
     total_records = len(df)
     success_count = 0
     error_count = 0
     warning_count = 0
+    skipped_count = 0  # New counter for skipped duplicates
     
     # Counters by type
     general_volunteer_count = 0
@@ -258,11 +302,13 @@ def import_volunteers(excel_path, dry_run=False):
             id_number = get_clean_string(row.get('תעודת זהות', ''))
             phone = get_clean_string(row.get('מספר טלפון', ''))
             email = clean_email(row.get('מייל'))
-            city = get_clean_string(row.get('עיר מגורים', ''))
-            age = parse_age(row.get('גיל', ''))
+            city = clean_city(row.get('עיר מגורים', ''))  # Use clean_city to handle multiple cities
+            birth_date = parse_birth_date(row.get('תאריך לידה', ''))
+            # Calculate age ONLY for validation (must be 13+), system will calc age from birth_date
+            calculated_age = calculate_age_from_birth_date(birth_date)
             gender = parse_gender(row.get('מין', ''))
             want_tutor = parse_want_tutor(row.get('סוג התנדבות', ''))
-            status = parse_status(row.get('סטטוס', ''))
+            status = parse_status(row.get('סטטוס', ''))  # Keep original value from Excel
             volunteer_comment = get_clean_string(row.get('הערות המתנדב', ''))
             coordinator_comment = get_clean_string(row.get('הערות הרכז', ''))
             
@@ -314,50 +360,50 @@ def import_volunteers(excel_path, dry_run=False):
                 results.append(result)
                 continue
             
-            # Check for duplicate email in Staff (only if email exists)
+            # Check for duplicate ID - SKIP (don't error)
+            if SignedUp.objects.filter(id=id_int).exists():
+                result['status'] = 'Skipped'
+                result['details'] = f'ת.ז. כבר קיימת במערכת - דילוג: {id_number}'
+                skipped_count += 1
+                results.append(result)
+                continue
+            
+            # Check for duplicate email in Staff - SKIP (don't error)
             if email and Staff.objects.filter(email=email).exists():
-                result['status'] = 'Error'
-                result['details'] = f'כתובת מייל כבר קיימת במערכת: {email}'
-                error_count += 1
+                result['status'] = 'Skipped'
+                result['details'] = f'מייל כבר קיים במערכת - דילוג: {email}'
+                skipped_count += 1
                 results.append(result)
                 continue
             
-            # Find available ID
-            available_id, id_changed = find_available_id(id_int)
+            # ID is available - use as-is
+            available_id = id_int
             
-            if available_id is None:
-                result['status'] = 'Error'
-                result['details'] = f'לא נמצא ID פנוי החל מ-{id_int}'
-                error_count += 1
-                results.append(result)
-                continue
-            
-            # Track warnings
-            warnings = []
-            if id_changed:
-                warnings.append(f'ID שונה: {id_number} → {available_id}')
-            
-            # Determine record type
+            # Determine record type based on want_tutor and original status from Excel
+            # Keep status values as-is for display purposes
             if want_tutor:
                 if status == "יש חניך":
-                    record_type = "חונך עם חניך"
+                    record_type = "חונך - יש חניך"
+                    tutorship_status_db = "יש_חניך"  # DB value with underscore
                 elif status == "אין חניך":
-                    record_type = "חונך ללא חניך"
+                    record_type = "חונך - אין חניך"
+                    tutorship_status_db = "אין_חניך"
                 else:
-                    record_type = "חונך ממתין להתאמה"
+                    # "ממתין לראיון" or None - needs interview/matching
+                    record_type = f"חונך ממתין - {status or 'ללא סטטוס'}"
+                    tutorship_status_db = "אין_חניך"  # Default for pending
             else:
                 record_type = "מתנדב כללי"
+                tutorship_status_db = None
             
             result['record_type'] = record_type
             
             if dry_run:
                 # In dry run, just validate and report
-                result['status'] = 'Warning' if warnings else 'OK'
-                result['details'] = ' | '.join(warnings) if warnings else 'תקין'
-                if warnings:
-                    warning_count += 1
-                else:
-                    success_count += 1
+                birth_info = f"תאריך לידה: {birth_date}" if birth_date else "אין תאריך לידה"
+                result['status'] = 'OK'
+                result['details'] = f'{birth_info} | גיל מחושב: {calculated_age}'
+                success_count += 1
                 results.append(result)
                 continue
             
@@ -368,7 +414,8 @@ def import_volunteers(excel_path, dry_run=False):
                     id=available_id,
                     first_name=first_name,
                     surname=surname,
-                    age=age,
+                    age=calculated_age,  # Required field - calculated from birth_date
+                    birth_date=birth_date,  # Also store birth_date for future recalculation
                     gender=gender,
                     phone=phone,
                     city=city,
@@ -451,12 +498,9 @@ def import_volunteers(excel_path, dry_run=False):
             
             # === END TRANSACTION ===
             
-            result['status'] = 'Warning' if warnings else 'OK'
-            result['details'] = ' | '.join(warnings) if warnings else ''
-            if warnings:
-                warning_count += 1
-            else:
-                success_count += 1
+            result['status'] = 'OK'
+            result['details'] = f'נוצר בהצלחה: {record_type}'
+            success_count += 1
             results.append(result)
             
         except IntegrityError as e:
@@ -526,6 +570,8 @@ Examples:
     parser.add_argument('excel_file', help='Path to the Excel file to import')
     parser.add_argument('--dry-run', action='store_true', 
                         help='Validate data without actually importing')
+    parser.add_argument('--limit', type=int, default=99999,
+                        help='Maximum number of records to import (default: all)')
     
     args = parser.parse_args()
     
@@ -533,7 +579,7 @@ Examples:
         print(f"Error: File not found: {args.excel_file}")
         sys.exit(1)
     
-    import_volunteers(args.excel_file, dry_run=args.dry_run)
+    import_volunteers(args.excel_file, dry_run=args.dry_run, limit=args.limit)
 
 
 if __name__ == '__main__':

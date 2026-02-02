@@ -15,7 +15,7 @@ cd /Users/shlomosmac/Applications/dev/FinalProjectOpenU/childsmile && source mye
 
 steps to db bkp and restore:
 1. Backup the database
-pg_dump -U child_smile_user -h localhost -p 5432 child_smile_db > backup_20260121.sql
+pg_dump -U child_smile_user -h localhost -p 5432 child_smile_db > backup_before_import_vols_20260202.sql
 
 
 # clear cache of visual studio code all the rm -rf commands we tried since they were awesome and need them again
@@ -50,7 +50,7 @@ GRANT USAGE, CREATE ON SCHEMA public TO child_smile_user;
 ALTER ROLE child_smile_user SET search_path TO public;
 
 3. finally, exit the psql prompt and run the restore command:
-psql -U child_smile_user -h localhost -p 5432 -d child_smile_db < backup_20260121.sql
+psql -U child_smile_user -h localhost -p 5432 -d child_smile_db < backup_before_import_vols_20260202.sql
 
 
 \dT+  -- to see enums in psql
