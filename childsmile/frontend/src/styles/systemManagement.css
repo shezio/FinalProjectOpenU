@@ -1,3 +1,8 @@
+/* Ensure Rubik font for all Hebrew text */
+* {
+  font-family: Rubik, sans-serif;
+}
+
 .staff-page-content {
   margin-top: 60px;
   /* תלוי בגובה של ההדר + מרווח קטן */

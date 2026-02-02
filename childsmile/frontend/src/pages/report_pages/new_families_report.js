@@ -11,11 +11,14 @@ import "react-toastify/dist/ReactToastify.css";
 import { exportNewFamiliesToExcel, exportNewFamiliesToPDF } from "../../components/export_utils";
 import { useTranslation } from "react-i18next";
 
+const PAGE_SIZE = 10;
+
 const NewFamiliesReport = () => {
   const [families, setFamilies] = useState([]);
   const [loading, setLoading] = useState(true);
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
   const { t } = useTranslation();
   const hasPermissionToView = hasViewPermissionForTable("children");
   const [sortOrderRegistrationDate, setSortOrderRegistrationDate] = useState('asc'); // Default to ascending
@@ -56,7 +59,8 @@ const NewFamiliesReport = () => {
 
   const fetchData = () => {
     setLoading(true);
-    setSortOrderRegistrationDate('desc')
+    setSortOrderRegistrationDate('desc');
+    setCurrentPage(1);
     axios
       .get("/api/reports/new-families-report/", {
         params: { from_date: fromDate, to_date: toDate },
@@ -76,6 +80,7 @@ const NewFamiliesReport = () => {
   const refreshData = () => {
     setFromDate("");
     setToDate("");
+    setCurrentPage(1);
     fetchData();
   };
 
@@ -171,6 +176,7 @@ const NewFamiliesReport = () => {
             {families.length === 0 ? (
               <div className="no-data">{t("No data to display")}</div>
             ) : (
+              <>
               <table className="tutorship-pending-data-grid">
                 <thead>
                   <tr>
@@ -197,7 +203,7 @@ const NewFamiliesReport = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {families.map((family, index) => (
+                  {families.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE).map((family, index) => (
                     <tr key={index}>
                       <td>
                         <input
@@ -216,6 +222,33 @@ const NewFamiliesReport = () => {
                   ))}
                 </tbody>
               </table>
+              <div className="pagination">
+                <button onClick={() => setCurrentPage(1)} disabled={currentPage === 1} className="pagination-arrow">&laquo;</button>
+                <button onClick={() => setCurrentPage(currentPage - 1)} disabled={currentPage === 1} className="pagination-arrow">&lsaquo;</button>
+                {Array.from({ length: Math.ceil(families.length / PAGE_SIZE) }, (_, i) => {
+                  const pageNum = i + 1;
+                  const totalPages = Math.ceil(families.length / PAGE_SIZE);
+                  const maxButtons = 5;
+                  const halfRange = Math.floor(maxButtons / 2);
+                  let start = Math.max(1, currentPage - halfRange);
+                  let end = Math.min(totalPages, start + maxButtons - 1);
+                  if (end - start < maxButtons - 1) {
+                    start = Math.max(1, end - maxButtons + 1);
+                  }
+                  return pageNum >= start && pageNum <= end ? (
+                    <button
+                      key={pageNum}
+                      className={currentPage === pageNum ? "active" : ""}
+                      onClick={() => setCurrentPage(pageNum)}
+                    >
+                      {pageNum}
+                    </button>
+                  ) : null;
+                })}
+                <button onClick={() => setCurrentPage(currentPage + 1)} disabled={currentPage === Math.ceil(families.length / PAGE_SIZE)} className="pagination-arrow">&rsaquo;</button>
+                <button onClick={() => setCurrentPage(Math.ceil(families.length / PAGE_SIZE))} disabled={currentPage === Math.ceil(families.length / PAGE_SIZE)} className="pagination-arrow">&raquo;</button>
+              </div>
+              </>
             )}
           </div>
         )}

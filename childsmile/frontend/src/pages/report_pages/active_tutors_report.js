@@ -10,11 +10,14 @@ import 'react-toastify/dist/ReactToastify.css';
 import { exportToExcel, exportToPDF } from '../../components/export_utils';
 import { useTranslation } from 'react-i18next'; // Import the translation hook
 
+const PAGE_SIZE = 10;
+
 const ActiveTutorsReport = () => {
   const [tutors, setTutors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
   const { t } = useTranslation(); // Translation hook
 
   // Check if the user has permission to view the required tables
@@ -61,6 +64,7 @@ const ActiveTutorsReport = () => {
   const fetchData = () => {
     setLoading(true);
     setSortOrderTutorshipCreationDate('desc'); // Reset sort order when fetching new data
+    setCurrentPage(1);
     axios
       .get('/api/reports/active-tutors-report/', {
         params: { from_date: fromDate, to_date: toDate },
@@ -80,6 +84,7 @@ const ActiveTutorsReport = () => {
     // Refresh the data without applying filters
     setFromDate('');
     setToDate('');
+    setCurrentPage(1);
     fetchData();
   };
 
@@ -176,6 +181,7 @@ const ActiveTutorsReport = () => {
             {tutors.length === 0 ? (
               <div className="no-data">{t("No data to display")}</div>
             ) : (
+              <>
               <table className="data-grid">
                 <thead>
                   <tr>
@@ -199,7 +205,7 @@ const ActiveTutorsReport = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {tutors.map((tutor, index) => (
+                  {tutors.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE).map((tutor, index) => (
                     <tr key={index}>
                       <td>
                         <input
@@ -215,6 +221,33 @@ const ActiveTutorsReport = () => {
                   ))}
                 </tbody>
               </table>
+              <div className="pagination">
+                <button onClick={() => setCurrentPage(1)} disabled={currentPage === 1} className="pagination-arrow">&laquo;</button>
+                <button onClick={() => setCurrentPage(currentPage - 1)} disabled={currentPage === 1} className="pagination-arrow">&lsaquo;</button>
+                {Array.from({ length: Math.ceil(tutors.length / PAGE_SIZE) }, (_, i) => {
+                  const pageNum = i + 1;
+                  const totalPages = Math.ceil(tutors.length / PAGE_SIZE);
+                  const maxButtons = 5;
+                  const halfRange = Math.floor(maxButtons / 2);
+                  let start = Math.max(1, currentPage - halfRange);
+                  let end = Math.min(totalPages, start + maxButtons - 1);
+                  if (end - start < maxButtons - 1) {
+                    start = Math.max(1, end - maxButtons + 1);
+                  }
+                  return pageNum >= start && pageNum <= end ? (
+                    <button
+                      key={pageNum}
+                      className={currentPage === pageNum ? "active" : ""}
+                      onClick={() => setCurrentPage(pageNum)}
+                    >
+                      {pageNum}
+                    </button>
+                  ) : null;
+                })}
+                <button onClick={() => setCurrentPage(currentPage + 1)} disabled={currentPage === Math.ceil(tutors.length / PAGE_SIZE)} className="pagination-arrow">&rsaquo;</button>
+                <button onClick={() => setCurrentPage(Math.ceil(tutors.length / PAGE_SIZE))} disabled={currentPage === Math.ceil(tutors.length / PAGE_SIZE)} className="pagination-arrow">&raquo;</button>
+              </div>
+              </>
             )}
           </div>
         )}

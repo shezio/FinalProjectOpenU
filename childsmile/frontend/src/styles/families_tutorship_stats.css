@@ -1,3 +1,8 @@
+/* Ensure Rubik font for all Hebrew text */
+* {
+  font-family: Rubik, sans-serif;
+}
+
 /* Main container for the report */
 .families-waiting-report-main-content {
   min-height: 100vh;
