@@ -115,15 +115,15 @@ const Registration = () => {
       newErrors.surname = t("Surname must be in Hebrew and cannot be empty.");
     }
 
-    // Validate birth_date and age (must be 18-100 years old)
+    // Validate birth_date and age (must be 13-100 years old)
     if (!formData.birth_date) {
       newErrors.birth_date = t("Birth date is required.");
     } else {
       const age = calculateAge(formData.birth_date);
-      if (age < 18) {
-        newErrors.birth_date = t("גיל מינימלי להרשמה הוא 18");
+      if (age < 13) {
+        newErrors.birth_date = t("גיל מינימלי להרשמה הוא 13");
       } else if (age > 100) {
-        newErrors.birth_date = t("Age must be between 18 and 100.");
+        newErrors.birth_date = t("Age must be between 13 and 100.");
       }
     }
 

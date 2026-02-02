@@ -421,7 +421,7 @@ const Families = () => {
       expected_end_treatment_by_protocol: formatDate(family.expected_end_treatment_by_protocol) || '',
       has_completed_treatments: family.has_completed_treatments || false,
       status: family.status || 'טיפולים',
-      responsible_coordinator: family.responsible_coordinator || '', // Load current coordinator
+      responsible_coordinator: family.responsible_coordinator_id || '', // Load current coordinator ID (not name)
     };
 
     const cityKey = family.city ? family.city.trim() : '';
@@ -594,6 +594,48 @@ const Families = () => {
   const formatStatus = (status) => {
     if (!status) return '---';
     return status.replace(/_/g, ' ');
+  };
+
+  // Format age display for young children
+  // Under 1 year: show "X חודשים"
+  // 1-2 years: show "שנה וX חודשים"
+  // 2+ years: show age number
+  const formatAge = (family) => {
+    if (!family.date_of_birth) return family.age || '---';
+    
+    // Parse date_of_birth (format: dd/mm/yyyy)
+    const [day, month, year] = family.date_of_birth.split('/');
+    const birthDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+    const today = new Date();
+    
+    // Calculate total months
+    let totalMonths = (today.getFullYear() - birthDate.getFullYear()) * 12;
+    totalMonths += today.getMonth() - birthDate.getMonth();
+    
+    // Adjust if day hasn't passed yet this month
+    if (today.getDate() < birthDate.getDate()) {
+      totalMonths--;
+    }
+    
+    const years = Math.floor(totalMonths / 12);
+    const months = totalMonths % 12;
+    
+    if (years < 1) {
+      // Under 1 year: show months only
+      if (months === 0) return 'פחות מחודש';
+      if (months === 1) return 'חודש';
+      if (months === 2) return 'חודשיים';
+      return `${months} חודשים`;
+    } else if (years === 1) {
+      // 1-2 years: show "שנה וX חודשים"
+      if (months === 0) return 'שנה';
+      if (months === 1) return 'שנה וחודש';
+      if (months === 2) return 'שנה וחודשיים';
+      return `שנה ו-${months} חודשים`;
+    } else {
+      // 2+ years: show the age number
+      return family.age || years;
+    }
   };
 
   // Add the toggle sort function for registration date
@@ -833,7 +875,7 @@ const Families = () => {
                           />
                         </td>}
                         <td>{family.first_name} {family.last_name}</td>
-                        <td>{family.age}</td>
+                        <td>{formatAge(family)}</td>
                         <td>{family.address}</td>
                         <td>{family.child_phone_number || '---'}</td>
                         <td>{formatStatus(family.tutoring_status)}</td>
@@ -937,7 +979,7 @@ const Families = () => {
               <div className="family-details-grid">
                 <p>{t('ID')}: {selectedFamily.id}</p>
                 <p>{t('Full Name')}: {selectedFamily.first_name} {selectedFamily.last_name}</p>
-                <p>{t('Age')}: {selectedFamily.age || '---'}</p>
+                <p>{t('Age')}: {formatAge(selectedFamily)}</p>
                 <p>{t('Status')}: {formatStatus(selectedFamily.status)}</p>
                 <p>{t('Address')}: {selectedFamily.address}</p>
                 <p>{t('Phone')}: {selectedFamily.child_phone_number || '---'}</p>

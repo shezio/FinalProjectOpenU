@@ -1246,12 +1246,22 @@ def get_staff_name_by_id(staff_id):
     """
     Get the full name of a staff member by their staff_id.
     Returns the name in format "first_name last_name" or None if not found.
+    Handles cases where the stored value is already a name (legacy data).
     """
     try:
         if not staff_id:
             return None
         
-        staff = Staff.objects.filter(staff_id=staff_id).first()
+        # If staff_id is not numeric, it might already be a name (legacy data)
+        # Return it as-is if it's not a valid ID
+        try:
+            staff_id_int = int(staff_id)
+        except (ValueError, TypeError):
+            # It's not a number - might be a name already stored in DB
+            # Return None so caller can handle it (or use the raw value)
+            return None
+        
+        staff = Staff.objects.filter(staff_id=staff_id_int).first()
         if staff:
             return f"{staff.first_name} {staff.last_name}"
         
