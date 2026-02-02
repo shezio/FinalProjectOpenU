@@ -1,3 +1,8 @@
+/* Ensure Rubik font for all Hebrew text */
+* {
+  font-family: Rubik, sans-serif;
+}
+
 /* Scoped styles for the grid container in ActiveTutorsReport */
 .page-content .tutorship-pending-grid-container {
     width: 100%;
@@ -40,14 +45,14 @@
 
 @media (max-width: 2400px) {
     .page-content .tutorship-pending-grid-container {
-        height: 500px; /* Allow the grid to grow based on content */
+        height: 700px; /* Allow the grid to grow based on content */
         width: 100%;
         /* Adjust width to leave space for the sidebar */
         margin-right: 100px;
         transform: scale(0.95);
     }
     .new-families-report-main-content .page-content .tutorship-pending-grid-container {
-      height: 500px; /* Allow the grid to grow based on content */
+      height: 700px; /* Allow the grid to grow based on content */
       width: 1500px;
       /* Adjust width to leave space for the sidebar */
       margin-right: 150px;

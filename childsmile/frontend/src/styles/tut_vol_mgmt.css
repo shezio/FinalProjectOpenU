@@ -1,3 +1,8 @@
+/* Ensure Rubik font for all Hebrew text */
+* {
+  font-family: Rubik, sans-serif;
+}
+
 .families-grid-wrapper {
   perspective: 2000px;
   width: 1600px;

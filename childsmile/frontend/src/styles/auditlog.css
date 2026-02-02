@@ -1,5 +1,10 @@
 /* Audit Log Page Styles - Based on Families.css Structure */
 
+/* Ensure Rubik font for all Hebrew text */
+* {
+  font-family: Rubik, sans-serif;
+}
+
 .audit-log-main-content {
   display: flex;
   flex-direction: column;

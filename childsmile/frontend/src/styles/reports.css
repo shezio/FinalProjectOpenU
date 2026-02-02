@@ -1,3 +1,8 @@
+/* Ensure Rubik font for all Hebrew text */
+* {
+  font-family: Rubik, sans-serif;
+}
+
 /* ===== MODERN BENTO BOX DASHBOARD DESIGN ===== */
 
 /* 1. The Container - Locked to Screen Height */

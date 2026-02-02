@@ -1,3 +1,8 @@
+/* Ensure Rubik font for all Hebrew text */
+* {
+  font-family: Rubik, sans-serif;
+}
+
 /* Registration Page Container */
 .registration-page {
   min-height: 100vh;

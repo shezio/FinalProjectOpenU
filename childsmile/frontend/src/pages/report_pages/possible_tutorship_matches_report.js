@@ -11,6 +11,8 @@ import { useTranslation } from "react-i18next";
 import axios from "../../axiosConfig";
 import { navigateTo } from "../../components/utils";
 
+const PAGE_SIZE = 10;
+
 const PossibleTutorshipMatchesReport = () => {
   const [loading, setLoading] = useState(true);
   const [matches, setMatches] = useState([]);
@@ -18,6 +20,7 @@ const PossibleTutorshipMatchesReport = () => {
   const [maxDistance, setMaxDistance] = useState(100); // Default max distance for 
   // slider
   const [minGrade, setMinGrade] = useState(-5); // Initialize minGrade with a default value of 0
+  const [currentPage, setCurrentPage] = useState(1);
   const { t } = useTranslation();
   const [sortOrder, setSortOrder] = useState('desc'); // Default sort order
 
@@ -77,6 +80,7 @@ const PossibleTutorshipMatchesReport = () => {
 
   const applyDistanceFilter = (distance) => {
     setMaxDistance(distance); // Update the slider value
+    setCurrentPage(1);
     const filtered = matches.filter((match) => {
       const distanceValue = parseFloat(match.distance_between_cities); // Convert to number
       return distanceValue <= parseFloat(distance); // Compare as numbers
@@ -85,6 +89,7 @@ const PossibleTutorshipMatchesReport = () => {
   };
 
   const refreshData = () => {
+    setCurrentPage(1);
     fetchData();
   };
 
@@ -173,6 +178,7 @@ const PossibleTutorshipMatchesReport = () => {
               {filteredMatches.length === 0 ? (
                 <div className="no-data">{t("No data to display")}</div>
               ) : (
+                <>
                 <table className="tutorship-pending-data-grid">
                   <thead>
                     <tr>
@@ -203,7 +209,7 @@ const PossibleTutorshipMatchesReport = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredMatches.map((match, index) => (
+                    {filteredMatches.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE).map((match, index) => (
                       <tr key={index}>
                         <td>
                           <input
@@ -226,6 +232,33 @@ const PossibleTutorshipMatchesReport = () => {
                     ))}
                   </tbody>
                 </table>
+                <div className="pagination">
+                  <button onClick={() => setCurrentPage(1)} disabled={currentPage === 1} className="pagination-arrow">&laquo;</button>
+                  <button onClick={() => setCurrentPage(currentPage - 1)} disabled={currentPage === 1} className="pagination-arrow">&lsaquo;</button>
+                  {Array.from({ length: Math.ceil(filteredMatches.length / PAGE_SIZE) }, (_, i) => {
+                    const pageNum = i + 1;
+                    const totalPages = Math.ceil(filteredMatches.length / PAGE_SIZE);
+                    const maxButtons = 5;
+                    const halfRange = Math.floor(maxButtons / 2);
+                    let start = Math.max(1, currentPage - halfRange);
+                    let end = Math.min(totalPages, start + maxButtons - 1);
+                    if (end - start < maxButtons - 1) {
+                      start = Math.max(1, end - maxButtons + 1);
+                    }
+                    return pageNum >= start && pageNum <= end ? (
+                      <button
+                        key={pageNum}
+                        className={currentPage === pageNum ? "active" : ""}
+                        onClick={() => setCurrentPage(pageNum)}
+                      >
+                        {pageNum}
+                      </button>
+                    ) : null;
+                  })}
+                  <button onClick={() => setCurrentPage(currentPage + 1)} disabled={currentPage === Math.ceil(filteredMatches.length / PAGE_SIZE)} className="pagination-arrow">&rsaquo;</button>
+                  <button onClick={() => setCurrentPage(Math.ceil(filteredMatches.length / PAGE_SIZE))} disabled={currentPage === Math.ceil(filteredMatches.length / PAGE_SIZE)} className="pagination-arrow">&raquo;</button>
+                </div>
+                </>
               )}
             </div>
           </>

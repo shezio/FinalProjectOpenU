@@ -1,4 +1,10 @@
 /* Feedbacks.css */
+
+/* Ensure Rubik font for all Hebrew text */
+* {
+  font-family: Rubik, sans-serif;
+}
+
 .feedbacks-main-content {
     display: flex;
     flex-direction: column;
