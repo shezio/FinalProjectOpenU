@@ -3,7 +3,7 @@
   width: 1600px;
   height: 480px;
   position: relative;
-  margin-left: 500px;
+  margin-left: 460px;
 }
 
 
@@ -31,10 +31,9 @@
 .tutor-vol-data-grid td:nth-child(9), /* Tutee Wellness column in tutors */
 .flip-back .tutor-vol-data-grid td:nth-child(5) /* Comments column in volunteers */
 {
-  max-width: 80px;
-  min-width: 60px;
+  max-width: 150px;
   height: auto;
-  min-height: 45px;
+  min-height: 30px;
   overflow: hidden;
   vertical-align: middle;
   padding: 6px 8px;
@@ -152,10 +151,11 @@
 
 /* Table styling - THE ACTUAL GRID WITH GLASSMORPHISM BUBBLE EFFECT */
 .tutor-vol-data-grid {
-  width: 98%;
+  width: 100%;
+  max-width: 100%;
   border-collapse: separate;
   border-spacing: 0;
-  table-layout: auto !important;
+  table-layout: auto;
   border: 2px solid rgba(255, 255, 255, 0.5);
   background: linear-gradient(135deg, 
     rgba(255, 255, 255, 0.65) 0%,
@@ -172,7 +172,7 @@
   z-index: 1;
   isolation: isolate;
   animation: bubbleAppear 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-  font-size: 22px;
+  font-size: 30px;
   direction: rtl;
 }
 
@@ -209,8 +209,10 @@
 .tutor-vol-data-grid th,
 .tutor-vol-data-grid td {
   border: 1px solid #ddd;
-  padding: 10px;
+  padding: 8px 10px;
   text-align: right;
+  white-space: nowrap;
+  width: auto;
 }
 
 .tutor-vol-data-grid th {
@@ -220,6 +222,7 @@
   backdrop-filter: blur(15px) saturate(180%);
   -webkit-backdrop-filter: blur(15px) saturate(180%);
   font-weight: 700;
+  font-size: 30px;
   color: white;
   position: sticky !important;
   top: 0;
@@ -228,6 +231,12 @@
   box-shadow: 0 4px 20px rgba(99, 102, 241, 0.35);
   text-shadow: 0 2px 10px rgba(0, 0, 0, 0.25);
   letter-spacing: 0.5px;
+  white-space: nowrap;
+  width: auto;
+}
+
+.tutor-vol-data-grid td {
+  font-size: 26px;
 }
 
 .tutor-vol-data-grid tr:nth-child(even) {
@@ -252,9 +261,9 @@
 
 .flip-wrapper {
   position: relative;
-  width: 1950px;
-  height: 550px;
-  margin-right: 230px;
+  width: 1800px;
+  height: 600px;
+  margin-right: 240px;
   margin-top: 350px;
   perspective: 2000px;
   background: linear-gradient(135deg, 
@@ -606,4 +615,177 @@ input.search-bar::placeholder {
   box-shadow: 
     0 10px 30px rgba(239, 68, 68, 0.4),
     inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+/* Details Button Styles */
+.details-button {
+  background: linear-gradient(135deg, #4a90d9 0%, #357abd 100%);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 14px;
+  cursor: pointer;
+  font-size: 18px;
+  font-weight: 600;
+  font-family: Rubik, sans-serif;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(74, 144, 217, 0.3);
+  white-space: nowrap;
+}
+
+.details-button:hover {
+  background: linear-gradient(135deg, #357abd 0%, #2a5f8f 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(74, 144, 217, 0.4);
+}
+
+.details-button:active {
+  transform: translateY(0);
+}
+
+/* Tutorship Details Modal Styles */
+.tutorship-details-modal {
+  min-width: 450px;
+  max-width: 550px;
+}
+
+.tutorship-details-header {
+  background: transparent !important;
+}
+
+.tutorship-details-header h2 {
+  font-size: 2.5em;
+  background: linear-gradient(135deg, 
+    rgba(99, 102, 241, 1) 0%,
+    rgba(168, 85, 247, 1) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  text-shadow: none;
+}
+
+.tutorship-details-body {
+  padding: 24px;
+}
+
+.tutorship-detail-row {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 20px;
+}
+
+.tutorship-detail-row:last-child {
+  margin-bottom: 0;
+}
+
+.tutorship-detail-row h3 {
+  color: #9333ea;
+  margin: 0 0 10px 0;
+  font-size: 24px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+
+.tutorship-detail-textarea {
+  width: 100%;
+  min-height: 80px;
+  max-height: 120px;
+  padding: 12px;
+  border: 1px solid rgba(147, 51, 234, 0.3);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.95);
+  color: #1f2937;
+  font-family: Rubik, sans-serif;
+  font-size: 20px;
+  font-style: normal;
+  line-height: 1.5;
+  resize: none;
+  overflow-y: auto;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.tutorship-detail-textarea:focus {
+  outline: none;
+  border-color: #9333ea;
+  box-shadow: 0 0 0 3px rgba(147, 51, 234, 0.2);
+}
+
+.tutorship-detail-textarea::placeholder {
+  color: #666;
+  font-family: Rubik, sans-serif;
+  font-style: normal;
+}
+
+.tutorship-detail-select {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid rgba(147, 51, 234, 0.3);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.95);
+  color: #1f2937;
+  font-family: Rubik, sans-serif;
+  font-size: 14px;
+  cursor: pointer;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.tutorship-detail-select:focus {
+  outline: none;
+  border-color: #9333ea;
+  box-shadow: 0 0 0 3px rgba(147, 51, 234, 0.2);
+}
+
+.tutorship-detail-select option {
+  background: white;
+  color: #1f2937;
+}
+
+/* Save button for tutorship details modal */
+.tutor-vol-btn-save {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.95) 0%, rgba(220, 38, 38, 0.95) 100%);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  color: white;
+  padding: 12px 20px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 24px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 6px 20px rgba(239, 68, 68, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+.tutor-vol-btn-save::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, 
+    transparent, 
+    rgba(255, 255, 255, 0.3), 
+    transparent);
+  transition: left 0.5s;
+}
+
+.tutor-vol-btn-save:hover::before {
+  left: 100%;
+}
+
+.tutor-vol-btn-save:hover {
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: 
+    0 10px 30px rgba(239, 68, 68, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+.tutor-vol-btn-save:active {
+  transform: translateY(0);
 }

@@ -3,8 +3,7 @@ import axios from '../axiosConfig';
 import Sidebar from '../components/Sidebar';
 import InnerPageHeader from '../components/InnerPageHeader';
 import { isGuestUser, hasUpdatePermissionForTable, hasDeletePermissionForTable } from '../components/utils';
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { toast } from 'react-toastify';
 import { useTranslation } from 'react-i18next';
 import '../styles/common.css';
 import '../styles/families.css'; // Import the CSS file for families
@@ -89,6 +88,9 @@ const Families = () => {
   const [showCityChangeModal, setShowCityChangeModal] = useState(false);
   const [cityChangeData, setCityChangeData] = useState(null);
 
+  // Search state for child name
+  const [searchTerm, setSearchTerm] = useState('');
+
   // Bulk delete feature flag
   const ENABLE_BULK_DELETE = process.env.REACT_APP_ENABLE_BULK_DELETE === 'true';
 
@@ -123,6 +125,16 @@ const Families = () => {
   };
 
   let filteredFamilies = families;
+  // Apply search filter for child name
+  if (searchTerm.trim()) {
+    const term = searchTerm.trim().toLowerCase();
+    filteredFamilies = filteredFamilies.filter((family) => {
+      const fullName = `${family.first_name || ''} ${family.last_name || ''}`.toLowerCase();
+      const firstName = (family.first_name || '').toLowerCase();
+      const lastName = (family.last_name || '').toLowerCase();
+      return fullName.includes(term) || firstName.includes(term) || lastName.includes(term);
+    });
+  }
   if (showHealthyOnly) {
     filteredFamilies = filteredFamilies.filter((family) => family.status === "בריא");
   }
@@ -145,7 +157,7 @@ const Families = () => {
   useEffect(() => {
     setTotalCount(filteredFamilies.length);
     setPage(1); // Reset to page 1 only when filters actually change
-  }, [showHealthyOnly, showMatureOnly, selectedStatus, maxAge, families]);
+  }, [showHealthyOnly, showMatureOnly, selectedStatus, maxAge, searchTerm, families]);
 
   const handleAddFamilyChange = (e) => {
     const { name, value } = e.target;
@@ -578,6 +590,12 @@ const Families = () => {
     return new Date(`${year}-${month}-${day}`);
   };
 
+  // Format status text: replace underscores with spaces
+  const formatStatus = (status) => {
+    if (!status) return '---';
+    return status.replace(/_/g, ' ');
+  };
+
   // Add the toggle sort function for registration date
   const toggleSortOrderRegistrationDate = () => {
     setSortOrderRegistrationDate((prevOrder) => (prevOrder === 'asc' ? 'desc' : 'asc'));
@@ -690,16 +708,6 @@ const Families = () => {
       <Sidebar />
       <div className="content">
         <InnerPageHeader title={t('Families Management')} />
-        <ToastContainer
-          position="top-center"
-          autoClose={5000}
-          hideProgressBar={false}
-          closeOnClick
-          pauseOnFocusLoss
-          draggable
-          pauseOnHover
-          rtl={true}
-        />
         <div className="filter-create-container">
             <button 
               className="refresh-icon-button"
@@ -759,6 +767,13 @@ const Families = () => {
               className="age-slider-input"
             />
           </div>
+          <input
+            className="families-search-bar"
+            type="text"
+            placeholder={t("Search by child name")}
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
         </div>
         {loading ? (
           <div className="loader">{t('Loading data...')}</div>
@@ -821,8 +836,8 @@ const Families = () => {
                         <td>{family.age}</td>
                         <td>{family.address}</td>
                         <td>{family.child_phone_number || '---'}</td>
-                        <td>{family.tutoring_status || '---'}</td>
-                        <td>{family.status}</td>
+                        <td>{formatStatus(family.tutoring_status)}</td>
+                        <td>{formatStatus(family.status)}</td>
                         <td>{family.responsible_coordinator || '---'}</td>
                         <td>{family.registration_date}</td>
                         <td>
@@ -923,7 +938,7 @@ const Families = () => {
                 <p>{t('ID')}: {selectedFamily.id}</p>
                 <p>{t('Full Name')}: {selectedFamily.first_name} {selectedFamily.last_name}</p>
                 <p>{t('Age')}: {selectedFamily.age || '---'}</p>
-                <p>{t('Status')}: {selectedFamily.status || 'טיפולים'}</p>
+                <p>{t('Status')}: {formatStatus(selectedFamily.status)}</p>
                 <p>{t('Address')}: {selectedFamily.address}</p>
                 <p>{t('Phone')}: {selectedFamily.child_phone_number || '---'}</p>
                 <p>{t('Gender')}: {selectedFamily.gender ? t('נקבה') : t('זכר')}</p>
@@ -932,7 +947,7 @@ const Families = () => {
                 <p>{t('Diagnosis Date')}: {selectedFamily.diagnosis_date || '---'}</p>
                 <p>{t('Marital Status')}: {selectedFamily.marital_status || '---'}</p>
                 <p>{t('Number of Siblings')}: {selectedFamily.num_of_siblings}</p>
-                <p>{t('Tutoring Status')}: {selectedFamily.tutoring_status || '---'}</p>
+                <p>{t('Tutoring Status')}: {formatStatus(selectedFamily.tutoring_status)}</p>
                 {/* MULTI-TUTOR SUPPORT: Display list of tutors */}
                 {selectedFamily.tutors && selectedFamily.tutors.length > 0 ? (
                   <p>{t('Tutors')}: {selectedFamily.tutors.map((tutor) => tutor.tutor_name).join(', ')}</p>
@@ -1301,7 +1316,7 @@ const Families = () => {
                     <option value="">{t('Select a tutoring status')}</option>
                     {tutoringStatuses.map((status, index) => (
                       <option key={index} value={status}>
-                        {status}
+                        {formatStatus(status)}
                       </option>
                     ))}
                   </select>
@@ -1689,7 +1704,7 @@ const Families = () => {
                     <option value="">{t('Select a tutoring status')}</option>
                     {tutoringStatuses.map((status, index) => (
                       <option key={index} value={status}>
-                        {status}
+                        {formatStatus(status)}
                       </option>
                     ))}
                   </select>

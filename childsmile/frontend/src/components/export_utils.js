@@ -941,7 +941,9 @@ export const exportPossibleMatchesToExcel = async (matches, t) => {
       t("Tutor Full Name"),
       t("Child City"),
       t("Tutor City"),
+      t("Child Birth Date"),
       t("Child Age"),
+      t("Tutor Birth Date"),
       t("Tutor Age"),
       t("Child Gender"),
       t("Tutor Gender"),
@@ -953,7 +955,9 @@ export const exportPossibleMatchesToExcel = async (matches, t) => {
       match.tutor_full_name,
       match.child_city,
       match.tutor_city,
+      match.child_birth_date || "-",
       match.child_age,
+      match.tutor_birth_date || "-",
       match.tutor_age,
       match.child_gender ? t('Female') : t('Male'),
       match.tutor_gender ? t('Female') : t('Male'),
@@ -1027,7 +1031,9 @@ export const exportPossibleMatchesToPDF = async (matches, t) => {
       t("Tutor Full Name"),
       t("Child City"),
       t("Tutor City"),
+      t("Child Birth Date"),
       t("Child Age"),
+      t("Tutor Birth Date"),
       t("Tutor Age"),
       t("Child Gender"),
       t("Tutor Gender"),
@@ -1039,7 +1045,9 @@ export const exportPossibleMatchesToPDF = async (matches, t) => {
       reverseText(match.tutor_full_name), // Reverse for RTL
       reverseText(match.child_city), // Reverse for RTL
       reverseText(match.tutor_city), // Reverse for RTL
+      match.child_birth_date || "-", // Birth date
       match.child_age, // Keep numbers as is
+      match.tutor_birth_date || "-", // Birth date
       match.tutor_age, // Keep numbers as is
       reverseText(match.child_gender ? t('Female') : t('Male')), // Reverse for RTL
       reverseText(match.tutor_gender ? t('Female') : t('Male')), // Reverse for RTL
@@ -1065,6 +1073,8 @@ export const exportPossibleMatchesToPDF = async (matches, t) => {
         7: { halign: 'right' }, // Align eighth column to the right
         8: { halign: 'right' },
         9: { halign: 'right' },
+        10: { halign: 'right' },
+        11: { halign: 'right' },
 
       },
       margin: { left: 10, right: 10 }, // Add margins to prevent clipping

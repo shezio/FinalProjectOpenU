@@ -80,6 +80,11 @@ def calculate_possible_matches(request):
         check_matches_permissions(request, ["CREATE", "UPDATE", "DELETE", "VIEW"])
         api_logger.debug("DEBUG: User has all required permissions.")
 
+        # Step 1.5: Refresh all ages (tutors and children) before calculating matches
+        from .utils import refresh_all_ages_for_matching
+        age_refresh_result = refresh_all_ages_for_matching()
+        api_logger.debug(f"DEBUG: Ages refreshed - tutors: {age_refresh_result['tutors_updated']}, children: {age_refresh_result['children_updated']}")
+
         # Step 2: Fetch possible matches
         possible_matches = fetch_possible_matches()
         api_logger.debug(f"DEBUG: Fetched {len(possible_matches)} possible matches.")
@@ -1079,6 +1084,11 @@ def calculate_manual_match(request):
         # Check permissions
         check_matches_permissions(request, ["VIEW"])
         
+        # Refresh all ages (tutors and children) before calculating manual match
+        from .utils import refresh_all_ages_for_matching
+        age_refresh_result = refresh_all_ages_for_matching()
+        api_logger.debug(f"DEBUG: Ages refreshed for manual match - tutors: {age_refresh_result['tutors_updated']}, children: {age_refresh_result['children_updated']}")
+        
         data = request.data
         child_id = data.get("child_id")
         tutor_id = data.get("tutor_id")
@@ -1102,7 +1112,9 @@ def calculate_manual_match(request):
             CONCAT(signedup.first_name, ' ', signedup.surname) AS tutor_full_name,
             child.city AS child_city,
             signedup.city AS tutor_city,
+            child.date_of_birth AS child_birth_date,
             EXTRACT(YEAR FROM AGE(current_date, child.date_of_birth))::int AS child_age,
+            signedup.birth_date AS tutor_birth_date,
             signedup.age AS tutor_age,
             child.gender AS child_gender,
             signedup.gender AS tutor_gender,
@@ -1113,14 +1125,11 @@ def calculate_manual_match(request):
             CONCAT(signedup.first_name, ' ', signedup.surname) AS child_responsible_coordinator,
             child.medical_diagnosis,
             child.child_phone_number,
-            child.date_of_birth,
             child.treating_hospital,
             child.marital_status,
             child.num_of_siblings,
             child.details_for_tutoring,
             child.additional_info,
-            signedup.age,
-            signedup.gender,
             child.registrationdate,
             signedup.phone,
             signedup.email,
@@ -1217,29 +1226,28 @@ def calculate_manual_match(request):
             "tutor_full_name": row[3],
             "child_city": row[4],
             "tutor_city": row[5],
-            "child_age": row[6],
-            "tutor_age": row[7],
-            "child_gender": row[8],
-            "tutor_gender": row[9],
-            "distance_between_cities": row[10],
-            "grade": row[11],
-            "is_used": row[12],
-            "child_tutoring_status": row[13],
-            "child_responsible_coordinator": row[14],
-            "medical_diagnosis": row[15],
-            "child_phone_number": row[16],
-            "date_of_birth": row[17].strftime("%d/%m/%Y") if row[17] else None,
-            "treating_hospital": row[18],
-            "marital_status": row[19],
-            "num_of_siblings": row[20],
-            "details_for_tutoring": row[21],
-            "additional_info": row[22],
-            "tutor_age": row[23],
-            "tutor_gender": row[24],
-            "registrationdate": row[25].strftime("%d/%m/%Y") if row[25] else None,
-            "tutor_phone": row[26],
-            "tutor_email": row[27],
-            "tutor_is_active": row[28],
+            "child_birth_date": row[6].strftime("%d/%m/%Y") if row[6] else None,
+            "child_age": row[7],
+            "tutor_birth_date": row[8].strftime("%d/%m/%Y") if row[8] else None,
+            "tutor_age": row[9],
+            "child_gender": row[10],
+            "tutor_gender": row[11],
+            "distance_between_cities": row[12],
+            "grade": row[13],
+            "is_used": row[14],
+            "child_tutoring_status": row[15],
+            "child_responsible_coordinator": row[16],
+            "medical_diagnosis": row[17],
+            "child_phone_number": row[18],
+            "treating_hospital": row[19],
+            "marital_status": row[20],
+            "num_of_siblings": row[21],
+            "details_for_tutoring": row[22],
+            "additional_info": row[23],
+            "registrationdate": row[24].strftime("%d/%m/%Y") if row[24] else None,
+            "tutor_phone": row[25],
+            "tutor_email": row[26],
+            "tutor_is_active": row[27],
         }
         
         # Wrap in a list so we can use the same distance/grade calculation logic

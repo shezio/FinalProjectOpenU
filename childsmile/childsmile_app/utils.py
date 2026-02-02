@@ -76,6 +76,162 @@ from django.views.decorators.csrf import csrf_exempt, csrf_protect
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
+# ============================================================================
+# AGE CALCULATION UTILITIES
+# ============================================================================
+
+def calculate_age_from_birth_date(birth_date):
+    """
+    Calculate age from a birth date.
+    :param birth_date: A date object representing the birth date.
+    :return: Integer age in years, or None if birth_date is None.
+    """
+    if not birth_date:
+        return None
+    today = datetime.date.today()
+    return today.year - birth_date.year - (
+        (today.month, today.day) < (birth_date.month, birth_date.day)
+    )
+
+
+def parse_date_string(date_string):
+    """
+    Parse a date string in dd/mm/yyyy format to a date object.
+    :param date_string: String in dd/mm/yyyy format.
+    :return: date object or None if parsing fails.
+    """
+    if not date_string:
+        return None
+    try:
+        # Handle dd/mm/yyyy format
+        if '/' in str(date_string):
+            parts = str(date_string).split('/')
+            if len(parts) == 3:
+                day, month, year = int(parts[0]), int(parts[1]), int(parts[2])
+                return datetime.date(year, month, day)
+        # Handle yyyy-mm-dd format (ISO)
+        elif '-' in str(date_string):
+            parts = str(date_string).split('-')
+            if len(parts) == 3:
+                year, month, day = int(parts[0]), int(parts[1]), int(parts[2])
+                return datetime.date(year, month, day)
+        return None
+    except (ValueError, TypeError):
+        return None
+
+
+def format_date_to_string(date_obj):
+    """
+    Format a date object to dd/mm/yyyy string.
+    :param date_obj: A date object.
+    :return: String in dd/mm/yyyy format or None.
+    """
+    if not date_obj:
+        return None
+    return date_obj.strftime('%d/%m/%Y')
+
+
+def refresh_volunteer_ages():
+    """
+    Refresh/recalculate ages for all volunteers and tutors in SignedUp table
+    based on their birth_date field.
+    :return: Dictionary with counts of updated records.
+    """
+    updated_count = 0
+    skipped_count = 0
+    
+    # Get all SignedUp records with birth_date
+    signedups = SignedUp.objects.filter(birth_date__isnull=False)
+    
+    for signedup in signedups:
+        new_age = calculate_age_from_birth_date(signedup.birth_date)
+        if new_age is not None and new_age != signedup.age:
+            signedup.age = new_age
+            signedup.save(update_fields=['age'])
+            updated_count += 1
+        else:
+            skipped_count += 1
+    
+    api_logger.info(f"Volunteer ages refreshed: {updated_count} updated, {skipped_count} unchanged")
+    return {'updated': updated_count, 'skipped': skipped_count}
+
+
+def refresh_tutor_ages_only():
+    """
+    Refresh/recalculate ages only for tutors (not general volunteers) in SignedUp table
+    based on their birth_date field. Used for tutorship matching.
+    :return: Dictionary with counts of updated records.
+    """
+    updated_count = 0
+    skipped_count = 0
+    
+    # Get tutor IDs from Tutors table
+    tutor_ids = Tutors.objects.values_list('id_id', flat=True)
+    
+    # Get SignedUp records for tutors with birth_date
+    signedups = SignedUp.objects.filter(id__in=tutor_ids, birth_date__isnull=False)
+    
+    for signedup in signedups:
+        new_age = calculate_age_from_birth_date(signedup.birth_date)
+        if new_age is not None and new_age != signedup.age:
+            signedup.age = new_age
+            signedup.save(update_fields=['age'])
+            updated_count += 1
+        else:
+            skipped_count += 1
+    
+    api_logger.info(f"Tutor ages refreshed: {updated_count} updated, {skipped_count} unchanged")
+    return {'updated': updated_count, 'skipped': skipped_count}
+
+
+def refresh_children_ages():
+    """
+    Refresh/recalculate ages for all children based on their date_of_birth.
+    Note: Children model has age as a @property, not a field, so this updates
+    the PossibleMatches table child_age values.
+    :return: Dictionary with counts of updated records.
+    """
+    # Children model uses @property for age calculation, so no DB update needed
+    # But we need to update PossibleMatches table for reports
+    updated_count = 0
+    
+    # Update child_age in PossibleMatches based on current date
+    with connection.cursor() as cursor:
+        cursor.execute("""
+            UPDATE childsmile_app_possiblematches pm
+            SET child_age = EXTRACT(YEAR FROM AGE(current_date, c.date_of_birth))::int
+            FROM childsmile_app_children c
+            WHERE pm.child_id = c.child_id
+            AND pm.child_age != EXTRACT(YEAR FROM AGE(current_date, c.date_of_birth))::int
+        """)
+        updated_count = cursor.rowcount
+    
+    api_logger.info(f"Children ages in PossibleMatches refreshed: {updated_count} updated")
+    return {'updated': updated_count}
+
+
+def refresh_all_ages_for_matching():
+    """
+    Refresh all ages needed for tutorship matching:
+    - Tutor ages (from SignedUp.birth_date)
+    - Children ages (in PossibleMatches from Children.date_of_birth)
+    :return: Dictionary with combined counts.
+    """
+    tutor_result = refresh_tutor_ages_only()
+    children_result = refresh_children_ages()
+    
+    return {
+        'tutors_updated': tutor_result['updated'],
+        'tutors_skipped': tutor_result.get('skipped', 0),
+        'children_updated': children_result['updated']
+    }
+
+
+# ============================================================================
+# END OF AGE CALCULATION UTILITIES
+# ============================================================================
+
+
 def get_enum_values(enum_type):
     from django.db import connection
     with connection.cursor() as cursor:
@@ -195,7 +351,9 @@ def fetch_possible_matches():
         CONCAT(signedup.first_name, ' ', signedup.surname) AS tutor_full_name,
         child.city AS child_city,
         signedup.city AS tutor_city,
+        child.date_of_birth AS child_birth_date,
         EXTRACT(YEAR FROM AGE(current_date, child.date_of_birth))::int AS child_age,
+        signedup.birth_date AS tutor_birth_date,
         signedup.age AS tutor_age,
         child.gender AS child_gender,
         signedup.gender AS tutor_gender,
@@ -245,13 +403,15 @@ def fetch_possible_matches():
                 "tutor_full_name": row[3],
                 "child_city": row[4],
                 "tutor_city": row[5],
-                "child_age": row[6],
-                "tutor_age": row[7],
-                "child_gender": row[8],
-                "tutor_gender": row[9],
-                "distance_between_cities": row[10],
-                "grade": row[11],
-                "is_used": row[12],
+                "child_birth_date": format_date_to_string(row[6]) if row[6] else None,
+                "child_age": row[7],
+                "tutor_birth_date": format_date_to_string(row[8]) if row[8] else None,
+                "tutor_age": row[9],
+                "child_gender": row[10],
+                "tutor_gender": row[11],
+                "distance_between_cities": row[12],
+                "grade": row[13],
+                "is_used": row[14],
             }
             for row in rows
         ]

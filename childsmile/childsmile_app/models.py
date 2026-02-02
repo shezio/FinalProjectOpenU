@@ -100,6 +100,7 @@ class SignedUp(models.Model):
     first_name = models.CharField(max_length=255)
     surname = models.CharField(max_length=255)
     age = models.IntegerField()
+    birth_date = models.DateField(null=True, blank=True)
     gender = models.BooleanField()
     phone = models.CharField(max_length=20)
     city = models.CharField(max_length=255)

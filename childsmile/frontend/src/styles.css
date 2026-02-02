@@ -58,14 +58,14 @@ body {
   /* Add spacing below the title */
   color: #1da821;
   /* Adjust text color */
-  font-family: 'Rubik', sans-serif;
+  font-family: Rubik, sans-serif;
   /* Use the specified font */
 }
 
 .login-main-content .curved-text {
   font-size: 48px;
   fill: #1da821;
-  font-family: 'Rubik', sans-serif;
+  font-family: Rubik, sans-serif;
   font-weight: bold;
 }
 
@@ -248,7 +248,7 @@ body {
 .google-icon {
   font-weight: bold;
   font-size: 16px;
-  font-family: 'Arial', sans-serif;
+  font-family: Rubik, sans-serif;
 }
 
 .totp-input-container {
@@ -269,7 +269,7 @@ body {
   text-align: center;
   font-size: 24px;
   font-weight: bold;
-  font-family: 'Courier New', monospace;
+  font-family: Rubik, sans-serif;
   background-color: white;
   transition: all 0.2s ease;
   outline: none;

@@ -372,6 +372,7 @@ def possible_tutorship_matches_report(request):
     api_logger.info("possible_tutorship_matches_report called")
     """
     Retrieve a report of all possible tutorship matches.
+    Refreshes tutor and children ages before returning data.
     """
     user_id = request.session.get("user_id")
     if not user_id:
@@ -386,11 +387,56 @@ def possible_tutorship_matches_report(request):
         )
 
     try:
+        # Refresh all ages (tutors and children) before returning report data
+        from .utils import refresh_all_ages_for_matching, format_date_to_string
+        age_refresh_result = refresh_all_ages_for_matching()
+        api_logger.debug(f"Ages refreshed for matches report - tutors: {age_refresh_result['tutors_updated']}, children: {age_refresh_result['children_updated']}")
+        
         # Fetch all data from the PossibleMatches table
-        possible_matches = PossibleMatches.objects.all().values()
+        possible_matches = PossibleMatches.objects.all()
 
-        # Convert the data to a list of dictionaries
-        possible_matches_data = list(possible_matches)
+        # Enrich with birth_date from source tables
+        possible_matches_data = []
+        for match in possible_matches:
+            match_dict = {
+                'match_id': match.match_id,
+                'child_id': match.child_id,
+                'tutor_id': match.tutor_id,
+                'child_full_name': match.child_full_name,
+                'tutor_full_name': match.tutor_full_name,
+                'child_city': match.child_city,
+                'tutor_city': match.tutor_city,
+                'child_age': match.child_age,
+                'tutor_age': match.tutor_age,
+                'child_gender': match.child_gender,
+                'tutor_gender': match.tutor_gender,
+                'distance_between_cities': match.distance_between_cities,
+                'grade': match.grade,
+                'is_used': match.is_used,
+            }
+            
+            # Get child birth_date from Children table
+            try:
+                child = Children.objects.filter(child_id=match.child_id).first()
+                if child and child.birthday:
+                    match_dict['child_birth_date'] = format_date_to_string(child.birthday)
+                else:
+                    match_dict['child_birth_date'] = None
+            except Exception:
+                match_dict['child_birth_date'] = None
+            
+            # Get tutor birth_date from SignedUp table
+            try:
+                tutor = SignedUp.objects.filter(id=match.tutor_id).first()
+                if tutor and tutor.birth_date:
+                    match_dict['tutor_birth_date'] = format_date_to_string(tutor.birth_date)
+                else:
+                    match_dict['tutor_birth_date'] = None
+            except Exception:
+                match_dict['tutor_birth_date'] = None
+            
+            possible_matches_data.append(match_dict)
+        
         api_logger.debug(f"Possible matches data: {possible_matches_data}")
 
         # Return the data as JSON

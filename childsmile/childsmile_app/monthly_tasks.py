@@ -177,3 +177,65 @@ def check_and_create_monthly_review_tasks():
         }
 
 
+def refresh_all_ages_monthly():
+    """
+    Monthly age refresh for all volunteers, tutors, and children.
+    This should be called once a month to ensure ages are up-to-date.
+    
+    AUTOMATIC SCHEDULING: Runs automatically on the 1st of each month at 4:00 AM Israel time.
+    - Set AGE_REFRESH_ENABLED='true' to enable monthly age refresh
+    - If not set or 'false', feature is completely disabled
+    
+    Logic:
+    - Refresh ages for all SignedUp records (volunteers & tutors) from birth_date
+    - Refresh ages in PossibleMatches table for children
+    
+    Returns:
+        dict: Statistics about age refresh (volunteers_updated, children_updated, errors)
+    """
+    from .utils import refresh_volunteer_ages, refresh_children_ages
+    
+    # Check if feature is enabled
+    age_refresh_enabled = os.environ.get('AGE_REFRESH_ENABLED', 'false').lower() == 'true'
+    if not age_refresh_enabled:
+        api_logger.debug('Monthly age refresh feature is disabled (AGE_REFRESH_ENABLED not set to true)')
+        return {
+            'status': 'disabled',
+            'volunteers_updated': 0,
+            'children_updated': 0,
+            'errors': 0
+        }
+    
+    try:
+        api_logger.info('🔄 Starting monthly age refresh...')
+        
+        # Refresh volunteer/tutor ages
+        volunteer_result = refresh_volunteer_ages()
+        
+        # Refresh children ages in PossibleMatches
+        children_result = refresh_children_ages()
+        
+        log_message = f'✅ Monthly age refresh completed | Volunteers updated: {volunteer_result["updated"]} | Children updated: {children_result["updated"]}'
+        api_logger.info(log_message)
+        
+        return {
+            'status': 'completed',
+            'volunteers_updated': volunteer_result['updated'],
+            'volunteers_skipped': volunteer_result.get('skipped', 0),
+            'children_updated': children_result['updated'],
+            'errors': 0
+        }
+        
+    except Exception as e:
+        error_msg = f'❌ Error in monthly age refresh: {str(e)}'
+        api_logger.error(error_msg)
+        return {
+            'status': 'error',
+            'volunteers_updated': 0,
+            'children_updated': 0,
+            'errors': 1,
+            'error_message': str(e)
+        }
+
+
+

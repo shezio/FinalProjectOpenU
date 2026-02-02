@@ -225,6 +225,8 @@ def get_tutors(request):
             "id": t.id_id,  # ה-ID של המדריך בטבלת Tutors
             "first_name": t.staff.first_name,  # נתונים מטבלת Staff
             "last_name": t.staff.last_name,
+            "birth_date": t.id.birth_date.strftime('%d/%m/%Y') if t.id and t.id.birth_date else None,  # Birth date from SignedUp
+            "age": t.id.age if t.id else None,  # Age from SignedUp model
             "phone": t.id.phone if t.id else "",  # Phone from SignedUp model
             "city": t.id.city if t.id else "",  # City from SignedUp model (via join)
             "tutorship_status": t.tutorship_status,
@@ -320,6 +322,7 @@ def get_signedup(request):
                 "id": user.id,
                 "first_name": user.first_name,
                 "surname": user.surname,
+                "birth_date": user.birth_date.strftime('%d/%m/%Y') if user.birth_date else None,
                 "age": user.age,
                 "gender": user.gender,
                 "phone": user.phone,
@@ -578,6 +581,8 @@ def get_general_volunteers_not_pending(request):
             "first_name": gv.staff.first_name,
             "last_name": gv.staff.last_name,
             "email": gv.staff.email,
+            "birth_date": gv.id.birth_date.strftime('%d/%m/%Y') if gv.id and gv.id.birth_date else None,  # Birth date from SignedUp
+            "age": gv.id.age if gv.id else None,  # Age from SignedUp model
             "phone": gv.id.phone if gv.id else "",  # Phone from SignedUp model
             "city": gv.id.city if gv.id else "",  # City from SignedUp model
             "signupdate": gv.signupdate,
