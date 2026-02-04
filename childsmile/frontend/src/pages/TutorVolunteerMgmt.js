@@ -103,10 +103,10 @@ const TutorVolunteerMgmt = () => {
       return { valid: false, error: t("Date cannot be in the future") };
     }
     
-    // Calculate age - must be between 18 and 120
+    // Calculate age - must be between 13 and 120
     const age = Math.floor((today - date) / (365.25 * 24 * 60 * 60 * 1000));
-    if (age < 18) {
-      return { valid: false, error: t("Age must be at least 18") };
+    if (age < 13) {
+      return { valid: false, error: t("Age must be at least 13") };
     }
     if (age > 120) {
       return { valid: false, error: t("Date cannot be more than 120 years ago") };
