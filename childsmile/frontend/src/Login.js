@@ -53,8 +53,10 @@ const Login = () => {
     } catch (err) {
       console.error('Email login error:', err);
       
-      // Check if it's a pending approval error
-      if (err.response?.status === 403 && err.response?.data?.pending_approval) {
+      // Check if it's a temporarily suspended error
+      if (err.response?.status === 403 && err.response?.data?.temporarily_suspended) {
+        setError(t('Your account is temporarily suspended. Please contact the administrator.'));
+      } else if (err.response?.status === 403 && err.response?.data?.pending_approval) {
         setError(t('הרשמתך בהמתנה לאישור מנהל המערכת. אנא המתן לאישור.'));
       } else {
         setError(t(err.response?.data?.error || 'Failed to send login code'));

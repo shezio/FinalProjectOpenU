@@ -7,7 +7,6 @@ import '../styles/systemManagement.css'; // Special CSS for this page
 import axios from '../axiosConfig';
 import Modal from 'react-modal';
 import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
 import { hasAllPermissions } from '../components/utils';
 import { useTranslation } from 'react-i18next'; // Translation hook
 import { showErrorToast } from '../components/toastUtils'; // Toast utility
@@ -21,6 +20,7 @@ const requiredPermissions = [
 ];
 
 const ENABLE_BULK_DELETE = process.env.REACT_APP_ENABLE_BULK_DELETE === 'true';
+const BLOCK_ACCESS_AFTER_APPROVAL = process.env.REACT_APP_BLOCK_ACCESS_AFTER_APPROVAL === 'true';
 
 const SystemManagement = () => {
   const navigate = useNavigate(); // Add this line
@@ -60,8 +60,11 @@ const SystemManagement = () => {
   const [deactivationReason, setDeactivationReason] = useState('');
   const [isDeactivationLoading, setIsDeactivationLoading] = useState(false);
   const [showInactiveOnly, setShowInactiveOnly] = useState(false);
+  const [showSuspendedOnly, setShowSuspendedOnly] = useState(false); // For suspended users filter
   const [selectedStaff, setSelectedStaff] = useState([]); // For bulk delete
   const [selectedRoleFilter, setSelectedRoleFilter] = useState(''); // For role filtering
+  const [isThawModalOpen, setIsThawModalOpen] = useState(false); // For thaw suspension confirmation
+  const [isThawLoading, setIsThawLoading] = useState(false); // Loading state for thaw operation
 
   useEffect(() => {
     if (hasPermissionOnSystemManagement) {
@@ -201,6 +204,7 @@ const SystemManagement = () => {
 
   const toggleInactiveFilter = () => {
     setShowInactiveOnly(!showInactiveOnly);
+    setShowSuspendedOnly(false); // Clear suspended filter when toggling inactive
     setPage(1); // Reset to page 1 when toggling filter
     setSearchQuery(''); // Clear search when toggling filter
     
@@ -209,6 +213,31 @@ const SystemManagement = () => {
     if (!showInactiveOnly) {
       // If turning on inactive filter
       filtered = staff.filter(user => !user.is_active);
+    } else {
+      // If turning off, show all
+      filtered = staff;
+    }
+    
+    // Apply role filter if set
+    if (selectedRoleFilter) {
+      filtered = filtered.filter(user => user.roles.includes(selectedRoleFilter));
+    }
+    
+    setFilteredStaff(filtered);
+    setTotalCount(filtered.length);
+  };
+
+  const toggleSuspendedFilter = () => {
+    setShowSuspendedOnly(!showSuspendedOnly);
+    setShowInactiveOnly(false); // Clear inactive filter when toggling suspended
+    setPage(1); // Reset to page 1 when toggling filter
+    setSearchQuery(''); // Clear search when toggling filter
+    
+    // Apply filter - show only suspended users (is_active=true but deactivation_reason="suspended")
+    let filtered = staff;
+    if (!showSuspendedOnly) {
+      // If turning on suspended filter
+      filtered = staff.filter(user => user.is_active && user.deactivation_reason === "suspended");
     } else {
       // If turning off, show all
       filtered = staff;
@@ -641,6 +670,44 @@ const SystemManagement = () => {
     }
   };
 
+  // New function to grant access to suspended users
+  const handleThawSuspendedUsers = async () => {
+    if (selectedStaff.length === 0) {
+      toast.error(t('No staff members selected.'));
+      return;
+    }
+
+    // Open the confirmation modal instead of using window.confirm
+    setIsThawModalOpen(true);
+  };
+
+  // New function to confirm and execute thaw operation
+  const confirmThawSuspendedUsers = async () => {
+    try {
+      setIsThawLoading(true);
+      // Use bulk endpoint to clear suspensions for all selected users at once
+      // This logs a single audit entry instead of spamming the audit log
+      await axios.post('/api/bulk_clear_suspension/', {
+        staff_ids: selectedStaff
+      });
+      toast.success(t('Access granted to selected users.'));
+      setSelectedStaff([]); // Clear selection
+      fetchAllStaff(); // Refresh the staff list
+      setShowSuspendedOnly(false); // Clear the filter
+      setIsThawModalOpen(false); // Close the modal
+    } catch (error) {
+      console.error('Error granting access:', error);
+      showErrorToast(t, 'Failed to grant access to users.', error);
+    } finally {
+      setIsThawLoading(false);
+    }
+  };
+
+  // Function to close thaw modal
+  const closeThawModal = () => {
+    setIsThawModalOpen(false);
+  };
+
   if (!hasPermissionOnSystemManagement) {
     return (
       <div className="sys-mgmt-main-content">
@@ -708,6 +775,15 @@ const SystemManagement = () => {
               >
                 {showInactiveOnly ? t('Showing Inactive') : t('Show Inactive')}
               </button>
+              {BLOCK_ACCESS_AFTER_APPROVAL && (
+                <button 
+                  onClick={toggleSuspendedFilter}
+                  className={`filter-inactive-button ${showSuspendedOnly ? 'active' : ''}`}
+                  title={showSuspendedOnly ? t('Show all users') : t('Show suspended users only')}
+                >
+                  {showSuspendedOnly ? t('Showing Suspended') : t('Show Suspended Users')}
+                </button>
+              )}
               <button 
                 onClick={() => navigate('/dashboard')}
                 className="dashboard-button"
@@ -767,7 +843,7 @@ const SystemManagement = () => {
                 <table className="staff-data-grid">
                   <thead>
                     <tr>
-                      {ENABLE_BULK_DELETE && <th className="bulk-delete-column">
+                      {(ENABLE_BULK_DELETE || showSuspendedOnly) && <th className="bulk-delete-column">
                         <input
                           type="checkbox"
                           style={{ width: '22px', height: '22px' }}
@@ -799,6 +875,7 @@ const SystemManagement = () => {
                         </button>
                       </th>
                       <th>{t('Roles')}</th>
+                      {(showInactiveOnly || showSuspendedOnly) && <th>{t('Deactivation Reason')}</th>}
                       <th>{t('Actions')}</th>
                     </tr>
                   </thead>
@@ -808,7 +885,7 @@ const SystemManagement = () => {
                         key={user.id}
                         className={user.is_active ? '' : 'inactive-user-row'}
                       >
-                        {ENABLE_BULK_DELETE && <td className="bulk-delete-column">
+                        {(ENABLE_BULK_DELETE || showSuspendedOnly) && <td className="bulk-delete-column">
                           <input
                             type="checkbox"
                             style={{ width: '22px', height: '22px' }}
@@ -829,6 +906,7 @@ const SystemManagement = () => {
                         <td>{user.last_name}</td>
                         <td>{user.created_at}</td>
                         <td>{user.roles.map((role) => t(role)).join(', ')}</td>
+                        {(showInactiveOnly || showSuspendedOnly) && <td>{user.deactivation_reason ? t(user.deactivation_reason) : '-'}</td>}
                         <td>
                           {user.is_active ? (
                             <button
@@ -857,10 +935,22 @@ const SystemManagement = () => {
                   </tbody>
                 </table>
               )}
-            </div>
+              
+              {/* Grant Access to Suspended Users Button */}
+                      {BLOCK_ACCESS_AFTER_APPROVAL && showSuspendedOnly && selectedStaff.length > 0 && (
+                      <div className="grant-access-button-container">
+                        <button
+                        onClick={handleThawSuspendedUsers}
+                        className="grant-access-button"
+                        >
+                        ✓ {t('Grant Access to Selected Users')}
+                        </button>
+                      </div>
+                      )}
+                    </div>
 
-            <div className="pagination">
-              {/* Left Arrows */}
+                    <div className="pagination">
+                      {/* Left Arrows */}
               <button
                 onClick={() => handlePageChange(1)} // Go to the first page
                 disabled={page === 1 || totalCount <= 1} // Disable if on the first page or only one page exists
@@ -1249,6 +1339,43 @@ const SystemManagement = () => {
             </form>
           </div>
         </div>
+      )}
+
+      {/* Thaw Suspension Confirmation Modal */}
+      {isThawModalOpen && (
+        <Modal
+          isOpen={isThawModalOpen}
+          onRequestClose={closeThawModal}
+          className="delete-modal"
+          overlayClassName="delete-modal-overlay"
+          portalClassName="modal-portal"
+          shouldCloseOnOverlayClick={true}
+          ariaHideApp={false}
+        >
+          <h2>{t('Grant Access to Suspended Users')}</h2>
+          <p>
+            {t('You are about to grant access to')} <strong>{selectedStaff.length}</strong> {t('suspended user(s)')}
+          </p>
+          <p style={{ color: '#666', marginTop: '10px' }}>
+            {t('These users will be able to log in and access the system.')}
+          </p>
+          <div className="modal-actions">
+            <button 
+              onClick={confirmThawSuspendedUsers} 
+              className="yes-button"
+              disabled={isThawLoading}
+            >
+              {isThawLoading ? t('Processing...') : t('Grant Access')}
+            </button>
+            <button 
+              onClick={closeThawModal} 
+              className="no-button"
+              disabled={isThawLoading}
+            >
+              {t('Cancel')}
+            </button>
+          </div>
+        </Modal>
       )}
     </div>
   );

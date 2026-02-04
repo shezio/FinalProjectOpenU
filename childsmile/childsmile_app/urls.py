@@ -26,6 +26,7 @@ from .views_staff import (
     create_staff_member,
     staff_creation_send_totp,
     staff_creation_verify_totp,
+    bulk_clear_suspension,
 )
 from .views_volunteer import (
     create_volunteer_or_tutor,
@@ -265,6 +266,11 @@ urlpatterns = [
         "api/update_staff_member/<int:staff_id>/",
         update_staff_member,
         name="update_staff_member",
+    ),
+    path(
+        "api/bulk_clear_suspension/",
+        bulk_clear_suspension,
+        name="bulk_clear_suspension",
     ),
     path(
         "api/delete_staff_member/<int:staff_id>/",

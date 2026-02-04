@@ -135,16 +135,68 @@ def get_clean_string(val):
 
 
 def clean_city(city_val):
-    """Clean city value - take only the first city if multiple are provided."""
+    """
+    Clean and normalize city value.
+    
+    1. Extract first city if multiple are provided (separated by / or ,)
+    2. Extract main city if contains comment text
+    3. Apply mapping for typos, variants, and prefix removals
+    4. Normalize to exact JSON format
+    """
+    # City mapping dictionary for corrections
+    city_mapping = {
+        # Direct mappings (exact replacement)
+        'תל אביב': 'תל אביב - יפו',
+        'מודיעין': 'מודיעין-מכבים-רעות',
+        'מודעין': 'מודיעין-מכבים-רעות',  # Typo
+        'פתח תקוה': 'פתח תקווה',  # Typo
+        'קריית אתא': 'קרית אתא',  # Variant spelling
+        'קריית נטפים': 'קרית נטפים',  # Variant spelling
+        'יהוד מונוסון': 'יהוד-מונוסון',  # Space to dash
+        
+        # Remove prefixes (קיבוץ, מושב, יישוב)
+        'קיבוץ חפץ חיים': 'חפץ חיים',
+        'מושב בני ראם': 'בני ראם',
+        'מושב חמד': 'חמד',
+        'מושב פורת': 'פורת',
+        'יד רמב״ם (מושב)': 'יד רמבם',
+        'יישוב נופים': 'נופים',
+        
+        # Spelling variants
+        'מגד אל כרום': 'מג\'ד אל-כרום',
+        
+        # Comments extraction - take first part before text
+        'גבעת שמואל אבל עושה שירות': 'גבעת שמואל',
+        'מושה טפחות': 'טפחות',  # Typo: מושה should be מושב
+        'עלי זהב לומד בשדרות': 'עלי זהב',
+        'ירושלים- תא': 'ירושלים',  # Typo: תא is garbage
+        'ראשל״צ': 'ראשון לציון',  # Abbreviation
+        'הדר גנים': 'גנות הדר',  # Alternate name
+        'רעננה(מגדל עוז)': 'רעננה',  # Remove address clarification
+    }
+    
     city = get_clean_string(city_val)
     if not city:
         return ''
+    
+    # Remove any newlines and extra spaces
+    city = city.replace('\n', ' ').replace('\r', '').strip()
+    
     # Handle multiple cities separated by / or ,
     for separator in ['/', ',']:
         if separator in city:
             city = city.split(separator)[0].strip()
-    # Remove any newlines
-    city = city.replace('\n', ' ').replace('\r', '').strip()
+    
+    # Check if exact match exists in mapping
+    if city in city_mapping:
+        return city_mapping[city]
+    
+    # If no exact match, check for partial matches (contains)
+    # Useful for comment-type entries
+    for key, value in city_mapping.items():
+        if key in city:  # City contains a mapped key (e.g., "גבעת שמואל אבל..." contains "גבעת שמואל")
+            return value
+    
     return city
 
 
@@ -440,7 +492,8 @@ def import_volunteers(excel_path, dry_run=False, limit=99999):
                     last_name=surname,
                     created_at=now(),
                     registration_approved=True,  # Already approved - imported by admin
-                    is_active=True
+                    is_active=True,
+                    deactivation_reason="suspended"  # Mark imported users as suspended (no access until admin grants)
                 )
                 
                 # 4. Create role-specific record based on want_tutor and status

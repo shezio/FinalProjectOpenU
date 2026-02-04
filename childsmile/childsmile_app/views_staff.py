@@ -158,6 +158,38 @@ def update_staff_member(request, staff_id):
         # INACTIVE STAFF FEATURE: Handle deactivation/reactivation FIRST - prioritized before email changes
         # This ensures admins can't modify staff details if they're being deactivated
         
+        # HANDLE SUSPENSION CLEARING (THAW)
+        if request.data.get("clear_suspension"):
+            # Clear the suspension for this user - grant access
+            if staff_member.deactivation_reason == "suspended":
+                staff_member.deactivation_reason = None
+                staff_member.save()
+                
+                log_api_action(
+                    request=request,
+                    action='CLEAR_SUSPENSION',
+                    success=True,
+                    error_message=None,
+                    status_code=200,
+                    entity_type='Staff',
+                    entity_ids=[staff_id],
+                    additional_data={
+                        'staff_email': staff_member.email,
+                        'staff_full_name': f"{staff_member.first_name} {staff_member.last_name}",
+                        'performed_by': f"{user.first_name} {user.last_name}"
+                    }
+                )
+                
+                api_logger.info(f"Suspension cleared for user {staff_id} ({staff_member.email})")
+                return JsonResponse({
+                    "message": "Access granted to user",
+                    "success": True
+                }, status=200)
+            else:
+                return JsonResponse({
+                    "error": "User is not suspended"
+                }, status=400)
+        
         # HANDLE DEACTIVATION
         if request.data.get("is_active") == False and staff_member.is_active == True:
             # Staff member is being deactivated
@@ -507,20 +539,20 @@ def update_staff_member(request, staff_id):
                 code = TOTPCode.generate_code()
                 TOTPCode.objects.create(email=new_email, code=code)
                 
-                subject = "Email Change Verification - חיוך של ילד"
+                subject = "אימות שינוי כתובת מייל - חיוך של ילד"
                 message = f"""
-                Hello {data.get('first_name', staff_member.first_name)},
+                שלום {data.get('first_name', staff_member.first_name)},
                 
-                An email change has been requested for this staff account.
-                
-                Your verification code is: {code}
-                
-                This code will expire in 5 minutes.
-                
-                Please provide this code to verify and complete the email change.
-                
-                Best regards,
-                חיוך של ילד Team
+                מייל זה נשלח לשם אימות שינוי כתובת המייל שלך במערכת חיוך של ילד.   
+
+                קוד האימות שלך הוא: {code}
+
+                קוד זה יפוג תוך 5 דקות.
+
+                אנא הזן את הקוד במערכת כדי לאמת ולהשלים את שינוי כתובת המייל.
+
+                בברכה,
+                צוות חיוך של ילד
                 """
                 
                 try:
@@ -1268,12 +1300,12 @@ def staff_creation_send_totp(request):
         code = TOTPCode.generate_code()
         TOTPCode.objects.create(email=email, code=code)
 
-        subject = "אימות יצירת חשבון צוות - חיוך של ילד"
+        subject = "אימות יצירת חשבון סגל - חיוך של ילד"
         message = f"""
         שלום {first_name},
-        
-        מנהל מערכת יוצר לך חשבון צוות ב-חיוך של ילד.
-        
+
+        מנהל מערכת יוצר לך חשבון סגל.
+
         קוד האימות שלך הוא: {code}
         
         הקוד יפוג בעוד 5 דקות.
@@ -1500,3 +1532,114 @@ def staff_creation_verify_totp(request):
             status_code=500
         )
         return JsonResponse({"error": "Staff creation failed"}, status=500)
+
+
+@conditional_csrf
+@api_view(["POST"])
+def bulk_clear_suspension(request):
+    """
+    Bulk clear suspension for multiple staff members.
+    Logs a single audit entry for all users instead of spamming the audit log.
+    """
+    api_logger.info("bulk_clear_suspension called")
+    user_id = request.session.get("user_id")
+    if not user_id:
+        log_api_action(
+            request=request,
+            action='BULK_CLEAR_SUSPENSION_FAILED',
+            success=False,
+            error_message="Authentication credentials were not provided",
+            status_code=403
+        )
+        return JsonResponse({"detail": "Authentication credentials were not provided."}, status=403)
+
+    user = Staff.objects.get(staff_id=user_id)
+    if not is_admin(user):
+        log_api_action(
+            request=request,
+            action='BULK_CLEAR_SUSPENSION_FAILED',
+            success=False,
+            error_message="You do not have permission to perform this action",
+            status_code=401
+        )
+        return JsonResponse({"error": "You do not have permission to perform this action."}, status=401)
+
+    try:
+        staff_ids = request.data.get("staff_ids", [])
+        
+        if not staff_ids or not isinstance(staff_ids, list):
+            return JsonResponse({
+                "error": "staff_ids must be provided as a non-empty list"
+            }, status=400)
+        
+        # Get all staff members to clear
+        staff_members = Staff.objects.filter(
+            staff_id__in=staff_ids,
+            is_active=True,
+            deactivation_reason="suspended"
+        )
+        
+        if not staff_members.exists():
+            log_api_action(
+                request=request,
+                action='BULK_CLEAR_SUSPENSION_FAILED',
+                success=False,
+                error_message="No suspended users found in the provided list",
+                status_code=400,
+                entity_type='Staff',
+                entity_ids=staff_ids
+            )
+            return JsonResponse({
+                "error": "No suspended users found in the provided list"
+            }, status=400)
+        
+        # Track which users were actually cleared
+        cleared_users = []
+        cleared_emails = []
+        
+        # Clear suspension for all matching staff members
+        for staff_member in staff_members:
+            staff_member.deactivation_reason = None
+            staff_member.save()
+            cleared_users.append(staff_member.staff_id)
+            cleared_emails.append(staff_member.email)
+        
+        # Log ONE audit entry for all cleared users
+        log_api_action(
+            request=request,
+            action='BULK_CLEAR_SUSPENSION',
+            success=True,
+            error_message=None,
+            status_code=200,
+            entity_type='Staff',
+            entity_ids=cleared_users,
+            additional_data={
+                'cleared_count': len(cleared_users),
+                'cleared_emails': cleared_emails,
+                'cleared_staff_ids': cleared_users,
+                'performed_by': f"{user.first_name} {user.last_name}",
+                'performed_by_email': user.email
+            }
+        )
+        
+        api_logger.info(f"Bulk suspension cleared for {len(cleared_users)} users: {cleared_emails}")
+        
+        return JsonResponse({
+            "message": f"Access granted to {len(cleared_users)} user(s)",
+            "success": True,
+            "cleared_count": len(cleared_users),
+            "cleared_users": cleared_users
+        }, status=200)
+        
+    except Exception as e:
+        api_logger.error(f"Error in bulk_clear_suspension: {str(e)}")
+        api_logger.error(f"Full traceback: {traceback.format_exc()}")
+        log_api_action(
+            request=request,
+            action='BULK_CLEAR_SUSPENSION_FAILED',
+            success=False,
+            error_message=str(e),
+            status_code=500,
+            entity_type='Staff'
+        )
+        return JsonResponse({"error": str(e)}, status=500)

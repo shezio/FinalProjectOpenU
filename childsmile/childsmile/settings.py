@@ -208,3 +208,6 @@ DEFAULT_FROM_EMAIL = 'noreply@send.amitssmile.com'
 # TOTP Settings
 TOTP_EXPIRY_MINUTES = 5
 TOTP_MAX_ATTEMPTS = 3
+
+# Access Control Feature
+BLOCK_ACCESS_AFTER_APPROVAL = os.environ.get('BLOCK_ACCESS_AFTER_APPROVAL', 'false').lower() in ('true', '1', 'yes','True')

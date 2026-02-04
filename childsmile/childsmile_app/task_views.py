@@ -42,6 +42,13 @@ from .unused_views import (
 )
 from django.db import DatabaseError
 from django.core.cache import cache
+from django.conf import settings
+from django.core.mail import send_mail
+from django.views.decorators.csrf import csrf_exempt
+from django.utils import timezone
+from django.utils.timezone import make_aware
+from django.views import View
+from django.http import HttpResponse, JsonResponse
 from rest_framework import viewsets, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -945,18 +952,30 @@ def update_task_status(request, task_id):
                     try:
                         staff_user = Staff.objects.get(email=user_email)
                         staff_user.registration_approved = True
+                        # Mark user as suspended (no access) if BLOCK_ACCESS_AFTER_APPROVAL flag is True
+                        if os.environ.get('BLOCK_ACCESS_AFTER_APPROVAL', 'false').lower() in ('true', '1', 'yes'):
+                            staff_user.deactivation_reason = "suspended"
                         staff_user.save()
                         api_logger.info(f"User {staff_user.staff_id} ({user_email}) approved for registration")
                         
                         # Send approval email
                         try:
                             subject = "!הרשמתך אושרה"
+                            
+                            # Check if access blocking is enabled
+                            block_access = os.environ.get('BLOCK_ACCESS_AFTER_APPROVAL', 'false').lower() in ('true', '1', 'yes')
+                            
+                            # Build message based on access control flag
+                            login_line = "כעת תוכל להתחבר למערכת ולהתחיל לעזור לילדים.\n\n" if not block_access else ""
+                            
                             message = f"""
                             שלום {staff_user.first_name},
 
                             אנו שמחים להודיע לך שהרשמתך בחיוך של ילד אושרה!
 
-                            כעת תוכל להתחבר למערכת ולהתחיל לעזור לילדים.
+                            {login_line}
+                            לחץ על הקישור הבא להצטרפות לקבוצת הווטסאפ שלנו למתנדבי העמותה:
+                            https://chat.whatsapp.com/B7UcLqApSTzCpppWR221DB
 
                             בברכה,
                             צוות חיוך של ילד
