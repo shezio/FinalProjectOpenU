@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import ReactDOM from 'react-dom';
 import { useLocation } from 'react-router-dom';
 import ReactSlider from 'react-slider';
 import Sidebar from '../components/Sidebar';
@@ -124,6 +125,8 @@ const Tutorships = () => {
   const [editingDateId, setEditingDateId] = useState(null);
   const [editingDateValue, setEditingDateValue] = useState('');
   const dateInputRef = useRef(null);
+  const [showGradeTooltip, setShowGradeTooltip] = useState(false);
+  const tooltipRef = useRef(null);
 
   const toggleMagnify = () => {
     setIsMagnifyActive((prevState) => !prevState);
@@ -968,6 +971,23 @@ const Tutorships = () => {
     };
   }, [showStatusDropdown, showTutorshipActivationDropdown]);
 
+  // Handle click-outside to close grade tooltip
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (tooltipRef.current && !tooltipRef.current.contains(event.target)) {
+        setShowGradeTooltip(false);
+      }
+    }
+    if (showGradeTooltip) {
+      document.addEventListener("mousedown", handleClickOutside);
+    } else {
+      document.removeEventListener("mousedown", handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [showGradeTooltip]);
+
   const handleBulkDelete = async () => {
     if (selectedTutorships.length === 0) {
       toast.warn(t('No tutorships selected for deletion.'));
@@ -1561,9 +1581,18 @@ const Tutorships = () => {
                         >
                           {sortOrder === 'asc' ? '▲' : '▼'}
                         </button>
-                        <span className="grade-tooltip-container">
-                          <span className="grade-tooltip-icon">?</span>
-                          <span className="grade-tooltip-text">
+                        <span className="grade-tooltip-container" ref={tooltipRef}>
+                          <button 
+                            className="grade-tooltip-icon" 
+                            onClick={() => setShowGradeTooltip(!showGradeTooltip)}
+                            type="button"
+                            aria-label="Grade explanation"
+                          >
+                            ?
+                          </button>
+                        </span>
+                        {showGradeTooltip && ReactDOM.createPortal(
+                          <span className="grade-tooltip-text visible">
                             {t(`Each tutor-child match receives a grade based on:`)}<br /><br />
                             <b><u>{t('Base Score')}</u>:</b> {t('Starts from 0 to 100 depending on the match\'s position in the list.')}<br />
                             <b>{t('with a base grade spreading linearly across matches')}.</b><br /><br />
@@ -1581,8 +1610,9 @@ const Tutorships = () => {
                             <b><u>{t('Final Grade')}</u>:</b><br />
                             {t('Rounded up to the nearest whole number')}<br />
                             {t('Always kept between -5 and 100')}
-                          </span>
-                        </span>
+                          </span>,
+                          document.body
+                        )}
                       </th>
                     </tr>
                   </thead>
