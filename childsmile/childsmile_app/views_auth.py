@@ -1,6 +1,9 @@
 """
 Authentication views - Login, TOTP verification, Google OAuth
 """
+import json
+import traceback
+import os
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework.decorators import api_view
@@ -13,8 +16,6 @@ from .models import Staff, TOTPCode
 from .utils import *
 from .audit_utils import log_api_action
 from .logger import api_logger
-import json
-import traceback
 
 
 def logout_all_other_sessions(user_id, current_session_key):
@@ -130,6 +131,98 @@ def login_email(request):
                 "error": "Your account is inactive. Please contact the administrator.",
                 "account_inactive": True
             }, status=403)
+        
+        # ACCESS CONTROL: Check if access is blocked after approval (suspended state)
+        # This check happens BEFORE sending TOTP code
+        block_access_after_approval = os.environ.get('BLOCK_ACCESS_AFTER_APPROVAL', 'false').lower() in ('true', '1', 'yes')
+        if block_access_after_approval and staff_user.deactivation_reason == "suspended":
+            log_api_action(
+                request=request,
+                action='USER_LOGIN_FAILED',
+                success=False,
+                error_message="Account access temporarily suspended",
+                status_code=403,
+                additional_data={
+                    'attempted_email': email,
+                    'staff_id': staff_user.staff_id,
+                    'reason': 'temporarily_suspended',
+                    'deactivation_reason': staff_user.deactivation_reason
+                }
+            )
+            api_logger.warning(f"Login attempt by user with suspended access {staff_user.staff_id} ({email})")
+            return JsonResponse({
+                "error": "Your account is temporarily suspended. Please contact the administrator.",
+                "temporarily_suspended": True
+            }, status=403)
+        
+        # CHECK IF USER IS APPROVED FOR REGISTRATION
+        if not staff_user.registration_approved:
+            log_api_action(
+                request=request,
+                action='USER_LOGIN_FAILED',
+                success=False,
+                error_message="Registration not yet approved by administrator",
+                status_code=403,
+                additional_data={'attempted_email': email}
+            )
+            api_logger.warning(f"User {user_id} attempted to log in without registration approval.")
+            return JsonResponse({
+                "error": "Your registration is pending approval. Please check your email for approval notification.",
+                "pending_approval": True
+            }, status=403)
+        
+        # Send TOTP code - only after all checks pass
+        api_logger.info(f"Sending login code to {email}")
+        try:
+            TOTPCode.objects.filter(email=email, used=False).update(used=True)
+            code = TOTPCode.generate_code()
+            TOTPCode.objects.create(email=email, code=code)
+        
+            # Send email with TOTP code
+            subject = "קוד הכניסה שלך - חיוך של ילד"
+            message = f"""
+            שלום,
+            
+            קוד הכניסה שלך הוא: {code}
+            
+            הקוד יפוג בעוד 5 דקות.
+            
+            אם לא ביקשת קוד זה, אנא התעלם מהודעה זו.
+            
+            בברכה,
+            צוות חיוך של ילד
+            """
+            
+            send_mail(
+                subject,
+                message,
+                settings.DEFAULT_FROM_EMAIL,
+                [email],
+                fail_silently=False,
+            )
+            
+            log_api_action(
+                request=request,
+                action='LOGIN_CODE_SENT',
+                success=True,
+                error_message=None,
+                status_code=200,
+                additional_data={'attempted_email': email}
+            )
+            api_logger.info(f"Login code sent successfully to {email}")
+            return JsonResponse({"message": "Login code sent to your email"}, status=200)
+        
+        except Exception as e:
+            log_api_action(
+                request=request,
+                action='LOGIN_CODE_SEND_FAILED',
+                success=False,
+                error_message=str(e),
+                status_code=500,
+                additional_data={'attempted_email': email}
+            )
+            api_logger.error(f"Error sending login code: {str(e)}")
+            return JsonResponse({"error": "Failed to send login code"}, status=500)
         
         # CHECK IF USER IS APPROVED FOR REGISTRATION
         if not staff_user.registration_approved:

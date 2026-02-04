@@ -1484,5 +1484,53 @@ def activate_staff(staff, performed_by_user, request=None):
         'restored_roles': restored_role_names
     }
 
+def grant_access_to_suspended_users(user_list=None):
+    """
+    Grant access to suspended users by clearing their deactivation_reason.
+    
+    Args:
+        user_list: List of staff_id or email strings. If None, grants access to ALL suspended users.
+    
+    Returns:
+        dict with count of granted and not found
+    """
+    from django.db.models import Q
+    
+    if user_list is None:
+        # Grant access to ALL suspended users
+        updated_count = Staff.objects.filter(
+            deactivation_reason="suspended"
+        ).update(deactivation_reason=None)
+        return {
+            'status': 'success',
+            'message': f'Access granted to {updated_count} suspended users',
+            'count': updated_count
+        }
+    else:
+        # Grant access to specific users
+        granted_count = 0
+        not_found = []
+        
+        for identifier in user_list:
+            try:
+                # Try as email first, then as staff_id
+                staff = Staff.objects.get(
+                    Q(email=identifier) | Q(staff_id=identifier)
+                )
+                if staff.deactivation_reason == "suspended":
+                    staff.deactivation_reason = None
+                    staff.save()
+                    granted_count += 1
+                    api_logger.info(f"Access granted to user {staff.email} ({staff.staff_id})")
+            except Staff.DoesNotExist:
+                not_found.append(identifier)
+        
+        return {
+            'status': 'success',
+            'message': f'Access granted to {granted_count} user(s)',
+            'granted': granted_count,
+            'not_found': not_found
+        }
+
 def env_bool(name: str, default=False) -> bool:
     return os.environ.get(name, str(default)).lower() in ("1", "true", "yes", "on")
