@@ -106,9 +106,19 @@ def parse_birth_date(date_val):
             return date_val.date()
         date_str = str(date_val).strip()
         # Try different formats including datetime with time component
-        for fmt in ['%Y-%m-%d %H:%M:%S', '%Y-%m-%d', '%d/%m/%Y', '%d-%m-%Y', '%d.%m.%Y']:
+        # Order matters: try strict formats first, then more ambiguous ones
+        for fmt in ['%Y-%m-%d %H:%M:%S', '%Y-%m-%d', '%d/%m/%Y', '%d-%m-%Y', '%d.%m.%Y', '%m/%d/%Y', '%m-%d-%Y', '%m.%d.%Y']:
             try:
-                return datetime.strptime(date_str, fmt).date()
+                parsed_date = datetime.strptime(date_str, fmt).date()
+                # Sanity check: age must be 13+ and less than 120 years old
+                today = datetime.now().date()
+                age = today.year - parsed_date.year
+                if (today.month, today.day) < (parsed_date.month, parsed_date.day):
+                    age -= 1
+                if 13 <= age <= 120:
+                    return parsed_date
+                # If age is invalid, continue trying other formats
+                continue
             except ValueError:
                 continue
         return None

@@ -66,7 +66,7 @@ from time import sleep
 from math import sin, cos, sqrt, atan2, radians, ceil
 import json
 import os
-from django.db.models import Count, F
+from django.db.models import Count, F, Q
 import tempfile
 import shutil
 from filelock import FileLock
@@ -242,6 +242,9 @@ def get_or_update_city_location(city, retries=3, delay=2):
     """
     Retrieve the latitude and longitude of a city from the DB.
     If the city is not found, geocode it and update the DB.
+    
+    Gracefully handles API unavailability by returning None instead of crashing.
+    This allows matches to proceed without distance data when the geocoding API is down.
     """
     # Try to find any record where city is city1 or city2
     geo = CityGeoDistance.objects.filter(city1=city).first() or CityGeoDistance.objects.filter(city2=city).first()
@@ -251,25 +254,41 @@ def get_or_update_city_location(city, retries=3, delay=2):
         if geo.city2 == city and geo.city2_latitude and geo.city2_longitude:
             return {"latitude": geo.city2_latitude, "longitude": geo.city2_longitude}
 
-    # If not found, geocode and store in DB
-    geolocator = Nominatim(user_agent="childsmile_app")
-    for attempt in range(retries):
-        try:
-            location = geolocator.geocode(f"{city}, ישראל", timeout=10) or geolocator.geocode(city, timeout=10)
-            if location:
-                # Save a dummy CityGeoDistance row with city as city1 and empty city2
-                CityGeoDistance.objects.get_or_create(
-                    city1=city, city2="",
-                    defaults={
-                        "city1_latitude": location.latitude,
-                        "city1_longitude": location.longitude,
-                    }
-                )
-                return {"latitude": location.latitude, "longitude": location.longitude}
-        except Exception as e:
-            api_logger.exception(f"Error: Geocoding failed for city '{city}': {e} (attempt {attempt+1})")
-        time.sleep(delay)
-    return None
+    # If not found, try to geocode and store in DB
+    # But gracefully handle API unavailability
+    try:
+        geolocator = Nominatim(user_agent="childsmile_app")
+        for attempt in range(retries):
+            try:
+                location = geolocator.geocode(f"{city}, ישראל", timeout=10) or geolocator.geocode(city, timeout=10)
+                if location:
+                    # Save a dummy CityGeoDistance row with city as city1 and empty city2
+                    CityGeoDistance.objects.get_or_create(
+                        city1=city, city2="",
+                        defaults={
+                            "city1_latitude": location.latitude,
+                            "city1_longitude": location.longitude,
+                        }
+                    )
+                    return {"latitude": location.latitude, "longitude": location.longitude}
+            except (GeocoderUnavailable, GeocoderTimedOut) as e:
+                # API is unavailable or timed out - log and return None (graceful degradation)
+                api_logger.debug(f"DEBUG: Geocoding API unavailable for city '{city}' (attempt {attempt+1}/{retries}): {type(e).__name__}")
+                if attempt < retries - 1:
+                    time.sleep(delay)
+                else:
+                    # After all retries, log as warning and return None
+                    api_logger.warning(f"WARNING: Geocoding API unavailable for city '{city}' after {retries} attempts. Proceeding without coordinates.")
+                    return None
+            except Exception as e:
+                # Unexpected error - log and continue
+                api_logger.debug(f"DEBUG: Unexpected error geocoding city '{city}': {type(e).__name__}: {str(e)[:100]}")
+                time.sleep(delay)
+        return None
+    except Exception as e:
+        # Catch-all for any unexpected errors in the entire function
+        api_logger.warning(f"WARNING: get_or_update_city_location failed for city '{city}': {str(e)[:100]}")
+        return None
 
 
 def promote_pending_tutor_to_tutor(task):
@@ -456,9 +475,67 @@ def insert_new_matches(matches):
 def calculate_distances(matches):
     """
     Calculate distances and coordinates between child and tutor cities in the matches.
+    
+    Strategy:
+    1. Collect all unique city pairs
+    2. Identify missing pairs from cache (CityGeoDistance table)
+    3. Process missing pairs in chunks of 10 (synchronously, waiting for completion)
+    4. Return all matches with complete distance data (distance_pending=False)
+    
     :param matches: List of match objects, each containing child_city and tutor_city.
     :return: List of matches with calculated distances and coordinates.
     """
+    api_logger.debug(f"DEBUG: calculate_distances called for {len(matches)} matches")
+    
+    # Step 1: Collect all unique city pairs
+    city_pairs = set()
+    for match in matches:
+        child_city = match.get("child_city", "").strip()
+        tutor_city = match.get("tutor_city", "").strip()
+        if child_city and tutor_city and child_city != tutor_city:
+            # Normalize pair to avoid duplicates (city1, city2) == (city2, city1)
+            pair = tuple(sorted([child_city, tutor_city]))
+            city_pairs.add(pair)
+    
+    api_logger.debug(f"DEBUG: Found {len(city_pairs)} unique city pairs to calculate")
+    
+    # Step 2: Identify missing pairs that need calculation
+    missing_pairs = []
+    for city1, city2 in city_pairs:
+        # Check if this pair exists in cache with complete data
+        geo = CityGeoDistance.objects.filter(
+            (Q(city1=city1, city2=city2) | Q(city1=city2, city2=city1))
+        ).first()
+        
+        if not geo or not all([
+            geo.city1_latitude,
+            geo.city1_longitude,
+            geo.city2_latitude,
+            geo.city2_longitude,
+            geo.distance is not None
+        ]):
+            missing_pairs.append((city1, city2))
+    
+    api_logger.debug(f"DEBUG: {len(missing_pairs)} city pairs missing from cache - will calculate in chunks")
+    
+    # Step 3: Process missing pairs in chunks of 10 (synchronously)
+    chunk_size = 10
+    for i in range(0, len(missing_pairs), chunk_size):
+        chunk = missing_pairs[i:i+chunk_size]
+        api_logger.debug(f"DEBUG: Processing chunk {i//chunk_size + 1} with {len(chunk)} city pairs")
+        
+        for city1, city2 in chunk:
+            try:
+                # Synchronous calculation - wait for completion
+                # If API fails, this will gracefully return None and continue
+                calculate_and_store_distance_force(city1, city2)
+                api_logger.debug(f"DEBUG: Calculated distance for {city1} <-> {city2}")
+            except Exception as e:
+                # Log but don't crash - allow processing to continue
+                api_logger.warning(f"WARNING: Failed to calculate distance for {city1} <-> {city2}: {str(e)[:100]}")
+                continue
+    
+    # Step 4: Now populate match data from cache (all should be calculated)
     for match in matches:
         api_logger.debug(f"DEBUG: Processing match: {match}") 
         result = calculate_distance_between_cities(
@@ -475,17 +552,20 @@ def calculate_distances(matches):
                 match["child_longitude"] = result["city1_longitude"]
                 match["tutor_latitude"] = result["city2_latitude"]
                 match["tutor_longitude"] = result["city2_longitude"]
+                # Should be False now since we calculated everything
                 match["distance_pending"] = result.get("distance_pending", False)
             except KeyError as e:
                 api_logger.error(f"DEBUG: KeyError while accessing result: {e}")
                 raise
         else:
+            # Fallback if still missing (shouldn't happen after calculation)
             match["distance_between_cities"] = 0
             match["child_latitude"] = None
             match["child_longitude"] = None
             match["tutor_latitude"] = None
             match["tutor_longitude"] = None
             match["distance_pending"] = True
+    
     return matches
 
 
@@ -910,37 +990,45 @@ def calculate_and_store_distance_force(city1, city2):
     """
     Always calculate and store the distance between city1 and city2 if not present.
     This function does NOT call async_calculate_and_store_distance.
+    
+    Gracefully handles API unavailability - returns silently without crashing.
     """
-    api_logger.debug(
-        f"DEBUG: [FORCE] Calculating and storing distance between {city1} and {city2}"
-    )
+    try:
+        api_logger.debug(
+            f"DEBUG: [FORCE] Calculating and storing distance between {city1} and {city2}"
+        )
 
-    # Ensure both cities have coordinates
-    loc1 = get_or_update_city_location(city1)
-    loc2 = get_or_update_city_location(city2)
-    if not loc1 or not loc1.get("latitude") or not loc2 or not loc2.get("latitude"):
-        api_logger.debug(f"DEBUG: [FORCE] Could not geocode one or both cities: {city1}, {city2}")
-        return
+        # Ensure both cities have coordinates
+        loc1 = get_or_update_city_location(city1)
+        loc2 = get_or_update_city_location(city2)
+        
+        # Graceful degradation: if geocoding failed (returns None), just return
+        if not loc1 or not loc1.get("latitude") or not loc2 or not loc2.get("latitude"):
+            api_logger.debug(f"DEBUG: [FORCE] Could not geocode one or both cities: {city1}, {city2} - skipping distance calculation")
+            return
 
-    lat1, lon1 = loc1["latitude"], loc1["longitude"]
-    lat2, lon2 = loc2["latitude"], loc2["longitude"]
+        lat1, lon1 = loc1["latitude"], loc1["longitude"]
+        lat2, lon2 = loc2["latitude"], loc2["longitude"]
 
-    # Haversine formula
-    R = 6371
-    dlat = radians(lat2 - lat1)
-    dlon = radians(lon2 - lon1)
-    a = (sin(dlat / 2) ** 2) + cos(radians(lat1)) * cos(radians(lat2)) * (
-        sin(dlon / 2) ** 2
-    )
-    c = 2 * atan2(sqrt(a), sqrt(1 - a))
-    distance = ceil(R * c)
+        # Haversine formula
+        R = 6371
+        dlat = radians(lat2 - lat1)
+        dlon = radians(lon2 - lon1)
+        a = (sin(dlat / 2) ** 2) + cos(radians(lat1)) * cos(radians(lat2)) * (
+            sin(dlon / 2) ** 2
+        )
+        c = 2 * atan2(sqrt(a), sqrt(1 - a))
+        distance = ceil(R * c)
 
-    # Save city2 data under city1 using the safe updater
-    add_city_distance(city1, city2, distance, lat2, lon2)
+        # Save city2 data under city1 using the safe updater
+        add_city_distance(city1, city2, distance, lat2, lon2)
 
-    api_logger.debug(
-        f"DEBUG: [FORCE] Calculated and saved distance for {city1} and {city2}: {distance} km"
-    )
+        api_logger.debug(
+            f"DEBUG: [FORCE] Calculated and saved distance for {city1} and {city2}: {distance} km"
+        )
+    except Exception as e:
+        # Catch any unexpected errors and log them without crashing
+        api_logger.warning(f"WARNING: [FORCE] Exception in calculate_and_store_distance_force for {city1} <-> {city2}: {str(e)[:100]}")
 
 def add_city_location(city, lat, lon):
     # Update all records where city is city1 or city2
