@@ -242,6 +242,8 @@
 
 .tutor-vol-data-grid td {
   font-size: 26px;
+  max-width: 350px;
+  overflow-x: auto;
 }
 
 .tutor-vol-data-grid tr:nth-child(even) {
@@ -266,7 +268,7 @@
 
 .flip-wrapper {
   position: relative;
-  width: 1800px;
+  width: 1850px;
   height: 600px;
   margin-right: 240px;
   margin-top: 350px;
@@ -793,4 +795,15 @@ input.search-bar::placeholder {
 
 .tutor-vol-btn-save:active {
   transform: translateY(0);
+}
+
+/* Ensure pagination buttons are always clickable */
+.flip-front .pagination,
+.flip-back .pagination {
+  pointer-events: auto !important;
+}
+
+.flip-front .pagination button,
+.flip-back .pagination button {
+  pointer-events: auto !important;
 }

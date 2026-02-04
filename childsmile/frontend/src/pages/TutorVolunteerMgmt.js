@@ -11,7 +11,7 @@ import { useTranslation } from "react-i18next";
 import axios from "../axiosConfig";
 import { showErrorToast } from "../components/toastUtils";
 
-const PAGE_SIZE = 8;
+const PAGE_SIZE = 7;
 
 const TutorVolunteerMgmt = () => {
   const { t } = useTranslation();
@@ -536,6 +536,26 @@ const TutorVolunteerMgmt = () => {
     : sortEntitiesByUpdated(filteredVolunteers).slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
   const totalPages = Math.max(1, Math.ceil((showTutors ? filteredTutors.length : filteredVolunteers.length) / PAGE_SIZE));
 
+  // Helper function to get visible page numbers (5-6 buttons centered around current page)
+  const getVisiblePageNumbers = () => {
+    const maxVisible = 6;
+    const halfVisible = Math.floor(maxVisible / 2);
+    
+    let startPage = Math.max(1, currentPage - halfVisible);
+    let endPage = Math.min(totalPages, startPage + maxVisible - 1);
+    
+    // Adjust start if we're near the end
+    if (endPage - startPage + 1 < maxVisible) {
+      startPage = Math.max(1, endPage - maxVisible + 1);
+    }
+    
+    const pages = [];
+    for (let i = startPage; i <= endPage; i++) {
+      pages.push(i);
+    }
+    return pages;
+  };
+
   // Animation CSS
   useEffect(() => {
     const style = document.createElement('style');
@@ -796,21 +816,23 @@ const TutorVolunteerMgmt = () => {
             )}
           </tbody>
         </table>
-        <div className="pagination">
-          <button onClick={() => setCurrentPage(1)} disabled={currentPage === 1} className="pagination-arrow">&laquo;</button>
-          <button onClick={() => setCurrentPage(currentPage - 1)} disabled={currentPage === 1} className="pagination-arrow">&lsaquo;</button>
-          {Array.from({ length: totalPages }, (_, i) => (
-            <button
-              key={i + 1}
-              className={currentPage === i + 1 ? "active" : ""}
-              onClick={() => setCurrentPage(i + 1)}
-            >
-              {i + 1}
-            </button>
-          ))}
-          <button onClick={() => setCurrentPage(currentPage + 1)} disabled={currentPage === totalPages} className="pagination-arrow">&rsaquo;</button>
-          <button onClick={() => setCurrentPage(totalPages)} disabled={currentPage === totalPages} className="pagination-arrow">&raquo;</button>
-        </div>
+        {!loading && (
+          <div className="pagination">
+            <button onClick={() => setCurrentPage(1)} disabled={currentPage === 1} className="pagination-arrow">&laquo;</button>
+            <button onClick={() => setCurrentPage(currentPage - 1)} disabled={currentPage === 1} className="pagination-arrow">&lsaquo;</button>
+            {getVisiblePageNumbers().map(pageNum => (
+              <button
+                key={pageNum}
+                className={currentPage === pageNum ? "active" : ""}
+                onClick={() => setCurrentPage(pageNum)}
+              >
+                {pageNum}
+              </button>
+            ))}
+            <button onClick={() => setCurrentPage(currentPage + 1)} disabled={currentPage === totalPages} className="pagination-arrow">&rsaquo;</button>
+            <button onClick={() => setCurrentPage(totalPages)} disabled={currentPage === totalPages} className="pagination-arrow">&raquo;</button>
+          </div>
+        )}
       </>
     )
   );
@@ -991,21 +1013,23 @@ const TutorVolunteerMgmt = () => {
             )}
           </tbody>
         </table>
-        <div className="pagination">
-          <button onClick={() => setCurrentPage(1)} disabled={currentPage === 1} className="pagination-arrow">&laquo;</button>
-          <button onClick={() => setCurrentPage(currentPage - 1)} disabled={currentPage === 1} className="pagination-arrow">&lsaquo;</button>
-          {Array.from({ length: totalPages }, (_, i) => (
-            <button
-              key={i + 1}
-              className={currentPage === i + 1 ? "active" : ""}
-              onClick={() => setCurrentPage(i + 1)}
-            >
-              {i + 1}
-            </button>
-          ))}
-          <button onClick={() => setCurrentPage(currentPage + 1)} disabled={currentPage === totalPages} className="pagination-arrow">&rsaquo;</button>
-          <button onClick={() => setCurrentPage(totalPages)} disabled={currentPage === totalPages} className="pagination-arrow">&raquo;</button>
-        </div>
+        {!loading && (
+          <div className="pagination">
+            <button onClick={() => setCurrentPage(1)} disabled={currentPage === 1} className="pagination-arrow">&laquo;</button>
+            <button onClick={() => setCurrentPage(currentPage - 1)} disabled={currentPage === 1} className="pagination-arrow">&lsaquo;</button>
+            {getVisiblePageNumbers().map(pageNum => (
+              <button
+                key={pageNum}
+                className={currentPage === pageNum ? "active" : ""}
+                onClick={() => setCurrentPage(pageNum)}
+              >
+                {pageNum}
+              </button>
+            ))}
+            <button onClick={() => setCurrentPage(currentPage + 1)} disabled={currentPage === totalPages} className="pagination-arrow">&rsaquo;</button>
+            <button onClick={() => setCurrentPage(totalPages)} disabled={currentPage === totalPages} className="pagination-arrow">&raquo;</button>
+          </div>
+        )}
       </>
     )
   );

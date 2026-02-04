@@ -92,6 +92,8 @@ const Tutorships = () => {
   const [page, setPage] = useState(1); // Current page
   const [pageSize] = useState(5); // Number of tutorships per page
   const [totalCount, setTotalCount] = useState(0); // Total number of tutorships
+  const [matchesPage, setMatchesPage] = useState(1); // Current page for matches
+  const [matchesPageSize] = useState(7); // Number of matches per page
   const [isMagnifyActive, setIsMagnifyActive] = useState(false);
   const [matchSearchQuery, setMatchSearchQuery] = useState('');
   const [tutorshipSearchQuery, setTutorshipSearchQuery] = useState('');
@@ -467,6 +469,34 @@ const Tutorships = () => {
         return b.grade - a.grade;
       }
     });
+
+  // Helper function to get visible page numbers (max 4 buttons)
+  const getVisibleMatchPageNumbers = () => {
+    const maxVisible = 4;
+    const halfVisible = Math.floor(maxVisible / 2);
+    const totalMatchPages = Math.max(1, Math.ceil(sortedAndFilteredMatches.length / matchesPageSize));
+    
+    let startPage = Math.max(1, matchesPage - halfVisible);
+    let endPage = Math.min(totalMatchPages, startPage + maxVisible - 1);
+    
+    // Adjust start if we're near the end
+    if (endPage - startPage + 1 < maxVisible) {
+      startPage = Math.max(1, endPage - maxVisible + 1);
+    }
+    
+    const pages = [];
+    for (let i = startPage; i <= endPage; i++) {
+      pages.push(i);
+    }
+    return pages;
+  };
+
+  // Paginate matches for display
+  const totalMatchPages = Math.max(1, Math.ceil(sortedAndFilteredMatches.length / matchesPageSize));
+  const paginatedMatches = sortedAndFilteredMatches.slice(
+    (matchesPage - 1) * matchesPageSize,
+    matchesPage * matchesPageSize
+  );
 
   // const fetchTutorships = () => {
   //   setLoading(true);
@@ -988,6 +1018,11 @@ const Tutorships = () => {
     };
   }, [showGradeTooltip]);
 
+  // Reset matches page when filters or search changes
+  useEffect(() => {
+    setMatchesPage(1);
+  }, [matchSearchQuery, filterThreshold, sortOrder, statusFilter]);
+
   const handleBulkDelete = async () => {
     if (selectedTutorships.length === 0) {
       toast.warn(t('No tutorships selected for deletion.'));
@@ -1238,54 +1273,56 @@ const Tutorships = () => {
                 </tbody>
               </table>
             )}
-            <div className="pagination">
-              {/* Left Arrows */}
-              <button
-                onClick={() => setPage(1)} // Go to the first page
-                disabled={page === 1}
-                className="pagination-arrow"
-              >
-                &laquo; {/* Double left arrow */}
-              </button>
-              <button
-                onClick={() => setPage(page - 1)} // Go to the previous page
-                disabled={page === 1}
-                className="pagination-arrow"
-              >
-                &lsaquo; {/* Single left arrow */}
-              </button>
+            {!loading && (
+              <div className="pagination">
+                {/* Left Arrows */}
+                <button
+                  onClick={() => setPage(1)} // Go to the first page
+                  disabled={page === 1}
+                  className="pagination-arrow"
+                >
+                  &laquo; {/* Double left arrow */}
+                </button>
+                <button
+                  onClick={() => setPage(page - 1)} // Go to the previous page
+                  disabled={page === 1}
+                  className="pagination-arrow"
+                >
+                  &lsaquo; {/* Single left arrow */}
+                </button>
 
-              {/* Page Numbers */}
-              {displayTotalCount <= pageSize ? (
-                <button className="active">1</button> // Display only "1" if there's only one page
-              ) : (
-                Array.from({ length: Math.ceil(displayTotalCount / pageSize) }, (_, i) => (
-                  <button
-                    key={i + 1}
-                    onClick={() => setPage(i + 1)}
-                    className={page === i + 1 ? 'active' : ''}
-                  >
-                    {i + 1}
-                  </button>
-                ))
-              )}
+                {/* Page Numbers */}
+                {displayTotalCount <= pageSize ? (
+                  <button className="active">1</button> // Display only "1" if there's only one page
+                ) : (
+                  Array.from({ length: Math.ceil(displayTotalCount / pageSize) }, (_, i) => (
+                    <button
+                      key={i + 1}
+                      onClick={() => setPage(i + 1)}
+                      className={page === i + 1 ? 'active' : ''}
+                    >
+                      {i + 1}
+                    </button>
+                  ))
+                )}
 
-              {/* Right Arrows */}
-              <button
-                onClick={() => setPage(page + 1)} // Go to the next page
-                disabled={page === Math.ceil(displayTotalCount / pageSize) || displayTotalCount <= 1}
-                className="pagination-arrow"
-              >
-                &rsaquo; {/* Single right arrow */}
-              </button>
-              <button
-                onClick={() => setPage(Math.ceil(displayTotalCount / pageSize))} // Go to the last page
-                disabled={page === Math.ceil(displayTotalCount / pageSize) || displayTotalCount <= 1}
-                className="pagination-arrow"
-              >
-                &raquo; {/* Double right arrow */}
-              </button>
-            </div>
+                {/* Right Arrows */}
+                <button
+                  onClick={() => setPage(page + 1)} // Go to the next page
+                  disabled={page === Math.ceil(displayTotalCount / pageSize) || displayTotalCount <= 1}
+                  className="pagination-arrow"
+                >
+                  &rsaquo; {/* Single right arrow */}
+                </button>
+                <button
+                  onClick={() => setPage(Math.ceil(displayTotalCount / pageSize))} // Go to the last page
+                  disabled={page === Math.ceil(displayTotalCount / pageSize) || displayTotalCount <= 1}
+                  className="pagination-arrow"
+                >
+                  &raquo; {/* Double right arrow */}
+                </button>
+              </div>
+            )}
             {ENABLE_BULK_DELETE && (
               <div className="bulk-delete-container">
                 <button
@@ -1617,7 +1654,7 @@ const Tutorships = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {sortedAndFilteredMatches.map((match, index) => (
+                    {paginatedMatches.map((match, index) => (
                       <tr
                         key={`${match.child_id}-${match.tutor_id}-${index}`}
                         onClick={() => handleRowClick(match)}
@@ -1647,6 +1684,48 @@ const Tutorships = () => {
                   </tbody>
                 </table>
               )}
+                {/* Pagination controls for matches */}
+                {!gridLoading && totalMatchPages > 1 && (
+                  <div className="pagination" style={{ marginTop: '20px' }}>
+                    <button 
+                      onClick={() => setMatchesPage(1)} 
+                      disabled={matchesPage === 1} 
+                      className="pagination-arrow"
+                    >
+                      &laquo;
+                    </button>
+                    <button 
+                      onClick={() => setMatchesPage(matchesPage - 1)} 
+                      disabled={matchesPage === 1} 
+                      className="pagination-arrow"
+                    >
+                      &lsaquo;
+                    </button>
+                    {getVisibleMatchPageNumbers().map(pageNum => (
+                      <button
+                        key={pageNum}
+                        className={matchesPage === pageNum ? "active" : ""}
+                        onClick={() => setMatchesPage(pageNum)}
+                      >
+                        {pageNum}
+                      </button>
+                    ))}
+                    <button 
+                      onClick={() => setMatchesPage(matchesPage + 1)} 
+                      disabled={matchesPage === totalMatchPages} 
+                      className="pagination-arrow"
+                    >
+                      &rsaquo;
+                    </button>
+                    <button 
+                      onClick={() => setMatchesPage(totalMatchPages)} 
+                      disabled={matchesPage === totalMatchPages} 
+                      className="pagination-arrow"
+                    >
+                      &raquo;
+                    </button>
+                  </div>
+                )}
             </div>
             <div className="map-match-container">
               {mapError ? (
