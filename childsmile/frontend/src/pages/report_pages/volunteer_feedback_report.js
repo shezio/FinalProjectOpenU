@@ -4,11 +4,11 @@ import InnerPageHeader from "../../components/InnerPageHeader";
 import "../../styles/common.css";
 import "../../styles/reports.css";
 import { exportVolunteerFeedbackToExcel, exportVolunteerFeedbackToPDF } from "../../components/export_utils";
-import { ToastContainer, toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import { toast } from "react-toastify";
 import { useTranslation } from "react-i18next";
 import axios from "../../axiosConfig";
 import { navigateTo } from "../../components/utils";
+import { showErrorToast } from "../../components/toastUtils";
 
 const VolunteerFeedbackReport = () => {
   const PAGE_SIZE = 5;
@@ -81,7 +81,7 @@ const VolunteerFeedbackReport = () => {
       })
       .catch((error) => {
         console.error("Error fetching volunteer feedback report:", error);
-        toast.error(t("Error fetching data"));
+        showErrorToast(t("Error fetching data"));
       })
       .finally(() => {
         setLoading(false);
@@ -138,16 +138,7 @@ const VolunteerFeedbackReport = () => {
       <Sidebar />
       <InnerPageHeader title={t("Volunteer Feedback Report")} />
       <div className="page-content">
-        <ToastContainer
-          position="top-center"
-          autoClose={2000}
-          hideProgressBar={false}
-          closeOnClick
-          pauseOnFocusLoss
-          draggable
-          pauseOnHover
-          rtl={true}
-        />
+        
         {loading ? (
           <div className="loader">{t("Loading data...")}</div>
         ) : (

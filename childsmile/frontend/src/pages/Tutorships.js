@@ -9,8 +9,7 @@ import '../styles/reports.css';
 import '../styles/tutorships.css';
 import axios from '../axiosConfig';
 import Modal from 'react-modal';
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { toast } from 'react-toastify';
 import { hasViewPermissionForTable, hasUpdatePermissionForTable, hasDeletePermissionForTable, hasCreatePermissionForTable, getTutors, isGuestUser } from '../components/utils';
 import { useTranslation } from 'react-i18next'; // Import the translation hook
 import { showErrorToast, showErrorApprovalToast } from '../components/toastUtils'; // Import the toast utility
@@ -1049,16 +1048,6 @@ const Tutorships = () => {
       <Sidebar />
       <InnerPageHeader title="ניהול חונכויות" />
       <div className="page-content">
-        <ToastContainer
-          position="top-center"
-          autoClose={5000}
-          hideProgressBar={false}
-          closeOnClick
-          pauseOnFocusLoss
-          draggable
-          pauseOnHover
-          rtl={true}
-        />
         <div className="filter-create-container">
           <div className="create-task">
             <button onClick={openAddWizardModal} disabled={isGuestUser()}>

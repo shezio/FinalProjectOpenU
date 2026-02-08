@@ -170,6 +170,7 @@ export const exportFamiliesTutorshipChartToPDF = async (chartRef, stats, t) => {
     }
 
     pdf.save(t("families_tutorship_stats_chart.pdf"));
+    toast.success(t('Report generated successfully'), { autoClose: 10000 });
 
     // **ADD AUDIT SUCCESS - This was missing!**
     await auditExportSuccess(format, 1, reportName, ['aggregate_statistics', 'family_counts']);
@@ -276,6 +277,7 @@ export const exportPendingTutorsChartToPDF = async (chartRef, stats, t) => {
     });
 
     pdf.save(t("pending_tutors_stats_chart.pdf"));
+    toast.success(t('Report generated successfully'), { autoClose: 10000 });
 
     // **ADD AUDIT SUCCESS - This was missing!**
     await auditExportSuccess(format, 1, reportName, ['tutor_statistics', 'aggregate_data']);
@@ -361,6 +363,7 @@ export const exportRolesSpreadChartToPDF = async (chartRef, roles, t) => {
     });
 
     pdf.save(t("roles_spread_stats_chart.pdf"));
+    toast.success(t('Report generated successfully'), { autoClose: 10000 });
 
     // **ADD AUDIT SUCCESS - This was missing!**
     await auditExportSuccess(format, 1, reportName, ['role_statistics', 'staff_counts']);

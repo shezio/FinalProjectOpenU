@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from '../axiosConfig';
 import { useTranslation } from 'react-i18next';
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { toast } from 'react-toastify';
 import Sidebar from '../components/Sidebar';
 import InnerPageHeader from '../components/InnerPageHeader';
 import './Dashboard.css';
@@ -309,17 +308,6 @@ const Dashboard = () => {
         </div>
       </div>
       </div>
-      <ToastContainer 
-        position="top-center" 
-        autoClose={3000}
-        hideProgressBar={false}
-        newestOnTop={false}
-        closeOnClick
-        rtl={true}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-      />
       <AIChatBot />
     </div>
   );
