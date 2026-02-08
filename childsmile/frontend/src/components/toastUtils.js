@@ -1,6 +1,7 @@
 /* toastUtils.js */
 import { toast } from 'react-toastify';
 
+let isCreatingErrorToast = false;
 let errorToastPromise = null;
 
 export const showErrorToast = (t, key, error) => {
@@ -11,6 +12,8 @@ export const showErrorToast = (t, key, error) => {
 
   // Create a new promise for this toast creation
   errorToastPromise = new Promise((resolve) => {
+    isCreatingErrorToast = true;
+
     try {
       const errorMessage = t(
         error.response?.data?.error || 
@@ -25,10 +28,10 @@ export const showErrorToast = (t, key, error) => {
       
       // Use setTimeout with 0ms to defer to next event loop - ensures dismiss completes
       setTimeout(() => {
-        // Create toast without toastId to prevent duplicates across multiple containers
-        toast.error(messageToShow, { 
-          autoClose: 10000,
+        const toastId = toast.error(messageToShow, { 
+          autoClose: 5000,
           onClose: () => {
+            isCreatingErrorToast = false;
             errorToastPromise = null;
             resolve();
           }
@@ -36,6 +39,7 @@ export const showErrorToast = (t, key, error) => {
       }, 0);
     } catch (err) {
       console.error('Error in showErrorToast:', err);
+      isCreatingErrorToast = false;
       errorToastPromise = null;
       resolve();
     }
