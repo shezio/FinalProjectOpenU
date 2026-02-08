@@ -5,8 +5,7 @@ import "../../styles/common.css";
 import "../../styles/reports.css";
 import { hasViewPermissionForTable, navigateTo } from "../../components/utils";
 import axios from "../../axiosConfig";
-import { ToastContainer, toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import { toast } from "react-toastify";
 import { exportFamiliesToExcel, exportFamiliesToPDF, auditExportSuccess, auditExportFailure } from "../../components/export_utils";
 import { useTranslation } from "react-i18next";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
@@ -304,16 +303,7 @@ const FamiliesPerLocationReport = () => {
       <Sidebar />
       <InnerPageHeader title={t("Families Per Location Report")} />
       <div className="page-content">
-        <ToastContainer
-          position="top-center"
-          autoClose={2000}
-          hideProgressBar={false}
-          closeOnClick
-          pauseOnFocusLoss
-          draggable
-          pauseOnHover
-          rtl={true}
-        />
+        
         <div className="filter-create-container">
           <div className="actions">
             <button

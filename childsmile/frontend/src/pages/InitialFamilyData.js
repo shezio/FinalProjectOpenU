@@ -2,8 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from '../axiosConfig';
 import Sidebar from '../components/Sidebar';
 import InnerPageHeader from '../components/InnerPageHeader';
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { toast } from 'react-toastify';
 import { useTranslation } from 'react-i18next';
 import '../styles/common.css';
 import '../styles/families.css';
@@ -313,7 +312,6 @@ const InitialFamilyData = () => {
     <div className="families-main-content">
       <Sidebar />
       <InnerPageHeader title={t('Initial Family Data')} />
-      <ToastContainer position="top-center" autoClose={5000} rtl={true} />
       <div className="filter-create-container">
         <button className="refresh-button" onClick={handleRefresh}>
           {t('Refresh')}

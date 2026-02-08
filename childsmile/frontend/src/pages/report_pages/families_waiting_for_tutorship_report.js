@@ -7,8 +7,7 @@ import "../../styles/reports.css";
 import "../../styles/tutorship_pending.css";
 import { hasViewPermissionForTable, hasCreatePermissionForTable, navigateTo } from "../../components/utils";
 import axios from "../../axiosConfig";
-import { ToastContainer, toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import { toast } from "react-toastify";
 import { exportTutorshipPendingToExcel, exportTutorshipPendingToPDF } from "../../components/export_utils";
 import { useTranslation } from "react-i18next";
 
@@ -140,16 +139,7 @@ const FamiliesWaitingForTutorshipReport = () => {
       <Sidebar />
       <InnerPageHeader title={t("Families Waiting for Tutorship Report")} />
       <div className="page-content">
-        <ToastContainer
-          position="top-center"
-          autoClose={2000}
-          hideProgressBar={false}
-          closeOnClick
-          pauseOnFocusLoss
-          draggable
-          pauseOnHover
-          rtl={true}
-        />
+        
         <div className="filter-create-container">
           <div className="actions">
             <button

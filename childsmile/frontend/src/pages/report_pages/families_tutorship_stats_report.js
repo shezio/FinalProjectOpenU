@@ -6,8 +6,6 @@ import "../../styles/reports.css";
 import "../../styles/families_tutorship_stats.css";
 import { hasViewPermissionForTable, navigateTo } from "../../components/utils";
 import axios from "../../axiosConfig";
-import { ToastContainer, toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
 import { useTranslation } from "react-i18next";
 import { Pie } from "react-chartjs-2";
 import { showErrorToast } from '../../components/toastUtils'; // Toast 
@@ -67,16 +65,7 @@ const FamiliesTutorshipStatsReport = () => {
       <Sidebar />
       <InnerPageHeader title={t("Families Tutorship Stats Report")} />
       <div className="families-tutorship-stats-page-content">
-        <ToastContainer
-          position="top-center"
-          autoClose={2000}
-          hideProgressBar={false}
-          closeOnClick
-          pauseOnFocusLoss
-          draggable
-          pauseOnHover
-          rtl={true}
-        />
+        
         <div className="filter-create-container">
           <div className="actions">
             <button

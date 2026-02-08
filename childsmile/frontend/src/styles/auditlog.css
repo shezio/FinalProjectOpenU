@@ -27,7 +27,8 @@
   display: flex;
   flex-direction: column;
   gap: 20px;
-  width: 60%;
+  width: 2000px;
+  margin-right: 200px;
 }
 
 @media (max-width: 1000px) {
@@ -281,6 +282,7 @@
   width: 100%;
   border-collapse: collapse;
   table-layout: auto !important;
+  margin-right: 100px;
 }
 
 .audit-log-data-grid th,
@@ -289,6 +291,7 @@
   padding: 12px;
   text-align: right;
   font-size: 24px;
+  width: fit-content;
 }
 
 .audit-log-data-grid th {
@@ -321,8 +324,17 @@
   word-break: break-word;
   white-space: pre-wrap;
   word-wrap: break-word;
-  width: 80%;
+  width: 70%;
   text-align: center !important;
+}
+
+.ip-column {
+  width: 120px;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.9em;
+  color: #555;
+  white-space: nowrap;
+  text-align: center;
 }
 
 /* Pagination */
@@ -477,5 +489,356 @@
   .timestamp-column {
     width: 120px;
   }
+}
+
+.audit-log-main-content .btn.btn-danger {
+  background-color: #dc3545 !important;
+  color: white !important;
+}
+/* Purge Button Styling */
+.purge-button {
+  padding: 10px 16px;
+  background-color: #dc3545 !important;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.purge-button:hover:not(:disabled) {
+  background-color: #c82333 !important;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(220, 53, 69, 0.3);
+}
+
+.purge-button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* Modal Overlay */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+/* Modal Content */
+.modal-content {
+  background-color: white;
+  border-radius: 12px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+  max-height: 90vh;
+  overflow-y: auto;
+  width: 90%;
+  max-width: 600px;
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.purge-modal {
+  max-width: 600px;
+}
+
+/* Modal Header */
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24px;
+  border-bottom: 1px solid #eee;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+}
+
+.modal-header h2 {
+  margin: 0;
+  font-size: 22px;
+  color: #333;
+  font-weight: 700;
+}
+
+.modal-close {
+  background: linear-gradient(135deg, 
+    rgba(255, 77, 77, 0.95) 0%,
+    rgba(209, 26, 42, 0.95) 100%);
+  backdrop-filter: blur(15px) saturate(180%);
+  -webkit-backdrop-filter: blur(15px) saturate(180%);
+  color: white;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  font-size: 24px;
+  cursor: pointer;
+  padding: 8px 12px;
+  width: auto;
+  height: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  box-shadow: 
+    0 8px 20px rgba(255, 77, 77, 0.3),
+    0 4px 10px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  font-weight: bold;
+}
+
+.modal-close:hover {
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: 
+    0 12px 30px rgba(255, 77, 77, 0.4),
+    0 6px 15px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+/* Modal Body */
+.modal-body {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Info Section */
+.purge-info-section h3,
+.warning-section h3 {
+  margin: 0 0 16px 0;
+  font-size: 22px;
+  font-weight: 700;
+  color: #333;
+}
+
+
+.modal-content input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  accent-color: #dc3545;
+  flex-shrink: 0;
+  margin-left: 4px;
+}
+
+.audit-log-main-content .modal-close {
+  position: absolute;
+  left: 16px;
+}
+
+.audit-log-main-content .modal-content{
+  max-height: 105vh;
+}
+.purge-info-section h3
+{
+  margin: -22px 0 16px 0;
+}
+
+.info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px;
+  background-color: #f8f9fa;
+  border-radius: 6px;
+  border-left: 3px solid #007bff;
+}
+
+.info-item .label {
+  font-size: 16px;
+  font-weight: 600;
+  color: #666;
+  text-transform: uppercase;
+}
+
+.info-item .value {
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+  word-break: break-word;
+}
+
+.info-item .value.highlight {
+  color: #dc3545;
+  background-color: #ffe0e0;
+  padding: 4px 8px;
+  border-radius: 3px;
+}
+
+.info-item .value.filename {
+  font-family: 'Courier New', monospace;
+  font-size: 14px;
+  color: #555;
+  background-color: #fff;
+  padding: 8px;
+  border-radius: 3px;
+  border: 1px solid #ddd;
+}
+
+/* Warning Section */
+.warning-section {
+  background-color: #fff3cd;
+  border: 1px solid #ffc107;
+  border-radius: 6px;
+  padding: 16px;
+}
+
+.warning-list {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.warning-list li {
+  margin-bottom: 8px;
+  line-height: 1.5;
+  color: #333;
+  font-size: 16px;
+}
+
+.warning-list li strong {
+  color: #dc3545;
+  font-weight: 700;
+}
+
+/* Checkbox Section */
+.checkbox-section {
+  background-color: #e8f4f8;
+  border: 1px solid #b3e5fc;
+  border-radius: 6px;
+  padding: 12px 16px;
+}
+
+.checkbox-label {
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.safety-checkbox {
+  cursor: pointer;
+  width: 20px;
+  height: 20px;
+  accent-color: #dc3545;
+  flex-shrink: 0;
+  margin: 0;
+}
+
+.checkbox-text {
+  font-size: 16px;
+  color: #333;
+  line-height: 1.5;
+  display: flex-end;
+}
+
+/* Modal Footer */
+.modal-footer {
+  display: flex;
+  gap: 12px;
+  padding: 24px;
+  border-top: 1px solid #eee;
+  background-color: #f8f9fa;
+  justify-content: flex-end;
+}
+
+.btn {
+  padding: 10px 24px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-secondary {
+  background-color: #6c757d;
+  color: white;
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background-color: #5a6268;
+}
+
+.btn-secondary:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.modal-footer .btn-danger,
+.btn-danger {
+  background-color: #6c757d;
+  color: white;
+}
+
+.modal-footer .btn-danger:hover:not(:disabled),
+.btn-danger:hover:not(:disabled) {
+  background-color: #5a6268;
+}
+
+.modal-footer .btn-danger:disabled,
+.btn-danger:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* Audit-specific danger button - Red for purge/export actions */
+button.audit-btn-danger {
+  background-color: #dc3545 !important;
+  color: white !important;
+  border: none !important;
+  padding: 10px 24px !important;
+  font-size: 24px !important;
+  font-weight: 600 !important;
+  transition: all 0.2s ease !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  background: #dc3545 !important;
+}
+
+button.audit-btn-danger:hover:not(:disabled) {
+  background-color: #c82333 !important;
+  background: #c82333 !important;
+  box-shadow: 0 4px 8px rgba(220, 53, 69, 0.3) !important;
+  color: white !important;
+}
+
+button.audit-btn-danger:disabled {
+  background-color: #ccc !important;
+  background: #ccc !important;
+  cursor: not-allowed !important;
+  opacity: 0.6 !important;
+  color: white !important;
 }
 

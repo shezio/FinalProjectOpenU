@@ -5,7 +5,7 @@ from rest_framework.decorators import api_view
 from django.db.models import Q, Count
 from django.utils.dateparse import parse_datetime
 from django.utils import timezone
-from datetime import timedelta
+from datetime import timedelta, datetime
 from .models import AuditLog, Staff, AuditTranslation
 from .utils import *
 from .audit_utils import is_admin, log_api_action
@@ -155,4 +155,77 @@ def audit_action(request):
         return JsonResponse({"status": "audit_logged"}, status=200)
         
     except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
+
+@conditional_csrf
+@api_view(["POST"])
+def purge_old_audit_logs(request):
+    """
+    Delete audit logs older than 90 days (AFTER user exports them)
+    This should only be called AFTER the frontend has exported the CSV
+    """
+    api_logger.info("purge_old_audit_logs called - REAL DELETE HAPPENING")
+    
+    try:
+        user_id = request.session.get("user_id")
+        if not user_id:
+            return JsonResponse({"error": "Not authenticated"}, status=403)
+        
+        # Check if user is admin
+        try:
+            staff = Staff.objects.get(staff_id=user_id)
+            if not is_admin(staff):
+                return JsonResponse({"error": "Admin permission required"}, status=403)
+        except Staff.DoesNotExist:
+            return JsonResponse({"error": "User not found"}, status=404)
+        
+        # Calculate 90 days ago
+        cutoff_date = timezone.now() - timedelta(days=90)
+        
+        # Find logs older than 90 days
+        old_logs = AuditLog.objects.filter(timestamp__lt=cutoff_date).order_by('timestamp')
+        
+        # Check if there are any old logs
+        if not old_logs.exists():
+            api_logger.warning(f"No logs older than 90 days found. Cutoff date: {cutoff_date}")
+            return JsonResponse({
+                "error": f"No audit logs older than 90 days to purge. Cutoff date: {cutoff_date.strftime('%d/%m/%Y')}",
+                "no_data": True,
+                "cutoff_date": cutoff_date.isoformat()
+            }, status=200)
+        
+        # Get count and metadata BEFORE deletion
+        record_count = old_logs.count()
+        first_log = old_logs.first()
+        last_log = old_logs.last()
+        
+        first_date = first_log.timestamp
+        last_date = last_log.timestamp
+        
+        # Format dates for filename: MM_YYYY
+        first_month_year = first_date.strftime("%m_%Y")
+        last_month_year = last_date.strftime("%m_%Y")
+        timestamp_suffix = timezone.now().strftime("%H%M%S")
+        
+        filename = f"auditlog_{first_month_year}_to_{last_month_year}_{timestamp_suffix}"
+        
+        # 🗑️ DELETE the old logs NOW
+        deleted_count, _ = old_logs.delete()
+        
+        api_logger.warning(f"🗑️ PURGED {deleted_count} audit logs. Date range: {first_date} to {last_date}")
+        
+        return JsonResponse({
+            'success': True,
+            'message': f'Successfully purged {record_count} audit logs',
+            'deleted_count': deleted_count,
+            'record_count': record_count,
+            'first_log_date': first_date.strftime('%d/%m/%Y'),
+            'last_log_date': last_date.strftime('%d/%m/%Y'),
+            'cutoff_date': cutoff_date.strftime('%d/%m/%Y'),
+            'filename': filename,
+            'purge_status': 'COMPLETED'
+        }, status=200)
+        
+    except Exception as e:
+        api_logger.error(f"Error in purge_old_audit_logs: {str(e)}")
         return JsonResponse({"error": str(e)}, status=500)

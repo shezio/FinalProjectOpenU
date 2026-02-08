@@ -5,8 +5,7 @@ import InnerPageHeader from "../components/InnerPageHeader";
 import "../styles/common.css";
 import "../styles/reports.css";
 import "../styles/feedbacks.css";
-import { ToastContainer, toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import { toast } from "react-toastify";
 import { useTranslation } from "react-i18next";
 import axios from "../axiosConfig";
 import { hasAllPermissions, hasViewPermissionForTable, navigateTo } from '../components/utils';
@@ -436,16 +435,7 @@ const TutorFeedbacks = () => {
       <Sidebar />
       <InnerPageHeader title={t("Tutor Feedbacks")} />
       <div className="feedbacks-page-content">
-        <ToastContainer
-          position="top-center"
-          autoClose={2000}
-          hideProgressBar={false}
-          closeOnClick
-          pauseOnFocusLoss
-          draggable
-          pauseOnHover
-          rtl={true}
-        />
+        
         {loading && <div className="loader">{t("Loading data...")}</div>}
 
         <div className="feedbacks-filter-create-container">

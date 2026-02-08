@@ -6,8 +6,6 @@ import "../../styles/reports.css";
 import "../../styles/roles_spread_stats_report.css";
 import { hasViewPermissionForTable, navigateTo } from "../../components/utils";
 import axios from "../../axiosConfig";
-import { ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
 import { useTranslation } from "react-i18next";
 import { Pie } from "react-chartjs-2";
 import { showErrorToast } from '../../components/toastUtils';
@@ -86,16 +84,7 @@ const RolesSpreadReport = () => {
       <Sidebar />
       <InnerPageHeader title={t("Roles Spread Report")} />
       <div className="roles-spread-report-page-content">
-        <ToastContainer
-          position="top-center"
-          autoClose={2000}
-          hideProgressBar={false}
-          closeOnClick
-          pauseOnFocusLoss
-          draggable
-          pauseOnHover
-          rtl={true}
-        />
+        
         <div className="filter-create-container">
           <div className="actions">
             <button

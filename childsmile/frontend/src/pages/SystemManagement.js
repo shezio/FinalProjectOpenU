@@ -6,7 +6,7 @@ import '../styles/reports.css';
 import '../styles/systemManagement.css'; // Special CSS for this page
 import axios from '../axiosConfig';
 import Modal from 'react-modal';
-import { ToastContainer, toast } from 'react-toastify';
+import { toast } from 'react-toastify';
 import { hasAllPermissions } from '../components/utils';
 import { useTranslation } from 'react-i18next'; // Translation hook
 import { showErrorToast } from '../components/toastUtils'; // Toast utility
@@ -725,16 +725,6 @@ const SystemManagement = () => {
       <Sidebar />
       <InnerPageHeader title={t('System Management')} />
       <div className="staff-page-content">
-        <ToastContainer
-          position="top-center"
-          autoClose={5000}
-          hideProgressBar={false}
-          closeOnClick
-          pauseOnFocusLoss
-          draggable
-          pauseOnHover
-          rtl={true}
-        />
         {loading ? (
           // Loader displayed above everything
           <div className="loader-container">

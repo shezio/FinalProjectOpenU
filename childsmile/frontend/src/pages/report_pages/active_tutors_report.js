@@ -5,8 +5,7 @@ import '../../styles/common.css';
 import '../../styles/reports.css';
 import { hasViewPermissionForTable, navigateTo } from '../../components/utils';
 import axios from '../../axiosConfig';
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { toast } from 'react-toastify';
 import { exportToExcel, exportToPDF } from '../../components/export_utils';
 import { useTranslation } from 'react-i18next'; // Import the translation hook
 
@@ -115,17 +114,6 @@ const ActiveTutorsReport = () => {
       <Sidebar />
       <InnerPageHeader title="דוח חונכויות פעילות" />
       <div className="page-content">
-        <ToastContainer
-          position="top-center" // Center the toast
-          autoClose={2000} // Auto-close after 3 seconds
-          hideProgressBar={false} // Show the progress bar
-          closeOnClick
-          pauseOnFocusLoss
-          draggable
-          pauseOnHover
-          className="toast-rtl" // Apply the RTL class to all toasts
-          rtl={true} // Ensure progress bar moves from left to right
-        />
         <div className="filter-create-container">
           <div className="actions">
             <button

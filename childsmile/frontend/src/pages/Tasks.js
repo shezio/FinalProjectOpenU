@@ -7,8 +7,7 @@ import { getStaff, getChildren, getTutors, getChildFullName, getTutorFullName, g
 import '../styles/common.css';
 import '../styles/tasks.css';
 import Select from 'react-select';
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { toast } from 'react-toastify';
 import { showErrorToast, showWarningToast } from '../components/toastUtils';
 import { useTranslation } from 'react-i18next';
 import "../i18n";
@@ -761,17 +760,6 @@ const Tasks = () => {
     <div className="tasks-main-content">
       <Sidebar className={isDragging ? "sidebar--dragging" : ""} />
       <InnerPageHeader title="לוח משימות" />
-      <ToastContainer
-        position="top-center"
-        autoClose={2000}
-        hideProgressBar={false}
-        closeOnClick
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-        className="toast-rtl"
-        rtl={true}
-      />
       {loading && <div className="loader">{t("Loading data...")}</div>}
       {!loading && (
         <>

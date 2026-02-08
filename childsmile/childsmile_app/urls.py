@@ -111,6 +111,7 @@ from .audit_views import (
     get_audit_logs,
     get_audit_statistics,
     audit_action,
+    purge_old_audit_logs,
 )
 
 
@@ -428,6 +429,7 @@ urlpatterns = [
     path("api/audit-logs/", get_audit_logs, name="get_audit_logs"),
     path("api/audit-statistics/", get_audit_statistics, name="get_audit_statistics"),
     path("api/audit-action/", audit_action, name="audit_action"),
+    path("api/purge-old-audit-logs/", purge_old_audit_logs, name="purge_old_audit_logs"),
     # Dashboard endpoints
     path("api/dashboard/", include("childsmile_app.urls_dashboard")),
 ]
