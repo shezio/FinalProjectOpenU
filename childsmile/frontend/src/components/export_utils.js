@@ -12,6 +12,7 @@ import { AlefBold } from '../fonts/Alef-Bold'; // Import the custom font for PDF
 import { Cell } from 'jspdf-autotable';
 import html2canvas from "html2canvas";
 import axios from '../axiosConfig'; // ADD THIS IMPORT
+import JSZip from 'jszip'; // For creating ZIP files
 
 // **ADD THESE AUDIT FUNCTIONS**
 const auditExportSuccess = async (format, recordCount, reportName, dataTypes = []) => {
@@ -1445,77 +1446,98 @@ export const exportTutorFeedbackToPDF = async (feedbacks, t) => {
     showErrorToast(t, '', { message: 'Export failed' });
   }
 };
-export const exportAuditToExcel = async (auditLogs, t) => {
+export const exportAuditToCSV = async (auditLogs, t, customFilename = null, skipSuccessToast = false) => {
   const reportName = 'audit_log_report';
-  const format = 'EXCEL';
+  const format = 'CSV';
   
   try {
     // Validate that data is provided
     if (!auditLogs || auditLogs.length === 0) {
       const errorMsg = 'אנא בחר לפחות רשומה אחת ליצירת דוח';
       await auditExportFailure(format, reportName, errorMsg, 'VALIDATION');
+      toast.dismiss('audit-export-error');
+      toast.dismiss('audit-export-success');
       showErrorToast(t, '', { message: errorMsg });
-      return;
+      return false; // Return false on validation error
     }
 
-    // Data is already validated and passed from component
-    const headers = [t('Timestamp'), t('Description'), t('User Roles')];
-    const rows = auditLogs.map(log => [
-      log[t('Timestamp')] || '',
-      log[t('Description')] || '', // This will have actual \n newlines
-      log[t('User Roles')] || '',
-    ]);
-
-    const worksheetData = [headers, ...rows];
-    const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
-
-    // Adjust column widths to fit content
-    const columnWidths = [
-      { wch: 25 }, // Timestamp column
-      { wch: 60 }, // Description column (wider for wrapped text)
-      { wch: 30 }, // User Roles column
-    ];
-    worksheet['!cols'] = columnWidths;
-
-    // Set worksheet direction to RTL
-    worksheet['!dir'] = 'rtl';
-
-    // Enable text wrapping for all cells and set row heights
-    let rowIndex = 0;
-    worksheet['!rows'] = [];
+    // CSV headers
+    const headers = ['Timestamp', 'Description', 'User Email', 'User Roles', 'Action', 'Source IP', 'Status'];
     
-    for (let cell in worksheet) {
-      if (cell.match(/^[A-Z]/)) {
-        if (!worksheet[cell].s) worksheet[cell].s = {};
-        worksheet[cell].s.alignment = {
-          vertical: 'top',
-          wrapText: true, // Enable text wrapping
-        };
+    // Helper to escape CSV fields (handles commas, quotes, newlines)
+    const escapeCSV = (value) => {
+      if (value === null || value === undefined) return '';
+      const str = String(value);
+      // If the field contains commas, quotes, or newlines, wrap in double quotes
+      if (str.includes(',') || str.includes('"') || str.includes('\n') || str.includes('\r')) {
+        return '"' + str.replace(/"/g, '""') + '"';
       }
-      // Extract row number from cell reference (e.g., "A1" -> 1)
-      const match = cell.match(/[A-Z]+(\d+)/);
-      if (match) {
-        const row = parseInt(match[1]) - 1;
-        // Set minimum row height for wrapped content
-        if (!worksheet['!rows']) worksheet['!rows'] = [];
-        worksheet['!rows'][row] = { hpx: 30 }; // 30 pixels minimum height
-      }
+      return str;
+    };
+
+    // Build CSV content with BOM for proper Hebrew encoding in Excel
+    const BOM = '\uFEFF';
+    let csvContent = BOM;
+    
+    // Add header row
+    csvContent += headers.map(escapeCSV).join(',') + '\r\n';
+    
+    // Add data rows
+    auditLogs.forEach(log => {
+      const row = [
+        log.Timestamp || '',
+        log.Description || '',
+        log['User Email'] || '',
+        log['User Roles'] || '',
+        log.Action || '',
+        log['Source IP'] || '',
+        log.Status || '',
+      ];
+      csvContent += row.map(escapeCSV).join(',') + '\r\n';
+    });
+
+    // Generate filename with date range if not custom
+    let filename = customFilename;
+    if (!filename) {
+      // Extract dates from logs (assume they have date info)
+      const now = new Date();
+      const timestamp = now.getHours().toString().padStart(2, '0') + 
+                       now.getMinutes().toString().padStart(2, '0') + 
+                       now.getSeconds().toString().padStart(2, '0');
+      filename = `${t('audit_log_report')}_${timestamp}`;
     }
 
-    const workbook = XLSX.utils.book_new();
-    const sheetName = t('Audit Log Report');
-    XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
-    const fileName = t('audit_log_report');
-    XLSX.writeFile(workbook, `${fileName}.xlsx`);
-    toast.success(t('Audit log exported successfully'));
+    // Create ZIP with CSV inside (with compression enabled)
+    const zip = new JSZip();
+    zip.file(`${filename}.csv`, csvContent, { compression: 'DEFLATE' });
+    
+    const blob = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${filename}.zip`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    // Show success toast unless explicitly skipped (for purge case)
+    if (!skipSuccessToast) {
+      toast.success(t('Audit log exported successfully'), { toastId: 'audit-export-success', autoClose: 10000 });
+    }
 
     // Audit the export success
-    await auditExportSuccess(format, auditLogs.length, reportName, ['timestamp', 'description', 'user_roles']);
+    await auditExportSuccess(format, auditLogs.length, reportName, ['timestamp', 'description', 'user_roles', 'ip_address']);
+    
+    return true; // Return true on success
     
   } catch (error) {
     console.error('Export failed:', error);
     await auditExportFailure(format, reportName, error.message, 'TECHNICAL');
+    toast.dismiss('audit-export-error');
+    toast.dismiss('audit-export-success');
     showErrorToast(t, '', { message: 'Export failed' });
+    return false; // Return false on error
   }
 };
 
@@ -1527,7 +1549,10 @@ export const exportAuditToPDF = async (auditLogs, t) => {
     // Validate that data is provided
     if (!auditLogs || auditLogs.length === 0) {
       const errorMsg = 'אנא בחר לפחות רשומה אחת ליצירת דוח';
+      console.log('🔴 PDF VALIDATION ERROR - showing error toast');
       await auditExportFailure(format, reportName, errorMsg, 'VALIDATION');
+      toast.dismiss('audit-export-error');
+      toast.dismiss('audit-export-success');
       showErrorToast(t, '', { message: errorMsg });
       return;
     }
@@ -1551,6 +1576,7 @@ export const exportAuditToPDF = async (auditLogs, t) => {
       reverseText(t('Timestamp')),
       reverseText(t('Description')),
       reverseText(t('User Roles')),
+      reverseText(t('Source IP')),
     ].reverse()];
 
     // Reorder timestamp: split and swap date/time order
@@ -1563,6 +1589,7 @@ export const exportAuditToPDF = async (auditLogs, t) => {
         reorderedTimestamp,
         log[t('Description')] || '',
         reverseText(log[t('User Roles')] || ''),
+        log[t('IP Address')] || '—',
       ].reverse();
     });
 
@@ -1575,19 +1602,24 @@ export const exportAuditToPDF = async (auditLogs, t) => {
       headStyles: { fillColor: [76, 175, 80], textColor: 255, halign: 'center' },
       columnStyles: {
         0: { halign: 'center' },
-        1: { halign: 'center' , cellWidth: 80 }, // middle column a bit wider
-        2: { halign: 'center' },
+        1: { halign: 'center' },
+        2: { halign: 'center' , cellWidth: 80 },
+        3: { halign: 'center' },
       },
     });
 
     doc.save(`${t('audit_log_report')}.pdf`);
-    toast.success(t('Audit log exported successfully'));
+    console.log('🟢 PDF SUCCESS - showing success toast');
+    toast.success(t('Audit log exported successfully'), { toastId: 'audit-export-success', autoClose: 10000 });
 
-    await auditExportSuccess(format, auditLogs.length, reportName, ['timestamp', 'description', 'user_roles']);
+    await auditExportSuccess(format, auditLogs.length, reportName, ['timestamp', 'description', 'user_roles', 'ip_address']);
     
   } catch (error) {
     console.error('Export failed:', error);
+    console.log('🔴 PDF CATCH ERROR - showing error toast');
     await auditExportFailure(format, reportName, error.message, 'TECHNICAL');
+    toast.dismiss('audit-export-error');
+    toast.dismiss('audit-export-success');
     showErrorToast(t, '', { message: 'Export failed' });
   }
 };

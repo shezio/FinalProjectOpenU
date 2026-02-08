@@ -7,8 +7,6 @@ import './styles.css';
 import './styles/common.css';  /* ✅ Import common.css directly */
 import { BrowserRouter, HashRouter } from 'react-router-dom';
 import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
-
 const isProd = process.env.NODE_ENV === 'production';
 
 // If the URL doesn't already have a hash, redirect to one

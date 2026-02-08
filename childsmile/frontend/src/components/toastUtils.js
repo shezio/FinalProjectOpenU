@@ -1,20 +1,47 @@
 /* toastUtils.js */
 import { toast } from 'react-toastify';
 
+let errorToastPromise = null;
+
 export const showErrorToast = (t, key, error) => {
-  console.log('showErrorToast called with:', t, key, error); // Debug log
+  // If we're already creating a toast, return the existing promise
+  if (errorToastPromise) {
+    return errorToastPromise;
+  }
 
-  // ✅ Check for error field first (from your API response)
-  const errorMessage = t(
-    error.response?.data?.error || 
-    error.response?.data?.detail || 
-    error.message
-  );
+  // Create a new promise for this toast creation
+  errorToastPromise = new Promise((resolve) => {
+    try {
+      const errorMessage = t(
+        error.response?.data?.error || 
+        error.response?.data?.detail || 
+        error.message
+      );
 
-  // Combine the translated error message with the context
-  // if the key is empty - use the error message directly
-  const messageToShow = key ? `${t(key)} - ${errorMessage}` : errorMessage;
-  toast.error(messageToShow);
+      const messageToShow = key ? `${t(key)} - ${errorMessage}` : errorMessage;
+      
+      // Dismiss ALL toasts to ensure clean slate
+      toast.dismiss();
+      
+      // Use setTimeout with 0ms to defer to next event loop - ensures dismiss completes
+      setTimeout(() => {
+        // Create toast without toastId to prevent duplicates across multiple containers
+        toast.error(messageToShow, { 
+          autoClose: 10000,
+          onClose: () => {
+            errorToastPromise = null;
+            resolve();
+          }
+        });
+      }, 0);
+    } catch (err) {
+      console.error('Error in showErrorToast:', err);
+      errorToastPromise = null;
+      resolve();
+    }
+  });
+
+  return errorToastPromise;
 };
 
 export const showWarningToast = (t, key, error) => {
