@@ -4,8 +4,7 @@ import InnerPageHeader from "../../components/InnerPageHeader";
 import "../../styles/common.css";
 import "../../styles/reports.css";
 import { exportTutorFeedbackToExcel, exportTutorFeedbackToPDF } from "../../components/export_utils";
-import { ToastContainer, toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import { toast } from "react-toastify";
 import { useTranslation } from "react-i18next";
 import axios from "../../axiosConfig";
 import { navigateTo } from "../../components/utils";
@@ -140,16 +139,7 @@ const TutorFeedbackReport = () => {
       <Sidebar />
       <InnerPageHeader title={t("Tutor Feedback Report")} />
       <div className="page-content">
-        <ToastContainer
-          position="top-center"
-          autoClose={2000}
-          hideProgressBar={false}
-          closeOnClick
-          pauseOnFocusLoss
-          draggable
-          pauseOnHover
-          rtl={true}
-        />
+        
         {loading ? (
           <div className="loader">{t("Loading data...")}</div>
         ) : (

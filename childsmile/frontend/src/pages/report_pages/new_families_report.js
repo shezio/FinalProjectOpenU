@@ -6,8 +6,7 @@ import "../../styles/reports.css";
 import "../../styles/tutorship_pending.css";
 import { hasViewPermissionForTable, navigateTo } from "../../components/utils";
 import axios from "../../axiosConfig";
-import { ToastContainer, toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import { toast } from "react-toastify";
 import { exportNewFamiliesToExcel, exportNewFamiliesToPDF } from "../../components/export_utils";
 import { useTranslation } from "react-i18next";
 
@@ -111,16 +110,7 @@ const NewFamiliesReport = () => {
       <Sidebar />
       <InnerPageHeader title={t("New Families Report")} />
       <div className="page-content">
-        <ToastContainer
-          position="top-center"
-          autoClose={2000}
-          hideProgressBar={false}
-          closeOnClick
-          pauseOnFocusLoss
-          draggable
-          pauseOnHover
-          rtl={true}
-        />
+        
         <div className="filter-create-container">
           <div className="actions">
             <button

@@ -68,7 +68,7 @@ def is_admin(staff):
     return any(role in admin_roles for role in user_roles)
 
 def generate_audit_description(user_email, username, action, timestamp, user_roles, success, error_message, 
-                              entity_type=None, entity_ids=None, report_name=None, additional_data=None):
+                              entity_type=None, entity_ids=None, report_name=None, additional_data=None, client_ip=None):
     """Generate human-readable description for audit log"""
     
     # Format timestamp to dd/mm/yyyy HH:MM:SS
@@ -979,6 +979,10 @@ def generate_audit_description(user_email, username, action, timestamp, user_rol
         if report_name:
             description += f"\nReport: {report_name}"
     
+    # Append Source IP to every audit description for regulatory compliance
+    if client_ip:
+        description += f"\nSource IP: {client_ip}"
+    
     return description
 
 def log_api_action(
@@ -1039,6 +1043,7 @@ def log_api_action(
                     safe_additional_data[key] = value
         
         # **ENHANCED DESCRIPTION GENERATION**
+        client_ip = get_client_ip(request)
         description = generate_audit_description(
             user_email=user_email,
             username=username,
@@ -1050,7 +1055,8 @@ def log_api_action(
             entity_type=entity_type,
             entity_ids=entity_ids,
             report_name=report_name,
-            additional_data=safe_additional_data
+            additional_data=safe_additional_data,
+            client_ip=client_ip
         )
         
         # Create audit log entry
@@ -1066,7 +1072,7 @@ def log_api_action(
                 permissions=user_permissions,
                 entity_type=entity_type,
                 entity_ids=entity_ids,
-                ip_address=get_client_ip(request),
+                ip_address=client_ip,
                 user_agent=request.META.get('HTTP_USER_AGENT', ''),
                 status_code=status_code,
                 success=success,
