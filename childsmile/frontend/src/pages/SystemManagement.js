@@ -129,8 +129,28 @@ const SystemManagement = () => {
       });
       
       setStaff(sortedStaff);
-      setFilteredStaff(sortedStaff);
-      setTotalCount(sortedStaff.length); // Total now based on filtered set
+      
+      // Apply filters after refresh
+      let baseList = sortedStaff;
+      
+      // Apply inactive filter if active
+      if (showInactiveOnly) {
+        baseList = sortedStaff.filter(user => !user.is_active);
+      }
+      
+      // Apply suspended filter if active
+      if (showSuspendedOnly) {
+        baseList = sortedStaff.filter(user => user.is_active && user.deactivation_reason === "suspended");
+      }
+      
+      // Apply role filter if selected
+      if (selectedRoleFilter) {
+        baseList = baseList.filter(user => user.roles.includes(selectedRoleFilter));
+      }
+      
+      setFilteredStaff(baseList);
+      setTotalCount(baseList.length); // Total now based on filtered set
+      
       const rolesResponse = await axios.get('/api/get_roles/');
       setRoles(rolesResponse.data.roles); // Set roles for the dropdown
     } catch (error) {
@@ -160,7 +180,8 @@ const SystemManagement = () => {
       
       await axios.delete(`/api/delete_staff_member/${staffId}/`);
       toast.success(t('Staff member deleted successfully.'));
-      fetchAllStaff(); // Refresh the data after deletion
+      fetchAllStaff(); // Refresh the data after deletion - filters will be reapplied
+      setPage(1); // Reset to page 1 after delete
     } catch (error) {
       console.error('Error deleting staff member:', error);
       showErrorToast(t, 'Failed to delete staff member.', error);
