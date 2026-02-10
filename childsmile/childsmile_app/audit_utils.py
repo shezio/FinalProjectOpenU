@@ -213,24 +213,51 @@ def generate_audit_description(user_email, username, action, timestamp, user_rol
     
     # **ENHANCED VOLUNTEER/TUTOR CREATION**
     elif action in ['CREATE_VOLUNTEER_SUCCESS', 'CREATE_PENDING_TUTOR_SUCCESS'] and additional_data:
-        volunteer_email = additional_data.get('volunteer_email', additional_data.get('tutor_email', user_email))
-        first_name = additional_data.get('first_name', 'Unknown')
-        surname = additional_data.get('surname', 'Unknown')
-        created_username = additional_data.get('username', username)
-        
-        entity_name = 'Volunteer' if 'VOLUNTEER' in action else 'Pending Tutor'
-        
-        description = f"New {entity_name}\n"
-        description += f"{first_name} {surname}\n"
-        description += f"Username: {created_username}\n"
-        description += f"Email: {volunteer_email}\n"
-        description += f"Created on: {timestamp_formatted}\n"
-        
-        if entity_type and entity_ids:
-            description += f"Record ID: {', '.join(map(str, entity_ids))}\n"
-        
-        description += f"Account setup completed\n"
-        description += f"during registration process"
+        # Check if this is a bulk import operation
+        if additional_data.get('is_bulk_import'):
+            total = additional_data.get('total_records', 0)
+            success = additional_data.get('success_count', 0)
+            error = additional_data.get('error_count', 0)
+            skipped = additional_data.get('skipped_count', 0)
+            dry_run = additional_data.get('dry_run', False)
+            breakdown = additional_data.get('breakdown', {})
+            
+            description = f"[BULK_IMPORT_TITLE]\n"
+            description += f"Admin: {username}\n"
+            description += f"Email: {user_email}\n"
+            description += f"[MODE_LABEL]: {'[MODE_PREVIEW]' if dry_run else '[MODE_LIVE]'}\n"
+            description += f"Timestamp: {timestamp_formatted}\n"
+            description += f"\n"
+            description += f"[SUMMARY_LABEL]\n"
+            description += f"[TOTAL_RECORDS_LABEL]: {total}\n"
+            description += f"[IMPORTED_LABEL]: {success}\n"
+            description += f"[SKIPPED_LABEL]: {skipped}\n"
+            description += f"[ERRORS_LABEL]: {error}\n"
+            description += f"\n"
+            description += f"[BREAKDOWN_LABEL]\n"
+            description += f"[GENERAL_VOLUNTEERS_LABEL]: {breakdown.get('general_volunteer', 0)}\n"
+            description += f"[TUTORS_WITH_TUTEES_LABEL]: {breakdown.get('tutor_with_tutee', 0)}\n"
+            description += f"[TUTORS_WITHOUT_TUTEES_LABEL]: {breakdown.get('tutor_no_tutee', 0)}\n"
+            description += f"[PENDING_TUTORS_LABEL]: {breakdown.get('pending_tutor', 0)}"
+        else:
+            # Regular single volunteer/tutor creation
+            volunteer_email = additional_data.get('volunteer_email', additional_data.get('tutor_email', user_email))
+            first_name = additional_data.get('first_name', 'Unknown')
+            surname = additional_data.get('surname', 'Unknown')
+            created_username = additional_data.get('username', username)
+            
+            entity_name = 'Volunteer' if 'VOLUNTEER' in action else 'Pending Tutor'
+            
+            description = f"New {entity_name}\n"
+            description += f"{first_name} {surname}\n"
+            description += f"Username: {created_username}\n"
+            description += f"Email: {volunteer_email}\n"
+            description += f"Created on: {timestamp_formatted}\n"
+            
+            if entity_type and entity_ids:
+                description += f"ID: {', '.join(map(str, entity_ids))}\n"
+            
+            description += f"Account setup completed"
     
     elif action in ['CREATE_VOLUNTEER_FAILED', 'CREATE_PENDING_TUTOR_FAILED'] and additional_data:
         attempted_email = additional_data.get('attempted_email', 'Unknown')
@@ -650,7 +677,32 @@ def generate_audit_description(user_email, username, action, timestamp, user_rol
         description += f"Roles: {roles_text}"
         
         if entity_type and entity_ids:
-            description += f"\nRecord ID: {', '.join(map(str, entity_ids))}"
+            description += f"\nTutor ID: {', '.join(map(str, entity_ids))}"
+
+    elif action == 'UPDATE_GENERAL_VOLUNTEER_SUCCESS' and additional_data:
+        volunteer_name = additional_data.get('volunteer_name', 'Unknown Volunteer')
+        volunteer_email = additional_data.get('volunteer_email', 'Unknown')
+        changed_fields = additional_data.get('changed_fields', {})
+        
+        description = f"Timestamp: {timestamp_formatted}\n"
+        description += f"User: {username}\n"
+        description += f"Email: {user_email}\n"
+        description += f"Action: Updated volunteer\n"
+        description += f"Volunteer: {volunteer_name}\n"
+        description += f"Volunteer Email: {volunteer_email}\n"
+        
+        if changed_fields:
+            field_updates = []
+            for field, changes in changed_fields.items():
+                old_val = changes.get('old', 'Unknown')
+                new_val = changes.get('new', 'Unknown')
+                field_updates.append(f"{field}: '{old_val}' → '{new_val}'")
+            description += f"Changed:\n{'; '.join(field_updates)}\n"
+        
+        description += f"Roles: {roles_text}"
+        
+        if entity_type and entity_ids:
+            description += f"\nVolunteer ID: {', '.join(map(str, entity_ids))}"
 
     elif action == 'UPDATE_TUTOR_FAILED' and additional_data:
         tutor_name = additional_data.get('tutor_name', 'Unknown')

@@ -30,7 +30,7 @@ const AuditLog = () => {
   const [endDate, setEndDate] = useState('');
   const [sortBy, setSortBy] = useState('desc'); // 'asc' or 'desc'
   const [page, setPage] = useState(1);
-  const [pageSize] = useState(2);
+  const [pageSize] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [actions, setActions] = useState([]);
@@ -76,6 +76,21 @@ const AuditLog = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Helper function to translate description keys
+  const translateDescription = (description) => {
+    if (!description) return description;
+    
+    let translated = description;
+    const keys = description.match(/\[([^\]]+)\]/g) || [];
+    
+    keys.forEach(key => {
+      const translatedValue = t(key);
+      translated = translated.replace(key, translatedValue);
+    });
+    
+    return translated;
   };
 
   // Apply filters and sorting
@@ -203,7 +218,7 @@ const AuditLog = () => {
       // Format logs for export
       const formattedLogs = logsToExport.map(log => ({
         Timestamp: new Date(log.timestamp).toLocaleString('he-IL'),
-        Description: log.description,
+        Description: translateDescription(log.description),
         'User Email': log.user_email,
         'User Roles': Array.isArray(log.user_roles) ? log.user_roles.join(', ') : log.user_roles,
         Action: log.action,
@@ -261,7 +276,7 @@ const AuditLog = () => {
         // Export ALL filtered logs across all pages
         selectedData = filteredLogs.map(log => ({
           [t('Timestamp')]: new Date(log.timestamp).toLocaleString(navigator.language || 'he-IL'),
-          [t('Description')]: log.description,
+          [t('Description')]: translateDescription(log.description),
           [t('Action')]: t(log.action),
           [t('User Roles')]: Array.isArray(log.user_roles) ? log.user_roles.map(role => t(role)).join(', ') : t(log.user_roles),
           [t('User Email')]: log.user_email,
@@ -273,7 +288,7 @@ const AuditLog = () => {
           .filter((log, index) => selectedLogs.has(`${page}-${index}`))
           .map(log => ({
             [t('Timestamp')]: new Date(log.timestamp).toLocaleString(navigator.language || 'he-IL'),
-            [t('Description')]: log.description,
+            [t('Description')]: translateDescription(log.description),
             [t('Action')]: t(log.action),
             [t('User Roles')]: Array.isArray(log.user_roles) ? log.user_roles.map(role => t(role)).join(', ') : t(log.user_roles),
             [t('User Email')]: log.user_email,
@@ -317,7 +332,7 @@ const AuditLog = () => {
       if (purgeData && purgeData.logsToExport && purgeData.logsToExport.length > 0) {
         const formattedLogs = purgeData.logsToExport.map(log => ({
           Timestamp: new Date(log.timestamp).toLocaleString('he-IL'),
-          Description: log.description,
+          Description: translateDescription(log.description),
           'User Email': log.user_email,
           'User Roles': Array.isArray(log.user_roles) ? log.user_roles.join(', ') : log.user_roles,
           Action: log.action,
@@ -534,7 +549,7 @@ const AuditLog = () => {
                         <td className="timestamp-column">
                           {new Date(log.timestamp).toLocaleString(navigator.language || 'he-IL')}
                         </td>
-                        <td className="description-column">{log.description}</td>
+                        <td className="description-column">{translateDescription(log.description)}</td>
                         <td className="description-column">
                           {Array.isArray(log.user_roles) 
                             ? log.user_roles.map(role => t(role)).join(', ')

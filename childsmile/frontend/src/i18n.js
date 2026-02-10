@@ -257,6 +257,21 @@ const resources = {
       "Results will be shown with import summary": "Results will be shown with import summary",
       "Preview file downloaded. Review and upload again without dry-run to import.": "Preview file downloaded. Review and upload again without dry-run to import.",
       "Import failed": "Import failed",
+      // Bulk Import Audit Log Headers
+      "[BULK_IMPORT_TITLE]": "Bulk Import - Volunteers/Tutors",
+      "[MODE_LABEL]": "Mode",
+      "[MODE_PREVIEW]": "Preview",
+      "[MODE_LIVE]": "Live Import",
+      "[SUMMARY_LABEL]": "Summary",
+      "[TOTAL_RECORDS_LABEL]": "Total Records",
+      "[IMPORTED_LABEL]": "Imported",
+      "[SKIPPED_LABEL]": "Skipped",
+      "[ERRORS_LABEL]": "Errors",
+      "[BREAKDOWN_LABEL]": "Breakdown",
+      "[GENERAL_VOLUNTEERS_LABEL]": "General Volunteers",
+      "[TUTORS_WITH_TUTEES_LABEL]": "Tutors with Tutees",
+      "[TUTORS_WITHOUT_TUTEES_LABEL]": "Tutors without Tutees",
+      "[PENDING_TUTORS_LABEL]": "Pending Tutors",
     }
   },
   he: {
@@ -1139,6 +1154,21 @@ const resources = {
       "Results will be shown with import summary": "התוצאות יוצגו עם סיכום הייבוא",
       "Preview file downloaded. Review and upload again without dry-run to import.": "קובץ התצוגה הורד בהצלחה. בדוק והעלה שוב ללא בדיקה לביצוע ייבוא.",
       "Import failed": "הייבוא נכשל",
+      // Bulk Import Audit Log Headers
+      "[BULK_IMPORT_TITLE]": "ייבוא קבוצתי - מתנדבים/חונכים",
+      "[MODE_LABEL]": "מצב",
+      "[MODE_PREVIEW]": "תצוגה מקדימה",
+      "[MODE_LIVE]": "ייבוא חי",
+      "[SUMMARY_LABEL]": "סיכום",
+      "[TOTAL_RECORDS_LABEL]": "סך הרשומות",
+      "[IMPORTED_LABEL]": "יובאו",
+      "[SKIPPED_LABEL]": "דולגו",
+      "[ERRORS_LABEL]": "שגיאות",
+      "[BREAKDOWN_LABEL]": "פירוט",
+      "[GENERAL_VOLUNTEERS_LABEL]": "מתנדבים כלליים",
+      "[TUTORS_WITH_TUTEES_LABEL]": "חונכים עם חניכים",
+      "[TUTORS_WITHOUT_TUTEES_LABEL]": "חונכים ללא חניכים",
+      "[PENDING_TUTORS_LABEL]": "מועמדים לחונכות",
     }
   }
 };
