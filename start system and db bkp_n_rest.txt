@@ -22,7 +22,6 @@ pg_dump -U child_smile_user -h localhost -p 5432 child_smile_db > backup_before_
 rm -rf ~/Library/Application\ Support/Code/Cache
 rm -rf ~/Library/Application\ Support/Code/CachedData
 rm -rf ~/Library/Application\ Support/Code/Code\ Cache
-rm -rf ~/Library/Application\ Support/Code/User/workspaceStorage  
 
  - test data removal
 DELETE FROM auditlog;

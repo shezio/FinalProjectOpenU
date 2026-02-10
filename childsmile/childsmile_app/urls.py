@@ -37,6 +37,7 @@ from .views_volunteer import (
     update_tutor,
     update_volunteer_id,
     update_volunteer_phone,
+    import_volunteers_endpoint,
 )
 from .task_views import (
     get_user_tasks,
@@ -430,6 +431,8 @@ urlpatterns = [
     path("api/audit-statistics/", get_audit_statistics, name="get_audit_statistics"),
     path("api/audit-action/", audit_action, name="audit_action"),
     path("api/purge-old-audit-logs/", purge_old_audit_logs, name="purge_old_audit_logs"),
+    # Import endpoints
+    path("api/import/volunteers/", import_volunteers_endpoint, name="import_volunteers"),
     # Dashboard endpoints
     path("api/dashboard/", include("childsmile_app.urls_dashboard")),
 ]
