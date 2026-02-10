@@ -807,3 +807,114 @@ input.search-bar::placeholder {
 .flip-back .pagination button {
   pointer-events: auto !important;
 }
+
+/* Import button styling */
+.import-volunteers-btn {
+  padding: 10px 16px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 24px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+  margin: 0 8px;
+}
+
+.import-volunteers-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.5);
+  transform: translateY(-2px);
+}
+
+.import-volunteers-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.import-volunteers-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Import Modal Styles */
+.import-modal-file-group {
+  margin-bottom: 20px;
+}
+
+.import-modal-file-label {
+  display: block;
+  margin-bottom: 10px;
+  font-weight: bold;
+  font-size: 24px;
+  color: #1f2937;
+}
+
+.import-modal-file-input {
+  width: 100%;
+  padding: 8px;
+  font-size: 14px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+
+.import-modal-file-selected {
+  margin-top: 8px;
+  color: green;
+  font-size: 18px;
+}
+
+/* Import Modal Checkbox Group */
+.import-modal-checkbox-group {
+  margin-bottom: 20px;
+}
+
+.import-modal-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  font-size: 18px;
+  color: #1f2937;
+}
+
+.import-modal-checkbox-label input {
+  cursor: pointer;
+}
+
+.import-modal-checkbox-hint {
+  margin-left: 8px;
+  color: #666;
+  font-size: 14px;
+}
+
+/* Import Modal Instructions Box */
+.import-modal-instructions-box {
+  padding: 12px;
+  background-color: #f0f0f0;
+  border-radius: 6px;
+  margin-bottom: 20px;
+  font-size: 16px;
+}
+
+.import-modal-instructions-box strong {
+  display: block;
+  font-size: 20px;
+  margin-bottom: 8px;
+  color: #1f2937;
+}
+
+.import-modal-instructions-box ul {
+  margin: 8px 0 0 20px;
+  padding: 0;
+  list-style: disc;
+  text-align: right;
+}
+
+.import-modal-instructions-box li {
+  margin-bottom: 6px;
+  color: #333;
+  font-size: 16px;
+}

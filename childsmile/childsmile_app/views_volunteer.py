@@ -1,14 +1,24 @@
 """
 Volunteer and Tutor registration views - Handle TOTP-based registration
 """
-from django.http import JsonResponse
+import os
+import base64
+import pandas as pd
+from io import BytesIO
+from openpyxl import Workbook
+from openpyxl.styles import Font, PatternFill, Alignment
+
+from django.http import JsonResponse, FileResponse
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from rest_framework import status
 from django_ratelimit.decorators import ratelimit
 from django.core.mail import send_mail
 from django.conf import settings
-from django.db import DatabaseError, transaction
+from django.db import DatabaseError, transaction, IntegrityError
 from django.utils.timezone import now
+from django.core.files.uploadedfile import UploadedFile
 from .models import (
     Staff, TOTPCode, SignedUp, Pending_Tutor, 
     General_Volunteer, Tutors, Role, Children,
@@ -21,6 +31,11 @@ from .logger import api_logger
 import json
 import datetime
 import traceback
+import re
+import os
+import base64
+import pandas as pd
+
 
 
 @conditional_csrf
@@ -744,7 +759,7 @@ def create_pending_tutor(request):
         # Create pending tutor record
         pending_tutor = Pending_Tutor.objects.create(
             id=signup_user,
-            created_at=datetime.datetime.now()
+            created_at=datetime.datetime.n
         )
 
         log_api_action(
@@ -1424,3 +1439,587 @@ def update_tutor(request, tutor_id):
             }
         )
         return JsonResponse({"message": "No fields updated."}, status=200)
+
+# ==================== BULK IMPORT VOLUNTEERS/TUTORS ====================
+
+
+
+@conditional_csrf
+@api_view(['POST'])
+def import_volunteers_endpoint(request):
+    
+    try:
+        # Check feature flag - inline (no helper method)
+        if not (os.environ.get("BLOCK_ACCESS_AFTER_APPROVAL", "False").lower() == "true"):
+            log_api_action(
+                request=request,
+                action='CREATE_VOLUNTEER_FAILED',
+                success=False,
+                error_message="Bulk import feature is not enabled",
+                status_code=403,
+                additional_data={'reason': 'Feature disabled'}
+            )
+            return JsonResponse(
+                {'error': 'Bulk import feature is not enabled'},
+                status=403
+            )
+        
+        # Check authentication (403 - not authenticated)
+        user_id = request.session.get("user_id")
+        if not user_id:
+            log_api_action(
+                request=request,
+                action='CREATE_VOLUNTEER_FAILED',
+                success=False,
+                error_message="Authentication credentials were not provided",
+                status_code=403,
+                additional_data={'reason': 'Not authenticated'}
+            )
+            return JsonResponse(
+                {'error': 'Authentication credentials were not provided'},
+                status=403
+            )
+        
+        try:
+            user = Staff.objects.get(staff_id=user_id)
+        except Staff.DoesNotExist:
+            log_api_action(
+                request=request,
+                action='CREATE_VOLUNTEER_FAILED',
+                success=False,
+                error_message="User not found",
+                status_code=403,
+                additional_data={'reason': 'User does not exist'}
+            )
+            return JsonResponse(
+                {'error': 'User not found'},
+                status=403
+            )
+        
+        # Check permission (401 - authenticated but no permission)
+        has_tutor_create = has_permission(request, "tutors", "CREATE")
+        has_volunteer_create = has_permission(request, "general_volunteer", "CREATE")
+        
+        if not (has_tutor_create or has_volunteer_create):
+            log_api_action(
+                request=request,
+                action='CREATE_VOLUNTEER_FAILED',
+                success=False,
+                error_message="You do not have permission to import volunteers or tutors",
+                status_code=401,
+                additional_data={'reason': 'Permission denied', 'user_email': user.email}
+            )
+            api_logger.critical(f"Unauthorized import attempt by {user.email} - lacks CREATE permission")
+            return JsonResponse(
+                {'error': 'You do not have permission to import volunteers or tutors'},
+                status=401
+            )
+        
+        api_logger.info(f"Import permission granted for user: {user.email}")
+        
+        # Get uploaded file
+        if 'file' not in request.FILES:
+            return JsonResponse(
+                {'error': 'No file provided'},
+                status=400
+            )
+        
+        file: UploadedFile = request.FILES['file']
+        
+        # Validate file extension
+        if not file.name.endswith('.xlsx'):
+            return JsonResponse(
+                {'error': 'File must be .xlsx format'},
+                status=400
+            )
+        
+        dry_run = request.data.get('dry_run', 'false').lower() == 'true'
+        
+        # Read Excel file
+        try:
+            df = pd.read_excel(file, dtype=str)
+        except Exception as e:
+            api_logger.error(f"Failed to read Excel file: {str(e)}")
+            return JsonResponse(
+                {'error': f'Failed to read Excel file: {str(e)}'},
+                status=400
+            )
+        
+        if df.empty:
+            return JsonResponse(
+                {'error': 'Excel file is empty'},
+                status=400
+            )
+        
+        # Get required roles
+        try:
+            general_volunteer_role = Role.objects.get(role_name="General Volunteer")
+        except Role.DoesNotExist:
+            return JsonResponse(
+                {'error': 'Role "General Volunteer" not found in database'},
+                status=500
+            )
+        
+        try:
+            tutor_role = Role.objects.get(role_name="Tutor")
+        except Role.DoesNotExist:
+            return JsonResponse(
+                {'error': 'Role "Tutor" not found in database'},
+                status=500
+            )
+        
+        # Process records
+        total_records = len(df)
+        success_count = 0
+        error_count = 0
+        skipped_count = 0
+        general_volunteer_count = 0
+        tutor_with_tutee_count = 0
+        tutor_no_tutee_count = 0
+        pending_tutor_count = 0
+        
+        results = []
+        
+        for idx, row in df.iterrows():
+            row_num = idx + 2
+            # get_clean_string inline for names
+            first_name_raw = row.get('שם פרטי', '')
+            first_name = '' if (first_name_raw is None or pd.isna(first_name_raw) or str(first_name_raw).lower() == 'nan') else str(first_name_raw).strip()
+            
+            surname_raw = row.get('שם משפחה', '')
+            surname = '' if (surname_raw is None or pd.isna(surname_raw) or str(surname_raw).lower() == 'nan') else str(surname_raw).strip()
+            
+            result = {
+                'row_num': row_num,
+                'first_name': first_name,
+                'surname': surname,
+                'email': '',
+                'status': '',
+                'record_type': '',
+                'details': ''
+            }
+            
+            try:
+                # Parse data - INLINE, NO HELPER METHODS
+                # get_clean_string inline
+                id_number_raw = row.get('תעודת זהות', '')
+                id_number = '' if (id_number_raw is None or pd.isna(id_number_raw) or str(id_number_raw).lower() == 'nan') else str(id_number_raw).strip()
+                
+                phone_raw = row.get('מספר טלפון', '')
+                phone = '' if (phone_raw is None or pd.isna(phone_raw) or str(phone_raw).lower() == 'nan') else str(phone_raw).strip()
+                
+                # clean_email inline
+                email_raw = row.get('מייל')
+                if email_raw and not pd.isna(email_raw):
+                    email = str(email_raw).strip().replace('\n', '').replace('\r', '')
+                    if not email or email.lower() == 'nan':
+                        email = None
+                else:
+                    email = None
+                
+                # clean_city inline
+                city_raw = row.get('עיר מגורים', '')
+                city_val = '' if (city_raw is None or pd.isna(city_raw) or str(city_raw).lower() == 'nan') else str(city_raw).strip()
+                city_mapping = {
+                    'תל אביב': 'תל אביב - יפו',
+                    'מודיעין': 'מודיעין-מכבים-רעות',
+                    'מודעין': 'מודיעין-מכבים-רעות',
+                    'פתח תקוה': 'פתח תקווה',
+                    'קריית אתא': 'קרית אתא',
+                    'קריית נטפים': 'קרית נטפים',
+                    'יהוד מונוסון': 'יהוד-מונוסון',
+                    'קיבוץ חפץ חיים': 'חפץ חיים',
+                    'מושב בני ראם': 'בני ראם',
+                    'מושב חמד': 'חמד',
+                    'מושב פורת': 'פורת',
+                    'יד רמב״ם (מושב)': 'יד רמבם',
+                    'יישוב נופים': 'נופים',
+                    'מגד אל כרום': 'מג\'ד אל-כרום',
+                    'גבעת שמואל אבל עושה שירות': 'גבעת שמואל',
+                    'מושה טפחות': 'טפחות',
+                    'עלי זהב לומד בשדרות': 'עלי זהב',
+                    'ירושלים- תא': 'ירושלים',
+                    'ראשל״צ': 'ראשון לציון',
+                    'הדר גנים': 'גנות הדר',
+                    'רעננה(מגדל עוז)': 'רעננה',
+                }
+                city = city_val.replace('\n', ' ').replace('\r', '').strip() if city_val else ''
+                for separator in ['/', ',']:
+                    if separator in city:
+                        city = city.split(separator)[0].strip()
+                if city in city_mapping:
+                    city = city_mapping[city]
+                else:
+                    for key, value in city_mapping.items():
+                        if key in city:
+                            city = value
+                            break
+                
+                # parse_birth_date inline
+                date_val = row.get('תאריך לידה', '')
+                if not date_val or pd.isna(date_val) or str(date_val).lower() == 'nan':
+                    birth_date = None
+                else:
+                    try:
+                        from datetime import datetime as dt
+                        if isinstance(date_val, dt):
+                            birth_date = date_val.date()
+                        else:
+                            date_str = str(date_val).strip()
+                            birth_date = None
+                            for fmt in ['%Y-%m-%d %H:%M:%S', '%Y-%m-%d', '%d/%m/%Y', '%d-%m-%Y', '%d.%m.%Y', '%m/%d/%Y', '%m-%d-%Y', '%m.%d.%Y']:
+                                try:
+                                    parsed_date = dt.strptime(date_str, fmt).date()
+                                    today = dt.now().date()
+                                    age_check = today.year - parsed_date.year
+                                    if (today.month, today.day) < (parsed_date.month, parsed_date.day):
+                                        age_check -= 1
+                                    if 13 <= age_check <= 120:
+                                        birth_date = parsed_date
+                                        break
+                                except ValueError:
+                                    continue
+                    except Exception:
+                        birth_date = None
+                
+                # calculate_age_from_birth_date inline
+                if birth_date:
+                    from datetime import datetime as dt
+                    today = dt.now().date()
+                    calculated_age = today.year - birth_date.year
+                    if (today.month, today.day) < (birth_date.month, birth_date.day):
+                        calculated_age -= 1
+                    calculated_age = max(0, calculated_age)
+                else:
+                    calculated_age = 0
+                
+                # parse_gender inline
+                gender_val = row.get('מין', '')
+                if isinstance(gender_val, bool):
+                    gender = gender_val
+                elif isinstance(gender_val, str):
+                    gender_lower = gender_val.lower().strip()
+                    gender = gender_lower in ['true', 'נקבה', 'female', 'f', '1']
+                else:
+                    gender = False
+                
+                # parse_want_tutor inline
+                want_tutor_val = row.get('סוג התנדבות', '')
+                if isinstance(want_tutor_val, bool):
+                    want_tutor = want_tutor_val
+                elif isinstance(want_tutor_val, str):
+                    val_lower = want_tutor_val.lower().strip()
+                    want_tutor = val_lower in ['true', 'כן', 'yes', '1']
+                else:
+                    want_tutor = False
+                
+                # parse_status inline
+                status_raw = row.get('סטטוס', '')
+                if not status_raw or pd.isna(status_raw) or str(status_raw).lower() == 'nan':
+                    status_val = None
+                else:
+                    status_val = str(status_raw).strip()
+                
+                # get_clean_string inline for comments
+                volunteer_comment_raw = row.get('הערות המתנדב', '')
+                volunteer_comment = '' if (volunteer_comment_raw is None or pd.isna(volunteer_comment_raw) or str(volunteer_comment_raw).lower() == 'nan') else str(volunteer_comment_raw).strip()
+                
+                coordinator_comment_raw = row.get('הערות הרכז', '')
+                coordinator_comment = '' if (coordinator_comment_raw is None or pd.isna(coordinator_comment_raw) or str(coordinator_comment_raw).lower() == 'nan') else str(coordinator_comment_raw).strip()
+                
+                result['email'] = email or ''
+                
+                # Build comments
+                signedup_comment_parts = []
+                tutor_preferences = None
+                
+                if want_tutor:
+                    if volunteer_comment:
+                        tutor_preferences = volunteer_comment
+                    if coordinator_comment:
+                        signedup_comment_parts.append(f"הערות רכז: {coordinator_comment}")
+                else:
+                    if volunteer_comment:
+                        signedup_comment_parts.append(f"הערות מתנדב: {volunteer_comment}")
+                    if coordinator_comment:
+                        signedup_comment_parts.append(f"הערות רכז: {coordinator_comment}")
+                
+                signedup_comment = ' | '.join(signedup_comment_parts) if signedup_comment_parts else None
+                
+                # Validate
+                if not first_name or not surname:
+                    result['status'] = 'Error'
+                    result['details'] = 'חסר שם פרטי או שם משפחה'
+                    error_count += 1
+                    results.append(result)
+                    continue
+                
+                if not id_number:
+                    result['status'] = 'Error'
+                    result['details'] = 'חסרה תעודת זהות'
+                    error_count += 1
+                    results.append(result)
+                    continue
+                
+                try:
+                    id_int = int(id_number)
+                except ValueError:
+                    result['status'] = 'Error'
+                    result['details'] = f'תעודת זהות לא מספרית: {id_number}'
+                    error_count += 1
+                    results.append(result)
+                    continue
+                
+                # Check duplicates
+                if SignedUp.objects.filter(id=id_int).exists():
+                    result['status'] = 'Skipped'
+                    result['details'] = f'ת.ז. כבר קיימת במערכת'
+                    skipped_count += 1
+                    results.append(result)
+                    continue
+                
+                if email and Staff.objects.filter(email=email).exists():
+                    result['status'] = 'Skipped'
+                    result['details'] = f'מייל כבר קיים במערכת'
+                    skipped_count += 1
+                    results.append(result)
+                    continue
+                
+                # Determine record type
+                if want_tutor:
+                    if status_val == "יש חניך":
+                        record_type = "חונך - יש חניך"
+                    elif status_val == "אין חניך":
+                        record_type = "חונך - אין חניך"
+                    else:
+                        record_type = f"חונך ממתין - {status_val or 'ללא סטטוס'}"
+                else:
+                    record_type = "מתנדב כללי"
+                
+                result['record_type'] = record_type
+                
+                if dry_run:
+                    result['status'] = 'OK'
+                    result['details'] = f'בדיקה בלבד: {record_type}'
+                    success_count += 1
+                    results.append(result)
+                    continue
+                
+                # === CREATE RECORDS ===
+                with transaction.atomic():
+                    # 1. Create SignedUp
+                    signedup = SignedUp.objects.create(
+                        id=id_int,
+                        first_name=first_name,
+                        surname=surname,
+                        age=calculated_age,
+                        birth_date=birth_date,
+                        gender=gender,
+                        phone=phone,
+                        city=city,
+                        comment=signedup_comment,
+                        email=email,
+                        want_tutor=want_tutor,
+                    )
+                    
+                    # 2. Create Staff with unique username
+                    username = f"{first_name}_{surname}"
+                    index = 1
+                    original_username = username
+                    while Staff.objects.filter(username=username).exists():
+                        username = f"{original_username}_{index}"
+                        index += 1
+                    
+                    staff = Staff.objects.create(
+                        username=username,
+                        email=email,
+                        first_name=first_name,
+                        last_name=surname,
+                        created_at=now(),
+                        registration_approved=True,
+                        is_active=True,
+                        deactivation_reason="suspended"
+                    )
+                    
+                    # 3. Create role-specific record
+                    if want_tutor:
+                        staff.roles.add(tutor_role)
+                        
+                        if status_val == "יש חניך":
+                            Tutors.objects.create(
+                                id_id=signedup.id,
+                                staff=staff,
+                                tutorship_status="יש_חניך",
+                                tutor_email=email,
+                                preferences=tutor_preferences,
+                            )
+                            tutor_with_tutee_count += 1
+                        elif status_val == "אין חניך":
+                            Tutors.objects.create(
+                                id_id=signedup.id,
+                                staff=staff,
+                                tutorship_status="אין_חניך",
+                                tutor_email=email,
+                                preferences=tutor_preferences,
+                            )
+                            tutor_no_tutee_count += 1
+                        else:
+                            Tutors.objects.create(
+                                id_id=signedup.id,
+                                staff=staff,
+                                tutorship_status="אין_חניך",
+                                tutor_email=email,
+                                preferences=tutor_preferences,
+                            )
+                            Pending_Tutor.objects.create(
+                                id_id=signedup.id,
+                                pending_status="ממתין",
+                            )
+                            pending_tutor_count += 1
+                    else:
+                        staff.roles.add(general_volunteer_role)
+                        General_Volunteer.objects.create(
+                            id_id=signedup.id,
+                            staff_id=staff.staff_id,
+                            signupdate=now().date(),
+                            comments="",
+                        )
+                        general_volunteer_count += 1
+                
+                result['status'] = 'OK'
+                result['details'] = f'נוצר בהצלחה: {record_type}'
+                success_count += 1
+                results.append(result)
+                
+            except IntegrityError as e:
+                result['status'] = 'Error'
+                result['details'] = f'שגיאת מסד נתונים: {str(e)}'
+                error_count += 1
+                results.append(result)
+            except Exception as e:
+                result['status'] = 'Error'
+                result['details'] = f'שגיאה כללית: {str(e)}'
+                error_count += 1
+                results.append(result)
+        
+        # Create result Excel file - INLINE, NO HELPER METHODS
+        wb = Workbook()
+        ws = wb.active
+        ws.title = "תוצאות ייבוא"
+        
+        headers = ['שורה', 'שם פרטי', 'שם משפחה', 'מייל', 'סטטוס ייבוא', 'סוג רשומה', 'פרטים']
+        header_fill = PatternFill(start_color='4472C4', end_color='4472C4', fill_type='solid')
+        header_font = Font(color='FFFFFF', bold=True)
+        ok_fill = PatternFill(start_color='C6EFCE', end_color='C6EFCE', fill_type='solid')
+        error_fill = PatternFill(start_color='FFC7CE', end_color='FFC7CE', fill_type='solid')
+        warning_fill = PatternFill(start_color='FFEB9C', end_color='FFEB9C', fill_type='solid')
+        
+        for col, header in enumerate(headers, 1):
+            cell = ws.cell(row=1, column=col, value=header)
+            cell.fill = header_fill
+            cell.font = header_font
+            cell.alignment = Alignment(horizontal='center')
+        
+        for row_idx, result in enumerate(results, 2):
+            ws.cell(row=row_idx, column=1, value=result.get('row_num', ''))
+            ws.cell(row=row_idx, column=2, value=result['first_name'])
+            ws.cell(row=row_idx, column=3, value=result['surname'])
+            ws.cell(row=row_idx, column=4, value=result.get('email', ''))
+            
+            status_cell = ws.cell(row=row_idx, column=5, value=result['status'])
+            if result['status'] == 'OK':
+                status_cell.fill = ok_fill
+            elif result['status'] == 'Error':
+                status_cell.fill = error_fill
+            elif result['status'] == 'Warning':
+                status_cell.fill = warning_fill
+            
+            ws.cell(row=row_idx, column=6, value=result.get('record_type', ''))
+            ws.cell(row=row_idx, column=7, value=result.get('details', ''))
+        
+        ws.column_dimensions['A'].width = 8
+        ws.column_dimensions['B'].width = 15
+        ws.column_dimensions['C'].width = 15
+        ws.column_dimensions['D'].width = 30
+        ws.column_dimensions['E'].width = 12
+        ws.column_dimensions['F'].width = 20
+        ws.column_dimensions['G'].width = 60
+        ws.sheet_view.rightToLeft = True
+        
+        result_excel = BytesIO()
+        wb.save(result_excel)
+        result_excel.seek(0)
+        
+        # Log the import action
+        if success_count > 0 or error_count > 0 or skipped_count > 0:
+            log_api_action(
+                request=request,
+                action='CREATE_VOLUNTEER_SUCCESS' if success_count > 0 else 'CREATE_VOLUNTEER_FAILED',
+                affected_tables=['childsmile_app_signedup', 'childsmile_app_staff', 'childsmile_app_general_volunteer', 'childsmile_app_tutors', 'childsmile_app_pending_tutor'],
+                entity_type='Bulk Import',
+                success=success_count > 0,
+                additional_data={
+                    'total_records': total_records,
+                    'success_count': success_count,
+                    'error_count': error_count,
+                    'skipped_count': skipped_count,
+                    'dry_run': dry_run,
+                    'breakdown': {
+                        'general_volunteer': general_volunteer_count,
+                        'tutor_with_tutee': tutor_with_tutee_count,
+                        'tutor_no_tutee': tutor_no_tutee_count,
+                        'pending_tutor': pending_tutor_count,
+                    }
+                }
+            )
+        
+        # Return results
+        response_data = {
+            'total': total_records,
+            'success': success_count,
+            'skipped': skipped_count,
+            'error': error_count,
+            'dry_run': dry_run,
+            'breakdown': {
+                'general_volunteer': general_volunteer_count,
+                'tutor_with_tutee': tutor_with_tutee_count,
+                'tutor_no_tutee': tutor_no_tutee_count,
+                'pending_tutor': pending_tutor_count,
+            },
+            'message': f'✅ ייבוא הושלם: {success_count} מתוך {total_records} הרשומות יובאו בהצלחה' if success_count > 0 else '❌ לא הצליח לייבא רשומות',
+            'has_errors': error_count > 0 or skipped_count > 0,
+            'result_file_available': True
+        }
+        
+        # If dry_run, return Excel file for preview
+        if dry_run:
+            response = FileResponse(result_excel, content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+            from datetime import datetime as dt
+            response['Content-Disposition'] = f'attachment; filename="import_preview_{dt.now().strftime("%Y%m%d_%H%M%S")}.xlsx"'
+            return response
+        
+        # For regular import, return JSON with Excel file bytes embedded as base64
+        # This allows frontend to download the results file
+        result_excel.seek(0)
+        excel_base64 = base64.b64encode(result_excel.read()).decode('utf-8')
+        response_data['result_file'] = excel_base64
+        from datetime import datetime as dt
+        response_data['result_filename'] = f"import_results_{dt.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
+
+        return JsonResponse(response_data, status=200)
+    
+    except Exception as e:
+        api_logger.error(f"Import endpoint error: {str(e)}")
+        api_logger.error(f"Full traceback: {traceback.format_exc()}")
+        log_api_action(
+            request=request,
+            action='CREATE_VOLUNTEER_FAILED',
+            success=False,
+            error_message=str(e),
+            status_code=500,
+            additional_data={'error_type': type(e).__name__}
+        )
+        return JsonResponse(
+            {'error': f'Unexpected error: {str(e)}'},
+            status=500
+        )

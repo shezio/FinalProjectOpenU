@@ -40,6 +40,13 @@ const TutorVolunteerMgmt = () => {
   const [showTutorshipDetailsModal, setShowTutorshipDetailsModal] = useState(false);
   const [tutorshipDetailsData, setTutorshipDetailsData] = useState(null);
 
+  // Import feature state
+  const [importEnabled, setImportEnabled] = useState(false);
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [importFile, setImportFile] = useState(null);
+  const [importDryRun, setImportDryRun] = useState(true);
+  const [importLoading, setImportLoading] = useState(false);
+
   const startEdit = (entity, field, type) => {
     const rowId = entity.id; // Always use id for tutors and volunteers
     setEditingCell({ rowId, field, type });
@@ -392,6 +399,12 @@ const TutorVolunteerMgmt = () => {
     fetchGridData();
   }, [showTutors]);
 
+  // Check if import feature is enabled from environment variable
+  useEffect(() => {
+    const enabled = process.env.REACT_APP_BLOCK_ACCESS_AFTER_APPROVAL === 'true';
+    setImportEnabled(enabled);
+  }, []);
+
   const fetchGridData = () => {
     setLoading(true);
     if (showTutors) {
@@ -588,6 +601,97 @@ const TutorVolunteerMgmt = () => {
     } else {
       // Show dd/mm/yyyy
       return dateObj.toLocaleDateString('en-GB');
+    }
+  };
+
+  // ============ IMPORT HANDLERS ============
+  const handleImportFile = (e) => {
+    const file = e.target.files?.[0];
+    if (file && file.name.endsWith('.xlsx')) {
+      setImportFile(file);
+    } else {
+      toast.error(t("Please select an .xlsx file"));
+      setImportFile(null);
+    }
+  };
+
+  const downloadResultsFile = (base64Data, filename) => {
+    // Convert base64 to blob
+    const byteCharacters = atob(base64Data);
+    const byteNumbers = new Array(byteCharacters.length);
+    for (let i = 0; i < byteCharacters.length; i++) {
+      byteNumbers[i] = byteCharacters.charCodeAt(i);
+    }
+    const byteArray = new Uint8Array(byteNumbers);
+    const blob = new Blob([byteArray], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    
+    // Create download link
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', filename);
+    document.body.appendChild(link);
+    link.click();
+    link.parentNode.removeChild(link);
+    window.URL.revokeObjectURL(url);
+  };
+
+  const handleImportSubmit = async () => {
+    if (!importFile) {
+      toast.error(t("Please select a file"));
+      return;
+    }
+
+    setImportLoading(true);
+    const formData = new FormData();
+    formData.append('file', importFile);
+    formData.append('dry_run', importDryRun.toString());
+
+    try {
+      const response = await axios.post("/api/import/volunteers/", formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+        responseType: importDryRun ? 'blob' : 'json'
+      });
+
+      if (importDryRun) {
+        // Download the preview file
+        const url = window.URL.createObjectURL(new Blob([response.data]));
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', `import_preview_${new Date().getTime()}.xlsx`);
+        document.body.appendChild(link);
+        link.click();
+        link.parentNode.removeChild(link);
+        window.URL.revokeObjectURL(url);
+        toast.success(t("Preview file downloaded. Review and upload again without dry-run to import."));
+      } else {
+        // Real import - show success with detailed breakdown
+        const data = response.data;
+        const { success, error, skipped, total, breakdown, result_file, result_filename, message } = data;
+        
+        // Show detailed success toast
+        toast.success(
+          `✅ ${message}\n📊 בפירוט: ${breakdown.general_volunteer} מתנדבים כלליים, ${breakdown.tutor_with_tutee} חונכים עם חניכים, ${breakdown.tutor_no_tutee} חונכים ללא חניכים`,
+          { autoClose: 5000 }
+        );
+        
+        // Download the results file if it exists
+        if (result_file && result_filename) {
+          downloadResultsFile(result_file, result_filename);
+        }
+        
+        setImportFile(null);
+        setShowImportModal(false);
+        fetchGridData();
+      }
+    } catch (error) {
+      if (error.response?.data?.error) {
+        toast.error(error.response.data.error);
+      } else {
+        showErrorToast(t, "Import failed", error);
+      }
+    } finally {
+      setImportLoading(false);
     }
   };
 
@@ -1049,6 +1153,15 @@ const TutorVolunteerMgmt = () => {
           <button onClick={refreshGrid} className="refresh-volunteers-tutors-btn">
             {showTutors ? t("Refresh Tutors List") : t("Refresh Volunteers List")}
           </button>
+          {importEnabled && showTutors && (
+            <button 
+              onClick={() => setShowImportModal(true)}
+              className="import-volunteers-btn"
+              title={t("Import volunteers from Excel file")}
+            >
+              📥 {t("Import Volunteers")}
+            </button>
+          )}
           {showTutors && (
             <select
               className="tutorship-status-filter"
@@ -1179,6 +1292,77 @@ const TutorVolunteerMgmt = () => {
             </div>
           </div>
         </>
+      )}
+
+      {/* Import Volunteers Modal */}
+      {showImportModal && (
+        <div className="tutor-vol-modal-overlay" onClick={() => !importLoading && setShowImportModal(false)}>
+          <div className="tutor-vol-modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="tutor-vol-modal-header">
+              <h2>📥 {t("Import Volunteers")}</h2>
+              <span className="tutor-vol-modal-close" onClick={() => !importLoading && setShowImportModal(false)}>&times;</span>
+            </div>
+            <div className="tutor-vol-modal-body">
+              <div className="import-modal-file-group">
+                <label className="import-modal-file-label">
+                  {t("Select Excel File (.xlsx)")}:
+                </label>
+                <input
+                  type="file"
+                  accept=".xlsx"
+                  onChange={handleImportFile}
+                  disabled={importLoading}
+                  className="import-modal-file-input"
+                />
+                {importFile && <p className="import-modal-file-selected">✓ {importFile.name}</p>}
+              </div>
+
+              <div className="import-modal-checkbox-group">
+                <label className="import-modal-checkbox-label">
+                  <input
+                    type="checkbox"
+                    checked={importDryRun}
+                    onChange={(e) => setImportDryRun(e.target.checked)}
+                    disabled={importLoading}
+                  />
+                  <span>
+                    {t("Dry Run")} 
+                    <small className="import-modal-checkbox-hint">
+                      ({t("Preview without importing")})
+                    </small>
+                  </span>
+                </label>
+              </div>
+
+              <div className="import-modal-instructions-box">
+                <strong>{t("Instructions")}:</strong>
+                <ul>
+                  <li>{t("Excel file must have columns: שם פרטי, שם משפחה, תעודת זהות, מייל, סוג התנדבות, etc.")}</li>
+                  <li>{t("First do a dry-run to validate data")}</li>
+                  <li>{t("Then upload without dry-run to import")}</li>
+                  <li>{t("Results will be shown with import summary")}</li>
+                </ul>
+              </div>
+            </div>
+
+            <div className="tutor-vol-modal-footer">
+              <button 
+                className="tutor-vol-btn-cancel" 
+                onClick={() => setShowImportModal(false)}
+                disabled={importLoading}
+              >
+                {t("Cancel")}
+              </button>
+              <button 
+                className="tutor-vol-btn-confirm" 
+                onClick={handleImportSubmit}
+                disabled={!importFile || importLoading}
+              >
+                {importLoading ? `${t("Processing")}...` : (importDryRun ? t("Validate") : t("Import"))}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
