@@ -506,6 +506,7 @@ const TutorVolunteerMgmt = () => {
         const name = (entity.name || (entity.first_name + " " + entity.last_name) || "").toLowerCase();
         const email = (entity.tutor_email || entity.email || "").toLowerCase();
         const phone = (entity.phone || "").toLowerCase();
+        const city = (entity.city || "").toLowerCase();
         // Normalize phone for comparison (remove dashes and spaces)
         const normalizedPhone = phone.replace(/[-\s]/g, '');
         const id = String(entity.id || "").toLowerCase();
@@ -515,6 +516,7 @@ const TutorVolunteerMgmt = () => {
             !email.includes(term) && 
             !phone.includes(term) && 
             !normalizedPhone.includes(normalizedTerm) &&
+            !city.includes(term) &&
             !id.includes(term)) {
           return false;
         }
@@ -1181,7 +1183,7 @@ const TutorVolunteerMgmt = () => {
           <input
             className="search-bar"
             type="text"
-            placeholder={t("Search by name, email, phone or ID")}
+            placeholder={t("Search by name, email, phone, city or ID")}
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
           />

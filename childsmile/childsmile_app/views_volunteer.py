@@ -1608,6 +1608,20 @@ def import_volunteers_endpoint(request):
                 phone_raw = row.get('מספר טלפון', '')
                 phone = '' if (phone_raw is None or pd.isna(phone_raw) or str(phone_raw).lower() == 'nan') else str(phone_raw).strip()
                 
+                # Format phone number - ensure leading zero and remove dashes/spaces
+                if phone:
+                    phone_normalized = phone.replace('-', '').replace(' ', '').strip()
+                    # If doesn't start with 0, add it
+                    if phone_normalized and not phone_normalized.startswith('0'):
+                        phone_normalized = '0' + phone_normalized
+                    # Validate it's 10 digits
+                    if phone_normalized.isdigit() and len(phone_normalized) == 10:
+                        phone = f"{phone_normalized[:3]}-{phone_normalized[3:]}"  # Format as XXX-XXXXXXX
+                    else:
+                        phone = ''  # Invalid phone, set to empty
+                else:
+                    phone = ''
+                
                 # clean_email inline
                 email_raw = row.get('מייל')
                 if email_raw and not pd.isna(email_raw):

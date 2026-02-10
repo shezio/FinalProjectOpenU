@@ -923,7 +923,7 @@ const resources = {
       "You do not have permission to update tutors.": "אין לך הרשאה לעדכן חונכים ",
       "You do not have permission to update volunteers.": "אין לך הרשאה לעדכן מתנדבים ",
       "Search by name or email": "חפש לפי שם או אימייל",
-      "Search by name, email, phone or ID": "חפש לפי שם, אימייל, טלפון או ת.ז",
+      "Search by name, email, phone, city or ID": "חפש לפי שם, אימייל, טלפון, עיר או ת.ז",
       "Search by child name": "חפש לפי שם ילד",
       "Registration Approval": "אישור הרשמה",
       "Registration approved! You can now log in.": "הרשמתך אושרה! תוכל כעת להתחבר למערכת.",
