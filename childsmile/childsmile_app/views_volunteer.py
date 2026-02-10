@@ -1038,6 +1038,21 @@ def update_volunteer_id(request, old_id):
             # Determine if this was a tutor or volunteer for proper action name
             action_name = 'UPDATE_TUTOR_SUCCESS' if tutor_updated else 'UPDATE_GENERAL_VOLUNTEER_SUCCESS'
             
+            # Prepare audit data with correct field names based on user type
+            audit_data = {
+                'update_type': 'ID_CHANGE',
+                'old_id': old_id,
+                'new_id': new_id,
+            }
+            
+            # Add the right name fields based on whether it's a tutor or volunteer
+            if tutor_updated:
+                audit_data['tutor_name'] = f"{original_data['first_name']} {original_data['surname']}"
+                audit_data['tutor_email'] = original_data['email']
+            else:
+                audit_data['volunteer_name'] = f"{original_data['first_name']} {original_data['surname']}"
+                audit_data['volunteer_email'] = original_data['email']
+            
             log_api_action(
                 request=request,
                 action=action_name,
@@ -1045,13 +1060,7 @@ def update_volunteer_id(request, old_id):
                 entity_type='SignedUp',
                 entity_ids=[old_id, new_id],
                 success=True,
-                additional_data={
-                    'update_type': 'ID_CHANGE',
-                    'old_id': old_id,
-                    'new_id': new_id,
-                    'volunteer_name': f"{original_data['first_name']} {original_data['surname']}",
-                    'volunteer_email': original_data['email']
-                }
+                additional_data=audit_data
             )
             
             return JsonResponse({
@@ -1155,6 +1164,22 @@ def update_volunteer_phone(request, volunteer_id):
     
     # Log with appropriate action name based on user type
     action_name = 'UPDATE_TUTOR_SUCCESS' if is_tutor else 'UPDATE_GENERAL_VOLUNTEER_SUCCESS'
+    
+    # Prepare audit data with correct field names based on user type
+    audit_data = {
+        'update_type': 'PHONE_CHANGE',
+        'old_phone': old_phone,
+        'new_phone': new_phone_formatted,
+    }
+    
+    # Add the right name field based on whether it's a tutor or volunteer
+    if is_tutor:
+        audit_data['tutor_name'] = f"{signedup.first_name} {signedup.surname}"
+        audit_data['tutor_email'] = signedup.email
+    else:
+        audit_data['volunteer_name'] = f"{signedup.first_name} {signedup.surname}"
+        audit_data['volunteer_email'] = signedup.email
+    
     log_api_action(
         request=request,
         action=action_name,
@@ -1162,13 +1187,7 @@ def update_volunteer_phone(request, volunteer_id):
         entity_type='SignedUp',
         entity_ids=[volunteer_id],
         success=True,
-        additional_data={
-            'update_type': 'PHONE_CHANGE',
-            'old_phone': old_phone,
-            'new_phone': new_phone_formatted,
-            'volunteer_name': f"{signedup.first_name} {signedup.surname}",
-            'volunteer_email': signedup.email
-        }
+        additional_data=audit_data
     )
     
     return JsonResponse({
@@ -1608,6 +1627,20 @@ def import_volunteers_endpoint(request):
                 phone_raw = row.get('מספר טלפון', '')
                 phone = '' if (phone_raw is None or pd.isna(phone_raw) or str(phone_raw).lower() == 'nan') else str(phone_raw).strip()
                 
+                # Format phone number - ensure leading zero and remove dashes/spaces
+                if phone:
+                    phone_normalized = phone.replace('-', '').replace(' ', '').strip()
+                    # If doesn't start with 0, add it
+                    if phone_normalized and not phone_normalized.startswith('0'):
+                        phone_normalized = '0' + phone_normalized
+                    # Validate it's 10 digits
+                    if phone_normalized.isdigit() and len(phone_normalized) == 10:
+                        phone = f"{phone_normalized[:3]}-{phone_normalized[3:]}"  # Format as XXX-XXXXXXX
+                    else:
+                        phone = ''  # Invalid phone, set to empty
+                else:
+                    phone = ''
+                
                 # clean_email inline
                 email_raw = row.get('מייל')
                 if email_raw and not pd.isna(email_raw):
@@ -1951,13 +1984,14 @@ def import_volunteers_endpoint(request):
         result_excel.seek(0)
         
         # Log the import action
-        if success_count > 0 or error_count > 0 or skipped_count > 0:
+        # Log ALL imports (dry-run or live) as long as there are records processed
+        if total_records > 0:
             log_api_action(
                 request=request,
-                action='CREATE_VOLUNTEER_SUCCESS' if success_count > 0 else 'CREATE_VOLUNTEER_FAILED',
+                action='CREATE_VOLUNTEER_SUCCESS',  # Always use SUCCESS for imports (both dry-run and live)
                 affected_tables=['childsmile_app_signedup', 'childsmile_app_staff', 'childsmile_app_general_volunteer', 'childsmile_app_tutors', 'childsmile_app_pending_tutor'],
                 entity_type='Bulk Import',
-                success=success_count > 0,
+                success=True,  # Both dry-run and live imports are successful operations
                 additional_data={
                     'total_records': total_records,
                     'success_count': success_count,
@@ -1969,7 +2003,8 @@ def import_volunteers_endpoint(request):
                         'tutor_with_tutee': tutor_with_tutee_count,
                         'tutor_no_tutee': tutor_no_tutee_count,
                         'pending_tutor': pending_tutor_count,
-                    }
+                    },
+                    'is_bulk_import': True
                 }
             )
         

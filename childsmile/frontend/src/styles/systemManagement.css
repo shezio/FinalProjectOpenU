@@ -443,6 +443,9 @@
   flex-shrink: 0;
 }
 
+.staff-page-content input.search-bar {
+  width: 350px;
+}
 
 .search-bar {
   padding: 10px 15px;
