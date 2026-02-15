@@ -272,6 +272,15 @@ const resources = {
       "[TUTORS_WITH_TUTEES_LABEL]": "Tutors with Tutees",
       "[TUTORS_WITHOUT_TUTEES_LABEL]": "Tutors without Tutees",
       "[PENDING_TUTORS_LABEL]": "Pending Tutors",
+      // Bulk Import Families Audit Log Headers
+      "[BULK_FAMILY_IMPORT_TITLE]": "Bulk Import - Families",
+      "[FAMILY_IMPORT_LABEL]": "Family Import",
+      "[ACTIVE_FAMILIES_LABEL]": "Active Families",
+      "[PENDING_FAMILIES_LABEL]": "Families Pending Approval",
+      "Import Families": "Import Families",
+      "Select Excel File": "Select Excel File",
+      "Dry Run (Preview Only)": "Dry Run (Preview Only)",
+      "Importing...": "Importing...",
     }
   },
   he: {
@@ -395,7 +404,8 @@ const resources = {
       "Tutoring status": "מצב חונכות",
       "Responsible Coordinator": "רכז אחראי",
       "Select a coordinator": "בחר רכז",
-      "Auto-assigned based on tutoring status": "מוקצה אוטומטית על סמך מצב חונכות",
+      "Auto-assigned based on status": "מוקצה אוטומטית על סמך מצב חונכות או סטטוס",
+      "Responsible coordinator is required.": "חובה לצוות רכז אחראי",
       "Tutorship Status": "מצב חונכות",
       "Tutorship status": "מצב חונכות",
       "Tutors Coordinator": "רכז חונכים",
@@ -1169,6 +1179,15 @@ const resources = {
       "[TUTORS_WITH_TUTEES_LABEL]": "חונכים עם חניכים",
       "[TUTORS_WITHOUT_TUTEES_LABEL]": "חונכים ללא חניכים",
       "[PENDING_TUTORS_LABEL]": "מועמדים לחונכות",
+      // Bulk Import Families Audit Log Headers
+      "[BULK_FAMILY_IMPORT_TITLE]": "ייבוא קבוצתי - משפחות",
+      "[FAMILY_IMPORT_LABEL]": "ייבוא משפחות",
+      "[ACTIVE_FAMILIES_LABEL]": "משפחות פעילות",
+      "[PENDING_FAMILIES_LABEL]": "משפחות בהמתנה לאישור",
+      "Import Families": "ייבוא",
+      "Select Excel File": "בחר קובץ Excel",
+      "Dry Run (Preview Only)": "בדיקה (תצוגה מקדימה בלבד)",
+      "Importing...": "מייבא...",
     }
   }
 };

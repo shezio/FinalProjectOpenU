@@ -94,6 +94,13 @@ const Families = () => {
   // Bulk delete feature flag
   const ENABLE_BULK_DELETE = process.env.REACT_APP_ENABLE_BULK_DELETE === 'true';
 
+  // Families import feature flag
+  const FAMILIES_IMPORT_ENABLED = process.env.REACT_APP_FAMILIES_IMPORT_ENABLED === 'true';
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [importFile, setImportFile] = useState(null);
+  const [importDryRun, setImportDryRun] = useState(true);
+  const [isImporting, setIsImporting] = useState(false);
+
   const fetchFamilies = async () => {
     setIsRefreshing(true);
     setLoading(true);
@@ -256,6 +263,9 @@ const Families = () => {
     if (!newFamily.status) {
       newErrors.status = t("Status is required.");
     }
+    if (!newFamily.responsible_coordinator) {
+      newErrors.responsible_coordinator = t("Responsible coordinator is required.");
+    }
 
     // Validate registration_date if provided - must be valid date and not in future
     if (newFamily.registration_date) {
@@ -371,6 +381,56 @@ const Families = () => {
     setErrors({}); // Clear errors when closing the modal
   };
 
+  const handleImportFamilies = async () => {
+    if (!importFile) {
+      showErrorToast('Please select a file');
+      return;
+    }
+
+    setIsImporting(true);
+    const formData = new FormData();
+    formData.append('file', importFile);
+    formData.append('dry_run', importDryRun);
+
+    try {
+      const response = await axios.post('/api/import/families/', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+
+      if (importDryRun) {
+        const link = document.createElement('a');
+        link.href = window.URL.createObjectURL(new Blob([response.data]));
+        link.setAttribute('download', `import_preview_families_${new Date().getTime()}.xlsx`);
+        document.body.appendChild(link);
+        link.click();
+        link.parentNode.removeChild(link);
+        toast.success('Preview file downloaded. Review and upload again without dry-run to import.');
+      } else {
+        if (response.data.result_file) {
+          const binary = atob(response.data.result_file);
+          const array = new Uint8Array(binary.length);
+          for (let i = 0; i < binary.length; i++) {
+            array[i] = binary.charCodeAt(i);
+          }
+          const link = document.createElement('a');
+          link.href = window.URL.createObjectURL(new Blob([array]));
+          link.setAttribute('download', response.data.result_filename || 'import_results_families.xlsx');
+          document.body.appendChild(link);
+          link.click();
+          link.parentNode.removeChild(link);
+        }
+        toast.success(response.data.message || 'Import completed successfully');
+        setShowImportModal(false);
+        setImportFile(null);
+        setImportDryRun(true);
+        fetchFamilies();
+      }
+    } catch (error) {
+      showErrorToast(error.response?.data?.error || 'Import failed');
+    } finally {
+      setIsImporting(false);
+    }
+  };
 
   const showFamilyDetails = (family) => {
     setSelectedFamily(family);
@@ -421,7 +481,7 @@ const Families = () => {
       expected_end_treatment_by_protocol: formatDate(family.expected_end_treatment_by_protocol) || '',
       has_completed_treatments: family.has_completed_treatments || false,
       status: family.status || 'טיפולים',
-      responsible_coordinator: family.responsible_coordinator_id || '', // Load current coordinator ID (not name)
+      responsible_coordinator: family.responsible_coordinator || '', // Load current coordinator (can be "ללא" or staff_id)
     };
 
     const cityKey = family.city ? family.city.trim() : '';
@@ -712,9 +772,20 @@ const Families = () => {
     setPage(1);
   }, [showHealthyOnly, showMatureOnly, selectedStatus, maxAge, families]);
 
-  // Auto-assign coordinator based on tutoring status
+  // Auto-assign coordinator based on tutoring status AND medical status (בריא/ז״ל)
   useEffect(() => {
-    if (newFamily.tutoring_status) {
+    // Check if child is בריא or ז״ל (healthy or deceased)
+    const isHealthyOrDeceased = newFamily.status === 'בריא' || newFamily.status === 'ז״ל';
+    
+    if (isHealthyOrDeceased) {
+      // For healthy/deceased children, auto-assign to "ללא"
+      setAutoAssignedCoordinator('ללא');
+      setNewFamily(prev => ({
+        ...prev,
+        responsible_coordinator: 'ללא'
+      }));
+    } else if (newFamily.tutoring_status) {
+      // For other statuses, assign based on tutoring_status
       // Define status categories - matching enum definition (with underscores)
       const NON_TUTORED_STATUSES = ['לא_רוצים', 'לא_רלוונטי', 'בוגר'];
       const TUTORED_STATUSES = [
@@ -743,7 +814,7 @@ const Families = () => {
         }));
       }
     }
-  }, [newFamily.tutoring_status, familiesCoordinators, tutoredCoordinators]);
+  }, [newFamily.tutoring_status, newFamily.status, familiesCoordinators, tutoredCoordinators]);
 
   return (
     <div className="families-main-content">
@@ -769,6 +840,11 @@ const Families = () => {
             >
               {t('Initial Family Data')}
             </button>
+            {FAMILIES_IMPORT_ENABLED && (
+              <button onClick={() => setShowImportModal(true)}>
+                {t('Import Families')}
+              </button>
+            )}
             <button onClick={openAddModal} disabled={isGuestUser()}>
               {t('Add New Family')}
             </button>
@@ -1367,7 +1443,7 @@ const Families = () => {
                   <label>{t('Responsible Coordinator')}</label>
                   {autoAssignedCoordinator && (
                     <div className="families-auto-assigned-note">
-                      ✨ {t('Auto-assigned based on tutoring status')}
+                      ✨ {t('Auto-assigned based on status')}
                     </div>
                   )}
                   <select
@@ -1375,8 +1451,11 @@ const Families = () => {
                     value={newFamily.responsible_coordinator}
                     onChange={handleAddFamilyChange}
                     className={errors.responsible_coordinator ? "error" : ""}
+                    required
                   >
-                    <option value="">{t('Select a coordinator')}</option>
+                    {/* Option for "ללא" (no coordinator) - for בריא/ז״ל children */}
+                    <option value="ללא">ללא (אין רכז)</option>
+                    {/* Other coordinators from the system */}
                     {availableCoordinators.map((coordinator, index) => (
                       <option key={index} value={coordinator.staff_id}>
                         {coordinator.name}
@@ -1755,7 +1834,7 @@ const Families = () => {
                   <label>{t('Responsible Coordinator')}</label>
                   {autoAssignedCoordinator && (
                     <div className="families-auto-assigned-note">
-                      ✨ {t('Auto-assigned based on tutoring status')}
+                      ✨ {t('Auto-assigned based on status')}
                     </div>
                   )}
                   <select
@@ -1763,8 +1842,11 @@ const Families = () => {
                     value={newFamily.responsible_coordinator}
                     onChange={handleAddFamilyChange}
                     className={errors.responsible_coordinator ? "error" : ""}
+                    required
                   >
-                    <option value="">{t('Select a coordinator')}</option>
+                    {/* Option for "ללא" (no coordinator) - for בריא/ז״ל children */}
+                    <option value="ללא">ללא (אין רכז)</option>
+                    {/* Other coordinators from the system */}
                     {availableCoordinators.map((coordinator, index) => (
                       <option key={index} value={coordinator.staff_id}>
                         {coordinator.name}
@@ -1792,6 +1874,44 @@ const Families = () => {
                 <div className="form-actions">
                   <button type="submit">{t('Add Family')}</button>
                   <button type="button" onClick={closeAddModal}>{t('Cancel')}</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+        {/* Import Families Modal */}
+        {showImportModal && (
+          <div className="modal show">
+            <div className="modal-content">
+              <span className="close" onClick={() => setShowImportModal(false)}>&times;</span>
+              <h2>{t('Import Families')}</h2>
+              <form onSubmit={(e) => { e.preventDefault(); handleImportFamilies(); }}>
+                <div className="form-group">
+                  <label>{t('Select Excel File')}</label>
+                  <input
+                    type="file"
+                    accept=".xlsx"
+                    onChange={(e) => setImportFile(e.target.files[0])}
+                    required
+                  />
+                </div>
+                <div className="form-group">
+                  <label>
+                    <input
+                      type="checkbox"
+                      checked={importDryRun}
+                      onChange={(e) => setImportDryRun(e.target.checked)}
+                    />
+                    {t('Dry Run (Preview Only)')}
+                  </label>
+                </div>
+                <div className="modal-buttons">
+                  <button type="submit" disabled={isImporting}>
+                    {isImporting ? t('Importing...') : t('Import')}
+                  </button>
+                  <button type="button" onClick={() => setShowImportModal(false)}>
+                    {t('Cancel')}
+                  </button>
                 </div>
               </form>
             </div>

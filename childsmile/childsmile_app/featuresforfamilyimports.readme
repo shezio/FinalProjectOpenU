@@ -1,0 +1,13 @@
+Now we need to add some features to the system - a child can have no resposible_coordinator - if he is בריא or ז״ל  which means we must support this state in the system on import and also make it “ללא” when the status changes to בריא or ז״ל
+
+responsible_coordinator db wise is just a char so need to just update API on the hardcoded value ללא whilst in UI unknown  would become ללא on ui
+
+Another feature is to be able to mark a child as “no need review call”
+Which would be automatically  marked for בריא or ז״ל
+And manually where needed
+
+The auto creator for review tasks will ignore children marked as such
+Need api and ui for this feature as well
+DONT WANT MIGRATION - give me sql to run adding a column bool named need_review
+
+ALTER TABLE children ADD COLUMN need_review BOOLEAN DEFAULT FALSE;

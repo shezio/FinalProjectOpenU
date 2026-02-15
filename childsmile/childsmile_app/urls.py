@@ -71,6 +71,7 @@ from .family_views import (
     delete_initial_family_data,
     mark_initial_family_complete,
     update_child_id,
+    import_families_endpoint,
 )
 from .feedback_views import (
     create_tutor_feedback,
@@ -433,6 +434,7 @@ urlpatterns = [
     path("api/purge-old-audit-logs/", purge_old_audit_logs, name="purge_old_audit_logs"),
     # Import endpoints
     path("api/import/volunteers/", import_volunteers_endpoint, name="import_volunteers"),
+    path("api/import/families/", import_families_endpoint, name="import_families"),
     # Dashboard endpoints
     path("api/dashboard/", include("childsmile_app.urls_dashboard")),
 ]

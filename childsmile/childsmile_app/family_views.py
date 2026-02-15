@@ -329,7 +329,9 @@ def create_family(request):
             # get the name of the responsible coordinator that has the role of 'Tutored Families Coordinator' else get the name of the responsible coordinator with the role of 'Family Coordinator' using not the user_id but getting it from the Staff table
                 # Get the correct responsible coordinator based on tutoring status
         tutoring_status = data.get("tutoring_status", "")
-        coordinator_staff_id = get_responsible_coordinator_for_family(tutoring_status)
+        child_status = data.get("status", "")
+        # Pass child_status to handle בריא/ז״ל children (they get "ללא")
+        coordinator_staff_id = get_responsible_coordinator_for_family(tutoring_status, child_status=child_status)
         responsible_coordinator = coordinator_staff_id if coordinator_staff_id else user_id
 
         # Create a new family record in the database
@@ -630,30 +632,6 @@ def update_family(request, child_id):
         family.num_of_siblings = data.get("num_of_siblings", family.num_of_siblings)
         family.details_for_tutoring = data.get("details_for_tutoring", family.details_for_tutoring)
         family.additional_info = data.get("additional_info", family.additional_info)
-        
-        # Handle tutoring_status change and auto-update coordinator
-        old_tutoring_status = family.tutoring_status
-        new_tutoring_status = data.get("tutoring_status", family.tutoring_status)
-        family.tutoring_status = new_tutoring_status
-        
-        # Auto-update responsible_coordinator if tutoring_status changed
-        # Only auto-update if coordinator wasn't manually set in the request
-        if old_tutoring_status != new_tutoring_status and "responsible_coordinator" not in data:
-            new_coordinator_id = get_responsible_coordinator_for_family(new_tutoring_status)
-            if new_coordinator_id:
-                old_coordinator_name = get_staff_name_by_id(family.responsible_coordinator)
-                family.responsible_coordinator = new_coordinator_id
-                new_coordinator_name = get_staff_name_by_id(new_coordinator_id)
-                field_changes.append(f"Responsible Coordinator (auto-updated): '{old_coordinator_name}' → '{new_coordinator_name}' (due to tutoring status change)")
-        elif "responsible_coordinator" in data:
-            # Allow manual override of responsible_coordinator
-            new_coordinator = data.get("responsible_coordinator")
-            if family.responsible_coordinator != new_coordinator:
-                old_coordinator_name = get_staff_name_by_id(family.responsible_coordinator)
-                family.responsible_coordinator = new_coordinator
-                new_coordinator_name = get_staff_name_by_id(new_coordinator)
-                field_changes.append(f"Responsible Coordinator (manual): '{old_coordinator_name}' → '{new_coordinator_name}'")
-        
         family.current_medical_state = data.get("current_medical_state", family.current_medical_state)
         family.when_completed_treatments = parse_date_field(data.get("when_completed_treatments"), "when_completed_treatments")
         family.father_name = data.get("father_name", family.father_name)
@@ -664,11 +642,42 @@ def update_family(request, child_id):
         family.expected_end_treatment_by_protocol = parse_date_field(data.get("expected_end_treatment_by_protocol"), "expected_end_treatment_by_protocol")
         family.has_completed_treatments = data.get("has_completed_treatments", family.has_completed_treatments)
         
-        # Track old status for deceased handling
+        # Handle tutoring_status change and auto-update coordinator
+        old_tutoring_status = family.tutoring_status
+        new_tutoring_status = data.get("tutoring_status", family.tutoring_status)
+        family.tutoring_status = new_tutoring_status
+        
+        # Track old status for the coordinator logic
         old_status = family.status
         new_status = data.get("status", family.status)
         family.status = new_status
-        family.lastupdateddate = datetime.datetime.now()
+        
+        # Auto-update responsible_coordinator if tutoring_status changed OR if status changed to/from בריא/ז״ל
+        # Only auto-update if coordinator wasn't manually set in the request
+        should_auto_update_coordinator = (
+            (old_tutoring_status != new_tutoring_status) or 
+            (old_status != new_status)
+        ) and "responsible_coordinator" not in data
+        
+        if should_auto_update_coordinator:
+            # Pass both tutoring_status and child status to determine coordinator
+            new_coordinator_id = get_responsible_coordinator_for_family(new_tutoring_status, child_status=new_status)
+            if new_coordinator_id:
+                old_coordinator_name = get_staff_name_by_id(family.responsible_coordinator)
+                family.responsible_coordinator = new_coordinator_id
+                new_coordinator_name = get_staff_name_by_id(new_coordinator_id)
+                if old_status != new_status:
+                    field_changes.append(f"Responsible Coordinator (auto-updated): '{old_coordinator_name}' → '{new_coordinator_name}' (due to status change)")
+                else:
+                    field_changes.append(f"Responsible Coordinator (auto-updated): '{old_coordinator_name}' → '{new_coordinator_name}' (due to tutoring status change)")
+        elif "responsible_coordinator" in data:
+            # Allow manual override of responsible_coordinator
+            new_coordinator = data.get("responsible_coordinator")
+            if family.responsible_coordinator != new_coordinator:
+                old_coordinator_name = get_staff_name_by_id(family.responsible_coordinator)
+                family.responsible_coordinator = new_coordinator
+                new_coordinator_name = get_staff_name_by_id(new_coordinator)
+                field_changes.append(f"Responsible Coordinator (manual): '{old_coordinator_name}' → '{new_coordinator_name}'")
         
         # DECEASED/HEALTHY HANDLING: When child status changes to deceased or healthy, 
         # DELETE all tutorships (not make inactive - that's for inactive staff flow only)
@@ -1672,3 +1681,464 @@ def update_child_id(request, old_id):
             additional_data={'attempted_new_id': new_id}
         )
         return JsonResponse({"error": f"Error updating child ID: {str(e)}"}, status=500)
+
+# ==================== BULK IMPORT FAMILIES ====================
+
+
+@conditional_csrf
+@api_view(['POST'])
+def import_families_endpoint(request):
+    
+    try:
+        # Check feature flag - inline (no helper method)
+        if not (os.environ.get("FAMILIES_IMPORT_ENABLED", "False").lower() == "true"):
+            log_api_action(
+                request=request,
+                action='CREATE_FAMILY_FAILED',
+                success=False,
+                error_message="Bulk import feature is not enabled",
+                status_code=403,
+                additional_data={'reason': 'Feature disabled'}
+            )
+            return JsonResponse(
+                {'error': 'Bulk import feature is not enabled'},
+                status=403
+            )
+        
+        # Check authentication (403 - not authenticated)
+        user_id = request.session.get("user_id")
+        if not user_id:
+            log_api_action(
+                request=request,
+                action='CREATE_FAMILY_FAILED',
+                success=False,
+                error_message="Authentication credentials were not provided",
+                status_code=403,
+                additional_data={'reason': 'Not authenticated'}
+            )
+            return JsonResponse(
+                {'error': 'Authentication credentials were not provided'},
+                status=403
+            )
+        
+        try:
+            user = Staff.objects.get(staff_id=user_id)
+        except Staff.DoesNotExist:
+            log_api_action(
+                request=request,
+                action='CREATE_FAMILY_FAILED',
+                success=False,
+                error_message="User not found",
+                status_code=403,
+                additional_data={'reason': 'User does not exist'}
+            )
+            return JsonResponse(
+                {'error': 'User not found'},
+                status=403
+            )
+        
+        # Check permission (401 - authenticated but no permission)
+        has_family_create = has_permission(request, "children", "CREATE")
+        
+        if not has_family_create:
+            log_api_action(
+                request=request,
+                action='CREATE_FAMILY_FAILED',
+                success=False,
+                error_message="You do not have permission to import families",
+                status_code=401,
+                additional_data={'reason': 'Permission denied', 'user_email': user.email}
+            )
+            api_logger.critical(f"Unauthorized family import attempt by {user.email} - lacks CREATE permission")
+            return JsonResponse(
+                {'error': 'You do not have permission to import families'},
+                status=401
+            )
+        
+        api_logger.info(f"Import permission granted for user: {user.email}")
+        
+        # Get uploaded file
+        if 'file' not in request.FILES:
+            return JsonResponse(
+                {'error': 'No file provided'},
+                status=400
+            )
+        
+        file = request.FILES['file']
+        
+        # Validate file extension
+        if not file.name.endswith('.xlsx'):
+            return JsonResponse(
+                {'error': 'File must be .xlsx format'},
+                status=400
+            )
+        
+        dry_run = request.data.get('dry_run', 'false').lower() == 'true'
+        
+        # Read Excel file
+        try:
+            df = pd.read_excel(file, dtype=str)
+        except Exception as e:
+            api_logger.error(f"Failed to read Excel file: {str(e)}")
+            return JsonResponse(
+                {'error': f'Failed to read Excel file: {str(e)}'},
+                status=400
+            )
+        
+        if df.empty:
+            return JsonResponse(
+                {'error': 'Excel file is empty'},
+                status=400
+            )
+        
+        # Get valid enum values for validation during dry-run
+        valid_marital_statuses = set(get_enum_values("marital_status"))
+        valid_tutoring_statuses = set(get_enum_values("tutoring_status"))
+        valid_statuses = set(get_enum_values("status"))
+        
+        # Process records
+        total_records = len(df)
+        success_count = 0
+        error_count = 0
+        skipped_count = 0
+        invalid_enum_count = 0
+        
+        results = []
+        
+        for idx, row in df.iterrows():
+            row_num = idx + 2
+            
+            # Extract full name and SPLIT it into first and last names
+            full_name_raw = row.get('שם מלא של הילד/ה', '')
+            full_name = '' if (full_name_raw is None or pd.isna(full_name_raw) or str(full_name_raw).lower() == 'nan') else str(full_name_raw).strip()
+            
+            # Split by space: last element is surname, rest is first name
+            if full_name:
+                name_parts = full_name.split()
+                child_last_name = name_parts[-1]  # Last part is surname
+                child_first_name = ' '.join(name_parts[:-1]) if len(name_parts) > 1 else name_parts[0]  # Everything else is first name
+            else:
+                child_first_name = ''
+                child_last_name = ''
+            
+            result = {
+                'row_num': row_num,
+                'child_first_name': child_first_name,
+                'child_last_name': child_last_name,
+                'child_id': '',
+                'status': '',
+                'details': '',
+                'enum_warnings': []
+            }
+            
+            try:
+                # Parse child ID and pad with leading zeros if needed
+                child_id_raw = row.get('תעודת זהות ילד/ה', '')
+                child_id = '' if (child_id_raw is None or pd.isna(child_id_raw) or str(child_id_raw).lower() == 'nan') else str(child_id_raw).strip()
+                
+                # Pad with leading zeros to make it 9 digits
+                if child_id:
+                    try:
+                        child_id_int_temp = int(child_id)
+                        child_id = str(child_id_int_temp).zfill(9)  # Pad to 9 digits with leading zeros
+                    except ValueError:
+                        child_id = ''
+                
+                result['child_id'] = child_id
+                
+                # Validate required fields
+                if not child_first_name or not child_last_name:
+                    result['status'] = 'Error'
+                    result['details'] = 'חסר שם פרטי או שם משפחה של ילד'
+                    error_count += 1
+                    results.append(result)
+                    continue
+                
+                if not child_id:
+                    result['status'] = 'Error'
+                    result['details'] = 'חסרה תעודת זהות של ילד'
+                    error_count += 1
+                    results.append(result)
+                    continue
+                
+                try:
+                    child_id_int = int(child_id)
+                except ValueError:
+                    result['status'] = 'Error'
+                    result['details'] = f'תעודת זהות לא מספרית: {child_id}'
+                    error_count += 1
+                    results.append(result)
+                    continue
+                
+                # Check if child already exists
+                if Children.objects.filter(child_id=child_id_int).exists():
+                    result['status'] = 'Skipped'
+                    result['details'] = f'תעודת זהות כבר קיימת במערכת'
+                    skipped_count += 1
+                    results.append(result)
+                    continue
+                
+                # Dry run - validate with enum checks
+                if dry_run:
+                    # Parse optional fields for enum validation
+                    marital_status_raw = row.get('סטטוס זוגי', '')
+                    marital_status = '' if (marital_status_raw is None or pd.isna(marital_status_raw) or str(marital_status_raw).lower() == 'nan') else str(marital_status_raw).strip()
+                    
+                    tutoring_status_raw = row.get('מצב חונכות', '')
+                    tutoring_status_val = '' if (tutoring_status_raw is None or pd.isna(tutoring_status_raw) or str(tutoring_status_raw).lower() == 'nan') else str(tutoring_status_raw).strip()
+                    
+                    status_raw = row.get('סטטוס', '')
+                    status_val = '' if (status_raw is None or pd.isna(status_raw) or str(status_raw).lower() == 'nan') else str(status_raw).strip()
+                    
+                    gender_raw = row.get('מין', '')
+                    gender_str = '' if (gender_raw is None or pd.isna(gender_raw) or str(gender_raw).lower() == 'nan') else str(gender_raw).strip().lower()
+                    
+                    # Check for enum mismatches
+                    if marital_status and marital_status not in valid_marital_statuses:
+                        result['enum_warnings'].append(f'סטטוס משפחה "{marital_status}" לא נמצא במערכת')
+                        invalid_enum_count += 1
+                    
+                    if tutoring_status_val and tutoring_status_val not in valid_tutoring_statuses:
+                        result['enum_warnings'].append(f'סטטוס חונכות "{tutoring_status_val}" לא נמצא במערכת')
+                        invalid_enum_count += 1
+                    
+                    if status_val and status_val not in valid_statuses:
+                        result['enum_warnings'].append(f'סטטוס "{status_val}" לא נמצא במערכת')
+                        invalid_enum_count += 1
+                    
+                    if gender_str and gender_str not in ['true', 'false', '1', '0', 'זכר', 'נקבה']:
+                        result['enum_warnings'].append(f'מין "{gender_str}" לא תקין - צפוי: true/false או 1/0')
+                        invalid_enum_count += 1
+                    
+                    result['status'] = 'OK' if not result['enum_warnings'] else 'Warning'
+                    result['details'] = 'בדיקה בלבד: משפחה תקינה' if not result['enum_warnings'] else 'בדיקה בלבד: משפחה עם אזהרות'
+                    success_count += 1
+                    results.append(result)
+                    continue
+                
+                # === CREATE RECORD ===
+                # Parse optional fields
+                city_raw = row.get('עיר', '')
+                city = '' if (city_raw is None or pd.isna(city_raw) or str(city_raw).lower() == 'nan') else str(city_raw).strip()
+                
+                phone_raw = row.get('מספר טלפון של הילד/ה', '')
+                phone = '' if (phone_raw is None or pd.isna(phone_raw) or str(phone_raw).lower() == 'nan') else str(phone_raw).strip()
+                
+                # Format phone: remove dashes/spaces, pad to 10 digits with trailing zeros if needed
+                if phone:
+                    phone_normalized = phone.replace('-', '').replace(' ', '').strip()
+                    # Remove any non-digit characters
+                    phone_normalized = ''.join(c for c in phone_normalized if c.isdigit())
+                    # Pad to 10 digits with trailing zeros if fewer than 10
+                    if phone_normalized:
+                        phone_normalized = phone_normalized.ljust(10, '0')  # Pad with trailing zeros
+                    if phone_normalized and len(phone_normalized) == 10:
+                        phone = f"{phone_normalized[:3]}-{phone_normalized[3:]}"  # Format as XXX-XXXXXXX
+                    else:
+                        phone = ''  # Invalid phone
+                else:
+                    phone = ''
+                
+                hospital_raw = row.get('בית חולים מטפל', '')
+                hospital = '' if (hospital_raw is None or pd.isna(hospital_raw) or str(hospital_raw).lower() == 'nan') else str(hospital_raw).strip()
+                # Trim trailing spaces from hospital name
+                hospital = hospital.rstrip() if hospital else ''
+                
+                diagnosis_raw = row.get('אבחנה רפואית', '')
+                diagnosis = '' if (diagnosis_raw is None or pd.isna(diagnosis_raw) or str(diagnosis_raw).lower() == 'nan') else str(diagnosis_raw).strip()
+                
+                # Parse marital_status from Excel if provided
+                marital_status_raw = row.get('סטטוס זוגי', '')
+                marital_status = '' if (marital_status_raw is None or pd.isna(marital_status_raw) or str(marital_status_raw).lower() == 'nan') else str(marital_status_raw).strip()
+                
+                # Parse tutoring_status from Excel, default to 'למצוא חונך' if not provided
+                tutoring_status_raw = row.get('מצב חונכות', '')
+                tutoring_status_val = '' if (tutoring_status_raw is None or pd.isna(tutoring_status_raw) or str(tutoring_status_raw).lower() == 'nan') else str(tutoring_status_raw).strip()
+                final_tutoring_status = tutoring_status_val if tutoring_status_val else 'למצוא חונך'
+                
+                # Parse status from Excel if provided
+                status_raw = row.get('סטטוס', '')
+                status_val = '' if (status_raw is None or pd.isna(status_raw) or str(status_raw).lower() == 'nan') else str(status_raw).strip()
+                final_status = status_val if status_val else 'פעיל'
+                
+                # Parse gender from Excel - female=True, male=False
+                gender_val = row.get('מין', '')
+                if isinstance(gender_val, bool):
+                    gender = gender_val
+                elif isinstance(gender_val, str):
+                    gender_lower = gender_val.lower().strip()
+                    gender = gender_lower in ['true', 'נקבה', 'female', 'f', '1']
+                else:
+                    gender = False
+                
+                # Parse birth date - inline
+                date_val = row.get('תאריך לידה', '')
+                birth_date = None
+                if date_val and not pd.isna(date_val) and str(date_val).lower() != 'nan':
+                    try:
+                        from datetime import datetime as dt
+                        if isinstance(date_val, dt):
+                            birth_date = date_val.date()
+                        else:
+                            date_str = str(date_val).strip()
+                            for fmt in ['%Y-%m-%d %H:%M:%S', '%Y-%m-%d', '%d/%m/%Y', '%d-%m-%Y', '%d.%m.%Y']:
+                                try:
+                                    birth_date = dt.strptime(date_str, fmt).date()
+                                    break
+                                except ValueError:
+                                    continue
+                    except Exception:
+                        birth_date = None
+                
+                # Determine responsible_coordinator based on medical status and tutoring status
+                # Pass child_status (final_status) to handle בריא/ז״ל children (they get "ללא")
+                responsible_coordinator = get_responsible_coordinator_for_family(final_tutoring_status, child_status=final_status)
+                
+                with transaction.atomic():
+                    child = Children.objects.create(
+                        child_id=child_id_int,
+                        childfirstname=child_first_name,
+                        childsurname=child_last_name,
+                        city=city,
+                        child_phone_number=phone,
+                        treating_hospital=hospital,
+                        medical_diagnosis=diagnosis,
+                        date_of_birth=birth_date,
+                        marital_status=marital_status,
+                        registrationdate=datetime.datetime.now().date(),
+                        lastupdateddate=datetime.datetime.now().date(),
+                        status=final_status,
+                        tutoring_status=final_tutoring_status,
+                        responsible_coordinator=responsible_coordinator,
+                        gender=gender
+                    )
+                
+                result['status'] = 'OK'
+                result['details'] = f'נוצרה בהצלחה'
+                success_count += 1
+                results.append(result)
+                
+            except IntegrityError as e:
+                result['status'] = 'Error'
+                result['details'] = f'שגיאת מסד נתונים: {str(e)[:50]}'
+                error_count += 1
+                results.append(result)
+            except Exception as e:
+                result['status'] = 'Error'
+                result['details'] = f'שגיאה כללית: {str(e)[:50]}'
+                error_count += 1
+                results.append(result)
+        
+        # Create result Excel file
+        wb = Workbook()
+        ws = wb.active
+        ws.title = "תוצאות ייבוא"
+        
+        headers = ['שורה', 'שם פרטי ילד', 'שם משפחה ילד', 'תעודת זהות', 'סטטוס ייבוא', 'פרטים', 'אזהרות שדות']
+        header_fill = PatternFill(start_color='4472C4', end_color='4472C4', fill_type='solid')
+        header_font = Font(color='FFFFFF', bold=True)
+        ok_fill = PatternFill(start_color='C6EFCE', end_color='C6EFCE', fill_type='solid')
+        error_fill = PatternFill(start_color='FFC7CE', end_color='FFC7CE', fill_type='solid')
+        warning_fill = PatternFill(start_color='FFEB9C', end_color='FFEB9C', fill_type='solid')
+        
+        for col, header in enumerate(headers, 1):
+            cell = ws.cell(row=1, column=col, value=header)
+            cell.fill = header_fill
+            cell.font = header_font
+            cell.alignment = Alignment(horizontal='center')
+        
+        for row_idx, result in enumerate(results, 2):
+            ws.cell(row=row_idx, column=1, value=result.get('row_num', ''))
+            ws.cell(row=row_idx, column=2, value=result['child_first_name'])
+            ws.cell(row=row_idx, column=3, value=result['child_last_name'])
+            ws.cell(row=row_idx, column=4, value=result.get('child_id', ''))
+            
+            status_cell = ws.cell(row=row_idx, column=5, value=result['status'])
+            if result['status'] == 'OK':
+                status_cell.fill = ok_fill
+            elif result['status'] == 'Error':
+                status_cell.fill = error_fill
+            elif result['status'] == 'Skipped' or result['status'] == 'Warning':
+                status_cell.fill = warning_fill
+            
+            ws.cell(row=row_idx, column=6, value=result.get('details', ''))
+            
+            # Add enum warnings if any
+            if result.get('enum_warnings'):
+                warnings_text = ' | '.join(result['enum_warnings'])
+                ws.cell(row=row_idx, column=7, value=warnings_text)
+        
+        ws.column_dimensions['A'].width = 8
+        ws.column_dimensions['B'].width = 15
+        ws.column_dimensions['C'].width = 15
+        ws.column_dimensions['D'].width = 15
+        ws.column_dimensions['E'].width = 12
+        ws.column_dimensions['F'].width = 60
+        ws.column_dimensions['G'].width = 80
+        ws.sheet_view.rightToLeft = True
+        
+        result_excel = BytesIO()
+        wb.save(result_excel)
+        result_excel.seek(0)
+        
+        # Log the import action - Log ALL imports (dry-run or live) as long as there are records processed
+        if total_records > 0:
+            log_api_action(
+                request=request,
+                action='CREATE_FAMILY_SUCCESS',
+                affected_tables=['childsmile_app_children'],
+                entity_type='Bulk Import Families',
+                success=True,
+                additional_data={
+                    'total_records': total_records,
+                    'success_count': success_count,
+                    'error_count': error_count,
+                    'skipped_count': skipped_count,
+                    'dry_run': dry_run,
+                    'is_bulk_import': True
+                }
+            )
+        
+        # Return results
+        response_data = {
+            'total': total_records,
+            'success': success_count,
+            'skipped': skipped_count,
+            'error': error_count,
+            'dry_run': dry_run,
+            'message': f'✅ ייבוא הושלם: {success_count} מתוך {total_records} המשפחות יובאו בהצלחה' if success_count > 0 else '❌ לא הצליח לייבא משפחות',
+            'has_errors': error_count > 0 or skipped_count > 0,
+            'result_file_available': True
+        }
+        
+        # If dry_run, return Excel file for preview
+        if dry_run:
+            response = FileResponse(result_excel, content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+            from datetime import datetime as dt
+            response['Content-Disposition'] = f'attachment; filename="import_preview_families_{dt.now().strftime("%Y%m%d_%H%M%S")}.xlsx"'
+            return response
+        
+        # For regular import, return JSON with Excel file bytes embedded as base64
+        result_excel.seek(0)
+        excel_base64 = base64.b64encode(result_excel.read()).decode('utf-8')
+        response_data['result_file'] = excel_base64
+        from datetime import datetime as dt
+        response_data['result_filename'] = f"import_results_families_{dt.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
+
+        return JsonResponse(response_data, status=200)
+    
+    except Exception as e:
+        api_logger.error(f"Import families endpoint error: {str(e)}")
+        api_logger.error(f"Full traceback: {traceback.format_exc()}")
+        log_api_action(
+            request=request,
+            action='CREATE_FAMILY_FAILED',
+            success=False,
+            error_message=str(e),
+            status_code=500,
+            additional_data={'error_type': type(e).__name__}
+        )
+        return JsonResponse(
+            {'error': f'Unexpected error: {str(e)}'},
+            status=500
+        )
