@@ -10,4 +10,7 @@ The auto creator for review tasks will ignore children marked as such
 Need api and ui for this feature as well
 DONT WANT MIGRATION - give me sql to run adding a column bool named need_review
 
-ALTER TABLE children ADD COLUMN need_review BOOLEAN DEFAULT FALSE;
+ALTER TABLE childsmile_app_children ADD COLUMN need_review BOOLEAN DEFAULT TRUE;
+
+also need to set the values to True after creating the column
+UPDATE childsmile_app_children SET need_review = TRUE;

@@ -1635,3 +1635,72 @@ def grant_access_to_suspended_users(user_list=None):
 
 def env_bool(name: str, default=False) -> bool:
     return os.environ.get(name, str(default)).lower() in ("1", "true", "yes", "on")
+
+def check_and_handle_age_maturity(child):
+    """
+    Check if a child has reached age 16 (maturity threshold).
+    If so, automatically set need_review=False and delete all review tasks.
+    
+    IMPORTANT: Once need_review is set to False due to age (>= 16) or status (בריא/ז״ל),
+    it MUST NOT be allowed to revert back to True. This ensures mature children don't get
+    review tasks created again.
+    
+    Parameters:
+    - child: Children model instance
+    
+    Returns:
+    - dict: {'mature': bool, 'age': int, 'need_review_changed': bool, 'tasks_deleted': int}
+    """
+    try:
+        from datetime import date
+        
+        # Calculate age
+        today = date.today()
+        age = (
+            today.year
+            - child.date_of_birth.year
+            - (
+                (today.month, today.day)
+                < (child.date_of_birth.month, child.date_of_birth.day)
+            )
+        )
+        
+        is_mature = age >= 16
+        need_review_changed = False
+        tasks_deleted = 0
+        
+        # If child is mature (age >= 16), set need_review=False and delete review tasks
+        if is_mature:
+            # Only change need_review if it's currently True
+            # Once it's False (for any reason), it should stay False
+            if child.need_review:
+                child.need_review = False
+                child.save(update_fields=['need_review'])
+                need_review_changed = True
+                
+                # Delete all review tasks for this child
+                review_task_type = Task_Types.objects.filter(task_type='שיחת ביקורת').first()
+                if review_task_type:
+                    deleted_result = Tasks.objects.filter(
+                        related_child_id=child.child_id,
+                        task_type=review_task_type
+                    ).delete()
+                    tasks_deleted = deleted_result[0]
+                    if tasks_deleted > 0:
+                        api_logger.info(f"Child {child.child_id} reached age 16: deleted {tasks_deleted} review tasks")
+        
+        return {
+            'mature': is_mature,
+            'age': age,
+            'need_review_changed': need_review_changed,
+            'tasks_deleted': tasks_deleted
+        }
+    except Exception as e:
+        api_logger.error(f"Error checking age maturity for child {child.child_id}: {str(e)}")
+        return {
+            'mature': False,
+            'age': 0,
+            'need_review_changed': False,
+            'tasks_deleted': 0,
+            'error': str(e)
+        }

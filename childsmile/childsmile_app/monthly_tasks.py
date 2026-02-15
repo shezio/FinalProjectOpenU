@@ -110,6 +110,20 @@ def check_and_create_monthly_review_tasks():
         
         # Check each family
         for child in all_children:
+            # Feature #3: Check if child is mature (age >= 16) - auto-set need_review=False
+            from .utils import check_and_handle_age_maturity
+            maturity_result = check_and_handle_age_maturity(child)
+            
+            # SKIP children marked as not needing review (Feature #2)
+            # This includes: בריא/ז״ל status, בוגר tutoring status, or age >= 16
+            if not child.need_review:
+                tasks_skipped += 1
+                reason = ""
+                if maturity_result['mature']:
+                    reason = f"(age: {maturity_result['age']})"
+                api_logger.debug(f"Skipping review task for {child.childfirstname} {child.childsurname} (need_review=False) {reason}")
+                continue
+            
             # Check if month has passed since last talk (or never had one)
             if child.last_review_talk_conducted is None or child.last_review_talk_conducted <= one_month_ago:
                 
