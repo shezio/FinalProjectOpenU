@@ -1270,20 +1270,32 @@ def conditional_csrf(view_func):
     return csrf_protect(view_func) if is_prod else csrf_exempt(view_func)
 
 
-def get_responsible_coordinator_for_family(tutoring_status):
+def get_responsible_coordinator_for_family(tutoring_status, child_status=None):
     """
-    Get the staff_id of the appropriate coordinator based on tutoring status.
+    Get the appropriate coordinator assignment based on tutoring and medical status.
     
     Coordinator Assignment Rules:
+    - "ללא" (None/No Coordinator): For בריא (Healthy) or ז״ל (Deceased) children
+      (Can still be overridden if needed, but system default is "ללא")
     - Family Coordinator: For non-tutored statuses (לא_רוצים, לא_רלוונטי, בוגר)
     - Tutored Families Coordinator: For tutored/searching statuses (למצוא_חונך, יש_חונך, 
                                     למצוא_חונך_אין_באיזור_שלו, למצוא_חונך_בעדיפות_גבוה, 
                                     שידוך_בסימן_שאלה)
     
-    Returns the staff_id of the coordinator, or None if not found.
+    Parameters:
+    - tutoring_status: The tutoring status of the child
+    - child_status: The medical status (בריא, ז״ל, etc.) - passed for checking
+    
+    Returns "ללא" for healthy/deceased children, or the coordinator staff_id otherwise.
     """
     try:
-        # Normalize status - convert spaces to underscores just in case
+        # If child is בריא (healthy) or ז״ל (deceased), no coordinator needed
+        if child_status:
+            child_status_normalized = str(child_status).strip()
+            if child_status_normalized in ['בריא', 'ז״ל']:
+                return 'ללא'
+        
+        # Normalize tutoring status - convert spaces to underscores just in case
         normalized_status = tutoring_status.replace(' ', '_') if tutoring_status else ''
         
         # Define status categories
@@ -1301,7 +1313,7 @@ def get_responsible_coordinator_for_family(tutoring_status):
             "שידוך_בסימן_שאלה"               # MATCH_QUESTIONABLE
         }
         
-        # Determine which coordinator to assign based on status
+        # Determine which coordinator to assign based on tutoring status
         if normalized_status in TUTORED_STATUSES:
             # Get Tutored Families Coordinator
             coordinator = Staff.objects.filter(
@@ -1324,10 +1336,11 @@ def get_responsible_coordinator_for_family(tutoring_status):
         if coordinator:
             return coordinator.staff_id
         
-        return None
+        # Last resort: return "ללא" if no coordinator found
+        return 'ללא'
     except Exception as e:
         api_logger.error(f"Error getting responsible coordinator: {str(e)}")
-        return None
+        return 'ללא'
 
 
 def get_staff_name_by_id(staff_id):
