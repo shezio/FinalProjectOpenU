@@ -405,6 +405,7 @@ const resources = {
       "Responsible Coordinator": "רכז אחראי",
       "Select a coordinator": "בחר רכז",
       "Auto-assigned based on status": "מוקצה אוטומטית על סמך מצב חונכות או סטטוס",
+      "Responsible coordinator is required.": "חובה לצוות רכז אחראי",
       "Tutorship Status": "מצב חונכות",
       "Tutorship status": "מצב חונכות",
       "Tutors Coordinator": "רכז חונכים",

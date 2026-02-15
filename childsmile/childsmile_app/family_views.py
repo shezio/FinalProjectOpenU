@@ -632,6 +632,15 @@ def update_family(request, child_id):
         family.num_of_siblings = data.get("num_of_siblings", family.num_of_siblings)
         family.details_for_tutoring = data.get("details_for_tutoring", family.details_for_tutoring)
         family.additional_info = data.get("additional_info", family.additional_info)
+        family.current_medical_state = data.get("current_medical_state", family.current_medical_state)
+        family.when_completed_treatments = parse_date_field(data.get("when_completed_treatments"), "when_completed_treatments")
+        family.father_name = data.get("father_name", family.father_name)
+        family.father_phone = data.get("father_phone", family.father_phone)
+        family.mother_name = data.get("mother_name", family.mother_name)
+        family.mother_phone = data.get("mother_phone", family.mother_phone)
+        family.street_and_apartment_number = data.get("street_and_apartment_number", family.street_and_apartment_number)
+        family.expected_end_treatment_by_protocol = parse_date_field(data.get("expected_end_treatment_by_protocol"), "expected_end_treatment_by_protocol")
+        family.has_completed_treatments = data.get("has_completed_treatments", family.has_completed_treatments)
         
         # Handle tutoring_status change and auto-update coordinator
         old_tutoring_status = family.tutoring_status

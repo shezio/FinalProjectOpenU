@@ -481,7 +481,7 @@ const Families = () => {
       expected_end_treatment_by_protocol: formatDate(family.expected_end_treatment_by_protocol) || '',
       has_completed_treatments: family.has_completed_treatments || false,
       status: family.status || 'טיפולים',
-      responsible_coordinator: family.responsible_coordinator_id || '', // Load current coordinator ID (not name)
+      responsible_coordinator: family.responsible_coordinator || '', // Load current coordinator (can be "ללא" or staff_id)
     };
 
     const cityKey = family.city ? family.city.trim() : '';
