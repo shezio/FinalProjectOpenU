@@ -54,4 +54,4 @@ psql -U child_smile_user -h localhost -p 5432 -d child_smile_db < backup_before_
 
 \dT+  -- to see enums in psql
 -- to see enum values
-SELECT unnest(enum_range(NULL::your_enum_name)) AS enum_value;
+SELECT unnest(enum_range(NULL::marital_status)) AS enum_value;

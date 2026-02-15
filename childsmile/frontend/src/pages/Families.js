@@ -386,50 +386,68 @@ const Families = () => {
 
   const handleImportFamilies = async () => {
     if (!importFile) {
-      showErrorToast('Please select a file');
+      showErrorToast(t, "Please select a file", null);
       return;
     }
 
     setIsImporting(true);
     const formData = new FormData();
     formData.append('file', importFile);
-    formData.append('dry_run', importDryRun);
+    formData.append('dry_run', importDryRun.toString());
 
     try {
       const response = await axios.post('/api/import/families/', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
+        headers: { 'Content-Type': 'multipart/form-data' },
+        responseType: importDryRun ? 'blob' : 'json'
       });
 
       if (importDryRun) {
+        // Dry-run: Download the preview file
+        const url = window.URL.createObjectURL(new Blob([response.data]));
         const link = document.createElement('a');
-        link.href = window.URL.createObjectURL(new Blob([response.data]));
+        link.href = url;
         link.setAttribute('download', `import_preview_families_${new Date().getTime()}.xlsx`);
         document.body.appendChild(link);
         link.click();
         link.parentNode.removeChild(link);
-        toast.success('Preview file downloaded. Review and upload again without dry-run to import.');
+        window.URL.revokeObjectURL(url);
+        toast.success(t("Preview file downloaded. Review and upload again without dry-run to import."));
       } else {
-        if (response.data.result_file) {
-          const binary = atob(response.data.result_file);
+        // Real import - show success with detailed breakdown
+        const data = response.data;
+        const { success, error, skipped, total, result_file, result_filename, message } = data;
+        
+        // Show success toast
+        toast.success(message || t("Import completed successfully"), { autoClose: 5000 });
+        
+        // Download the results file if it exists
+        if (result_file && result_filename) {
+          const binary = atob(result_file);
           const array = new Uint8Array(binary.length);
           for (let i = 0; i < binary.length; i++) {
             array[i] = binary.charCodeAt(i);
           }
+          const url = window.URL.createObjectURL(new Blob([array]));
           const link = document.createElement('a');
-          link.href = window.URL.createObjectURL(new Blob([array]));
-          link.setAttribute('download', response.data.result_filename || 'import_results_families.xlsx');
+          link.href = url;
+          link.setAttribute('download', result_filename);
           document.body.appendChild(link);
           link.click();
           link.parentNode.removeChild(link);
+          window.URL.revokeObjectURL(url);
         }
-        toast.success(response.data.message || 'Import completed successfully');
-        setShowImportModal(false);
+        
         setImportFile(null);
+        setShowImportModal(false);
         setImportDryRun(true);
         fetchFamilies();
       }
     } catch (error) {
-      showErrorToast(error.response?.data?.error || 'Import failed');
+      if (error.response?.data?.error) {
+        showErrorToast(t, '', error);  // Pass empty key to show only backend message
+      } else {
+        showErrorToast(t, "Import failed", error);
+      }
     } finally {
       setIsImporting(false);
     }
