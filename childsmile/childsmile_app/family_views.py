@@ -2101,11 +2101,20 @@ def import_families_endpoint(request):
                 tutoring_status_val = '' if (tutoring_status_raw is None or pd.isna(tutoring_status_raw) or str(tutoring_status_raw).lower() == 'nan') else str(tutoring_status_raw).strip()
                 final_tutoring_status = tutoring_status_val if tutoring_status_val else 'למצוא חונך'
                 
-                # Feature #3: Check סוג column for maturity (בוגר = mature)
-                # If סוג = "בוגר", set need_review=False on import
+                # Feature #3: Check סוג column for maturity (בוגר/ת = mature)
+                # If סוג contains "בוגר", set need_review=False on import
                 sug_raw = row.get('סוג', '')
                 sug_val = '' if (sug_raw is None or pd.isna(sug_raw) or str(sug_raw).lower() == 'nan') else str(sug_raw).strip()
-                need_review_from_mature = sug_val == 'בוגר'
+                dont_need_review_since_mature = 'בוגר' in sug_val  # Matches "בוגר/ת" and "בוגר"
+                
+                # ALSO check age >= 16 for maturity (independent of סוג column)
+                # If child is 16+, also set need_review=False
+                is_mature_by_age = False
+                if birth_date:
+                    from datetime import date as date_class
+                    today = date_class.today()
+                    age = today.year - birth_date.year - ((today.month, today.day) < (birth_date.month, birth_date.day))
+                    is_mature_by_age = age >= 16
                 
                 # Parse status from Excel if provided
                 status_raw = row.get('סטטוס', '')
@@ -2266,21 +2275,21 @@ def import_families_endpoint(request):
                         gender=gender,
                         last_review_talk_conducted=last_review_talk_conducted,
                         # Feature #2 + #3: Auto-set need_review based on:
-                        # - Set to False if: בריא/ז״ל status OR "לא צריך" in review_talk column OR בוגר tutoring_status
+                        # - Set to False if: בריא/ז״ל status OR "לא צריך" in review_talk column OR בוגר (סוג column) OR age >= 16
                         # - Otherwise default to True
-                        need_review=False if (final_status in ['בריא', 'ז״ל'] or need_review_from_review_talk is False or need_review_from_mature) else True
+                        need_review=False if (final_status in ['בריא', 'ז״ל'] or need_review_from_review_talk is False or dont_need_review_since_mature or is_mature_by_age) else True
                     )
                     
-                    # If surname is "XXX" (missing), create עדכון משפחה task for משפחות coordinators
+                    # If surname is "XXX" (missing), create עדכון משפחה task for Families Coordinators
                     if needs_surname_task:
                         try:
-                            # Get all משפחות coordinators (Families Coordinator role)
+                            # Get all Families Coordinators to verify missing surnames
                             coordinators = Staff.objects.filter(
-                                roles__role_name='רכז משפחות'
+                                roles__role_name='Families Coordinator'
                             ).distinct()
                             
                             if coordinators.exists():
-                                task_desc = f"עדכון שם משפחה חסר לילד/ה {child_first_name} (כרגע: {child_last_name})"
+                                task_desc = f"עדכון שם משפחה חסר לילד/ה {child_first_name} (כרגע: {child_last_name}) - תעודת זהות: {child_id}"
                                 for coordinator in coordinators:
                                     Tasks.objects.create(
                                         task_type='עדכון משפחה',
