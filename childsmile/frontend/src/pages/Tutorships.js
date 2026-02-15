@@ -590,6 +590,7 @@ const Tutorships = () => {
         num_of_siblings: row.num_of_siblings ?? "---",
         tutoring_status: row.tutoring_status ?? "---",
         responsible_coordinator: row.responsible_coordinator ?? "---",
+        need_review: row.need_review ?? true,
         additional_info: row.additional_info ?? "---",
         current_medical_state: row.current_medical_state ?? "---",
         treating_hospital: row.treating_hospital ?? "---",
@@ -1389,6 +1390,7 @@ const Tutorships = () => {
                         <tr><td>{t('Number of Siblings')}</td><td> {selectedMatchForInfo.num_of_siblings}</td></tr>
                         <tr><td>{t('Tutoring Status')}</td><td> {selectedMatchForInfo.tutoring_status}</td></tr>
                         <tr><td>{t('Responsible Coordinator')}</td><td> {selectedMatchForInfo.responsible_coordinator}</td></tr>
+                        <tr><td>{t('Need Review')}</td><td> {selectedMatchForInfo.need_review ? t('Yes') : t('No')}</td></tr>
                         <tr><td>{t('Additional Info')}</td><td> {selectedMatchForInfo.additional_info}</td></tr>
                         <tr><td>{t('Current Medical State')}</td><td> {selectedMatchForInfo.current_medical_state}</td></tr>
                         <tr><td>{t('Treating Hospital')}</td><td> {selectedMatchForInfo.treating_hospital}</td></tr>

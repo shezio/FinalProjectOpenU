@@ -66,6 +66,7 @@ const Families = () => {
     has_completed_treatments: false, // Default to false
     status: 'טיפולים', // Default status
     responsible_coordinator: '', // Auto-assigned coordinator
+    need_review: true, // Feature #2: Default to true (child needs review tasks)
   });
   const [familiesCoordinators, setFamiliesCoordinators] = useState([]); // For non-tutored families
   const [tutoredCoordinators, setTutoredCoordinators] = useState([]); // For tutored families
@@ -342,6 +343,7 @@ const Families = () => {
       has_completed_treatments: false,
       status: 'טיפולים',
       responsible_coordinator: '', // Reset coordinator
+      need_review: true, // Feature #2: Reset to true
     });
     setAutoAssignedCoordinator(null); // Reset auto-assigned flag
     setErrors({});
@@ -377,6 +379,7 @@ const Families = () => {
       expected_end_treatment_by_protocol: '',
       has_completed_treatments: false,
       status: 'טיפולים', // Reset to default status
+      need_review: true, // Feature #2: Reset to true
     });
     setErrors({}); // Clear errors when closing the modal
   };
@@ -482,6 +485,7 @@ const Families = () => {
       has_completed_treatments: family.has_completed_treatments || false,
       status: family.status || 'טיפולים',
       responsible_coordinator: family.responsible_coordinator || '', // Load current coordinator (can be "ללא" or staff_id)
+      need_review: family.need_review !== undefined ? family.need_review : true, // Feature #2: Load need_review (default true)
     };
 
     const cityKey = family.city ? family.city.trim() : '';
@@ -600,6 +604,7 @@ const Families = () => {
       expected_end_treatment_by_protocol: '',
       has_completed_treatments: false,
       status: 'טיפולים', // Reset to default status
+      need_review: true, // Feature #2: Reset to true
     });
     setErrors({});
   };
@@ -772,20 +777,21 @@ const Families = () => {
     setPage(1);
   }, [showHealthyOnly, showMatureOnly, selectedStatus, maxAge, families]);
 
-  // Auto-assign coordinator based on tutoring status AND medical status (בריא/ז״ל)
+  // Auto-assign coordinator and need_review based on tutoring status AND medical status (בריא/ז״ל)
   useEffect(() => {
     // Check if child is בריא or ז״ל (healthy or deceased)
     const isHealthyOrDeceased = newFamily.status === 'בריא' || newFamily.status === 'ז״ל';
     
     if (isHealthyOrDeceased) {
-      // For healthy/deceased children, auto-assign to "ללא"
+      // For healthy/deceased children, auto-assign to "ללא" and set need_review to false
       setAutoAssignedCoordinator('ללא');
       setNewFamily(prev => ({
         ...prev,
-        responsible_coordinator: 'ללא'
+        responsible_coordinator: 'ללא',
+        need_review: false  // Auto-set to false for בריא/ז״ל
       }));
     } else if (newFamily.tutoring_status) {
-      // For other statuses, assign based on tutoring_status
+      // For other statuses, assign based on tutoring_status and set need_review to true
       // Define status categories - matching enum definition (with underscores)
       const NON_TUTORED_STATUSES = ['לא_רוצים', 'לא_רלוונטי', 'בוגר'];
       const TUTORED_STATUSES = [
@@ -810,7 +816,8 @@ const Families = () => {
         setAutoAssignedCoordinator(assignedCoordinator.staff_id);
         setNewFamily(prev => ({
           ...prev,
-          responsible_coordinator: String(assignedCoordinator.staff_id)
+          responsible_coordinator: String(assignedCoordinator.staff_id),
+          need_review: true  // Auto-set to true for other statuses
         }));
       }
     }
@@ -1073,6 +1080,7 @@ const Families = () => {
                   <p>{t('Tutors')}: {t('No tutors assigned')}</p>
                 )}
                 <p>{t('Responsible Coordinator')}: {selectedFamily.responsible_coordinator || '---'}</p>
+                <p>{t('Need Review')}: {selectedFamily.need_review ? t('Yes') : t('No')}</p>
                 <p>{t('Additional Info')}: {selectedFamily.additional_info || '---'}</p>
                 <p>{t('Current Medical State')}: {selectedFamily.current_medical_state || '---'}</p>
                 <p>{t('Treating Hospital')}: {selectedFamily.treating_hospital || '---'}</p>
@@ -1414,6 +1422,23 @@ const Families = () => {
                     <option value="Yes">{t('Yes')}</option>
                   </select>
                   {errors.has_completed_treatments && <span className="families-error-message">{errors.has_completed_treatments}</span>}
+
+                  <label>{t('Need Review')}</label>
+                  <select
+                    name="need_review"
+                    value={newFamily.need_review ? "Yes" : "No"}
+                    onChange={(e) =>
+                      handleAddFamilyChange({
+                        target: {
+                          name: "need_review",
+                          value: e.target.value === "Yes",
+                        },
+                      })
+                    }
+                  >
+                    <option value="Yes">{t('Yes')}</option>
+                    <option value="No">{t('No')}</option>
+                  </select>
 
                   <label>{t('Details for Tutoring')}</label>
                   <textarea
@@ -1805,6 +1830,24 @@ const Families = () => {
                     <option value="Yes">{t('Yes')}</option>
                   </select>
                   {errors.has_completed_treatments && <span className="families-error-message">{errors.has_completed_treatments}</span>}
+
+                  <label>{t('Need Review')}</label>
+                  <select
+                    name="need_review"
+                    value={newFamily.need_review ? "Yes" : "No"}
+                    onChange={(e) =>
+                      handleAddFamilyChange({
+                        target: {
+                          name: "need_review",
+                          value: e.target.value === "Yes",
+                        },
+                      })
+                    }
+                  >
+                    <option value="Yes">{t('Yes')}</option>
+                    <option value="No">{t('No')}</option>
+                  </select>
+                  <small>{t('Auto-disabled for בריא/ז״ל children. Review tasks will be created for children marked as "Yes".')}</small>
 
                   <label>{t('Details for Tutoring')}</label>
                   <textarea

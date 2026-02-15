@@ -174,6 +174,7 @@ def get_complete_family_details(request):
                 "has_completed_treatments": family.has_completed_treatments,
                 "status": family.status,
                 "age": family.age,
+                "need_review": family.need_review,
                 # MULTI-TUTOR SUPPORT: Add list of tutors
                 "tutors": child_tutors_map.get(family.child_id, []),
                 "tutors_count": len(child_tutors_map.get(family.child_id, [])),
@@ -333,6 +334,33 @@ def create_family(request):
         # Pass child_status to handle בריא/ז״ל children (they get "ללא")
         coordinator_staff_id = get_responsible_coordinator_for_family(tutoring_status, child_status=child_status)
         responsible_coordinator = coordinator_staff_id if coordinator_staff_id else user_id
+        
+        # Feature #3: Determine need_review for new child based on age and status
+        # Set to False if: בריא/ז״ל status OR בוגר tutoring_status OR age >= 16
+        date_of_birth = parse_date_field(data.get("date_of_birth"), "date_of_birth")
+        need_review_value = True  # Default to True
+        
+        # Check age-based maturity (>= 16)
+        if date_of_birth:
+            from datetime import date
+            today = date.today()
+            age = (
+                today.year
+                - date_of_birth.year
+                - (
+                    (today.month, today.day)
+                    < (date_of_birth.month, date_of_birth.day)
+                )
+            )
+            if age >= 16:
+                need_review_value = False
+        
+        # Check status and tutoring_status for other permanent conditions
+        if child_status in ['בריא', 'ז״ל'] or tutoring_status == 'בוגר':
+            need_review_value = False
+        elif data.get("need_review") is not None:
+            # Allow explicit override only if not in permanent condition
+            need_review_value = data.get("need_review", True)
 
         # Create a new family record in the database
         family = Children.objects.create(
@@ -346,7 +374,7 @@ def create_family(request):
             city=data["city"],
             child_phone_number=data["child_phone_number"],
             treating_hospital=data["treating_hospital"],
-            date_of_birth=data["date_of_birth"],
+            date_of_birth=date_of_birth,
             medical_diagnosis=data.get("medical_diagnosis"),
             diagnosis_date=(
                 data.get("diagnosis_date") if data.get("diagnosis_date") else None
@@ -380,6 +408,8 @@ def create_family(request):
             ),
             has_completed_treatments=data.get("has_completed_treatments", False),
             status=(data["status"] if data.get("status") else "טיפולים"),
+            # Feature #2 + #3: Set need_review based on age, status, and tutoring_status
+            need_review=need_review_value,
         )
 
         # Log successful family creation
@@ -710,6 +740,63 @@ def update_family(request, child_id):
                 status_reason = "deceased" if new_status in deceased_statuses else "healthy"
                 field_changes.append(f"Tutors freed due to {status_reason} status: {[t['tutor_name'] for t in tutors_freed]}")
                 api_logger.info(f"Child {child_id} status changed to {status_reason}. Freed {len(tutors_freed)} tutors: {tutors_freed}")
+        
+        # Feature #2 + #3: Handle need_review for בריא/ז״ל children AND age >= 16 maturity
+        # CRITICAL RULE: Once need_review=False due to age (>= 16) or status (בריא/ז״ל/בוגר), 
+        # it MUST NOT revert back to True. These are permanent lifecycle events.
+        
+        old_need_review = family.need_review
+        
+        # Check if child is mature (age >= 16) - if so, need_review MUST be False
+        from .utils import check_and_handle_age_maturity
+        maturity_check = check_and_handle_age_maturity(family)
+        is_mature = maturity_check.get('mature', False)
+        
+        # Check if tutoring_status is בוגר (mature) - if so, need_review MUST be False
+        is_mature_tutoring = new_tutoring_status == 'בוגר'
+        
+        # Determine if need_review MUST be False (permanent, cannot be overridden)
+        must_be_false = is_mature or is_mature_tutoring or new_status in exit_statuses
+        
+        if must_be_false:
+            # These are permanent conditions - need_review MUST be False and cannot be changed
+            family.need_review = False
+        elif old_status in exit_statuses and new_status not in exit_statuses:
+            # Child status changed FROM בריא/ז״ל to something else
+            # Only reset to True if was True before and there's no other permanent condition
+            if old_need_review and not is_mature and not is_mature_tutoring:
+                family.need_review = True
+        
+        # Allow manual override ONLY if none of the permanent conditions apply
+        if "need_review" in data and not must_be_false:
+            family.need_review = data.get("need_review", True)
+        elif "need_review" in data and must_be_false:
+            # Request tries to override permanent condition - log warning and ignore
+            api_logger.warning(f"Attempt to override permanent need_review=False for child {child_id} (age: {maturity_check.get('age', '?')}, mature_tutoring: {is_mature_tutoring})")
+        
+        # If need_review changed to False, delete all review tasks for this child
+        if old_need_review and not family.need_review:
+            review_task_type = Task_Types.objects.filter(task_type='שיחת ביקורת').first()
+            if review_task_type:
+                deleted_tasks = Tasks.objects.filter(
+                    related_child_id=child_id,
+                    task_type=review_task_type
+                ).delete()
+                if deleted_tasks[0] > 0:
+                    reason = ""
+                    if is_mature:
+                        reason = f" (age >= 16)"
+                    elif is_mature_tutoring:
+                        reason = f" (tutoring_status: בוגר)"
+                    elif new_status in exit_statuses:
+                        reason = f" (status: {new_status})"
+                    field_changes.append(f"Deleted {deleted_tasks[0]} review tasks (need_review set to False{reason})")
+                    api_logger.info(f"Deleted {deleted_tasks[0]} review tasks for child {child_id}{reason}")
+        
+        # Track the need_review change for audit log
+        if old_need_review != family.need_review:
+            field_changes.append(f"Need Review: {old_need_review} → {family.need_review}")
+
         
         # Save the updated family record
         try:
@@ -1812,6 +1899,10 @@ def import_families_endpoint(request):
             full_name_raw = row.get('שם מלא של הילד/ה', '')
             full_name = '' if (full_name_raw is None or pd.isna(full_name_raw) or str(full_name_raw).lower() == 'nan') else str(full_name_raw).strip()
             
+            # Parse status early for surname logic
+            status_raw = row.get('סטטוס', '')
+            status_val = '' if (status_raw is None or pd.isna(status_raw) or str(status_raw).lower() == 'nan') else str(status_raw).strip()
+            
             # Split by space: last element is surname, rest is first name
             if full_name:
                 name_parts = full_name.split()
@@ -1820,6 +1911,20 @@ def import_families_endpoint(request):
             else:
                 child_first_name = ''
                 child_last_name = ''
+            
+            # Handle missing surname: if no surname and status is בריא/ז״ל, use status as surname
+            # Otherwise use "XXX" as placeholder and create update task
+            if not child_last_name:
+                if status_val in ['בריא', 'ז״ל']:
+                    # Use status as surname for healthy/deceased children
+                    child_last_name = status_val
+                    needs_surname_task = False
+                else:
+                    # Use XXX as placeholder
+                    child_last_name = 'XXX'
+                    needs_surname_task = True
+            else:
+                needs_surname_task = False
             
             result = {
                 'row_num': row_num,
@@ -1947,6 +2052,46 @@ def import_families_endpoint(request):
                 diagnosis_raw = row.get('אבחנה רפואית', '')
                 diagnosis = '' if (diagnosis_raw is None or pd.isna(diagnosis_raw) or str(diagnosis_raw).lower() == 'nan') else str(diagnosis_raw).strip()
                 
+                # Parse diagnosis_date from Excel - ONLY if valid format found, else stay NULL
+                diagnosis_date = None
+                diagnosis_date_raw = row.get('תאריך אבחון', '')
+                if diagnosis_date_raw and not pd.isna(diagnosis_date_raw) and str(diagnosis_date_raw).lower() != 'nan':
+                    try:
+                        from datetime import datetime as dt
+                        # If already a datetime object (from pandas), use it directly
+                        if isinstance(diagnosis_date_raw, dt):
+                            diagnosis_date = diagnosis_date_raw.date()
+                        else:
+                            date_str = str(diagnosis_date_raw).strip()
+                            # Try multiple date formats
+                            date_formats = [
+                                '%Y-%m-%d %H:%M:%S',  # ISO with time
+                                '%Y-%m-%d',           # ISO
+                                '%d/%m/%Y',           # EU: dd/mm/yyyy
+                                '%m/%d/%Y',           # US: mm/dd/yyyy
+                                '%d-%m-%Y',           # dd-mm-yyyy
+                                '%m-%d-%Y',           # mm-dd-yyyy
+                                '%d.%m.%Y',           # dd.mm.yyyy
+                                '%m.%d.%Y',           # mm.dd.yyyy
+                                '%d/%m/%y',           # dd/mm/yy (2-digit year)
+                                '%m/%d/%y',           # mm/dd/yy
+                                '%d-%m-%y',           # dd-mm-yy
+                                '%m-%d-%y',           # mm-dd-yy
+                                '%d.%m.%y',           # dd.mm.yy
+                                '%m.%d.%y',           # mm.dd.yy
+                                '%Y/%m/%d',           # yyyy/mm/dd
+                                '%Y.%m.%d',           # yyyy.mm.dd
+                            ]
+                            for fmt in date_formats:
+                                try:
+                                    diagnosis_date = dt.strptime(date_str, fmt).date()
+                                    break
+                                except ValueError:
+                                    continue
+                    except Exception:
+                        # If any error occurs during parsing, leave as None
+                        diagnosis_date = None
+                
                 # Parse marital_status from Excel if provided
                 marital_status_raw = row.get('סטטוס זוגי', '')
                 marital_status = '' if (marital_status_raw is None or pd.isna(marital_status_raw) or str(marital_status_raw).lower() == 'nan') else str(marital_status_raw).strip()
@@ -1955,6 +2100,12 @@ def import_families_endpoint(request):
                 tutoring_status_raw = row.get('מצב חונכות', '')
                 tutoring_status_val = '' if (tutoring_status_raw is None or pd.isna(tutoring_status_raw) or str(tutoring_status_raw).lower() == 'nan') else str(tutoring_status_raw).strip()
                 final_tutoring_status = tutoring_status_val if tutoring_status_val else 'למצוא חונך'
+                
+                # Feature #3: Check סוג column for maturity (בוגר = mature)
+                # If סוג = "בוגר", set need_review=False on import
+                sug_raw = row.get('סוג', '')
+                sug_val = '' if (sug_raw is None or pd.isna(sug_raw) or str(sug_raw).lower() == 'nan') else str(sug_raw).strip()
+                need_review_from_mature = sug_val == 'בוגר'
                 
                 # Parse status from Excel if provided
                 status_raw = row.get('סטטוס', '')
@@ -1971,17 +2122,37 @@ def import_families_endpoint(request):
                 else:
                     gender = False
                 
-                # Parse birth date - inline
+                # Parse birth date - handle multiple date formats
                 date_val = row.get('תאריך לידה', '')
                 birth_date = None
                 if date_val and not pd.isna(date_val) and str(date_val).lower() != 'nan':
                     try:
                         from datetime import datetime as dt
+                        # If already a datetime object (from pandas), use it directly
                         if isinstance(date_val, dt):
                             birth_date = date_val.date()
                         else:
                             date_str = str(date_val).strip()
-                            for fmt in ['%Y-%m-%d %H:%M:%S', '%Y-%m-%d', '%d/%m/%Y', '%d-%m-%Y', '%d.%m.%Y']:
+                            # Try multiple date formats: ISO, EU (dd/mm/yyyy), US (mm/dd/yyyy), dotted, dashed
+                            date_formats = [
+                                '%Y-%m-%d %H:%M:%S',  # ISO with time
+                                '%Y-%m-%d',           # ISO
+                                '%d/%m/%Y',           # EU: dd/mm/yyyy
+                                '%m/%d/%Y',           # US: mm/dd/yyyy
+                                '%d-%m-%Y',           # dd-mm-yyyy
+                                '%m-%d-%Y',           # mm-dd-yyyy
+                                '%d.%m.%Y',           # dd.mm.yyyy
+                                '%m.%d.%Y',           # mm.dd.yyyy
+                                '%d/%m/%y',           # dd/mm/yy (2-digit year)
+                                '%m/%d/%y',           # mm/dd/yy
+                                '%d-%m-%y',           # dd-mm-yy
+                                '%m-%d-%y',           # mm-dd-yy
+                                '%d.%m.%y',           # dd.mm.yy
+                                '%m.%d.%y',           # mm.dd.yy
+                                '%Y/%m/%d',           # yyyy/mm/dd
+                                '%Y.%m.%d',           # yyyy.mm.dd
+                            ]
+                            for fmt in date_formats:
                                 try:
                                     birth_date = dt.strptime(date_str, fmt).date()
                                     break
@@ -1989,6 +2160,87 @@ def import_families_endpoint(request):
                                     continue
                     except Exception:
                         birth_date = None
+                
+                # Parse שיחת ביקורת (review talk) - maps to last_review_talk_conducted
+                # If value is "לא צריך" (string), set need_review=False; otherwise parse as date
+                review_talk_raw = row.get('שיחת ביקורת', '')
+                review_talk_value = '' if (review_talk_raw is None or pd.isna(review_talk_raw) or str(review_talk_raw).lower() == 'nan') else str(review_talk_raw).strip()
+                last_review_talk_conducted = None
+                need_review_from_review_talk = None  # Will be set if "לא צריך" is found
+                
+                if review_talk_value:
+                    if review_talk_value == 'לא צריך':
+                        # If marked as "לא צריך", set need_review to False
+                        need_review_from_review_talk = False
+                    else:
+                        # Try to parse as date - handle multiple date formats including Hebrew months
+                        try:
+                            from datetime import datetime as dt
+                            import re
+                            
+                            # If already a datetime object (from pandas), use it directly
+                            if isinstance(review_talk_raw, dt):
+                                last_review_talk_conducted = review_talk_raw.date()
+                            else:
+                                date_str = review_talk_value
+                                
+                                # Hebrew month names mapping
+                                hebrew_months = {
+                                    'ינואר': '01', 'יוני': '06', 'יולי': '07', 'אוגוסט': '08',
+                                    'ספטמבר': '09', 'אוקטובר': '10', 'נובמבר': '11', 'דצמבר': '12',
+                                    'פברואר': '02', 'מרץ': '03', 'אפריל': '04', 'מאי': '05',
+                                    'יוני': '06', 'יולי': '07', 'אגוסטוס': '08',
+                                    # Short forms
+                                    'ינ': '01', 'פב': '02', 'מר': '03', 'אפ': '04', 'מא': '05',
+                                    'יו': '06', 'יול': '07', 'אוג': '08', 'ספ': '09', 'אוק': '10',
+                                    'נו': '11', 'דצ': '12',
+                                }
+                                
+                                # Try to parse Hebrew date format: "D Month" or "D Month YYYY"
+                                for heb_month, month_num in hebrew_months.items():
+                                    if heb_month in date_str:
+                                        # Extract day and year if present
+                                        day_match = re.search(r'(\d{1,2})\s+' + heb_month, date_str)
+                                        year_match = re.search(heb_month + r'.*?(\d{4})', date_str)
+                                        
+                                        if day_match:
+                                            day = int(day_match.group(1))
+                                            year = int(year_match.group(1)) if year_match else datetime.now().year
+                                            try:
+                                                last_review_talk_conducted = dt(year, int(month_num), day).date()
+                                                break
+                                            except ValueError:
+                                                continue
+                                
+                                # If not parsed yet, try standard formats
+                                if not last_review_talk_conducted:
+                                    date_formats = [
+                                        '%Y-%m-%d %H:%M:%S',  # ISO with time
+                                        '%Y-%m-%d',           # ISO
+                                        '%d/%m/%Y',           # EU: dd/mm/yyyy
+                                        '%m/%d/%Y',           # US: mm/dd/yyyy
+                                        '%d-%m-%Y',           # dd-mm-yyyy
+                                        '%m-%d-%Y',           # mm-dd-yyyy
+                                        '%d.%m.%Y',           # dd.mm.yyyy
+                                        '%m.%d.%Y',           # mm.dd.yyyy
+                                        '%d/%m/%y',           # dd/mm/yy (2-digit year)
+                                        '%m/%d/%y',           # mm/dd/yy
+                                        '%d-%m-%y',           # dd-mm-yy
+                                        '%m-%d-%y',           # mm-dd-yy
+                                        '%d.%m.%y',           # dd.mm.yy
+                                        '%m.%d.%y',           # mm.dd.yy
+                                        '%Y/%m/%d',           # yyyy/mm/dd
+                                        '%Y.%m.%d',           # yyyy.mm.dd
+                                        '%Y',                 # Year only
+                                    ]
+                                    for fmt in date_formats:
+                                        try:
+                                            last_review_talk_conducted = dt.strptime(date_str, fmt).date()
+                                            break
+                                        except ValueError:
+                                            continue
+                        except Exception:
+                            last_review_talk_conducted = None
                 
                 # Determine responsible_coordinator based on medical status and tutoring status
                 # Pass child_status (final_status) to handle בריא/ז״ל children (they get "ללא")
@@ -2003,6 +2255,7 @@ def import_families_endpoint(request):
                         child_phone_number=phone,
                         treating_hospital=hospital,
                         medical_diagnosis=diagnosis,
+                        diagnosis_date=diagnosis_date,
                         date_of_birth=birth_date,
                         marital_status=marital_status,
                         registrationdate=datetime.datetime.now().date(),
@@ -2010,8 +2263,36 @@ def import_families_endpoint(request):
                         status=final_status,
                         tutoring_status=final_tutoring_status,
                         responsible_coordinator=responsible_coordinator,
-                        gender=gender
+                        gender=gender,
+                        last_review_talk_conducted=last_review_talk_conducted,
+                        # Feature #2 + #3: Auto-set need_review based on:
+                        # - Set to False if: בריא/ז״ל status OR "לא צריך" in review_talk column OR בוגר tutoring_status
+                        # - Otherwise default to True
+                        need_review=False if (final_status in ['בריא', 'ז״ל'] or need_review_from_review_talk is False or need_review_from_mature) else True
                     )
+                    
+                    # If surname is "XXX" (missing), create עדכון משפחה task for משפחות coordinators
+                    if needs_surname_task:
+                        try:
+                            # Get all משפחות coordinators (Families Coordinator role)
+                            coordinators = Staff.objects.filter(
+                                roles__role_name='רכז משפחות'
+                            ).distinct()
+                            
+                            if coordinators.exists():
+                                task_desc = f"עדכון שם משפחה חסר לילד/ה {child_first_name} (כרגע: {child_last_name})"
+                                for coordinator in coordinators:
+                                    Tasks.objects.create(
+                                        task_type='עדכון משפחה',
+                                        description=task_desc,
+                                        assigned_to=coordinator,
+                                        assigned_by=user,
+                                        date_assigned=datetime.datetime.now(),
+                                        status='חדש'
+                                    )
+                        except Exception as e:
+                            # Log task creation failure but don't fail the import
+                            api_logger.warning(f"Failed to create surname update task for child {child_id}: {str(e)}")
                 
                 result['status'] = 'OK'
                 result['details'] = f'נוצרה בהצלחה'

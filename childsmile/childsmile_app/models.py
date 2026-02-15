@@ -211,6 +211,8 @@ class Children(models.Model):
     )
     # Track last review talk conducted date for monthly follow-up tasks
     last_review_talk_conducted = models.DateField(null=True, blank=True)
+    # Feature #2: Skip review task creation for this child (auto-set for בריא/ז״ל, can be manual)
+    need_review = models.BooleanField(default=True)
 
     def __str__(self):
         return f"{self.childfirstname} {self.childsurname}"
