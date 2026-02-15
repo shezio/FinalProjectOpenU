@@ -41,13 +41,13 @@ from .unused_views import (
     NewFamiliesLastMonthReportView,
     PotentialTutorshipMatchReportView,
 )
-from django.db import DatabaseError
+from django.db import DatabaseError, IntegrityError
 from django.core.cache import cache
 from rest_framework import viewsets, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.decorators import action, api_view
-from django.http import HttpResponse, JsonResponse
+from django.http import HttpResponse, JsonResponse, FileResponse
 from django.views import View
 from django.db import connection
 from django.views.decorators.csrf import csrf_exempt
@@ -64,6 +64,12 @@ from math import sin, cos, sqrt, atan2, radians, ceil
 import json
 import os
 import traceback
+import re
+import base64
+import pandas as pd
+from io import BytesIO
+from openpyxl import Workbook
+from openpyxl.styles import Font, PatternFill, Alignment
 from django.db.models import Count, F, Q , Prefetch
 from .utils import *
 from .audit_utils import log_api_action
@@ -1878,6 +1884,40 @@ def import_families_endpoint(request):
                 status=400
             )
         
+        # Log actual column names for debugging
+        api_logger.info(f"Excel columns found: {list(df.columns)}")
+        
+        # Create flexible column mapping - try to find columns by name
+        # This handles both "שם מלא" and separate "שם פרטי"/"שם משפחה" columns
+        columns = {col.strip(): col for col in df.columns}  # Normalized column names
+        
+        # Find column names (case-insensitive and trim whitespace)
+        def find_column(potential_names):
+            """Find which column exists from a list of potential names"""
+            for name in potential_names:
+                normalized = name.strip()
+                for col, orig_col in columns.items():
+                    if col == normalized:
+                        return orig_col
+            return None
+        
+        # Map all possible column names
+        col_first_name = find_column(['שם פרטי']) or 'שם פרטי'
+        col_last_name = find_column(['שם משפחה']) or 'שם משפחה'
+        col_full_name = find_column(['שם מלא של הילד/ה', 'שם מלא']) or None
+        col_child_id = find_column(['תעודת זהות ילד/ה', 'תעודת זהות', 'ID']) or 'תעודת זהות ילד/ה'
+        col_status = find_column(['סטטוס']) or 'סטטוס'
+        col_marital_status = find_column(['סטטוס זוגי']) or 'סטטוס זוגי'
+        col_tutoring_status = find_column(['מצב חונכות', 'סטטוס חונכות']) or 'מצב חונכות'
+        col_gender = find_column(['מין']) or 'מין'
+        col_city = find_column(['עיר']) or 'עיר'
+        col_phone = find_column(['מספר טלפון של הילד/ה', 'מספר טלפון']) or 'מספר טלפון של הילד/ה'
+        col_hospital = find_column(['בית חולים מטפל', 'בית חולים']) or 'בית חולים מטפל'
+        col_diagnosis = find_column(['אבחנה רפואית', 'אבחנה']) or 'אבחנה רפואית'
+        col_diagnosis_date = find_column(['תאריך אבחון', 'תאריך אבחנה']) or 'תאריך אבחון'
+        
+        api_logger.info(f"Column mapping: first_name={col_first_name}, last_name={col_last_name}, full_name={col_full_name}")
+        
         # Get valid enum values for validation during dry-run
         valid_marital_statuses = set(get_enum_values("marital_status"))
         valid_tutoring_statuses = set(get_enum_values("tutoring_status"))
@@ -1895,22 +1935,28 @@ def import_families_endpoint(request):
         for idx, row in df.iterrows():
             row_num = idx + 2
             
-            # Extract full name and SPLIT it into first and last names
-            full_name_raw = row.get('שם מלא של הילד/ה', '')
-            full_name = '' if (full_name_raw is None or pd.isna(full_name_raw) or str(full_name_raw).lower() == 'nan') else str(full_name_raw).strip()
+            # Extract first and last names from separate columns (preferred) or full name
+            first_name_raw = row.get(col_first_name, '')
+            last_name_raw = row.get(col_last_name, '')
+            
+            child_first_name = '' if (first_name_raw is None or pd.isna(first_name_raw) or str(first_name_raw).lower() == 'nan') else str(first_name_raw).strip()
+            child_last_name = '' if (last_name_raw is None or pd.isna(last_name_raw) or str(last_name_raw).lower() == 'nan') else str(last_name_raw).strip()
+            
+            # Fallback to full_name column if separate names are missing
+            if (not child_first_name or not child_last_name) and col_full_name:
+                full_name_raw = row.get(col_full_name, '')
+                full_name = '' if (full_name_raw is None or pd.isna(full_name_raw) or str(full_name_raw).lower() == 'nan') else str(full_name_raw).strip()
+                
+                if full_name:
+                    name_parts = full_name.split()
+                    if not child_last_name:
+                        child_last_name = name_parts[-1]  # Last part is surname
+                    if not child_first_name:
+                        child_first_name = ' '.join(name_parts[:-1]) if len(name_parts) > 1 else name_parts[0]
             
             # Parse status early for surname logic
-            status_raw = row.get('סטטוס', '')
+            status_raw = row.get(col_status, '')
             status_val = '' if (status_raw is None or pd.isna(status_raw) or str(status_raw).lower() == 'nan') else str(status_raw).strip()
-            
-            # Split by space: last element is surname, rest is first name
-            if full_name:
-                name_parts = full_name.split()
-                child_last_name = name_parts[-1]  # Last part is surname
-                child_first_name = ' '.join(name_parts[:-1]) if len(name_parts) > 1 else name_parts[0]  # Everything else is first name
-            else:
-                child_first_name = ''
-                child_last_name = ''
             
             # Handle missing surname: if no surname and status is בריא/ז״ל, use status as surname
             # Otherwise use "XXX" as placeholder and create update task
@@ -1938,7 +1984,7 @@ def import_families_endpoint(request):
             
             try:
                 # Parse child ID and pad with leading zeros if needed
-                child_id_raw = row.get('תעודת זהות ילד/ה', '')
+                child_id_raw = row.get(col_child_id, '')
                 child_id = '' if (child_id_raw is None or pd.isna(child_id_raw) or str(child_id_raw).lower() == 'nan') else str(child_id_raw).strip()
                 
                 # Pad with leading zeros to make it 9 digits
@@ -1983,19 +2029,60 @@ def import_families_endpoint(request):
                     results.append(result)
                     continue
                 
+                # Parse birth_date FIRST (needed for both dry-run age check and live import)
+                date_val = row.get('תאריך לידה', '')
+                birth_date = None
+                if date_val and not pd.isna(date_val) and str(date_val).lower() != 'nan':
+                    try:
+                        from datetime import datetime as dt
+                        # If already a datetime object (from pandas), use it directly
+                        if isinstance(date_val, dt):
+                            birth_date = date_val.date()
+                        else:
+                            date_str = str(date_val).strip()
+                            # Try multiple date formats: ISO, EU (dd/mm/yyyy), US (mm/dd/yyyy), dotted, dashed
+                            date_formats = [
+                                '%Y-%m-%d %H:%M:%S',  # ISO with time
+                                '%Y-%m-%d',           # ISO
+                                '%d/%m/%Y',           # EU: dd/mm/yyyy
+                                '%m/%d/%Y',           # US: mm/dd/yyyy
+                                '%d-%m-%Y',           # dd-mm-yyyy
+                                '%m-%d-%Y',           # mm-dd-yyyy
+                                '%d.%m.%Y',           # dd.mm.yyyy
+                                '%m.%d.%Y',           # mm.dd.yyyy
+                                '%d/%m/%y',           # dd/mm/yy (2-digit year)
+                                '%m/%d/%y',           # mm/dd/yy
+                                '%d-%m-%y',           # dd-mm-yy
+                                '%m-%d-%y',           # mm-dd-yy
+                                '%d.%m.%y',           # dd.mm.yy
+                                '%m.%d.%y',           # mm.dd.yy
+                                '%Y/%m/%d',           # yyyy/mm/dd
+                                '%Y.%m.%d',           # yyyy.mm.dd
+                            ]
+                            for fmt in date_formats:
+                                try:
+                                    birth_date = dt.strptime(date_str, fmt).date()
+                                    break
+                                except ValueError:
+                                    continue
+                    except Exception:
+                        birth_date = None
+                
                 # Dry run - validate with enum checks
                 if dry_run:
                     # Parse optional fields for enum validation
-                    marital_status_raw = row.get('סטטוס זוגי', '')
+                    marital_status_raw = row.get(col_marital_status, '')
                     marital_status = '' if (marital_status_raw is None or pd.isna(marital_status_raw) or str(marital_status_raw).lower() == 'nan') else str(marital_status_raw).strip()
                     
-                    tutoring_status_raw = row.get('מצב חונכות', '')
+                    tutoring_status_raw = row.get(col_tutoring_status, '')
                     tutoring_status_val = '' if (tutoring_status_raw is None or pd.isna(tutoring_status_raw) or str(tutoring_status_raw).lower() == 'nan') else str(tutoring_status_raw).strip()
+                    # Normalize: convert spaces to underscores for tutoring_status only
+                    tutoring_status_normalized = tutoring_status_val.replace(' ', '_') if tutoring_status_val else ''
                     
-                    status_raw = row.get('סטטוס', '')
+                    status_raw = row.get(col_status, '')
                     status_val = '' if (status_raw is None or pd.isna(status_raw) or str(status_raw).lower() == 'nan') else str(status_raw).strip()
                     
-                    gender_raw = row.get('מין', '')
+                    gender_raw = row.get(col_gender, '')
                     gender_str = '' if (gender_raw is None or pd.isna(gender_raw) or str(gender_raw).lower() == 'nan') else str(gender_raw).strip().lower()
                     
                     # Check for enum mismatches
@@ -2003,7 +2090,7 @@ def import_families_endpoint(request):
                         result['enum_warnings'].append(f'סטטוס משפחה "{marital_status}" לא נמצא במערכת')
                         invalid_enum_count += 1
                     
-                    if tutoring_status_val and tutoring_status_val not in valid_tutoring_statuses:
+                    if tutoring_status_normalized and tutoring_status_normalized not in valid_tutoring_statuses:
                         result['enum_warnings'].append(f'סטטוס חונכות "{tutoring_status_val}" לא נמצא במערכת')
                         invalid_enum_count += 1
                     
@@ -2023,10 +2110,10 @@ def import_families_endpoint(request):
                 
                 # === CREATE RECORD ===
                 # Parse optional fields
-                city_raw = row.get('עיר', '')
+                city_raw = row.get(col_city, '')
                 city = '' if (city_raw is None or pd.isna(city_raw) or str(city_raw).lower() == 'nan') else str(city_raw).strip()
                 
-                phone_raw = row.get('מספר טלפון של הילד/ה', '')
+                phone_raw = row.get(col_phone, '')
                 phone = '' if (phone_raw is None or pd.isna(phone_raw) or str(phone_raw).lower() == 'nan') else str(phone_raw).strip()
                 
                 # Format phone: remove dashes/spaces, pad to 10 digits with trailing zeros if needed
@@ -2044,17 +2131,17 @@ def import_families_endpoint(request):
                 else:
                     phone = ''
                 
-                hospital_raw = row.get('בית חולים מטפל', '')
+                hospital_raw = row.get(col_hospital, '')
                 hospital = '' if (hospital_raw is None or pd.isna(hospital_raw) or str(hospital_raw).lower() == 'nan') else str(hospital_raw).strip()
                 # Trim trailing spaces from hospital name
                 hospital = hospital.rstrip() if hospital else ''
                 
-                diagnosis_raw = row.get('אבחנה רפואית', '')
+                diagnosis_raw = row.get(col_diagnosis, '')
                 diagnosis = '' if (diagnosis_raw is None or pd.isna(diagnosis_raw) or str(diagnosis_raw).lower() == 'nan') else str(diagnosis_raw).strip()
                 
                 # Parse diagnosis_date from Excel - ONLY if valid format found, else stay NULL
                 diagnosis_date = None
-                diagnosis_date_raw = row.get('תאריך אבחון', '')
+                diagnosis_date_raw = row.get(col_diagnosis_date, '')
                 if diagnosis_date_raw and not pd.isna(diagnosis_date_raw) and str(diagnosis_date_raw).lower() != 'nan':
                     try:
                         from datetime import datetime as dt
@@ -2093,13 +2180,15 @@ def import_families_endpoint(request):
                         diagnosis_date = None
                 
                 # Parse marital_status from Excel if provided
-                marital_status_raw = row.get('סטטוס זוגי', '')
+                marital_status_raw = row.get(col_marital_status, '')
                 marital_status = '' if (marital_status_raw is None or pd.isna(marital_status_raw) or str(marital_status_raw).lower() == 'nan') else str(marital_status_raw).strip()
                 
-                # Parse tutoring_status from Excel, default to 'למצוא חונך' if not provided
-                tutoring_status_raw = row.get('מצב חונכות', '')
+                # Parse tutoring_status from Excel, default to 'למצוא_חונך' if not provided
+                tutoring_status_raw = row.get(col_tutoring_status, '')
                 tutoring_status_val = '' if (tutoring_status_raw is None or pd.isna(tutoring_status_raw) or str(tutoring_status_raw).lower() == 'nan') else str(tutoring_status_raw).strip()
-                final_tutoring_status = tutoring_status_val if tutoring_status_val else 'למצוא חונך'
+                # Normalize: convert spaces to underscores for tutoring_status only
+                tutoring_status_normalized = tutoring_status_val.replace(' ', '_') if tutoring_status_val else ''
+                final_tutoring_status = tutoring_status_normalized if tutoring_status_normalized else 'למצוא_חונך'
                 
                 # Feature #3: Check סוג column for maturity (בוגר/ת = mature)
                 # If סוג contains "בוגר", set need_review=False on import
@@ -2117,12 +2206,12 @@ def import_families_endpoint(request):
                     is_mature_by_age = age >= 16
                 
                 # Parse status from Excel if provided
-                status_raw = row.get('סטטוס', '')
+                status_raw = row.get(col_status, '')
                 status_val = '' if (status_raw is None or pd.isna(status_raw) or str(status_raw).lower() == 'nan') else str(status_raw).strip()
                 final_status = status_val if status_val else 'פעיל'
                 
                 # Parse gender from Excel - female=True, male=False
-                gender_val = row.get('מין', '')
+                gender_val = row.get(col_gender, '')
                 if isinstance(gender_val, bool):
                     gender = gender_val
                 elif isinstance(gender_val, str):
@@ -2131,44 +2220,7 @@ def import_families_endpoint(request):
                 else:
                     gender = False
                 
-                # Parse birth date - handle multiple date formats
-                date_val = row.get('תאריך לידה', '')
-                birth_date = None
-                if date_val and not pd.isna(date_val) and str(date_val).lower() != 'nan':
-                    try:
-                        from datetime import datetime as dt
-                        # If already a datetime object (from pandas), use it directly
-                        if isinstance(date_val, dt):
-                            birth_date = date_val.date()
-                        else:
-                            date_str = str(date_val).strip()
-                            # Try multiple date formats: ISO, EU (dd/mm/yyyy), US (mm/dd/yyyy), dotted, dashed
-                            date_formats = [
-                                '%Y-%m-%d %H:%M:%S',  # ISO with time
-                                '%Y-%m-%d',           # ISO
-                                '%d/%m/%Y',           # EU: dd/mm/yyyy
-                                '%m/%d/%Y',           # US: mm/dd/yyyy
-                                '%d-%m-%Y',           # dd-mm-yyyy
-                                '%m-%d-%Y',           # mm-dd-yyyy
-                                '%d.%m.%Y',           # dd.mm.yyyy
-                                '%m.%d.%Y',           # mm.dd.yyyy
-                                '%d/%m/%y',           # dd/mm/yy (2-digit year)
-                                '%m/%d/%y',           # mm/dd/yy
-                                '%d-%m-%y',           # dd-mm-yy
-                                '%m-%d-%y',           # mm-dd-yy
-                                '%d.%m.%y',           # dd.mm.yy
-                                '%m.%d.%y',           # mm.dd.yy
-                                '%Y/%m/%d',           # yyyy/mm/dd
-                                '%Y.%m.%d',           # yyyy.mm.dd
-                            ]
-                            for fmt in date_formats:
-                                try:
-                                    birth_date = dt.strptime(date_str, fmt).date()
-                                    break
-                                except ValueError:
-                                    continue
-                    except Exception:
-                        birth_date = None
+                # birth_date already parsed earlier (needed for both dry-run and live import)
                 
                 # Parse שיחת ביקורת (review talk) - maps to last_review_talk_conducted
                 # If value is "לא צריך" (string), set need_review=False; otherwise parse as date

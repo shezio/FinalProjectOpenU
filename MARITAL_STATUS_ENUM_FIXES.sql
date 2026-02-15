@@ -13,6 +13,7 @@ ALTER TYPE marital_status ADD VALUE 'רווק/ה' AFTER 'אלמנה';
 -- Verify: All 7 values now exist (was 3, added 4)
 SELECT unnest(enum_range(NULL::marital_status)) AS marital_status_values ORDER BY marital_status_values;
 
+
 -- Expected output:
 -- marital_status_values
 -- אין
@@ -22,3 +23,9 @@ SELECT unnest(enum_range(NULL::marital_status)) AS marital_status_values ORDER B
 -- ידועים בציבור
 -- נשואים
 -- רווק/ה
+
+
+--also run 
+ALTER TABLE childsmile_app_children ADD COLUMN need_review BOOLEAN DEFAULT TRUE;
+--and
+UPDATE childsmile_app_children SET need_review = TRUE;
