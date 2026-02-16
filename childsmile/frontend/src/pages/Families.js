@@ -56,6 +56,8 @@ const Families = () => {
     medical_diagnosis: '',
     diagnosis_date: '',
     additional_info: '',
+    is_in_frame: '',
+    coordinator_comments: '',
     current_medical_state: '',
     when_completed_treatments: '',
     father_name: '',
@@ -333,6 +335,8 @@ const Families = () => {
       medical_diagnosis: '',
       diagnosis_date: '',
       additional_info: '',
+      is_in_frame: '',
+      coordinator_comments: '',
       current_medical_state: '',
       when_completed_treatments: '',
       father_name: '',
@@ -369,6 +373,8 @@ const Families = () => {
       num_of_siblings: '',
       details_for_tutoring: '',
       additional_info: '',
+      is_in_frame: '',
+      coordinator_comments: '',
       tutoring_status: '',
       current_medical_state: '',
       when_completed_treatments: '',
@@ -493,6 +499,8 @@ const Families = () => {
       medical_diagnosis: family.medical_diagnosis || '',
       diagnosis_date: formatDate(family.diagnosis_date) || '',
       additional_info: family.additional_info || '',
+      is_in_frame: family.is_in_frame || '',
+      coordinator_comments: family.coordinator_comments || '',
       current_medical_state: family.current_medical_state || '',
       when_completed_treatments: formatDate(family.when_completed_treatments) || '',
       father_name: family.father_name || '',
@@ -1099,6 +1107,8 @@ const Families = () => {
                 )}
                 <p>{t('Responsible Coordinator')}: {selectedFamily.responsible_coordinator || '---'}</p>
                 <p>{t('Need Review')}: {selectedFamily.need_review ? t('Yes') : t('No')}</p>
+                <p>{t('Is In Frame')}: {selectedFamily.is_in_frame || '---'}</p>
+                <p>{t('Coordinator Comments')}: {selectedFamily.coordinator_comments || '---'}</p>
                 <p>{t('Additional Info')}: {selectedFamily.additional_info || '---'}</p>
                 <p>{t('Current Medical State')}: {selectedFamily.current_medical_state || '---'}</p>
                 <p>{t('Treating Hospital')}: {selectedFamily.treating_hospital || '---'}</p>
@@ -1360,6 +1370,22 @@ const Families = () => {
                   <textarea
                     name="additional_info"
                     value={newFamily.additional_info}
+                    onChange={handleAddFamilyChange}
+                    className="scrollable-textarea"
+                  />
+
+                  <label>{t('Is In Frame')}</label>
+                  <textarea
+                    name="is_in_frame"
+                    value={newFamily.is_in_frame}
+                    onChange={handleAddFamilyChange}
+                    className="scrollable-textarea"
+                  />
+
+                  <label>{t('Coordinator Comments')}</label>
+                  <textarea
+                    name="coordinator_comments"
+                    value={newFamily.coordinator_comments}
                     onChange={handleAddFamilyChange}
                     className="scrollable-textarea"
                   />
@@ -1773,6 +1799,22 @@ const Families = () => {
                     onChange={handleAddFamilyChange}
                     className="scrollable-textarea"
                   />
+
+                  <label>{t('Is In Frame')}</label>
+                  <textarea
+                    name="is_in_frame"
+                    value={newFamily.is_in_frame}
+                    onChange={handleAddFamilyChange}
+                    className="scrollable-textarea"
+                  />
+
+                  <label>{t('Coordinator Comments')}</label>
+                  <textarea
+                    name="coordinator_comments"
+                    value={newFamily.coordinator_comments}
+                    onChange={handleAddFamilyChange}
+                    className="scrollable-textarea"
+                  />
                 </div>
 
                 <div className="form-column">
@@ -1865,7 +1907,6 @@ const Families = () => {
                     <option value="Yes">{t('Yes')}</option>
                     <option value="No">{t('No')}</option>
                   </select>
-                  <small>{t('Auto-disabled for בריא/ז״ל children. Review tasks will be created for children marked as "Yes".')}</small>
 
                   <label>{t('Details for Tutoring')}</label>
                   <textarea

@@ -213,6 +213,10 @@ class Children(models.Model):
     last_review_talk_conducted = models.DateField(null=True, blank=True)
     # Feature #2: Skip review task creation for this child (auto-set for בריא/ז״ל, can be manual)
     need_review = models.BooleanField(default=True)
+    # Feature #4: Frame status - imported from "האם נמצא במסגרת?" column
+    is_in_frame = models.TextField(null=True, blank=True)
+    # Feature #5: Coordinator comments - imported from "הערות רכז" column
+    coordinator_comments = models.TextField(null=True, blank=True)
 
     def __str__(self):
         return f"{self.childfirstname} {self.childsurname}"

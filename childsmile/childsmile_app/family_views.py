@@ -181,6 +181,8 @@ def get_complete_family_details(request):
                 "status": family.status,
                 "age": family.age,
                 "need_review": family.need_review,
+                "is_in_frame": family.is_in_frame,
+                "coordinator_comments": family.coordinator_comments,
                 # MULTI-TUTOR SUPPORT: Add list of tutors
                 "tutors": child_tutors_map.get(family.child_id, []),
                 "tutors_count": len(child_tutors_map.get(family.child_id, [])),
@@ -414,6 +416,8 @@ def create_family(request):
             ),
             has_completed_treatments=data.get("has_completed_treatments", False),
             status=(data["status"] if data.get("status") else "טיפולים"),
+            is_in_frame=data.get("is_in_frame"),
+            coordinator_comments=data.get("coordinator_comments"),
             # Feature #2 + #3: Set need_review based on age, status, and tutoring_status
             need_review=need_review_value,
         )
@@ -631,6 +635,10 @@ def update_family(request, child_id):
             field_changes.append(f"Completed Treatments: '{family.has_completed_treatments}' → '{data.get('has_completed_treatments')}'")
         if family.status != data.get("status", family.status):
             field_changes.append(f"Status: '{family.status}' → '{data.get('status')}'")
+        if family.is_in_frame != data.get("is_in_frame", family.is_in_frame):
+            field_changes.append(f"In Frame: '{family.is_in_frame}' → '{data.get('is_in_frame')}'")
+        if family.coordinator_comments != data.get("coordinator_comments", family.coordinator_comments):
+            field_changes.append(f"Coordinator Comments: '{family.coordinator_comments}' → '{data.get('coordinator_comments')}'")
 
         # Handle date fields separately (compare parsed dates)
         new_date_of_birth = parse_date_field(data.get("date_of_birth"), "date_of_birth")
@@ -677,6 +685,8 @@ def update_family(request, child_id):
         family.street_and_apartment_number = data.get("street_and_apartment_number", family.street_and_apartment_number)
         family.expected_end_treatment_by_protocol = parse_date_field(data.get("expected_end_treatment_by_protocol"), "expected_end_treatment_by_protocol")
         family.has_completed_treatments = data.get("has_completed_treatments", family.has_completed_treatments)
+        family.is_in_frame = data.get("is_in_frame", family.is_in_frame)
+        family.coordinator_comments = data.get("coordinator_comments", family.coordinator_comments)
         
         # Handle tutoring_status change and auto-update coordinator
         old_tutoring_status = family.tutoring_status
@@ -1915,6 +1925,21 @@ def import_families_endpoint(request):
         col_hospital = find_column(['בית חולים מטפל', 'בית חולים']) or 'בית חולים מטפל'
         col_diagnosis = find_column(['אבחנה רפואית', 'אבחנה']) or 'אבחנה רפואית'
         col_diagnosis_date = find_column(['תאריך אבחון', 'תאריך אבחנה']) or 'תאריך אבחון'
+        col_num_of_siblings = find_column(['כמה אחים יש?', 'כמה אחים יש? (בנוסף לילד/ה החולים)', 'מספר אחים']) or 'כמה אחים יש?'
+        col_registration_date = find_column(['תאריך רישום']) or 'תאריך רישום'
+        col_street_address = find_column(['רחוב ומס דירה', 'רחוב וספר דירה', 'כתובת']) or 'רחוב ומס דירה'
+        col_medical_state = find_column(['מצב רפואי עדכני', 'מצב רפואי']) or 'מצב רפואי עדכני'
+        col_completed_treatments = find_column(['האם סיים/ה טיפולים?', 'סיום טיפולים']) or 'האם סיים/ה טיפולים?'
+        col_treatment_end_protocol = find_column(['צפי סיום על פי פרוטוקול?', 'תאריך סיום צפוי']) or 'צפי סיום על פי פרוטוקול?'
+        col_when_completed_treatments = find_column(['מתי סיים/ה טיפולים?', 'תאריך סיום טיפולים']) or 'מתי סיים/ה טיפולים?'
+        col_father_name = find_column(['שם האב']) or 'שם האב'
+        col_father_phone = find_column(['מס טלפון של האב']) or 'מס טלפון של האב'
+        col_mother_name = find_column(['שם האם']) or 'שם האם'
+        col_mother_phone = find_column(['מס טלפון של האם']) or 'מס טלפון של האם'
+        col_tutoring_details = find_column(['פרטים לצורך חונכות', 'פרטים לחונכות']) or 'פרטים לצורך חונכות (לצורך ליה ונעם)'
+        col_additional_info = find_column(['האם יש משהו ספציפי שתרצו לבקש/לדעת?', 'מידע נוסף', 'הערות']) or 'האם יש משהו ספציפי שתרצו לבקש/לדעת?'
+        col_is_in_frame = find_column(['האם נמצא במסגרת?']) or 'האם נמצא במסגרת?'
+        col_coordinator_comments = find_column(['הערות רכז', 'הערות רכז/מנהל']) or 'הערות רכז'
         
         api_logger.info(f"Column mapping: first_name={col_first_name}, last_name={col_last_name}, full_name={col_full_name}")
         
@@ -2139,6 +2164,65 @@ def import_families_endpoint(request):
                 diagnosis_raw = row.get(col_diagnosis, '')
                 diagnosis = '' if (diagnosis_raw is None or pd.isna(diagnosis_raw) or str(diagnosis_raw).lower() == 'nan') else str(diagnosis_raw).strip()
                 
+                # Parse street/address from Excel
+                street_address_raw = row.get(col_street_address, '')
+                street_address = '' if (street_address_raw is None or pd.isna(street_address_raw) or str(street_address_raw).lower() == 'nan') else str(street_address_raw).strip()
+                
+                # Parse medical state from Excel
+                medical_state_raw = row.get(col_medical_state, '')
+                medical_state = '' if (medical_state_raw is None or pd.isna(medical_state_raw) or str(medical_state_raw).lower() == 'nan') else str(medical_state_raw).strip()
+                
+                # Parse father details from Excel
+                father_name_raw = row.get(col_father_name, '')
+                father_name = '' if (father_name_raw is None or pd.isna(father_name_raw) or str(father_name_raw).lower() == 'nan') else str(father_name_raw).strip()
+                
+                father_phone_raw = row.get(col_father_phone, '')
+                father_phone = '' if (father_phone_raw is None or pd.isna(father_phone_raw) or str(father_phone_raw).lower() == 'nan') else str(father_phone_raw).strip()
+                # Format father phone similar to child phone
+                if father_phone:
+                    father_phone_normalized = father_phone.replace('-', '').replace(' ', '').strip()
+                    father_phone_normalized = ''.join(c for c in father_phone_normalized if c.isdigit())
+                    if father_phone_normalized:
+                        father_phone_normalized = father_phone_normalized.ljust(10, '0')
+                    if father_phone_normalized and len(father_phone_normalized) == 10:
+                        father_phone = f"{father_phone_normalized[:3]}-{father_phone_normalized[3:]}"
+                    else:
+                        father_phone = ''
+                
+                # Parse mother details from Excel
+                mother_name_raw = row.get(col_mother_name, '')
+                mother_name = '' if (mother_name_raw is None or pd.isna(mother_name_raw) or str(mother_name_raw).lower() == 'nan') else str(mother_name_raw).strip()
+                
+                mother_phone_raw = row.get(col_mother_phone, '')
+                mother_phone = '' if (mother_phone_raw is None or pd.isna(mother_phone_raw) or str(mother_phone_raw).lower() == 'nan') else str(mother_phone_raw).strip()
+                # Format mother phone similar to child phone
+                if mother_phone:
+                    mother_phone_normalized = mother_phone.replace('-', '').replace(' ', '').strip()
+                    mother_phone_normalized = ''.join(c for c in mother_phone_normalized if c.isdigit())
+                    if mother_phone_normalized:
+                        mother_phone_normalized = mother_phone_normalized.ljust(10, '0')
+                    if mother_phone_normalized and len(mother_phone_normalized) == 10:
+                        mother_phone = f"{mother_phone_normalized[:3]}-{mother_phone_normalized[3:]}"
+                    else:
+                        mother_phone = ''
+                
+                # Parse tutoring details from Excel
+                tutoring_details_raw = row.get(col_tutoring_details, '')
+                tutoring_details = '' if (tutoring_details_raw is None or pd.isna(tutoring_details_raw) or str(tutoring_details_raw).lower() == 'nan') else str(tutoring_details_raw).strip()
+                
+                # Parse additional info from Excel
+                additional_info_raw = row.get(col_additional_info, '')
+                additional_info = '' if (additional_info_raw is None or pd.isna(additional_info_raw) or str(additional_info_raw).lower() == 'nan') else str(additional_info_raw).strip()
+
+                # Parse is_in_frame from Excel (frame status)
+                is_in_frame_raw = row.get(col_is_in_frame, '')
+                is_in_frame = '' if (is_in_frame_raw is None or pd.isna(is_in_frame_raw) or str(is_in_frame_raw).lower() == 'nan') else str(is_in_frame_raw).strip()
+
+                # Parse coordinator_comments from Excel
+                coordinator_comments_raw = row.get(col_coordinator_comments, '')
+                coordinator_comments = '' if (coordinator_comments_raw is None or pd.isna(coordinator_comments_raw) or str(coordinator_comments_raw).lower() == 'nan') else str(coordinator_comments_raw).strip()
+
+                
                 # Parse diagnosis_date from Excel - ONLY if valid format found, else stay NULL
                 diagnosis_date = None
                 diagnosis_date_raw = row.get(col_diagnosis_date, '')
@@ -2179,6 +2263,91 @@ def import_families_endpoint(request):
                         # If any error occurs during parsing, leave as None
                         diagnosis_date = None
                 
+                # Parse registration_date from Excel - use as is, else default to today
+                registration_date = datetime.datetime.now().date()  # Default to today
+                registration_date_raw = row.get(col_registration_date, '')
+                if registration_date_raw and not pd.isna(registration_date_raw) and str(registration_date_raw).lower() != 'nan':
+                    try:
+                        from datetime import datetime as dt
+                        if isinstance(registration_date_raw, dt):
+                            registration_date = registration_date_raw.date()
+                        else:
+                            date_str = str(registration_date_raw).strip()
+                            date_formats = [
+                                '%Y-%m-%d %H:%M:%S', '%Y-%m-%d', '%d/%m/%Y', '%m/%d/%Y',
+                                '%d-%m-%Y', '%m-%d-%Y', '%d.%m.%Y', '%m.%d.%Y',
+                                '%d/%m/%y', '%m/%d/%y', '%d-%m-%y', '%m-%d-%y',
+                                '%d.%m.%y', '%m.%d.%y', '%Y/%m/%d', '%Y.%m.%d'
+                            ]
+                            for fmt in date_formats:
+                                try:
+                                    registration_date = dt.strptime(date_str, fmt).date()
+                                    break
+                                except ValueError:
+                                    continue
+                    except Exception:
+                        registration_date = datetime.datetime.now().date()
+                
+                # Parse when_completed_treatments from Excel
+                when_completed_treatments = None
+                when_completed_treatments_raw = row.get(col_when_completed_treatments, '')
+                if when_completed_treatments_raw and not pd.isna(when_completed_treatments_raw) and str(when_completed_treatments_raw).lower() != 'nan':
+                    try:
+                        from datetime import datetime as dt
+                        if isinstance(when_completed_treatments_raw, dt):
+                            when_completed_treatments = when_completed_treatments_raw.date()
+                        else:
+                            date_str = str(when_completed_treatments_raw).strip()
+                            date_formats = [
+                                '%Y-%m-%d %H:%M:%S', '%Y-%m-%d', '%d/%m/%Y', '%m/%d/%Y',
+                                '%d-%m-%Y', '%m-%d-%Y', '%d.%m.%Y', '%m.%d.%Y',
+                                '%d/%m/%y', '%m/%d/%y', '%d-%m-%y', '%m-%d-%y',
+                                '%d.%m.%y', '%m.%d.%y', '%Y/%m/%d', '%Y.%m.%d'
+                            ]
+                            for fmt in date_formats:
+                                try:
+                                    when_completed_treatments = dt.strptime(date_str, fmt).date()
+                                    break
+                                except ValueError:
+                                    continue
+                    except Exception:
+                        when_completed_treatments = None
+                
+                # Parse expected_end_treatment_by_protocol from Excel
+                expected_end_treatment_by_protocol = None
+                treatment_end_protocol_raw = row.get(col_treatment_end_protocol, '')
+                if treatment_end_protocol_raw and not pd.isna(treatment_end_protocol_raw) and str(treatment_end_protocol_raw).lower() != 'nan':
+                    try:
+                        from datetime import datetime as dt
+                        if isinstance(treatment_end_protocol_raw, dt):
+                            expected_end_treatment_by_protocol = treatment_end_protocol_raw.date()
+                        else:
+                            date_str = str(treatment_end_protocol_raw).strip()
+                            date_formats = [
+                                '%Y-%m-%d %H:%M:%S', '%Y-%m-%d', '%d/%m/%Y', '%m/%d/%Y',
+                                '%d-%m-%Y', '%m-%d-%Y', '%d.%m.%Y', '%m.%d.%Y',
+                                '%d/%m/%y', '%m/%d/%y', '%d-%m-%y', '%m-%d-%y',
+                                '%d.%m.%y', '%m.%d.%y', '%Y/%m/%d', '%Y.%m.%d'
+                            ]
+                            for fmt in date_formats:
+                                try:
+                                    expected_end_treatment_by_protocol = dt.strptime(date_str, fmt).date()
+                                    break
+                                except ValueError:
+                                    continue
+                    except Exception:
+                        expected_end_treatment_by_protocol = None
+                
+                # Parse completed_treatments boolean from Excel
+                has_completed_treatments_raw = row.get(col_completed_treatments, '')
+                has_completed_treatments = None  # Can be True, False, or None
+                if has_completed_treatments_raw and not pd.isna(has_completed_treatments_raw) and str(has_completed_treatments_raw).lower() != 'nan':
+                    has_completed_str = str(has_completed_treatments_raw).lower().strip()
+                    if has_completed_str in ['true', 'כן', 'yes', '1', 'true']:
+                        has_completed_treatments = True
+                    elif has_completed_str in ['false', 'לא', 'no', '0', 'false']:
+                        has_completed_treatments = False
+                
                 # Parse marital_status from Excel if provided
                 marital_status_raw = row.get(col_marital_status, '')
                 marital_status = '' if (marital_status_raw is None or pd.isna(marital_status_raw) or str(marital_status_raw).lower() == 'nan') else str(marital_status_raw).strip()
@@ -2205,10 +2374,27 @@ def import_families_endpoint(request):
                     age = today.year - birth_date.year - ((today.month, today.day) < (birth_date.month, birth_date.day))
                     is_mature_by_age = age >= 16
                 
-                # Parse status from Excel if provided
+                # Parse status from Excel - REQUIRED field
                 status_raw = row.get(col_status, '')
                 status_val = '' if (status_raw is None or pd.isna(status_raw) or str(status_raw).lower() == 'nan') else str(status_raw).strip()
-                final_status = status_val if status_val else 'פעיל'
+                
+                # Validate that status is provided
+                if not status_val:
+                    result['status'] = 'Error'
+                    result['details'] = f'סטטוס חובה - חסר או ריק'
+                    error_count += 1
+                    results.append(result)
+                    continue
+                
+                # Validate that status is a valid enum value
+                if status_val not in valid_statuses:
+                    result['status'] = 'Error'
+                    result['details'] = f'סטטוס "{status_val}" לא תקין. ערכים חוקיים: {", ".join(valid_statuses)}'
+                    invalid_enum_count += 1
+                    results.append(result)
+                    continue
+                
+                final_status = status_val
                 
                 # Parse gender from Excel - female=True, male=False
                 gender_val = row.get(col_gender, '')
@@ -2303,6 +2489,18 @@ def import_families_endpoint(request):
                         except Exception:
                             last_review_talk_conducted = None
                 
+                # Parse num_of_siblings from Excel - default to 0 if missing or invalid
+                num_of_siblings = 0
+                num_siblings_raw = row.get(col_num_of_siblings, '')
+                if num_siblings_raw and not pd.isna(num_siblings_raw) and str(num_siblings_raw).lower() != 'nan':
+                    try:
+                        num_of_siblings = int(str(num_siblings_raw).strip())
+                        # Validate reasonable range (0-20)
+                        if num_of_siblings < 0 or num_of_siblings > 20:
+                            num_of_siblings = 0
+                    except (ValueError, TypeError):
+                        num_of_siblings = 0
+                
                 # Determine responsible_coordinator based on medical status and tutoring status
                 # Pass child_status (final_status) to handle בריא/ז״ל children (they get "ללא")
                 responsible_coordinator = get_responsible_coordinator_for_family(final_tutoring_status, child_status=final_status)
@@ -2319,13 +2517,27 @@ def import_families_endpoint(request):
                         diagnosis_date=diagnosis_date,
                         date_of_birth=birth_date,
                         marital_status=marital_status,
-                        registrationdate=datetime.datetime.now().date(),
+                        num_of_siblings=num_of_siblings,
+                        registrationdate=registration_date,
                         lastupdateddate=datetime.datetime.now().date(),
                         status=final_status,
                         tutoring_status=final_tutoring_status,
                         responsible_coordinator=responsible_coordinator,
                         gender=gender,
                         last_review_talk_conducted=last_review_talk_conducted,
+                        street_and_apartment_number=street_address,
+                        current_medical_state=medical_state,
+                        when_completed_treatments=when_completed_treatments,
+                        has_completed_treatments=has_completed_treatments,
+                        expected_end_treatment_by_protocol=expected_end_treatment_by_protocol,
+                        father_name=father_name,
+                        father_phone=father_phone,
+                        mother_name=mother_name,
+                        mother_phone=mother_phone,
+                        details_for_tutoring=tutoring_details,
+                        additional_info=additional_info,
+                        is_in_frame=is_in_frame if is_in_frame else None,
+                        coordinator_comments=coordinator_comments if coordinator_comments else None,
                         # Feature #2 + #3: Auto-set need_review based on:
                         # - Set to False if: בריא/ז״ל status OR "לא צריך" in review_talk column OR בוגר (סוג column) OR age >= 16
                         # - Otherwise default to True
