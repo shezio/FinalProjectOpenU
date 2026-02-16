@@ -592,6 +592,8 @@ const Tutorships = () => {
         responsible_coordinator: row.responsible_coordinator ?? "---",
         need_review: row.need_review ?? true,
         additional_info: row.additional_info ?? "---",
+        is_in_frame: row.is_in_frame ?? "---",
+        coordinator_comments: row.coordinator_comments ?? "---",
         current_medical_state: row.current_medical_state ?? "---",
         treating_hospital: row.treating_hospital ?? "---",
         when_completed_treatments: row.when_completed_treatments ?? "---",
@@ -708,6 +710,8 @@ const Tutorships = () => {
           tutoring_status: family.tutoring_status ?? "---",
           responsible_coordinator: family.responsible_coordinator ?? "---",
           additional_info: family.additional_info ?? "---",
+          is_in_frame: family.is_in_frame ?? "---",
+          coordinator_comments: family.coordinator_comments ?? "---",
           current_medical_state: family.current_medical_state ?? "---",
           treating_hospital: family.treating_hospital ?? "---",
           when_completed_treatments: family.when_completed_treatments ?? "---",
@@ -1392,6 +1396,8 @@ const Tutorships = () => {
                         <tr><td>{t('Responsible Coordinator')}</td><td> {selectedMatchForInfo.responsible_coordinator}</td></tr>
                         <tr><td>{t('Need Review')}</td><td> {selectedMatchForInfo.need_review ? t('Yes') : t('No')}</td></tr>
                         <tr><td>{t('Additional Info')}</td><td> {selectedMatchForInfo.additional_info}</td></tr>
+                        <tr><td>{t('Is In Frame')}</td><td> {selectedMatchForInfo.is_in_frame || '---'}</td></tr>
+                        <tr><td>{t('Coordinator Comments')}</td><td> {selectedMatchForInfo.coordinator_comments || '---'}</td></tr>
                         <tr><td>{t('Current Medical State')}</td><td> {selectedMatchForInfo.current_medical_state}</td></tr>
                         <tr><td>{t('Treating Hospital')}</td><td> {selectedMatchForInfo.treating_hospital}</td></tr>
                         <tr><td>{t('When Completed Treatments')}</td><td> {selectedMatchForInfo.when_completed_treatments}</td></tr>
