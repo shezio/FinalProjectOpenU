@@ -1,0 +1,2798 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>דוח עיריות - יבוא משפחות</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            direction: rtl;
+            text-align: right;
+        }
+        
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            opacity: 0.9;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            padding: 20px 30px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .stat-box {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            border-right: 4px solid #667eea;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        
+        .stat-box .number {
+            font-size: 2em;
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .stat-box .label {
+            font-size: 0.85em;
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        .content {
+            padding: 30px;
+        }
+        
+        .section {
+            margin-bottom: 40px;
+        }
+        
+        .section-title {
+            font-size: 1.6em;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #667eea;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+        
+        .section-title .badge {
+            background: #667eea;
+            color: white;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.7em;
+            font-weight: bold;
+        }
+        
+        .section-title .badge.partial {
+            background: #ffc107;
+        }
+        
+        .section-title .badge.nomatch {
+            background: #dc3545;
+        }
+        
+        .city-group {
+            background: #f8f9fa;
+            margin-bottom: 25px;
+            border-radius: 8px;
+            border-right: 4px solid #667eea;
+            overflow: hidden;
+        }
+        
+        .city-group.partial {
+            border-right-color: #ffc107;
+        }
+        
+        .city-group.nomatch {
+            border-right-color: #dc3545;
+        }
+        
+        .city-header {
+            background: #667eea;
+            color: white;
+            padding: 12px 15px;
+            font-weight: bold;
+            font-size: 1em;
+        }
+        
+        .city-group.partial .city-header {
+            background: #ffc107;
+            color: #333;
+        }
+        
+        .city-group.nomatch .city-header {
+            background: #dc3545;
+        }
+        
+        .city-rows {
+            padding: 0;
+        }
+        
+        .row-item {
+            padding: 12px 15px;
+            border-bottom: 1px solid #e9ecef;
+            display: grid;
+            grid-template-columns: auto 1fr 1fr 1fr;
+            gap: 15px;
+            align-items: center;
+            font-size: 0.85em;
+        }
+        
+        .row-item:last-child {
+            border-bottom: none;
+        }
+        
+        .row-num {
+            background: #667eea;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+            text-align: center;
+            min-width: 50px;
+        }
+        
+        .child-id {
+            font-family: monospace;
+            background: #f0f0f0;
+            padding: 4px 8px;
+            border-radius: 4px;
+            direction: ltr;
+            text-align: left;
+        }
+        
+        .match-info {
+            background: #e8f4f8;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 10px;
+            font-size: 0.9em;
+        }
+        
+        .match-info strong {
+            color: #0c5460;
+        }
+        
+        .json-keys {
+            background: #f5f5f5;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        
+        .json-keys h4 {
+            margin-bottom: 15px;
+            color: #333;
+        }
+        
+        .json-keys .key {
+            display: inline-block;
+            background: #e8f4f8;
+            color: #0c5460;
+            padding: 8px 12px;
+            border-radius: 4px;
+            margin: 5px;
+            font-family: monospace;
+            font-size: 0.85em;
+        }
+        
+        .footer {
+            background: #f8f9fa;
+            padding: 20px 30px;
+            text-align: center;
+            color: #666;
+            font-size: 0.85em;
+            border-top: 1px solid #e9ecef;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 דוח ניתוח עיריות - יבוא משפחות</h1>
+            <p>דוח ממוקד: עיריות שצריכות בדיקה ותיקון</p>
+            <p style="font-size: 0.9em; opacity: 0.9;">יום: 16.02.2026 | נוצר: 22:14</p>
+        </div>
+        
+        <div class="stats">
+            <div class="stat-box">
+                <div class="number">122</div>
+                <div class="label">עיריות תקינות ✅</div>
+            </div>
+            <div class="stat-box">
+                <div class="number">37</div>
+                <div class="label">עיריות חלקיות ⚠️</div>
+            </div>
+            <div class="stat-box">
+                <div class="number">28</div>
+                <div class="label">עיריות חסרות ❌</div>
+            </div>
+        </div>
+        
+        <div class="content">
+            <div class="section">
+                <h3 style="color: #333; margin-bottom: 15px;">📍 עיריות תקפות במערכת (עבור reference ל-NPO):</h3>
+                <div class="json-keys">
+                    <h4>🏘️ כל העיריות הזמינות (1277 סה״כ):</h4>
+                    <span class="key">אבו ג'ווייעד (שבט)</span>
+                    <span class="key">אבו גוש</span>
+                    <span class="key">אבו סנאן</span>
+                    <span class="key">אבו סריחאן (שבט)</span>
+                    <span class="key">אבו עבדון (שבט)</span>
+                    <span class="key">אבו עמאר (שבט)</span>
+                    <span class="key">אבו עמרה (שבט)</span>
+                    <span class="key">אבו קורינאת (שבט)</span>
+                    <span class="key">אבו קרינאת (יישוב)</span>
+                    <span class="key">אבו רובייעה (שבט)</span>
+                    <span class="key">אבו רוקייק (שבט)</span>
+                    <span class="key">אבו תלול</span>
+                    <span class="key">אבטין</span>
+                    <span class="key">אבטליון</span>
+                    <span class="key">אביאל</span>
+                    <span class="key">אביבים</span>
+                    <span class="key">אביגדור</span>
+                    <span class="key">אביגיל</span>
+                    <span class="key">אביחיל</span>
+                    <span class="key">אביטל</span>
+                    <span class="key">אביעזר</span>
+                    <span class="key">אבירים</span>
+                    <span class="key">אבן יהודה</span>
+                    <span class="key">אבן מנחם</span>
+                    <span class="key">אבן ספיר</span>
+                    <span class="key">אבן שמואל</span>
+                    <span class="key">אבני איתן</span>
+                    <span class="key">אבני חפץ</span>
+                    <span class="key">אבנת</span>
+                    <span class="key">אבשלום</span>
+                    <span class="key">אדורה</span>
+                    <span class="key">אדורים</span>
+                    <span class="key">אדירים</span>
+                    <span class="key">אדמית</span>
+                    <span class="key">אדרת</span>
+                    <span class="key">אודים</span>
+                    <span class="key">אודם</span>
+                    <span class="key">אוהד</span>
+                    <span class="key">אום אל-פחם</span>
+                    <span class="key">אום אל-קוטוף</span>
+                    <span class="key">אום בטין</span>
+                    <span class="key">אומן</span>
+                    <span class="key">אומץ</span>
+                    <span class="key">אופקים</span>
+                    <span class="key">אור הגנוז</span>
+                    <span class="key">אור הנר</span>
+                    <span class="key">אור יהודה</span>
+                    <span class="key">אור עקיבא</span>
+                    <span class="key">אורה</span>
+                    <span class="key">אורות</span>
+                    <span class="key">אורטל</span>
+                    <span class="key">אורים</span>
+                    <span class="key">אורנים</span>
+                    <span class="key">אורנית</span>
+                    <span class="key">אושה</span>
+                    <span class="key">אזור</span>
+                    <span class="key">אחווה</span>
+                    <span class="key">אחוזם</span>
+                    <span class="key">אחוזת ברק</span>
+                    <span class="key">אחיהוד</span>
+                    <span class="key">אחיטוב</span>
+                    <span class="key">אחיסמך</span>
+                    <span class="key">אחיעזר</span>
+                    <span class="key">אטרש (שבט)</span>
+                    <span class="key">איבים</span>
+                    <span class="key">אייל</span>
+                    <span class="key">איילת השחר</span>
+                    <span class="key">אילון</span>
+                    <span class="key">אילות</span>
+                    <span class="key">אילניה</span>
+                    <span class="key">אילת</span>
+                    <span class="key">אירוס</span>
+                    <span class="key">איתמר</span>
+                    <span class="key">איתן</span>
+                    <span class="key">איתנים</span>
+                    <span class="key">אכסאל</span>
+                    <span class="key">אל סייד</span>
+                    <span class="key">אל-עזי</span>
+                    <span class="key">אל-עריאן</span>
+                    <span class="key">אל-רום</span>
+                    <span class="key">אלומה</span>
+                    <span class="key">אלומות</span>
+                    <span class="key">אלון הגליל</span>
+                    <span class="key">אלון מורה</span>
+                    <span class="key">אלון שבות</span>
+                    <span class="key">אלוני אבא</span>
+                    <span class="key">אלוני הבשן</span>
+                    <span class="key">אלוני יצחק</span>
+                    <span class="key">אלונים</span>
+                    <span class="key">אלי-עד</span>
+                    <span class="key">אליאב</span>
+                    <span class="key">אליכין</span>
+                    <span class="key">אליפז</span>
+                    <span class="key">אליפלט</span>
+                    <span class="key">אליקים</span>
+                    <span class="key">אלישיב</span>
+                    <span class="key">אלישמע</span>
+                    <span class="key">אלמגור</span>
+                    <span class="key">אלמוג</span>
+                    <span class="key">אלעד</span>
+                    <span class="key">אלעזר</span>
+                    <span class="key">אלפי מנשה</span>
+                    <span class="key">אלקוש</span>
+                    <span class="key">אלקנה</span>
+                    <span class="key">אמונים</span>
+                    <span class="key">אמירים</span>
+                    <span class="key">אמנון</span>
+                    <span class="key">אמציה</span>
+                    <span class="key">אניעם</span>
+                    <span class="key">אסד (שבט)</span>
+                    <span class="key">אספר</span>
+                    <span class="key">אעבלין</span>
+                    <span class="key">אעצם (שבט)</span>
+                    <span class="key">אפיניש (שבט)</span>
+                    <span class="key">אפיק</span>
+                    <span class="key">אפיקים</span>
+                    <span class="key">אפק</span>
+                    <span class="key">אפרת</span>
+                    <span class="key">ארבל</span>
+                    <span class="key">ארגמן</span>
+                    <span class="key">ארז</span>
+                    <span class="key">אריאל</span>
+                    <span class="key">ארסוף</span>
+                    <span class="key">אשבול</span>
+                    <span class="key">אשבל</span>
+                    <span class="key">אשדוד</span>
+                    <span class="key">אשדות יעקב (איחוד)</span>
+                    <span class="key">אשדות יעקב (מאוחד)</span>
+                    <span class="key">אשחר</span>
+                    <span class="key">אשכולות</span>
+                    <span class="key">אשל הנשיא</span>
+                    <span class="key">אשלים</span>
+                    <span class="key">אשקלון</span>
+                    <span class="key">אשרת</span>
+                    <span class="key">אשתאול</span>
+                    <span class="key">אתגר</span>
+                    <span class="key">באקה אל-גרביה</span>
+                    <span class="key">באר אורה</span>
+                    <span class="key">באר גנים</span>
+                    <span class="key">באר טוביה</span>
+                    <span class="key">באר יעקב</span>
+                    <span class="key">באר מילכה</span>
+                    <span class="key">באר שבע</span>
+                    <span class="key">בארות יצחק</span>
+                    <span class="key">בארותיים</span>
+                    <span class="key">בארי</span>
+                    <span class="key">בוסתן הגליל</span>
+                    <span class="key">בועיינה-נוג'ידאת</span>
+                    <span class="key">בוקעאתא</span>
+                    <span class="key">בורגתה</span>
+                    <span class="key">בחן</span>
+                    <span class="key">בטחה</span>
+                    <span class="key">ביצרון</span>
+                    <span class="key">ביר אל-מכסור</span>
+                    <span class="key">ביר הדאג'</span>
+                    <span class="key">ביריה</span>
+                    <span class="key">בית אורן</span>
+                    <span class="key">בית אל</span>
+                    <span class="key">בית אלעזרי</span>
+                    <span class="key">בית אלפא</span>
+                    <span class="key">בית אריה</span>
+                    <span class="key">בית ברל</span>
+                    <span class="key">בית ג'ן</span>
+                    <span class="key">בית גוברין</span>
+                    <span class="key">בית גמליאל</span>
+                    <span class="key">בית דגן</span>
+                    <span class="key">בית הגדי</span>
+                    <span class="key">בית הלוי</span>
+                    <span class="key">בית הלל</span>
+                    <span class="key">בית העמק</span>
+                    <span class="key">בית הערבה</span>
+                    <span class="key">בית השיטה</span>
+                    <span class="key">בית זיד</span>
+                    <span class="key">בית זית</span>
+                    <span class="key">בית זרע</span>
+                    <span class="key">בית חגלה</span>
+                    <span class="key">בית חורון</span>
+                    <span class="key">בית חירות</span>
+                    <span class="key">בית חלקיה</span>
+                    <span class="key">בית חנן</span>
+                    <span class="key">בית חנניה</span>
+                    <span class="key">בית חשמונאי</span>
+                    <span class="key">בית יהושע</span>
+                    <span class="key">בית יוסף</span>
+                    <span class="key">בית ינאי</span>
+                    <span class="key">בית יצחק-שער חפר</span>
+                    <span class="key">בית לחם הגלילית</span>
+                    <span class="key">בית מאיר</span>
+                    <span class="key">בית נחמיה</span>
+                    <span class="key">בית ניר</span>
+                    <span class="key">בית נקופה</span>
+                    <span class="key">בית עובד</span>
+                    <span class="key">בית עוזיאל</span>
+                    <span class="key">בית עזרא</span>
+                    <span class="key">בית עריף</span>
+                    <span class="key">בית צבי</span>
+                    <span class="key">בית קמה</span>
+                    <span class="key">בית קשת</span>
+                    <span class="key">בית רבן</span>
+                    <span class="key">בית רימון</span>
+                    <span class="key">בית שאן</span>
+                    <span class="key">בית שמש</span>
+                    <span class="key">בית שערים</span>
+                    <span class="key">בית שקמה</span>
+                    <span class="key">ביתן אהרן</span>
+                    <span class="key">ביתר עילית</span>
+                    <span class="key">בלפוריה</span>
+                    <span class="key">בן זכאי</span>
+                    <span class="key">בן עמי</span>
+                    <span class="key">בן שמן (כפר נוער)</span>
+                    <span class="key">בן שמן (מושב)</span>
+                    <span class="key">בני ברק</span>
+                    <span class="key">בני דקלים</span>
+                    <span class="key">בני דרום</span>
+                    <span class="key">בני דרור</span>
+                    <span class="key">בני יהודה</span>
+                    <span class="key">בני נצרים</span>
+                    <span class="key">בני עטרות</span>
+                    <span class="key">בני עיש</span>
+                    <span class="key">בני ציון</span>
+                    <span class="key">בני ראם</span>
+                    <span class="key">בניה</span>
+                    <span class="key">בנימינה-גבעת עדה</span>
+                    <span class="key">בסמה</span>
+                    <span class="key">בסמת טבעון</span>
+                    <span class="key">בענה</span>
+                    <span class="key">בצרה</span>
+                    <span class="key">בצת</span>
+                    <span class="key">בקוע</span>
+                    <span class="key">בקעות</span>
+                    <span class="key">בר גיורא</span>
+                    <span class="key">בר יוחאי</span>
+                    <span class="key">בר כוכבא</span>
+                    <span class="key">ברוכין</span>
+                    <span class="key">ברור חיל</span>
+                    <span class="key">ברוש</span>
+                    <span class="key">ברכה</span>
+                    <span class="key">ברכיה</span>
+                    <span class="key">ברעם</span>
+                    <span class="key">ברק</span>
+                    <span class="key">ברקאי</span>
+                    <span class="key">ברקן</span>
+                    <span class="key">ברקת</span>
+                    <span class="key">בת הדר</span>
+                    <span class="key">בת חן</span>
+                    <span class="key">בת חפר</span>
+                    <span class="key">בת ים</span>
+                    <span class="key">בת עין</span>
+                    <span class="key">בת שלמה</span>
+                    <span class="key">ג'דיידה-מכר</span>
+                    <span class="key">ג'ולס</span>
+                    <span class="key">ג'לג'וליה</span>
+                    <span class="key">ג'נאביב (שבט)</span>
+                    <span class="key">ג'סר א-זרקא</span>
+                    <span class="key">ג'ש (גוש חלב)</span>
+                    <span class="key">ג'ת</span>
+                    <span class="key">גאולי תימן</span>
+                    <span class="key">גאולים</span>
+                    <span class="key">גאליה</span>
+                    <span class="key">גבולות</span>
+                    <span class="key">גבים</span>
+                    <span class="key">גבע</span>
+                    <span class="key">גבע בנימין</span>
+                    <span class="key">גבע כרמל</span>
+                    <span class="key">גבעולים</span>
+                    <span class="key">גבעון החדשה</span>
+                    <span class="key">גבעות בר</span>
+                    <span class="key">גבעות הרואה</span>
+                    <span class="key">גבעות עדן</span>
+                    <span class="key">גבעת אבני</span>
+                    <span class="key">גבעת אלה</span>
+                    <span class="key">גבעת ברנר</span>
+                    <span class="key">גבעת השלושה</span>
+                    <span class="key">גבעת זאב</span>
+                    <span class="key">גבעת חיים (איחוד)</span>
+                    <span class="key">גבעת חיים (מאוחד)</span>
+                    <span class="key">גבעת חן</span>
+                    <span class="key">גבעת יואב</span>
+                    <span class="key">גבעת יערים</span>
+                    <span class="key">גבעת ישעיהו</span>
+                    <span class="key">גבעת כח</span>
+                    <span class="key">גבעת נילי</span>
+                    <span class="key">גבעת עוז</span>
+                    <span class="key">גבעת שמואל</span>
+                    <span class="key">גבעת שמש</span>
+                    <span class="key">גבעת שפירא</span>
+                    <span class="key">גבעתי</span>
+                    <span class="key">גבעתיים</span>
+                    <span class="key">גברעם</span>
+                    <span class="key">גבת</span>
+                    <span class="key">גדות</span>
+                    <span class="key">גדיש</span>
+                    <span class="key">גדעונה</span>
+                    <span class="key">גדרה</span>
+                    <span class="key">גונן</span>
+                    <span class="key">גורן</span>
+                    <span class="key">גורנות הגליל</span>
+                    <span class="key">גזית</span>
+                    <span class="key">גזר</span>
+                    <span class="key">גיאה</span>
+                    <span class="key">גיבתון</span>
+                    <span class="key">גיזו</span>
+                    <span class="key">גילון</span>
+                    <span class="key">גילת</span>
+                    <span class="key">גינוסר</span>
+                    <span class="key">גיניגר</span>
+                    <span class="key">גינתון</span>
+                    <span class="key">גיתה</span>
+                    <span class="key">גיתית</span>
+                    <span class="key">גלאון</span>
+                    <span class="key">גלגל</span>
+                    <span class="key">גליל ים</span>
+                    <span class="key">גלעד (אבן יצחק)</span>
+                    <span class="key">גמזו</span>
+                    <span class="key">גן הדרום</span>
+                    <span class="key">גן השומרון</span>
+                    <span class="key">גן חיים</span>
+                    <span class="key">גן יאשיה</span>
+                    <span class="key">גן יבנה</span>
+                    <span class="key">גן נר</span>
+                    <span class="key">גן שורק</span>
+                    <span class="key">גן שלמה</span>
+                    <span class="key">גן שמואל</span>
+                    <span class="key">גנות</span>
+                    <span class="key">גנות הדר</span>
+                    <span class="key">גני הדר</span>
+                    <span class="key">גני טל</span>
+                    <span class="key">גני יוחנן</span>
+                    <span class="key">גני מודיעין</span>
+                    <span class="key">גני עם</span>
+                    <span class="key">גני תקווה</span>
+                    <span class="key">געש</span>
+                    <span class="key">געתון</span>
+                    <span class="key">גפן</span>
+                    <span class="key">גרופית</span>
+                    <span class="key">גשור</span>
+                    <span class="key">גשר</span>
+                    <span class="key">גשר הזיו</span>
+                    <span class="key">גת (קיבוץ)</span>
+                    <span class="key">גת רימון</span>
+                    <span class="key">דאלית אל-כרמל</span>
+                    <span class="key">דבורה</span>
+                    <span class="key">דבוריה</span>
+                    <span class="key">דביר</span>
+                    <span class="key">דברת</span>
+                    <span class="key">דגניה א'</span>
+                    <span class="key">דגניה ב'</span>
+                    <span class="key">דובב</span>
+                    <span class="key">דולב</span>
+                    <span class="key">דור</span>
+                    <span class="key">דורות</span>
+                    <span class="key">דחי</span>
+                    <span class="key">דייר אל-אסד</span>
+                    <span class="key">דייר חנא</span>
+                    <span class="key">דייר ראפאת</span>
+                    <span class="key">דימונה</span>
+                    <span class="key">דישון</span>
+                    <span class="key">דליה</span>
+                    <span class="key">דלתון</span>
+                    <span class="key">דמיידה</span>
+                    <span class="key">דן</span>
+                    <span class="key">דפנה</span>
+                    <span class="key">דקל</span>
+                    <span class="key">דריג'את</span>
+                    <span class="key">האון</span>
+                    <span class="key">הבונים</span>
+                    <span class="key">הגושרים</span>
+                    <span class="key">הדר עם</span>
+                    <span class="key">הוד השרון</span>
+                    <span class="key">הודיה</span>
+                    <span class="key">הודיות</span>
+                    <span class="key">הוואשלה (שבט)</span>
+                    <span class="key">הוזייל (שבט)</span>
+                    <span class="key">הושעיה</span>
+                    <span class="key">הזורע</span>
+                    <span class="key">הזורעים</span>
+                    <span class="key">החותרים</span>
+                    <span class="key">היוגב</span>
+                    <span class="key">הילה</span>
+                    <span class="key">המעפיל</span>
+                    <span class="key">הסוללים</span>
+                    <span class="key">העוגן</span>
+                    <span class="key">הר אדר</span>
+                    <span class="key">הר גילה</span>
+                    <span class="key">הר עמשא</span>
+                    <span class="key">הראל</span>
+                    <span class="key">הרדוף</span>
+                    <span class="key">הרצליה</span>
+                    <span class="key">הררית</span>
+                    <span class="key">ורד יריחו</span>
+                    <span class="key">ורדון</span>
+                    <span class="key">זבארגה (שבט)</span>
+                    <span class="key">זבדיאל</span>
+                    <span class="key">זוהר</span>
+                    <span class="key">זיקים</span>
+                    <span class="key">זיתן</span>
+                    <span class="key">זכרון יעקב</span>
+                    <span class="key">זכריה</span>
+                    <span class="key">זמר</span>
+                    <span class="key">זמרת</span>
+                    <span class="key">זנוח</span>
+                    <span class="key">זרועה</span>
+                    <span class="key">זרזיר</span>
+                    <span class="key">זרחיה</span>
+                    <span class="key">ח'ואלד</span>
+                    <span class="key">ח'ואלד (שבט)</span>
+                    <span class="key">חבצלת השרון</span>
+                    <span class="key">חבר</span>
+                    <span class="key">חברון</span>
+                    <span class="key">חגור</span>
+                    <span class="key">חגי</span>
+                    <span class="key">חגלה</span>
+                    <span class="key">חד-נס</span>
+                    <span class="key">חדיד</span>
+                    <span class="key">חדרה</span>
+                    <span class="key">חוג'ייראת (ד'הרה)</span>
+                    <span class="key">חולדה</span>
+                    <span class="key">חולון</span>
+                    <span class="key">חולית</span>
+                    <span class="key">חולתה</span>
+                    <span class="key">חוסן</span>
+                    <span class="key">חוסנייה</span>
+                    <span class="key">חופית</span>
+                    <span class="key">חוקוק</span>
+                    <span class="key">חורה</span>
+                    <span class="key">חורפיש</span>
+                    <span class="key">חורשים</span>
+                    <span class="key">חזון</span>
+                    <span class="key">חיבת ציון</span>
+                    <span class="key">חיננית</span>
+                    <span class="key">חיפה</span>
+                    <span class="key">חירות</span>
+                    <span class="key">חלוץ</span>
+                    <span class="key">חלץ</span>
+                    <span class="key">חמאם</span>
+                    <span class="key">חמד</span>
+                    <span class="key">חמדיה</span>
+                    <span class="key">חמדת</span>
+                    <span class="key">חמרה</span>
+                    <span class="key">חניאל</span>
+                    <span class="key">חניתה</span>
+                    <span class="key">חנתון</span>
+                    <span class="key">חספין</span>
+                    <span class="key">חפץ חיים</span>
+                    <span class="key">חפצי-בה</span>
+                    <span class="key">חצב</span>
+                    <span class="key">חצבה</span>
+                    <span class="key">חצור הגלילית</span>
+                    <span class="key">חצור-אשדוד</span>
+                    <span class="key">חצרים</span>
+                    <span class="key">חרב לאת</span>
+                    <span class="key">חרוצים</span>
+                    <span class="key">חריש</span>
+                    <span class="key">חרמש</span>
+                    <span class="key">חרשים</span>
+                    <span class="key">חשמונאים</span>
+                    <span class="key">טבריה</span>
+                    <span class="key">טובא-זנגריה</span>
+                    <span class="key">טורעאן</span>
+                    <span class="key">טייבה</span>
+                    <span class="key">טייבה (בעמק)</span>
+                    <span class="key">טירה</span>
+                    <span class="key">טירת יהודה</span>
+                    <span class="key">טירת כרמל</span>
+                    <span class="key">טירת צבי</span>
+                    <span class="key">טל שחר</span>
+                    <span class="key">טל-אל</span>
+                    <span class="key">טללים</span>
+                    <span class="key">טלמון</span>
+                    <span class="key">טמרה</span>
+                    <span class="key">טמרה (יזרעאל)</span>
+                    <span class="key">טנא</span>
+                    <span class="key">טפחות</span>
+                    <span class="key">יאנוח-ג'ת</span>
+                    <span class="key">יבול</span>
+                    <span class="key">יבנאל</span>
+                    <span class="key">יבנה</span>
+                    <span class="key">יגור</span>
+                    <span class="key">יגל</span>
+                    <span class="key">יד בנימין</span>
+                    <span class="key">יד השמונה</span>
+                    <span class="key">יד חנה</span>
+                    <span class="key">יד מרדכי</span>
+                    <span class="key">יד נתן</span>
+                    <span class="key">יד רמבם</span>
+                    <span class="key">ידידה</span>
+                    <span class="key">יהוד-מונוסון</span>
+                    <span class="key">יהל</span>
+                    <span class="key">יובל</span>
+                    <span class="key">יובלים</span>
+                    <span class="key">יודפת</span>
+                    <span class="key">יונתן</span>
+                    <span class="key">יושיביה</span>
+                    <span class="key">יזרעאל</span>
+                    <span class="key">יחיעם</span>
+                    <span class="key">יטבתה</span>
+                    <span class="key">ייטב</span>
+                    <span class="key">יכיני</span>
+                    <span class="key">ינוב</span>
+                    <span class="key">ינון</span>
+                    <span class="key">יסוד המעלה</span>
+                    <span class="key">יסודות</span>
+                    <span class="key">יסעור</span>
+                    <span class="key">יעד</span>
+                    <span class="key">יעל</span>
+                    <span class="key">יעף</span>
+                    <span class="key">יערה</span>
+                    <span class="key">יפיע</span>
+                    <span class="key">יפית</span>
+                    <span class="key">יפעת</span>
+                    <span class="key">יפתח</span>
+                    <span class="key">יצהר</span>
+                    <span class="key">יציץ</span>
+                    <span class="key">יקום</span>
+                    <span class="key">יקיר</span>
+                    <span class="key">יקנעם (מושבה)</span>
+                    <span class="key">יקנעם עילית</span>
+                    <span class="key">יראון</span>
+                    <span class="key">ירדנה</span>
+                    <span class="key">ירוחם</span>
+                    <span class="key">ירושלים</span>
+                    <span class="key">ירחיב</span>
+                    <span class="key">ירכא</span>
+                    <span class="key">ירקונה</span>
+                    <span class="key">ישע</span>
+                    <span class="key">ישעי</span>
+                    <span class="key">ישרש</span>
+                    <span class="key">יתד</span>
+                    <span class="key">כאבול</span>
+                    <span class="key">כאוכב אבו אל-היג'א</span>
+                    <span class="key">כברי</span>
+                    <span class="key">כדורי</span>
+                    <span class="key">כדיתה</span>
+                    <span class="key">כוכב השחר</span>
+                    <span class="key">כוכב יאיר</span>
+                    <span class="key">כוכב יעקב</span>
+                    <span class="key">כוכב מיכאל</span>
+                    <span class="key">כורזים</span>
+                    <span class="key">כחל</span>
+                    <span class="key">כחלה</span>
+                    <span class="key">כיסופים</span>
+                    <span class="key">כישור</span>
+                    <span class="key">כליל</span>
+                    <span class="key">כלנית</span>
+                    <span class="key">כמאנה</span>
+                    <span class="key">כמהין</span>
+                    <span class="key">כמון</span>
+                    <span class="key">כנות</span>
+                    <span class="key">כנף</span>
+                    <span class="key">כנרת (מושבה)</span>
+                    <span class="key">כנרת (קבוצה)</span>
+                    <span class="key">כסיפה</span>
+                    <span class="key">כסלון</span>
+                    <span class="key">כסרא-סמיע</span>
+                    <span class="key">כעביה-טבאש-חג'אג'רה</span>
+                    <span class="key">כפר אביב</span>
+                    <span class="key">כפר אדומים</span>
+                    <span class="key">כפר אוריה</span>
+                    <span class="key">כפר אחים</span>
+                    <span class="key">כפר ביאליק</span>
+                    <span class="key">כפר בילו</span>
+                    <span class="key">כפר בלום</span>
+                    <span class="key">כפר בן נון</span>
+                    <span class="key">כפר ברא</span>
+                    <span class="key">כפר ברוך</span>
+                    <span class="key">כפר גדעון</span>
+                    <span class="key">כפר גלים</span>
+                    <span class="key">כפר גליקסון</span>
+                    <span class="key">כפר גלעדי</span>
+                    <span class="key">כפר דניאל</span>
+                    <span class="key">כפר האורנים</span>
+                    <span class="key">כפר החורש</span>
+                    <span class="key">כפר המכבי</span>
+                    <span class="key">כפר הנגיד</span>
+                    <span class="key">כפר הנוער הדתי</span>
+                    <span class="key">כפר הנשיא</span>
+                    <span class="key">כפר הס</span>
+                    <span class="key">כפר הראה</span>
+                    <span class="key">כפר הריף</span>
+                    <span class="key">כפר ויתקין</span>
+                    <span class="key">כפר ורבורג</span>
+                    <span class="key">כפר ורדים</span>
+                    <span class="key">כפר זוהרים</span>
+                    <span class="key">כפר זיתים</span>
+                    <span class="key">כפר חבד</span>
+                    <span class="key">כפר חושן</span>
+                    <span class="key">כפר חיטים</span>
+                    <span class="key">כפר חיים</span>
+                    <span class="key">כפר חנניה</span>
+                    <span class="key">כפר חסידים א'</span>
+                    <span class="key">כפר חסידים ב'</span>
+                    <span class="key">כפר חרוב</span>
+                    <span class="key">כפר טרומן</span>
+                    <span class="key">כפר יאסיף</span>
+                    <span class="key">כפר ידידיה</span>
+                    <span class="key">כפר יהושע</span>
+                    <span class="key">כפר יונה</span>
+                    <span class="key">כפר יחזקאל</span>
+                    <span class="key">כפר יעבץ</span>
+                    <span class="key">כפר כמא</span>
+                    <span class="key">כפר כנא</span>
+                    <span class="key">כפר מונש</span>
+                    <span class="key">כפר מימון</span>
+                    <span class="key">כפר מלל</span>
+                    <span class="key">כפר מנדא</span>
+                    <span class="key">כפר מנחם</span>
+                    <span class="key">כפר מסריק</span>
+                    <span class="key">כפר מצר</span>
+                    <span class="key">כפר מרדכי</span>
+                    <span class="key">כפר נטר</span>
+                    <span class="key">כפר סאלד</span>
+                    <span class="key">כפר סבא</span>
+                    <span class="key">כפר סילבר</span>
+                    <span class="key">כפר סירקין</span>
+                    <span class="key">כפר עבודה</span>
+                    <span class="key">כפר עזה</span>
+                    <span class="key">כפר עציון</span>
+                    <span class="key">כפר פינס</span>
+                    <span class="key">כפר קאסם</span>
+                    <span class="key">כפר קיש</span>
+                    <span class="key">כפר קרע</span>
+                    <span class="key">כפר ראש הנקרה</span>
+                    <span class="key">כפר רוזנואלד (זרעית)</span>
+                    <span class="key">כפר רופין</span>
+                    <span class="key">כפר רות</span>
+                    <span class="key">כפר שמאי</span>
+                    <span class="key">כפר שמואל</span>
+                    <span class="key">כפר שמריהו</span>
+                    <span class="key">כפר תבור</span>
+                    <span class="key">כפר תפוח</span>
+                    <span class="key">כרי דשא</span>
+                    <span class="key">כרכום</span>
+                    <span class="key">כרם ביבנה (ישיבה)</span>
+                    <span class="key">כרם בן זמרה</span>
+                    <span class="key">כרם בן שמן</span>
+                    <span class="key">כרם מהרל</span>
+                    <span class="key">כרם שלום</span>
+                    <span class="key">כרמי יוסף</span>
+                    <span class="key">כרמי צור</span>
+                    <span class="key">כרמי קטיף</span>
+                    <span class="key">כרמיאל</span>
+                    <span class="key">כרמיה</span>
+                    <span class="key">כרמים</span>
+                    <span class="key">כרמל</span>
+                    <span class="key">לבון</span>
+                    <span class="key">לביא</span>
+                    <span class="key">לבנים</span>
+                    <span class="key">להב</span>
+                    <span class="key">להבות הבשן</span>
+                    <span class="key">להבות חביבה</span>
+                    <span class="key">להבים</span>
+                    <span class="key">לוד</span>
+                    <span class="key">לוזית</span>
+                    <span class="key">לוחמי הגיטאות</span>
+                    <span class="key">לוטם</span>
+                    <span class="key">לוטן</span>
+                    <span class="key">לימן</span>
+                    <span class="key">לכיש</span>
+                    <span class="key">לפיד</span>
+                    <span class="key">לפידות</span>
+                    <span class="key">לקיה</span>
+                    <span class="key">מאור</span>
+                    <span class="key">מאיר שפיה</span>
+                    <span class="key">מבוא ביתר</span>
+                    <span class="key">מבוא דותן</span>
+                    <span class="key">מבוא חורון</span>
+                    <span class="key">מבוא חמה</span>
+                    <span class="key">מבוא מודיעים</span>
+                    <span class="key">מבואות ים</span>
+                    <span class="key">מבואות יריחו</span>
+                    <span class="key">מבועים</span>
+                    <span class="key">מבטחים</span>
+                    <span class="key">מבקיעים</span>
+                    <span class="key">מבשרת ציון</span>
+                    <span class="key">מג'ד אל-כרום</span>
+                    <span class="key">מג'דל שמס</span>
+                    <span class="key">מגאר</span>
+                    <span class="key">מגדים</span>
+                    <span class="key">מגדל</span>
+                    <span class="key">מגדל העמק</span>
+                    <span class="key">מגדל עוז</span>
+                    <span class="key">מגדלים</span>
+                    <span class="key">מגידו</span>
+                    <span class="key">מגל</span>
+                    <span class="key">מגן</span>
+                    <span class="key">מגן שאול</span>
+                    <span class="key">מגשימים</span>
+                    <span class="key">מדרך עוז</span>
+                    <span class="key">מדרשת בן גוריון</span>
+                    <span class="key">מדרשת רופין</span>
+                    <span class="key">מודיעין עילית</span>
+                    <span class="key">מודיעין-מכבים-רעות</span>
+                    <span class="key">מולדת</span>
+                    <span class="key">מוצא עילית</span>
+                    <span class="key">מוקייבלה</span>
+                    <span class="key">מורן</span>
+                    <span class="key">מורשת</span>
+                    <span class="key">מזור</span>
+                    <span class="key">מזכרת בתיה</span>
+                    <span class="key">מזרע</span>
+                    <span class="key">מזרעה</span>
+                    <span class="key">מחולה</span>
+                    <span class="key">מחנה הילה</span>
+                    <span class="key">מחנה טלי</span>
+                    <span class="key">מחנה יהודית</span>
+                    <span class="key">מחנה יוכבד</span>
+                    <span class="key">מחנה יפה</span>
+                    <span class="key">מחנה יתיר</span>
+                    <span class="key">מחנה מרים</span>
+                    <span class="key">מחנה תל נוף</span>
+                    <span class="key">מחניים</span>
+                    <span class="key">מחסיה</span>
+                    <span class="key">מטולה</span>
+                    <span class="key">מטע</span>
+                    <span class="key">מי עמי</span>
+                    <span class="key">מיטב</span>
+                    <span class="key">מיטל</span>
+                    <span class="key">מייסר</span>
+                    <span class="key">מיצר</span>
+                    <span class="key">מירב</span>
+                    <span class="key">מירון</span>
+                    <span class="key">מישר</span>
+                    <span class="key">מיתר</span>
+                    <span class="key">מכורה</span>
+                    <span class="key">מכחול</span>
+                    <span class="key">מכמורת</span>
+                    <span class="key">מכמנים</span>
+                    <span class="key">מלאה</span>
+                    <span class="key">מלילות</span>
+                    <span class="key">מלכיה</span>
+                    <span class="key">מנוחה</span>
+                    <span class="key">מנוף</span>
+                    <span class="key">מנות</span>
+                    <span class="key">מנחמיה</span>
+                    <span class="key">מנרה</span>
+                    <span class="key">מנשית זבדה</span>
+                    <span class="key">מסד</span>
+                    <span class="key">מסדה</span>
+                    <span class="key">מסילות</span>
+                    <span class="key">מסילת ציון</span>
+                    <span class="key">מסלול</span>
+                    <span class="key">מסעדה</span>
+                    <span class="key">מסעודין אל-עזאזמה</span>
+                    <span class="key">מעברות</span>
+                    <span class="key">מעגלים</span>
+                    <span class="key">מעגן</span>
+                    <span class="key">מעגן מיכאל</span>
+                    <span class="key">מעוז חיים</span>
+                    <span class="key">מעון</span>
+                    <span class="key">מעונה</span>
+                    <span class="key">מעיליא</span>
+                    <span class="key">מעין ברוך</span>
+                    <span class="key">מעין צבי</span>
+                    <span class="key">מעלה אדומים</span>
+                    <span class="key">מעלה אפרים</span>
+                    <span class="key">מעלה גלבוע</span>
+                    <span class="key">מעלה גמלא</span>
+                    <span class="key">מעלה החמישה</span>
+                    <span class="key">מעלה לבונה</span>
+                    <span class="key">מעלה מכמש</span>
+                    <span class="key">מעלה עירון</span>
+                    <span class="key">מעלה עמוס</span>
+                    <span class="key">מעלות-תרשיחא</span>
+                    <span class="key">מענית</span>
+                    <span class="key">מעש</span>
+                    <span class="key">מפלסים</span>
+                    <span class="key">מצדות יהודה</span>
+                    <span class="key">מצובה</span>
+                    <span class="key">מצליח</span>
+                    <span class="key">מצפה</span>
+                    <span class="key">מצפה אביב</span>
+                    <span class="key">מצפה אילן</span>
+                    <span class="key">מצפה יריחו</span>
+                    <span class="key">מצפה נטופה</span>
+                    <span class="key">מצפה רמון</span>
+                    <span class="key">מצפה שלם</span>
+                    <span class="key">מצר</span>
+                    <span class="key">מקווה ישראל</span>
+                    <span class="key">מרגליות</span>
+                    <span class="key">מרום גולן</span>
+                    <span class="key">מרחב עם</span>
+                    <span class="key">מרחביה (מושב)</span>
+                    <span class="key">מרחביה (קיבוץ)</span>
+                    <span class="key">מרכז שפירא</span>
+                    <span class="key">משאבי שדה</span>
+                    <span class="key">משגב דב</span>
+                    <span class="key">משגב עם</span>
+                    <span class="key">משהד</span>
+                    <span class="key">משואה</span>
+                    <span class="key">משואות יצחק</span>
+                    <span class="key">משכיות</span>
+                    <span class="key">משמר איילון</span>
+                    <span class="key">משמר דוד</span>
+                    <span class="key">משמר הירדן</span>
+                    <span class="key">משמר הנגב</span>
+                    <span class="key">משמר העמק</span>
+                    <span class="key">משמר השבעה</span>
+                    <span class="key">משמר השרון</span>
+                    <span class="key">משמר יהודה</span>
+                    <span class="key">משמרות</span>
+                    <span class="key">משמרת</span>
+                    <span class="key">משען</span>
+                    <span class="key">מתן</span>
+                    <span class="key">מתת</span>
+                    <span class="key">מתתיהו</span>
+                    <span class="key">נאות גולן</span>
+                    <span class="key">נאות הכיכר</span>
+                    <span class="key">נאות מרדכי</span>
+                    <span class="key">נאות סמדר</span>
+                    <span class="key">נאעורה</span>
+                    <span class="key">נבטים</span>
+                    <span class="key">נגבה</span>
+                    <span class="key">נגוהות</span>
+                    <span class="key">נהורה</span>
+                    <span class="key">נהלל</span>
+                    <span class="key">נהריה</span>
+                    <span class="key">נוב</span>
+                    <span class="key">נוגה</span>
+                    <span class="key">נוה צוף</span>
+                    <span class="key">נווה</span>
+                    <span class="key">נווה אבות</span>
+                    <span class="key">נווה אור</span>
+                    <span class="key">נווה אטיב</span>
+                    <span class="key">נווה אילן</span>
+                    <span class="key">נווה איתן</span>
+                    <span class="key">נווה דניאל</span>
+                    <span class="key">נווה זוהר</span>
+                    <span class="key">נווה זיו</span>
+                    <span class="key">נווה חריף</span>
+                    <span class="key">נווה ים</span>
+                    <span class="key">נווה ימין</span>
+                    <span class="key">נווה ירק</span>
+                    <span class="key">נווה מבטח</span>
+                    <span class="key">נווה מיכאל</span>
+                    <span class="key">נווה שלום</span>
+                    <span class="key">נועם</span>
+                    <span class="key">נוף איילון</span>
+                    <span class="key">נוף הגליל</span>
+                    <span class="key">נופים</span>
+                    <span class="key">נופית</span>
+                    <span class="key">נופך</span>
+                    <span class="key">נוקדים</span>
+                    <span class="key">נורדיה</span>
+                    <span class="key">נורית</span>
+                    <span class="key">נחושה</span>
+                    <span class="key">נחל עוז</span>
+                    <span class="key">נחלה</span>
+                    <span class="key">נחליאל</span>
+                    <span class="key">נחלים</span>
+                    <span class="key">נחם</span>
+                    <span class="key">נחף</span>
+                    <span class="key">נחשולים</span>
+                    <span class="key">נחשון</span>
+                    <span class="key">נחשונים</span>
+                    <span class="key">נטועה</span>
+                    <span class="key">נטור</span>
+                    <span class="key">נטע</span>
+                    <span class="key">נטעים</span>
+                    <span class="key">נטף</span>
+                    <span class="key">ניין</span>
+                    <span class="key">נילי</span>
+                    <span class="key">ניצן</span>
+                    <span class="key">ניצן ב'</span>
+                    <span class="key">ניצנה (קהילת חינוך)</span>
+                    <span class="key">ניצני סיני</span>
+                    <span class="key">ניצני עוז</span>
+                    <span class="key">ניצנים</span>
+                    <span class="key">ניר אליהו</span>
+                    <span class="key">ניר בנים</span>
+                    <span class="key">ניר גלים</span>
+                    <span class="key">ניר דוד (תל עמל)</span>
+                    <span class="key">ניר חן</span>
+                    <span class="key">ניר יפה</span>
+                    <span class="key">ניר יצחק</span>
+                    <span class="key">ניר ישראל</span>
+                    <span class="key">ניר משה</span>
+                    <span class="key">ניר עוז</span>
+                    <span class="key">ניר עם</span>
+                    <span class="key">ניר עציון</span>
+                    <span class="key">ניר עקיבא</span>
+                    <span class="key">ניר צבי</span>
+                    <span class="key">נירים</span>
+                    <span class="key">נירית</span>
+                    <span class="key">נמרוד</span>
+                    <span class="key">נס הרים</span>
+                    <span class="key">נס עמים</span>
+                    <span class="key">נס ציונה</span>
+                    <span class="key">נעורים</span>
+                    <span class="key">נעלה</span>
+                    <span class="key">נעמה</span>
+                    <span class="key">נען</span>
+                    <span class="key">נערן</span>
+                    <span class="key">נצאצרה (שבט)</span>
+                    <span class="key">נצר חזני</span>
+                    <span class="key">נצר סרני</span>
+                    <span class="key">נצרת</span>
+                    <span class="key">נשר</span>
+                    <span class="key">נתיב הגדוד</span>
+                    <span class="key">נתיב הלה</span>
+                    <span class="key">נתיב העשרה</span>
+                    <span class="key">נתיב השיירה</span>
+                    <span class="key">נתיבות</span>
+                    <span class="key">נתניה</span>
+                    <span class="key">סאג'ור</span>
+                    <span class="key">סאסא</span>
+                    <span class="key">סביון</span>
+                    <span class="key">סגולה</span>
+                    <span class="key">סואעד (חמרייה)</span>
+                    <span class="key">סואעד (כמאנה) (שבט)</span>
+                    <span class="key">סולם</span>
+                    <span class="key">סוסיה</span>
+                    <span class="key">סופה</span>
+                    <span class="key">סח'נין</span>
+                    <span class="key">סייד (שבט)</span>
+                    <span class="key">סלמה</span>
+                    <span class="key">סלעית</span>
+                    <span class="key">סמר</span>
+                    <span class="key">סנסנה</span>
+                    <span class="key">סעד</span>
+                    <span class="key">סעוה</span>
+                    <span class="key">סער</span>
+                    <span class="key">ספיר</span>
+                    <span class="key">סתריה</span>
+                    <span class="key">ע'ג'ר</span>
+                    <span class="key">עבדון</span>
+                    <span class="key">עברון</span>
+                    <span class="key">עגור</span>
+                    <span class="key">עדי</span>
+                    <span class="key">עדנים</span>
+                    <span class="key">עוזה</span>
+                    <span class="key">עוזייר</span>
+                    <span class="key">עולש</span>
+                    <span class="key">עומר</span>
+                    <span class="key">עופר</span>
+                    <span class="key">עופרה</span>
+                    <span class="key">עוצם</span>
+                    <span class="key">עוקבי (בנו עוקבה)</span>
+                    <span class="key">עזוז</span>
+                    <span class="key">עזר</span>
+                    <span class="key">עזריאל</span>
+                    <span class="key">עזריה</span>
+                    <span class="key">עזריקם</span>
+                    <span class="key">עטאוונה (שבט)</span>
+                    <span class="key">עטרת</span>
+                    <span class="key">עידן</span>
+                    <span class="key">עיילבון</span>
+                    <span class="key">עיינות</span>
+                    <span class="key">עילוט</span>
+                    <span class="key">עין איילה</span>
+                    <span class="key">עין אל-אסד</span>
+                    <span class="key">עין גב</span>
+                    <span class="key">עין גדי</span>
+                    <span class="key">עין דור</span>
+                    <span class="key">עין הבשור</span>
+                    <span class="key">עין הוד</span>
+                    <span class="key">עין החורש</span>
+                    <span class="key">עין המפרץ</span>
+                    <span class="key">עין הנציב</span>
+                    <span class="key">עין העמק</span>
+                    <span class="key">עין השופט</span>
+                    <span class="key">עין השלושה</span>
+                    <span class="key">עין ורד</span>
+                    <span class="key">עין זיוון</span>
+                    <span class="key">עין חוד</span>
+                    <span class="key">עין חצבה</span>
+                    <span class="key">עין חרוד (איחוד)</span>
+                    <span class="key">עין חרוד (מאוחד)</span>
+                    <span class="key">עין יהב</span>
+                    <span class="key">עין יעקב</span>
+                    <span class="key">עין כרם-ביס חקלאי</span>
+                    <span class="key">עין כרמל</span>
+                    <span class="key">עין מאהל</span>
+                    <span class="key">עין נקובא</span>
+                    <span class="key">עין עירון</span>
+                    <span class="key">עין צורים</span>
+                    <span class="key">עין קנייא</span>
+                    <span class="key">עין ראפה</span>
+                    <span class="key">עין שמר</span>
+                    <span class="key">עין שריד</span>
+                    <span class="key">עין תמר</span>
+                    <span class="key">עינת</span>
+                    <span class="key">עיר אובות</span>
+                    <span class="key">עכו</span>
+                    <span class="key">עלומים</span>
+                    <span class="key">עלי</span>
+                    <span class="key">עלי זהב</span>
+                    <span class="key">עלמה</span>
+                    <span class="key">עלמון</span>
+                    <span class="key">עמוקה</span>
+                    <span class="key">עמיחי</span>
+                    <span class="key">עמינדב</span>
+                    <span class="key">עמיעד</span>
+                    <span class="key">עמיעוז</span>
+                    <span class="key">עמיקם</span>
+                    <span class="key">עמיר</span>
+                    <span class="key">עמנואל</span>
+                    <span class="key">עמקה</span>
+                    <span class="key">ענב</span>
+                    <span class="key">עספיא</span>
+                    <span class="key">עפולה</span>
+                    <span class="key">עץ אפרים</span>
+                    <span class="key">עצמון שגב</span>
+                    <span class="key">עראבה</span>
+                    <span class="key">עראמשה</span>
+                    <span class="key">ערב אל נעים</span>
+                    <span class="key">ערד</span>
+                    <span class="key">ערוגות</span>
+                    <span class="key">ערערה</span>
+                    <span class="key">ערערה-בנגב</span>
+                    <span class="key">עשהאל</span>
+                    <span class="key">עשרת</span>
+                    <span class="key">עתלית</span>
+                    <span class="key">עתניאל</span>
+                    <span class="key">פארן</span>
+                    <span class="key">פדואל</span>
+                    <span class="key">פדויים</span>
+                    <span class="key">פדיה</span>
+                    <span class="key">פוריה - כפר עבודה</span>
+                    <span class="key">פוריה - נווה עובד</span>
+                    <span class="key">פוריה עילית</span>
+                    <span class="key">פוריידיס</span>
+                    <span class="key">פורת</span>
+                    <span class="key">פטיש</span>
+                    <span class="key">פלך</span>
+                    <span class="key">פלמחים</span>
+                    <span class="key">פני חבר</span>
+                    <span class="key">פסגות</span>
+                    <span class="key">פסוטה</span>
+                    <span class="key">פעמי תשז</span>
+                    <span class="key">פצאל</span>
+                    <span class="key">פקיעין (בוקייעה)</span>
+                    <span class="key">פקיעין חדשה</span>
+                    <span class="key">פרדס חנה-כרכור</span>
+                    <span class="key">פרדסיה</span>
+                    <span class="key">פרוד</span>
+                    <span class="key">פרזון</span>
+                    <span class="key">פרי גן</span>
+                    <span class="key">פתח תקווה</span>
+                    <span class="key">פתחיה</span>
+                    <span class="key">צאלים</span>
+                    <span class="key">צביה</span>
+                    <span class="key">צבעון</span>
+                    <span class="key">צובה</span>
+                    <span class="key">צוחר</span>
+                    <span class="key">צופיה</span>
+                    <span class="key">צופים</span>
+                    <span class="key">צופית</span>
+                    <span class="key">צופר</span>
+                    <span class="key">צוקי ים</span>
+                    <span class="key">צוקים</span>
+                    <span class="key">צור הדסה</span>
+                    <span class="key">צור יצחק</span>
+                    <span class="key">צור משה</span>
+                    <span class="key">צור נתן</span>
+                    <span class="key">צוריאל</span>
+                    <span class="key">צורית</span>
+                    <span class="key">ציפורי</span>
+                    <span class="key">צלפון</span>
+                    <span class="key">צנדלה</span>
+                    <span class="key">צפריה</span>
+                    <span class="key">צפרירים</span>
+                    <span class="key">צפת</span>
+                    <span class="key">צרופה</span>
+                    <span class="key">צרעה</span>
+                    <span class="key">קבועה (שבט)</span>
+                    <span class="key">קבוצת יבנה</span>
+                    <span class="key">קדומים</span>
+                    <span class="key">קדימה-צורן</span>
+                    <span class="key">קדמה</span>
+                    <span class="key">קדמת צבי</span>
+                    <span class="key">קדר</span>
+                    <span class="key">קדרון</span>
+                    <span class="key">קדרים</span>
+                    <span class="key">קודייראת א-צאנע(שבט)</span>
+                    <span class="key">קוואעין (שבט)</span>
+                    <span class="key">קוממיות</span>
+                    <span class="key">קורנית</span>
+                    <span class="key">קטורה</span>
+                    <span class="key">קיסריה</span>
+                    <span class="key">קלחים</span>
+                    <span class="key">קליה</span>
+                    <span class="key">קלנסווה</span>
+                    <span class="key">קלע</span>
+                    <span class="key">קציר</span>
+                    <span class="key">קצר א-סר</span>
+                    <span class="key">קצרין</span>
+                    <span class="key">קרית אונו</span>
+                    <span class="key">קרית ארבע</span>
+                    <span class="key">קרית אתא</span>
+                    <span class="key">קרית ביאליק</span>
+                    <span class="key">קרית גת</span>
+                    <span class="key">קרית טבעון</span>
+                    <span class="key">קרית ים</span>
+                    <span class="key">קרית יערים</span>
+                    <span class="key">קרית יערים(מוסד)</span>
+                    <span class="key">קרית מוצקין</span>
+                    <span class="key">קרית מלאכי</span>
+                    <span class="key">קרית נטפים</span>
+                    <span class="key">קרית ענבים</span>
+                    <span class="key">קרית עקרון</span>
+                    <span class="key">קרית שלמה</span>
+                    <span class="key">קרית שמונה</span>
+                    <span class="key">קרני שומרון</span>
+                    <span class="key">קשת</span>
+                    <span class="key">ראמה</span>
+                    <span class="key">ראס אל-עין</span>
+                    <span class="key">ראס עלי</span>
+                    <span class="key">ראש העין</span>
+                    <span class="key">ראש פינה</span>
+                    <span class="key">ראש צורים</span>
+                    <span class="key">ראשון לציון</span>
+                    <span class="key">רבבה</span>
+                    <span class="key">רבדים</span>
+                    <span class="key">רביבים</span>
+                    <span class="key">רביד</span>
+                    <span class="key">רגבה</span>
+                    <span class="key">רגבים</span>
+                    <span class="key">רהט</span>
+                    <span class="key">רווחה</span>
+                    <span class="key">רוויה</span>
+                    <span class="key">רוח מדבר</span>
+                    <span class="key">רוחמה</span>
+                    <span class="key">רומאנה</span>
+                    <span class="key">רומת הייב</span>
+                    <span class="key">רועי</span>
+                    <span class="key">רותם</span>
+                    <span class="key">רחוב</span>
+                    <span class="key">רחובות</span>
+                    <span class="key">רחלים</span>
+                    <span class="key">ריחאניה</span>
+                    <span class="key">ריחן</span>
+                    <span class="key">ריינה</span>
+                    <span class="key">רימונים</span>
+                    <span class="key">רינתיה</span>
+                    <span class="key">רכסים</span>
+                    <span class="key">רם-און</span>
+                    <span class="key">רמות</span>
+                    <span class="key">רמות השבים</span>
+                    <span class="key">רמות מאיר</span>
+                    <span class="key">רמות מנשה</span>
+                    <span class="key">רמות נפתלי</span>
+                    <span class="key">רמלה</span>
+                    <span class="key">רמת גן</span>
+                    <span class="key">רמת דוד</span>
+                    <span class="key">רמת הכובש</span>
+                    <span class="key">רמת השופט</span>
+                    <span class="key">רמת השרון</span>
+                    <span class="key">רמת טראמפ</span>
+                    <span class="key">רמת יוחנן</span>
+                    <span class="key">רמת ישי</span>
+                    <span class="key">רמת מגשימים</span>
+                    <span class="key">רמת צבי</span>
+                    <span class="key">רמת רזיאל</span>
+                    <span class="key">רמת רחל</span>
+                    <span class="key">רנן</span>
+                    <span class="key">רעים</span>
+                    <span class="key">רעננה</span>
+                    <span class="key">רקפת</span>
+                    <span class="key">רשפון</span>
+                    <span class="key">רשפים</span>
+                    <span class="key">רתמים</span>
+                    <span class="key">שאר ישוב</span>
+                    <span class="key">שבי דרום</span>
+                    <span class="key">שבי ציון</span>
+                    <span class="key">שבי שומרון</span>
+                    <span class="key">שבלי - אום אל-גנם</span>
+                    <span class="key">שגב-שלום</span>
+                    <span class="key">שדה אילן</span>
+                    <span class="key">שדה אליהו</span>
+                    <span class="key">שדה אליעזר</span>
+                    <span class="key">שדה בוקר</span>
+                    <span class="key">שדה דוד</span>
+                    <span class="key">שדה ורבורג</span>
+                    <span class="key">שדה יואב</span>
+                    <span class="key">שדה יעקב</span>
+                    <span class="key">שדה יצחק</span>
+                    <span class="key">שדה משה</span>
+                    <span class="key">שדה נחום</span>
+                    <span class="key">שדה נחמיה</span>
+                    <span class="key">שדה ניצן</span>
+                    <span class="key">שדה עוזיהו</span>
+                    <span class="key">שדה צבי</span>
+                    <span class="key">שדות ים</span>
+                    <span class="key">שדות מיכה</span>
+                    <span class="key">שדי אברהם</span>
+                    <span class="key">שדי חמד</span>
+                    <span class="key">שדי תרומות</span>
+                    <span class="key">שדמה</span>
+                    <span class="key">שדמות דבורה</span>
+                    <span class="key">שדמות מחולה</span>
+                    <span class="key">שדרות</span>
+                    <span class="key">שואבה</span>
+                    <span class="key">שובה</span>
+                    <span class="key">שובל</span>
+                    <span class="key">שוהם</span>
+                    <span class="key">שומרה</span>
+                    <span class="key">שומריה</span>
+                    <span class="key">שוקדה</span>
+                    <span class="key">שורש</span>
+                    <span class="key">שורשים</span>
+                    <span class="key">שושנת העמקים</span>
+                    <span class="key">שזור</span>
+                    <span class="key">שחר</span>
+                    <span class="key">שחרות</span>
+                    <span class="key">שחרית</span>
+                    <span class="key">שיבולים</span>
+                    <span class="key">שיזף</span>
+                    <span class="key">שיטים</span>
+                    <span class="key">שייח' דנון</span>
+                    <span class="key">שילה</span>
+                    <span class="key">שילת</span>
+                    <span class="key">שכניה</span>
+                    <span class="key">שלווה</span>
+                    <span class="key">שלווה במדבר</span>
+                    <span class="key">שלוחות</span>
+                    <span class="key">שלומי</span>
+                    <span class="key">שלומית</span>
+                    <span class="key">שמיר</span>
+                    <span class="key">שמעה</span>
+                    <span class="key">שמרת</span>
+                    <span class="key">שמשית</span>
+                    <span class="key">שני</span>
+                    <span class="key">שניר</span>
+                    <span class="key">שעב</span>
+                    <span class="key">שעל</span>
+                    <span class="key">שעלבים</span>
+                    <span class="key">שער אפרים</span>
+                    <span class="key">שער הגולן</span>
+                    <span class="key">שער העמקים</span>
+                    <span class="key">שער מנשה</span>
+                    <span class="key">שער שומרון</span>
+                    <span class="key">שערי תקווה</span>
+                    <span class="key">שפיים</span>
+                    <span class="key">שפיר</span>
+                    <span class="key">שפר</span>
+                    <span class="key">שפרעם</span>
+                    <span class="key">שקד</span>
+                    <span class="key">שקף</span>
+                    <span class="key">שרונה</span>
+                    <span class="key">שריגים (לי-און)</span>
+                    <span class="key">שריד</span>
+                    <span class="key">שרשרת</span>
+                    <span class="key">שתולה</span>
+                    <span class="key">שתולים</span>
+                    <span class="key">תאשור</span>
+                    <span class="key">תדהר</span>
+                    <span class="key">תובל</span>
+                    <span class="key">תומר</span>
+                    <span class="key">תושיה</span>
+                    <span class="key">תימורים</span>
+                    <span class="key">תירוש</span>
+                    <span class="key">תל אביב - יפו</span>
+                    <span class="key">תל יוסף</span>
+                    <span class="key">תל יצחק</span>
+                    <span class="key">תל מונד</span>
+                    <span class="key">תל עדשים</span>
+                    <span class="key">תל ציון</span>
+                    <span class="key">תל קציר</span>
+                    <span class="key">תל שבע</span>
+                    <span class="key">תל תאומים</span>
+                    <span class="key">תלם</span>
+                    <span class="key">תלמי אליהו</span>
+                    <span class="key">תלמי אלעזר</span>
+                    <span class="key">תלמי בילו</span>
+                    <span class="key">תלמי יוסף</span>
+                    <span class="key">תלמי יחיאל</span>
+                    <span class="key">תלמי יפה</span>
+                    <span class="key">תלמים</span>
+                    <span class="key">תמרת</span>
+                    <span class="key">תנובות</span>
+                    <span class="key">תעוז</span>
+                    <span class="key">תפרח</span>
+                    <span class="key">תקומה</span>
+                    <span class="key">תקוע</span>
+                    <span class="key">תראבין א-צאנע (שבט)</span>
+                    <span class="key">תראבין א-צאנע(ישוב)</span>
+                    <span class="key">תרום</span>
+
+                </div>
+            </div>
+            
+            <!-- PARTIAL MATCHES -->
+            <div class="section">
+                <div class="section-title">
+                    ⚠️ עיריות חלקיות (צריכות בדיקה)
+                    <span class="badge partial">37</span>
+                </div>
+                <p style="background: #fff3cd; padding: 15px; border-radius: 8px; margin-bottom: 20px; color: #856404;">
+                    <strong>⚠️ הערה:</strong> העיריות האלה נמצאות כחלק מעירייה אחרת בנתוני המערכת. 
+                    בדוק אם זה תקין או אם צריך לתקן על ידי שימוש בעירייה המוצעת.
+                </p>
+
+            <div class="city-group partial">
+                <div class="city-header">📍 בית רבן גבעת וושינגטון → גבע</div>
+                <div class="match-info">
+                    <strong>🔍 ההצעה:</strong> "בית רבן גבעת וושינגטון" יכול להיות חלק של "גבע"
+                </div>
+                <div class="city-rows">
+
+                    <div class="row-item">
+                        <div class="row-num">שורה 36</div>
+                        <div>יעלה תמה שי</div>
+                        <div class="child-id">235075371</div>
+                        <div style="color: #ffc107; font-weight: bold;">⚠️ בדיקה</div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="city-group partial">
+                <div class="city-header">📍 בנימינה → בנימינה-גבעת עדה</div>
+                <div class="match-info">
+                    <strong>🔍 ההצעה:</strong> "בנימינה" יכול להיות חלק של "בנימינה-גבעת עדה"
+                </div>
+                <div class="city-rows">
+
+                    <div class="row-item">
+                        <div class="row-num">שורה 47</div>
+                        <div>דקל פקלוצווג</div>
+                        <div class="child-id">224263392</div>
+                        <div style="color: #ffc107; font-weight: bold;">⚠️ בדיקה</div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="city-group partial">
+                <div class="city-header">📍 דבורה בארון נתניה ישראל → נתניה</div>
+                <div class="match-info">
+                    <strong>🔍 ההצעה:</strong> "דבורה בארון נתניה ישראל" יכול להיות חלק של "נתניה"
+                </div>
+                <div class="city-rows">
+
+                    <div class="row-item">
+                        <div class="row-num">שורה 343</div>
+                        <div>איתמר משה רובינשטיין</div>
+                        <div class="child-id">228761862</div>
+                        <div style="color: #ffc107; font-weight: bold;">⚠️ בדיקה</div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="city-group partial">
+                <div class="city-header">📍 האורנים חצב Israel → חצב</div>
+                <div class="match-info">
+                    <strong>🔍 ההצעה:</strong> "האורנים חצב Israel" יכול להיות חלק של "חצב"
+                </div>
+                <div class="city-rows">
+
+                    <div class="row-item">
+                        <div class="row-num">שורה 377</div>
+                        <div>ליה וטורי</div>
+                        <div class="child-id">335470563</div>
+                        <div style="color: #ffc107; font-weight: bold;">⚠️ בדיקה</div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="city-group partial">
+                <div class="city-header">📍 הפלמ"ח 33 פתח תקווה ישראל → פתח תקווה</div>
+                <div class="match-info">
+                    <strong>🔍 ההצעה:</strong> "הפלמ"ח 33 פתח תקווה ישראל" יכול להיות חלק של "פתח תקווה"
+                </div>
+                <div class="city-rows">
+
+                    <div class="row-item">
+                        <div class="row-num">שורה 162</div>
+                        <div>מיכאל בליאקוב</div>
+                        <div class="child-id">226123255</div>
+                        <div style="color: #ffc107; font-weight: bold;">⚠️ בדיקה</div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="city-group partial">
+                <div class="city-header">📍 חושב אחיסמך → אחיסמך</div>
+                <div class="match-info">
+                    <strong>🔍 ההצעה:</strong> "חושב אחיסמך" יכול להיות חלק של "אחיסמך"
+                </div>
+                <div class="city-rows">
+
+                    <div class="row-item">
+                        <div class="row-num">שורה 481</div>
+                        <div>נעם אבישג לגטווי</div>
+                        <div class="child-id">216870444</div>
+                        <div style="color: #ffc107; font-weight: bold;">⚠️ בדיקה</div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="city-group partial">
+                <div class="city-header">📍 יפו → תל אביב - יפו</div>
+                <div class="match-info">
+                    <strong>🔍 ההצעה:</strong> "יפו" יכול להיות חלק של "תל אביב - יפו"
+                </div>
+                <div class="city-rows">
+
+                    <div class="row-item">
+                        <div class="row-num">שורה 321</div>
+                        <div>אנאל בנימין</div>
+                        <div class="child-id">223682477</div>
+                        <div style="color: #ffc107; font-weight: bold;">⚠️ בדיקה</div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="city-group partial">
+                <div class="city-header">📍 יקינטון 2 חריש → חריש</div>
+                <div class="match-info">
+                    <strong>🔍 ההצעה:</strong> "יקינטון 2 חריש" יכול להיות חלק של "חריש"
+                </div>
+                <div class="city-rows">
+
+                    <div class="row-item">
+                        <div class="row-num">שורה 188</div>
+                        <div>צרניאחובסקי סופיה</div>
+                        <div class="child-id">343147302</div>
+                        <div style="color: #ffc107; font-weight: bold;">⚠️ בדיקה</div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="city-group partial">
+                <div class="city-header">📍 מודיעין → מודיעין-מכבים-רעות</div>
+                <div class="match-info">
+                    <strong>🔍 ההצעה:</strong> "מודיעין" יכול להיות חלק של "מודיעין-מכבים-רעות"
+                </div>
+                <div class="city-rows">
+
+                    <div class="row-item">
+                        <div class="row-num">שורה 27</div>
+                        <div>אגם שמחה ליב</div>
+                        <div class="child-id">217600469</div>
+                        <div style="color: #ffc107; font-weight: bold;">⚠️ בדיקה</div>
+                    </div>
+
+                    <div class="row-item">
+                        <div class="row-num">שורה 79</div>
+                        <div>יהונתן אליגאל</div>
+                        <div class="child-id">238751986</div>
+                        <div style="color: #ffc107; font-weight: bold;">⚠️ בדיקה</div>
+                    </div>
+
+                    <div class="row-item">
+                        <div class="row-num">שורה 102</div>
+                        <div>טליה צדקיהו</div>
+                        <div class="child-id">234631554</div>
+                        <div style="color: #ffc107; font-weight: bold;">⚠️ בדיקה</div>
+                    </div>
+
+                    <div class="row-item">
+                        <div class="row-num">שורה 119</div>
+                        <div>יואב נידם</div>
+                        <div class="child-id">219486503</div>
+                        <div style="color: #ffc107; font-weight: bold;">⚠️ בדיקה</div>
+                    </div>
+
+                    <div class="row-item">
+                        <div class="row-num">שורה 160</div>
+                        <div>קורן משה עמר</div>
+                        <div class="child-id">224336321</div>
+                        <div style="color: #ffc107; font-weight: bold;">⚠️ בדיקה</div>
+                    </div>
+
+                    <div class="row-item">
+                        <div class="row-num">שורה 241</div>
+                        <div>אריאל גונן</div>
+                        <div class="child-id">217792951</div>
+                        <div style="color: #ffc107; font-weight: bold;">⚠️ בדיקה</div>
+                    </div>
+
+                    <div class="row-item">
+                        <div class="row-num">שורה 332</div>
+                        <div>אילן ראף</div>
+                        <div class="child-id">331233213</div>
+                        <div style="color: #ffc107; font-weight: bold;">⚠️ בדיקה</div>
+                    </div>
+
+                    <div class="row-item">
+                        <div class="row-num">שורה 410</div>
+                        <div>מאורי אדרי</div>
+                        <div class="child-id">236891453</div>
+                        <div style="color: #ffc107; font-weight: bold;">⚠️ בדיקה</div>
+                    </div>
+
+                    <div class="row-item">
+                        <div class="row-num">שורה 448</div>
+                        <div>מתן אשר טיטלבוים</div>
+                        <div class="child-id">215065509</div>
+                        <div style="color: #ffc107; font-weight: bold;">⚠️ בדיקה</div>
+                    </div>
+
+                    <div class="row-item">
+                        <div class="row-num">שורה 499</div>
+                        <div>נועם אבירם</div>
+                        <div class="child-id">331767590</div>
+                        <div style="color: #ffc107; font-weight: bold;">⚠️ בדיקה</div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="city-group partial">
+                <div class="city-header">📍 מושב אומן → אומן</div>
+                <div class="match-info">
+                    <strong>🔍 ההצעה:</strong> "מושב אומן" יכול להיות חלק של "אומן"
+                </div>
+                <div class="city-rows">
+
+                    <div class="row-item">
+                        <div class="row-num">שורה 475</div>
+                        <div>אריאל מלכה</div>
+                        <div class="child-id">213759517</div>
+                        <div style="color: #ffc107; font-weight: bold;">⚠️ בדיקה</div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="city-group partial">
+                <div class="city-header">📍 מושב בית עזרא → עזר</div>
+                <div class="match-info">
+                    <strong>🔍 ההצעה:</strong> "מושב בית עזרא" יכול להיות חלק של "עזר"
+                </div>
+                <div class="city-rows">
+
+                    <div class="row-item">
+                        <div class="row-num">שורה 309</div>
+                        <div>יאיר יהודה</div>
+                        <div class="child-id">233983410</div>
+                        <div style="color: #ffc107; font-weight: bold;">⚠️ בדיקה</div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="city-group partial">
+                <div class="city-header">📍 מושב ברכיה → ברכיה</div>
+                <div class="match-info">
+                    <strong>🔍 ההצעה:</strong> "מושב ברכיה" יכול להיות חלק של "ברכיה"
+                </div>
+                <div class="city-rows">
+
+                    <div class="row-item">
+                        <div class="row-num">שורה 484</div>
+                        <div>שילת ביתן</div>
+                        <div class="child-id">322493255</div>
+                        <div style="color: #ffc107; font-weight: bold;">⚠️ בדיקה</div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="city-group partial">
+                <div class="city-header">📍 מושב זיתן → זיתן</div>
+                <div class="match-info">
+                    <strong>🔍 ההצעה:</strong> "מושב זיתן" יכול להיות חלק של "זיתן"
+                </div>
+                <div class="city-rows">
+
+                    <div class="row-item">
+                        <div class="row-num">שורה 180</div>
+                        <div>רועי עמר</div>
+                        <div class="child-id">000000009</div>
+                        <div style="color: #ffc107; font-weight: bold;">⚠️ בדיקה</div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="city-group partial">
+                <div class="city-header">📍 מושב יערה → יערה</div>
+                <div class="match-info">
+                    <strong>🔍 ההצעה:</strong> "מושב יערה" יכול להיות חלק של "יערה"
+                </div>
+                <div class="city-rows">
+
+                    <div class="row-item">
+                        <div class="row-num">שורה 58</div>
+                        <div>אלרואי מרדכי</div>
+                        <div class="child-id">340231828</div>
+                        <div style="color: #ffc107; font-weight: bold;">⚠️ בדיקה</div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="city-group partial">
+                <div class="city-header">📍 מושב כפר שמאי → כפר שמאי</div>
+                <div class="match-info">
+                    <strong>🔍 ההצעה:</strong> "מושב כפר שמאי" יכול להיות חלק של "כפר שמאי"
+                </div>
+                <div class="city-rows">
+
+                    <div class="row-item">
+                        <div class="row-num">שורה 221</div>
+                        <div>ארבל קרני</div>
+                        <div class="child-id">227025509</div>
+                        <div style="color: #ffc107; font-weight: bold;">⚠️ בדיקה</div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="city-group partial">
+                <div class="city-header">📍 מושב נחלים → נחלים</div>
+                <div class="match-info">
+                    <strong>🔍 ההצעה:</strong> "מושב נחלים" יכול להיות חלק של "נחלים"
+                </div>
+                <div class="city-rows">
+
+                    <div class="row-item">
+                        <div class="row-num">שורה 407</div>
+                        <div>אמיתי סלע</div>
+                        <div class="child-id">212303564</div>
+                        <div style="color: #ffc107; font-weight: bold;">⚠️ בדיקה</div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="city-group partial">
+                <div class="city-header">📍 מושב פורת → פורת</div>
+                <div class="match-info">
+                    <strong>🔍 ההצעה:</strong> "מושב פורת" יכול להיות חלק של "פורת"
+                </div>
+                <div class="city-rows">
+
+                    <div class="row-item">
+                        <div class="row-num">שורה 234</div>
+                        <div>ליאב חסאן</div>
+                        <div class="child-id">334928884</div>
+                        <div style="color: #ffc107; font-weight: bold;">⚠️ בדיקה</div>
+                    </div>
+
+                    <div class="row-item">
+                        <div class="row-num">שורה 386</div>
+                        <div>טוביה ברוך חלילי</div>
+                        <div class="child-id">230709388</div>
+                        <div style="color: #ffc107; font-weight: bold;">⚠️ בדיקה</div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="city-group partial">
+                <div class="city-header">📍 מושב רנן → רנן</div>
+                <div class="match-info">
+                    <strong>🔍 ההצעה:</strong> "מושב רנן" יכול להיות חלק של "רנן"
+                </div>
+                <div class="city-rows">
+
+                    <div class="row-item">
+                        <div class="row-num">שורה 498</div>
+                        <div>הילה ניסים</div>
+                        <div class="child-id">222008963</div>
+                        <div style="color: #ffc107; font-weight: bold;">⚠️ בדיקה</div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="city-group partial">
+                <div class="city-header">📍 מושב שדה משה → שדה משה</div>
+                <div class="match-info">
+                    <strong>🔍 ההצעה:</strong> "מושב שדה משה" יכול להיות חלק של "שדה משה"
+                </div>
+                <div class="city-rows">
+
+                    <div class="row-item">
+                        <div class="row-num">שורה 352</div>
+                        <div>רומי שירה אברג'ל</div>
+                        <div class="child-id">217832823</div>
+                        <div style="color: #ffc107; font-weight: bold;">⚠️ בדיקה</div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="city-group partial">
+                <div class="city-header">📍 נריה (טלמון) → טלמון</div>
+                <div class="match-info">
+                    <strong>🔍 ההצעה:</strong> "נריה (טלמון)" יכול להיות חלק של "טלמון"
+                </div>
+                <div class="city-rows">
+
+                    <div class="row-item">
+                        <div class="row-num">שורה 402</div>
+                        <div>נעמה קרן</div>
+                        <div class="child-id">000000015</div>
+                        <div style="color: #ffc107; font-weight: bold;">⚠️ בדיקה</div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="city-group partial">
+                <div class="city-header">📍 נריה אזור מודיעין → אזור</div>
+                <div class="match-info">
+                    <strong>🔍 ההצעה:</strong> "נריה אזור מודיעין" יכול להיות חלק של "אזור"
+                </div>
+                <div class="city-rows">
+
+                    <div class="row-item">
+                        <div class="row-num">שורה 400</div>
+                        <div>אלירז צור</div>
+                        <div class="child-id">229567268</div>
+                        <div style="color: #ffc107; font-weight: bold;">⚠️ בדיקה</div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="city-group partial">
+                <div class="city-header">📍 נתניה Израиль → נתניה</div>
+                <div class="match-info">
+                    <strong>🔍 ההצעה:</strong> "נתניה Израиль" יכול להיות חלק של "נתניה"
+                </div>
+                <div class="city-rows">
+
+                    <div class="row-item">
+                        <div class="row-num">שורה 48</div>
+                        <div>שלו דוידוב</div>
+                        <div class="child-id">219736527</div>
+                        <div style="color: #ffc107; font-weight: bold;">⚠️ בדיקה</div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="city-group partial">
+                <div class="city-header">📍 ספסופה → סופה</div>
+                <div class="match-info">
+                    <strong>🔍 ההצעה:</strong> "ספסופה" יכול להיות חלק של "סופה"
+                </div>
+                <div class="city-rows">
+
+                    <div class="row-item">
+                        <div class="row-num">שורה 463</div>
+                        <div>יאיר קקון</div>
+                        <div class="child-id">322927724</div>
+                        <div style="color: #ffc107; font-weight: bold;">⚠️ בדיקה</div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="city-group partial">
+                <div class="city-header">📍 פרדס חנה → פרדס חנה-כרכור</div>
+                <div class="match-info">
+                    <strong>🔍 ההצעה:</strong> "פרדס חנה" יכול להיות חלק של "פרדס חנה-כרכור"
+                </div>
+                <div class="city-rows">
+
+                    <div class="row-item">
+                        <div class="row-num">שורה 108</div>
+                        <div>יובל קושפן</div>
+                        <div class="child-id">220315196</div>
+                        <div style="color: #ffc107; font-weight: bold;">⚠️ בדיקה</div>
+                    </div>
+
+                    <div class="row-item">
+                        <div class="row-num">שורה 142</div>
+                        <div>עתי ביטון</div>
+                        <div class="child-id">228373056</div>
+                        <div style="color: #ffc107; font-weight: bold;">⚠️ בדיקה</div>
+                    </div>
+
+                    <div class="row-item">
+                        <div class="row-num">שורה 266</div>
+                        <div>אביב פרידמן</div>
+                        <div class="child-id">240541722</div>
+                        <div style="color: #ffc107; font-weight: bold;">⚠️ בדיקה</div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="city-group partial">
+                <div class="city-header">📍 צורן → קדימה-צורן</div>
+                <div class="match-info">
+                    <strong>🔍 ההצעה:</strong> "צורן" יכול להיות חלק של "קדימה-צורן"
+                </div>
+                <div class="city-rows">
+
+                    <div class="row-item">
+                        <div class="row-num">שורה 99</div>
+                        <div>נועם גבאי</div>
+                        <div class="child-id">221064413</div>
+                        <div style="color: #ffc107; font-weight: bold;">⚠️ בדיקה</div>
+                    </div>
+
+                    <div class="row-item">
+                        <div class="row-num">שורה 117</div>
+                        <div>אייל לוי</div>
+                        <div class="child-id">000000012</div>
+                        <div style="color: #ffc107; font-weight: bold;">⚠️ בדיקה</div>
+                    </div>
+
+                    <div class="row-item">
+                        <div class="row-num">שורה 270</div>
+                        <div>אייל לוי</div>
+                        <div class="child-id">000000007</div>
+                        <div style="color: #ffc107; font-weight: bold;">⚠️ בדיקה</div>
+                    </div>
+
+                    <div class="row-item">
+                        <div class="row-num">שורה 302</div>
+                        <div>כרמל אזולאי</div>
+                        <div class="child-id">318938172</div>
+                        <div style="color: #ffc107; font-weight: bold;">⚠️ בדיקה</div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="city-group partial">
+                <div class="city-header">📍 קדימה → קדימה-צורן</div>
+                <div class="match-info">
+                    <strong>🔍 ההצעה:</strong> "קדימה" יכול להיות חלק של "קדימה-צורן"
+                </div>
+                <div class="city-rows">
+
+                    <div class="row-item">
+                        <div class="row-num">שורה 191</div>
+                        <div>לירי גורפינקל</div>
+                        <div class="child-id">216969618</div>
+                        <div style="color: #ffc107; font-weight: bold;">⚠️ בדיקה</div>
+                    </div>
+
+                    <div class="row-item">
+                        <div class="row-num">שורה 440</div>
+                        <div>ניר עומר</div>
+                        <div class="child-id">334561214</div>
+                        <div style="color: #ffc107; font-weight: bold;">⚠️ בדיקה</div>
+                    </div>
+
+                    <div class="row-item">
+                        <div class="row-num">שורה 472</div>
+                        <div>נטע ידייקין</div>
+                        <div class="child-id">212451207</div>
+                        <div style="color: #ffc107; font-weight: bold;">⚠️ בדיקה</div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="city-group partial">
+                <div class="city-header">📍 קיבוץ יגור → יגור</div>
+                <div class="match-info">
+                    <strong>🔍 ההצעה:</strong> "קיבוץ יגור" יכול להיות חלק של "יגור"
+                </div>
+                <div class="city-rows">
+
+                    <div class="row-item">
+                        <div class="row-num">שורה 449</div>
+                        <div>יעל גולדשטיין</div>
+                        <div class="child-id">214892754</div>
+                        <div style="color: #ffc107; font-weight: bold;">⚠️ בדיקה</div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="city-group partial">
+                <div class="city-header">📍 קיבוץ כפר החורש כפר החורש ישראל → כפר החורש</div>
+                <div class="match-info">
+                    <strong>🔍 ההצעה:</strong> "קיבוץ כפר החורש כפר החורש ישראל" יכול להיות חלק של "כפר החורש"
+                </div>
+                <div class="city-rows">
+
+                    <div class="row-item">
+                        <div class="row-num">שורה 83</div>
+                        <div>אביאל</div>
+                        <div class="child-id">339950875</div>
+                        <div style="color: #ffc107; font-weight: bold;">⚠️ בדיקה</div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="city-group partial">
+                <div class="city-header">📍 קיבוץ כרמים → כרמים</div>
+                <div class="match-info">
+                    <strong>🔍 ההצעה:</strong> "קיבוץ כרמים" יכול להיות חלק של "כרמים"
+                </div>
+                <div class="city-rows">
+
+                    <div class="row-item">
+                        <div class="row-num">שורה 293</div>
+                        <div>הלל חדד</div>
+                        <div class="child-id">326853645</div>
+                        <div style="color: #ffc107; font-weight: bold;">⚠️ בדיקה</div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="city-group partial">
+                <div class="city-header">📍 קיבוץ עמיר → עמיר</div>
+                <div class="match-info">
+                    <strong>🔍 ההצעה:</strong> "קיבוץ עמיר" יכול להיות חלק של "עמיר"
+                </div>
+                <div class="city-rows">
+
+                    <div class="row-item">
+                        <div class="row-num">שורה 207</div>
+                        <div>שירה אורי בניה</div>
+                        <div class="child-id">344648738</div>
+                        <div style="color: #ffc107; font-weight: bold;">⚠️ בדיקה</div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="city-group partial">
+                <div class="city-header">📍 קיבוץ רבדים → רבדים</div>
+                <div class="match-info">
+                    <strong>🔍 ההצעה:</strong> "קיבוץ רבדים" יכול להיות חלק של "רבדים"
+                </div>
+                <div class="city-rows">
+
+                    <div class="row-item">
+                        <div class="row-num">שורה 26</div>
+                        <div>עידן</div>
+                        <div class="child-id">343817314</div>
+                        <div style="color: #ffc107; font-weight: bold;">⚠️ בדיקה</div>
+                    </div>
+
+                    <div class="row-item">
+                        <div class="row-num">שורה 415</div>
+                        <div>עידן מזיג</div>
+                        <div class="child-id">343817342</div>
+                        <div style="color: #ffc107; font-weight: bold;">⚠️ בדיקה</div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="city-group partial">
+                <div class="city-header">📍 קרית מנחם ירושלים → ירושלים</div>
+                <div class="match-info">
+                    <strong>🔍 ההצעה:</strong> "קרית מנחם ירושלים" יכול להיות חלק של "ירושלים"
+                </div>
+                <div class="city-rows">
+
+                    <div class="row-item">
+                        <div class="row-num">שורה 65</div>
+                        <div>אנאל שירה אשרוף</div>
+                        <div class="child-id">344544556</div>
+                        <div style="color: #ffc107; font-weight: bold;">⚠️ בדיקה</div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="city-group partial">
+                <div class="city-header">📍 רחוב קרל פופר 13 Netanya Israel → רחוב</div>
+                <div class="match-info">
+                    <strong>🔍 ההצעה:</strong> "רחוב קרל פופר 13 Netanya Israel" יכול להיות חלק של "רחוב"
+                </div>
+                <div class="city-rows">
+
+                    <div class="row-item">
+                        <div class="row-num">שורה 163</div>
+                        <div>פלג גרינשפן</div>
+                        <div class="child-id">227091303</div>
+                        <div style="color: #ffc107; font-weight: bold;">⚠️ בדיקה</div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="city-group partial">
+                <div class="city-header">📍 רמת בית שמש → בית שמש</div>
+                <div class="match-info">
+                    <strong>🔍 ההצעה:</strong> "רמת בית שמש" יכול להיות חלק של "בית שמש"
+                </div>
+                <div class="city-rows">
+
+                    <div class="row-item">
+                        <div class="row-num">שורה 438</div>
+                        <div>אברהם יאיר בן שבת</div>
+                        <div class="child-id">226273456</div>
+                        <div style="color: #ffc107; font-weight: bold;">⚠️ בדיקה</div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="city-group partial">
+                <div class="city-header">📍 שדרות ישראל → שדרות</div>
+                <div class="match-info">
+                    <strong>🔍 ההצעה:</strong> "שדרות ישראל" יכול להיות חלק של "שדרות"
+                </div>
+                <div class="city-rows">
+
+                    <div class="row-item">
+                        <div class="row-num">שורה 51</div>
+                        <div>אביאל אביעד כהן</div>
+                        <div class="child-id">233975804</div>
+                        <div style="color: #ffc107; font-weight: bold;">⚠️ בדיקה</div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="city-group partial">
+                <div class="city-header">📍 תל אביב → תל אביב - יפו</div>
+                <div class="match-info">
+                    <strong>🔍 ההצעה:</strong> "תל אביב" יכול להיות חלק של "תל אביב - יפו"
+                </div>
+                <div class="city-rows">
+
+                    <div class="row-item">
+                        <div class="row-num">שורה 41</div>
+                        <div>שהם ברהה</div>
+                        <div class="child-id">215836016</div>
+                        <div style="color: #ffc107; font-weight: bold;">⚠️ בדיקה</div>
+                    </div>
+
+                    <div class="row-item">
+                        <div class="row-num">שורה 64</div>
+                        <div>נועם כהן</div>
+                        <div class="child-id">342157062</div>
+                        <div style="color: #ffc107; font-weight: bold;">⚠️ בדיקה</div>
+                    </div>
+
+                    <div class="row-item">
+                        <div class="row-num">שורה 120</div>
+                        <div>גיא כץ</div>
+                        <div class="child-id">235057916</div>
+                        <div style="color: #ffc107; font-weight: bold;">⚠️ בדיקה</div>
+                    </div>
+
+                    <div class="row-item">
+                        <div class="row-num">שורה 138</div>
+                        <div>הלל לנה יעקב</div>
+                        <div class="child-id">238326979</div>
+                        <div style="color: #ffc107; font-weight: bold;">⚠️ בדיקה</div>
+                    </div>
+
+                    <div class="row-item">
+                        <div class="row-num">שורה 152</div>
+                        <div>יובל תהילה בן דוד</div>
+                        <div class="child-id">338437916</div>
+                        <div style="color: #ffc107; font-weight: bold;">⚠️ בדיקה</div>
+                    </div>
+
+                    <div class="row-item">
+                        <div class="row-num">שורה 184</div>
+                        <div>שירה סיונוב</div>
+                        <div class="child-id">224743096</div>
+                        <div style="color: #ffc107; font-weight: bold;">⚠️ בדיקה</div>
+                    </div>
+
+                    <div class="row-item">
+                        <div class="row-num">שורה 267</div>
+                        <div>עילי אליעזר</div>
+                        <div class="child-id">331613562</div>
+                        <div style="color: #ffc107; font-weight: bold;">⚠️ בדיקה</div>
+                    </div>
+
+                    <div class="row-item">
+                        <div class="row-num">שורה 324</div>
+                        <div>עומר שמעון חגואל</div>
+                        <div class="child-id">328506043</div>
+                        <div style="color: #ffc107; font-weight: bold;">⚠️ בדיקה</div>
+                    </div>
+
+                    <div class="row-item">
+                        <div class="row-num">שורה 417</div>
+                        <div>אימרי זיגלר</div>
+                        <div class="child-id">337376867</div>
+                        <div style="color: #ffc107; font-weight: bold;">⚠️ בדיקה</div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="city-group partial">
+                <div class="city-header">📍 תל אביב עוברים לרחובות → רחוב</div>
+                <div class="match-info">
+                    <strong>🔍 ההצעה:</strong> "תל אביב עוברים לרחובות" יכול להיות חלק של "רחוב"
+                </div>
+                <div class="city-rows">
+
+                    <div class="row-item">
+                        <div class="row-num">שורה 433</div>
+                        <div>אלה ניסני</div>
+                        <div class="child-id">235755261</div>
+                        <div style="color: #ffc107; font-weight: bold;">⚠️ בדיקה</div>
+                    </div>
+
+                </div>
+            </div>
+
+            </div>
+            
+            <!-- NO MATCHES -->
+            <div class="section">
+                <div class="section-title">
+                    ❌ עיריות חסרות (צריכות עזרה)
+                    <span class="badge nomatch">28</span>
+                </div>
+                <p style="background: #f8d7da; padding: 15px; border-radius: 8px; margin-bottom: 20px; color: #721c24;">
+                    <strong>❌ בעיה:</strong> העיריות האלה לא נמצאות במערכת. 
+                    בדוק אם זה טעות הקלדה (כמו חילוף אותיות), או שצריך לעדכן את רשימת העיריות עם ה-NPO.
+                </p>
+
+            <div class="city-group nomatch">
+                <div class="city-header">🚫 באר יעקוב</div>
+                <div class="city-rows">
+
+                    <div class="row-item">
+                        <div class="row-num">שורה 429</div>
+                        <div>יאיר ישראל עמר</div>
+                        <div class="child-id">234863397</div>
+                        <div style="color: #dc3545; font-weight: bold;">❌ לא נמצאת</div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="city-group nomatch">
+                <div class="city-header">🚫 בני עייש</div>
+                <div class="city-rows">
+
+                    <div class="row-item">
+                        <div class="row-num">שורה 67</div>
+                        <div>גאל שוקר</div>
+                        <div class="child-id">221035181</div>
+                        <div style="color: #dc3545; font-weight: bold;">❌ לא נמצאת</div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="city-group nomatch">
+                <div class="city-header">🚫 דגניה א׳</div>
+                <div class="city-rows">
+
+                    <div class="row-item">
+                        <div class="row-num">שורה 141</div>
+                        <div>אלה כהן</div>
+                        <div class="child-id">223209388</div>
+                        <div style="color: #dc3545; font-weight: bold;">❌ לא נמצאת</div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="city-group nomatch">
+                <div class="city-header">🚫 דרך האבות 245</div>
+                <div class="city-rows">
+
+                    <div class="row-item">
+                        <div class="row-num">שורה 8</div>
+                        <div>הילה פרץ</div>
+                        <div class="child-id">344625363</div>
+                        <div style="color: #dc3545; font-weight: bold;">❌ לא נמצאת</div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="city-group nomatch">
+                <div class="city-header">🚫 ההדרים 38 קדימה צורן ישראל</div>
+                <div class="city-rows">
+
+                    <div class="row-item">
+                        <div class="row-num">שורה 179</div>
+                        <div>אייל לוי</div>
+                        <div class="child-id">344711999</div>
+                        <div style="color: #dc3545; font-weight: bold;">❌ לא נמצאת</div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="city-group nomatch">
+                <div class="city-header">🚫 חוות יאיר</div>
+                <div class="city-rows">
+
+                    <div class="row-item">
+                        <div class="row-num">שורה 287</div>
+                        <div>יעל הופמן</div>
+                        <div class="child-id">215724097</div>
+                        <div style="color: #dc3545; font-weight: bold;">❌ לא נמצאת</div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="city-group nomatch">
+                <div class="city-header">🚫 חיספין</div>
+                <div class="city-rows">
+
+                    <div class="row-item">
+                        <div class="row-num">שורה 460</div>
+                        <div>רועי בן אילוז</div>
+                        <div class="child-id">215657503</div>
+                        <div style="color: #dc3545; font-weight: bold;">❌ לא נמצאת</div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="city-group nomatch">
+                <div class="city-header">🚫 יבניאל</div>
+                <div class="city-rows">
+
+                    <div class="row-item">
+                        <div class="row-num">שורה 177</div>
+                        <div>יוחאי חדאד</div>
+                        <div class="child-id">341962363</div>
+                        <div style="color: #dc3545; font-weight: bold;">❌ לא נמצאת</div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="city-group nomatch">
+                <div class="city-header">🚫 מגד אלכורום</div>
+                <div class="city-rows">
+
+                    <div class="row-item">
+                        <div class="row-num">שורה 219</div>
+                        <div>ביאן נאסר</div>
+                        <div class="child-id">315480129</div>
+                        <div style="color: #dc3545; font-weight: bold;">❌ לא נמצאת</div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="city-group nomatch">
+                <div class="city-header">🚫 מודעין מכבים רעות</div>
+                <div class="city-rows">
+
+                    <div class="row-item">
+                        <div class="row-num">שורה 182</div>
+                        <div>בן זוארי</div>
+                        <div class="child-id">319129185</div>
+                        <div style="color: #dc3545; font-weight: bold;">❌ לא נמצאת</div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="city-group nomatch">
+                <div class="city-header">🚫 מרר</div>
+                <div class="city-rows">
+
+                    <div class="row-item">
+                        <div class="row-num">שורה 428</div>
+                        <div>שרבל רושרוש</div>
+                        <div class="child-id">233744861</div>
+                        <div style="color: #dc3545; font-weight: bold;">❌ לא נמצאת</div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="city-group nomatch">
+                <div class="city-header">🚫 עובדה</div>
+                <div class="city-rows">
+
+                    <div class="row-item">
+                        <div class="row-num">שורה 218</div>
+                        <div>יותם יאיר לוי</div>
+                        <div class="child-id">340052125</div>
+                        <div style="color: #dc3545; font-weight: bold;">❌ לא נמצאת</div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="city-group nomatch">
+                <div class="city-header">🚫 פרדס חנה כרכור</div>
+                <div class="city-rows">
+
+                    <div class="row-item">
+                        <div class="row-num">שורה 7</div>
+                        <div>בילי</div>
+                        <div class="child-id">235821659</div>
+                        <div style="color: #dc3545; font-weight: bold;">❌ לא נמצאת</div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="city-group nomatch">
+                <div class="city-header">🚫 פתח  תקווה</div>
+                <div class="city-rows">
+
+                    <div class="row-item">
+                        <div class="row-num">שורה 237</div>
+                        <div>נווה יעקב</div>
+                        <div class="child-id">333538403</div>
+                        <div style="color: #dc3545; font-weight: bold;">❌ לא נמצאת</div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="city-group nomatch">
+                <div class="city-header">🚫 פתח תקוה</div>
+                <div class="city-rows">
+
+                    <div class="row-item">
+                        <div class="row-num">שורה 226</div>
+                        <div>הילה יונה</div>
+                        <div class="child-id">338465230</div>
+                        <div style="color: #dc3545; font-weight: bold;">❌ לא נמצאת</div>
+                    </div>
+
+                    <div class="row-item">
+                        <div class="row-num">שורה 294</div>
+                        <div>דניאלה פריג</div>
+                        <div class="child-id">329882054</div>
+                        <div style="color: #dc3545; font-weight: bold;">❌ לא נמצאת</div>
+                    </div>
+
+                    <div class="row-item">
+                        <div class="row-num">שורה 384</div>
+                        <div>אילת ריכטר</div>
+                        <div class="child-id">000000008</div>
+                        <div style="color: #dc3545; font-weight: bold;">❌ לא נמצאת</div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="city-group nomatch">
+                <div class="city-header">🚫 קדימה צורן</div>
+                <div class="city-rows">
+
+                    <div class="row-item">
+                        <div class="row-num">שורה 367</div>
+                        <div>לירן נעים</div>
+                        <div class="child-id">222464604</div>
+                        <div style="color: #dc3545; font-weight: bold;">❌ לא נמצאת</div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="city-group nomatch">
+                <div class="city-header">🚫 קריית אונו</div>
+                <div class="city-rows">
+
+                    <div class="row-item">
+                        <div class="row-num">שורה 135</div>
+                        <div>איה אביקסיס</div>
+                        <div class="child-id">219841459</div>
+                        <div style="color: #dc3545; font-weight: bold;">❌ לא נמצאת</div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="city-group nomatch">
+                <div class="city-header">🚫 קריית חיים</div>
+                <div class="city-rows">
+
+                    <div class="row-item">
+                        <div class="row-num">שורה 444</div>
+                        <div>ליאן אבן צור</div>
+                        <div class="child-id">340168889</div>
+                        <div style="color: #dc3545; font-weight: bold;">❌ לא נמצאת</div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="city-group nomatch">
+                <div class="city-header">🚫 קריית טבעון</div>
+                <div class="city-rows">
+
+                    <div class="row-item">
+                        <div class="row-num">שורה 336</div>
+                        <div>ענר בלוססקי</div>
+                        <div class="child-id">212179204</div>
+                        <div style="color: #dc3545; font-weight: bold;">❌ לא נמצאת</div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="city-group nomatch">
+                <div class="city-header">🚫 קריית מוצקין</div>
+                <div class="city-rows">
+
+                    <div class="row-item">
+                        <div class="row-num">שורה 462</div>
+                        <div>ירדן זגורי</div>
+                        <div class="child-id">322783747</div>
+                        <div style="color: #dc3545; font-weight: bold;">❌ לא נמצאת</div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="city-group nomatch">
+                <div class="city-header">🚫 קריית מלאכי</div>
+                <div class="city-rows">
+
+                    <div class="row-item">
+                        <div class="row-num">שורה 359</div>
+                        <div>נעה איבגי</div>
+                        <div class="child-id">233683119</div>
+                        <div style="color: #dc3545; font-weight: bold;">❌ לא נמצאת</div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="city-group nomatch">
+                <div class="city-header">🚫 קרית ג.</div>
+                <div class="city-rows">
+
+                    <div class="row-item">
+                        <div class="row-num">שורה 284</div>
+                        <div>(דראי)עוזרי נוריאל</div>
+                        <div class="child-id">339141137</div>
+                        <div style="color: #dc3545; font-weight: bold;">❌ לא נמצאת</div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="city-group nomatch">
+                <div class="city-header">🚫 קרית שמואל</div>
+                <div class="city-rows">
+
+                    <div class="row-item">
+                        <div class="row-num">שורה 442</div>
+                        <div>איילה</div>
+                        <div class="child-id">224029629</div>
+                        <div style="color: #dc3545; font-weight: bold;">❌ לא נמצאת</div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="city-group nomatch">
+                <div class="city-header">🚫 שבות רחל</div>
+                <div class="city-rows">
+
+                    <div class="row-item">
+                        <div class="row-num">שורה 194</div>
+                        <div>טליה מעין</div>
+                        <div class="child-id">226147908</div>
+                        <div style="color: #dc3545; font-weight: bold;">❌ לא נמצאת</div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="city-group nomatch">
+                <div class="city-header">🚫 שביל התפוזים קדימה צורן ישראל</div>
+                <div class="city-rows">
+
+                    <div class="row-item">
+                        <div class="row-num">שורה 291</div>
+                        <div>נעמה ראובן</div>
+                        <div class="child-id">225520766</div>
+                        <div style="color: #dc3545; font-weight: bold;">❌ לא נמצאת</div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="city-group nomatch">
+                <div class="city-header">🚫 שיבלי אום אלגנם</div>
+                <div class="city-rows">
+
+                    <div class="row-item">
+                        <div class="row-num">שורה 346</div>
+                        <div>אמין שיבלי</div>
+                        <div class="child-id">341812931</div>
+                        <div style="color: #dc3545; font-weight: bold;">❌ לא נמצאת</div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="city-group nomatch">
+                <div class="city-header">🚫 תל אביב יפו</div>
+                <div class="city-rows">
+
+                    <div class="row-item">
+                        <div class="row-num">שורה 329</div>
+                        <div>נהוראי ניסנוב</div>
+                        <div class="child-id">215663683</div>
+                        <div style="color: #dc3545; font-weight: bold;">❌ לא נמצאת</div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="city-group nomatch">
+                <div class="city-header">🚫 תן אביב</div>
+                <div class="city-rows">
+
+                    <div class="row-item">
+                        <div class="row-num">שורה 23</div>
+                        <div>אביב אלוש</div>
+                        <div class="child-id">343335667</div>
+                        <div style="color: #dc3545; font-weight: bold;">❌ לא נמצאת</div>
+                    </div>
+
+                </div>
+            </div>
+
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p><strong>הוראות:</strong></p>
+            <ul style="list-style: none; margin-top: 10px;">
+                <li>✅ <strong>עיריות תקינות:</strong> 122 עיריות בהצלחה (לא מוצגות בדוח זה)</li>
+                <li>⚠️ <strong>עיריות חלקיות:</strong> בדוק את ההצעה - אם זה נכון אנחנו יכולים להשתמש בעירייה המוצעת</li>
+                <li>❌ <strong>עיריות חסרות:</strong> צור בקשה ל-NPO - בדוק את הטעויות, וספר להם איזה עיריות צריך להוסיף</li>
+            </ul>
+            <p style="margin-top: 15px; font-style: italic;">דוח ממערכת Child Smile | 16.02.2026</p>
+        </div>
+    </div>
+</body>
+</html>

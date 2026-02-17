@@ -71,11 +71,136 @@ from io import BytesIO
 from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill, Alignment
 from django.db.models import Count, F, Q , Prefetch
+from difflib import get_close_matches
 from .utils import *
 from .audit_utils import log_api_action
 from .logger import api_logger
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
+# Load settlements and streets data for import validation
+try:
+    SETTLEMENTS_N_STREETS = {}
+    settlements_path = os.path.join(
+        os.path.dirname(__file__), 
+        '..', 'frontend', 'src', 'components', 'settlements_n_streets.json'
+    )
+    if os.path.exists(settlements_path):
+        with open(settlements_path, 'r', encoding='utf-8') as f:
+            SETTLEMENTS_N_STREETS = json.load(f)
+        # Normalize keys (remove trailing spaces)
+        SETTLEMENTS_N_STREETS = {k.strip(): v for k, v in SETTLEMENTS_N_STREETS.items()}
+except Exception as e:
+    api_logger.warning(f"Failed to load settlements_n_streets.json: {str(e)}")
+    SETTLEMENTS_N_STREETS = {}
+
+
+def find_best_city_match(user_input):
+    """
+    Find the best matching city from the settlements JSON.
+    Uses exact mapping dictionary first, then checks if input contains a known city name.
+    Returns tuple: (matched_city, was_corrected)
+    - matched_city: The best match from valid settlements (or original if no match)
+    - was_corrected: Boolean indicating if correction was made
+    
+    This approach prevents confusing similar cities like מודיעין vs גני מודיעין.
+    """
+    if not user_input or not SETTLEMENTS_N_STREETS:
+        return user_input, False
+    
+    # City mapping dictionary for typos, variants, and prefix removals
+    city_mapping = {
+        # Direct mappings (exact replacement)
+        'תל אביב': 'תל אביב - יפו',
+        'מודיעין': 'מודיעין-מכבים-רעות',
+        'מודעין': 'מודיעין-מכבים-רעות',  # Typo
+        'פתח תקוה': 'פתח תקווה',  # Typo
+        'קריית אתא': 'קרית אתא',  # Variant spelling
+        'קריית נטפים': 'קרית נטפים',  # Variant spelling
+        'יהוד מונוסון': 'יהוד-מונוסון',  # Space to dash
+        
+        # Remove prefixes (קיבוץ, מושב, יישוב)
+        'קיבוץ חפץ חיים': 'חפץ חיים',
+        'מושב בני ראם': 'בני ראם',
+        'מושב חמד': 'חמד',
+        'מושב פורת': 'פורת',
+        'יד רמב״ם (מושב)': 'יד רמבם',
+        'יישוב נופים': 'נופים',
+        
+        # Spelling variants
+        'מגד אל כרום': 'מג\'ד אל-כרום',
+        
+        # Comments extraction - take first part before text
+        'גבעת שמואל אבל עושה שירות': 'גבעת שמואל',
+        'מושה טפחות': 'טפחות',  # Typo: מושה should be מושב
+        'עלי זהב לומד בשדרות': 'עלי זהב',
+        'ירושלים- תא': 'ירושלים',  # Typo: תא is garbage
+        'ראשל״צ': 'ראשון לציון',  # Abbreviation
+        'הדר גנים': 'גנות הדר',  # Alternate name
+        'רעננה(מגדל עוז)': 'רעננה',  # Remove address clarification
+    }
+    
+    # Normalize user input
+    normalized_input = user_input.strip()
+    if not normalized_input:
+        return '', False
+    
+    # Reject "Israel" / "ישראל"
+    if normalized_input.lower() in ['israel', 'ישראל']:
+        return None, False  # Special marker for invalid
+    
+    # Check if exact match exists in settlements JSON
+    if normalized_input in SETTLEMENTS_N_STREETS:
+        return normalized_input, False
+    
+    # Check if exact match exists in mapping dictionary
+    if normalized_input in city_mapping:
+        mapped_city = city_mapping[normalized_input]
+        return mapped_city, True
+    
+    # Check for partial matches (contains) - useful for entries with comments
+    # e.g., "גבעת שמואל אבל..." contains "גבעת שמואל"
+    for key, value in city_mapping.items():
+        if key in normalized_input:
+            return value, True
+    
+    # Return original input (not in mapping, but might be valid)
+    return normalized_input, False
+
+
+def find_best_street_match(user_input, city):
+    """
+    Find the best matching street for a given city.
+    Returns tuple: (matched_street, was_corrected, is_placeholder)
+    - matched_street: The best match from valid streets
+    - was_corrected: Boolean indicating if correction was made
+    - is_placeholder: True if we're using first street or placeholder
+    """
+    if not user_input or not city or not SETTLEMENTS_N_STREETS:
+        return user_input, False, False
+    
+    # Normalize input
+    normalized_input = user_input.strip()
+    if not normalized_input:
+        return None, False, False  # No street provided
+    
+    # Get streets for this city
+    city_normalized = city.strip() if isinstance(city, str) else city
+    streets = SETTLEMENTS_N_STREETS.get(city_normalized, [])
+    if not streets:
+        return normalized_input, False, False  # City not in JSON, return original street
+    
+    # Check exact match
+    if normalized_input in streets:
+        return normalized_input, False, False
+    
+    # Try fuzzy matching
+    matches = get_close_matches(normalized_input, streets, n=1, cutoff=0.6)
+    if matches:
+        return matches[0], normalized_input != matches[0], False
+    
+    # No match found
+    return normalized_input, False, False
 
 
 @conditional_csrf
@@ -2093,6 +2218,64 @@ def import_families_endpoint(request):
                     except Exception:
                         birth_date = None
                 
+                # === CREATE RECORD ===
+                # Parse optional fields
+                city_raw = row.get(col_city, '')
+                city_original = '' if (city_raw is None or pd.isna(city_raw) or str(city_raw).lower() == 'nan') else str(city_raw).strip()
+                
+                # Remove commas and extra spaces from city
+                city_original = city_original.replace(',', '').strip() if city_original else ''
+                
+                # Try to find best city match in settlements JSON
+                city_matched, city_was_corrected = find_best_city_match(city_original)
+                
+                # Check if "Israel" was rejected
+                if city_matched is None:
+                    result['status'] = 'Skipped'
+                    result['details'] = 'דילוג: עיר = "ישראל" - זה לא עיר, יש למחוק או להחליף'
+                    skipped_count += 1
+                    if city_was_corrected:
+                        result['enum_warnings'].append(f'עיר תוקנה: "{city_original}" → בוטלה ("ישראל")')
+                    results.append(result)
+                    continue
+                
+                city = city_matched if city_matched else city_original
+                if city_was_corrected:
+                    result['enum_warnings'].append(f'עיר תוקנה: "{city_original}" → "{city}"')
+                
+                # Parse street/address from Excel
+                street_address_raw = row.get(col_street_address, '')
+                street_address_original = '' if (street_address_raw is None or pd.isna(street_address_raw) or str(street_address_raw).lower() == 'nan') else str(street_address_raw).strip()
+                
+                # Remove commas and extra spaces from street
+                street_address_original = street_address_original.replace(',', '').strip() if street_address_original else ''
+                
+                # Try to find best street match
+                street_matched, street_was_corrected, _ = find_best_street_match(street_address_original, city)
+                
+                street_address = street_matched if street_matched else street_address_original
+                if street_was_corrected and street_matched:
+                    result['enum_warnings'].append(f'רחוב תוקן: "{street_address_original}" → "{street_address}"')
+                
+                # Validate required address fields
+                # City is REQUIRED (already validated above with fuzzy matching)
+                if not city:
+                    result['status'] = 'Error'
+                    result['details'] = 'שגיאה: עיר חסרה (עמודה K) - חובה מלא'
+                    result['enum_warnings'].append('עיר חסרה')
+                    error_count += 1
+                    results.append(result)
+                    continue
+                
+                # Street is REQUIRED
+                if not street_address:
+                    result['status'] = 'Error'
+                    result['details'] = 'שגיאה: כתובת רחוב חסרה (עמודה J) - חובה מלא'
+                    result['enum_warnings'].append('כתובת רחוב חסרה - אנא עדכן או קח קשר עם מנהל המערכת')
+                    error_count += 1
+                    results.append(result)
+                    continue
+                
                 # Dry run - validate with enum checks
                 if dry_run:
                     # Parse optional fields for enum validation
@@ -2133,13 +2316,11 @@ def import_families_endpoint(request):
                     results.append(result)
                     continue
                 
-                # === CREATE RECORD ===
-                # Parse optional fields
-                city_raw = row.get(col_city, '')
-                city = '' if (city_raw is None or pd.isna(city_raw) or str(city_raw).lower() == 'nan') else str(city_raw).strip()
-                
                 phone_raw = row.get(col_phone, '')
                 phone = '' if (phone_raw is None or pd.isna(phone_raw) or str(phone_raw).lower() == 'nan') else str(phone_raw).strip()
+                
+                # Remove commas from phone
+                phone = phone.replace(',', '').strip() if phone else ''
                 
                 # Format phone: remove dashes/spaces, pad to 10 digits with trailing zeros if needed
                 if phone:
@@ -2158,11 +2339,13 @@ def import_families_endpoint(request):
                 
                 hospital_raw = row.get(col_hospital, '')
                 hospital = '' if (hospital_raw is None or pd.isna(hospital_raw) or str(hospital_raw).lower() == 'nan') else str(hospital_raw).strip()
-                # Trim trailing spaces from hospital name
-                hospital = hospital.rstrip() if hospital else ''
+                # Remove commas and trim spaces
+                hospital = hospital.replace(',', '').strip() if hospital else ''
                 
                 diagnosis_raw = row.get(col_diagnosis, '')
                 diagnosis = '' if (diagnosis_raw is None or pd.isna(diagnosis_raw) or str(diagnosis_raw).lower() == 'nan') else str(diagnosis_raw).strip()
+                # Remove commas and trim spaces
+                diagnosis = diagnosis.replace(',', '').strip() if diagnosis else ''
                 
                 # Parse street/address from Excel
                 street_address_raw = row.get(col_street_address, '')
@@ -2500,6 +2683,8 @@ def import_families_endpoint(request):
                             num_of_siblings = 0
                     except (ValueError, TypeError):
                         num_of_siblings = 0
+                
+                # (Address validation already done earlier - applies to both dry-run and wet-run)
                 
                 # Determine responsible_coordinator based on medical status and tutoring status
                 # Pass child_status (final_status) to handle בריא/ז״ל children (they get "ללא")

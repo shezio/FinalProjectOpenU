@@ -1014,45 +1014,61 @@ const Families = () => {
                   {/* Left Arrows */}
                   <button
                     onClick={() => setPage(1)} // Go to the first page
-                    disabled={page === 1}
+                    disabled={page === 1 || totalCount <= pageSize}
                     className="pagination-arrow"
                   >
                     &laquo; {/* Double left arrow */}
                   </button>
                   <button
                     onClick={() => setPage(page - 1)} // Go to the previous page
-                    disabled={page === 1}
+                    disabled={page === 1 || totalCount <= pageSize}
                     className="pagination-arrow"
                   >
                     &lsaquo; {/* Single left arrow */}
                   </button>
 
-                  {/* Page Numbers */}
-                  {totalCount <= pageSize ? (
-                    <button className="active">1</button> // Display only "1" if there's only one page
-                  ) : (
-                    Array.from({ length: Math.ceil(totalCount / pageSize) }, (_, i) => (
-                      <button
-                        key={i + 1}
-                        onClick={() => setPage(i + 1)}
-                        className={page === i + 1 ? 'active' : ''}
-                      >
-                        {i + 1}
-                      </button>
-                    ))
-                  )}
+                  {/* Page Numbers - Show max 5 pages */}
+                  {(() => {
+                    const totalPages = Math.ceil(totalCount / pageSize);
+                    if (totalPages <= 1) {
+                      return <button className="active">1</button>;
+                    }
+                    
+                    const maxButtons = 5;
+                    let startPage = Math.max(1, page - Math.floor(maxButtons / 2));
+                    let endPage = Math.min(totalPages, startPage + maxButtons - 1);
+                    
+                    // Adjust start if we're near the end
+                    if (endPage - startPage + 1 < maxButtons) {
+                      startPage = Math.max(1, endPage - maxButtons + 1);
+                    }
+                    
+                    const pages = [];
+                    for (let i = startPage; i <= endPage; i++) {
+                      pages.push(
+                        <button
+                          key={i}
+                          onClick={() => setPage(i)}
+                          className={page === i ? 'active' : ''}
+                        >
+                          {i}
+                        </button>
+                      );
+                    }
+                    return pages;
+                  })()}
 
                   {/* Right Arrows */}
                   <button
                     onClick={() => setPage(page + 1)} // Go to the next page
-                    disabled={page === Math.ceil(totalCount / pageSize) || totalCount <= 1}
+                    disabled={page === Math.ceil(totalCount / pageSize) || totalCount <= pageSize}
                     className="pagination-arrow"
                   >
                     &rsaquo; {/* Single right arrow */}
                   </button>
                   <button
                     onClick={() => setPage(Math.ceil(totalCount / pageSize))} // Go to the last page
-                    disabled={page === Math.ceil(totalCount / pageSize) || totalCount <= 1}
+                    disabled={page === Math.ceil(totalCount / pageSize) || totalCount <= pageSize}
                     className="pagination-arrow"
                   >
                     &raquo; {/* Double right arrow */}
