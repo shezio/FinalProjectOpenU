@@ -89,35 +89,46 @@ def calculate_possible_matches(request):
         possible_matches = fetch_possible_matches()
         api_logger.debug(f"DEBUG: Fetched {len(possible_matches)} possible matches.")
 
-        # Step 3: Calculate distances and coordinates
-        possible_matches = calculate_distances(possible_matches)
-        api_logger.debug(f"DEBUG: Calculated distances and coordinates for possible matches.")
+        # Step 3a: Calculate distances and coordinates for FIRST 200 MATCHES (pagination)
+        # This gives user ~28 pages of results (7 rows per page) to see pagination benefits
+        paginated_matches = calculate_distances(possible_matches, limit=200)
+        api_logger.debug(f"DEBUG: Calculated distances for first 200 matches (total {len(possible_matches)} available).")
 
-        # Step 4: Calculate grades
-        graded_matches = calculate_grades(possible_matches)
-        api_logger.debug(f"DEBUG: Calculated grades for matches.")
+        # Step 3b: Async calculate distances for REST OF MATCHES in background (fire-and-forget)
+        # This runs concurrently while user browses the first 200
+        if len(possible_matches) > 200:
+            rest_of_matches = possible_matches[200:]
+            def async_calculate_rest():
+                try:
+                    calculate_distances(rest_of_matches)
+                    api_logger.debug(f"DEBUG: Background distance calculation completed for {len(rest_of_matches)} matches")
+                except Exception as e:
+                    api_logger.warning(f"WARNING: Background distance calculation failed: {str(e)[:100]}")
+            
+            threading.Thread(target=async_calculate_rest, daemon=True).start()
+
+        # Step 4: Calculate grades for paginated matches only
+        graded_matches = calculate_grades(paginated_matches)
+        api_logger.debug(f"DEBUG: Calculated grades for {len(graded_matches)} paginated matches.")
 
         # --- PRINT ALL TUTORS INCLUDED IN MATCHES ---
         tutor_ids = set(match["tutor_id"] for match in graded_matches)
         tutors = Tutors.objects.filter(id_id__in=tutor_ids).select_related("staff")
-        api_logger.verbose("VERBOSE: Tutors included in matches:")
+        api_logger.verbose("VERBOSE: Tutors included in first 30 matches:")
         for t in tutors:
             api_logger.verbose(
                 f"VERBOSE: staff={t.staff.first_name} {t.staff.last_name}, id={t.id_id}"
             )
 
-        #Step 5: Clear the possiblematches table
-        api_logger.debug("DEBUG: Clearing possible matches table.")
-        clear_possible_matches()
+        # Step 5: Upsert ALL MATCHES (including those not yet with distances calculated)
+        # This populates the database for report + lazy-loading
+        api_logger.debug("DEBUG: Upserting ALL possible matches to database (including rest).")
+        upsert_stats = upsert_possible_matches(possible_matches)
+        api_logger.debug(f"DEBUG: Upsert complete - {upsert_stats}")
 
-        # Step 6: Insert new matches (ALL matches - for the report to use)
-        api_logger.debug(f"DEBUG: Inserting {len(graded_matches)} new matches into the database.")
-        insert_new_matches(graded_matches)
-
-        api_logger.debug("DEBUG: New matches inserted successfully.")
         api_logger.debug("DEBUG: Possible matches calculation completed.")
 
-        # Step 7: Filter matches for wizard UI - only show children with 0 active/pending tutors
+        # Step 6: Filter matches for wizard UI - only show children with 0 active/pending tutors
         # The full data is in PossibleMatches table for the report to use
         children_with_tutors = set(
             Tutorships.objects.filter(
@@ -128,12 +139,19 @@ def calculate_possible_matches(request):
             match for match in graded_matches 
             if match['child_id'] not in children_with_tutors
         ]
-        api_logger.debug(f"DEBUG: Filtered to {len(wizard_matches)} matches for wizard (children with 0 tutors).")
+        
+        # Compute total (before filtering) for pagination
+        total_possible = len(possible_matches)
+        
+        api_logger.debug(f"DEBUG: Filtered to {len(wizard_matches)} matches for wizard (children with 0 tutors). Total available: {total_possible}.")
 
         return JsonResponse(
             {
                 "message": "Possible matches calculated successfully.",
                 "matches": wizard_matches,
+                "total_count": total_possible,
+                "has_more": total_possible > 200,
+                "page_size": 200,
             },
             status=200,
         )
@@ -158,6 +176,101 @@ def calculate_possible_matches(request):
             error_message=str(e),
             status_code=500
         )
+        return JsonResponse({"error": str(e)}, status=500)
+
+
+@conditional_csrf
+@api_view(["GET"])
+def get_more_possible_matches(request):
+    """
+    Lazy-load pagination endpoint for possible matches.
+    
+    Query params:
+    - offset: Starting index (default 30 for second page)
+    - limit: Number of results per page (default 100)
+    
+    Returns:
+    - matches: Array of match objects
+    - offset: Current offset
+    - limit: Items per page
+    - has_more: Whether there are more results
+    - total_count: Total number of matches available
+    """
+    api_logger.info("get_more_possible_matches called")
+    try:
+        # Check permissions
+        check_matches_permissions(request, ["VIEW"])
+        
+        # Get pagination parameters
+        offset = int(request.GET.get('offset', 30))
+        limit = int(request.GET.get('limit', 100))
+        
+        # Validate parameters
+        if offset < 0:
+            offset = 30
+        if limit < 1 or limit > 1000:
+            limit = 100
+        
+        api_logger.debug(f"DEBUG: Fetching matches from offset {offset} with limit {limit}")
+        
+        # Fetch matches from database (already calculated and stored by calculate_possible_matches)
+        all_matches = PossibleMatches.objects.all().order_by('grade').reverse()
+        total_count = all_matches.count()
+        
+        # Paginate
+        paginated_matches = all_matches[offset:offset + limit]
+        
+        # Convert to dict format
+        matches_data = [
+            {
+                "child_id": m.child_id,
+                "tutor_id": m.tutor_id,
+                "child_full_name": m.child_full_name,
+                "tutor_full_name": m.tutor_full_name,
+                "child_city": m.child_city,
+                "tutor_city": m.tutor_city,
+                "child_age": m.child_age,
+                "tutor_age": m.tutor_age,
+                "child_gender": m.child_gender,
+                "tutor_gender": m.tutor_gender,
+                "distance_between_cities": m.distance_between_cities,
+                "grade": m.grade,
+                "is_used": m.is_used,
+            }
+            for m in paginated_matches
+        ]
+        
+        # Filter for wizard (children with 0 active tutors)
+        children_with_tutors = set(
+            Tutorships.objects.filter(
+                ~Q(tutorship_activation='inactive')
+            ).values_list('child_id', flat=True)
+        )
+        wizard_matches = [
+            m for m in matches_data
+            if m['child_id'] not in children_with_tutors
+        ]
+        
+        api_logger.debug(f"DEBUG: Returning {len(wizard_matches)} matches from offset {offset}")
+        
+        return JsonResponse(
+            {
+                "message": "Matches retrieved successfully.",
+                "matches": wizard_matches,
+                "offset": offset,
+                "limit": limit,
+                "total_count": total_count,
+                "has_more": (offset + limit) < total_count,
+            },
+            status=200,
+        )
+    
+    except PermissionError as e:
+        api_logger.error(f"Permission error: {str(e)}")
+        return JsonResponse({"error": str(e)}, status=403)
+    
+    except Exception as e:
+        api_logger.error(f"An error occurred in get_more_possible_matches: {str(e)}")
         return JsonResponse({"error": str(e)}, status=500)
 
 
