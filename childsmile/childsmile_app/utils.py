@@ -405,12 +405,15 @@ def fetch_possible_matches():
         -- Only include active staff members
         AND staff.is_active = TRUE
         -- Exclude deceased and healthy children (use parameterized query to avoid encoding issues)
-        AND child.status NOT IN (%s, %s);
+        AND child.status NOT IN (%s, %s)
+        -- Exclude irrelevant tutoring statuses (no point matching if they don't want/aren't relevant)
+        AND child.tutoring_status NOT IN (%s, %s);
     """
     # Use parameterized query for Hebrew values to avoid encoding issues with special characters
     excluded_statuses = ('ז״ל', 'בריא')
+    excluded_tutoring_statuses = ('לא_רוצים', 'לא_רלוונטי')
     with connection.cursor() as cursor:
-        cursor.execute(query, excluded_statuses)
+        cursor.execute(query, excluded_statuses + excluded_tutoring_statuses)
         rows = cursor.fetchall()
         if not rows:
             return []  # Ensure it returns a list
