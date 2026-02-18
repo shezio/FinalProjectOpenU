@@ -17,6 +17,7 @@ from .models import (
     PossibleMatches,  # Add this line
     InitialFamilyData,
     PrevTutorshipStatuses,
+    SettlementsStreets
 )
 from .unused_views import (
     PermissionsViewSet,
@@ -78,37 +79,221 @@ from .logger import api_logger
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-# Load settlements and streets data for import validation
-try:
-    SETTLEMENTS_N_STREETS = {}
-    settlements_path = os.path.join(
-        os.path.dirname(__file__), 
-        '..', 'frontend', 'src', 'components', 'settlements_n_streets.json'
-    )
-    if os.path.exists(settlements_path):
-        with open(settlements_path, 'r', encoding='utf-8') as f:
-            SETTLEMENTS_N_STREETS = json.load(f)
-        # Normalize keys (remove trailing spaces)
-        SETTLEMENTS_N_STREETS = {k.strip(): v for k, v in SETTLEMENTS_N_STREETS.items()}
-except Exception as e:
-    api_logger.warning(f"Failed to load settlements_n_streets.json: {str(e)}")
-    SETTLEMENTS_N_STREETS = {}
+# Load settlements and streets data from database for import validation
+def get_settlements_dict():
+    """
+    Load settlements and streets from database table.
+    Returns dict format: {city_name: [streets]}
+    """
+    try:
+        settlements_dict = {}
+        settlements = SettlementsStreets.objects.all().values('city_name', 'streets')
+        for item in settlements:
+            city_name = item['city_name']
+            streets = item['streets'] if item['streets'] else []
+            settlements_dict[city_name] = streets
+        return settlements_dict
+    except Exception as e:
+        api_logger.warning(f"Failed to load settlements from database: {str(e)}")
+        return {}
+
+# Load settlements at startup for import validation (will be refreshed on each use)
+SETTLEMENTS_N_STREETS = get_settlements_dict()
+
+
+# Fallback special values dict for the 5 problematic rows that fail all other mechanisms
+# Keys use * as wildcard (each part around * must appear in input)
+# Values are the exact correct database values
+FIVE_SPECIAL_VALUES = {
+    # Cities
+    'דגניה א"': 'דגניה א\'',  # Exact match with double quote
+    'דגניה ב"': 'דגניה ב\'',  # Exact match with double quote
+    'כרום': 'מג\'ד אל-כרום',  # If input contains "כרום", return full city name
+    
+    # Streets - patterns with * as wildcard (each part must be in input)
+    'דולצ*אריה': 'דולצ\'ין אריה',  # If input has "דולצ" and "אריה", return this street
+    'בוטינסקי': 'ז\'בוטינסקי',  # If input contains "בוטינסקי", return this street
+    'פרופ*צ*חנובר*אהרון': 'פרופ׳ צ׳חנובר אהרון',  # If input has all 4 parts, return this street
+}
+
+
+def match_special_pattern(user_input, pattern_key):
+    """
+    Check if user_input matches a pattern_key from FIVE_SPECIAL_VALUES.
+    Patterns use * as wildcard - all parts around * must appear in input (in order).
+    
+    Examples:
+    - pattern: "דולצ*אריה" matches: "דולצין אריה", "דולצ׳ין אריה", etc.
+    - pattern: "כרום" matches any input containing "כרום"
+    - pattern: "פרופ*צ*חנובר*אהרון" matches input with all 4 parts in order
+    
+    Returns: True if pattern matches, False otherwise
+    """
+    if not user_input:
+        return False
+    
+    if '*' not in pattern_key:
+        # Simple substring match
+        return pattern_key in user_input
+    
+    # Split by * to get parts that must appear in order
+    parts = pattern_key.split('*')
+    pos = 0
+    
+    for part in parts:
+        if not part:  # Skip empty parts
+            continue
+        idx = user_input.find(part, pos)
+        if idx == -1:
+            return False
+        pos = idx + len(part)
+    
+    return True
+
+
+def get_special_value_if_matched(user_input):
+    """
+    Check if user_input matches any pattern in FIVE_SPECIAL_VALUES.
+    If it matches, return the corresponding exact database value.
+    Returns: (matched_value, was_matched) or (None, False)
+    """
+    if not user_input:
+        return None, False
+    
+    for pattern_key, db_value in FIVE_SPECIAL_VALUES.items():
+        if match_special_pattern(user_input, pattern_key):
+            return db_value, True
+    
+    return None, False
+
+
+def normalize_special_chars(text):
+    """
+    Normalize special characters for fuzzy matching.
+    Removes/normalizes: apostrophes, commas, dashes, quotes, etc.
+    Returns normalized text suitable for comparison.
+    
+    Examples:
+    - "מג׳ד אל-כרום" → "מגד אל כרום"
+    - "דולצ׳ין אריה" → "דולצין אריה"
+    - "בן-גוריון" → "בן גוריון"
+    """
+    if not text:
+        return ""
+    
+    # Replace various quote/apostrophe characters with nothing
+    text = text.replace("׳", "")  # Hebrew geresh (׳)
+    text = text.replace("'", "")  # Regular apostrophe (')
+    text = text.replace("`", "")  # Backtick
+    text = text.replace("´", "")  # Acute accent
+    
+    # Replace dashes/hyphens with space
+    text = text.replace("-", " ")
+    text = text.replace("–", " ")  # En dash
+    text = text.replace("—", " ")  # Em dash
+    
+    # Replace commas with space
+    text = text.replace(",", " ")
+    
+    # Normalize multiple spaces to single space
+    text = " ".join(text.split())
+    
+    return text.strip()
+
+
+def find_city_by_normalized_match(user_input, settlements_dict):
+    """
+    Find a city in settlements_dict by normalizing special characters.
+    If exact match fails, try fuzzy match with normalized versions.
+    
+    Returns: (matched_city, was_corrected)
+    - matched_city: The exact city name from DB (with correct punctuation)
+    - was_corrected: Boolean indicating if correction was made
+    """
+    if not user_input or not settlements_dict:
+        return None, False
+    
+    normalized_input = normalize_special_chars(user_input.strip())
+    if not normalized_input:
+        return None, False
+    
+    # Try exact match first (after normalization)
+    for city in settlements_dict.keys():
+        normalized_city = normalize_special_chars(city)
+        if normalized_input == normalized_city:
+            was_corrected = (user_input.strip() != city)
+            return city, was_corrected
+    
+    # Try fuzzy matching with normalized versions
+    normalized_cities = {normalize_special_chars(city): city for city in settlements_dict.keys()}
+    matches = get_close_matches(normalized_input, normalized_cities.keys(), n=1, cutoff=0.75)
+    
+    if matches:
+        matched_normalized = matches[0]
+        matched_city = normalized_cities[matched_normalized]
+        was_corrected = (user_input.strip() != matched_city)
+        return matched_city, was_corrected
+    
+    return None, False
+
+
+def find_street_by_normalized_match(user_input, streets_list):
+    """
+    Find a street in streets_list by normalizing special characters.
+    Returns: (matched_street, was_corrected)
+    - matched_street: The exact street name from DB (with correct punctuation)
+    - was_corrected: Boolean indicating if correction was made
+    """
+    if not user_input or not streets_list:
+        return None, False
+    
+    normalized_input = normalize_special_chars(user_input.strip())
+    if not normalized_input:
+        return None, False
+    
+    # Try exact match first (after normalization)
+    for street in streets_list:
+        normalized_street = normalize_special_chars(street)
+        if normalized_input == normalized_street:
+            was_corrected = (user_input.strip() != street)
+            return street, was_corrected
+    
+    # Try fuzzy matching with normalized versions
+    normalized_streets = {normalize_special_chars(street): street for street in streets_list}
+    matches = get_close_matches(normalized_input, normalized_streets.keys(), n=1, cutoff=0.75)
+    
+    if matches:
+        matched_normalized = matches[0]
+        matched_street = normalized_streets[matched_normalized]
+        was_corrected = (user_input.strip() != matched_street)
+        return matched_street, was_corrected
+    
+    return None, False
 
 
 def find_best_city_match(user_input):
     """
-    Find the best matching city from the settlements JSON.
-    Uses exact mapping dictionary first, then checks if input contains a known city name.
+    Find the best matching city from the settlements database.
+    Uses: exact mapping → normalized match (handles apostrophes/dashes) → fuzzy match
     Returns tuple: (matched_city, was_corrected)
     - matched_city: The best match from valid settlements (or original if no match)
     - was_corrected: Boolean indicating if correction was made
     
-    This approach prevents confusing similar cities like מודיעין vs גני מודיעין.
+    This approach handles special characters (apostrophes, dashes, commas) in names.
     """
     if not user_input or not SETTLEMENTS_N_STREETS:
         return user_input, False
     
-    # City mapping dictionary for typos, variants, and prefix removals
+    # Normalize user input
+    normalized_input = user_input.strip()
+    if not normalized_input:
+        return '', False
+    
+    # Reject "Israel" / "ישראל"
+    if normalized_input.lower() in ['israel', 'ישראל']:
+        return None, False  # Special marker for invalid
+    
+    # City mapping dictionary for known typos, variants, and prefix removals
     city_mapping = {
         # Direct mappings (exact replacement)
         'תל אביב': 'תל אביב - יפו',
@@ -129,6 +314,8 @@ def find_best_city_match(user_input):
         
         # Spelling variants
         'מגד אל כרום': 'מג\'ד אל-כרום',
+        'מג׳ד אל כרום': 'מג\'ד אל-כרום',  # Excel geresh variant
+        'מג׳ד אל-כרום': 'מג\'ד אל-כרום',  # Direct match with geresh
         
         # Comments extraction - take first part before text
         'גבעת שמואל אבל עושה שירות': 'גבעת שמואל',
@@ -140,47 +327,120 @@ def find_best_city_match(user_input):
         'רעננה(מגדל עוז)': 'רעננה',  # Remove address clarification
     }
     
-    # Normalize user input
-    normalized_input = user_input.strip()
-    if not normalized_input:
-        return '', False
-    
-    # Reject "Israel" / "ישראל"
-    if normalized_input.lower() in ['israel', 'ישראל']:
-        return None, False  # Special marker for invalid
-    
-    # Check if exact match exists in settlements JSON
-    if normalized_input in SETTLEMENTS_N_STREETS:
-        return normalized_input, False
-    
-    # Check if exact match exists in mapping dictionary
+    # **STEP 1: Check if exact match exists in hardcoded mapping dictionary FIRST (before normalization)**
     if normalized_input in city_mapping:
         mapped_city = city_mapping[normalized_input]
         return mapped_city, True
     
-    # Check for partial matches (contains) - useful for entries with comments
+    # **STEP 2: Check for partial matches in mapping (useful for entries with comments)**
     # e.g., "גבעת שמואל אבל..." contains "גבעת שמואל"
     for key, value in city_mapping.items():
         if key in normalized_input:
             return value, True
     
+    # **STEP 3: Try normalized matching (handles apostrophes, dashes, commas)**
+    matched_city, was_corrected = find_city_by_normalized_match(normalized_input, SETTLEMENTS_N_STREETS)
+    if matched_city:
+        return matched_city, was_corrected
+    
+    # **STEP 4: Fallback - Check special values (for the 5 problematic rows that fail everything else)**
+    special_value, was_matched = get_special_value_if_matched(normalized_input)
+    if special_value:
+        return special_value, True  # Mark as corrected since it's a fallback
+    
     # Return original input (not in mapping, but might be valid)
     return normalized_input, False
+
+
+def extract_street_and_apartment(user_input, city):
+    """
+    Extract street name and apartment number from combined input.
+    Works like the manual modal: searches for valid street name in JSON,
+    returns the matched street and remaining text as apartment number.
+    Uses normalized matching to handle special characters.
+    
+    Returns tuple: (street_name, apartment_number, is_valid)
+    - street_name: The street name found in JSON (or None if not found)
+    - apartment_number: The remaining text (or empty string)
+    - is_valid: True if street was found in JSON
+    
+    Examples:
+    - "אין רחוב 1" → ("אין רחוב", "1", True)
+    - "פטל 11" → ("פטל", "11", True)
+    - "בנימין 276" → ("בנימין", "276", True)
+    - "אבן גבירול 29" → ("אבן גבירול", "29", True)
+    - "עיר תל אביב" → (None, "עיר תל אביב", False)
+    """
+    if not user_input or not city or not SETTLEMENTS_N_STREETS:
+        return None, user_input or '', False
+    
+    # Normalize input
+    normalized_input = user_input.strip()
+    if not normalized_input:
+        return None, '', False
+    
+    # Get streets for this city
+    city_normalized = city.strip() if isinstance(city, str) else city
+    streets = SETTLEMENTS_N_STREETS.get(city_normalized, [])
+    if not streets:
+        return None, normalized_input, False  # City not in JSON
+    
+    # **STEP 1: Try normalized matching (handles apostrophes, dashes, commas)**
+    # This will match "דולצ׳ין אריה" even if user typed "דולצין אריה"
+    matched_street, was_corrected = find_street_by_normalized_match(normalized_input, streets)
+    if matched_street:
+        # Extract apartment number (if any) from the input after the matched street
+        apartment = normalized_input[len(normalize_special_chars(matched_street)):].strip()
+        return matched_street, apartment, True
+    
+    # Try to find a street name that matches the beginning or is contained in the input
+    # Sort by length (longest first) to match "אבן גבירול" before "אבן"
+    sorted_streets = sorted(streets, key=len, reverse=True)
+    
+    for street in sorted_streets:
+        street_stripped = street.strip()
+        if not street_stripped:
+            continue
+        
+        # Exact match
+        if normalized_input == street_stripped:
+            return street_stripped, '', True
+        
+        # Input starts with street name + space (e.g., "פטל 11" matches "פטל")
+        if normalized_input.startswith(street_stripped + ' '):
+            apartment = normalized_input[len(street_stripped):].strip()
+            return street_stripped, apartment, True
+        
+        # Input starts with street name exactly (e.g., "פטל" with nothing after)
+        if normalized_input.startswith(street_stripped):
+            # Check if it's followed by space or digit or is exact match
+            remainder = normalized_input[len(street_stripped):]
+            if not remainder or remainder[0] in ' 0123456789/-':
+                apartment = remainder.strip()
+                return street_stripped, apartment, True
+    
+    # No street found in JSON
+    return None, normalized_input, False
 
 
 def find_best_street_match(user_input, city):
     """
     Find the best matching street for a given city.
+    Uses: exact mapping → normalized match (handles apostrophes/dashes) → fuzzy match
     Returns tuple: (matched_street, was_corrected, is_placeholder)
     - matched_street: The best match from valid streets
     - was_corrected: Boolean indicating if correction was made
     - is_placeholder: True if we're using first street or placeholder
+    
+    This approach handles special characters (apostrophes, dashes, commas) in street names.
     """
     if not user_input or not city or not SETTLEMENTS_N_STREETS:
         return user_input, False, False
     
-    # Normalize input
-    normalized_input = user_input.strip()
+    # Keep original user input before normalization
+    original_input = user_input.strip()
+    normalized_input = original_input  # Will be re-normalized later if needed
+    
     if not normalized_input:
         return None, False, False  # No street provided
     
@@ -190,17 +450,44 @@ def find_best_street_match(user_input, city):
     if not streets:
         return normalized_input, False, False  # City not in JSON, return original street
     
-    # Check exact match
+    # **EXACT DIRECT MAPPINGS** - Excel geresh (׳) to DB apostrophe (')
+    # Map EXACTLY to database values for the 5 problematic rows
+    street_mapping = {
+        'באר שבע': {},  # Removed - use normalized matching instead
+        'בני ברק': {},  # Removed - use normalized matching instead
+        'רחובות': {},  # Removed - use normalized matching instead
+    }
+    
+    # **STEP 1: Check if exact match exists in city-specific mapping FIRST (before normalization)**
+    if city_normalized in street_mapping:
+        if original_input in street_mapping[city_normalized]:
+            mapped_street = street_mapping[city_normalized][original_input]
+            return mapped_street, True, False
+    
+    # Now normalize for further matching
+    normalized_input = normalize_special_chars(original_input)
+    
+    # **STEP 2: Try normalized matching (handles apostrophes, dashes, commas)**
+    matched_street, was_corrected = find_street_by_normalized_match(original_input, streets)
+    if matched_street:
+        return matched_street, was_corrected, False
+    
+    # **STEP 3: Check exact match**
     if normalized_input in streets:
         return normalized_input, False, False
     
-    # Try fuzzy matching
+    # **STEP 4: Try fuzzy matching**
     matches = get_close_matches(normalized_input, streets, n=1, cutoff=0.6)
     if matches:
         return matches[0], normalized_input != matches[0], False
     
+    # **STEP 5: Fallback - Check special values (for the 5 problematic rows that fail everything else)**
+    special_value, was_matched = get_special_value_if_matched(original_input)
+    if special_value:
+        return special_value, True, False  # Mark as corrected since it's a fallback
+    
     # No match found
-    return normalized_input, False, False
+    return original_input, False, False
 
 
 @conditional_csrf
@@ -1985,6 +2272,11 @@ def import_families_endpoint(request):
         
         api_logger.info(f"Import permission granted for user: {user.email}")
         
+        # Refresh settlements data from database
+        global SETTLEMENTS_N_STREETS
+        SETTLEMENTS_N_STREETS = get_settlements_dict()
+        api_logger.info(f"Loaded {len(SETTLEMENTS_N_STREETS)} settlements from database")
+        
         # Get uploaded file
         if 'file' not in request.FILES:
             return JsonResponse(
@@ -2052,7 +2344,9 @@ def import_families_endpoint(request):
         col_diagnosis_date = find_column(['תאריך אבחון', 'תאריך אבחנה']) or 'תאריך אבחון'
         col_num_of_siblings = find_column(['כמה אחים יש?', 'כמה אחים יש? (בנוסף לילד/ה החולים)', 'מספר אחים']) or 'כמה אחים יש?'
         col_registration_date = find_column(['תאריך רישום']) or 'תאריך רישום'
-        col_street_address = find_column(['רחוב ומס דירה', 'רחוב וספר דירה', 'כתובת']) or 'רחוב ומס דירה'
+        # NEW: Find TWO separate columns for street and apartment
+        col_street = find_column(['רחוב']) or 'רחוב'
+        col_apartment = find_column(['מס׳ דירה', 'מס דירה']) or 'מס׳ דירה'
         col_medical_state = find_column(['מצב רפואי עדכני', 'מצב רפואי']) or 'מצב רפואי עדכני'
         col_completed_treatments = find_column(['האם סיים/ה טיפולים?', 'סיום טיפולים']) or 'האם סיים/ה טיפולים?'
         col_treatment_end_protocol = find_column(['צפי סיום על פי פרוטוקול?', 'תאריך סיום צפוי']) or 'צפי סיום על פי פרוטוקול?'
@@ -2226,40 +2520,9 @@ def import_families_endpoint(request):
                 # Remove commas and extra spaces from city
                 city_original = city_original.replace(',', '').strip() if city_original else ''
                 
-                # Try to find best city match in settlements JSON
-                city_matched, city_was_corrected = find_best_city_match(city_original)
-                
-                # Check if "Israel" was rejected
-                if city_matched is None:
-                    result['status'] = 'Skipped'
-                    result['details'] = 'דילוג: עיר = "ישראל" - זה לא עיר, יש למחוק או להחליף'
-                    skipped_count += 1
-                    if city_was_corrected:
-                        result['enum_warnings'].append(f'עיר תוקנה: "{city_original}" → בוטלה ("ישראל")')
-                    results.append(result)
-                    continue
-                
-                city = city_matched if city_matched else city_original
-                if city_was_corrected:
-                    result['enum_warnings'].append(f'עיר תוקנה: "{city_original}" → "{city}"')
-                
-                # Parse street/address from Excel
-                street_address_raw = row.get(col_street_address, '')
-                street_address_original = '' if (street_address_raw is None or pd.isna(street_address_raw) or str(street_address_raw).lower() == 'nan') else str(street_address_raw).strip()
-                
-                # Remove commas and extra spaces from street
-                street_address_original = street_address_original.replace(',', '').strip() if street_address_original else ''
-                
-                # Try to find best street match
-                street_matched, street_was_corrected, _ = find_best_street_match(street_address_original, city)
-                
-                street_address = street_matched if street_matched else street_address_original
-                if street_was_corrected and street_matched:
-                    result['enum_warnings'].append(f'רחוב תוקן: "{street_address_original}" → "{street_address}"')
-                
-                # Validate required address fields
-                # City is REQUIRED (already validated above with fuzzy matching)
-                if not city:
+                # Try EXACT matching FIRST (for Excel data manually copied from system)
+                # Only use smart matching functions if exact match fails
+                if not city_original:
                     result['status'] = 'Error'
                     result['details'] = 'שגיאה: עיר חסרה (עמודה K) - חובה מלא'
                     result['enum_warnings'].append('עיר חסרה')
@@ -2267,14 +2530,77 @@ def import_families_endpoint(request):
                     results.append(result)
                     continue
                 
-                # Street is REQUIRED
-                if not street_address:
+                # **STEP 1: Try EXACT match first** (for manually entered system values)
+                city_found = None
+                for json_city_key in SETTLEMENTS_N_STREETS.keys():
+                    if json_city_key.strip() == city_original:
+                        city_found = json_city_key
+                        break
+                
+                if city_found:
+                    city = city_found  # Use exact match
+                else:
+                    # **STEP 2: Fallback to smart matching** (find_best_city_match with special fallback values)
+                    city, city_was_corrected = find_best_city_match(city_original)
+                    
+                    if city is None:
+                        result['status'] = 'Error'
+                        result['details'] = f'שגיאה: עיר "{city_original}" לא קיימת במערכת (עמודה K)'
+                        result['enum_warnings'].append(f'עיר "{city_original}" לא קיימת במערכת')
+                        error_count += 1
+                        results.append(result)
+                        continue
+                    
+                    # If city was corrected, note it
+                    if city_was_corrected and city != city_original:
+                        result['enum_warnings'].append(f'עיר תוקנה: "{city_original}" → "{city}"')
+                
+                # Parse street and apartment from Excel - now TWO separate columns
+                street_raw = row.get(col_street, '')
+                street_original = '' if (street_raw is None or pd.isna(street_raw) or str(street_raw).lower() == 'nan') else str(street_raw).strip()
+                street_original = street_original.replace(',', '').strip() if street_original else ''
+                
+                apartment_raw = row.get(col_apartment, '')
+                apartment_original = '' if (apartment_raw is None or pd.isna(apartment_raw) or str(apartment_raw).lower() == 'nan') else str(apartment_raw).strip()
+                apartment_original = apartment_original.replace(',', '').strip() if apartment_original else ''
+                
+                # Validate required address fields: street is REQUIRED
+                if not street_original:
                     result['status'] = 'Error'
-                    result['details'] = 'שגיאה: כתובת רחוב חסרה (עמודה J) - חובה מלא'
-                    result['enum_warnings'].append('כתובת רחוב חסרה - אנא עדכן או קח קשר עם מנהל המערכת')
+                    result['details'] = 'שגיאה: רחוב חסר (עמודה J) - חובה מלא'
+                    result['enum_warnings'].append('רחוב חסר')
                     error_count += 1
                     results.append(result)
                     continue
+                
+                # Get the city's streets from JSON
+                city_streets = SETTLEMENTS_N_STREETS.get(city, [])
+                
+                # **STEP 1: Try EXACT match first** (for manually entered system values)
+                matched_street = None
+                if street_original in city_streets:
+                    matched_street = street_original  # Use exact match
+                else:
+                    # **STEP 2: Fallback to smart matching** (find_best_street_match with special fallback values)
+                    matched_street, street_was_corrected, is_placeholder = find_best_street_match(street_original, city)
+                    
+                    # If street is not found and no correction was made, it's an error
+                    if matched_street == street_original and not street_was_corrected:
+                        # Check if it exists in the city's streets as fallback
+                        if street_original not in city_streets:
+                            result['status'] = 'Error'
+                            result['details'] = f'שגיאה: רחוב "{street_original}" לא קיים ברשימת הרחובות של "{city}" (עמודה J)'
+                            result['enum_warnings'].append(f'רחוב "{street_original}" לא קיים ברשימת הרחובות של "{city}"')
+                            error_count += 1
+                            results.append(result)
+                            continue
+                    
+                    # If street was corrected, note it
+                    if street_was_corrected and matched_street != street_original:
+                        result['enum_warnings'].append(f'רחוב תוקן: "{street_original}" → "{matched_street}"')
+                
+                # Concatenate street and apartment for storage
+                street_and_apartment = f"{matched_street} {apartment_original}".strip() if apartment_original else matched_street
                 
                 # Dry run - validate with enum checks
                 if dry_run:
@@ -2346,10 +2672,6 @@ def import_families_endpoint(request):
                 diagnosis = '' if (diagnosis_raw is None or pd.isna(diagnosis_raw) or str(diagnosis_raw).lower() == 'nan') else str(diagnosis_raw).strip()
                 # Remove commas and trim spaces
                 diagnosis = diagnosis.replace(',', '').strip() if diagnosis else ''
-                
-                # Parse street/address from Excel
-                street_address_raw = row.get(col_street_address, '')
-                street_address = '' if (street_address_raw is None or pd.isna(street_address_raw) or str(street_address_raw).lower() == 'nan') else str(street_address_raw).strip()
                 
                 # Parse medical state from Excel
                 medical_state_raw = row.get(col_medical_state, '')
@@ -2584,7 +2906,6 @@ def import_families_endpoint(request):
                 if isinstance(gender_val, bool):
                     gender = gender_val
                 elif isinstance(gender_val, str):
-                    gender_lower = gender_val.lower().strip()
                     gender = gender_lower in ['true', 'נקבה', 'female', 'f', '1']
                 else:
                     gender = False
@@ -2617,6 +2938,7 @@ def import_families_endpoint(request):
                                 # Hebrew month names mapping
                                 hebrew_months = {
                                     'ינואר': '01', 'יוני': '06', 'יולי': '07', 'אוגוסט': '08',
+                                    'ספטמבר': '09', 'אוקטובר': '10', 'נובמבר': '11', 'דצמבר': '12',
                                     'ספטמבר': '09', 'אוקטובר': '10', 'נובמבר': '11', 'דצמבר': '12',
                                     'פברואר': '02', 'מרץ': '03', 'אפריל': '04', 'מאי': '05',
                                     'יוני': '06', 'יולי': '07', 'אגוסטוס': '08',
@@ -2690,6 +3012,40 @@ def import_families_endpoint(request):
                 # Pass child_status (final_status) to handle בריא/ז״ל children (they get "ללא")
                 responsible_coordinator = get_responsible_coordinator_for_family(final_tutoring_status, child_status=final_status)
                 
+                # === DUPLICATE DETECTION ===
+                # Check for duplicates: firstname + surname + city + any matching phone field
+                # This prevents accidentally creating duplicate records
+                duplicate_query = Children.objects.filter(
+                    childfirstname=child_first_name,
+                    childsurname=child_last_name,
+                    city=city
+                )
+                
+                is_duplicate = False
+                if duplicate_query.exists():
+                    # Found same name + city, now check if any phone matches
+                    for existing_child in duplicate_query:
+                        # Check if any of the phone fields match
+                        phones_match = False
+                        if phone and existing_child.child_phone_number and phone == existing_child.child_phone_number:
+                            phones_match = True
+                        if father_phone and existing_child.father_phone and father_phone == existing_child.father_phone:
+                            phones_match = True
+                        if mother_phone and existing_child.mother_phone and mother_phone == existing_child.mother_phone:
+                            phones_match = True
+                        
+                        if phones_match:
+                            is_duplicate = True
+                            break
+                
+                if is_duplicate:
+                    result['status'] = 'Skipped'
+                    result['details'] = f'דילוג: דובליקט חשוד - {child_first_name} {child_last_name} ב{city} קיים כבר במערכת עם טלפון תואם'
+                    result['enum_warnings'].append('דובליקט חשוד - בדוק יד')
+                    skipped_count += 1
+                    results.append(result)
+                    continue
+                
                 with transaction.atomic():
                     child = Children.objects.create(
                         child_id=child_id_int,
@@ -2710,7 +3066,7 @@ def import_families_endpoint(request):
                         responsible_coordinator=responsible_coordinator,
                         gender=gender,
                         last_review_talk_conducted=last_review_talk_conducted,
-                        street_and_apartment_number=street_address,
+                        street_and_apartment_number=street_and_apartment,
                         current_medical_state=medical_state,
                         when_completed_treatments=when_completed_treatments,
                         has_completed_treatments=has_completed_treatments,
@@ -2879,5 +3235,41 @@ def import_families_endpoint(request):
         )
         return JsonResponse(
             {'error': f'Unexpected error: {str(e)}'},
+            status=500
+        )
+
+
+@conditional_csrf
+@api_view(['GET'])
+def get_settlements_data(request):
+    """
+    GET /api/settlements/
+    Returns all settlements and their streets from database.
+    Replaces the 65MB JSON file load.
+    Used by frontend to populate city/street modals.
+    """
+    user_id = request.session.get("user_id")
+    if not user_id:
+        return JsonResponse(
+            {"detail": "Authentication credentials were not provided."}, status=403
+        )
+    
+    try:        
+        # Get all settlements from database
+        settlements = SettlementsStreets.objects.all().values('city_name', 'streets')
+        
+        # Convert to JSON format matching the old JSON structure
+        settlements_dict = {}
+        for settlement in settlements:
+            city_name = settlement['city_name']
+            streets = settlement['streets'] if settlement['streets'] else []
+            settlements_dict[city_name] = streets
+        
+        return JsonResponse(settlements_dict, status=200, safe=False)
+    
+    except Exception as e:
+        api_logger.error(f"Get settlements error: {str(e)}")
+        return JsonResponse(
+            {'error': f'Error fetching settlements: {str(e)}'},
             status=500
         )
