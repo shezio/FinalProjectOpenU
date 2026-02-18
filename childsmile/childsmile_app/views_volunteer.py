@@ -23,7 +23,8 @@ from .models import (
     Staff, TOTPCode, SignedUp, Pending_Tutor, 
     General_Volunteer, Tutors, Role, Children,
     Tutorships, PrevTutorshipStatuses, Tasks, Task_Types,
-    MaritalStatus, Tutor_Feedback, General_V_Feedback, PossibleMatches
+    MaritalStatus, Tutor_Feedback, General_V_Feedback, PossibleMatches,
+    SettlementsStreets
 )
 from .utils import *
 from .audit_utils import log_api_action
@@ -1759,6 +1760,15 @@ def import_volunteers_endpoint(request):
                 
                 coordinator_comment_raw = row.get('הערות הרכז', '')
                 coordinator_comment = '' if (coordinator_comment_raw is None or pd.isna(coordinator_comment_raw) or str(coordinator_comment_raw).lower() == 'nan') else str(coordinator_comment_raw).strip()
+                
+                # Validate city exists in settlements table if provided
+                if city:
+                    if not SettlementsStreets.objects.filter(city_name=city).exists():
+                        result['status'] = 'Error'
+                        result['details'] = f'עיר לא קיימת במערכת: {city}'
+                        error_count += 1
+                        results.append(result)
+                        continue
                 
                 result['email'] = email or ''
                 

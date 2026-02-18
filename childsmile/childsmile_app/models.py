@@ -605,3 +605,22 @@ class AuditTranslation(models.Model):
     id = models.AutoField(primary_key=True)
     action = models.CharField(max_length=100, unique=True)
     hebrew_translation = models.CharField(max_length=255)
+
+
+class SettlementsStreets(models.Model):
+    """
+    Store all settlements (cities) and their streets from JSON file.
+    Replaces 65MB JSON file with database table for fast API access.
+    """
+    city_name = models.CharField(max_length=255, primary_key=True, unique=True)
+    streets = models.JSONField(default=list, blank=True)  # Array of street strings
+    
+    class Meta:
+        db_table = "childsmile_app_settlementsstreets"
+        indexes = [
+            models.Index(fields=['city_name'], name='idx_settlements_city_name'),
+        ]
+    
+    def __str__(self):
+        return f"{self.city_name} ({len(self.streets)} streets)"
+

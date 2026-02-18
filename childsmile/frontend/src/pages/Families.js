@@ -10,7 +10,6 @@ import '../styles/families.css'; // Import the CSS file for families
 import "../i18n"; // Import i18n configuration
 import { showErrorToast } from '../components/toastUtils'; // Import the toast utility
 import hospitals from "../components/hospitals.json"; // Import the hospitals JSON file
-import settlementsAndStreets from "../components/settlements_n_streets.json";
 import Select from "react-select";
 import Modal from "react-modal";
 import { useNavigate } from 'react-router-dom'; // Add this import at the top with other imports
@@ -103,6 +102,9 @@ const Families = () => {
   const [importFile, setImportFile] = useState(null);
   const [importDryRun, setImportDryRun] = useState(true);
   const [isImporting, setIsImporting] = useState(false);
+  
+  // Settlements and streets data from API
+  const [settlementsAndStreets, setSettlementsAndStreets] = useState({});
 
   const fetchFamilies = async () => {
     setIsRefreshing(true);
@@ -162,6 +164,7 @@ const Families = () => {
   useEffect(() => {
     fetchFamilies();
     fetchAvailableCoordinators();
+    fetchSettlementsAndStreets();
   }, []);
 
   useEffect(() => {
@@ -233,8 +236,8 @@ const Families = () => {
     if (!newFamily.street) {
       newErrors.street = t("Street is required.");
     }
-    if (!newFamily.apartment_number || isNaN(newFamily.apartment_number)) {
-      newErrors.apartment_number = t("Apartment number must be a valid number.");
+    if (!newFamily.apartment_number || newFamily.apartment_number.toString().trim() === '') {
+      newErrors.apartment_number = t("Apartment number is required.");
     }
     // Validate phone number (10 digits) after removing spaces and dashes
     const phoneNumber = newFamily.child_phone_number.replace(/\D/g, ''); // Remove non-digit characters
@@ -793,6 +796,19 @@ const Families = () => {
     }
   };
 
+  // Fetch settlements and streets data from API
+  const fetchSettlementsAndStreets = async () => {
+    try {
+      const response = await axios.get('/api/settlements/');
+      // API returns dict format: {city_name: [streets]}
+      setSettlementsAndStreets(response.data);
+    } catch (error) {
+      console.error('Error fetching settlements and streets:', error);
+      showErrorToast(t, 'Error fetching settlements data', error);
+      setSettlementsAndStreets({});
+    }
+  };
+
   useEffect(() => {
     fetchFamilies();
     fetchAvailableCoordinators();
@@ -1219,10 +1235,8 @@ const Families = () => {
                 <div className="form-column">
                   <label>{t('Apartment Number')}</label>
                   <input
-                    type="number"
+                    type="text"
                     name="apartment_number"
-                    min="1"
-                    max="50000"
                     value={newFamily.apartment_number}
                     onChange={handleAddFamilyChange}
                     className={errors.apartment_number ? "error" : ""}
@@ -1651,10 +1665,8 @@ const Families = () => {
                   <label>{t('Apartment Number')}</label>
                   <span className="families-mandatory-span">{t("*This is a mandatory field")}</span>
                   <input
-                    type="number"
+                    type="text"
                     name="apartment_number"
-                    min="1"
-                    max="50000"
                     value={newFamily.apartment_number}
                     onChange={handleAddFamilyChange}
                     className={errors.apartment_number ? "error" : ""}

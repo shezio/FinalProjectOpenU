@@ -72,6 +72,7 @@ from .family_views import (
     mark_initial_family_complete,
     update_child_id,
     import_families_endpoint,
+    get_settlements_data,
 )
 from .feedback_views import (
     create_tutor_feedback,
@@ -435,6 +436,8 @@ urlpatterns = [
     # Import endpoints
     path("api/import/volunteers/", import_volunteers_endpoint, name="import_volunteers"),
     path("api/import/families/", import_families_endpoint, name="import_families"),
+    # Settlements endpoint (replaces JSON file)
+    path("api/settlements/", get_settlements_data, name="get_settlements"),
     # Dashboard endpoints
     path("api/dashboard/", include("childsmile_app.urls_dashboard")),
 ]
