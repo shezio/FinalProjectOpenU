@@ -689,9 +689,10 @@ def calculate_grades(possible_matches):
     return possible_matches
 
 
-def parse_date_field(date_value, field_name):
+def parse_date_field(date_value, field_name, return_string=False):
     """
     Parse a date field and return a valid date or None if the value is empty or invalid.
+    If return_string=True, returns string in YYYY-MM-DD format instead of date object.
     """
     if date_value in [None, "", "null"]:
         api_logger.debug(f"DEBUG: {field_name} is empty or null.")
@@ -699,13 +700,18 @@ def parse_date_field(date_value, field_name):
     try:
         parsed_date = datetime.datetime.strptime(date_value, "%Y-%m-%d").date()
         api_logger.debug(f"DEBUG: {field_name} parsed successfully: {parsed_date}")
+        # Return as string (YYYY-MM-DD) if requested, otherwise return date object
+        if return_string:
+            return parsed_date.strftime("%Y-%m-%d")
         return parsed_date
     except ValueError:
         api_logger.error(f"DEBUG: {field_name} has an invalid date format: {date_value}")
         return None  # Return None instead of raising an exception
 
 
-def create_task_internal(task_data):
+
+
+def create_task(task_data):
     """
     Internal function to create a task.
     """

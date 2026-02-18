@@ -477,10 +477,23 @@ const Families = () => {
     const street = streetAndApartment.join(' '); // Join the remaining parts as the street name
 
     // Format dates to YYYY-MM-DD for the input fields
+    // Handles both YYYY-MM-DD (CharField) and DD/MM/YYYY (legacy) formats
     const formatDate = (date) => {
       if (!date) return '';
-      const [day, month, year] = date.split('/');
-      return `${year}-${month}-${day}`;
+      
+      // If it's already in YYYY-MM-DD format (new CharField storage), return as-is
+      if (typeof date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(date)) {
+        return date;
+      }
+      
+      // If it's in DD/MM/YYYY format (legacy), convert to YYYY-MM-DD
+      if (typeof date === 'string' && /^\d{2}\/\d{2}\/\d{4}$/.test(date)) {
+        const [day, month, year] = date.split('/');
+        return `${year}-${month}-${day}`;
+      }
+      
+      // Fallback: try to parse and format
+      return '';
     };
 
     const newFamily = {
@@ -505,12 +518,12 @@ const Families = () => {
       is_in_frame: family.is_in_frame || '',
       coordinator_comments: family.coordinator_comments || '',
       current_medical_state: family.current_medical_state || '',
-      when_completed_treatments: formatDate(family.when_completed_treatments) || '',
+      when_completed_treatments: family.when_completed_treatments || '',
       father_name: family.father_name || '',
       father_phone: family.father_phone || '',
       mother_name: family.mother_name || '',
       mother_phone: family.mother_phone || '',
-      expected_end_treatment_by_protocol: formatDate(family.expected_end_treatment_by_protocol) || '',
+      expected_end_treatment_by_protocol: family.expected_end_treatment_by_protocol || '',
       has_completed_treatments: family.has_completed_treatments || false,
       status: family.status || 'טיפולים',
       responsible_coordinator: family.responsible_coordinator || '', // Load current coordinator (can be "ללא" or staff_id)

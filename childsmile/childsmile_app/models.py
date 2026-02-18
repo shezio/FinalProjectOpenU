@@ -184,7 +184,7 @@ class Children(models.Model):
     current_medical_state = models.CharField(
         max_length=255, null=True, blank=True
     )  # New field
-    when_completed_treatments = models.DateField(null=True, blank=True)  # New field
+    when_completed_treatments = models.CharField(max_length=255, null=True, blank=True)  # Changed from DateField to CharField (YYYY-MM-DD format)
     father_name = models.CharField(max_length=255, null=True, blank=True)  # New field
     father_phone = models.CharField(max_length=20, null=True, blank=True)  # New field
     mother_name = models.CharField(max_length=255, null=True, blank=True)  # New field
@@ -192,9 +192,9 @@ class Children(models.Model):
     street_and_apartment_number = models.CharField(
         max_length=255, null=True, blank=True
     )  # New field
-    expected_end_treatment_by_protocol = models.DateField(
-        null=True, blank=True
-    )  # New field
+    expected_end_treatment_by_protocol = models.CharField(
+        max_length=255, null=True, blank=True
+    )  # Changed from DateField to CharField (YYYY-MM-DD format)
     has_completed_treatments = models.BooleanField(null=True, blank=True)  # New field
     status = models.CharField(
         max_length=20,
@@ -269,7 +269,7 @@ class Matures(models.Model):
     child = models.OneToOneField(Children, on_delete=models.CASCADE, primary_key=True)
     full_address = models.CharField(max_length=255)
     current_medical_state = models.CharField(max_length=255, null=True, blank=True)
-    when_completed_treatments = models.DateField(null=True, blank=True)
+    when_completed_treatments = models.CharField(max_length=255, null=True, blank=True)  # Changed from DateField to CharField (YYYY-MM-DD format)
     parent_name = models.CharField(max_length=255, null=True, blank=True)
     parent_phone = models.CharField(max_length=20, null=True, blank=True)
     additional_info = models.TextField(null=True, blank=True)
