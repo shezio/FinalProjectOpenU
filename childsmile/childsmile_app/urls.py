@@ -84,6 +84,7 @@ from .feedback_views import (
 )
 from .tutorship_views import (
     calculate_possible_matches,
+    get_more_possible_matches,
     get_tutorships,
     create_tutorship,
     update_tutorship,
@@ -235,6 +236,11 @@ urlpatterns = [
         "api/calculate_possible_matches/",
         calculate_possible_matches,
         name="calculate_possible_matches",
+    ),
+    path(
+        "api/get_more_possible_matches/",
+        get_more_possible_matches,
+        name="get_more_possible_matches",
     ),
     path(
         "api/get_tutorships/",

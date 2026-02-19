@@ -557,8 +557,6 @@ const Tutorships = () => {
   };
   // Add near the top of Tutorships.js
   const TUTORING_STATUS_ROW_COLORS = {
-    "לא_רוצים": "#e6e6e6",                // grayish
-    "לא_רלוונטי": "#e6e6e6",              // grayish
     "בוגר": "#e6f7ff",                     // light blue
     "שידוך_בסימן_שאלה": "#f9e6ff",         // light purple
     "למצוא_חונך_בעדיפות_גבוה": "#e53935", // strong red (urgent)
@@ -566,6 +564,7 @@ const Tutorships = () => {
     "יש_חונך": "#e6ffe6",                  // light green
     "למצוא_חונך": "#fffbe6",               // light yellow (default)
   };
+  // NOTE: לא_רוצים and לא_רלוונטי are EXCLUDED - no point matching if they don't want tutoring or are not relevant
 
   function getTutoringStatusRowColor(status) {
     return TUTORING_STATUS_ROW_COLORS[status] || "#fff";

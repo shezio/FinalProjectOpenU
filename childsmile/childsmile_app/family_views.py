@@ -575,20 +575,12 @@ def get_complete_family_details(request):
                 "additional_info": family.additional_info,
                 "tutoring_status": family.tutoring_status,
                 "current_medical_state": family.current_medical_state,
-                "when_completed_treatments": (
-                    family.when_completed_treatments.strftime("%d/%m/%Y")
-                    if family.when_completed_treatments
-                    else None
-                ),
+                "when_completed_treatments": family.when_completed_treatments or None,
                 "father_name": family.father_name if family.father_name else None,
                 "father_phone": family.father_phone if family.father_phone else None,
                 "mother_name": family.mother_name if family.mother_name else None,
                 "mother_phone": family.mother_phone if family.mother_phone else None,
-                "expected_end_treatment_by_protocol": (
-                    family.expected_end_treatment_by_protocol.strftime("%d/%m/%Y")
-                    if family.expected_end_treatment_by_protocol
-                    else None
-                ),
+                "expected_end_treatment_by_protocol": family.expected_end_treatment_by_protocol or None,
                 "has_completed_treatments": family.has_completed_treatments,
                 "status": family.status,
                 "age": family.age,
@@ -1065,11 +1057,11 @@ def update_family(request, child_id):
         if family.diagnosis_date != new_diagnosis_date:
             field_changes.append(f"Diagnosis Date: '{family.diagnosis_date}' → '{new_diagnosis_date}'")
             
-        new_treatment_end = parse_date_field(data.get("when_completed_treatments"), "when_completed_treatments")
+        new_treatment_end = data.get("when_completed_treatments")
         if family.when_completed_treatments != new_treatment_end:
             field_changes.append(f"Treatment End: '{family.when_completed_treatments}' → '{new_treatment_end}'")
             
-        new_expected_end = parse_date_field(data.get("expected_end_treatment_by_protocol"), "expected_end_treatment_by_protocol")
+        new_expected_end = data.get("expected_end_treatment_by_protocol")
         if family.expected_end_treatment_by_protocol != new_expected_end:
             field_changes.append(f"Expected End: '{family.expected_end_treatment_by_protocol}' → '{new_expected_end}'")
 
@@ -1089,13 +1081,13 @@ def update_family(request, child_id):
         family.details_for_tutoring = data.get("details_for_tutoring", family.details_for_tutoring)
         family.additional_info = data.get("additional_info", family.additional_info)
         family.current_medical_state = data.get("current_medical_state", family.current_medical_state)
-        family.when_completed_treatments = parse_date_field(data.get("when_completed_treatments"), "when_completed_treatments")
+        family.when_completed_treatments = data.get("when_completed_treatments")
         family.father_name = data.get("father_name", family.father_name)
         family.father_phone = data.get("father_phone", family.father_phone)
         family.mother_name = data.get("mother_name", family.mother_name)
         family.mother_phone = data.get("mother_phone", family.mother_phone)
         family.street_and_apartment_number = data.get("street_and_apartment_number", family.street_and_apartment_number)
-        family.expected_end_treatment_by_protocol = parse_date_field(data.get("expected_end_treatment_by_protocol"), "expected_end_treatment_by_protocol")
+        family.expected_end_treatment_by_protocol = data.get("expected_end_treatment_by_protocol")
         family.has_completed_treatments = data.get("has_completed_treatments", family.has_completed_treatments)
         family.is_in_frame = data.get("is_in_frame", family.is_in_frame)
         family.coordinator_comments = data.get("coordinator_comments", family.coordinator_comments)
@@ -2602,46 +2594,7 @@ def import_families_endpoint(request):
                 # Concatenate street and apartment for storage
                 street_and_apartment = f"{matched_street} {apartment_original}".strip() if apartment_original else matched_street
                 
-                # Dry run - validate with enum checks
-                if dry_run:
-                    # Parse optional fields for enum validation
-                    marital_status_raw = row.get(col_marital_status, '')
-                    marital_status = '' if (marital_status_raw is None or pd.isna(marital_status_raw) or str(marital_status_raw).lower() == 'nan') else str(marital_status_raw).strip()
-                    
-                    tutoring_status_raw = row.get(col_tutoring_status, '')
-                    tutoring_status_val = '' if (tutoring_status_raw is None or pd.isna(tutoring_status_raw) or str(tutoring_status_raw).lower() == 'nan') else str(tutoring_status_raw).strip()
-                    # Normalize: convert spaces to underscores for tutoring_status only
-                    tutoring_status_normalized = tutoring_status_val.replace(' ', '_') if tutoring_status_val else ''
-                    
-                    status_raw = row.get(col_status, '')
-                    status_val = '' if (status_raw is None or pd.isna(status_raw) or str(status_raw).lower() == 'nan') else str(status_raw).strip()
-                    
-                    gender_raw = row.get(col_gender, '')
-                    gender_str = '' if (gender_raw is None or pd.isna(gender_raw) or str(gender_raw).lower() == 'nan') else str(gender_raw).strip().lower()
-                    
-                    # Check for enum mismatches
-                    if marital_status and marital_status not in valid_marital_statuses:
-                        result['enum_warnings'].append(f'סטטוס משפחה "{marital_status}" לא נמצא במערכת')
-                        invalid_enum_count += 1
-                    
-                    if tutoring_status_normalized and tutoring_status_normalized not in valid_tutoring_statuses:
-                        result['enum_warnings'].append(f'סטטוס חונכות "{tutoring_status_val}" לא נמצא במערכת')
-                        invalid_enum_count += 1
-                    
-                    if status_val and status_val not in valid_statuses:
-                        result['enum_warnings'].append(f'סטטוס "{status_val}" לא נמצא במערכת')
-                        invalid_enum_count += 1
-                    
-                    if gender_str and gender_str not in ['true', 'false', '1', '0', 'זכר', 'נקבה']:
-                        result['enum_warnings'].append(f'מין "{gender_str}" לא תקין - צפוי: true/false או 1/0')
-                        invalid_enum_count += 1
-                    
-                    result['status'] = 'OK' if not result['enum_warnings'] else 'Warning'
-                    result['details'] = 'בדיקה בלבד: משפחה תקינה' if not result['enum_warnings'] else 'בדיקה בלבד: משפחה עם אזהרות'
-                    success_count += 1
-                    results.append(result)
-                    continue
-                
+                # Parse ALL fields (for both dry-run and real import)
                 phone_raw = row.get(col_phone, '')
                 phone = '' if (phone_raw is None or pd.isna(phone_raw) or str(phone_raw).lower() == 'nan') else str(phone_raw).strip()
                 
@@ -2797,51 +2750,15 @@ def import_families_endpoint(request):
                 when_completed_treatments = None
                 when_completed_treatments_raw = row.get(col_when_completed_treatments, '')
                 if when_completed_treatments_raw and not pd.isna(when_completed_treatments_raw) and str(when_completed_treatments_raw).lower() != 'nan':
-                    try:
-                        from datetime import datetime as dt
-                        if isinstance(when_completed_treatments_raw, dt):
-                            when_completed_treatments = when_completed_treatments_raw.date()
-                        else:
-                            date_str = str(when_completed_treatments_raw).strip()
-                            date_formats = [
-                                '%Y-%m-%d %H:%M:%S', '%Y-%m-%d', '%d/%m/%Y', '%m/%d/%Y',
-                                '%d-%m-%Y', '%m-%d-%Y', '%d.%m.%Y', '%m.%d.%Y',
-                                '%d/%m/%y', '%m/%d/%y', '%d-%m-%y', '%m-%d-%y',
-                                '%d.%m.%y', '%m.%d.%y', '%Y/%m/%d', '%Y.%m.%d'
-                            ]
-                            for fmt in date_formats:
-                                try:
-                                    when_completed_treatments = dt.strptime(date_str, fmt).date()
-                                    break
-                                except ValueError:
-                                    continue
-                    except Exception:
-                        when_completed_treatments = None
+                    # Just accept the raw value as-is - this is a freeform text field
+                    when_completed_treatments = str(when_completed_treatments_raw).strip()
                 
                 # Parse expected_end_treatment_by_protocol from Excel
                 expected_end_treatment_by_protocol = None
                 treatment_end_protocol_raw = row.get(col_treatment_end_protocol, '')
                 if treatment_end_protocol_raw and not pd.isna(treatment_end_protocol_raw) and str(treatment_end_protocol_raw).lower() != 'nan':
-                    try:
-                        from datetime import datetime as dt
-                        if isinstance(treatment_end_protocol_raw, dt):
-                            expected_end_treatment_by_protocol = treatment_end_protocol_raw.date()
-                        else:
-                            date_str = str(treatment_end_protocol_raw).strip()
-                            date_formats = [
-                                '%Y-%m-%d %H:%M:%S', '%Y-%m-%d', '%d/%m/%Y', '%m/%d/%Y',
-                                '%d-%m-%Y', '%m-%d-%Y', '%d.%m.%Y', '%m.%d.%Y',
-                                '%d/%m/%y', '%m/%d/%y', '%d-%m-%y', '%m-%d-%y',
-                                '%d.%m.%y', '%m.%d.%y', '%Y/%m/%d', '%Y.%m.%d'
-                            ]
-                            for fmt in date_formats:
-                                try:
-                                    expected_end_treatment_by_protocol = dt.strptime(date_str, fmt).date()
-                                    break
-                                except ValueError:
-                                    continue
-                    except Exception:
-                        expected_end_treatment_by_protocol = None
+                    # Just accept the raw value as-is - this is a freeform text field
+                    expected_end_treatment_by_protocol = str(treatment_end_protocol_raw).strip()
                 
                 # Parse completed_treatments boolean from Excel
                 has_completed_treatments_raw = row.get(col_completed_treatments, '')
@@ -2906,7 +2823,7 @@ def import_families_endpoint(request):
                 if isinstance(gender_val, bool):
                     gender = gender_val
                 elif isinstance(gender_val, str):
-                    gender = gender_lower in ['true', 'נקבה', 'female', 'f', '1']
+                    gender = gender_val.lower() in ['true', 'נקבה', 'female', 'f', '1']
                 else:
                     gender = False
                 
@@ -3046,70 +2963,73 @@ def import_families_endpoint(request):
                     results.append(result)
                     continue
                 
-                with transaction.atomic():
-                    child = Children.objects.create(
-                        child_id=child_id_int,
-                        childfirstname=child_first_name,
-                        childsurname=child_last_name,
-                        city=city,
-                        child_phone_number=phone,
-                        treating_hospital=hospital,
-                        medical_diagnosis=diagnosis,
-                        diagnosis_date=diagnosis_date,
-                        date_of_birth=birth_date,
-                        marital_status=marital_status,
-                        num_of_siblings=num_of_siblings,
-                        registrationdate=registration_date,
-                        lastupdateddate=datetime.datetime.now().date(),
-                        status=final_status,
-                        tutoring_status=final_tutoring_status,
-                        responsible_coordinator=responsible_coordinator,
-                        gender=gender,
-                        last_review_talk_conducted=last_review_talk_conducted,
-                        street_and_apartment_number=street_and_apartment,
-                        current_medical_state=medical_state,
-                        when_completed_treatments=when_completed_treatments,
-                        has_completed_treatments=has_completed_treatments,
-                        expected_end_treatment_by_protocol=expected_end_treatment_by_protocol,
-                        father_name=father_name,
-                        father_phone=father_phone,
-                        mother_name=mother_name,
-                        mother_phone=mother_phone,
-                        details_for_tutoring=tutoring_details,
-                        additional_info=additional_info,
-                        is_in_frame=is_in_frame if is_in_frame else None,
-                        coordinator_comments=coordinator_comments if coordinator_comments else None,
-                        # Feature #2 + #3: Auto-set need_review based on:
-                        # - Set to False if: בריא/ז״ל status OR "לא צריך" in review_talk column OR בוגר (סוג column) OR age >= 16
-                        # - Otherwise default to True
-                        need_review=False if (final_status in ['בריא', 'ז״ל'] or need_review_from_review_talk is False or dont_need_review_since_mature or is_mature_by_age) else True
-                    )
-                    
-                    # If surname is "XXX" (missing), create עדכון משפחה task for Families Coordinators
-                    if needs_surname_task:
-                        try:
-                            # Get all Families Coordinators to verify missing surnames
-                            coordinators = Staff.objects.filter(
-                                roles__role_name='Families Coordinator'
-                            ).distinct()
-                            
-                            if coordinators.exists():
-                                task_desc = f"עדכון שם משפחה חסר לילד/ה {child_first_name} (כרגע: {child_last_name}) - תעודת זהות: {child_id}"
-                                for coordinator in coordinators:
-                                    Tasks.objects.create(
-                                        task_type='עדכון משפחה',
-                                        description=task_desc,
-                                        assigned_to=coordinator,
-                                        assigned_by=user,
-                                        date_assigned=datetime.datetime.now(),
-                                        status='חדש'
-                                    )
-                        except Exception as e:
-                            # Log task creation failure but don't fail the import
-                            api_logger.warning(f"Failed to create surname update task for child {child_id}: {str(e)}")
+                # ONLY DO DATABASE WRITES IF NOT DRY RUN
+                if not dry_run:
+                    with transaction.atomic():
+                        child = Children.objects.create(
+                            child_id=child_id_int,
+                            childfirstname=child_first_name,
+                            childsurname=child_last_name,
+                            city=city,
+                            child_phone_number=phone,
+                            treating_hospital=hospital,
+                            medical_diagnosis=diagnosis,
+                            diagnosis_date=diagnosis_date,
+                            date_of_birth=birth_date,
+                            marital_status=marital_status,
+                            num_of_siblings=num_of_siblings,
+                            registrationdate=registration_date,
+                            lastupdateddate=datetime.datetime.now().date(),
+                            status=final_status,
+                            tutoring_status=final_tutoring_status,
+                            responsible_coordinator=responsible_coordinator,
+                            gender=gender,
+                            last_review_talk_conducted=last_review_talk_conducted,
+                            street_and_apartment_number=street_and_apartment,
+                            current_medical_state=medical_state,
+                            when_completed_treatments=when_completed_treatments,
+                            has_completed_treatments=has_completed_treatments,
+                            expected_end_treatment_by_protocol=expected_end_treatment_by_protocol,
+                            father_name=father_name,
+                            father_phone=father_phone,
+                            mother_name=mother_name,
+                            mother_phone=mother_phone,
+                            details_for_tutoring=tutoring_details,
+                            additional_info=additional_info,
+                            is_in_frame=is_in_frame if is_in_frame else None,
+                            coordinator_comments=coordinator_comments if coordinator_comments else None,
+                            # Feature #2 + #3: Auto-set need_review based on:
+                            # - Set to False if: בריא/ז״ל status OR "לא צריך" in review_talk column OR בוגר (סוג column) OR age >= 16
+                            # - Otherwise default to True
+                            need_review=False if (final_status in ['בריא', 'ז״ל'] or need_review_from_review_talk is False or dont_need_review_since_mature or is_mature_by_age) else True
+                        )
+                        
+                        # If surname is "XXX" (missing), create עדכון משפחה task for Families Coordinators
+                        if needs_surname_task:
+                            try:
+                                # Get all Families Coordinators to verify missing surnames
+                                coordinators = Staff.objects.filter(
+                                    roles__role_name='Families Coordinator'
+                                ).distinct()
+                                
+                                if coordinators.exists():
+                                    task_desc = f"עדכון שם משפחה חסר לילד/ה {child_first_name} (כרגע: {child_last_name}) - תעודת זהות: {child_id}"
+                                    for coordinator in coordinators:
+                                        Tasks.objects.create(
+                                            task_type='עדכון משפחה',
+                                            description=task_desc,
+                                            assigned_to=coordinator,
+                                            assigned_by=user,
+                                            date_assigned=datetime.datetime.now(),
+                                            status='חדש'
+                                        )
+                            except Exception as e:
+                                # Log task creation failure but don't fail the import
+                                api_logger.warning(f"Failed to create surname update task for child {child_id}: {str(e)}")
                 
+                # RECORD RESULT (for both dry-run and real import)
                 result['status'] = 'OK'
-                result['details'] = f'נוצרה בהצלחה'
+                result['details'] = f'נוצרה בהצלחה' if not dry_run else 'בדיקה בלבד: משפחה תקינה'
                 success_count += 1
                 results.append(result)
                 
