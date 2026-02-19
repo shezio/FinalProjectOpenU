@@ -1016,6 +1016,10 @@ def delete_other_tasks_with_initial_family_data_async(task):
 
 
 in_progress_pairs = set()
+# Semaphore to limit concurrent database connections
+# Azure Standard_B1ms (burstable) has VERY limited connection slots (~10 total, some reserved for replication)
+# Only allow 2-3 concurrent threads to avoid "connection slots reserved for azure replication" errors
+_distance_semaphore = threading.Semaphore(2)
 
 
 def async_calculate_and_store_distance(city1, city2):
@@ -1026,7 +1030,12 @@ def async_calculate_and_store_distance(city1, city2):
 
     def worker():
         try:
-            calculate_and_store_distance_force(city1, city2)
+            # Acquire semaphore - wait if we're at max concurrent threads
+            _distance_semaphore.acquire()
+            try:
+                calculate_and_store_distance_force(city1, city2)
+            finally:
+                _distance_semaphore.release()
         finally:
             in_progress_pairs.discard(pair)
 
@@ -1038,7 +1047,8 @@ def calculate_and_store_distance_force(city1, city2):
     Always calculate and store the distance between city1 and city2 if not present.
     This function does NOT call async_calculate_and_store_distance.
     
-    Gracefully handles API unavailability - returns silently without crashing.
+    Gracefully handles API unavailability and connection pool exhaustion.
+    Azure Standard_B1ms has very limited connections - if pool is full, just silently skip.
     """
     try:
         api_logger.debug(
@@ -1074,8 +1084,22 @@ def calculate_and_store_distance_force(city1, city2):
             f"DEBUG: [FORCE] Calculated and saved distance for {city1} and {city2}: {distance} km"
         )
     except Exception as e:
-        # Catch any unexpected errors and log them without crashing
-        api_logger.warning(f"WARNING: [FORCE] Exception in calculate_and_store_distance_force for {city1} <-> {city2}: {str(e)[:100]}")
+        error_str = str(e).lower()
+        # Check for connection pool exhaustion (Azure B1ms tier issue)
+        if "connection slots" in error_str or "connection pool" in error_str or "too many connections" in error_str:
+            # Silently skip - this is expected during heavy load on Azure B1ms
+            # The next calculation cycle will try again when connections are available
+            api_logger.debug(
+                f"DEBUG: Database connection pool exhausted - will retry {city1}<->{city2} later"
+            )
+        elif "timeout" in error_str or "timed out" in error_str:
+            # Connection timeout - likely due to load
+            api_logger.debug(
+                f"DEBUG: Database connection timeout for {city1}<->{city2} - will retry later"
+            )
+        else:
+            # Other errors - log at debug level (not warning to reduce noise)
+            api_logger.debug(f"DEBUG: [FORCE] Exception calculating distance for {city1} <-> {city2}: {str(e)[:100]}")
 
 def add_city_location(city, lat, lon):
     # Update all records where city is city1 or city2
