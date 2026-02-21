@@ -752,7 +752,7 @@ def parse_date_field(date_value, field_name, return_string=False):
 
 
 
-def create_task(task_data):
+def create_task_internal(task_data):
     """
     Internal function to create a task.
     """
