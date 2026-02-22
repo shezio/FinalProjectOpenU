@@ -981,7 +981,7 @@ const Families = () => {
                         </button>
                       </th>
                       <th>{t('Address')}</th>
-                      <th>{t('Phone')}</th>
+                      <th>{t('Child Phone')}</th>
                       <th>{t('Tutorship Status')}</th>
                       <th>{t('Status')}</th>
                       <th>{t('Responsible Coordinator')}</th>
@@ -1136,7 +1136,7 @@ const Families = () => {
                 <p>{t('Age')}: {formatAge(selectedFamily)}</p>
                 <p>{t('Status')}: {formatStatus(selectedFamily.status)}</p>
                 <p>{t('Address')}: {selectedFamily.address}</p>
-                <p>{t('Phone')}: {selectedFamily.child_phone_number || '---'}</p>
+                <p>{t('Child Phone')}: {selectedFamily.child_phone_number || '---'}</p>
                 <p>{t('Gender')}: {selectedFamily.gender ? t('נקבה') : t('זכר')}</p>
                 <p>{t('Date of Birth')}: {selectedFamily.date_of_birth}</p>
                 <p>{t('Medical Diagnosis')}: {selectedFamily.medical_diagnosis || '---'}</p>
@@ -1256,7 +1256,7 @@ const Families = () => {
                   />
                   {errors.apartment_number && <span className="families-error-message">{errors.apartment_number}</span>}
 
-                  <label>{t('Phone Number')}</label>
+                  <label>{t('Child Phone Number')}</label>
                   <input
                     type="text"
                     name="child_phone_number"
@@ -1686,7 +1686,7 @@ const Families = () => {
                   />
                   {errors.apartment_number && <span className="families-error-message">{errors.apartment_number}</span>}
 
-                  <label>{t('Phone Number')}</label>
+                  <label>{t('Child Phone Number')}</label>
                   <span className="families-mandatory-span">{t("*This is a mandatory field")}</span>
                   <input
                     type="text"
