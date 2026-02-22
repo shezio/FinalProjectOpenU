@@ -444,6 +444,7 @@ class Tasks(models.Model):
     user_info = models.JSONField(null=True, blank=True)
     # Field for storing rejection reason when registration is rejected
     rejection_reason = models.TextField(max_length=200, null=True, blank=True)
+    explanation = models.CharField(max_length=255, null=True, blank=True)
 
     def __str__(self):
         return f"Task {self.task_id} - {self.task_type}"

@@ -168,6 +168,7 @@ def get_user_tasks(request):
                     if task.initial_family_data_id_fk
                     else None
                 ),
+                "explanation": task.explanation,
             }
             
             # Add extra info for "התאמת חניך" tasks
@@ -263,7 +264,7 @@ def create_task(request):
             {"error": "You do not have permission to create tasks."}, status=401
         )
 
-    task_data = request.data
+    task_data = request.data.copy()
     try:
         # --- NEW VALIDATION: Reject registration approval task type (internal only) ---
         task_type_id = task_data.get("type")
@@ -361,6 +362,8 @@ def create_task(request):
         except Exception as e:
             api_logger.error(f"Error in Pending_Tutor creation logic: {str(e)}")
 
+        # Pass explanation to create_task_internal
+        task_data["explanation"] = request.data.get("explanation")
         api_logger.debug(f"Task data being sent to create_task_internal: {task_data}")
         task = create_task_internal(task_data)
 
@@ -1407,6 +1410,9 @@ def update_task(request, task_id):
         new_due_date = request.data.get("due_date", original_due_date)
         if new_due_date and original_due_date != new_due_date:
             field_changes.append(f"Due date: '{original_due_date}' → '{new_due_date}'")
+
+        # Update explanation if present
+        task.explanation = request.data.get("explanation", task.explanation)
 
         # Save the updated task
         task.save()

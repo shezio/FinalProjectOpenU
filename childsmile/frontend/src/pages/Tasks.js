@@ -68,6 +68,7 @@ const Tasks = () => {
   const [rejectionReasonOption, setRejectionReasonOption] = useState('');
   const [rejectionReasonText, setRejectionReasonText] = useState('');
   const [staffUserNamesAndRoles, setStaffUserNamesAndRoles] = useState([]);
+  const [explanation, setExplanation] = useState("");
   const menuRef = useRef();
   const location = useLocation();
 
@@ -395,6 +396,7 @@ const Tasks = () => {
     setSelectedPendingTutor(null);
     setDueDate('');
     setErrors({});
+    setExplanation("");
   };
 
   const handleSubmitTask = async () => {
@@ -445,6 +447,7 @@ const Tasks = () => {
       due_date: document.getElementById('due_date').value,
       assigned_to: selectedStaff?.value,
       type: selectedTaskType?.value,
+      explanation: explanation,
     };
     if (taskTypeName !== "הוספת משפחה") {
       taskData.child = selectedChild?.value;
@@ -564,6 +567,7 @@ const Tasks = () => {
       due_date: document.getElementById('due_date').value,
       assigned_to: selectedStaff?.value,
       type: selectedTaskType?.value,
+      explanation: explanation,
     };
     if (taskTypeName !== "הוספת משפחה") {
       updatedTaskData.child = selectedChild?.value;
@@ -1004,6 +1008,10 @@ const Tasks = () => {
                         })}
                       </>
                     )}
+                    {/* Show explanation field */}
+                    {selectedTask.explanation && (
+                      <p><strong>הסבר:</strong> {selectedTask.explanation}</p>
+                    )}
                   </div>
                 </div>
               )}
@@ -1108,14 +1116,13 @@ const Tasks = () => {
                     {errors.pending_tutor && <p className="error-text">{errors.pending_tutor}</p>}
                   </>
                 )}
-                {isFamilyAdditionTask(selectedTaskType?.value) && (
-                  <>
-                    <h3>{t("Initial Family Details")}</h3>
-                    <p>שמות: {selectedTask.names ? selectedTask.names : "---"}</p>
-                    <p>טלפונים: {selectedTask.phones ? selectedTask.phones : "---"}</p>
-                    <p>מידע נוסף: {selectedTask.other_information ? selectedTask.other_information : "---"}</p>
-                  </>
-                )}
+                {/* Explanation field */}
+                <label>הסבר:</label>
+                <textarea
+                  className="scrollable-textarea"
+                  value={explanation}
+                  onChange={e => setExplanation(e.target.value)}
+                />
                 <button onClick={handleUpdateTask}>{t('Update Task')}</button>
               </div>
             </div>
@@ -1219,6 +1226,13 @@ const Tasks = () => {
                     {errors.pending_tutor && <p className="error-text">{errors.pending_tutor}</p>}
                   </>
                 )}
+                {/* Explanation field */}
+                <label>הסבר:</label>
+                <textarea
+                  className="scrollable-textarea"
+                  value={explanation}
+                  onChange={e => setExplanation(e.target.value)}
+                />
                 <button onClick={handleSubmitTask} disabled={isGuestUser()}>צור</button>
               </div>
             </div>
