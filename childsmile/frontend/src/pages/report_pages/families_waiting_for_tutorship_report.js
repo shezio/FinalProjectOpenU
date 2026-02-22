@@ -248,24 +248,27 @@ const FamiliesWaitingForTutorshipReport = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {families.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE).map((family, index) => (
-                    <tr key={index}>
-                      <td>
-                        <input
-                          type="checkbox"
-                          checked={family.selected || false}
-                          onChange={() => handleCheckboxChange(index)}
-                        />
-                      </td>
-                      <td>{family.first_name} {family.last_name} {getGenderIcon(family.gender)}</td>
-                      <td>{family.father_name}</td>
-                      <td>{family.father_phone}</td>
-                      <td>{family.mother_name}</td>
-                      <td>{family.mother_phone}</td>
-                      <td>{family.tutoring_status}</td>
-                      <td>{family.registration_date}</td>
-                    </tr>
-                  ))}
+                  {families.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE).map((family, idx) => {
+                    const realIndex = (currentPage - 1) * PAGE_SIZE + idx;
+                    return (
+                      <tr key={realIndex}>
+                        <td>
+                          <input
+                            type="checkbox"
+                            checked={family.selected || false}
+                            onChange={() => handleCheckboxChange(realIndex)}
+                          />
+                        </td>
+                        <td>{family.first_name} {family.last_name} {getGenderIcon(family.gender)}</td>
+                        <td>{family.father_name}</td>
+                        <td>{family.father_phone}</td>
+                        <td>{family.mother_name}</td>
+                        <td>{family.mother_phone}</td>
+                        <td>{family.tutoring_status}</td>
+                        <td>{family.registration_date}</td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
               <div className="pagination">
