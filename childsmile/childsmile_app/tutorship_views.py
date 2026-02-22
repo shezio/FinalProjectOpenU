@@ -1101,9 +1101,13 @@ def delete_tutorship(request, tutorship_id):
 @api_view(["GET"])
 def get_available_tutors(request):
     """
-    Get all available tutors (those who can be matched) for manual matching.
-    Returns tutor name and city for combo box display.
-    Uses the same filtering logic as fetch_possible_matches() for consistency.
+    Get all available tutors for manual matching dropdown.
+    Returns tutor name, city, and gender for combo box display.
+    
+    Query Parameters:
+    - child_id: Required. The child ID to find tutors for
+    
+    Returns ALL genders. UI checkbox will filter display.
     """
     api_logger.info("get_available_tutors called")
     try:
@@ -1117,8 +1121,8 @@ def get_available_tutors(request):
                 status=400
             )
         
-        # SQL to get available tutors (same filtering logic as fetch_possible_matches)
-        # Match gender requirement
+        # SQL to get available tutors - NO GENDER FILTER
+        # UI checkbox handles gender filtering for display only
         query = """
         SELECT DISTINCT
             tutor.id_id AS tutor_id,
@@ -1134,12 +1138,9 @@ def get_available_tutors(request):
             ON signedup.id = tutor.id_id
         JOIN childsmile_app_staff staff
             ON tutor.staff_id = staff.staff_id
-        JOIN childsmile_app_children child
-            ON child.gender = signedup.gender
         WHERE
-            child.child_id = %s
             -- Exclude tutors that have ACTIVE tutorships
-            AND NOT EXISTS (
+            NOT EXISTS (
                 SELECT 1
                 FROM childsmile_app_tutorships tutorship
                 WHERE tutorship.tutor_id = tutor.id_id
@@ -1150,7 +1151,7 @@ def get_available_tutors(request):
                 SELECT 1
                 FROM childsmile_app_tutorships tutorship
                 WHERE tutorship.tutor_id = tutor.id_id
-                AND tutorship.child_id = child.child_id
+                AND tutorship.child_id = %s
             )
             -- Only include staff members who are ACTIVE
             AND staff.is_active = TRUE
@@ -1173,7 +1174,7 @@ def get_available_tutors(request):
             for row in rows
         ]
         
-        api_logger.debug(f"DEBUG: Found {len(tutors_list)} available tutors for manual matching for child {child_id}")
+        api_logger.debug(f"DEBUG: Found {len(tutors_list)} available tutors (all genders, UI will filter)")
         return JsonResponse({"tutors": tutors_list}, status=200)
         
     except PermissionError as e:
@@ -1256,8 +1257,6 @@ def calculate_manual_match(request):
             ON tutor.staff_id = staff.staff_id
         WHERE 
             child.child_id = %s
-            -- Gender must match
-            AND child.gender = signedup.gender
             -- Prevent ANY tutorship with this pair (manual match is strict, only wizard allows re-creation)
             AND NOT EXISTS (
                 SELECT 1
