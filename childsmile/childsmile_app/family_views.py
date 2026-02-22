@@ -560,7 +560,7 @@ def get_complete_family_details(request):
                 "gender": family.gender,
                 "responsible_coordinator": get_staff_name_by_id(family.responsible_coordinator) or family.responsible_coordinator or "Unknown",
                 "responsible_coordinator_id": family.responsible_coordinator if str(family.responsible_coordinator).isdigit() else "",
-                "child_phone_number": family.child_phone_number,
+                "child_phone_number": family.child_phone_number if family.child_phone_number else None,
                 "treating_hospital": family.treating_hospital,
                 "date_of_birth": family.date_of_birth.strftime("%d/%m/%Y"),
                 "medical_diagnosis": family.medical_diagnosis,
@@ -570,7 +570,7 @@ def get_complete_family_details(request):
                     else None
                 ),
                 "marital_status": family.marital_status,
-                "num_of_siblings": family.num_of_siblings,
+                "num_of_siblings": family.num_of_siblings if family.num_of_siblings is not None else 0,
                 "details_for_tutoring": family.details_for_tutoring,
                 "additional_info": family.additional_info,
                 "tutoring_status": family.tutoring_status,
@@ -676,6 +676,27 @@ def create_family(request):
         # Extract data from the request
         data = request.data
 
+
+        father_phone = data.get("father_phone")
+        mother_phone = data.get("mother_phone")
+        
+        has_father = is_nonempty_phone(father_phone)
+        has_mother = is_nonempty_phone(mother_phone)
+
+        if not has_father and not has_mother:
+            log_api_action(
+                request=request,
+                action='CREATE_FAMILY_FAILED',
+                success=False,
+                error_message="At least one parent phone number must be provided",
+                status_code=400,
+                additional_data={'family_name': f"{data.get('childfirstname', 'Unknown')} {data.get('childsurname', 'Unknown')}"}
+            )
+            return JsonResponse(
+                {"error": "At least one parent phone number (father or mother) must be provided."},
+                status=400,
+            )
+
         # Validate required fields
         required_fields = [
             "child_id",
@@ -683,7 +704,6 @@ def create_family(request):
             "childsurname",
             "gender",
             "city",
-            "child_phone_number",
             "treating_hospital",
             "date_of_birth",
             "marital_status",
@@ -784,7 +804,7 @@ def create_family(request):
             gender=True if data["gender"] == "נקבה" else False,
             responsible_coordinator=responsible_coordinator,
             city=data["city"],
-            child_phone_number=data["child_phone_number"],
+            child_phone_number=data["child_phone_number"] if data.get("child_phone_number") else None,
             treating_hospital=data["treating_hospital"],
             date_of_birth=date_of_birth,
             medical_diagnosis=data.get("medical_diagnosis"),
@@ -950,13 +970,38 @@ def update_family(request, child_id):
                 )
             # If it's a valid ID format change, allow it to proceed (will be changed later via update_child_id endpoint)
 
+        father_phone = data.get("father_phone")
+        mother_phone = data.get("mother_phone")
+        
+        has_father = is_nonempty_phone(father_phone)
+        has_mother = is_nonempty_phone(mother_phone)
+
+        if not has_father and not has_mother:
+            log_api_action(
+                request=request,
+                action='UPDATE_FAMILY_FAILED',
+                success=False,
+                error_message="At least one parent phone number must be provided",
+                status_code=400,
+                entity_type='Children',
+                entity_ids=[child_id],
+                additional_data={
+                    'family_name': f"{family.childfirstname} {family.childsurname}",
+                    'attempted_changes': [],
+                    'changes_count': 0
+                }
+            )
+            return JsonResponse(
+                {"error": "At least one parent phone number (father or mother) must be provided."},
+                status=400,
+            )
+
         required_fields = [
             "child_id",
             "childfirstname",
             "childsurname",
             "gender",
             "city",
-            "child_phone_number",
             "treating_hospital",
             "date_of_birth",
             "marital_status",
@@ -2340,7 +2385,7 @@ def import_families_endpoint(request):
         col_hospital = find_column(['בית חולים מטפל', 'בית חולים']) or 'בית חולים מטפל'
         col_diagnosis = find_column(['אבחנה רפואית', 'אבחנה']) or 'אבחנה רפואית'
         col_diagnosis_date = find_column(['תאריך אבחון', 'תאריך אבחנה']) or 'תאריך אבחון'
-        col_num_of_siblings = find_column(['כמה אחים יש?', 'כמה אחים יש? (בנוסף לילד/ה החולים)', 'מספר אחים']) or 'כמה אחים יש?'
+        col_num_of_siblings = find_column_contains("כמה אחים") or 'כמה אחים יש?'
         col_registration_date = find_column(['תאריך רישום']) or 'תאריך רישום'
         # NEW: Find TWO separate columns for street and apartment
         col_street = find_column(['רחוב']) or 'רחוב'
@@ -2603,10 +2648,8 @@ def import_families_endpoint(request):
                 # Parse ALL fields (for both dry-run and real import)
                 phone_raw = row.get(col_phone, '')
                 phone = '' if (phone_raw is None or pd.isna(phone_raw) or str(phone_raw).lower() == 'nan') else str(phone_raw).strip()
-                
                 # Remove commas from phone
                 phone = phone.replace(',', '').strip() if phone else ''
-                
                 # Format phone: remove dashes/spaces, pad to 10 digits with trailing zeros if needed
                 if phone:
                     phone_normalized = phone.replace('-', '').replace(' ', '').strip()
@@ -2977,13 +3020,13 @@ def import_families_endpoint(request):
                             childfirstname=child_first_name,
                             childsurname=child_last_name,
                             city=city,
-                            child_phone_number=phone,
+                            child_phone_number=phone if phone else None,
                             treating_hospital=hospital,
                             medical_diagnosis=diagnosis,
                             diagnosis_date=diagnosis_date,
                             date_of_birth=birth_date,
                             marital_status=marital_status,
-                            num_of_siblings=num_of_siblings,
+                            num_of_siblings=num_of_siblings if num_of_siblings is not None else 0,
                             registrationdate=registration_date,
                             lastupdateddate=datetime.datetime.now().date(),
                             status=final_status,
@@ -2996,12 +3039,12 @@ def import_families_endpoint(request):
                             when_completed_treatments=when_completed_treatments,
                             has_completed_treatments=has_completed_treatments,
                             expected_end_treatment_by_protocol=expected_end_treatment_by_protocol,
-                            father_name=father_name,
-                            father_phone=father_phone,
-                            mother_name=mother_name,
-                            mother_phone=mother_phone,
-                            details_for_tutoring=tutoring_details,
-                            additional_info=additional_info,
+                            father_name=father_name if father_name else None,
+                            father_phone=father_phone if father_phone else None,
+                            mother_name=mother_name if mother_name else None,
+                            mother_phone=mother_phone if mother_phone else None,
+                            details_for_tutoring=tutoring_details if tutoring_details else None,
+                            additional_info=additional_info if additional_info else None,
                             is_in_frame=is_in_frame if is_in_frame else None,
                             coordinator_comments=coordinator_comments if coordinator_comments else None,
                             # Feature #2 + #3: Auto-set need_review based on:

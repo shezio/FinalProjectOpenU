@@ -171,7 +171,7 @@ class Children(models.Model):
     gender = models.BooleanField()
     responsible_coordinator = models.CharField(max_length=255)
     city = models.CharField(max_length=255)
-    child_phone_number = models.CharField(max_length=20)
+    child_phone_number = models.CharField(max_length=20, null=True, blank=True)
     treating_hospital = models.CharField(max_length=255)
     date_of_birth = models.DateField()
     medical_diagnosis = models.CharField(max_length=255, null=True, blank=True)

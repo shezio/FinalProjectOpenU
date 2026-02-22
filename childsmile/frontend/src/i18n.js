@@ -287,6 +287,7 @@ const resources = {
   he: {
     translation: {
       "Active Tutors Report": "דוח חונכויות פעילות",
+      "At least one parent phone number (father or mother) must be provided.": "חובה לספק לפחות מספר טלפון אחד של הורה (אב או אם)",
       "active_tutors_report": "דוח חונכויות פעילות",
       "families_per_location_report": "דוח משפחות לפי מיקום",
       "new_families_report": "דוח משפחות חדשות מהחודש האחרון",

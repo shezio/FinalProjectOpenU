@@ -241,8 +241,14 @@ const Families = () => {
     }
     // Validate phone number (10 digits) after removing spaces and dashes
     const phoneNumber = newFamily.child_phone_number.replace(/\D/g, ''); // Remove non-digit characters
-    if (!newFamily.child_phone_number || phoneNumber.length !== 10) {
+    if (newFamily.child_phone_number && phoneNumber.length !== 10) {
       newErrors.child_phone_number = t("Phone number must be 10 digits.");
+    }
+    const fatherPhone = newFamily.father_phone ? newFamily.father_phone.replace(/\D/g, '') : '';
+    const motherPhone = newFamily.mother_phone ? newFamily.mother_phone.replace(/\D/g, '') : '';
+    if (!fatherPhone && !motherPhone) {
+      newErrors.father_phone = t("At least one parent phone number (father or mother) must be provided.");
+      newErrors.mother_phone = t("At least one parent phone number (father or mother) must be provided.");
     }
     if (!newFamily.treating_hospital) {
       newErrors.treating_hospital = t("Treating hospital is required.");
@@ -290,7 +296,6 @@ const Families = () => {
       }
     }
 
-    console.log("Validation errors:", newErrors); // Debugging
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -509,7 +514,7 @@ const Families = () => {
       date_of_birth: formatDate(family.date_of_birth) || '',
       registration_date: formatDate(family.registration_date) || '',
       marital_status: family.marital_status || '',
-      num_of_siblings: family.num_of_siblings || '',
+      num_of_siblings: family.num_of_siblings !== undefined ? family.num_of_siblings.toString() : '0',
       details_for_tutoring: family.details_for_tutoring || '',
       tutoring_status: family.tutoring_status || '',
       medical_diagnosis: family.medical_diagnosis || '',
@@ -1687,7 +1692,6 @@ const Families = () => {
                   {errors.apartment_number && <span className="families-error-message">{errors.apartment_number}</span>}
 
                   <label>{t('Child Phone Number')}</label>
-                  <span className="families-mandatory-span">{t("*This is a mandatory field")}</span>
                   <input
                     type="text"
                     name="child_phone_number"
