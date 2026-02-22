@@ -666,67 +666,83 @@ def calculate_distance_between_cities(city1, city2):
 def calculate_grades(possible_matches):
     """
     Calculate the grade of a possible match based on distance and age differences.
+    Now divides matches into 3 groups: same gender male, same gender female, cross gender.
+    Each group is graded separately, then unified.
     :param possible_matches: List of possible match objects, each containing child_age, tutor_age, and distance.
     :return: List of matches with calculated grades.
     """
-    # Define constants for grade calculation
-    max_grade = 100
-    max_age_bonus = 20
-    mid_age_bonus = 10
-    low_age_bonus = 5
-    low_age_difference = 5
-    mid_age_difference = 10
-    high_age_difference = 15
-    max_distance_bonus = 20
-    mid_distance_bonus = 10
-    low_distance_bonus = 5
-    low_distance_diff = 10
-    mid_distance_diff = 20
-    high_distance_diff = 30
-    penalty_distance_diff = 50
-    high_distance_penalty = -5
+    def normalize_gender(g):
+        # Hebrew, boolean, string boolean
+        if g in ['זכר', False, 'false']: return 'male'
+        if g in ['נקבה', True, 'true']: return 'female'
+        return None
 
-    total_matches = len(possible_matches)  # Total number of matches
+    male_matches = []
+    female_matches = []
+    cross_matches = []
 
-    # Iterate through the matches and calculate grades
-    for index, match in enumerate(possible_matches):
-        #        tutor_id = match.get("tutor_id")
-        # Start with a base grade spread linearly across matches
-        base_grade = (
-            (index / (total_matches - 1)) * max_grade
-            if total_matches > 1
-            else max_grade
-        )
+    for match in possible_matches:
+        child_gender = normalize_gender(match.get('child_gender'))
+        tutor_gender = normalize_gender(match.get('tutor_gender'))
+        if child_gender == 'male' and tutor_gender == 'male':
+            male_matches.append(match)
+        elif child_gender == 'female' and tutor_gender == 'female':
+            female_matches.append(match)
+        elif child_gender and tutor_gender and child_gender != tutor_gender:
+            cross_matches.append(match)
+        else:
+            # Unknown gender, treat as cross
+            cross_matches.append(match)
 
-        # Adjust grade based on age difference
-        child_age = match.get("child_age")
-        tutor_age = match.get("tutor_age")
-        age_difference = abs(child_age - tutor_age)
+    def grade_group(matches):
+        max_grade = 100
+        max_age_bonus = 20
+        mid_age_bonus = 10
+        low_age_bonus = 5
+        low_age_difference = 5
+        mid_age_difference = 10
+        high_age_difference = 15
+        max_distance_bonus = 20
+        mid_distance_bonus = 10
+        low_distance_bonus = 5
+        low_distance_diff = 10
+        mid_distance_diff = 20
+        high_distance_diff = 30
+        penalty_distance_diff = 50
+        high_distance_penalty = -5
+        total_matches = len(matches)
+        for index, match in enumerate(matches):
+            base_grade = (
+                (index / (total_matches - 1)) * max_grade
+                if total_matches > 1
+                else max_grade
+            )
+            child_age = match.get("child_age")
+            tutor_age = match.get("tutor_age")
+            age_difference = abs(child_age - tutor_age)
+            if age_difference < low_age_difference:
+                base_grade += max_age_bonus
+            elif age_difference < mid_age_difference:
+                base_grade += mid_age_bonus
+            elif age_difference < high_age_difference:
+                base_grade += low_age_bonus
+            distance = match.get("distance_between_cities")
+            if distance < low_distance_diff:
+                base_grade += max_distance_bonus
+            elif distance < mid_distance_diff:
+                base_grade += mid_distance_bonus
+            elif distance < high_distance_diff:
+                base_grade += low_distance_bonus
+            elif distance > penalty_distance_diff:
+                base_grade = high_distance_penalty
+            base_grade = max(high_distance_penalty, min(base_grade, max_grade))
+            match["grade"] = ceil(base_grade)
+        return matches
 
-        if age_difference < low_age_difference:
-            base_grade += max_age_bonus
-        elif age_difference < mid_age_difference:
-            base_grade += mid_age_bonus
-        elif age_difference < high_age_difference:
-            base_grade += low_age_bonus
-
-        # Adjust grade based on distance
-        distance = match.get("distance_between_cities")
-        if distance < low_distance_diff:
-            base_grade += max_distance_bonus
-        elif distance < mid_distance_diff:
-            base_grade += mid_distance_bonus
-        elif distance < high_distance_diff:
-            base_grade += low_distance_bonus
-        elif distance > penalty_distance_diff:
-            base_grade = high_distance_penalty
-
-        # Ensure the grade is within the allowed range and if its not fix it
-        # if its less than -5 we will set it to -5, if its more than 100 we will set it to 100
-        base_grade = max(high_distance_penalty, min(base_grade, max_grade))
-        match["grade"] = ceil(base_grade)
-
-    return possible_matches
+    graded_male = grade_group(male_matches)
+    graded_female = grade_group(female_matches)
+    graded_cross = grade_group(cross_matches)
+    return graded_male + graded_female + graded_cross
 
 
 def parse_date_field(date_value, field_name, return_string=False):
