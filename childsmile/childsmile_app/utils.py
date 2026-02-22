@@ -130,7 +130,10 @@ def format_date_to_string(date_obj):
         return None
     return date_obj.strftime('%d/%m/%Y')
 
-
+def is_nonempty_phone(phone):
+    """Helper: Returns True if phone is not None and not empty after stripping."""
+    return bool(phone and str(phone).strip())
+    
 def refresh_volunteer_ages():
     """
     Refresh/recalculate ages for all volunteers and tutors in SignedUp table
