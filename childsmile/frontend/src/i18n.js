@@ -528,6 +528,8 @@ const resources = {
       "ID": "תעודת זהות",
       "Israeli ID": "ת.ז",
       "Phone": "טלפון",
+      "Child Phone": "טלפון הילד",
+      "Child Phone Number": "מספר טלפון של הילד",
       "ID must be 9 digits long.": "תעודת זהות חייבת להיות באורך 9 ספרות.",
       "This email is already registered": "כתובת האימייל כבר רשומה במערכת",
       "This phone number is already registered": "מספר הטלפון כבר רשום במערכת",

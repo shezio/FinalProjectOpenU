@@ -1736,6 +1736,7 @@ def mark_initial_family_complete(request, initial_family_data_id):
     Update an existing initial family data record in the InitialFamilyData model.
     """
     user_id = request.session.get("user_id")
+   
     if not user_id:
         log_api_action(
             request=request,
@@ -2319,7 +2320,12 @@ def import_families_endpoint(request):
                     if col == normalized:
                         return orig_col
             return None
-        
+        def find_column_contains(substring):
+            for col in df.columns:
+                if substring in col:
+                    return col
+            return None
+
         # Map all possible column names
         col_first_name = find_column(['שם פרטי']) or 'שם פרטי'
         col_last_name = find_column(['שם משפחה']) or 'שם משפחה'
@@ -2344,9 +2350,9 @@ def import_families_endpoint(request):
         col_treatment_end_protocol = find_column(['צפי סיום על פי פרוטוקול?', 'תאריך סיום צפוי']) or 'צפי סיום על פי פרוטוקול?'
         col_when_completed_treatments = find_column(['מתי סיים/ה טיפולים?', 'תאריך סיום טיפולים']) or 'מתי סיים/ה טיפולים?'
         col_father_name = find_column(['שם האב']) or 'שם האב'
-        col_father_phone = find_column(['מס טלפון של האב']) or 'מס טלפון של האב'
+        col_father_phone = find_column_contains("טלפון של האב") or 'מס טלפון של האב'
         col_mother_name = find_column(['שם האם']) or 'שם האם'
-        col_mother_phone = find_column(['מס טלפון של האם']) or 'מס טלפון של האם'
+        col_mother_phone = find_column_contains("טלפון של האם") or 'מס טלפון של האם'
         col_tutoring_details = find_column(['פרטים לצורך חונכות', 'פרטים לחונכות']) or 'פרטים לצורך חונכות (לצורך ליה ונעם)'
         col_additional_info = find_column(['האם יש משהו ספציפי שתרצו לבקש/לדעת?', 'מידע נוסף', 'הערות']) or 'האם יש משהו ספציפי שתרצו לבקש/לדעת?'
         col_is_in_frame = find_column(['האם נמצא במסגרת?']) or 'האם נמצא במסגרת?'
