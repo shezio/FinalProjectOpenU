@@ -31,6 +31,20 @@ const FamiliesWaitingForTutorshipReport = () => {
     return new Date(`${year}-${month}-${day}`);
   };
 
+  // Helper to get gender icon
+  const getGenderIcon = (gender) => {
+    // Handle Hebrew text values
+    if (gender === 'זכר') return '♂️';
+    if (gender === 'נקבה') return '♀️';
+    // Handle boolean values (true = Female, false = Male)
+    if (gender === true) return '♀️';
+    if (gender === false) return '♂️';
+    // Handle string boolean values
+    if (gender === 'true') return '♀️';
+    if (gender === 'false') return '♂️';
+    return '';
+  };
+
   const toggleSortOrderRegistrationDate = () => {
     setSortOrderRegistrationDate((prevOrder) => (prevOrder === 'asc' ? 'desc' : 'asc'));
     const sorted = [...families].sort((a, b) => {
@@ -77,7 +91,8 @@ const FamiliesWaitingForTutorshipReport = () => {
     navigate("/tutorships", { 
       state: {
         manualMatchChildId: selectedFamily.child_id,
-        childName: `${selectedFamily.first_name} ${selectedFamily.last_name}`
+        childName: `${selectedFamily.first_name} ${selectedFamily.last_name}`,
+        childGender: selectedFamily.gender
       }
     });
   };
@@ -242,7 +257,7 @@ const FamiliesWaitingForTutorshipReport = () => {
                           onChange={() => handleCheckboxChange(index)}
                         />
                       </td>
-                      <td>{family.first_name} {family.last_name}</td>
+                      <td>{family.first_name} {family.last_name} {getGenderIcon(family.gender)}</td>
                       <td>{family.father_name}</td>
                       <td>{family.father_phone}</td>
                       <td>{family.mother_name}</td>

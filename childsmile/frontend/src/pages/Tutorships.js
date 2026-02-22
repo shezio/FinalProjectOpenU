@@ -92,13 +92,15 @@ const Tutorships = () => {
   const [pageSize] = useState(5); // Number of tutorships per page
   const [totalCount, setTotalCount] = useState(0); // Total number of tutorships
   const [matchesPage, setMatchesPage] = useState(1); // Current page for matches
-  const [matchesPageSize] = useState(7); // Number of matches per page
+  const [matchesPageSize] = useState(6); // Number of matches per page
   const [isMagnifyActive, setIsMagnifyActive] = useState(false);
   const [matchSearchQuery, setMatchSearchQuery] = useState('');
   const [tutorshipSearchQuery, setTutorshipSearchQuery] = useState('');
   const [enrichedTutorships, setEnrichedTutorships] = useState([]);
   const [wizardFamilies, setWizardFamilies] = useState([]);
   const [wizardTutors, setWizardTutors] = useState([]);
+  const [showCrossGenderWizard, setShowCrossGenderWizard] = useState(true); // UI-only checkbox for wizard
+  const [showCrossGenderManual, setShowCrossGenderManual] = useState(false); // UI-only checkbox for manual
   const showPendingDistancesWarning = matches.some(m => m.distance_pending);
   //const showPendingDistancesWarning = true; // Always show the warning for now
   const [CoordinatorOrAdmin, setCoordinatorOrAdmin] = useState(false);
@@ -117,6 +119,7 @@ const Tutorships = () => {
   const [isManualMatchMode, setIsManualMatchMode] = useState(false);
   const [manualMatchChildId, setManualMatchChildId] = useState(null);
   const [manualMatchChildName, setManualMatchChildName] = useState(null);
+  const [manualMatchChildGender, setManualMatchChildGender] = useState(null);
   const [availableTutors, setAvailableTutors] = useState([]);
   const [selectedTutorForMatch, setSelectedTutorForMatch] = useState(null);
   const [isCalculatingManualMatch, setIsCalculatingManualMatch] = useState(false);
@@ -335,6 +338,34 @@ const Tutorships = () => {
     );
 
     return pendingRole ? pendingRole.role_name : null; // Return the role name if found
+  };
+
+  // Helper to get gender icon and label
+  const getGenderIcon = (gender) => {
+    // Hebrew text values
+    if (gender === 'זכר') return '👦';
+    if (gender === 'נקבה') return '👩';
+    // Boolean values (true = Female, false = Male)
+    if (gender === true) return '👩';
+    if (gender === false) return '👦';
+    // String boolean values
+    if (gender === 'true') return '👩';
+    if (gender === 'false') return '👦';
+    // Fallback: unknown gender
+    return '';
+  };
+
+  const isCrossGenderMatch = (childGender, tutorGender) => {
+    return childGender !== tutorGender;
+  };
+
+  // Filter matches based on cross-gender checkbox state
+  const getFilteredMatches = (allMatches, showCrossGender) => {
+    if (showCrossGender) {
+      return allMatches; // Show all
+    }
+    // Show only same gender
+    return allMatches.filter(match => !isCrossGenderMatch(match.child_gender, match.tutor_gender));
   };
 
   // Permissions required to access the page
@@ -900,8 +931,10 @@ const Tutorships = () => {
     setIsManualMatchMode(false);
     setManualMatchChildId(null);
     setManualMatchChildName(null);
+    setManualMatchChildGender(null);
     setSelectedTutorForMatch(null);
     setManualMatchResult(null);
+    setShowCrossGenderManual(false);
   };
 
   useEffect(() => {
@@ -915,6 +948,7 @@ const Tutorships = () => {
       setIsManualMatchMode(true);
       setManualMatchChildId(location.state.manualMatchChildId);
       setManualMatchChildName(location.state.childName || `Child ID: ${location.state.manualMatchChildId}`);
+      setManualMatchChildGender(location.state.childGender || null);
       
       // Fetch tutors and then open modal - pass child_id to the API
       axios.get(`/api/get_available_tutors/?child_id=${location.state.manualMatchChildId}`)
@@ -1528,6 +1562,15 @@ const Tutorships = () => {
                 <div {...props}>{state.valueNow}</div>
               )}
             />
+            {/* Cross-Gender Checkbox for wizard modal */}
+            <label style={{ marginLeft: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <input
+                type="checkbox"
+                checked={showCrossGenderWizard}
+                onChange={(e) => setShowCrossGenderWizard(e.target.checked)}
+              />
+              <span>{t('Show other gender matches')}</span>
+            </label>
             <div className="status-filter-container" ref={statusFilterRef}>
               <label className="status-filter-label">
                 {statusFilter
@@ -1650,7 +1693,7 @@ const Tutorships = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {paginatedMatches.map((match, index) => (
+                    {getFilteredMatches(paginatedMatches, showCrossGenderWizard).map((match, index) => (
                       <tr
                         key={`${match.child_id}-${match.tutor_id}-${index}`}
                         onClick={() => handleRowClick(match)}
@@ -1670,8 +1713,8 @@ const Tutorships = () => {
                             <i className="info-icon" title={t('Press to see full info')}>i</i>
                           </div>
                         </td>
-                        <td>{match.child_full_name}</td>
-                        <td>{match.tutor_full_name}</td>
+                        <td>{match.child_full_name} {getGenderIcon(match.child_gender)}</td>
+                        <td>{match.tutor_full_name} {getGenderIcon(match.tutor_gender)}</td>
                         <td>{match.child_city}</td>
                         <td>{match.tutor_city}</td>
                         <td>{match.grade}</td>
@@ -1853,7 +1896,7 @@ const Tutorships = () => {
                   <option value="">{t('Choose a tutor...')}</option>
                   {availableTutors.map((tutor) => (
                     <option key={tutor.tutor_id} value={tutor.tutor_id}>
-                      {tutor.tutor_full_name}, {tutor.tutor_city}, {t('age')} {tutor.tutor_age}
+                      {tutor.tutor_full_name} {getGenderIcon(tutor.tutor_gender)}, {tutor.tutor_city}, {t('age')} {tutor.tutor_age}
                     </option>
                   ))}
                 </select>
@@ -1862,7 +1905,7 @@ const Tutorships = () => {
               {selectedTutorForMatch && (
                 <div className="selected-tutor-info">
                   <h4>{t('Selected Tutor')}:</h4>
-                  <p>{selectedTutorForMatch.tutor_full_name}, {selectedTutorForMatch.tutor_city}, {t('age')} {selectedTutorForMatch.tutor_age}</p>
+                  <p>{selectedTutorForMatch.tutor_full_name} {getGenderIcon(selectedTutorForMatch.tutor_gender)}, {selectedTutorForMatch.tutor_city}, {t('age')} {selectedTutorForMatch.tutor_age}</p>
                 </div>
               )}
 

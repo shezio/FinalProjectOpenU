@@ -78,6 +78,10 @@
   /* Prevent overflow issues */
 }
 
+.match-modal-content .grid-container{
+  overflow-y: hidden;
+}
+
 .grid-container {
   flex: 1;
   min-width: 300px;

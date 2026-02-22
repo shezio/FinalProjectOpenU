@@ -479,6 +479,7 @@ const resources = {
       'Add New Family': 'הוסף משפחה',
       "Family Details": 'פרטי משפחה - משפחת ',
       'Close': 'סגור',
+      "Show other gender matches": 'הצג התאמות מהמין ההפכי',
       "Date of Birth": 'תאריך לידה',
       "Medical Diagnosis": 'אבחון רפואי',
       "Diagnosis Date": 'תאריך אבחון',

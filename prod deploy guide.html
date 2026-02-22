@@ -1,0 +1,442 @@
+ <!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🚀 מדריך העלאה לסביבת הייצור - חיוך של ילד</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            direction: rtl;
+            padding: 40px 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 50px 40px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+        
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.95;
+        }
+        
+        .content {
+            padding: 40px;
+        }
+        
+        .warning-box {
+            background: #fff3cd;
+            border-right: 5px solid #ffc107;
+            padding: 20px;
+            margin-bottom: 30px;
+            border-radius: 8px;
+            text-align: right;
+        }
+        
+        .warning-box strong {
+            color: #856404;
+            font-size: 1.1em;
+        }
+        
+        .warning-box p {
+            color: #856404;
+            margin-top: 8px;
+            line-height: 1.6;
+        }
+        
+        .steps {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .step {
+            background: #f8f9fa;
+            border-right: 5px solid #667eea;
+            padding: 25px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+        
+        .step:hover {
+            background: #f0f2ff;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+            transform: translateX(-5px);
+        }
+        
+        .step-number {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.2em;
+            margin-left: 15px;
+        }
+        
+        .step-title {
+            font-size: 1.3em;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .step-description {
+            color: #555;
+            line-height: 1.8;
+            margin-bottom: 15px;
+            font-size: 1em;
+        }
+        
+        .step-details {
+            background: white;
+            padding: 15px;
+            border-radius: 6px;
+            border-right: 3px solid #667eea;
+            text-align: right;
+            font-family: 'Courier New', monospace;
+            color: #333;
+            overflow-x: auto;
+        }
+        
+        .code {
+            background: #f5f5f5;
+            padding: 12px;
+            border-radius: 4px;
+            margin: 8px 0;
+            color: #d63384;
+            font-weight: 500;
+        }
+        
+        .emoji {
+            font-size: 1.5em;
+            margin-left: 8px;
+        }
+        
+        .success-box {
+            background: #d4edda;
+            border-right: 5px solid #28a745;
+            padding: 25px;
+            border-radius: 8px;
+            text-align: center;
+            margin-top: 30px;
+        }
+        
+        .success-box h2 {
+            color: #155724;
+            font-size: 1.8em;
+            margin-bottom: 10px;
+        }
+        
+        .success-box p {
+            color: #155724;
+            font-size: 1.1em;
+        }
+        
+        .info-badge {
+            display: inline-block;
+            background: #e7f3ff;
+            color: #004085;
+            padding: 8px 12px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            margin-top: 10px;
+        }
+        
+        .time-estimate {
+            color: #666;
+            font-size: 0.95em;
+            margin-top: 10px;
+            font-style: italic;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                margin: 0;
+                border-radius: 0;
+            }
+            
+            .header {
+                padding: 30px 20px;
+            }
+            
+            .header h1 {
+                font-size: 1.8em;
+            }
+            
+            .content {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 העלאה לסביבת הייצור</h1>
+            <p>מדריך שלב-אחר-שלב לעדכון מערכת חיוך של ילד</p>
+        </div>
+        
+        <div class="content">
+            <div class="warning-box">
+                <strong>⚠️ חשוב! קראו בעיון לפני שמתחילים:</strong>
+                <p>
+                    הנתונים במערכת בדיקה (test data) יימחקו לחלוטין. 
+                    <strong>גבו את כל הנתונים החשובים לפני שתתחילו!</strong>
+                    העלאה זו מוגמרת תוך ~15 דקות.
+                </p>
+                <p style="margin-top: 12px; background: #ffe6e6; padding: 10px; border-radius: 4px;">
+                    <strong>⚡ סדר ביצוע קריטי:</strong>
+                    1️⃣ הרץ SQL ישירות בפרוד 
+                    2️⃣ דחוף PR (עם FTs מופעלים)
+                    3️⃣ ממתן לפרסום PR
+                    4️⃣ אז בצע את שאר השלבים
+                </p>
+            </div>
+            
+            <div class="steps">
+                <!-- שלב PRE: ההכנה המקדימה - SQL + PR -->
+                <div class="step" style="background: linear-gradient(135deg, #fff3cd 0%, #ffe6b3 100%); border-right: 5px solid #ff6b6b;">
+                    <div class="step-title">
+                        <span class="step-number" style="background: #ff6b6b;">PRE</span>
+                        <span>⚡ שלב קריטי: SQL ישירות + דחיפת PR</span>
+                    </div>
+                    <div class="step-description">
+                        <strong>זה חייב לקרות לפני כל דבר אחר!</strong> בצע את השלבים הבאים בסדר זה:
+                    </div>
+                    <div style="background: white; padding: 15px; border-radius: 6px; border-right: 3px solid #ff6b6b; margin-bottom: 12px;">
+                        <strong style="color: #856404; display: block; margin-bottom: 10px;">שלב 1: הרץ SQL במסד הנתונים בפרוד</strong>
+                        <div class="code">ALTER TABLE childsmile_app_children 
+  ALTER COLUMN when_completed_treatments TYPE VARCHAR(255),
+  ALTER COLUMN expected_end_treatment_by_protocol TYPE VARCHAR(255);</div>
+                        <div class="code">ALTER TABLE childsmile_app_matures 
+  ALTER COLUMN when_completed_treatments TYPE VARCHAR(255);</div>
+                        <p style="margin-top: 10px; color: #555; font-size: 0.9em;">✓ בצע בישירות - לא דרך PR</p>
+                    </div>
+                    <div style="background: white; padding: 15px; border-radius: 6px; border-right: 3px solid #ff6b6b;">
+                        <strong style="color: #856404; display: block; margin-bottom: 10px;">שלב 2: דחוף PR עם שינויים</strong>
+                        <ul style="text-align: right; margin-right: 20px; color: #555; line-height: 1.8; font-size: 0.95em;">
+                            <li>✅ <code>frontend/.env.production</code> - כל FTs = TRUE</li>
+                            <li>✅ <code>childsmile_app/utils.py</code> - שינויים החדשים בקוד</li>
+                            <li>✅ כל קובצי ה-Python שעודכנו</li>
+                            <li>✅ תוואי ההערות: "פרוד העלאה - [תאריך]"</li>
+                        </ul>
+                    </div>
+                    <div class="info-badge" style="margin-top: 12px;">🔐 רק אחרי ש-PR מתויבה, ממשיך לשלב 0</div>
+                    <div class="time-estimate">⏱️ זמן: ~5 דקות</div>
+                </div>
+                    <div class="step-title">
+                        <span class="step-number">0</span>
+                        <span>הכנה מוקדמת - ודא שכל FTs פתוחים 🔧</span>
+                    </div>
+                    <div class="step-description">
+                        <strong>חשוב מאוד!</strong> לפני ההעלאה, בדוק שכל ה-Feature Toggles (FTs) פתוחים בחזית:
+                    </div>
+                    <div class="step-details">
+                        <strong>קובץ:</strong> <code>frontend/.env.production</code>
+                        <div class="code">REACT_APP_API_URL=https://app.achildssmile.org.il</div>
+                        <div class="code">REACT_APP_ENABLE_BULK_DELETE=true</div>
+                        <div class="code">REACT_APP_BLOCK_ACCESS_AFTER_APPROVAL=true</div>
+                        <div class="code">REACT_APP_FAMILIES_IMPORT_ENABLED=true</div>
+                    </div>
+                    <div class="info-badge">✅ כל ה-FTs אמורים להיות TRUE בייצור!</div>
+                    <div class="time-estimate">⏱️ זמן: ~2 דקות</div>
+                </div>
+
+                <!-- שלב 0.5: Azure Env Vars -->
+                <div class="step">
+                    <div class="step-title">
+                        <span class="step-number">0.5</span>
+                        <span>וודא משתנים ב-Azure (Environment Variables) ☁️</span>
+                    </div>
+                    <div class="step-description">
+                        בדוק ש-Azure App Service או Container Registry מכיל את כל המשתנים הדרושים:
+                    </div>
+                    <div class="step-details">
+                        <strong>משתנים הדרושים ב-Azure:</strong>
+                        <div class="code">REACT_APP_ENABLE_BULK_DELETE=true</div>
+                        <div class="code">REACT_APP_BLOCK_ACCESS_AFTER_APPROVAL=true</div>
+                        <div class="code">REACT_APP_FAMILIES_IMPORT_ENABLED=true</div>
+                        <div class="code">REACT_APP_API_URL=https://app.achildssmile.org.il</div>
+                        <div class="code">EMAIL_HOST_USER=[gmail]</div>
+                        <div class="code">EMAIL_HOST_PASSWORD=[app_password]</div>
+                        <div class="code">SECRET_KEY=[django_secret]</div>
+                        <div class="code">DB_PASSWORD=[prod_db_password]</div>
+                    </div>
+                    <div class="info-badge">🔐 כל המשתנים ב-Azure צריכים להיות מעודכנים!</div>
+                    <div class="time-estimate">⏱️ זמן: ~3 דקות</div>
+                </div>
+                
+                <!-- שלב 1: הכנה מוקדמת - פתיחת גישה למסד הנתונים -->
+                <div class="step">
+                    <div class="step-title">
+                        <span class="step-number">1</span>
+                        <span>הכנה מוקדמת - פתיחת גישה למסד הנתונים 🔐</span>
+                    </div>
+                    <div class="step-description">
+                        לפני כל דבר, נתחבר למסד הנתונים (Database) כדי לבצע את הנקיונות הדרושים:
+                    </div>
+                    <div class="step-details">
+                        <div class="code">ALTER TABLE childsmile_app_children 
+  ALTER COLUMN when_completed_treatments TYPE VARCHAR(255),
+  ALTER COLUMN expected_end_treatment_by_protocol TYPE VARCHAR(255);</div>
+                        <div class="code">ALTER TABLE childsmile_app_matures 
+  ALTER COLUMN when_completed_treatments TYPE VARCHAR(255);</div>
+                    </div>
+                    <div class="time-estimate">⏱️ זמן: ~1 דקה</div>
+                </div>
+                
+                <!-- שלב 2: ניקיון חסומים -->
+                <div class="step">
+                    <div class="step-title">
+                        <span class="step-number">2</span>
+                        <span>ניקיון נתונים עזר (תיקיות תומכות) 🧹</span>
+                    </div>
+                    <div class="step-description">
+                        נמחוק תיקיות עזר שעלולות לחסום את המחיקה מהתוך המערכת:
+                    </div>
+                    <div class="step-details">
+                        <div class="code">DELETE FROM audit_log;</div>
+                        <div class="code">DELETE FROM childsmile_app_tasks;</div>
+                        <div class="code">DELETE FROM childsmile_app_healthy;</div>
+                    </div>
+                    <div class="info-badge">💡 זה מנקה רישומי דוחות, משימות וילדים בריאים</div>
+                    <div class="time-estimate">⏱️ זמן: ~2 דקות</div>
+                </div>
+                
+                <!-- שלב 3: מחיקה מהממשק -->
+                <div class="step">
+                    <div class="step-title">
+                        <span class="step-number">3</span>
+                        <span>מחיקה ממשק המשתמש (UI) 🖥️</span>
+                    </div>
+                    <div class="step-description">
+                        עברו למערכת דרך הממשק ומחקו את כל הנתונים:
+                    </div>
+                    <ul style="text-align: right; margin-right: 20px; color: #555; line-height: 2;">
+                        <li><strong>מחקו את כל החניכויות</strong> (Tutorships) בעמוד ניהול חניכויות</li>
+                        <li><strong>מחקו את כל הילדים</strong> (Children) בעמוד משפחות</li>
+                        <li><strong>מחקו את כל החונכים</strong> (Tutors) בעמוד ניהול מתנדבים</li>
+                        <li><strong>מחקו את כל המשימות</strong> (Tasks) בעמוד משימות</li>
+                    </ul>
+                    <div class="info-badge">ℹ️ הכל מחוק ממשק? מצוין! עברו לשלב הבא</div>
+                    <div class="time-estimate">⏱️ זמן: ~5 דקות</div>
+                </div>
+                
+                <!-- שלב 4: ניקיון נתונים עמוקים -->
+                <div class="step">
+                    <div class="step-title">
+                        <span class="step-number">4</span>
+                        <span>ניקיון נתונים עמוקים (Database) 🗑️</span>
+                    </div>
+                    <div class="step-description">
+                        מחקו את נתוני הרקע של מסד הנתונים שלא מחוקו באופן אוטומטי:
+                    </div>
+                    <div class="step-details">
+                        <div class="code">DELETE FROM childsmile_app_prevtaskstatuses;</div>
+                        <div class="code">DELETE FROM childsmile_app_prevtutorshipstatuses;</div>
+                        <div class="code">DELETE FROM childsmile_app_possiblematches;</div>
+                    </div>
+                    <div class="info-badge">🔍 אלו טבלאות עזר שמעקבות אחרי היסטוריה</div>
+                    <div class="time-estimate">⏱️ זמן: ~1 דקה</div>
+                </div>
+                
+                <!-- שלב 5: ייבוא מתנדבים -->
+                <div class="step">
+                    <div class="step-title">
+                        <span class="step-number">5</span>
+                        <span>ייבוא מתנדבים (חונכים) 👥</span>
+                    </div>
+                    <div class="step-description">
+                        עברו לעמוד ייבוא מתנדבים והעלו את קובץ האקסל המוכן:
+                    </div>
+                    <div class="step-details">
+                        <strong>קובץ:</strong> מתנדבים_מוכן_לעלייה_לפרוד.xlsx
+                    </div>
+                    <div class="info-badge">📊 זה יכניס לי את כל החונכים עם כל הנתונים שלהם</div>
+                    <div class="time-estimate">⏱️ זמן: ~3 דקות (תלוי בגודל הקובץ)</div>
+                </div>
+                
+                <!-- שלב 6: ייבוא ילדים -->
+                <div class="step">
+                    <div class="step-title">
+                        <span class="step-number">6</span>
+                        <span>ייבוא משפחות וילדים 👨‍👩‍👧‍👦</span>
+                    </div>
+                    <div class="step-description">
+                        עברו לעמוד ייבוא משפחות והעלו את קובץ האקסל המוכן:
+                    </div>
+                    <div class="step-details">
+                        <strong>קובץ:</strong> ילדים_מוכן_לעלייה_לפרוד.xlsx
+                    </div>
+                    <div class="info-badge">📊 זה יכניס לי את כל הילדים וההורים עם כל המידע הרלוונטי</div>
+                    <div class="time-estimate">⏱️ זמן: ~3 דקות (תלוי בגודל הקובץ)</div>
+                </div>
+                
+                <!-- שלב 7: חתימה וסיום -->
+                <div class="step" style="background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);">
+                    <div class="step-title">
+                        <span class="step-number">7</span>
+                        <span>בדיקה סופית והשקה לייצור ✨</span>
+                    </div>
+                    <div class="step-description">
+                        בדקו שהכל עובד כראוי:
+                    </div>
+                    <ul style="text-align: right; margin-right: 20px; color: #555; line-height: 2;">
+                        <li>✓ התחברו למערכת - בדקו שהנתונים החדשים שם</li>
+                        <li>✓ בדקו דף חניכויות - אמור להיות ריק או עם הנתונים החדשים</li>
+                        <li>✓ בדקו דף משפחות - אמור להיות עם כל הילדים החדשים</li>
+                        <li>✓ בדקו דף מתנדבים - אמור להיות עם כל החונכים החדשים</li>
+                        <li>✓ בדקו שכל ה-FTs עובדים כמצופה (יבוא, מחיקה, ממשלות וכו')</li>
+                    </ul>
+                    <div class="info-badge">🎉 הכל בסדר? מזל טוב!</div>
+                    <div class="time-estimate">⏱️ זמן: ~2 דקות</div>
+                </div>
+            </div>
+            
+            <div class="success-box">
+                <h2>🏖️ חגיגה!</h2>
+                <p>המערכת עוסקת כעת בנתונים חדשים וטריים</p>
+                <p style="margin-top: 15px; font-size: 1em;">
+                    <strong>סך הזמן הכולל: ~25-30 דקות</strong><br>
+                    <small style="font-size: 0.9em;">(כולל SQL, PR, בדיקת FTs ו-Azure environment variables)</small>
+                </p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

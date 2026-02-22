@@ -380,8 +380,7 @@ def fetch_possible_matches():
         100 AS grade,
         FALSE AS is_used
     FROM childsmile_app_children child
-    JOIN childsmile_app_signedup signedup
-        ON child.gender = signedup.gender
+    CROSS JOIN childsmile_app_signedup signedup
     JOIN childsmile_app_tutors tutor
         ON signedup.id = tutor.id_id
     JOIN childsmile_app_staff staff
