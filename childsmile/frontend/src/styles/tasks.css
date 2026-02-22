@@ -849,3 +849,26 @@ Added max-width: 100% to prevent overflow*/
 .rejection-reason h3 {
   font-size: 26px !important;
 }
+
+.tasks-main-content .scrollable-textarea {
+  height: 150px;
+  width: 600px !important;
+}
+.scrollable-textarea {
+  height: 60px;
+  resize: none;
+  width: 100%;
+  font-family: Rubik, sans-serif;
+  overflow-y: auto;
+  font-size: 1.1em;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  padding: 8px;
+  background: #f9f9f9;
+  box-sizing: border-box;
+}
+
+textarea.scrollable-textarea {
+  resize: none;
+  overflow-y: auto;
+}

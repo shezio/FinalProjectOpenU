@@ -814,6 +814,7 @@ def create_task_internal(task_data):
             other_information=task_data.get("other_information"),
             initial_family_data_id_fk=initial_family_data,
             user_info=task_data.get("user_info"),  # Store user information if provided
+            explanation=task_data.get("explanation"),
         )
         api_logger.debug(f"Task created successfully: {task}")
         return task
