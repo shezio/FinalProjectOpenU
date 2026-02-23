@@ -810,11 +810,16 @@ const Tasks = () => {
                     }}
                   >
                     <option value="">{t("Filter by Family")}</option>
-                    {[...childrenOptions].sort((a, b) => a.label.localeCompare(b.label, 'he')).map((child) => (
-                      <option key={child.value} value={child.value}>
-                        {child.label}
-                      </option>
-                    ))}
+                    {Array.from(new Set(tasks
+                      .filter(task => task.type_name === 'שיחת ביקורת' && task.status !== 'הושלמה')
+                      .map(task => task.child)
+                    ))
+                      .map(childId => {
+                        const child = childrenOptions.find(c => c.value === childId);
+                        return child ? (
+                          <option key={child.value} value={child.value}>{child.label}</option>
+                        ) : null;
+                      })}
                   </select>
                 </div>
               )}
