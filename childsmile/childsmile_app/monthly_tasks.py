@@ -50,102 +50,126 @@ def check_and_create_monthly_review_tasks():
             'errors': 0
         }
     
+    # Prevent double execution: file-based lock
+    lock_file = '/tmp/monthly_review_task.lock'
+    if os.path.exists(lock_file):
+        api_logger.warning('Monthly review task creation skipped: lock file exists (job already running)')
+        return {
+            'status': 'skipped_due_to_lock',
+            'families_checked': 0,
+            'tasks_created': 0,
+            'tasks_skipped': 0,
+            'errors': 0
+        }
     try:
-        today = timezone.now().date()
-        one_month_ago = today - timedelta(days=30)
+        with open(lock_file, 'w') as f:
+            f.write(str(datetime.now()))
         
-        # Get all children (no is_active field on Children model)
-        all_children = Children.objects.all()
-        total_families = all_children.count()
-        
-        if total_families == 0:
-            api_logger.info('ℹ️ No active families found for review task creation')
-            return {
-                'status': 'completed',
-                'families_checked': 0,
-                'tasks_created': 0,
-                'tasks_skipped': 0,
-                'errors': 0
-            }
-        
-        # Get or create task type
-        task_type, _ = Task_Types.objects.get_or_create(
-            task_type='שיחת ביקורת',
-            defaults={
-                'resource': 'childsmile_app_children',
-                'action': 'CREATE'
-            }
-        )
-        
-        # Get Technical Coordinator role
         try:
-            tech_coordinator_role = Role.objects.get(role_name='Technical Coordinator')
-            coordinators = Staff.objects.filter(
-                roles=tech_coordinator_role,
-                is_active=True
+            today = timezone.now().date()
+            one_month_ago = today - timedelta(days=30)
+            
+            # Get all children (no is_active field on Children model)
+            all_children = Children.objects.all()
+            total_families = all_children.count()
+            
+            if total_families == 0:
+                api_logger.info('ℹ️ No active families found for review task creation')
+                return {
+                    'status': 'completed',
+                    'families_checked': 0,
+                    'tasks_created': 0,
+                    'tasks_skipped': 0,
+                    'errors': 0
+                }
+            
+            # Get or create task type
+            task_type, _ = Task_Types.objects.get_or_create(
+                task_type='שיחת ביקורת',
+                defaults={
+                    'resource': 'childsmile_app_children',
+                    'action': 'CREATE'
+                }
             )
-        except Role.DoesNotExist:
-            api_logger.error('❌ Role "Technical Coordinator" not found')
-            return {
-                'status': 'error',
-                'families_checked': total_families,
-                'tasks_created': 0,
-                'tasks_skipped': 0,
-                'errors': 1
-            }
-        
-        if not coordinators.exists():
-            api_logger.warning('⚠️ No active technical coordinators found')
-            return {
-                'status': 'error',
-                'families_checked': total_families,
-                'tasks_created': 0,
-                'tasks_skipped': 0,
-                'errors': 1
-            }
-        
-        tasks_created = 0
-        tasks_skipped = 0
-        coordinator_list = list(coordinators)
-        
-        # Check each family
-        for child in all_children:
-            # Feature #3: Check if child is mature (age >= 16) - auto-set need_review=False
-            from .utils import check_and_handle_age_maturity
-            maturity_result = check_and_handle_age_maturity(child)
             
-            # SKIP children marked as not needing review (Feature #2)
-            # This includes: בריא/ז״ל status, בוגר tutoring status, or age >= 16
-            if not child.need_review:
-                tasks_skipped += 1
-                reason = ""
-                if maturity_result['mature']:
-                    reason = f"(age: {maturity_result['age']})"
-                api_logger.debug(f"Skipping review task for {child.childfirstname} {child.childsurname} (need_review=False) {reason}")
-                continue
+            # Get Families Coordinator and Tutored Families Coordinator roles
+            try:
+                families_coordinator_role = Role.objects.get(role_name='Families Coordinator')
+            except Role.DoesNotExist:
+                api_logger.error('❌ Role "Families Coordinator" not found')
+                return {
+                    'status': 'error',
+                    'families_checked': total_families,
+                    'tasks_created': 0,
+                    'tasks_skipped': 0,
+                    'errors': 1
+                }
+            try:
+                tutored_families_coordinator_role = Role.objects.get(role_name='Tutored Families Coordinator')
+            except Role.DoesNotExist:
+                api_logger.error('❌ Role "Tutored Families Coordinator" not found')
+                return {
+                    'status': 'error',
+                    'families_checked': total_families,
+                    'tasks_created': 0,
+                    'tasks_skipped': 0,
+                    'errors': 1
+                }
             
-            # Check if month has passed since last talk (or never had one)
-            if child.last_review_talk_conducted is None or child.last_review_talk_conducted <= one_month_ago:
+            tasks_created = 0
+            tasks_skipped = 0
+            
+            # Check each family
+            for child in all_children:
+                # Feature #3: Check if child is mature (age >= 16) - auto-set need_review=False
+                from .utils import check_and_handle_age_maturity
+                maturity_result = check_and_handle_age_maturity(child)
                 
-                # Create ONE task per coordinator for this child
-                child_full_name = f"{child.childfirstname} {child.childsurname}".strip()
-                last_talk_date = child.last_review_talk_conducted.strftime('%d/%m/%Y') if child.last_review_talk_conducted else 'Never'
+                # SKIP children marked as not needing review (Feature #2)
+                # This includes: בריא/ז״ל status, בוגר tutoring status, or age >= 16
+                if not child.need_review:
+                    tasks_skipped += 1
+                    reason = ""
+                    if maturity_result['mature']:
+                        reason = f"(age: {maturity_result['age']})"
+                    api_logger.debug(f"Skipping review task for {child.childfirstname} {child.childsurname} (need_review=False) {reason}")
+                    continue
                 
-                # Due date: 30 days from now (gives time to conduct the call)
-                due_date = today + timedelta(days=30)
-                
-                # Task description includes child name and last talk date
-                description = f'Monthly family review talk for {child_full_name} - Last talk: {last_talk_date} - Conduct check-up call with family'
-                
-                # Create one task per coordinator
-                for coordinator in coordinator_list:
-                    # Check if task already exists for THIS child AND this coordinator
-                    # This prevents duplicate tasks per child per coordinator
-                    # Only check for INCOMPLETE tasks (לא הושלמה or בביצוע) - completed ones (הושלמה) are done
+                # Check if month has passed since last talk (or never had one)
+                if child.last_review_talk_conducted is None or child.last_review_talk_conducted <= one_month_ago:
+                    
+                    # Assign to responsible coordinator only if they have the correct role
+                    responsible_coordinator_id = getattr(child, 'responsible_coordinator', None)
+                    if not responsible_coordinator_id:
+                        tasks_skipped += 1
+                        api_logger.warning(f"No responsible coordinator for child {child.childfirstname} {child.childsurname} (child_id: {child.child_id})")
+                        continue
+                    try:
+                        responsible_coordinator = Staff.objects.get(staff_id=responsible_coordinator_id)
+                    except Staff.DoesNotExist:
+                        tasks_skipped += 1
+                        api_logger.warning(f"Responsible coordinator with ID {responsible_coordinator_id} not found for child {child.childfirstname} {child.childsurname} (child_id: {child.child_id})")
+                        continue
+                    # Check if responsible coordinator has one of the required roles
+                    if not (responsible_coordinator.roles.filter(role_name='Families Coordinator').exists() or responsible_coordinator.roles.filter(role_name='Tutored Families Coordinator').exists()):
+                        tasks_skipped += 1
+                        api_logger.warning(f"Responsible coordinator for child {child.childfirstname} {child.childsurname} does not have required role.")
+                        continue
+                    
+                    # Due date: 30 days from now (gives time to conduct the call)
+                    due_date = today + timedelta(days=30)
+                    
+                    # Prepare child name and last talk date for description
+                    child_full_name = f"{child.childfirstname} {child.childsurname}".strip()
+                    last_talk_date = child.last_review_talk_conducted.strftime('%d/%m/%Y') if child.last_review_talk_conducted else 'Never'
+                    # Task description includes child name and last talk date
+                    description = f'Monthly family review talk for {child_full_name} - Last talk: {last_talk_date} - Conduct check-up call with family'
+                    
+                    # Check if task already exists for THIS child AND this coordinator (by task type name)
                     existing_task = Tasks.objects.filter(
                         related_child=child,
-                        task_type=task_type,
-                        assigned_to=coordinator,
+                        task_type__task_type='שיחת ביקורת',
+                        assigned_to=responsible_coordinator,
                         status__in=['לא הושלמה', 'בביצוע']  # Only incomplete tasks
                     ).exists()
                     
@@ -155,32 +179,45 @@ def check_and_create_monthly_review_tasks():
                             description=description,
                             due_date=due_date,
                             status='לא הושלמה',  # Hebrew: "Not Completed"
-                            assigned_to=coordinator,
+                            assigned_to=responsible_coordinator,
                             related_child=child
                         )
                         
                         tasks_created += 1
-                        api_logger.debug(f"Created review task for family: {child_full_name} (child_id: {child.child_id}) assigned to {coordinator.username}")
+                        api_logger.debug(f"Created review task for family: {child_full_name} (child_id: {child.child_id}) assigned to {responsible_coordinator.username}")
                     else:
                         tasks_skipped += 1
-            else:
-                tasks_skipped += 1
-        
-        # Log summary
-        log_message = f'✅ Monthly review task check completed | Families checked: {total_families} | Created: {tasks_created} | Skipped: {tasks_skipped} | Coordinators: {coordinators.count()}'
-        api_logger.info(log_message)
-        
-        return {
-            'status': 'completed',
-            'families_checked': total_families,
-            'tasks_created': tasks_created,
-            'tasks_skipped': tasks_skipped,
-            'errors': 0
-        }
-        
+                else:
+                    tasks_skipped += 1
+            
+            # Log summary
+            log_message = f'✅ Monthly review task check completed | Families checked: {total_families} | Created: {tasks_created} | Skipped: {tasks_skipped}'
+            api_logger.info(log_message)
+            
+            return {
+                'status': 'completed',
+                'families_checked': total_families,
+                'tasks_created': tasks_created,
+                'tasks_skipped': tasks_skipped,
+                'errors': 0
+            }
+            
+        except Exception as e:
+            error_msg = f'❌ Error in monthly review task creation: {str(e)}'
+            api_logger.error(error_msg)
+            return {
+                'status': 'error',
+                'families_checked': 0,
+                'tasks_created': 0,
+                'tasks_skipped': 0,
+                'errors': 1,
+                'error_message': str(e)
+            }
+        finally:
+            if os.path.exists(lock_file):
+                os.remove(lock_file)
     except Exception as e:
-        error_msg = f'❌ Error in monthly review task creation: {str(e)}'
-        api_logger.error(error_msg)
+        api_logger.error(f"Error handling lock file: {str(e)}")
         return {
             'status': 'error',
             'families_checked': 0,

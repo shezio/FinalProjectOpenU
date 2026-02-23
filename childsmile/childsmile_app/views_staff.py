@@ -8,7 +8,7 @@ from django_ratelimit.decorators import ratelimit
 from django.core.mail import send_mail
 from django.conf import settings
 from django.db import DatabaseError, transaction
-from .models import Staff, Role, TOTPCode, SignedUp, Tutors, Pending_Tutor, Tasks
+from .models import Staff, Role, TOTPCode, SignedUp, Tutors, Pending_Tutor, Tasks, Task_Types
 from .utils import *
 from .audit_utils import log_api_action
 from .logger import api_logger
@@ -684,6 +684,9 @@ def update_staff_member(request, staff_id):
                     del request.session['staff_update_new_email']
         
         # Update roles if provided
+        technical_coordinator_role = None
+        original_roles_set = set(original_roles)
+        new_roles_set = set(data.get("roles", original_roles))
         if "roles" in data:
             roles = data["roles"]
             if isinstance(roles, list):
@@ -692,6 +695,8 @@ def update_staff_member(request, staff_id):
                     try:
                         role = Role.objects.get(role_name=role_name)
                         staff_member.roles.add(role)
+                        if role_name == "Technical Coordinator":
+                            technical_coordinator_role = role
                     except Role.DoesNotExist:
                         log_api_action(
                             request=request,
@@ -734,6 +739,56 @@ def update_staff_member(request, staff_id):
                     {"error": "Roles should be provided as a list of role names."},
                     status=400,
                 )
+
+        # If Technical Coordinator role was removed, delete review tasks assigned to this staff member
+        if "Technical Coordinator" not in new_roles_set:
+            try:
+                review_task_type = Task_Types.objects.get(task_type="שיחת ביקורת")
+                review_tasks = Tasks.objects.filter(
+                    assigned_to=staff_member,
+                    task_type=review_task_type,
+                    status__in=["לא הושלמה", "בביצוע"]
+                )
+                deleted_count = 0
+                for task in review_tasks:
+                    # Check if there is at least one other incomplete review task for the same child
+                    other_tasks_exist = Tasks.objects.filter(
+                        related_child=task.related_child,
+                        task_type=review_task_type,
+                        status__in=["לא הושלמה", "בביצוע"],
+                        assigned_to__ne=staff_member
+                    ).exists()
+                    if other_tasks_exist:
+                        task.delete()
+                        deleted_count += 1
+                api_logger.info(f"Deleted {deleted_count} review tasks for staff {staff_member.staff_id} after removing Technical Coordinator role (only if other tasks exist per child).")
+            except Task_Types.DoesNotExist:
+                api_logger.warning("Review task type 'שיחת ביקורת' not found when attempting to delete tasks.")
+
+        # If user loses both Families Coordinator and Tutored Families Coordinator roles, delete their review tasks (per child, only if another exists)
+        if not ("Families Coordinator" in new_roles_set or "Tutored Families Coordinator" in new_roles_set):
+            try:
+                review_task_type = Task_Types.objects.get(task_type="שיחת ביקורת")
+                review_tasks = Tasks.objects.filter(
+                    assigned_to=staff_member,
+                    task_type=review_task_type,
+                    status__in=["לא הושלמה", "בביצוע"]
+                )
+                deleted_count = 0
+                for task in review_tasks:
+                    # Only delete if another incomplete review task exists for this child
+                    other_tasks_exist = Tasks.objects.filter(
+                        related_child=task.related_child,
+                        task_type=review_task_type,
+                        status__in=["לא הושלמה", "בביצוע"],
+                        assigned_to__ne=staff_member
+                    ).exists()
+                    if other_tasks_exist:
+                        task.delete()
+                        deleted_count += 1
+                api_logger.info(f"Deleted {deleted_count} review tasks for staff {staff_member.staff_id} after losing both Families Coordinator and Tutored Families Coordinator roles (only if other tasks exist per child).")
+            except Task_Types.DoesNotExist:
+                api_logger.warning("Review task type 'שיחת ביקורת' not found when attempting to delete tasks.")
 
         # Propagate email changes to related tables
         old_email = staff_member.email
