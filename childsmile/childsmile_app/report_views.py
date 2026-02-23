@@ -151,10 +151,11 @@ def families_waiting_for_tutorship_report(request):
         # Define the tutoring statuses that indicate waiting for tutorship
         # MULTI-TUTOR: Now includes יש_חונך (has tutor) so we can add more tutors
         waiting_statuses = [
-            "למצוא_חונך",                    # Looking for tutor (no tutor yet)
+            "למצוא_חונך",                 # Looking for tutor (no tutor yet)
             "למצוא_חונך_אין_באיזור_שלו",  # Looking, none in area
-            "למצוא_חונך_בעדיפות_גבוה",     # Looking, high priority
-            "יש_חונך",                       # HAS tutor - but may want MORE (multi-tutor)
+            "למצוא_חונך_בעדיפות_גבוה",    # Looking, high priority
+            "יש_חונך",                    # HAS tutor - but may want MORE (multi-tutor)
+            "שידוך_בסימן_שאלה",           # Matched but not sure if it will work
         ]
 
         # Get date filters from query parameters
@@ -171,14 +172,17 @@ def families_waiting_for_tutorship_report(request):
         # 1. Have waiting status (with or without tutors) 
         # 2. Have pending tutorships
         # Exclude ONLY those with non-tutoring statuses (לא רוצים, לא רלוונטי, בוגר)
-        # Exclude deceased and healthy children
-        excluded_statuses = ['לא_רוצים', 'לא_רלוונטי', 'בוגר', 'ז״ל', 'בריא']
-        
+        # Exclude deceased children
+        excluded_tutoring_statuses = ['לא_רוצים', 'לא_רלוונטי', 'בוגר']  # Adjust as needed
+        excluded_statuses = ['ז״ל']  # Exclude deceased children
+
         children = Children.objects.filter(
             Q(tutoring_status__in=waiting_statuses) |  # Children with waiting/tutor status
             Q(tutorships__tutorship_activation='pending_first_approval')  # OR children with pending tutorships
         ).exclude(
-            tutoring_status__in=excluded_statuses  # Exclude non-tutoring statuses
+            tutoring_status__in=excluded_tutoring_statuses  # Exclude non-tutoring statuses
+        ).exclude(
+            status__in=excluded_statuses # Exclude deceased children
         ).distinct()
 
         # Apply date filters if provided
