@@ -140,6 +140,15 @@ const Sidebar = () => {
           ניהול חונכים ומתנדבים
         </button>
       )}
+      {hasPermissionToTutorships && (
+        <button
+          data-path="/tutorships"
+          className={location.pathname.startsWith('/tutorships') ? 'active' : ''}
+          onClick={() => goTo('/tutorships')}
+        >
+          חונכות
+        </button>
+      )}
       {/* End Tutor and Volunteer Management  */}
       {hasPermissionToFeedbacks && (
         <button
@@ -148,15 +157,6 @@ const Sidebar = () => {
           onClick={() => goTo('/feedbacks')}
         >
           משובים
-        </button>
-      )}
-      {hasPermissionToTutorships && (
-        <button
-          data-path="/tutorships"
-          className={location.pathname.startsWith('/tutorships') ? 'active' : ''}
-          onClick={() => goTo('/tutorships')}
-        >
-          חונכות
         </button>
       )}
       {hasPermissionToAnyReport && (
