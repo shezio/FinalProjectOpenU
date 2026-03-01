@@ -410,8 +410,16 @@ def fetch_possible_matches():
         AND child.status NOT IN (%s, %s)
         -- Exclude irrelevant tutoring statuses (no point matching if they don't want/aren't relevant)
         AND child.tutoring_status NOT IN (%s, %s)
-        -- exclude age >=16 which are matures and not relevant for tutoring
-        AND child.age < 16;
+        -- Exclude age >=16 which are matures and not relevant for tutoring
+        -- Smart SQL age calculation matching Python logic: 
+        -- age = year_diff - (1 if today's month/day is before birth month/day else 0)
+        -- This ensures we only get children under 16 (< 16 years old)
+        AND (
+            EXTRACT(YEAR FROM AGE(current_date, child.date_of_birth))::int -
+            CASE WHEN (EXTRACT(MONTH FROM current_date), EXTRACT(DAY FROM current_date)) < 
+                      (EXTRACT(MONTH FROM child.date_of_birth), EXTRACT(DAY FROM child.date_of_birth))
+                 THEN 1 ELSE 0 END
+        ) < 16
     """
     # Use parameterized query for Hebrew values to avoid encoding issues with special characters
     excluded_statuses = ('ז״ל', 'בריא')
