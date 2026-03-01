@@ -22,13 +22,15 @@ export const showErrorToast = (t, key, error) => {
       );
 
       const messageToShow = key ? `${t(key)} - ${errorMessage}` : errorMessage;
+      // if error arg is '', show only the key as error without the dash
+      const finalMessage = error === '' ? t(key) : messageToShow;
       
       // Dismiss ALL toasts to ensure clean slate
       toast.dismiss();
       
       // Use setTimeout with 0ms to defer to next event loop - ensures dismiss completes
       setTimeout(() => {
-        const toastId = toast.error(messageToShow, { 
+        const toastId = toast.error(finalMessage, { 
           autoClose: 5000,
           onClose: () => {
             isCreatingErrorToast = false;

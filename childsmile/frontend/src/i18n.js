@@ -297,6 +297,7 @@ const resources = {
       "tutor_feedback_report": "דוח משוב חונכים",
       "Anything Else": "משהו נוסף",
       "Filter by field": "סנן לפי",
+      "System is under maintenance, please try again later.": "המערכת כרגע בתחזוקה, אנא נסה שנית מאוחר יותר.",
       "From": "מ",
       "To": "עד",
       "An error occurred. Please try again.": "אירעה שגיאה. אנא נסה שוב.",
