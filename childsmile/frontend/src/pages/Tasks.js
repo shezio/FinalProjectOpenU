@@ -299,6 +299,16 @@ const Tasks = () => {
     return staffUser && staffUser.roles.includes('System Administrator');
   };
 
+  const isUserVolunteerCoordinator = () => {
+    const username = localStorage.getItem('username');
+    const staffUser = staffUserNamesAndRoles.find(user => user.username === username);
+    return staffUser && staffUser.roles.includes('Volunteer Coordinator');
+  };
+
+  const canManageRegistrationApproval = () => {
+    return isUserAdmin() || isUserVolunteerCoordinator();
+  };
+
   // Group tasks by status for Kanban columns
   const tasksByStatus = statusColumns.reduce((acc, col) => {
     acc[col.key] = tasks
@@ -937,14 +947,14 @@ const Tasks = () => {
                                     key={task.id} 
                                     draggableId={task.id.toString()} 
                                     index={index}
-                                    isDragDisabled={isRegistrationApprovalTask(task.type) && !isUserAdmin()}
+                                    isDragDisabled={isRegistrationApprovalTask(task.type) && !canManageRegistrationApproval()}
                                   >
                                     {(provided, snapshot) => (
                                       <div
                                         className="task-card"
                                         ref={provided.innerRef}
                                         {...provided.draggableProps}
-                                        {...(isRegistrationApprovalTask(task.type) && !isUserAdmin() ? {} : provided.dragHandleProps)}
+                                        {...(isRegistrationApprovalTask(task.type) && !canManageRegistrationApproval() ? {} : provided.dragHandleProps)}
                                         style={{
                                           backgroundColor: getTaskBgColor(task.due_date, task.status),
                                           ...provided.draggableProps.style

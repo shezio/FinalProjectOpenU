@@ -1203,7 +1203,7 @@ def is_user_approved(staff_user):
 
 def create_tasks_for_admins_async(staff_user_id, user_name, user_email):
     """
-    Async wrapper to create registration approval tasks for all admins
+    Async wrapper to create registration approval tasks for all Volunteer Coordinators (first approval level)
     """
     from threading import Thread
     thread = Thread(
@@ -1216,23 +1216,25 @@ def create_tasks_for_admins_async(staff_user_id, user_name, user_email):
 
 def create_tasks_for_admins(staff_user_id, user_name, user_email):
     """
-    Create registration approval tasks for all admin users.
-    When an admin moves to "in progress", tasks are deleted from other admins.
+    Create registration approval tasks ONLY for Volunteer Coordinators (first approval level).
+    When a coordinator approves, admin approval tasks will be created.
     """
     try:
-        # Fetch the System Manager role (admins)
-        admin_role = Role.objects.filter(role_name="System Administrator").first()
-        if not admin_role:
-            api_logger.debug("Role 'System Administrator' not found in the database.")
+        # Fetch Volunteer Coordinator role ONLY (first approval level)
+        coordinator_role = Role.objects.filter(role_name="Volunteer Coordinator").first()
+        
+        if not coordinator_role:
+            api_logger.debug("Role 'Volunteer Coordinator' not found in the database.")
+            return
+        
+        # Fetch all Volunteer Coordinators
+        approval_staff = Staff.objects.filter(roles=coordinator_role).distinct()
+        
+        if not approval_staff.exists():
+            api_logger.warning("No Volunteer Coordinators found in the database.")
             return
 
-        # Fetch all admins (System Administrators)
-        admins = Staff.objects.filter(roles=admin_role)
-        if not admins.exists():
-            api_logger.warning("No System Administrators found in the database.")
-            return
-
-        api_logger.debug(f"Found {admins.count()} System Administrators for registration approval task.")
+        api_logger.debug(f"Found {approval_staff.count()} Volunteer Coordinators for registration approval task (first level).")
 
         # Get the task type for registration approval
         task_type = Task_Types.objects.filter(task_type="אישור הרשמה").first()
@@ -1255,8 +1257,6 @@ def create_tasks_for_admins(staff_user_id, user_name, user_email):
         # Also get SignedUp data if available
         try:
             signed_up = SignedUp.objects.get(email=user_email)
-            # add more key values to user_info dict
-            # the signed up id, age, gender, phone, city ,want_tutor to user_info dict
             user_info.update({
                 "ID": signed_up.id,
                 "age": signed_up.age,
@@ -1268,24 +1268,114 @@ def create_tasks_for_admins(staff_user_id, user_name, user_email):
         except SignedUp.DoesNotExist:
             api_logger.debug(f"SignedUp record not found for email {user_email}")
 
-        # Create tasks for each admin    
-        for admin in admins:
+        # Create tasks for each Volunteer Coordinator (first approval level)
+        for staff_member in approval_staff:
             task_data = {
-                "description": f"אישור הרשמה",
+                "description": "אישור הרשמה ראשוני",
                 "due_date": (now().date() + datetime.timedelta(days=3)).strftime("%Y-%m-%d"),
                 "status": "לא הושלמה",
-                "assigned_to": admin.staff_id,
+                "assigned_to": staff_member.staff_id,
                 "type": task_type.id,
                 "user_info": user_info,  # Include user_info
             }
-            api_logger.debug(f"DEBUG: Creating registration approval task for admin {admin.staff_id}: {task_data}")
+            api_logger.debug(f"DEBUG: Creating coordinator approval task for Volunteer Coordinator {staff_member.staff_id}: {task_data}")
             try:
                 task = create_task_internal(task_data)
-                api_logger.info(f"Registration approval task created for admin {admin.staff_id}, task ID: {task.task_id}")
+                api_logger.info(f"Coordinator approval task created for {staff_member.staff_id}, task ID: {task.task_id}")
             except Exception as e:
-                api_logger.error(f"ERROR: Error creating registration approval task: {str(e)}")
+                api_logger.error(f"ERROR: Error creating coordinator approval task: {str(e)}")
     except Exception as e:
-        api_logger.error(f"ERROR: An error occurred while creating registration approval tasks: {str(e)}")
+        api_logger.error(f"ERROR: An error occurred while creating coordinator approval tasks: {str(e)}")
+
+
+def create_admin_approval_tasks_async(staff_user_id, user_email):
+    """
+    Async wrapper to create admin final approval tasks after coordinator approval
+    """
+    from threading import Thread
+    thread = Thread(
+        target=create_admin_approval_tasks,
+        args=(staff_user_id, user_email),
+        daemon=True
+    )
+    thread.start()
+
+
+def create_admin_approval_tasks(staff_user_id, user_email):
+    """
+    Create registration approval tasks for all System Administrators (second/final approval level).
+    This is triggered AFTER a Volunteer Coordinator approves the user.
+    No email is sent at this level - email only sent after admin final approval.
+    """
+    try:
+        # Fetch System Administrator role ONLY (second/final approval level)
+        admin_role = Role.objects.filter(role_name="System Administrator").first()
+        
+        if not admin_role:
+            api_logger.debug("Role 'System Administrator' not found in the database.")
+            return
+        
+        # Fetch all System Administrators
+        admin_staff = Staff.objects.filter(roles=admin_role).distinct()
+        
+        if not admin_staff.exists():
+            api_logger.warning("No System Administrators found in the database for final approval.")
+            return
+
+        api_logger.debug(f"Found {admin_staff.count()} System Administrators for final approval task.")
+
+        # Get the task type for registration approval
+        task_type = Task_Types.objects.filter(task_type="אישור הרשמה").first()
+        if not task_type:
+            api_logger.error("Task type 'אישור הרשמה' not found in the database.")
+            return
+
+        # Get the staff user and SignedUp record to extract their data
+        user_info = {}
+        try:
+            staff_user = Staff.objects.get(staff_id=staff_user_id)
+            user_info = {
+                "full_name": staff_user.first_name + " " + staff_user.last_name,
+                "email": staff_user.email,
+                "created_at": staff_user.created_at.isoformat() if staff_user.created_at else None,
+                "approval_level": "final_admin"  # Flag to indicate this is final admin approval
+            }
+        except Staff.DoesNotExist:
+            api_logger.error(f"Staff user with ID {staff_user_id} not found")
+            return
+        
+        # Also get SignedUp data if available
+        try:
+            signed_up = SignedUp.objects.get(email=user_email)
+            user_info.update({
+                "ID": signed_up.id,
+                "age": signed_up.age,
+                "gender": signed_up.gender,
+                "phone": signed_up.phone,
+                "city": signed_up.city,
+                "want_tutor": signed_up.want_tutor
+            })
+        except SignedUp.DoesNotExist:
+            api_logger.debug(f"SignedUp record not found for email {user_email}")
+
+        # Create tasks for each System Administrator (final approval level)
+        for staff_member in admin_staff:
+            task_data = {
+                "description": "אישור הרשמה סופי",
+                "due_date": (now().date() + datetime.timedelta(days=3)).strftime("%Y-%m-%d"),
+                "status": "לא הושלמה",
+                "assigned_to": staff_member.staff_id,
+                "type": task_type.id,
+                "user_info": user_info,  # Include user_info with approval_level flag
+            }
+            api_logger.debug(f"DEBUG: Creating final admin approval task for System Administrator {staff_member.staff_id}: {task_data}")
+            try:
+                task = create_task_internal(task_data)
+                api_logger.info(f"Final admin approval task created for {staff_member.staff_id}, task ID: {task.task_id}")
+            except Exception as e:
+                api_logger.error(f"ERROR: Error creating final admin approval task: {str(e)}")
+    except Exception as e:
+        api_logger.error(f"ERROR: An error occurred while creating final admin approval tasks: {str(e)}")
 
 
 def delete_other_registration_approval_tasks_async(task):
@@ -1303,7 +1393,9 @@ def delete_other_registration_approval_tasks_async(task):
 
 def delete_other_registration_approval_tasks(task):
     """
-    Delete all other registration approval tasks for the same user when one admin moves to "in progress"
+    Delete all other registration approval tasks at the same approval level for the same user.
+    When a coordinator takes a task, delete other coordinator tasks for that user.
+    When an admin takes a task, delete other admin tasks for that user.
     """
     try:
         api_logger.info(f"delete_other_registration_approval_tasks called for task {task.task_id}")
@@ -1325,14 +1417,21 @@ def delete_other_registration_approval_tasks(task):
             api_logger.warning(f"Could not extract email from task {task.task_id} - user_info: {task.user_info}, description: {task.description}")
             return
         
-        api_logger.debug(f"Looking for other registration approval tasks for email {user_email}")
+        # Determine the approval level from the description
+        approval_level = None
+        if "סופי" in task.description:
+            approval_level = "final_admin"
+        elif "ראשוני" in task.description:
+            approval_level = "coordinator"
         
-        # Find all other registration approval tasks
+        api_logger.debug(f"Deleting other {approval_level} approval tasks for email {user_email}")
+        
+        # Find all other registration approval tasks at the SAME level
         all_reg_tasks = Tasks.objects.filter(
             task_type__task_type="אישור הרשמה"
         ).exclude(task_id=task.task_id)
         
-        # Filter by matching email in user_info
+        # Filter by matching email in user_info and same approval level
         other_tasks = []
         for t in all_reg_tasks:
             task_email = None
@@ -1346,21 +1445,30 @@ def delete_other_registration_approval_tasks(task):
                 if email_match:
                     task_email = email_match.group(1)
             
+            # Check if email matches AND approval level matches
             if task_email and task_email == user_email:
-                other_tasks.append(t)
+                # Check if task is at the same approval level
+                task_level = None
+                if "סופי" in t.description:
+                    task_level = "final_admin"
+                elif "ראשוני" in t.description:
+                    task_level = "coordinator"
+                
+                if task_level == approval_level:
+                    other_tasks.append(t)
         
-        api_logger.info(f"Found {len(other_tasks)} other registration approval tasks for {user_email}")
+        api_logger.info(f"Found {len(other_tasks)} other {approval_level} approval tasks for {user_email} at same level")
         
         deleted_count = 0
         for other_task in other_tasks:
             try:
                 other_task.delete()
                 deleted_count += 1
-                api_logger.info(f"Deleted registration approval task {other_task.task_id} after admin {task.assigned_to_id} moved to בביצוע")
+                api_logger.info(f"Deleted {approval_level} approval task {other_task.task_id} after {task.assigned_to_id} moved to בביצוע")
             except Exception as e:
                 api_logger.error(f"Error deleting task {other_task.task_id}: {str(e)}")
         
-        api_logger.info(f"Successfully deleted {deleted_count} other registration approval tasks for {user_email}")
+        api_logger.info(f"Successfully deleted {deleted_count} other {approval_level} approval tasks for {user_email}")
     except Exception as e:
         api_logger.error(f"ERROR: An error occurred while deleting other registration approval tasks: {str(e)}")
 
