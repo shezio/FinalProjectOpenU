@@ -95,8 +95,8 @@ def register_send_totp(request):
                 "error": f"Missing required fields: {', '.join(missing_fields)}"
             }, status=400)
 
-        # Check if user already registered
-        if SignedUp.objects.filter(email=email).exists() or Staff.objects.filter(email=email).exists() or Tutors.objects.filter(tutor_email=email).exists():
+        # Check if user already registered (case-insensitive for Staff and SignedUp)
+        if SignedUp.objects.filter(email__iexact=email).exists() or Staff.objects.filter(email__iexact=email).exists() or Tutors.objects.filter(tutor_email=email).exists():
             log_api_action(
                 request=request,
                 action='USER_REGISTRATION_FAILED',
@@ -1821,7 +1821,7 @@ def import_volunteers_endpoint(request):
                     results.append(result)
                     continue
                 
-                if email and Staff.objects.filter(email=email).exists():
+                if email and Staff.objects.filter(email__iexact=email).exists():
                     result['status'] = 'Skipped'
                     result['details'] = f'מייל כבר קיים במערכת'
                     skipped_count += 1

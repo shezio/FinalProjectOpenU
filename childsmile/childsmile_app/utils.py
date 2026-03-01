@@ -306,7 +306,7 @@ def promote_pending_tutor_to_tutor(task):
         return False, "SignedUp row not found for pending tutor"
 
     # 3. Get the Staff instance by email (from SignedUp)
-    staff = Staff.objects.filter(email=signedup.email).first()
+    staff = Staff.objects.filter(email__iexact=signedup.email).first()
     if not staff:
         return False, "Staff not found for pending tutor email"
 

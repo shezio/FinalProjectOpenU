@@ -129,9 +129,9 @@ def update_staff_member(request, staff_id):
                 {"error": f"Username '{data['username']}' already exists."}, status=400
             )
 
-        # Check if email already exists
+        # Check if email already exists (case-insensitive)
         if (
-            Staff.objects.filter(email=data["email"])
+            Staff.objects.filter(email__iexact=data["email"])
             .exclude(staff_id=staff_id)
             .exists()
         ):
@@ -1079,7 +1079,7 @@ def create_staff_member(request):
                 {"error": f"Username '{data['username']}' already exists."}, status=400
             )
 
-        if Staff.objects.filter(email=data["email"]).exists():
+        if Staff.objects.filter(email__iexact=data["email"]).exists():
             log_api_action(
                 request=request,
                 action='CREATE_STAFF_FAILED',
@@ -1336,7 +1336,7 @@ def staff_creation_send_totp(request):
                 {"error": f"Username '{username}' already exists."}, status=400
             )
 
-        if Staff.objects.filter(email=email).exists():
+        if Staff.objects.filter(email__iexact=email).exists():
             log_api_action(
                 request=request,
                 action='CREATE_STAFF_FAILED',

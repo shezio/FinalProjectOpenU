@@ -40,8 +40,8 @@ class CustomSocialAccountAdapter(DefaultSocialAccountAdapter):
             nomailurl = f"{settings.LOCAL_URL}?error=no_email" if not settings.IS_PROD else f"{settings.CLOUDFRONT_URL}?error=no_email"
             raise ImmediateHttpResponse(redirect(nomailurl))
 
-        # Check if this email exists in our Staff table
-        if not Staff.objects.filter(email=email).exists():
+        # Check if this email exists in our Staff table (case-insensitive)
+        if not Staff.objects.filter(email__iexact=email).exists():
             print(f"DEBUG: Email {email} not found in Staff table - redirecting to React app")
             
             # Log failed Google login attempt - unauthorized email
@@ -70,7 +70,7 @@ class CustomSocialAccountAdapter(DefaultSocialAccountAdapter):
             print(f"DEBUG: Found existing Django user: {existing_user.username}")
         except User.DoesNotExist:
             # Create Django User immediately
-            staff_user = Staff.objects.get(email=email)
+            staff_user = Staff.objects.get(email__iexact=email)
             
             # Create a unique username (in case email is too long)
             username = email
@@ -108,7 +108,7 @@ class CustomSocialAccountAdapter(DefaultSocialAccountAdapter):
         
         # Log successful Google login
         try:
-            staff_user = Staff.objects.get(email=sociallogin.user.email)
+            staff_user = Staff.objects.get(email__iexact=sociallogin.user.email)
             log_api_action(
                 request=request,
                 action='GOOGLE_LOGIN_SUCCESS',

@@ -489,8 +489,8 @@ def create_staff_member(request):
                 {"error": f"Username '{data['username']}' already exists."}, status=400
             )
 
-        # Check if email already exists
-        if Staff.objects.filter(email=data["email"]).exists():
+        # Check if email already exists (case-insensitive)
+        if Staff.objects.filter(email__iexact=data["email"]).exists():
             api_logger.warning(f"User {user_id} attempted to create a staff member with an existing email: {data['email']}")
             return JsonResponse(
                 {"error": f"Email '{data['email']}' already exists."}, status=400
@@ -643,8 +643,8 @@ def google_login_success(request):
     api_logger.debug(f"About to search for Staff with email: '{django_user.email}'")
     
     try:
-        # Find the Staff record by email
-        staff_user = Staff.objects.get(email=django_user.email)
+        # Find the Staff record by email (case-insensitive)
+        staff_user = Staff.objects.get(email__iexact=django_user.email)
         
         # Create session
         request.session.flush()
