@@ -634,7 +634,7 @@ def delete_task(request, task_id):
                 # NOW: Delete the user and related data
                 try:
                     # Delete associated Staff user (the unapproved registration)
-                    staff_user = Staff.objects.get(email=rejected_email, registration_approved=False)
+                    staff_user = Staff.objects.get(email__iexact=rejected_email, registration_approved=False)
                     staff_user_id = staff_user.staff_id
                     
                     api_logger.info(f"Found staff user to delete: {staff_user_id} ({rejected_email})")
@@ -686,7 +686,7 @@ def delete_task(request, task_id):
                     api_logger.warning(f"Staff user not found for email {rejected_email} with registration_approved=False - trying without filter")
                     try:
                         # Fallback: try to find and delete without registration_approved filter
-                        staff_user = Staff.objects.get(email=rejected_email)
+                        staff_user = Staff.objects.get(email__iexact=rejected_email)
                         staff_user_id = staff_user.staff_id
                         api_logger.warning(f"Found staff user via email only: {staff_user_id} ({rejected_email})")
                         
@@ -978,7 +978,7 @@ def update_task_status(request, task_id):
                 
                 if user_email:
                     try:
-                        staff_user = Staff.objects.get(email=user_email)
+                        staff_user = Staff.objects.get(email__iexact=user_email)
                         staff_user.registration_approved = True
                         # Mark user as suspended (no access) if BLOCK_ACCESS_AFTER_APPROVAL flag is True
                         if os.environ.get('BLOCK_ACCESS_AFTER_APPROVAL', 'false').lower() in ('true', '1', 'yes'):

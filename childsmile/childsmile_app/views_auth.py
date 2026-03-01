@@ -96,8 +96,8 @@ def login_email(request):
             )
             return JsonResponse({"error": "Invalid email format"}, status=400)
         
-        # Check if email exists in Staff table
-        if not Staff.objects.filter(email=email).exists():
+        # Check if email exists in Staff table (case-insensitive)
+        if not Staff.objects.filter(email__iexact=email).exists():
             log_api_action(
                 request=request,
                 action='USER_LOGIN_FAILED',
@@ -108,8 +108,8 @@ def login_email(request):
             )
             return JsonResponse({"error": "Email not found in system"}, status=404)
         
-        # Get staff user
-        staff_user = Staff.objects.get(email=email)
+        # Get staff user (case-insensitive)
+        staff_user = Staff.objects.get(email__iexact=email)
         
         # INACTIVE STAFF FEATURE: Check if user is ACTIVE FIRST - before sending any emails
         if not staff_user.is_active:
@@ -420,9 +420,9 @@ def verify_totp(request):
         totp_record.used = True
         totp_record.save()
         
-        # Find Staff member
+        # Find Staff member (case-insensitive)
         try:
-            staff_user = Staff.objects.get(email=email)
+            staff_user = Staff.objects.get(email__iexact=email)
         except Staff.DoesNotExist:
             log_api_action(
                 request=request,
@@ -573,8 +573,8 @@ def google_login_success(request):
     api_logger.debug(f"About to search for Staff with email: '{django_user.email}'")
     
     try:
-        # Find the Staff record by email
-        staff_user = Staff.objects.get(email=django_user.email)
+        # Find the Staff record by email (case-insensitive)
+        staff_user = Staff.objects.get(email__iexact=django_user.email)
         
         # Create session
         request.session.flush()
