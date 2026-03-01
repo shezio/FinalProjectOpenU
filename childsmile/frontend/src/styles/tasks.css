@@ -28,6 +28,8 @@
   flex-direction: row;
   margin-top: 250px;
   padding-right: 320px;
+  position: relative;
+  z-index: 1;
 }
 
 .tasks-page-content {
@@ -222,7 +224,7 @@
   /* Wider loader */
   animation: spin 1s linear infinite;
   /* Slower spin for better visibility */
-  position: absolute;
+  position: fixed;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
@@ -232,6 +234,11 @@
   font-size: 20px;
   /* Adjust font size as needed */
   text-align: center;
+  z-index: 9999;
+}
+
+.tasks-main-content .loader {
+  margin-top: 250px !important;
 }
 
 @keyframes spin {
@@ -895,4 +902,123 @@ Added max-width: 100% to prevent overflow*/
 textarea.scrollable-textarea {
   resize: none;
   overflow-y: auto;
+}
+
+/* ===== Task Type Filter Dropdown (Admin Only) ===== */
+.tasks-main-content .status-filter {
+  position: relative;
+  display: inline-block;
+}
+
+.tasks-main-content .status-filter-button {
+  background: linear-gradient(135deg, 
+    rgba(147, 51, 234, 0.95) 0%,
+    rgba(124, 58, 255, 0.95) 100%) !important;
+  backdrop-filter: blur(15px) !important;
+  -webkit-backdrop-filter: blur(15px) !important;
+  color: white !important;
+  padding: 12px 20px !important;
+  font-size: 24px !important;
+  font-weight: 600 !important;
+  border: 2px solid rgba(255, 255, 255, 0.3) !important;
+  border-radius: 10px !important;
+  cursor: pointer !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  box-shadow: 
+    0 6px 20px rgba(147, 51, 234, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3) !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  white-space: nowrap !important;
+  position: relative !important;
+  overflow: hidden !important;
+}
+
+.tasks-main-content .status-filter-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, 
+    transparent, 
+    rgba(255, 255, 255, 0.2), 
+    transparent);
+  transition: left 0.5s;
+}
+
+.tasks-main-content .status-filter-button:hover::before {
+  left: 100%;
+}
+
+.tasks-main-content .status-filter-button:hover {
+  background: linear-gradient(135deg, 
+    rgba(147, 51, 234, 1) 0%,
+    rgba(124, 58, 255, 1) 100%) !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 
+    0 8px 30px rgba(147, 51, 234, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4) !important;
+}
+
+.tasks-main-content .status-filter-chevron {
+  display: inline-block;
+  transition: transform 0.3s ease;
+  font-size: 24px;
+}
+
+.tasks-main-content .status-filter-chevron.open {
+  transform: rotate(-180deg);
+}
+
+.tasks-main-content .status-checkboxes-dropdown {
+  position: fixed !important;
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.98) 0%,
+    rgba(249, 250, 251, 0.98) 100%);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 2px solid rgba(147, 51, 234, 0.4);
+  border-radius: 12px;
+  box-shadow: 
+    0 20px 60px rgba(147, 51, 234, 0.35),
+    0 12px 40px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  padding: 12px 16px;
+  min-width: 240px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 999999999 !important;
+  animation: slideDown 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.tasks-main-content .status-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  padding: 8px 12px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  user-select: none;
+  font-size: 18px;
+}
+
+.tasks-main-content .status-checkbox-label:hover {
+  background-color: rgba(147, 51, 234, 0.1);
+}
+
+.tasks-main-content .status-checkbox-label input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  accent-color: #9333ea;
+}
+
+.tasks-main-content .status-checkbox-label span {
+  color: #333;
+  font-weight: 500;
 }

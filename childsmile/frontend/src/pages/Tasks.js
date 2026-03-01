@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import ReactDOM from 'react-dom';
 import axios from '../axiosConfig';
 import Sidebar from '../components/Sidebar';
 import InnerPageHeader from '../components/InnerPageHeader';
@@ -58,6 +59,7 @@ const Tasks = () => {
   const [errors, setErrors] = useState({});
   const [selectedFilter, setSelectedFilter] = useState('');
   const [selectedChildFilter, setSelectedChildFilter] = useState('');
+  const [selectedTaskTypeFilters, setSelectedTaskTypeFilters] = useState({});
   const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState('');
   const [taskToUpdate, setTaskToUpdate] = useState(null);
@@ -77,7 +79,9 @@ const Tasks = () => {
   const [startDate, setStartDate] = useState(getFirstDayOfMonth());
   const [endDate, setEndDate] = useState(getLastDayOfMonth());
   const [filtering, setFiltering] = useState(false);
+  const [isTaskTypeFilterOpen, setIsTaskTypeFilterOpen] = useState(false);
   const menuRef = useRef();
+  const taskTypeFilterRef = useRef();
   const location = useLocation();
 
   // Close menu when clicking outside
@@ -86,14 +90,20 @@ const Tasks = () => {
       if (menuRef.current && !menuRef.current.contains(event.target)) {
         setMenuOpen(false);
       }
+      // Check if click is on the dropdown portal or button
+      const isDropdownClick = event.target.closest('.status-checkboxes-dropdown') || 
+                             event.target.closest('.status-filter-button');
+      if (taskTypeFilterRef.current && !taskTypeFilterRef.current.contains(event.target) && !isDropdownClick) {
+        setIsTaskTypeFilterOpen(false);
+      }
     };
-    if (menuOpen) {
+    if (menuOpen || isTaskTypeFilterOpen) {
       document.addEventListener('mousedown', handleClickOutside);
     }
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [menuOpen]);
+  }, [menuOpen, isTaskTypeFilterOpen]);
 
   // Close menu when selecting a new task
   useEffect(() => {
@@ -255,6 +265,19 @@ const Tasks = () => {
     fetchData(true);
   }, [selectedDateField, startDate, endDate, selectedFilter]);
 
+  // Initialize task type filters for admins - review task unchecked, others checked by default
+  useEffect(() => {
+    if (isUserAdmin() && filteredTaskTypes.length > 0) {
+      const newFilters = {};
+      filteredTaskTypes.forEach(type => {
+        // Check if this is a review task (סקירה חודשית or similar)
+        const isReviewTask = type.name && type.name.includes('שיחת ביקורת');
+        newFilters[type.id] = !isReviewTask; // Review task = false, others = true
+      });
+      setSelectedTaskTypeFilters(newFilters);
+    }
+  }, [filteredTaskTypes]);
+
   // Combine pending tutors and general volunteers for the dropdown
   const groupedPendingTutorOptions = [
     {
@@ -270,6 +293,12 @@ const Tasks = () => {
     }
   ];
 
+  const isUserAdmin = () => {
+    const username = localStorage.getItem('username');
+    const staffUser = staffUserNamesAndRoles.find(user => user.username === username);
+    return staffUser && staffUser.roles.includes('System Administrator');
+  };
+
   // Group tasks by status for Kanban columns
   const tasksByStatus = statusColumns.reduce((acc, col) => {
     acc[col.key] = tasks
@@ -277,6 +306,8 @@ const Tasks = () => {
         (task) =>
           (!selectedFilter || task.type === parseInt(selectedFilter)) &&
           (!selectedChildFilter || task.child === parseInt(selectedChildFilter)) &&
+          // For admins: apply task type filters; for non-admins: show all
+          (isUserAdmin() ? selectedTaskTypeFilters[task.type] !== false : true) &&
           task.status === col.key
       );
     return acc;
@@ -684,12 +715,6 @@ const Tasks = () => {
     return { key: translatedKey, value: displayValue };
   };
 
-  const isUserAdmin = () => {
-    const username = localStorage.getItem('username');
-    const staffUser = staffUserNamesAndRoles.find(user => user.username === username);
-    return staffUser && staffUser.roles.includes('System Administrator');
-  };
-
   const openRejectRegistrationModal = (task) => {
     if (!isUserAdmin()) {
       showErrorToast(t, 'Only administrators can reject registrations', '');
@@ -761,6 +786,25 @@ const Tasks = () => {
     closeDeleteModal();
   };
 
+  const handleTaskTypeFilterChange = (taskTypeId) => {
+    setSelectedTaskTypeFilters(prev => ({
+      ...prev,
+      [taskTypeId]: !prev[taskTypeId]
+    }));
+  };
+
+  // Calculate dropdown position for fixed positioning
+  const getDropdownPosition = () => {
+    if (!taskTypeFilterRef.current) return { top: 0, left: 0 };
+    const button = taskTypeFilterRef.current.querySelector('.status-filter-button');
+    if (!button) return { top: 0, left: 0 };
+    const rect = button.getBoundingClientRect();
+    return {
+      top: `${rect.bottom + 8}px`,
+      left: `${rect.left}px`
+    };
+  };
+
   const handleFilter = () => {
     setFiltering(true);
     fetchData(true).finally(() => setFiltering(false));
@@ -786,7 +830,7 @@ const Tasks = () => {
                   {t('Create New Task')}
                 </button>
               </div>
-              <div className="filter">
+              <div className="filter" style={{ display: isUserAdmin() ? 'none' : 'block' }}>
                 <select
                   value={selectedFilter}
                   onChange={(e) => {
@@ -803,6 +847,34 @@ const Tasks = () => {
                   ))}
                 </select>
               </div>
+              {/* Task Type Filter - Admin gets checkboxes, Non-admin gets dropdown */}
+              {isUserAdmin() && (
+                // Admin: Task Type Filter Checkboxes Dropdown
+                <div className="status-filter" ref={taskTypeFilterRef}>
+                  <button 
+                    className="status-filter-button"
+                    onClick={() => setIsTaskTypeFilterOpen(!isTaskTypeFilterOpen)}
+                  >
+                    סנן לפי סוג
+                    <span className={`status-filter-chevron ${isTaskTypeFilterOpen ? 'open' : ''}`}>▼</span>
+                  </button>
+                  {isTaskTypeFilterOpen && ReactDOM.createPortal(
+                    <div className="status-checkboxes-dropdown" style={getDropdownPosition()}>
+                      {filteredTaskTypes.map((type) => (
+                        <label key={type.id} className="status-checkbox-label">
+                          <input
+                            type="checkbox"
+                            checked={selectedTaskTypeFilters[type.id] !== false}
+                            onChange={() => handleTaskTypeFilterChange(type.id)}
+                          />
+                          <span>{type.name}</span>
+                        </label>
+                      ))}
+                    </div>,
+                    document.body
+                  )}
+                </div>
+              )}
               <div className="refresh">
                 <button onClick={() => fetchData(true)}>{t("Refresh Task List")}</button>
               </div>
@@ -978,6 +1050,10 @@ const Tasks = () => {
                       <>
                         <p>חניך: {getChildFullName(selectedTask.child, childrenOptions)}</p>
                         <p>חונך: {getTutorFullName(selectedTask.tutor, tutorsOptions)}</p>
+                        <p>שם האב: {selectedTask.father_name || '---'}</p>
+                        <p>טלפון האב: {selectedTask.father_phone || '---'}</p>
+                        <p>שם האם: {selectedTask.mother_name || '---'}</p>
+                        <p>טלפון האם: {selectedTask.mother_phone || '---'}</p>
                       </>
                     )}
                     {/* Show Pending Tutor only if IS "ראיון מועמד לחונכות" */}

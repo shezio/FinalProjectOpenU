@@ -409,8 +409,8 @@ def fetch_possible_matches():
         -- Exclude deceased and healthy children (use parameterized query to avoid encoding issues)
         AND child.status NOT IN (%s, %s)
         -- Exclude irrelevant tutoring statuses (no point matching if they don't want/aren't relevant)
-        AND child.tutoring_status NOT IN (%s, %s);
-        -- exclude age >=16 which are matures and not relevant for tutoring, but we can handle this in Python after fetching to avoid DB performance hit
+        AND child.tutoring_status NOT IN (%s, %s)
+        -- exclude age >=16 which are matures and not relevant for tutoring
         AND child.age < 16;
     """
     # Use parameterized query for Hebrew values to avoid encoding issues with special characters

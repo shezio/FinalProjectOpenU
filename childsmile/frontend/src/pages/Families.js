@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import axios from '../axiosConfig';
 import Sidebar from '../components/Sidebar';
 import InnerPageHeader from '../components/InnerPageHeader';
@@ -33,10 +34,13 @@ const Families = () => {
   const [statuses, setStatuses] = useState([]);
   const [page, setPage] = useState(1);
   const [pageSize] = useState(5); // Number of families per page
-  const [showHealthyOnly, setShowHealthyOnly] = useState(false);
   const [showMatureOnly, setShowMatureOnly] = useState(false); // State for showing mature families only
   const [totalCount, setTotalCount] = useState(0); // Total number of families after filtering
-  const [selectedStatus, setSelectedStatus] = useState(''); // State for selected status filter
+  const [selectedStatuses, setSelectedStatuses] = useState([]); // State for selected status filters (checkboxes)
+  const [showStatusDropdown, setShowStatusDropdown] = useState(false); // State for status filter dropdown visibility
+  const [dropdownStyle, setDropdownStyle] = useState({}); // State for dropdown positioning
+  const statusFilterRef = useRef(null); // Ref for status filter button
+  const statusDropdownRef = useRef(null); // Ref for status filter dropdown
   const [newFamily, setNewFamily] = useState({
     child_id: '',
     childfirstname: '',
@@ -147,14 +151,11 @@ const Families = () => {
       return fullName.includes(term) || firstName.includes(term) || lastName.includes(term);
     });
   }
-  if (showHealthyOnly) {
-    filteredFamilies = filteredFamilies.filter((family) => family.status === "בריא");
-  }
   if (showMatureOnly) {
     filteredFamilies = filteredFamilies.filter((family) => family.age >= 16);
   }
-  if (selectedStatus) {
-    filteredFamilies = filteredFamilies.filter((family) => family.status === selectedStatus);
+  if (selectedStatuses.length > 0) {
+    filteredFamilies = filteredFamilies.filter((family) => selectedStatuses.includes(family.status));
   }
   // Apply max age filter
   filteredFamilies = filteredFamilies.filter((family) => family.age <= maxAge);
@@ -170,7 +171,53 @@ const Families = () => {
   useEffect(() => {
     setTotalCount(filteredFamilies.length);
     setPage(1); // Reset to page 1 only when filters actually change
-  }, [showHealthyOnly, showMatureOnly, selectedStatus, maxAge, searchTerm, families]);
+  }, [showMatureOnly, selectedStatuses, maxAge, searchTerm, families]);
+
+  // Initialize selectedStatuses when statuses are loaded
+  useEffect(() => {
+    if (statuses.length > 0 && selectedStatuses.length === 0) {
+      // Check all statuses except "ז״ל" and "בריא"
+      const defaultStatuses = statuses.filter(status => status !== "ז״ל" && status !== "בריא");
+      setSelectedStatuses(defaultStatuses);
+    }
+  }, [statuses]);
+
+  // Position the dropdown when it opens
+  useEffect(() => {
+    if (showStatusDropdown && statusFilterRef.current) {
+      const rect = statusFilterRef.current.getBoundingClientRect();
+      setDropdownStyle({
+        top: `${rect.bottom + window.scrollY + 8}px`,
+        left: `${rect.left + window.scrollX}px`
+      });
+    }
+  }, [showStatusDropdown]);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    if (!showStatusDropdown) return;
+
+    const handleClickOutside = (event) => {
+      // Check if click is outside BOTH the button AND the dropdown
+      const clickedOnButton = statusFilterRef.current && statusFilterRef.current.contains(event.target);
+      const clickedOnDropdown = statusDropdownRef.current && statusDropdownRef.current.contains(event.target);
+      
+      // Only close if clicked outside both
+      if (!clickedOnButton && !clickedOnDropdown) {
+        setShowStatusDropdown(false);
+      }
+    };
+
+    // Add listener on the next tick to avoid immediately closing
+    const timeoutId = setTimeout(() => {
+      document.addEventListener('mousedown', handleClickOutside);
+    }, 0);
+
+    return () => {
+      clearTimeout(timeoutId);
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showStatusDropdown]);
 
   const handleAddFamilyChange = (e) => {
     const { name, value } = e.target;
@@ -835,7 +882,7 @@ const Families = () => {
   useEffect(() => {
     setTotalCount(filteredFamilies.length);
     setPage(1);
-  }, [showHealthyOnly, showMatureOnly, selectedStatus, maxAge, families]);
+  }, [showMatureOnly, selectedStatuses, maxAge, searchTerm, families]);
 
   // Auto-assign coordinator and need_review based on tutoring status AND medical status (בריא/ז״ל)
   useEffect(() => {
@@ -916,12 +963,6 @@ const Families = () => {
               {t('Add New Family')}
             </button>
             <button
-              className={`toggle-healthy-btn${showHealthyOnly ? " active" : ""}`}
-              onClick={() => setShowHealthyOnly((prev) => !prev)}
-            >
-              {showHealthyOnly ? t('Show All Statuses') : t('Show Healthy Only')}
-            </button>
-            <button
               className={`toggle-mature-btn${showMatureOnly ? " active" : ""}`}
               onClick={() => setShowMatureOnly((prev) => !prev)}
             >
@@ -929,16 +970,35 @@ const Families = () => {
             </button>
           </div>
           <div className="status-filter">
-            <select
-              value={selectedStatus}
-              onChange={(e) => setSelectedStatus(e.target.value)}
-              className="families-status-filter-label"
+            <button 
+              ref={statusFilterRef}
+              className="status-filter-button"
+              onClick={() => setShowStatusDropdown(!showStatusDropdown)}
             >
-              <option value="" >סנן לפי סטטוס</option>
-              {statuses.map((status, idx) => (
-                <option key={idx} value={status}>{status}</option>
-              ))}
-            </select>
+              {t('Status Filter')}
+              <span className={`status-filter-chevron ${showStatusDropdown ? 'open' : ''}`}>▼</span>
+            </button>
+            {showStatusDropdown && createPortal(
+              <div ref={statusDropdownRef} className="status-checkboxes-dropdown" style={dropdownStyle}>
+                {statuses.map((status, idx) => (
+                  <label key={idx} className="status-checkbox-label">
+                    <input
+                      type="checkbox"
+                      checked={selectedStatuses.includes(status)}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setSelectedStatuses([...selectedStatuses, status]);
+                        } else {
+                          setSelectedStatuses(selectedStatuses.filter(s => s !== status));
+                        }
+                      }}
+                    />
+                    {status}
+                  </label>
+                ))}
+              </div>,
+              document.body
+            )}
           </div>
           <div className="max-age-filter">
             <label>{t('Max Age')}: {maxAge}</label>
