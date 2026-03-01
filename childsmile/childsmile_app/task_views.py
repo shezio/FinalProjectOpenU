@@ -172,6 +172,10 @@ def get_user_tasks(request):
                     if task.related_child and task.related_child.last_review_talk_conducted
                     else None
                 ),
+                "father_name": task.related_child.father_name if task.related_child else None,
+                "father_phone": task.related_child.father_phone if task.related_child else None,
+                "mother_name": task.related_child.mother_name if task.related_child else None,
+                "mother_phone": task.related_child.mother_phone if task.related_child else None,
                 "tutor": task.related_tutor_id,
                 "type": task.task_type_id,
                 "type_name": task.task_type.task_type if task.task_type else None,  # ADD: task type name for frontend
