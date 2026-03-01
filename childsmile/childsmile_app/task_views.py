@@ -481,28 +481,28 @@ def delete_task(request, task_id):
         # Check if this is a registration approval task
         is_registration_approval = task_type and getattr(task_type, "task_type", None) == "אישור הרשמה"
         
-        # For registration approval tasks, only System Administrator can delete
+        # For registration approval tasks, only System Administrator or Volunteer Coordinator can delete
         if is_registration_approval:
             user = Staff.objects.get(staff_id=user_id)
-            # Check if user has System Administrator role
+            # Check if user has System Administrator or Volunteer Coordinator role
             has_admin_role = is_admin(user)
+            has_coordinator_role = user.roles.filter(role_name="Volunteer Coordinator").exists()
             
-            if not has_admin_role:
+            if not (has_admin_role or has_coordinator_role):
                 log_api_action(
                     request=request,
                     action='DELETE_TASK_FAILED',
                     success=False,
-                    error_message='Non-admin attempted to delete registration approval task',
+                    error_message='Non-admin/coordinator attempted to delete registration approval task',
                     status_code=401,
                     additional_data={
                         'task_id': task_id,
                         'task_type': 'אישור הרשמה',
-                        'reason': 'Only System Administrator can delete registration approval tasks'
+                        'reason': 'Only System Administrator or Volunteer Coordinator can delete registration approval tasks'
                     }
                 )
-                api_logger
                 return JsonResponse({
-                    "error": "Only System Administrator can delete registration approval tasks."
+                    "error": "Only System Administrator or Volunteer Coordinator can delete registration approval tasks."
                 }, status=401)
             
             # Get rejection reason from request
@@ -596,7 +596,7 @@ def delete_task(request, task_id):
                 tutor.save()
                 api_logger.info(f"Set tutor {tutor_id} tutorship_status to אין_חניך after tutee match task deletion")
         
-        # If task type is "אישור הרשמה", handle rejection workflow
+        # If task type is "אישור הרשמה", handle rejection workflow for TWO-TIER approval system
         rejected_email = None
         if is_registration_approval:
             # Extract email from user_info if available
@@ -611,100 +611,164 @@ def delete_task(request, task_id):
                 if email_match:
                     rejected_email = email_match.group(1)
             
-            api_logger.debug(f"Handling registration rejection - extracted_email: {rejected_email}")
+            api_logger.debug(f"Handling registration rejection - extracted_email: {rejected_email}, task_description: {task.description}")
             
             if rejected_email:
-                # FIRST: Delete all other registration approval tasks for this user
-                # (do this BEFORE checking cascade delete, to clear out duplicate tasks)
-                other_reg_tasks = Tasks.objects.filter(
-                    task_type__task_type="אישור הרשמה"
-                ).exclude(task_id=task_id)
+                # Determine which approval level is being rejected
+                approval_level = None
+                if "סופי" in task.description:
+                    approval_level = "final_admin"
+                elif "ראשוני" in task.description:
+                    approval_level = "coordinator"
                 
-                tasks_to_delete = []
-                for t in other_reg_tasks:
-                    if t.user_info and isinstance(t.user_info, dict):
-                        if t.user_info.get("email") == rejected_email:
-                            tasks_to_delete.append(t)
+                api_logger.info(f"Rejecting registration at approval_level={approval_level} for email {rejected_email}")
                 
-                deleted_count = len(tasks_to_delete)
-                for t in tasks_to_delete:
-                    t.delete()
-                
-                if deleted_count > 0:
-                    api_logger.info(f"Deleted {deleted_count} other registration approval tasks for {rejected_email}")
-                else:
-                    api_logger.debug(f"No other registration approval tasks found for {rejected_email}")
-                
-                # NOW: Delete the user and related data
-                try:
-                    # Delete associated Staff user (the unapproved registration)
-                    staff_user = Staff.objects.get(email__iexact=rejected_email, registration_approved=False)
-                    staff_user_id = staff_user.staff_id
+                # ========== IF COORDINATOR REJECTION: Delete all coordinator-level tasks for this user ==========
+                if approval_level == "coordinator":
+                    # Delete all coordinator approval tasks for this user
+                    other_reg_tasks = Tasks.objects.filter(
+                        task_type__task_type="אישור הרשמה",
+                        status="לא הושלמה"
+                    ).exclude(task_id=task_id)
                     
-                    api_logger.info(f"Found staff user to delete: {staff_user_id} ({rejected_email})")
+                    tasks_to_delete = []
+                    for t in other_reg_tasks:
+                        if t.user_info and isinstance(t.user_info, dict):
+                            if t.user_info.get("email") == rejected_email:
+                                # Only delete if same level
+                                if "ראשוני" in t.description:
+                                    tasks_to_delete.append(t)
                     
-                    # Delete associated SignedUp records
-                    signed_up_count = SignedUp.objects.filter(email=rejected_email).count()
-                    SignedUp.objects.filter(email=rejected_email).delete()
-                    api_logger.info(f"Deleted {signed_up_count} SignedUp records for {rejected_email}")
+                    deleted_count = len(tasks_to_delete)
+                    for t in tasks_to_delete:
+                        t.delete()
                     
-                    # Delete the unapproved user
-                    staff_user.delete()
-                    api_logger.info(f"Deleted unapproved user {staff_user_id} ({rejected_email})")
+                    api_logger.info(f"Deleted {deleted_count} other coordinator approval tasks for {rejected_email}")
                     
-                    # Send rejection emails to all System Administrators
+                    # Delete the user and related data (rejection at coordinator level deletes the user)
                     try:
-                        admin_role = Role.objects.get(role_name="System Administrator")
-                        admin_emails = Staff.objects.filter(
-                            roles=admin_role
-                        ).exclude(staff_id=user_id).values_list('email', flat=True)
-                        
-                        if admin_emails:
-                            current_admin_user = Staff.objects.get(staff_id=user_id)
-                            current_admin_name = f"{current_admin_user.first_name} {current_admin_user.last_name}"
-                                                        
-                            rejection_reason_text = task.rejection_reason or "No reason provided"
-                            
-                            subject = "הרשמה נדחתה"
-                            message = f"""
-                            שלום,
-
-                            הרשמה של {rejected_email} נדחתה על ידי {current_admin_name}.
-
-                            סיבת דחייה:
-                            {rejection_reason_text}
-
-                            המשתמש והנתונים הקשורים אליו הוסרו מהמערכת.
-                            """
-                            
-                            messages = [
-                                (subject, message, 'noreply@childsmile.com', [admin_email])
-                                for admin_email in admin_emails
-                            ]
-                            send_mass_mail(messages, fail_silently=True)
-                            api_logger.info(f"Sent rejection emails to {len(admin_emails)} admins")
-                    except Exception as e:
-                        api_logger.error(f"Error sending rejection emails: {str(e)}")
-                
-                except Staff.DoesNotExist:
-                    api_logger.warning(f"Staff user not found for email {rejected_email} with registration_approved=False - trying without filter")
-                    try:
-                        # Fallback: try to find and delete without registration_approved filter
-                        staff_user = Staff.objects.get(email__iexact=rejected_email)
+                        staff_user = Staff.objects.get(email__iexact=rejected_email, registration_approved=False)
                         staff_user_id = staff_user.staff_id
-                        api_logger.warning(f"Found staff user via email only: {staff_user_id} ({rejected_email})")
+                        
+                        api_logger.info(f"Coordinator rejected: Deleting user {staff_user_id} ({rejected_email})")
                         
                         # Delete associated SignedUp records
+                        signed_up_count = SignedUp.objects.filter(email=rejected_email).count()
                         SignedUp.objects.filter(email=rejected_email).delete()
-                        api_logger.info(f"Deleted SignedUp records for {rejected_email}")
+                        api_logger.info(f"Deleted {signed_up_count} SignedUp records for {rejected_email}")
                         
-                        # Delete the user
+                        # Delete any pending tutor records
+                        pending_tutors = Pending_Tutor.objects.filter(id__email=rejected_email)
+                        pending_tutor_count = pending_tutors.count()
+                        pending_tutors.delete()
+                        if pending_tutor_count > 0:
+                            api_logger.info(f"Deleted {pending_tutor_count} Pending_Tutor records for {rejected_email}")
+                        
+                        # Delete the unapproved user
                         staff_user.delete()
-                        api_logger.info(f"Deleted user {staff_user_id} ({rejected_email})")
+                        api_logger.info(f"Deleted unapproved user {staff_user_id} ({rejected_email})")
+                        
+                        # Delete any admin approval tasks that might have been created
+                        admin_approval_tasks = Tasks.objects.filter(
+                            task_type__task_type="אישور הרשמה",
+                            status="לא הושלמה"
+                        )
+                        admin_tasks_to_delete = []
+                        for t in admin_approval_tasks:
+                            if t.user_info and isinstance(t.user_info, dict):
+                                if t.user_info.get("email") == rejected_email:
+                                    if "סופי" in t.description:
+                                        admin_tasks_to_delete.append(t)
+                        
+                        for t in admin_tasks_to_delete:
+                            t.delete()
+                        
+                        api_logger.info(f"Also deleted {len(admin_tasks_to_delete)} admin approval tasks if they existed")
+                        
                     except Staff.DoesNotExist:
-                        api_logger.error(f"Staff user not found at all for email {rejected_email}")
-            else:
-                api_logger.warning(f"Could not extract email from registration approval task {task_id}")
+                        api_logger.warning(f"Staff user not found for email {rejected_email} - may have already been deleted")
+                
+                # ========== IF ADMIN REJECTION: Also delete user ==========
+                elif approval_level == "final_admin":
+                    # Delete all admin approval tasks for this user
+                    other_reg_tasks = Tasks.objects.filter(
+                        task_type__task_type="אישור הרשמה",
+                        status="לא הושלמה"
+                    ).exclude(task_id=task_id)
+                    
+                    tasks_to_delete = []
+                    for t in other_reg_tasks:
+                        if t.user_info and isinstance(t.user_info, dict):
+                            if t.user_info.get("email") == rejected_email:
+                                # Only delete if same level
+                                if "סופי" in t.description:
+                                    tasks_to_delete.append(t)
+                    
+                    deleted_count = len(tasks_to_delete)
+                    for t in tasks_to_delete:
+                        t.delete()
+                    
+                    api_logger.info(f"Deleted {deleted_count} other admin approval tasks for {rejected_email}")
+                    
+                    # Delete the user and related data (rejection at admin level also deletes the user)
+                    try:
+                        staff_user = Staff.objects.get(email__iexact=rejected_email, registration_approved=False)
+                        staff_user_id = staff_user.staff_id
+                        
+                        api_logger.info(f"Admin rejected: Deleting user {staff_user_id} ({rejected_email})")
+                        
+                        # Delete associated SignedUp records
+                        signed_up_count = SignedUp.objects.filter(email=rejected_email).count()
+                        SignedUp.objects.filter(email=rejected_email).delete()
+                        api_logger.info(f"Deleted {signed_up_count} SignedUp records for {rejected_email}")
+                        
+                        # Delete any pending tutor records
+                        pending_tutors = Pending_Tutor.objects.filter(id__email=rejected_email)
+                        pending_tutor_count = pending_tutors.count()
+                        pending_tutors.delete()
+                        if pending_tutor_count > 0:
+                            api_logger.info(f"Deleted {pending_tutor_count} Pending_Tutor records for {rejected_email}")
+                        
+                        # Delete the unapproved user
+                        staff_user.delete()
+                        api_logger.info(f"Deleted unapproved user {staff_user_id} ({rejected_email})")
+                        
+                        # Send rejection notification to Volunteer Coordinators
+                        try:
+                            coordinator_role = Role.objects.get(role_name="Volunteer Coordinator")
+                            coordinator_emails = Staff.objects.filter(
+                                roles=coordinator_role
+                            ).exclude(staff_id=user_id).values_list('email', flat=True)
+                            
+                            if coordinator_emails:
+                                current_admin_user = Staff.objects.get(staff_id=user_id)
+                                current_admin_name = f"{current_admin_user.first_name} {current_admin_user.last_name}"
+                                                            
+                                rejection_reason_text = task.rejection_reason or "No reason provided"
+                                
+                                subject = "הרשמה נדחתה - החלטה מנהלית סופית"
+                                message = f"""
+                                שלום,
+
+                                הרשמה של {rejected_email} נדחתה על ידי {current_admin_name} (החלטה מנהלית סופית).
+
+                                סיבת דחייה:
+                                {rejection_reason_text}
+
+                                המשתמש והנתונים הקשורים אליו הוסרו מהמערכת.
+                                """
+                                
+                                messages = [
+                                    (subject, message, settings.DEFAULT_FROM_EMAIL, [coord_email])
+                                    for coord_email in coordinator_emails
+                                ]
+                                send_mass_mail(messages, fail_silently=True)
+                                api_logger.info(f"Sent rejection notification to {len(coordinator_emails)} coordinators")
+                        except Exception as e:
+                            api_logger.error(f"Error sending rejection notification: {str(e)}")
+                        
+                    except Staff.DoesNotExist:
+                        api_logger.warning(f"Staff user not found for email {rejected_email} - may have already been deleted")
         
         # Delete the main task
         task.delete()
@@ -793,43 +857,44 @@ def update_task_status(request, task_id):
             {"detail": "Authentication credentials were not provided."}, status=403
         )
 
-    # Check if the user has UPDATE permission on the "tasks" resource
-    if not has_permission(request, "tasks", "UPDATE"):
-        log_api_action(
-            request=request,
-            action='UPDATE_TASK_FAILED',
-            success=False,
-            error_message="You do not have permission to update tasks",
-            status_code=401
-        )
-        return JsonResponse(
-            {"error": "You do not have permission to update tasks."}, status=401
-        )
-
     try:
         task = Tasks.objects.get(task_id=task_id)
         
-        # --- NEW VALIDATION: Only admins can change status of registration approval tasks ---
+        # --- SPECIAL HANDLING: Registration approval tasks use role-based permissions (not generic permissions) ---
         if task.task_type and task.task_type.task_type == "אישור הרשמה":
             user = Staff.objects.get(staff_id=user_id)
             has_admin_role = user.roles.filter(role_name="System Administrator").exists()
+            has_coordinator_role = user.roles.filter(role_name="Volunteer Coordinator").exists()
             
-            if not has_admin_role:
+            if not (has_admin_role or has_coordinator_role):
                 log_api_action(
                     request=request,
                     action='UPDATE_TASK_FAILED',
                     success=False,
-                    error_message='Non-admin attempted to move registration approval task',
+                    error_message='Non-admin/coordinator attempted to move registration approval task',
                     status_code=401,
                     additional_data={
                         'task_id': task_id,
                         'task_type': 'אישור הרשמה',
-                        'reason': 'Only System Administrator can modify registration approval tasks'
+                        'reason': 'Only System Administrator or Volunteer Coordinator can modify registration approval tasks'
                     }
                 )
                 return JsonResponse({
-                    "error": "Only System Administrator can modify registration approval tasks."
+                    "error": "Only System Administrator or Volunteer Coordinator can modify registration approval tasks."
                 }, status=401)
+        else:
+            # For non-registration-approval tasks, check generic UPDATE permission
+            if not has_permission(request, "tasks", "UPDATE"):
+                log_api_action(
+                    request=request,
+                    action='UPDATE_TASK_FAILED',
+                    success=False,
+                    error_message="You do not have permission to update tasks",
+                    status_code=401
+                )
+                return JsonResponse(
+                    {"error": "You do not have permission to update tasks."}, status=401
+                )
         
         old_status = task.status
         new_status = request.data.get("status", task.status)
@@ -963,7 +1028,7 @@ def update_task_status(request, task_id):
             except Exception as e:
                 api_logger.error(f"Error deleting previous status records for task {task_id}: {str(e)}")
             
-            # HANDLE REGISTRATION APPROVAL
+            # HANDLE REGISTRATION APPROVAL - TWO-TIER APPROVAL SYSTEM
             if task.task_type and task.task_type.task_type == "אישור הרשמה":
                 # Extract email from user_info if available
                 user_email = None
@@ -981,91 +1046,120 @@ def update_task_status(request, task_id):
                 api_logger.debug(f"Extracted email for registration approval: {user_email}")
                 
                 if user_email:
-                    try:
-                        staff_user = Staff.objects.get(email__iexact=user_email)
-                        staff_user.registration_approved = True
-                        # Mark user as suspended (no access) if BLOCK_ACCESS_AFTER_APPROVAL flag is True
-                        if os.environ.get('BLOCK_ACCESS_AFTER_APPROVAL', 'false').lower() in ('true', '1', 'yes'):
-                            staff_user.deactivation_reason = "suspended"
-                        staff_user.save()
-                        api_logger.info(f"User {staff_user.staff_id} ({user_email}) approved for registration")
+                    # Determine which approval level completed
+                    approval_level = None
+                    if "סופי" in task.description:
+                        approval_level = "final_admin"
+                    elif "ראשוני" in task.description:
+                        approval_level = "coordinator"
+                    
+                    api_logger.debug(f"Registration approval completion: approval_level={approval_level}, email={user_email}")
+                    
+                    # ========== TIER 1: COORDINATOR APPROVAL ==========
+                    if approval_level == "coordinator":
+                        api_logger.info(f"Coordinator approved registration for {user_email} - creating admin approval tasks")
                         
-                        # Send approval email
+                        # Get the staff user
                         try:
-                            subject = "!הרשמתך אושרה"
+                            staff_user = Staff.objects.get(email__iexact=user_email)
                             
-                            # Check if access blocking is enabled
-                            block_access = os.environ.get('BLOCK_ACCESS_AFTER_APPROVAL', 'false').lower() in ('true', '1', 'yes')
+                            # Create admin final approval tasks (tier 2)
+                            from .utils import create_admin_approval_tasks_async
+                            create_admin_approval_tasks_async(staff_user.staff_id, user_email)
+                            api_logger.info(f"Admin final approval tasks created for {user_email}")
                             
-                            # Build message based on access control flag
-                            login_line = "כעת תוכל להתחבר למערכת ולהתחיל לעזור לילדים.\n\n" if not block_access else ""
-                            
-                            message = f"""
-                            שלום {staff_user.first_name},
-
-                            אנו שמחים להודיע לך שהרשמתך בחיוך של ילד אושרה!
-
-                            {login_line}
-                            לחץ על הקישור הבא להצטרפות לקבוצת הווטסאפ שלנו למתנדבי העמותה:
-                            https://chat.whatsapp.com/B7UcLqApSTzCpppWR221DB
-
-                            בברכה,
-                            צוות חיוך של ילד
-                            """
-                            send_mail(
-                                subject,
-                                message,
-                                settings.DEFAULT_FROM_EMAIL,
-                                [user_email],
-                                fail_silently=False,
-                            )
-                            api_logger.info(f"Approval email sent to {user_email}")
-                        except Exception as email_error:
-                            api_logger.error(f"Error sending approval email to {user_email}: {str(email_error)}")
+                        except Staff.DoesNotExist:
+                            api_logger.error(f"Staff user not found for email {user_email} during coordinator approval")
+                    
+                    # ========== TIER 2: FINAL ADMIN APPROVAL ==========
+                    elif approval_level == "final_admin":
+                        api_logger.info(f"Admin approved registration for {user_email} - sending welcome email and enabling access")
                         
-                        # NOW CHECK IF THIS USER WANTED TO BE A TUTOR - DIRECTLY PROMOTE TO TUTOR
-                        # No more interview task - the "התאמת חניך" task will be created when tutorship is created
                         try:
-                            signed_up = SignedUp.objects.get(email=user_email)
-                            api_logger.debug(f"Found SignedUp record for {user_email}, want_tutor={signed_up.want_tutor}")
-                            if signed_up.want_tutor:
-                                # Check if pending tutor exists (they should be here from registration)
-                                pending_tutor = Pending_Tutor.objects.filter(id_id=signed_up.id).first()
-                                if pending_tutor:
-                                    api_logger.debug(f"Found pending tutor for {user_email}, promoting directly to Tutor")
-                                    
-                                    # Remove "General Volunteer" role if present
-                                    general_vol_role = Role.objects.filter(role_name="General Volunteer").first()
-                                    if general_vol_role and general_vol_role in staff_user.roles.all():
-                                        staff_user.roles.remove(general_vol_role)
-                                    
-                                    # Add "Tutor" role
-                                    tutor_role = Role.objects.filter(role_name="Tutor").first()
-                                    if tutor_role and tutor_role not in staff_user.roles.all():
-                                        staff_user.roles.add(tutor_role)
-                                    
-                                    # Create Tutor record if not exists
-                                    if not Tutors.objects.filter(id_id=signed_up.id).exists():
-                                        Tutors.objects.create(
-                                            id_id=signed_up.id,
-                                            staff=staff_user,
-                                            tutorship_status="אין_חניך",
-                                            tutor_email=signed_up.email,
-                                        )
-                                        api_logger.info(f"Created Tutor record for {user_email}")
-                                    
-                                    # NOTE: Don't delete from Pending_Tutor yet - will be deleted when "התאמת חניך" task is completed
-                                    api_logger.info(f"Promoted user {staff_user.staff_id} ({user_email}) to Tutor role (pending tutee match)")
+                            staff_user = Staff.objects.get(email__iexact=user_email)
+                            staff_user.registration_approved = True
+                            # Mark user as suspended (no access) if BLOCK_ACCESS_AFTER_APPROVAL flag is True
+                            if os.environ.get('BLOCK_ACCESS_AFTER_APPROVAL', 'false').lower() in ('true', '1', 'yes'):
+                                staff_user.deactivation_reason = "suspended"
+                            staff_user.save()
+                            api_logger.info(f"User {staff_user.staff_id} ({user_email}) approved for registration")
+                            
+                            # Send welcome/approval email ONLY after final admin approval
+                            try:
+                                subject = "!הרשמתך אושרה"
+                                
+                                # Check if access blocking is enabled
+                                block_access = os.environ.get('BLOCK_ACCESS_AFTER_APPROVAL', 'false').lower() in ('true', '1', 'yes')
+                                
+                                # Build message based on access control flag
+                                login_line = "כעת תוכל להתחבר למערכת ולהתחיל לעזור לילדים.\n\n" if not block_access else ""
+                                
+                                message = f"""
+                                שלום {staff_user.first_name},
+
+                                אנו שמחים להודיע לך שהרשמתך בחיוך של ילד אושרה!
+
+                                {login_line}
+                                לחץ על הקישור הבא להצטרפות לקבוצת הווטסאפ שלנו למתנדבי העמותה:
+                                https://chat.whatsapp.com/B7UcLqApSTzCpppWR221DB
+
+                                בברכה,
+                                צוות חיוך של ילד
+                                """
+                                send_mail(
+                                    subject,
+                                    message,
+                                    settings.DEFAULT_FROM_EMAIL,
+                                    [user_email],
+                                    fail_silently=False,
+                                )
+                                api_logger.info(f"Welcome email sent to {user_email} after final admin approval")
+                            except Exception as email_error:
+                                api_logger.error(f"Error sending welcome email to {user_email}: {str(email_error)}")
+                            
+                            # NOW CHECK IF THIS USER WANTED TO BE A TUTOR - DIRECTLY PROMOTE TO TUTOR
+                            # No more interview task - the "התאמת חניך" task will be created when tutorship is created
+                            try:
+                                signed_up = SignedUp.objects.get(email=user_email)
+                                api_logger.debug(f"Found SignedUp record for {user_email}, want_tutor={signed_up.want_tutor}")
+                                if signed_up.want_tutor:
+                                    # Check if pending tutor exists (they should be here from registration)
+                                    pending_tutor = Pending_Tutor.objects.filter(id_id=signed_up.id).first()
+                                    if pending_tutor:
+                                        api_logger.debug(f"Found pending tutor for {user_email}, promoting directly to Tutor")
+                                        
+                                        # Remove "General Volunteer" role if present
+                                        general_vol_role = Role.objects.filter(role_name="General Volunteer").first()
+                                        if general_vol_role and general_vol_role in staff_user.roles.all():
+                                            staff_user.roles.remove(general_vol_role)
+                                        
+                                        # Add "Tutor" role
+                                        tutor_role = Role.objects.filter(role_name="Tutor").first()
+                                        if tutor_role and tutor_role not in staff_user.roles.all():
+                                            staff_user.roles.add(tutor_role)
+                                        
+                                        # Create Tutor record if not exists
+                                        if not Tutors.objects.filter(id_id=signed_up.id).exists():
+                                            Tutors.objects.create(
+                                                id_id=signed_up.id,
+                                                staff=staff_user,
+                                                tutorship_status="אין_חניך",
+                                                tutor_email=signed_up.email,
+                                            )
+                                            api_logger.info(f"Created Tutor record for {user_email}")
+                                        
+                                        # NOTE: Don't delete from Pending_Tutor yet - will be deleted when "התאמת חניך" task is completed
+                                        api_logger.info(f"Promoted user {staff_user.staff_id} ({user_email}) to Tutor role (pending tutee match)")
+                                    else:
+                                        api_logger.debug(f"No pending tutor found for {user_email}")
                                 else:
-                                    api_logger.debug(f"No pending tutor found for {user_email}")
-                            else:
-                                api_logger.debug(f"User {user_email} does not want to be a tutor")
-                        except SignedUp.DoesNotExist:
-                            api_logger.debug(f"SignedUp record not found for {user_email}")
-                        except Exception as e:
-                            api_logger.error(f"Error promoting tutor for {user_email}: {str(e)}")
-                    except Staff.DoesNotExist:
-                        api_logger.error(f"Staff user not found for email {user_email} during registration approval")
+                                    api_logger.debug(f"User {user_email} does not want to be a tutor")
+                            except SignedUp.DoesNotExist:
+                                api_logger.debug(f"SignedUp record not found for {user_email}")
+                            except Exception as e:
+                                api_logger.error(f"Error promoting tutor for {user_email}: {str(e)}")
+                        except Staff.DoesNotExist:
+                            api_logger.error(f"Staff user not found for email {user_email} during final admin approval")
                 else:
                     api_logger.warning(f"Could not extract email from registration approval task {task_id}")
 
