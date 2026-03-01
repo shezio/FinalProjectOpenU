@@ -756,8 +756,8 @@ def update_staff_member(request, staff_id):
                         related_child=task.related_child,
                         task_type=review_task_type,
                         status__in=["לא הושלמה", "בביצוע"],
-                        assigned_to__ne=staff_member
-                    ).exists()
+                        assigned_to=staff_member
+                    ).exclude(assigned_to=staff_member).exists()
                     if other_tasks_exist:
                         task.delete()
                         deleted_count += 1
@@ -781,7 +781,9 @@ def update_staff_member(request, staff_id):
                         related_child=task.related_child,
                         task_type=review_task_type,
                         status__in=["לא הושלמה", "בביצוע"],
-                        assigned_to__ne=staff_member
+                        assigned_to=staff_member
+                    ).exclude(
+                        assigned_to=staff_member
                     ).exists()
                     if other_tasks_exist:
                         task.delete()

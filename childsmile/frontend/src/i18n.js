@@ -744,7 +744,7 @@ const resources = {
       "Additional Volunteers": "מתנדבים נוספים",
       "Select Additional Volunteers": "בחר מתנדבים נוספים",
       "Refresh Task List": "רענן רשימת משימות",
-      "All Tasks - Click to filter by type": "כל המשימות - לחץ לסינון לפי סוג",
+      "All Tasks - Click to filter by type": "סנן לפי סוג משימה",
       "Filter by Status": "סנן לפי סטטוס משימה",
       'Create New Task': 'צור משימה חדשה',
 
