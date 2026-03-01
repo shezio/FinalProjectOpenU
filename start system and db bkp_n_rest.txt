@@ -13,6 +13,9 @@ cd /Users/shlomosmac/Applications/dev/FinalProjectOpenU/childsmile && source mye
   git config --global user.email "shlezi0@gmail.com"
   git config --global user.name "shezio"
 
+connect to db:
+psql -U child_smile_user -h localhost -p 5432 -d child_smile_db
+
 steps to db bkp and restore:
 1. Backup the database
 pg_dump -U child_smile_user -h localhost -p 5432 child_smile_db > backup_before_import_vols_20260202.sql

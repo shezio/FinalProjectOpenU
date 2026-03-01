@@ -60,8 +60,8 @@ from django.views.decorators.csrf import csrf_exempt
 from django.db import transaction
 from django.utils import timezone
 import datetime
+from datetime import datetime, date, timedelta
 import urllib3
-from django.utils.timezone import make_aware
 from geopy.exc import GeocoderTimedOut
 from geopy.geocoders import Nominatim
 import threading, time
@@ -114,21 +114,46 @@ def get_user_tasks(request):
         api_logger.debug(f"Logged-in user: {user.username}")
         api_logger.debug(f"Is user '{user.username}' an admin? {user_is_admin}")
 
+        # Parse query parameters for filtering
+        date_field = request.GET.get('date_field', 'due_date')
+        start_date_str = request.GET.get('start_date')
+        end_date_str = request.GET.get('end_date')
+        task_type_id = request.GET.get('task_type_id')
+
+        # Default dates to current month if not provided
+        today = date.today()
+        if not start_date_str:
+            start_date = today.replace(day=1)
+        else:
+            start_date = date.fromisoformat(start_date_str)
+        if not end_date_str:
+            next_month = today.replace(day=28) + timedelta(days=4)
+            end_date = next_month - timedelta(days=next_month.day)
+        else:
+            end_date = date.fromisoformat(end_date_str)
+
+        # Validate date_field
+        allowed_fields = ['due_date', 'created_at', 'updated_at']
+        if date_field not in allowed_fields:
+            date_field = 'due_date'
+
         # Always fetch tasks from DB, no cache
+        base_query = Tasks.objects.select_related("task_type", "assigned_to", "pending_tutor__id", "related_child", "related_tutor", "related_tutor__id")
+
+        # Apply date range filter (inclusive)
+        filter_kwargs = {f'{date_field}__gte': start_date, f'{date_field}__lte': end_date}
+        base_query = base_query.filter(**filter_kwargs)
+
+        # Apply task type filter if provided
+        if task_type_id:
+            base_query = base_query.filter(task_type_id=task_type_id)
+
         if user_is_admin:
             api_logger.debug("Fetching all tasks for admin user.")
-            tasks = (
-                Tasks.objects.all()
-                .select_related("task_type", "assigned_to", "pending_tutor__id", "related_child", "related_tutor", "related_tutor__id")
-                .order_by("-updated_at")
-            )
+            tasks = base_query.order_by("-updated_at")
         else:
             api_logger.debug(f"Fetching tasks assigned to user '{user.username}'.")
-            tasks = (
-                Tasks.objects.filter(assigned_to_id=user_id)
-                .select_related("task_type", "assigned_to", "pending_tutor__id", "related_child", "related_tutor", "related_tutor__id")
-                .order_by("-updated_at")
-            )
+            tasks = base_query.filter(assigned_to_id=user_id).order_by("-updated_at")
 
         # Build tasks_data for the response
         tasks_data = []

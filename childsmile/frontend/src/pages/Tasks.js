@@ -20,15 +20,19 @@ const statusColumns = [
   { key: "הושלמה", label: "הושלמה" }
 ];
 
+const getFirstDayOfMonth = () => {
+  const now = new Date();
+  return new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
+};
+
+const getLastDayOfMonth = () => {
+  const now = new Date();
+  return new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
+};
+
 const Tasks = () => {
   const { t } = useTranslation();
-  const [tasks, setTasks] = useState(() => {
-    try {
-      return JSON.parse(localStorage.getItem('tasks')) || [];
-    } catch {
-      return [];
-    }
-  });
+  const [tasks, setTasks] = useState([]);
   const [taskTypes, setTaskTypes] = useState(() => {
     try {
       return JSON.parse(localStorage.getItem('taskTypes')) || [];
@@ -69,6 +73,10 @@ const Tasks = () => {
   const [rejectionReasonText, setRejectionReasonText] = useState('');
   const [staffUserNamesAndRoles, setStaffUserNamesAndRoles] = useState([]);
   const [explanation, setExplanation] = useState("");
+  const [selectedDateField, setSelectedDateField] = useState('due_date');
+  const [startDate, setStartDate] = useState(getFirstDayOfMonth());
+  const [endDate, setEndDate] = useState(getLastDayOfMonth());
+  const [filtering, setFiltering] = useState(false);
   const menuRef = useRef();
   const location = useLocation();
 
@@ -141,18 +149,16 @@ const Tasks = () => {
   const fetchData = async (forceFetch = false) => {
     setLoading(true);
     try {
-      if (forceFetch) {
-        localStorage.removeItem('tasks');
-        localStorage.removeItem('taskTypes');
-        localStorage.removeItem('staffOptions');
-        localStorage.removeItem('childrenOptions');
-        localStorage.removeItem('tutorsOptions');
-        localStorage.removeItem('pendingTutorsOptions');
-        localStorage.removeItem('generalVolunteersNotPending');
-        localStorage.removeItem('staffUserNamesAndRoles');
+      const params = new URLSearchParams();
+      params.append('date_field', selectedDateField);
+      params.append('start_date', startDate);
+      params.append('end_date', endDate);
+      if (selectedFilter) {
+        params.append('task_type_id', selectedFilter);
       }
+      const tasksUrl = `/api/tasks/?${params.toString()}`;
       const [tasksResponse, staffOptions, childrenOptions, tutorsOptions, pendingTutorsOptions, generalVolunteersNotPending, staffUserNamesAndRoles] = await Promise.all([
-        axios.get('/api/tasks/').catch((error) => {
+        axios.get(tasksUrl).catch((error) => {
           console.error('Error fetching tasks:', error);
           showErrorToast(t, 'Error fetching tasks', error);
           return { data: { tasks: [], task_types: [] } };
@@ -218,20 +224,10 @@ const Tasks = () => {
       );
       setFilteredTaskTypes(filteredTypes);
 
-      const storedTasks = JSON.parse(localStorage.getItem('tasks')) || [];
-      const storedTaskTypes = JSON.parse(localStorage.getItem('taskTypes')) || [];
-
-      const isTasksDifferent = JSON.stringify(newTasks) !== JSON.stringify(storedTasks);
-      const isTaskTypesDifferent = JSON.stringify(newTaskTypes) !== JSON.stringify(storedTaskTypes);
-
-      if (isTasksDifferent) {
-        setTasks(newTasks);
-        localStorage.setItem('tasks', JSON.stringify(newTasks));
-      }
-      if (isTaskTypesDifferent) {
-        setTaskTypes(newTaskTypes);
-        localStorage.setItem('taskTypes', JSON.stringify(newTaskTypes));
-      }
+      // Always set tasks and taskTypes from backend, never from localStorage
+      setTasks(newTasks);
+      setTaskTypes(newTaskTypes);
+      // Remove all localStorage.setItem for tasks and taskTypes
       localStorage.setItem('staffOptions', JSON.stringify(staffOptions));
       localStorage.setItem('childrenOptions', JSON.stringify(trimmedChildrenOptions));
       localStorage.setItem('tutorsOptions', JSON.stringify(tutorsOptions));
@@ -253,6 +249,11 @@ const Tasks = () => {
   useEffect(() => {
     fetchData(true); // force fetch every time the route changes
   }, [location.pathname]);
+
+  // Re-fetch tasks when date field, date range, or task type filter changes
+  useEffect(() => {
+    fetchData(true);
+  }, [selectedDateField, startDate, endDate, selectedFilter]);
 
   // Combine pending tutors and general volunteers for the dropdown
   const groupedPendingTutorOptions = [
@@ -760,6 +761,11 @@ const Tasks = () => {
     closeDeleteModal();
   };
 
+  const handleFilter = () => {
+    setFiltering(true);
+    fetchData(true).finally(() => setFiltering(false));
+  };
+
   return (
     <div className="tasks-main-content">
       <Sidebar className={isDragging ? "sidebar--dragging" : ""} />
@@ -800,29 +806,36 @@ const Tasks = () => {
               <div className="refresh">
                 <button onClick={() => fetchData(true)}>{t("Refresh Task List")}</button>
               </div>
-              {/* Child filter - only show for audit call tasks (שיחת ביקורת) - render after Refresh as requested */}
-              {selectedFilter && taskTypes.find(type => type.id === parseInt(selectedFilter))?.name === 'שיחת ביקורת' && (
+              <div className="actions">
+                <label htmlFor="date-field">{t("Filter by field")}</label>
                 <div className="filter">
                   <select
-                    value={selectedChildFilter}
-                    onChange={(e) => {
-                      setSelectedChildFilter(e.target.value);
-                    }}
+                    id="date-field"
+                    value={selectedDateField}
+                    onChange={e => setSelectedDateField(e.target.value)}
                   >
-                    <option value="">{t("Filter by Family")}</option>
-                    {Array.from(new Set(tasks
-                      .filter(task => task.type_name === 'שיחת ביקורת' && task.status !== 'הושלמה')
-                      .map(task => task.child)
-                    ))
-                      .map(childId => {
-                        const child = childrenOptions.find(c => c.value === childId);
-                        return child ? (
-                          <option key={child.value} value={child.value}>{child.label}</option>
-                        ) : null;
-                      })}
+                    <option value="due_date">{t('Due Date')}</option>
+                    <option value="created_at">{t('Created At')}</option>
+                    <option value="updated_at">{t('Updated At')}</option>
                   </select>
                 </div>
-              )}
+                <label htmlFor="date-from">{t("From")}</label>
+                <input
+                  type="date"
+                  id="date-from"
+                  value={startDate}
+                  onChange={e => setStartDate(e.target.value)}
+                  className="date-input"
+                />
+                <label htmlFor="date-to">{t("To")}</label>
+                <input
+                  type="date"
+                  id="date-to"
+                  value={endDate}
+                  onChange={e => setEndDate(e.target.value)}
+                  className="date-input"
+                />
+              </div>
             </div>
             {/* Kanban Board */}
             <div className="split-view"

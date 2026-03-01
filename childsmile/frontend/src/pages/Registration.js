@@ -192,15 +192,16 @@ const Registration = () => {
         .catch((error) => {
           console.error("Error sending TOTP:", error);
           setLoading(false);
-          
+          // Maintenance/server down detection
+          if (!error.response || error.response.status >= 500) {
+            showErrorToast(t, "System is under maintenance, please try again later.", '');
+            return;
+          }
           // Show the specific error from the backend (email/phone already exists, etc.)
-          // The form data is preserved so user can fix just the problematic field
-          
           if (error.response?.data?.error) {
             showErrorToast(t, '', error);
             return;
           }
-
           showErrorToast(t, 'Failed to send verification code.', '');
         });
     }
@@ -235,6 +236,11 @@ const Registration = () => {
       .catch((error) => {
         console.error("Error verifying TOTP:", error);
         setLoading(false);
+        // Maintenance/server down detection
+        if (!error.response || error.response.status >= 500) {
+          showErrorToast(t, "System is under maintenance, please try again later.", '');
+          return;
+        }
         showErrorToast(t, 'Verification failed.', error);
       });
   };

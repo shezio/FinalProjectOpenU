@@ -69,6 +69,30 @@
   border-radius: 5px;
 }
 
+.tasks-main-content .filter-create-container {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 10px;
+    align-items: center;
+    padding: 12px -33px 12px 60px;
+    margin: 20px 40px 0 -500px;
+    max-width: calc(100% - 1px);
+}
+
+.tasks-main-content .filter-create-container .date-input {
+  width: 15%;
+}
+
+.tasks-main-content .filter-create-container .actions{
+  margin-top: 20px !important;
+}
+
+.tasks-main-content .filter-create-container label {
+  font-size: 24px !important;
+  margin-right: 10px;
+  /* Add some space between the label and the input */
+}
+
 /* Ensure the container is responsive */
 .filter-create-container {
   display: flex;
