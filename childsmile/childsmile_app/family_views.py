@@ -63,6 +63,7 @@ import threading, time
 from time import sleep
 from math import sin, cos, sqrt, atan2, radians, ceil
 import json
+from .coordinator_utils import notify_tutored_families_coordinators_async
 import os
 import traceback
 import re
@@ -860,6 +861,9 @@ def create_family(request):
                 'responsible_coordinator': get_staff_name_by_id(responsible_coordinator) or "Unknown"
             }
         )
+
+        # Send email notification to Tutored Families Coordinators if tutoring status requires a tutor
+        notify_tutored_families_coordinators_async(family.child_id)
 
         return JsonResponse(
             {"message": "Family created successfully", "ID": family.child_id},
