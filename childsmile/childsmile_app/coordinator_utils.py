@@ -14,8 +14,11 @@ from .models import (
     SignedUp,
     Children,
     Task_Types,
+    Tasks,
 )
 from .logger import api_logger
+from datetime import timedelta
+from .utils import create_task_internal
 
 
 # ============================================================================
@@ -219,6 +222,26 @@ def create_tasks_for_admins(staff_user_id, user_name, user_email):
                         html_message=message
                     )
                 api_logger.info(f"Registration approval notification sent to {len(approval_staff)} Volunteer Coordinators for user {user_email}")
+                
+                # Create approval task for each Volunteer Coordinator
+                try:
+                    for staff_member in approval_staff:
+                        task_data = {
+                            "description": "אישור הרשמה ראשוני",
+                            "due_date": (now().date() + timedelta(days=3)).strftime("%Y-%m-%d"),
+                            "status": "לא הושלמה",
+                            "assigned_to": staff_member.staff_id,
+                            "type": task_type.id,
+                            "user_info": user_info,
+                        }
+                        api_logger.debug(f"DEBUG: Creating coordinator approval task for Volunteer Coordinator {staff_member.staff_id}: {task_data}")
+                        try:
+                            task = create_task_internal(task_data)
+                            api_logger.info(f"Coordinator approval task created for {staff_member.staff_id}, task ID: {task.task_id}")
+                        except Exception as task_error:
+                            api_logger.error(f"ERROR: Error creating coordinator approval task: {str(task_error)}")
+                except Exception as outer_error:
+                    api_logger.error(f"Error creating approval tasks: {str(outer_error)}")
         except Exception as e:
             api_logger.error(f"Error sending registration approval notification email: {str(e)}")
     except Exception as e:
