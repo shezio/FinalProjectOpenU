@@ -27,6 +27,7 @@ from .models import (
     SettlementsStreets
 )
 from .utils import *
+from .coordinator_utils import create_tasks_for_admins_async
 from .audit_utils import log_api_action
 from .logger import api_logger
 import json
@@ -544,6 +545,24 @@ def create_volunteer_or_tutor_internal(data, request=None):
         while Staff.objects.filter(username=username).exists():
             username = f"{original_username}_{index}"
             index += 1
+
+        # Check if user_id already exists in SignedUp (duplicate registration)
+        if SignedUp.objects.filter(id=int(user_id)).exists():
+            api_logger.warning(f"Duplicate registration attempt with ID {user_id}")
+            if request:
+                log_api_action(
+                    request=request,
+                    action='USER_REGISTRATION_FAILED',
+                    success=False,
+                    error_message=f"This ID ({user_id}) is already registered in the system",
+                    status_code=400,
+                    additional_data={
+                        'attempted_email': email,
+                        'attempted_id': user_id,
+                        'reason': 'duplicate_id'
+                    }
+                )
+            return JsonResponse({"error": f"This ID is already registered in the system"}, status=400)
 
         # Insert into SignedUp table - USE the Israeli ID
         signedup = SignedUp.objects.create(
