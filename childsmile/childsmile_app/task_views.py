@@ -1066,7 +1066,7 @@ def update_task_status(request, task_id):
                             
                             # SEND EMAIL WITH WHATSAPP GROUP LINK - volunteer must join group before admin can approve
                             try:
-                                subject = "!הרשמתך אושרה - הצטרף לקבוצת הווטסאפ"
+                                subject = "הרשמתך אושרה - הצטרף לקבוצת הווטסאפ!"
                                 message = f"""
 <html dir="rtl">
 <head>
@@ -1084,18 +1084,18 @@ def update_task_status(request, task_id):
 <body>
     <div class="container">
         <div class="header">
-            <h1>!ברוכים הבאים לחיוך של ילד</h1>
+            <h1>ברוכים הבאים לחיוך של ילד!</h1>
             <p>הרשמתך אושרה בשלב הראשון</p>
         </div>
         
         <div class="content">
             <p>שלום {staff_user.first_name},</p>
             
-            <p>תודה על הרשמתך למערכת <strong>חיוך של ילד</strong>!</p>
+            <p>תודה על הרשמתך לעמותת <strong>חיוך של ילד</strong>!</p>
             
             <div class="step">
-                <h3>✅ שלב ראשוני אושר בהצלחה</h3>
-                <p>הרשמתך עברה את בדיקת הראשון שלנו בהצלחה. אנחנו שמחים שהצטרפת אלינו!</p>
+                <h3>✅ שלב ראשוני הסתיים בהצלחה</h3>
+                <p>הרשמתך עברה את השלב הראשון בהצלחה. אנחנו שמחים שהצטרפת אלינו!</p>
             </div>
             
             <div class="step">
@@ -1110,7 +1110,17 @@ def update_task_status(request, task_id):
             
             <div class="step">
                 <h3>⏳ מה קורה כעת?</h3>
-                <p>לאחר שתצטרף לקבוצת הווטסאפ שלנו, צוות הניהול שלנו יבדוק את ההצטרפות ויגמור את תהליך האישור הסופי בקרוב.</p>
+                <p>לאחר שתצטרף לקבוצת הווטסאפ שלנו, צוות הניהול שלנו יבדוק את הפרטים ויסיים את תהליך האישור הסופי בקרוב.</p>
+            </div>
+            
+            <div class="step">
+                <h3>❓ שאלות?</h3>
+                <p>אם יש לך שאלות או צריך עזרה, צור קשר עם צוות הניהול שלנו דרך קבוצת הווטסאפ.</p>
+                <p><strong>ניתן לפנות לטל חלימי רכזת מתנדבים</strong></p>
+                <div style="direction: ltr; text-align: right; margin: 10px 0;">
+                    <a href="tel:+972507225027" style="display: inline-block; margin-left: 15px; text-decoration: none; color: #667eea;"><strong>📞 +972 50-722-5027</strong></a>
+                    <a href="https://wa.me/972507225027" style="display: inline-block; text-decoration: none; color: #25D366;"><strong>💬 WhatsApp</strong></a>
+                </div>
             </div>
             
             <p style="margin-top: 30px; color: #666;">
@@ -1161,19 +1171,7 @@ def update_task_status(request, task_id):
                             
                             # Send final approval confirmation email (NO WhatsApp link - they should already have joined)
                             try:
-                                subject = "!הרשמתך אושרה לחלוטין"
-                                
-                                # Check if access blocking is enabled
-                                block_access = os.environ.get('BLOCK_ACCESS_AFTER_APPROVAL', 'false').lower() in ('true', '1', 'yes')
-                                
-                                # Build message based on access control flag
-                                login_section = """
-                                <div class="step">
-                                    <h3>🔐 כניסה למערכת</h3>
-                                    <p>כעת תוכל להתחבר למערכת שלנו ולהתחיל לעזור לילדים!</p>
-                                    <p><strong>כנס לאתר:</strong> https://www.childsmile.org.il</p>
-                                </div>
-                                """ if not block_access else ""
+                                subject = "הרשמתך אושרה סופית!"
                                 
                                 message = f"""
 <html dir="rtl">
@@ -1191,30 +1189,33 @@ def update_task_status(request, task_id):
 <body>
     <div class="container">
         <div class="header">
-            <h1>!ברוכה הדרך ✨</h1>
-            <div class="success-badge">הרשמתך אושרה לחלוטין</div>
+            <h1>ברכותינו!</h1>
+            <div class="success-badge">הרשמתך אושרה סופית</div>
         </div>
         
         <div class="content">
             <p>שלום {staff_user.first_name},</p>
             
-            <p>אנחנו שמחים להודיע לך שהרשמתך בחיוך של ילד <strong>אושרה לחלוטין</strong>! 🎉</p>
+            <p>אנחנו שמחים להודיע לך שהרשמתך בחיוך של ילד <strong>אושרה סופית</strong>! 🎉</p>
             
             <div class="step">
-                <h3>✅ כל השלבים הושלמו בהצלחה</h3>
-                <p>עברת בהצלחה את כל שלבי התהליך. אתה כעת חלק מהקהילה שלנו!</p>
+                <h3>✅ כל השלבים הסתיימו בהצלחה</h3>
+                <p>עברת בהצלחה את כל שלבי התהליך.</p>
             </div>
             
             <div class="step">
                 <h3>👥 קבוצת הווטסאפ</h3>
-                <p>תודה שהצטרפת לקבוצת הווטסאפ שלנו - זה חלק חשוב מהקהילה שלנו. כאן תקבל עדכונים, תוכל לשתף חוויות, ותהיה בקשר קבוע עם שאר ההקבוצה.</p>
+                <p>תודה שהצטרפת לקבוצת הווטסאפ שלנו - זה חלק חשוב מהקהילה שלנו. כאן תקבל עדכונים, תוכל לשתף חוויות, ותהיה בקשר קבוע עם שאר החברים.</p>
             </div>
-            
-            {login_section}
             
             <div class="step">
                 <h3>❓ שאלות?</h3>
                 <p>אם יש לך שאלות או צריך עזרה, צור קשר עם צוות הניהול שלנו דרך קבוצת הווטסאפ או אתר החיוך של ילד.</p>
+                <p><strong>ניתן לפנות לטל חלימי רכזת מתנדבים</strong></p>
+                <div style="direction: ltr; text-align: right; margin: 10px 0;">
+                    <a href="tel:+972507225027" style="display: inline-block; margin-left: 15px; text-decoration: none; color: #28a745;"><strong>📞 +972 50-722-5027</strong></a>
+                    <a href="https://wa.me/972507225027" style="display: inline-block; text-decoration: none; color: #25D366;"><strong>💬 WhatsApp</strong></a>
+                </div>
             </div>
             
             <p style="margin-top: 30px; color: #666;">
