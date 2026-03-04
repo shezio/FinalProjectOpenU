@@ -327,6 +327,8 @@ const resources = {
       "Error updating task": "שגיאה בעדכון משימה",
       "Event Date": "תאריך האירוע",
       "Status Filter": "סנן לפי סטטוס",
+      "Parent Phone": "טלפון הורה",
+      "Search by name, ID, or phone": "חפש לפי שם, ת.ז או טלפון",
       "Export Map and Grid": "ייצא כתמונה",
       "Export to Excel": "ייצוא לאקסל",
       "Export to PDF": "ייצוא לPDF",

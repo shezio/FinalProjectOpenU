@@ -911,7 +911,7 @@ const SystemManagement = () => {
                             }}
                           />
                         </td>}
-                        <td>{user.username}</td>
+                        <td>{user.username.replace(/_/g, ' ')}</td>
                         <td>{user.email}</td>
                         <td>{user.first_name}</td>
                         <td>{user.last_name}</td>
@@ -1225,7 +1225,7 @@ const SystemManagement = () => {
         >
           <h2>{t('Are you sure you want to delete this staff member?')}</h2>
           {staffToDelete && (
-            <p><strong>{staffToDelete.username} ({staffToDelete.email})</strong></p>
+            <p><strong>{staffToDelete.username.replace(/_/g, ' ')} ({staffToDelete.email})</strong></p>
           )}
           <p style={{ color: 'red', fontWeight: 'bold' }}>
             {t('Deleting a staff member will remove all associated data')}

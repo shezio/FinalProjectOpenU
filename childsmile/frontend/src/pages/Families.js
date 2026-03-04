@@ -141,14 +141,26 @@ const Families = () => {
   };
 
   let filteredFamilies = families;
-  // Apply search filter for child name
+  // Apply search filter for child name, ID, and phone
   if (searchTerm.trim()) {
     const term = searchTerm.trim().toLowerCase();
     filteredFamilies = filteredFamilies.filter((family) => {
+      // Search by name
       const fullName = `${family.first_name || ''} ${family.last_name || ''}`.toLowerCase();
       const firstName = (family.first_name || '').toLowerCase();
       const lastName = (family.last_name || '').toLowerCase();
-      return fullName.includes(term) || firstName.includes(term) || lastName.includes(term);
+      const nameMatch = fullName.includes(term) || firstName.includes(term) || lastName.includes(term);
+      
+      // Search by ID
+      const idMatch = family.id && family.id.toString().includes(term);
+      
+      // Search by any phone field (child phone, father phone, mother phone)
+      const phoneMatch = 
+        (family.child_phone_number && family.child_phone_number.includes(term)) ||
+        (family.father_phone && family.father_phone.includes(term)) ||
+        (family.mother_phone && family.mother_phone.includes(term));
+      
+      return nameMatch || idMatch || phoneMatch;
     });
   }
   if (showMatureOnly) {
@@ -1015,7 +1027,7 @@ const Families = () => {
           <input
             className="families-search-bar"
             type="text"
-            placeholder={t("Search by child name")}
+            placeholder={t("Search by name, ID, or phone")}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -1046,7 +1058,7 @@ const Families = () => {
                         </button>
                       </th>
                       <th>{t('Address')}</th>
-                      <th>{t('Child Phone')}</th>
+                      <th>{t('Parent Phone')}</th>
                       <th>{t('Tutorship Status')}</th>
                       <th>{t('Status')}</th>
                       <th>{t('Responsible Coordinator')}</th>
@@ -1080,10 +1092,10 @@ const Families = () => {
                         <td>{family.first_name} {family.last_name}</td>
                         <td>{formatAge(family)}</td>
                         <td>{family.address}</td>
-                        <td>{family.child_phone_number || '---'}</td>
+                        <td>{family.mother_phone || family.father_phone || '---'}</td>
                         <td>{formatStatus(family.tutoring_status)}</td>
                         <td>{formatStatus(family.status)}</td>
-                        <td>{family.responsible_coordinator || '---'}</td>
+                        <td>{(family.responsible_coordinator || '---').replace(/_/g, ' ')}</td>
                         <td>{family.registration_date}</td>
                         <td>
                           <div className="family-actions">

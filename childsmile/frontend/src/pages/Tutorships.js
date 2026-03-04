@@ -1426,7 +1426,7 @@ const Tutorships = () => {
                         <tr><td>{t('Marital Status')}</td><td> {selectedMatchForInfo.marital_status}</td></tr>
                         <tr><td>{t('Number of Siblings')}</td><td> {selectedMatchForInfo.num_of_siblings}</td></tr>
                         <tr><td>{t('Tutoring Status')}</td><td> {selectedMatchForInfo.tutoring_status}</td></tr>
-                        <tr><td>{t('Responsible Coordinator')}</td><td> {selectedMatchForInfo.responsible_coordinator}</td></tr>
+                        <tr><td>{t('Responsible Coordinator')}</td><td> {(selectedMatchForInfo.responsible_coordinator || '---').replace(/_/g, ' ')}</td></tr>
                         <tr><td>{t('Need Review')}</td><td> {selectedMatchForInfo.need_review ? t('Yes') : t('No')}</td></tr>
                         <tr><td>{t('Additional Info')}</td><td> {selectedMatchForInfo.additional_info}</td></tr>
                         <tr><td>{t('Is In Frame')}</td><td> {selectedMatchForInfo.is_in_frame || '---'}</td></tr>
