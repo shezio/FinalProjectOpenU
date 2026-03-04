@@ -898,7 +898,7 @@ textarea.error {
 .families-search-bar {
   padding: 0 20px;
   min-width: 170px;
-  width: 170px;
+  width: 350px;
   height: 60px;
   border: 3px solid rgba(59, 130, 246, 0.75);
   background: linear-gradient(135deg, 

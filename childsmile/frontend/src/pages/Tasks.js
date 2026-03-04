@@ -972,7 +972,7 @@ const Tasks = () => {
                                         {!snapshot.isDragging && (
                                           <p>סטטוס: {task.status}</p>
                                         )}
-                                        <p className='strong-p'>לביצוע על ידי: {task.assignee}</p>
+                                        <p className='strong-p'>לביצוע על ידי: {task.assignee.replace(/_/g, ' ')}</p>
                                       </div>
                                     )}
                                   </Draggable>
@@ -1054,7 +1054,7 @@ const Tasks = () => {
                     <p>נוצרה ב: {selectedTask.created}</p>
                     <p>עודכנה ב: {selectedTask.updated}</p>
                     <p>סוג משימה: {getTaskTypeName(selectedTask.type)}</p>
-                    <p>לביצוע על ידי: {selectedTask.assignee}</p>
+                    <p>לביצוע על ידי: {selectedTask.assignee.replace(/_/g, ' ')}</p>
                     {/* Show Child and Tutor only if NOT special task types */}
                     {!isInterviewTask(selectedTask.type) && !isFamilyAdditionTask(selectedTask.type) && !isRegistrationApprovalTaskByName(selectedTask.type_name) && !isTuteeMatchTaskByName(selectedTask.type_name) && (
                       <>
