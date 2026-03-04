@@ -1058,11 +1058,85 @@ def update_task_status(request, task_id):
                     
                     # ========== TIER 1: COORDINATOR APPROVAL ==========
                     if approval_level == "coordinator":
-                        api_logger.info(f"Coordinator approved registration for {user_email} - creating admin approval tasks")
+                        api_logger.info(f"Coordinator approved registration for {user_email} - sending WhatsApp group link and creating admin approval tasks")
                         
                         # Get the staff user
                         try:
                             staff_user = Staff.objects.get(email__iexact=user_email)
+                            
+                            # SEND EMAIL WITH WHATSAPP GROUP LINK - volunteer must join group before admin can approve
+                            try:
+                                subject = "!הרשמתך אושרה - הצטרף לקבוצת הווטסאפ"
+                                message = f"""
+<html dir="rtl">
+<head>
+    <style>
+        body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
+        .container {{ max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9f9f9; border-radius: 8px; }}
+        .header {{ background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }}
+        .content {{ background-color: white; padding: 30px; border-radius: 0 0 8px 8px; }}
+        .step {{ margin: 20px 0; padding: 15px; background-color: #f0f4ff; border-right: 4px solid #667eea; border-radius: 4px; }}
+        .button {{ display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px 40px; text-decoration: none; border-radius: 5px; margin: 20px 0; text-align: center; font-weight: bold; }}
+        .footer {{ text-align: center; padding: 20px; color: #666; font-size: 12px; }}
+        .success-icon {{ font-size: 48px; margin: 20px 0; }}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>!ברוכים הבאים לחיוך של ילד</h1>
+            <p>הרשמתך אושרה בשלב הראשון</p>
+        </div>
+        
+        <div class="content">
+            <p>שלום {staff_user.first_name},</p>
+            
+            <p>תודה על הרשמתך למערכת <strong>חיוך של ילד</strong>!</p>
+            
+            <div class="step">
+                <h3>✅ שלב ראשוני אושר בהצלחה</h3>
+                <p>הרשמתך עברה את בדיקת הראשון שלנו בהצלחה. אנחנו שמחים שהצטרפת אלינו!</p>
+            </div>
+            
+            <div class="step">
+                <h3>📱 השלב הבא: הצטרף לקבוצת הווטסאפ</h3>
+                <p>כדי להשלים את תהליך ההרשמה, אנא הצטרף לקבוצת הווטסאפ של הקהילה שלנו:</p>
+                <p style="text-align: center;">
+                    <a href="https://chat.whatsapp.com/B7UcLqApSTzCpppWR221DB" class="button">
+                        הצטרף לקבוצת הווטסאפ 👥
+                    </a>
+                </p>
+            </div>
+            
+            <div class="step">
+                <h3>⏳ מה קורה כעת?</h3>
+                <p>לאחר שתצטרף לקבוצת הווטסאפ שלנו, צוות הניהול שלנו יבדוק את ההצטרפות ויגמור את תהליך האישור הסופי בקרוב.</p>
+            </div>
+            
+            <p style="margin-top: 30px; color: #666;">
+                בברכה,<br>
+                <strong>צוות חיוך של ילד</strong>
+            </p>
+        </div>
+        
+        <div class="footer">
+            <p>זוהי הודעה אוטומטית - אנא אל תשיב לאימייל זה</p>
+        </div>
+    </div>
+</body>
+</html>
+                                """
+                                send_mail(
+                                    subject,
+                                    message,
+                                    settings.DEFAULT_FROM_EMAIL,
+                                    [user_email],
+                                    fail_silently=False,
+                                    html_message=message,
+                                )
+                                api_logger.info(f"Coordinator approval email with WhatsApp link sent to {user_email}")
+                            except Exception as email_error:
+                                api_logger.error(f"Error sending coordinator approval email to {user_email}: {str(email_error)}")
                             
                             # Create admin final approval tasks (tier 2)
                             from .utils import create_admin_approval_tasks_async
@@ -1074,7 +1148,7 @@ def update_task_status(request, task_id):
                     
                     # ========== TIER 2: FINAL ADMIN APPROVAL ==========
                     elif approval_level == "final_admin":
-                        api_logger.info(f"Admin approved registration for {user_email} - sending welcome email and enabling access")
+                        api_logger.info(f"Admin approved registration for {user_email} - enabling access")
                         
                         try:
                             staff_user = Staff.objects.get(email__iexact=user_email)
@@ -1085,27 +1159,77 @@ def update_task_status(request, task_id):
                             staff_user.save()
                             api_logger.info(f"User {staff_user.staff_id} ({user_email}) approved for registration")
                             
-                            # Send welcome/approval email ONLY after final admin approval
+                            # Send final approval confirmation email (NO WhatsApp link - they should already have joined)
                             try:
-                                subject = "!הרשמתך אושרה"
+                                subject = "!הרשמתך אושרה לחלוטין"
                                 
                                 # Check if access blocking is enabled
                                 block_access = os.environ.get('BLOCK_ACCESS_AFTER_APPROVAL', 'false').lower() in ('true', '1', 'yes')
                                 
                                 # Build message based on access control flag
-                                login_line = "כעת תוכל להתחבר למערכת ולהתחיל לעזור לילדים.\n\n" if not block_access else ""
+                                login_section = """
+                                <div class="step">
+                                    <h3>🔐 כניסה למערכת</h3>
+                                    <p>כעת תוכל להתחבר למערכת שלנו ולהתחיל לעזור לילדים!</p>
+                                    <p><strong>כנס לאתר:</strong> https://www.childsmile.org.il</p>
+                                </div>
+                                """ if not block_access else ""
                                 
                                 message = f"""
-                                שלום {staff_user.first_name},
-
-                                אנו שמחים להודיע לך שהרשמתך בחיוך של ילד אושרה!
-
-                                {login_line}
-                                לחץ על הקישור הבא להצטרפות לקבוצת הווטסאפ שלנו למתנדבי העמותה:
-                                https://chat.whatsapp.com/B7UcLqApSTzCpppWR221DB
-
-                                בברכה,
-                                צוות חיוך של ילד
+<html dir="rtl">
+<head>
+    <style>
+        body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
+        .container {{ max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9f9f9; border-radius: 8px; }}
+        .header {{ background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }}
+        .content {{ background-color: white; padding: 30px; border-radius: 0 0 8px 8px; }}
+        .step {{ margin: 20px 0; padding: 15px; background-color: #e8f5e9; border-right: 4px solid #28a745; border-radius: 4px; }}
+        .footer {{ text-align: center; padding: 20px; color: #666; font-size: 12px; }}
+        .success-badge {{ background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; padding: 10px 20px; border-radius: 25px; display: inline-block; margin: 15px 0; font-weight: bold; }}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>!ברוכה הדרך ✨</h1>
+            <div class="success-badge">הרשמתך אושרה לחלוטין</div>
+        </div>
+        
+        <div class="content">
+            <p>שלום {staff_user.first_name},</p>
+            
+            <p>אנחנו שמחים להודיע לך שהרשמתך בחיוך של ילד <strong>אושרה לחלוטין</strong>! 🎉</p>
+            
+            <div class="step">
+                <h3>✅ כל השלבים הושלמו בהצלחה</h3>
+                <p>עברת בהצלחה את כל שלבי התהליך. אתה כעת חלק מהקהילה שלנו!</p>
+            </div>
+            
+            <div class="step">
+                <h3>👥 קבוצת הווטסאפ</h3>
+                <p>תודה שהצטרפת לקבוצת הווטסאפ שלנו - זה חלק חשוב מהקהילה שלנו. כאן תקבל עדכונים, תוכל לשתף חוויות, ותהיה בקשר קבוע עם שאר ההקבוצה.</p>
+            </div>
+            
+            {login_section}
+            
+            <div class="step">
+                <h3>❓ שאלות?</h3>
+                <p>אם יש לך שאלות או צריך עזרה, צור קשר עם צוות הניהול שלנו דרך קבוצת הווטסאפ או אתר החיוך של ילד.</p>
+            </div>
+            
+            <p style="margin-top: 30px; color: #666;">
+                בברכה,<br>
+                <strong>צוות חיוך של ילד</strong><br>
+                <small>🤝 יחד אנחנו עושים הבדל בחיי הילדים</small>
+            </p>
+        </div>
+        
+        <div class="footer">
+            <p>זוהי הודעה אוטומטית - אנא אל תשיב לאימייל זה</p>
+        </div>
+    </div>
+</body>
+</html>
                                 """
                                 send_mail(
                                     subject,
@@ -1113,10 +1237,11 @@ def update_task_status(request, task_id):
                                     settings.DEFAULT_FROM_EMAIL,
                                     [user_email],
                                     fail_silently=False,
+                                    html_message=message,
                                 )
-                                api_logger.info(f"Welcome email sent to {user_email} after final admin approval")
+                                api_logger.info(f"Final approval confirmation email sent to {user_email}")
                             except Exception as email_error:
-                                api_logger.error(f"Error sending welcome email to {user_email}: {str(email_error)}")
+                                api_logger.error(f"Error sending final approval email to {user_email}: {str(email_error)}")
                             
                             # NOW CHECK IF THIS USER WANTED TO BE A TUTOR - DIRECTLY PROMOTE TO TUTOR
                             # No more interview task - the "התאמת חניך" task will be created when tutorship is created
