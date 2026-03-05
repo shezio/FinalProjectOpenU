@@ -1266,14 +1266,14 @@ def calculate_manual_match(request):
             )
             -- Only allow ACTIVE staff members
             AND staff.is_active = TRUE
-            -- Exclude deceased children only dont use in clause
-            AND child.status <> %s
+            -- Exclude deceased and left children (use parameterized query to avoid encoding issues)
+            AND child.status NOT IN (%s, %s)
         """
         
         # Use parameterized query for Hebrew values to avoid encoding issues
-        excluded_statuses = ['ז״ל', 'עזב']  # "Deceased" and "Left" statuses in Hebrew
+        excluded_statuses = ('ז״ל', 'עזב')  # "Deceased" and "Left" statuses in Hebrew
         with connection.cursor() as cursor:
-            cursor.execute(query, [tutor_id, child_id, excluded_statuses])
+            cursor.execute(query, [tutor_id, child_id] + list(excluded_statuses))
             row = cursor.fetchone()
         
         if not row:
