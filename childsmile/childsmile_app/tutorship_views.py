@@ -1271,7 +1271,7 @@ def calculate_manual_match(request):
         """
         
         # Use parameterized query for Hebrew values to avoid encoding issues
-        excluded_statuses = 'ז״ל'
+        excluded_statuses = ['ז״ל', 'עזב']  # "Deceased" and "Left" statuses in Hebrew
         with connection.cursor() as cursor:
             cursor.execute(query, [tutor_id, child_id, excluded_statuses])
             row = cursor.fetchone()

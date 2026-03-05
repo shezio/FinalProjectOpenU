@@ -205,13 +205,14 @@ class Children(models.Model):
             ("אחזקה", "אחזקה"),
             ("ז״ל", "ז״ל"),
             ("בריא", "בריא"),
+            ("עזב", "עזב"),
         ],
         null=False,
         blank=False,
     )
     # Track last review talk conducted date for monthly follow-up tasks
     last_review_talk_conducted = models.DateField(null=True, blank=True)
-    # Feature #2: Skip review task creation for this child (auto-set for בריא/ז״ל, can be manual)
+    # Feature #2: Skip review task creation for this child (auto-set for בריא/ז״ל/עזב, can be manual)
     need_review = models.BooleanField(default=True)
     # Feature #4: Frame status - imported from "האם נמצא במסגרת?" column
     is_in_frame = models.TextField(null=True, blank=True)

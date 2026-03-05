@@ -174,7 +174,7 @@ def families_waiting_for_tutorship_report(request):
         # Exclude ONLY those with non-tutoring statuses (לא רוצים, לא רלוונטי, בוגר)
         # Exclude deceased children
         excluded_tutoring_statuses = ['לא_רוצים', 'לא_רלוונטי', 'בוגר']  # Adjust as needed
-        excluded_statuses = ['ז״ל']  # Exclude deceased children
+        excluded_statuses = ['ז״ל', 'עזב']  # Exclude deceased and left children
 
         children = Children.objects.filter(
             Q(tutoring_status__in=waiting_statuses) |  # Children with waiting/tutor status

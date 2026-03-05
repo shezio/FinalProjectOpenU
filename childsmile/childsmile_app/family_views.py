@@ -769,7 +769,7 @@ def create_family(request):
         responsible_coordinator = coordinator_staff_id if coordinator_staff_id else user_id
         
         # Feature #3: Determine need_review for new child based on age and status
-        # Set to False if: בריא/ז״ל status OR בוגר tutoring_status OR age >= 16
+        # Set to False if: בריא/ז״ל/עזב status OR בוגר tutoring_status OR age >= 16
         date_of_birth = parse_date_field(data.get("date_of_birth"), "date_of_birth")
         need_review_value = True  # Default to True
         
@@ -789,7 +789,7 @@ def create_family(request):
                 need_review_value = False
         
         # Check status and tutoring_status for other permanent conditions
-        if child_status in ['בריא', 'ז״ל'] or tutoring_status == 'בוגר':
+        if child_status in ['בריא', 'ז״ל', 'עזב'] or tutoring_status == 'בוגר':
             need_review_value = False
         elif data.get("need_review") is not None:
             # Allow explicit override only if not in permanent condition
@@ -1181,7 +1181,7 @@ def update_family(request, child_id):
         # DECEASED/HEALTHY HANDLING: When child status changes to deceased or healthy, 
         # DELETE all tutorships (not make inactive - that's for inactive staff flow only)
         deceased_statuses = ['ז״ל']  # Only the correct enum value with Hebrew gershayim
-        exit_statuses = deceased_statuses + ['בריא']  # Include healthy
+        exit_statuses = deceased_statuses + ['בריא','עזב']  # Include healthy and left the program as exit statuses that trigger tutor freeing and need_review logic
         tutors_freed = []
         if new_status in exit_statuses and old_status not in exit_statuses:
             # Child is deceased or healthy - DELETE tutorships and free tutors
@@ -2449,11 +2449,11 @@ def import_families_endpoint(request):
             status_raw = row.get(col_status, '')
             status_val = '' if (status_raw is None or pd.isna(status_raw) or str(status_raw).lower() == 'nan') else str(status_raw).strip()
             
-            # Handle missing surname: if no surname and status is בריא/ז״ל, use status as surname
+            # Handle missing surname: if no surname and status is בריא/ז״ל/עזב, use status as surname
             # Otherwise use "XXX" as placeholder and create update task
             if not child_last_name:
-                if status_val in ['בריא', 'ז״ל']:
-                    # Use status as surname for healthy/deceased children
+                if status_val in ['בריא', 'ז״ל', 'עזב']:
+                    # Use status as surname for healthy/deceased/left children
                     child_last_name = status_val
                     needs_surname_task = False
                 else:
@@ -3054,7 +3054,7 @@ def import_families_endpoint(request):
                             # Feature #2 + #3: Auto-set need_review based on:
                             # - Set to False if: בריא/ז״ל status OR "לא צריך" in review_talk column OR בוגר (סוג column) OR age >= 16
                             # - Otherwise default to True
-                            need_review=False if (final_status in ['בריא', 'ז״ל'] or need_review_from_review_talk is False or dont_need_review_since_mature or is_mature_by_age) else True
+                            need_review=False if (final_status in ['בריא', 'ז״ל', 'עזב'] or need_review_from_review_talk is False or dont_need_review_since_mature or is_mature_by_age) else True
                         )
                         
                         # If surname is "XXX" (missing), create עדכון משפחה task for Families Coordinators

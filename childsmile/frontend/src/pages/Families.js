@@ -126,7 +126,8 @@ const Families = () => {
       setFamilies(sortedFamilies); // Use sorted data
       setMaritalStatuses(response.data.marital_statuses.map((item) => item.status));
       setTutoringStatuses(response.data.tutoring_statuses.map((item) => item.status));
-      setStatuses(response.data.statuses.map((item) => item.status));
+      // Don't overwrite statuses from API - use hardcoded values instead
+      // setStatuses(response.data.statuses.map((item) => item.status));
     } catch (error) {
       console.error('Error fetching families:', error);
       showErrorToast(t, 'Error fetching families data', error);
@@ -185,14 +186,19 @@ const Families = () => {
     setPage(1); // Reset to page 1 only when filters actually change
   }, [showMatureOnly, selectedStatuses, maxAge, searchTerm, families]);
 
-  // Initialize selectedStatuses when statuses are loaded
+  // Initialize selectedStatuses with all possible statuses (hardcoded from model)
   useEffect(() => {
-    if (statuses.length > 0 && selectedStatuses.length === 0) {
-      // Check all statuses except "ז״ל" and "בריא"
-      const defaultStatuses = statuses.filter(status => status !== "ז״ל" && status !== "בריא");
+    // All possible statuses from the Children model
+    const allStatuses = ['טיפולים', 'מעקבים', 'אחזקה', 'ז״ל', 'בריא', 'עזב'];
+    setStatuses(allStatuses); // Always set all possible statuses
+    
+    // Only set selected statuses if not already set
+    if (selectedStatuses.length === 0) {
+      // Check all statuses except "ז״ל", "בריא", and "עזב"
+      const defaultStatuses = allStatuses.filter(status => status !== "ז״ל" && status !== "בריא" && status !== "עזב");
       setSelectedStatuses(defaultStatuses);
     }
-  }, [statuses]);
+  }, []);
 
   // Position the dropdown when it opens
   useEffect(() => {
@@ -896,18 +902,18 @@ const Families = () => {
     setPage(1);
   }, [showMatureOnly, selectedStatuses, maxAge, searchTerm, families]);
 
-  // Auto-assign coordinator and need_review based on tutoring status AND medical status (בריא/ז״ל)
+  // Auto-assign coordinator and need_review based on tutoring status AND medical status (בריא/ז״ל/עזב)
   useEffect(() => {
-    // Check if child is בריא or ז״ל (healthy or deceased)
-    const isHealthyOrDeceased = newFamily.status === 'בריא' || newFamily.status === 'ז״ל';
+    // Check if child is בריא, ז״ל, or עזב (healthy, deceased, or left)
+    const isHealthyOrDeceased = newFamily.status === 'בריא' || newFamily.status === 'ז״ל' || newFamily.status === 'עזב';
     
     if (isHealthyOrDeceased) {
-      // For healthy/deceased children, auto-assign to "ללא" and set need_review to false
+      // For healthy/deceased/left children, auto-assign to "ללא" and set need_review to false
       setAutoAssignedCoordinator('ללא');
       setNewFamily(prev => ({
         ...prev,
         responsible_coordinator: 'ללא',
-        need_review: false  // Auto-set to false for בריא/ז״ל
+        need_review: false  // Auto-set to false for בריא/ז״ל/עזב
       }));
     } else if (newFamily.tutoring_status) {
       // For other statuses, assign based on tutoring_status and set need_review to true
@@ -1642,7 +1648,7 @@ const Families = () => {
                     className={errors.responsible_coordinator ? "error" : ""}
                     required
                   >
-                    {/* Option for "ללא" (no coordinator) - for בריא/ז״ל children */}
+                    {/* Option for "ללא" (no coordinator) - for בריא/ז״ל/עזב children */}
                     <option value="ללא">ללא (אין רכז)</option>
                     {/* Other coordinators from the system */}
                     {availableCoordinators.map((coordinator, index) => (
@@ -2063,7 +2069,7 @@ const Families = () => {
                     className={errors.responsible_coordinator ? "error" : ""}
                     required
                   >
-                    {/* Option for "ללא" (no coordinator) - for בריא/ז״ל children */}
+                    {/* Option for "ללא" (no coordinator) - for בריא/ז״ל/עזב children */}
                     <option value="ללא">ללא (אין רכז)</option>
                     {/* Other coordinators from the system */}
                     {availableCoordinators.map((coordinator, index) => (
