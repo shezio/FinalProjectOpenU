@@ -406,8 +406,8 @@ def fetch_possible_matches():
         )
         -- Only include active staff members
         AND staff.is_active = TRUE
-        -- Exclude deceased and healthy children (use parameterized query to avoid encoding issues)
-        AND child.status NOT IN (%s, %s)
+        -- Exclude deceased, healthy, and left children (use parameterized query to avoid encoding issues)
+        AND child.status NOT IN (%s, %s, %s)
         -- Exclude irrelevant tutoring statuses (no point matching if they don't want/aren't relevant)
         AND child.tutoring_status NOT IN (%s, %s)
         -- Exclude age >=16 which are matures and not relevant for tutoring
