@@ -2,6 +2,7 @@
 amplify/\#current-cloud-backend
 amplify/.config/local-*
 amplify/logs
+amplify/huzu
 amplify/mock-data
 amplify/mock-api-resources
 amplify/backend/amplify-meta.json
