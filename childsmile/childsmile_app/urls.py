@@ -28,6 +28,9 @@ from .views_staff import (
     staff_creation_verify_totp,
     bulk_clear_suspension,
 )
+from .mail_views import (
+    send_mail_via_ui,
+)
 from .views_volunteer import (
     create_volunteer_or_tutor,
     register_send_totp,
@@ -421,6 +424,7 @@ urlpatterns = [
     path("api/auth/verify-totp/", verify_totp, name="verify_totp"),
     path("api/test-email-setup/", test_email_setup, name="test_email_setup"),
     path("api/test-gmail-auth/", test_gmail_auth, name="test_gmail_auth"),
+    path("api/send-mail/", send_mail_via_ui, name="send_mail_via_ui"),
     path("api/register-send-totp/", register_send_totp, name="register_send_totp"),
     path(
         "api/register-verify-totp/", register_verify_totp, name="register_verify_totp"
