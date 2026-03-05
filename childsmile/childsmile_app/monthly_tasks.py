@@ -126,7 +126,7 @@ def check_and_create_monthly_review_tasks():
                 maturity_result = check_and_handle_age_maturity(child)
                 
                 # SKIP children marked as not needing review (Feature #2)
-                # This includes: בריא/ז״ל status, בוגר tutoring status, or age >= 16
+                # This includes: בריא/ז״ל/עזב status, בוגר tutoring status, or age >= 16
                 if not child.need_review:
                     tasks_skipped += 1
                     reason = ""

@@ -422,7 +422,7 @@ def fetch_possible_matches():
         ) < 16
     """
     # Use parameterized query for Hebrew values to avoid encoding issues with special characters
-    excluded_statuses = ('ז״ל', 'בריא')
+    excluded_statuses = ('ז״ל', 'בריא', 'עזב')
     excluded_tutoring_statuses = ('לא_רוצים', 'לא_רלוונטי')
     with connection.cursor() as cursor:
         cursor.execute(query, excluded_statuses + excluded_tutoring_statuses)
@@ -1396,7 +1396,7 @@ def get_responsible_coordinator_for_family(tutoring_status, child_status=None):
     Get the appropriate coordinator assignment based on tutoring and medical status.
     
     Coordinator Assignment Rules:
-    - "ללא" (None/No Coordinator): For בריא (Healthy) or ז״ל (Deceased) children
+    - "ללא" (None/No Coordinator): For בריא (Healthy), ז״ל (Deceased), or עזב (Left) children
       (Can still be overridden if needed, but system default is "ללא")
     - Family Coordinator: For non-tutored statuses (לא_רוצים, לא_רלוונטי, בוגר)
     - Tutored Families Coordinator: For tutored/searching statuses (למצוא_חונך, יש_חונך, 
@@ -1410,10 +1410,10 @@ def get_responsible_coordinator_for_family(tutoring_status, child_status=None):
     Returns "ללא" for healthy/deceased children, or the coordinator staff_id otherwise.
     """
     try:
-        # If child is בריא (healthy) or ז״ל (deceased), no coordinator needed
+        # If child is בריא (healthy), ז״ל (deceased), or עזב (left), no coordinator needed
         if child_status:
             child_status_normalized = str(child_status).strip()
-            if child_status_normalized in ['בריא', 'ז״ל']:
+            if child_status_normalized in ['בריא', 'ז״ל', 'עזב']:
                 return 'ללא'
         
         # Normalize tutoring status - convert spaces to underscores just in case
@@ -1762,7 +1762,7 @@ def check_and_handle_age_maturity(child):
     Check if a child has reached age 16 (maturity threshold).
     If so, automatically set need_review=False and delete all review tasks.
     
-    IMPORTANT: Once need_review is set to False due to age (>= 16) or status (בריא/ז״ל),
+    IMPORTANT: Once need_review is set to False due to age (>= 16) or status (בריא/ז״ל/עזב),
     it MUST NOT be allowed to revert back to True. This ensures mature children don't get
     review tasks created again.
     
