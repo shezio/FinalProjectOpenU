@@ -1478,3 +1478,274 @@
     0 10px 30px rgba(16, 185, 129, 0.4),
     inset 0 1px 0 rgba(255, 255, 255, 0.4);
 }
+
+/* Mail Button Styles */
+.mail-button {
+  padding: 12px 20px;
+  margin-right: 5px;
+  background: linear-gradient(135deg, 
+    rgba(147, 51, 234, 0.95) 0%,
+    rgba(126, 34, 206, 0.95) 100%);
+  color: white;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 24px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 
+    0 6px 20px rgba(147, 51, 234, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+.mail-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, 
+    transparent, 
+    rgba(255, 255, 255, 0.3), 
+    transparent);
+  transition: left 0.5s;
+}
+
+.mail-button:hover::before {
+  left: 100%;
+}
+
+.mail-button:hover {
+  background: linear-gradient(135deg, 
+    rgba(147, 51, 234, 1) 0%,
+    rgba(126, 34, 206, 1) 100%);
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: 
+    0 10px 30px rgba(147, 51, 234, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+/* Mail Modal Content */
+.mail-modal-content {
+  width: 700px !important;
+  max-width: 95%;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.mail-modal-content h2 {
+  margin: 0 0 25px 0;
+  background: linear-gradient(135deg, rgba(147, 51, 234, 1) 0%, rgba(126, 34, 206, 1) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-size: 36px;
+  font-weight: 800;
+  text-align: center;
+  letter-spacing: 0.8px;
+  text-shadow: none;
+}
+
+.mail-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.mail-form-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.mail-form-row label {
+  font-weight: 700;
+  color: #333;
+  font-size: 18px;
+  letter-spacing: 0.3px;
+}
+
+.mail-form-row label span {
+  color: #ef4444;
+  margin-left: 4px;
+}
+
+.mail-form-row input[type="text"],
+.mail-form-row textarea {
+  padding: 14px 16px;
+  border: 2px solid rgba(200, 200, 200, 0.5);
+  border-radius: 10px;
+  font-size: 16px;
+  font-family: inherit;
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.95) 0%,
+    rgba(250, 250, 250, 0.9) 100%);
+  transition: all 0.3s ease;
+}
+
+.mail-form-row input[type="text"]:focus,
+.mail-form-row textarea:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  background: rgba(255, 255, 255, 1);
+}
+
+.mail-form-row input.error,
+.mail-form-row textarea.error {
+  border-color: #ef4444;
+}
+
+.mail-form-row input.error:focus,
+.mail-form-row textarea.error:focus {
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+.mail-form-row small {
+  font-size: 14px;
+  color: #666;
+  font-style: italic;
+  font-weight: 500;
+}
+
+.mail-error-message {
+  color: #ef4444;
+  font-size: 14px;
+  font-weight: 600;
+  display: block;
+  margin-top: -4px;
+}
+
+/* Drop Zone Styles */
+.mail-drop-zone {
+  border: 3px dashed rgba(59, 130, 246, 0.4);
+  border-radius: 12px;
+  padding: 30px;
+  text-align: center;
+  background: linear-gradient(135deg, 
+    rgba(59, 130, 246, 0.05) 0%,
+    rgba(59, 130, 246, 0.02) 100%);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.mail-drop-zone:hover {
+  border-color: rgba(59, 130, 246, 0.6);
+  background: linear-gradient(135deg, 
+    rgba(59, 130, 246, 0.1) 0%,
+    rgba(59, 130, 246, 0.05) 100%);
+}
+
+.mail-drop-zone.has-files {
+  border-color: rgba(16, 185, 129, 0.5);
+  background: linear-gradient(135deg, 
+    rgba(16, 185, 129, 0.05) 0%,
+    rgba(16, 185, 129, 0.02) 100%);
+}
+
+.mail-drop-label {
+  cursor: pointer;
+  font-size: 16px;
+  color: #666;
+  font-weight: 500;
+  display: block;
+  line-height: 1.5;
+}
+
+.mail-drop-zone:hover .mail-drop-label {
+  color: #3b82f6;
+}
+
+.mail-drop-zone.has-files .mail-drop-label {
+  color: #10b981;
+}
+
+/* Mail Form Actions */
+.mail-form-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 1.5rem;
+}
+
+.mail-form-actions button {
+  padding: 12px 24px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 18px;
+  font-weight: 600;
+  border: 2px solid transparent;
+  transition: all 0.3s ease;
+  letter-spacing: 0.3px;
+  position: relative;
+  overflow: hidden;
+}
+
+.mail-form-actions button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, 
+    transparent, 
+    rgba(255, 255, 255, 0.3), 
+    transparent);
+  transition: left 0.5s;
+}
+
+.mail-form-actions button:hover::before:not(:disabled) {
+  left: 100%;
+}
+
+.mail-form-actions button[type="submit"] {
+  background: linear-gradient(135deg, 
+    rgba(16, 185, 129, 0.95) 0%,
+    rgba(5, 150, 105, 0.95) 100%);
+  color: white;
+  box-shadow: 
+    0 6px 20px rgba(16, 185, 129, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.mail-form-actions button[type="submit"]:hover:not(:disabled) {
+  background: linear-gradient(135deg, 
+    rgba(16, 185, 129, 1) 0%,
+    rgba(5, 150, 105, 1) 100%);
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: 
+    0 10px 30px rgba(16, 185, 129, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+.mail-form-actions button[type="button"] {
+  background: linear-gradient(135deg, 
+    rgba(107, 114, 128, 0.95) 0%,
+    rgba(75, 85, 99, 0.95) 100%);
+  color: white;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 
+    0 6px 20px rgba(107, 114, 128, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.mail-form-actions button[type="button"]:hover:not(:disabled) {
+  background: linear-gradient(135deg, 
+    rgba(107, 114, 128, 1) 0%,
+    rgba(75, 85, 99, 1) 100%);
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: 
+    0 10px 30px rgba(107, 114, 128, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+.mail-form-actions button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

@@ -65,6 +65,18 @@ const SystemManagement = () => {
   const [selectedRoleFilter, setSelectedRoleFilter] = useState(''); // For role filtering
   const [isThawModalOpen, setIsThawModalOpen] = useState(false); // For thaw suspension confirmation
   const [isThawLoading, setIsThawLoading] = useState(false); // Loading state for thaw operation
+  
+  // Mail sending feature state
+  const [isMailModalOpen, setIsMailModalOpen] = useState(false);
+  const [mailData, setMailData] = useState({
+    to: '',
+    subject: '',
+    body: '',
+  });
+  const [mailAttachments, setMailAttachments] = useState([]);
+  const [mailErrors, setMailErrors] = useState({});
+  const [isMailSending, setIsMailSending] = useState(false);
+  const [mailRecipientEmail, setMailRecipientEmail] = useState('');
 
   useEffect(() => {
     if (hasPermissionOnSystemManagement) {
@@ -104,6 +116,69 @@ const SystemManagement = () => {
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
+  };
+
+  // Mail validation functions
+  const validateMailData = () => {
+    const errors = {};
+    
+    // Validate TO field
+    if (!mailData.to.trim()) {
+      errors.to = t("TO field is required");
+    } else {
+      const emails = mailData.to.split(',').map(e => e.trim()).filter(e => e);
+      if (emails.length === 0) {
+        errors.to = t("Please enter at least one email address");
+      } else {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        const invalidEmails = emails.filter(e => !emailRegex.test(e));
+        if (invalidEmails.length > 0) {
+          errors.to = t("Invalid email format") + ": " + invalidEmails.join(", ");
+        }
+      }
+    }
+    
+    // Validate Subject
+    if (!mailData.subject.trim()) {
+      errors.subject = t("Subject is required");
+    } else if (mailData.subject.length > 50) {
+      errors.subject = t("Subject must be maximum 50 characters");
+    }
+    
+    // Validate Body
+    if (!mailData.body.trim()) {
+      errors.body = t("Body is required");
+    } else if (mailData.body.length > 250) {
+      errors.body = t("Body must be maximum 250 characters");
+    }
+    
+    // Validate Attachments
+    if (mailAttachments.length > 0) {
+      const allowedExtensions = ['png', 'jpg', 'jpeg', 'pdf', 'xls', 'xlsx'];
+      let totalSize = 0;
+      
+      for (const file of mailAttachments) {
+        const fileExt = file.name.split('.').pop().toLowerCase();
+        if (!allowedExtensions.includes(fileExt)) {
+          errors.attachments = t("Invalid file type") + ": " + file.name + " (" + fileExt + ")";
+          break;
+        }
+        
+        totalSize += file.size;
+        
+        if (file.size > 10 * 1024 * 1024) {
+          errors.attachments = t("File too large") + ": " + file.name;
+          break;
+        }
+      }
+      
+      if (totalSize > 10 * 1024 * 1024) {
+        errors.attachments = t("Total attachment size exceeds 10MB limit");
+      }
+    }
+    
+    setMailErrors(errors);
+    return Object.keys(errors).length === 0;
   };
 
   const fetchAllStaff = async () => {
@@ -729,6 +804,92 @@ const SystemManagement = () => {
     setIsThawModalOpen(false);
   };
 
+  // Mail sending functions
+  const openMailModal = (email) => {
+    setMailRecipientEmail(email);
+    setMailData({
+      to: email,
+      subject: '',
+      body: '',
+    });
+    setMailAttachments([]);
+    setMailErrors({});
+    setIsMailModalOpen(true);
+  };
+
+  const closeMailModal = () => {
+    setIsMailModalOpen(false);
+    setMailData({
+      to: '',
+      subject: '',
+      body: '',
+    });
+    setMailAttachments([]);
+    setMailErrors({});
+    setMailRecipientEmail('');
+  };
+
+  const handleMailDataChange = (field, value) => {
+    setMailData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  const handleAttachmentChange = (e) => {
+    const files = Array.from(e.target.files);
+    setMailAttachments(files);
+  };
+
+  const handleSendMail = async (e) => {
+    e.preventDefault();
+    
+    if (!validateMailData()) {
+      return;
+    }
+
+    try {
+      setIsMailSending(true);
+      
+      const formData = new FormData();
+      formData.append('to', mailData.to);
+      formData.append('subject', mailData.subject);
+      formData.append('body', mailData.body);
+      
+      // Add attachments
+      for (const file of mailAttachments) {
+        formData.append('attachments', file);
+      }
+      
+      await axios.post('/api/send-mail/', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      
+      toast.success(t('Email sent successfully'));
+      closeMailModal();
+      
+    } catch (error) {
+      console.error('Error sending mail:', error);
+      showErrorToast(t, 'Failed to send email', error);
+    } finally {
+      setIsMailSending(false);
+    }
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const files = Array.from(e.dataTransfer.files);
+    setMailAttachments(files);
+  };
+
   if (!hasPermissionOnSystemManagement) {
     return (
       <div className="sys-mgmt-main-content">
@@ -919,6 +1080,13 @@ const SystemManagement = () => {
                         <td>{user.roles.map((role) => t(role)).join(', ')}</td>
                         {(showInactiveOnly || showSuspendedOnly) && <td>{user.deactivation_reason ? t(user.deactivation_reason) : '-'}</td>}
                         <td>
+                          <button
+                            onClick={() => openMailModal(user.email)}
+                            className="mail-button"
+                            title={t('Send email to this user')}
+                          >
+                            📧 {t('Send Mail')}
+                          </button>
                           {user.is_active ? (
                             <button
                               onClick={() => openAddStaffModal('edit', user)}
@@ -1387,6 +1555,88 @@ const SystemManagement = () => {
             </button>
           </div>
         </Modal>
+      )}
+
+      {/* Mail Sending Modal */}
+      {isMailModalOpen && (
+        <div className="staff-modal-overlay">
+          <div className="staff-modal-content mail-modal-content">
+            <span className="staff-close" onClick={closeMailModal}>&times;</span>
+            <h2>{t('Mail sending')}</h2>
+            <form onSubmit={handleSendMail} className="mail-form">
+              <div className="mail-form-row">
+                <label>{t('TO')} <span>*</span></label>
+                <input
+                  type="text"
+                  value={mailData.to}
+                  onChange={(e) => handleMailDataChange('to', e.target.value)}
+                  placeholder={t('email@example.com, another@example.com')}
+                  className={mailErrors.to ? 'error' : ''}
+                />
+                {mailErrors.to && <span className="mail-error-message">{mailErrors.to}</span>}
+                <small>{t('Separate multiple emails with commas')}</small>
+              </div>
+
+              <div className="mail-form-row">
+                <label>{t('Subject')} <span>*</span> ({mailData.subject.length}/50)</label>
+                <input
+                  type="text"
+                  value={mailData.subject}
+                  onChange={(e) => handleMailDataChange('subject', e.target.value.slice(0, 50))}
+                  placeholder={t('Email subject')}
+                  maxLength={50}
+                  className={mailErrors.subject ? 'error' : ''}
+                />
+                {mailErrors.subject && <span className="mail-error-message">{mailErrors.subject}</span>}
+              </div>
+
+              <div className="mail-form-row">
+                <label>{t('Body')} <span>*</span> ({mailData.body.length}/250)</label>
+                <textarea
+                  value={mailData.body}
+                  onChange={(e) => handleMailDataChange('body', e.target.value.slice(0, 250))}
+                  placeholder={t('Email body')}
+                  maxLength={250}
+                  rows="5"
+                  className={mailErrors.body ? 'error' : ''}
+                />
+                {mailErrors.body && <span className="mail-error-message">{mailErrors.body}</span>}
+              </div>
+
+              <div className="mail-form-row">
+                <label>{t('Attachments')}</label>
+                <div
+                  className={`mail-drop-zone ${mailAttachments.length > 0 ? 'has-files' : ''}`}
+                  onDragOver={handleDragOver}
+                  onDrop={handleDrop}
+                >
+                  <input
+                    type="file"
+                    multiple
+                    onChange={handleAttachmentChange}
+                    id="mail-file-input"
+                    style={{ display: 'none' }}
+                  />
+                  <label htmlFor="mail-file-input" className="mail-drop-label">
+                    {mailAttachments.length > 0
+                      ? t('Files selected') + ': ' + mailAttachments.map(f => f.name).join(', ')
+                      : t('Drag and drop files here or click to select (PNG, JPG, PDF, XLS - Max 10MB total)')}
+                  </label>
+                </div>
+                {mailErrors.attachments && <span className="mail-error-message">{mailErrors.attachments}</span>}
+              </div>
+
+              <div className="mail-form-actions">
+                <button type="submit" disabled={isMailSending}>
+                  {isMailSending ? t('Sending mail...') : t('Send Email')}
+                </button>
+                <button type="button" onClick={closeMailModal} disabled={isMailSending}>
+                  {t('Cancel')}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
     </div>
   );
