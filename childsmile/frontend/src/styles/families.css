@@ -576,7 +576,7 @@ html {
 }
 
 .scrollable-textarea {
-  height: 30px;
+  height: 50px !important;
   resize: none;
   width: 230px !important;
   font-family: Rubik, sans-serif;

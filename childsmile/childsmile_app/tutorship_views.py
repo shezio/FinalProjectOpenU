@@ -566,6 +566,9 @@ def create_tutorship(request):
 
         # Tutor status always changes (tutor can only have one tutee)
         tutor.tutorship_status = "יש_חניך"
+        # Populate tutor's relationship_status and tutee_wellness from child's data
+        tutor.relationship_status = child.marital_status or ""
+        tutor.tutee_wellness = child.current_medical_state or ""
         tutor.save()
 
         # Get names for audit
