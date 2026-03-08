@@ -639,7 +639,7 @@ def create_volunteer_or_tutor_internal(data, request=None):
                 id_id=signedup.id,
                 staff_id=staff.staff_id,
                 signupdate=now().date(),
-                comments="",
+                comments=comment,
             )
             
             # Log volunteer creation with proper user info
@@ -1944,7 +1944,7 @@ def import_volunteers_endpoint(request):
                             id_id=signedup.id,
                             staff_id=staff.staff_id,
                             signupdate=now().date(),
-                            comments="",
+                            comments=signedup_comment,
                         )
                         general_volunteer_count += 1
                 

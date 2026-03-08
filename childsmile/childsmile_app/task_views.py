@@ -1272,6 +1272,7 @@ def update_task_status(request, task_id):
                                                 staff=staff_user,
                                                 tutorship_status="אין_חניך",
                                                 tutor_email=signed_up.email,
+                                                preferences=signed_up.comment,
                                             )
                                             api_logger.info(f"Created Tutor record for {user_email}")
                                         
