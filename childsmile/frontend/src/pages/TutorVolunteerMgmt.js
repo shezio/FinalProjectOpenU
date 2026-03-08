@@ -895,24 +895,22 @@ const TutorVolunteerMgmt = () => {
                     )}
                   </td>
                   <td>
-                    {/* Show Details button only for tutors with active/pending tutorship */}
-                    {(entity.tutorship_status === "יש_חניך") && (
-                      <button
-                        className="details-button"
-                        onClick={() => {
-                          setTutorshipDetailsData({
-                            tutorId: entity.id,
-                            entity: entity,
-                            preferences: entity.preferences || "",
-                            relationship_status: entity.relationship_status || "",
-                            tutee_wellness: entity.tutee_wellness || "",
-                          });
-                          setShowTutorshipDetailsModal(true);
-                        }}
-                      >
-                        {t("Show Details")}
-                      </button>
-                    )}
+                    {/* Show Details button for all tutors */}
+                    <button
+                      className="details-button"
+                      onClick={() => {
+                        setTutorshipDetailsData({
+                          tutorId: entity.id,
+                          entity: entity,
+                          preferences: entity.preferences || "",
+                          relationship_status: entity.relationship_status || "",
+                          tutee_wellness: entity.tutee_wellness || "",
+                        });
+                        setShowTutorshipDetailsModal(true);
+                      }}
+                    >
+                      {t("Show Details")}
+                    </button>
                   </td>
                   <td>
                     {entity.updated ? formatUpdatedDate(entity.updated) : t("No updates yet")}
@@ -1228,38 +1226,57 @@ const TutorVolunteerMgmt = () => {
               </div>
               <div className="tutorship-detail-row">
                 <h3>{t("Relationship Status")}</h3>
-                <select
-                  className="tutorship-detail-select"
-                  value={tutorshipDetailsData.relationship_status}
-                  onChange={(e) => setTutorshipDetailsData({
-                    ...tutorshipDetailsData,
-                    relationship_status: e.target.value
-                  })}
-                >
-                  <option value="">{t("Select a marital status")}</option>
-                  {maritalStatusOptions.map(status => (
-                    <option key={status} value={status}>{status}</option>
-                  ))}
-                </select>
+                <div className={tutorshipDetailsData.entity.tutorship_status !== "יש_חניך" ? "tutorship-detail-disabled-field" : ""}>
+                  <select
+                    className="tutorship-detail-select"
+                    value={tutorshipDetailsData.relationship_status}
+                    onChange={(e) => setTutorshipDetailsData({
+                      ...tutorshipDetailsData,
+                      relationship_status: e.target.value
+                    })}
+                    disabled={tutorshipDetailsData.entity.tutorship_status !== "יש_חניך"}
+                  >
+                    <option value="">{t("Select a marital status")}</option>
+                    {maritalStatusOptions.map(status => (
+                      <option key={status} value={status}>{status}</option>
+                    ))}
+                  </select>
+                  {tutorshipDetailsData.entity.tutorship_status !== "יש_חניך" && (
+                    <div className="tutorship-detail-watermark">
+                      {t("Unavailable on tutoring status")}: {tutorshipDetailsData.entity.tutorship_status}
+                    </div>
+                  )}
+                </div>
               </div>
               <div className="tutorship-detail-row">
                 <h3>{t("Tutee Wellness")}</h3>
-                <textarea
-                  className="tutorship-detail-textarea"
-                  value={tutorshipDetailsData.tutee_wellness}
-                  onChange={(e) => setTutorshipDetailsData({
-                    ...tutorshipDetailsData,
-                    tutee_wellness: e.target.value
-                  })}
-                  placeholder={t("Enter tutee wellness info...")}
-                />
+                <div className={tutorshipDetailsData.entity.tutorship_status !== "יש_חניך" ? "tutorship-detail-disabled-field" : ""}>
+                  <textarea
+                    className="tutorship-detail-textarea"
+                    value={tutorshipDetailsData.tutee_wellness}
+                    onChange={(e) => setTutorshipDetailsData({
+                      ...tutorshipDetailsData,
+                      tutee_wellness: e.target.value
+                    })}
+                    disabled={tutorshipDetailsData.entity.tutorship_status !== "יש_חניך"}
+                    placeholder={t("Enter tutee wellness info...")}
+                  />
+                  {tutorshipDetailsData.entity.tutorship_status !== "יש_חניך" && (
+                    <div className="tutorship-detail-watermark">
+                      {t("Unavailable on tutoring status")}: {tutorshipDetailsData.entity.tutorship_status}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
             <div className="tutor-vol-modal-footer">
               <button className="tutor-vol-btn-cancel" onClick={() => setShowTutorshipDetailsModal(false)}>
                 {t("Close")}
               </button>
-              <button className="tutor-vol-btn-save" onClick={handleSaveTutorshipDetails}>
+              <button 
+                className="tutor-vol-btn-save" 
+                onClick={handleSaveTutorshipDetails}
+              >
                 {t("Save and Close")}
               </button>
             </div>

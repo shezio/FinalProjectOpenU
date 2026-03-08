@@ -32,6 +32,10 @@ class MaritalStatus(models.TextChoices):
     DIVORCED = "גרושים", "Divorced"
     SEPARATED = "פרודים", "Separated"
     NONE = "אין", "None"
+    WIDOW = "אלמנה", "Widow"
+    SINGLE_PARENT = "חד הורי", "Single Parent"
+    PUBLICLY_KNOWN = "ידועים בציבור", "Publicly Known"
+    SINGLE = "רווק/ה", "Single"
 
 
 class TutoringStatus(models.TextChoices):

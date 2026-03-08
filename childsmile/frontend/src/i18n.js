@@ -848,6 +848,7 @@ const resources = {
       'Save and Close': 'שמור וסגור',
       'Tutorship details saved successfully': 'פרטי החונכות נשמרו בהצלחה!',
       'Error saving tutorship details': 'שגיאה בשמירת פרטי החונכות',
+      'Unavailable on tutoring status': 'לא זמין בסטטוס חונכות',
       'Name': 'שם',
       "no data - see tutorship status": "אין נתונים",
       "Updated": "עודכן לאחרונה",

@@ -1533,7 +1533,7 @@
 .mail-modal-content {
   width: 700px !important;
   max-width: 95%;
-  max-height: 90vh;
+  max-height: 100vh;
   overflow-y: auto;
 }
 

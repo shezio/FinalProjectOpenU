@@ -481,7 +481,7 @@
   flex-direction: column;
   width: 100%;
   overflow-y: auto;
-  max-height: 90vh;
+  max-height: 100vh;
   flex: 2;
   margin-top: 80px;
 }
@@ -491,7 +491,7 @@
   gap: 2rem;
   width: 100%;
   overflow-y: auto;
-  max-height: 90vh;
+  max-height: 100vh;
 }
 
 .kanban-column {
