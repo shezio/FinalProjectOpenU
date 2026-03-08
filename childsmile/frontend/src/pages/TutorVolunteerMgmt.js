@@ -40,6 +40,10 @@ const TutorVolunteerMgmt = () => {
   const [showTutorshipDetailsModal, setShowTutorshipDetailsModal] = useState(false);
   const [tutorshipDetailsData, setTutorshipDetailsData] = useState(null);
 
+  // Volunteer Comments Modal state
+  const [showVolunteerCommentsModal, setShowVolunteerCommentsModal] = useState(false);
+  const [volunteerCommentsData, setVolunteerCommentsData] = useState(null);
+
   // Import feature state
   const [importEnabled, setImportEnabled] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
@@ -391,6 +395,26 @@ const TutorVolunteerMgmt = () => {
         showErrorToast(t, "You do not have permission to update tutors.", error);
       } else {
         showErrorToast(t, "Error saving tutorship details", error);
+      }
+    }
+  };
+
+  const handleSaveVolunteerComments = async () => {
+    if (!volunteerCommentsData) return;
+    
+    try {
+      await axios.put(`/api/update_general_volunteer/${volunteerCommentsData.volunteerId}/`, {
+        comments: volunteerCommentsData.comments
+      });
+      toast.success(t("Comments saved successfully"));
+      fetchGridData();
+      setShowVolunteerCommentsModal(false);
+      setVolunteerCommentsData(null);
+    } catch (error) {
+      if (error.response?.status === 401) {
+        showErrorToast(t, "You do not have permission to update volunteers.", error);
+      } else {
+        showErrorToast(t, "Error saving comments", error);
       }
     }
   };
@@ -1083,30 +1107,22 @@ const TutorVolunteerMgmt = () => {
                   </td>
                   <td
                     className="tutor-vol-editable-cell"
-                    onClick={() => !editingCell && startEdit(entity, "comments", "volunteer")}
                   >
-                    {editingCell?.rowId === entity.id && editingCell?.field === "comments" ? (
-                      <textarea
-                        value={editValue}
-                        onChange={e => setEditValue(e.target.value)}
-                        onBlur={() => confirmEdit(entity, "comments")}
-                        onKeyDown={e => {
-                          if (e.key === 'Escape') {
-                            e.preventDefault();
-                            setEditingCell(null);
-                            setEditValue("");
-                          } else if (e.key === 'Enter' && (e.altKey || e.metaKey || e.ctrlKey)) {
-                            e.preventDefault();
-                            setEditValue(editValue + '\n');
-                          } else if (e.key === 'Enter' && !e.altKey && !e.metaKey && !e.ctrlKey) {
-                            e.preventDefault();
-                            confirmEdit(entity, "comments");
-                          }
+                    {entity.comments ? (
+                      <button
+                        className="details-button"
+                        onClick={() => {
+                          setVolunteerCommentsData({
+                            volunteerId: entity.id,
+                            comments: entity.comments || ""
+                          });
+                          setShowVolunteerCommentsModal(true);
                         }}
-                        autoFocus
-                      />
+                      >
+                        {t("Click to see comments")}
+                      </button>
                     ) : (
-                      <span className="tutor-vol-text-cell-content">{entity.comments || "-"}</span>
+                      <span className="tutor-vol-text-cell-content">-</span>
                     )}
                   </td>
                   <td>
@@ -1278,6 +1294,47 @@ const TutorVolunteerMgmt = () => {
                 onClick={handleSaveTutorshipDetails}
               >
                 {t("Save and Close")}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Volunteer Comments Modal */}
+      {showVolunteerCommentsModal && volunteerCommentsData && (
+        <div className="tutor-vol-modal-overlay" onClick={() => setShowVolunteerCommentsModal(false)}>
+          <div className="tutor-vol-modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="tutor-vol-modal-header">
+              <h2>{t("Volunteer Comments")}</h2>
+              <span className="tutor-vol-modal-close" onClick={() => setShowVolunteerCommentsModal(false)}>&times;</span>
+            </div>
+            <div className="tutor-vol-modal-body">
+              <textarea
+                className="volunteer-comments-textarea"
+                value={volunteerCommentsData.comments}
+                onChange={(e) => setVolunteerCommentsData({
+                  ...volunteerCommentsData,
+                  comments: e.target.value
+                })}
+                placeholder={t("Enter comments...")}
+                style={{
+                  width: '100%',
+                  minHeight: '200px',
+                  padding: '10px',
+                  borderRadius: '4px',
+                  border: '1px solid #ddd',
+                  fontFamily: 'Arial, sans-serif',
+                  fontSize: '14px',
+                  resize: 'vertical'
+                }}
+              />
+            </div>
+            <div className="tutor-vol-modal-footer">
+              <button className="tutor-vol-btn-cancel" onClick={() => setShowVolunteerCommentsModal(false)}>
+                {t("Cancel")}
+              </button>
+              <button className="tutor-vol-btn-save" onClick={handleSaveVolunteerComments}>
+                {t("Save")}
               </button>
             </div>
           </div>

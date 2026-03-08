@@ -327,6 +327,7 @@ def promote_pending_tutor_to_tutor(task):
             staff=staff,
             tutorship_status="אין_חניך",
             tutor_email=signedup.email,
+            preferences=signedup.comment,
         )
 
     return True, "Promoted successfully"
