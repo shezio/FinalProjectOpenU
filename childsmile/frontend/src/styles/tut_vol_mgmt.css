@@ -918,3 +918,10 @@ input.search-bar::placeholder {
   color: #333;
   font-size: 16px;
 }
+
+/* Volunteer Comments Modal - Large Text */
+.tutor-vol-modal-overlay .tutor-vol-modal-content .tutor-vol-modal-body .volunteer-comments-textarea {
+  font-size: 24px !important;
+  line-height: 1.5;
+  font-family: Rubik, Arial, sans-serif;
+}
