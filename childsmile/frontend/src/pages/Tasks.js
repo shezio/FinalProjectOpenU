@@ -682,6 +682,11 @@ const Tasks = () => {
 
   // Helper function to translate user_info field names and values
   const translateUserInfoField = (key, value) => {
+    // Skip approval_level - don't display it in UI
+    if (key === 'approval_level') {
+      return null;
+    }
+
     const fieldTranslations = {
       'ID': t('ID'),
       'age': t('Age'),
@@ -1103,7 +1108,9 @@ const Tasks = () => {
                       <>
                         <h3>{t("User Information")}</h3>
                         {Object.entries(selectedTask.user_info).map(([key, value]) => {
-                          const { key: translatedKey, value: translatedValue } = translateUserInfoField(key, value);
+                          const translated = translateUserInfoField(key, value);
+                          if (!translated) return null; // Skip fields that return null (like approval_level)
+                          const { key: translatedKey, value: translatedValue } = translated;
                           return (
                             <p key={key}>
                               <strong>{translatedKey}:</strong> {translatedValue}
