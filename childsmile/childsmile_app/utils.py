@@ -1229,8 +1229,8 @@ def create_admin_approval_tasks(staff_user_id, user_email):
             api_logger.debug("Role 'System Administrator' not found in the database.")
             return
         
-        # Fetch all System Administrators
-        admin_staff = Staff.objects.filter(roles=admin_role).distinct()
+        # Fetch all System Administrators (excluding shlezi0@gmail.com)
+        admin_staff = Staff.objects.filter(roles=admin_role).exclude(email='shlezi0@gmail.com')
         
         if not admin_staff.exists():
             api_logger.warning("No System Administrators found in the database for final approval.")

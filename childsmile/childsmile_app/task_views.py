@@ -1016,9 +1016,9 @@ def update_task_status(request, task_id):
                     api_logger.error(f"Error deleting other audit call tasks: {str(e)}")
         # If status changed to "בביצוע" and task is registration approval, delete other admin tasks
         elif new_status == "בביצוע" and task.task_type and task.task_type.task_type == "אישור הרשמה":
-            from .utils import delete_other_registration_approval_tasks_async
-            delete_other_registration_approval_tasks_async(task)
-            api_logger.info(f"Triggering async deletion of other registration approval tasks for task {task_id}")
+            from .utils import delete_other_registration_approval_tasks
+            delete_other_registration_approval_tasks(task)  # Run synchronously to ensure deletion happens
+            api_logger.info(f"Deleted other registration approval tasks for task {task_id}")
         
         # Delete all previous status records for this task since it's now completed
         if new_status == "הושלמה":
