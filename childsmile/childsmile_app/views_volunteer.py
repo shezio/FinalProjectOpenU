@@ -1916,6 +1916,7 @@ def import_volunteers_endpoint(request):
                                 tutorship_status="יש_חניך",
                                 tutor_email=email,
                                 preferences=tutor_preferences,
+                                is_t_imported=True,
                             )
                             tutor_with_tutee_count += 1
                         elif status_val == "אין חניך":
@@ -1925,6 +1926,7 @@ def import_volunteers_endpoint(request):
                                 tutorship_status="אין_חניך",
                                 tutor_email=email,
                                 preferences=tutor_preferences,
+                                is_t_imported=True,
                             )
                             tutor_no_tutee_count += 1
                         else:
@@ -1934,6 +1936,7 @@ def import_volunteers_endpoint(request):
                                 tutorship_status="אין_חניך",
                                 tutor_email=email,
                                 preferences=tutor_preferences,
+                                is_t_imported=True,
                             )
                             Pending_Tutor.objects.create(
                                 id_id=signedup.id,

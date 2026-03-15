@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>סיכום תיקון באג ייבוא חונכים וחניכים</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.8;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.95;
+        }
+        
+        .content {
+            padding: 40px 30px;
+        }
+        
+        section {
+            margin-bottom: 40px;
+        }
+        
+        h2 {
+            color: #667eea;
+            font-size: 1.8em;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #667eea;
+        }
+        
+        h3 {
+            color: #764ba2;
+            font-size: 1.3em;
+            margin: 20px 0 10px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .problem-box {
+            background: #fff3cd;
+            border-right: 5px solid #ffc107;
+            padding: 20px;
+            margin: 15px 0;
+            border-radius: 5px;
+        }
+        
+        .problem-box strong {
+            color: #856404;
+        }
+        
+        .solution-box {
+            background: #d4edda;
+            border-right: 5px solid #28a745;
+            padding: 20px;
+            margin: 15px 0;
+            border-radius: 5px;
+        }
+        
+        .solution-box strong {
+            color: #155724;
+        }
+        
+        .change-item {
+            background: #f0f4ff;
+            padding: 20px;
+            margin: 15px 0;
+            border-radius: 8px;
+            border-right: 4px solid #667eea;
+        }
+        
+        .change-item h4 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        
+        code {
+            background: #f5f5f5;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            color: #d63384;
+        }
+        
+        pre {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            margin: 15px 0;
+            font-size: 0.9em;
+            line-height: 1.5;
+        }
+        
+        pre code {
+            background: none;
+            color: inherit;
+            padding: 0;
+            border-radius: 0;
+        }
+        
+        .example-flow {
+            background: #f8f9ff;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border: 2px solid #667eea;
+            font-family: monospace;
+            line-height: 2;
+        }
+        
+        .example-flow .step {
+            margin: 10px 0;
+            padding: 8px;
+            background: white;
+            border-radius: 4px;
+            border-right: 3px solid #764ba2;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        table thead {
+            background: #667eea;
+            color: white;
+        }
+        
+        table th {
+            padding: 15px;
+            text-align: right;
+            font-weight: 600;
+        }
+        
+        table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        table tbody tr:hover {
+            background: #f5f5f5;
+        }
+        
+        .checklist {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .checklist li {
+            padding: 12px;
+            margin: 8px 0;
+            background: #f0f4ff;
+            border-radius: 5px;
+            border-right: 4px solid #28a745;
+        }
+        
+        .checklist li:before {
+            content: "✅ ";
+            margin-left: 8px;
+            font-weight: bold;
+        }
+        
+        .file-box {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+            border-right: 3px solid #667eea;
+        }
+        
+        .file-box strong {
+            color: #667eea;
+        }
+        
+        .command-box {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+            overflow-x: auto;
+        }
+        
+        .command-box code {
+            background: none;
+            color: #f8f8f2;
+            padding: 0;
+        }
+        
+        .summary-box {
+            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+            border: 2px solid #28a745;
+            padding: 25px;
+            border-radius: 8px;
+            margin: 30px 0;
+            text-align: center;
+        }
+        
+        .summary-box h3 {
+            color: #155724;
+            border: none;
+            font-size: 1.5em;
+            margin: 0;
+        }
+        
+        .emoji {
+            font-size: 1.2em;
+        }
+        
+        .footer {
+            background: #f5f5f5;
+            padding: 30px;
+            margin-top: 40px;
+            text-align: center;
+            border-top: 1px solid #ddd;
+        }
+        
+        .footer p {
+            margin: 10px 0;
+            color: #666;
+        }
+        
+        .highlight {
+            background: #fff3cd;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-weight: 600;
+        }
+        
+        @media print {
+            body {
+                background: white;
+            }
+            .container {
+                box-shadow: none;
+                border-radius: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>🐛 סיכום תיקון באג ייבוא חונכים וחניכים</h1>
+            <p>דוקומנטציה טכנית לצוות העמותה</p>
+        </div>
+        
+        <!-- Content -->
+        <div class="content">
+            
+            <!-- Problem Section -->
+            <section>
+                <h2><span class="emoji">⚠️</span> הבעיה שתוקנה</h2>
+                
+                <div class="problem-box">
+                    <strong>בעיה ביצור:</strong><br>
+                    כאשר יובאו חונכים וחניכים מקובץ Excel, וברשומה היתה המידע "יש חניך" (או "יש חונך" לחניך), המערכת הייתה משאירה את הרשומה בסטטוס "יש חניך" גם לאחר שהחונכות היתה מחוקה. זה יצר <strong>אי-עקביות</strong> - החונך עדיין נראה "תופוס" גם שלא היה לו חניך.
+                </div>
+                
+                <h3><span class="emoji">📋</span> דוגמה של הבעיה:</h3>
+                <div class="example-flow">
+                    <div class="step">1️⃣ קובץ Excel מכיל חונך עם סטטוס "יש חניך"</div>
+                    <div class="step">2️⃣ המערכת יובאה את החונך עם סטטוס "יש חניך" (לפי הקובץ)</div>
+                    <div class="step">3️⃣ אדמין מוחק את החונכות</div>
+                    <div class="step" style="background: #ffe6e6; border-right-color: #dc3545;">
+                        ❌ בעיה: החונך עדיין מראה "יש חניך" - סטטוס שגוי!
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Solutions Section -->
+            <section>
+                <h2><span class="emoji">✅</span> השינויים שבוצעו</h2>
+                
+                <!-- Solution 1 -->
+                <div class="change-item">
+                    <h4><span class="emoji">1️⃣</span> הוספת שדות מעקב בטבלאות (SQL)</h4>
+                    <p><strong>קובץ:</strong> <code>add_imported_flags.sql</code></p>
+                    
+                    <pre><code>ALTER TABLE childsmile_app_tutors ADD COLUMN is_t_imported BOOLEAN DEFAULT FALSE;
+ALTER TABLE childsmile_app_children ADD COLUMN is_c_imported BOOLEAN DEFAULT FALSE;</code></pre>
+                    
+                    <p style="margin-top: 15px;"><strong>מה זה עושה:</strong></p>
+                    <ul style="margin: 10px 0 0 20px; list-style: none;">
+                        <li>✓ <code>is_t_imported</code> - שדה בוליאני בטבלת החונכים - מסמן אם החונך יובא מקובץ Excel</li>
+                        <li>✓ <code>is_c_imported</code> - שדה בוליאני בטבלת החניכים - מסמן אם החניך יובא מקובץ Excel</li>
+                        <li>✓ <strong>DEFAULT FALSE</strong> - רק רשומות מיובאות יהיו TRUE</li>
+                    </ul>
+                </div>
+                
+                <!-- Solution 2 -->
+                <div class="change-item">
+                    <h4><span class="emoji">2️⃣</span> הוספת סימון ייבוא בלוגיקת הייבוא</h4>
+                    <p><strong>קובץ:</strong> <code>views_volunteer.py</code> - הוספת <code>is_t_imported=True</code> בשלוש מקומות</p>
+                    
+                    <pre><code>Tutors.objects.create(
+    id_id=signedup.id,
+    staff=staff,
+    tutorship_status="יש_חניך",        # בדיוק כמו קודם
+    tutor_email=email,
+    preferences=tutor_preferences,
+    is_t_imported=True,                # ✅ זה בלבד הוסף!
+)</code></pre>
+                    
+                    <p style="margin-top: 15px;"><strong>מה השתנה:</strong></p>
+                    <div style="background: #d4edda; padding: 10px; border-radius: 5px; margin-top: 10px;">
+                        <p><strong style="color: #155724;">הוסיפו:</strong> שדה <code>is_t_imported=True</code> לכל Tutors שמיובא</p>
+                    </div>
+                    <div style="background: #d4edda; padding: 10px; border-radius: 5px; margin-top: 10px;">
+                        <p><strong style="color: #155724;">לא שינו:</strong> הלוגיקה של הייבוא נשארת בדיוק אותו הדבר - כל הסטטוסים מהקובץ מיובאים כמו שהם</p>
+                    </div>
+                    <p style="margin-top: 10px;"><strong>זה בלבד הוסף:</strong> סימון לצוותה שהרשומה מיובאת, כדי שנוכל להתייחס אליה בצורה מיוחדת כשמוחקים חונכות</p>
+                </div>
+                
+                <!-- Solution 3 -->
+                <div class="change-item">
+                    <h4><span class="emoji">3️⃣</span> שינוי לוגיקת מחיקת חונכות</h4>
+                    <p><strong>קובץ:</strong> <code>tutorship_views.py</code> - שורות 1019-1042</p>
+                    
+                    <pre><code># אם החונך יובא מקובץ
+if tutor.is_t_imported:
+    tutor.tutorship_status = "אין_חניך"   # ✅ חזור ל "אין חניך"
+    tutor.is_t_imported = False            # ✅ כבר לא מיובא
+    tutor.save()
+
+# אם החניך יובא מקובץ (ואין עוד חונכות)
+if not other_child_tutorships:
+    if child.is_c_imported:
+        child.tutoring_status = "אין_חונך"  # ✅ חזור ל "אין חונך"
+        child.is_c_imported = False         # ✅ כבר לא מיובא
+        child.save()</code></pre>
+                    
+                    <p style="margin-top: 15px;"><strong>מה זה עושה:</strong></p>
+                    <ul style="margin: 10px 0 0 20px; list-style: disc;">
+                        <li>כאשר מוחקים חונכות של חונך <strong>מיובא</strong>:
+                            <ul style="margin-top: 5px;">
+                                <li>סטטוס החונך חוזר ל "אין_חניך" (לא "יש חניך")</li>
+                                <li>הדגל <code>is_t_imported</code> הופך ל FALSE (עכשיו החונך מטופל כרשומה רגילה)</li>
+                            </ul>
+                        </li>
+                        <li style="margin-top: 10px;">כאשר מוחקים חונכות של חניך <strong>מיובא</strong>:
+                            <ul style="margin-top: 5px;">
+                                <li>סטטוס החניך חוזר ל "אין_חונך" (לא "יש חונך")</li>
+                                <li>הדגל <code>is_c_imported</code> הופך ל FALSE</li>
+                                <li><strong>רק אם</strong> זאת החונכות האחרונה (יכול להיות עוד חונכים)</li>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+            </section>
+            
+            <!-- Example Section -->
+            <section>
+                <h2><span class="emoji">🔄</span> איך זה עובד - דוגמה מעשית</h2>
+                
+                <h3>סיטואציה: ייבוא חונך</h3>
+                
+                <div class="example-flow">
+                    <div style="font-weight: bold; color: #667eea; margin-bottom: 15px;">📁 קובץ Excel:</div>
+                    <div class="step">שם: דוד כהן</div>
+                    <div class="step">ת.ז: 123456789</div>
+                    <div class="step">סטטוס: "יש חניך"</div>
+                    
+                    <div style="margin: 20px 0; text-align: center; font-weight: bold; color: #764ba2;">⬇️ תהליך ייבוא ⬇️</div>
+                    
+                    <div style="font-weight: bold; color: #667eea; margin-bottom: 15px;">💾 מה הנוצר במערכת:</div>
+                    <div class="step" style="background: #d4edda; border-right-color: #28a745;">דוד כהן בטבלת חונכים</div>
+                    <div class="step" style="background: #d4edda; border-right-color: #28a745;">tutorship_status = "יש_חניך" ✅ (בדיוק כמו בקובץ)</div>
+                    <div class="step" style="background: #d4edda; border-right-color: #28a745;">is_t_imported = TRUE ✅ (סימון ייבוא - זה החידוש!)</div>
+                    
+                    <div style="margin: 20px 0; text-align: center; font-weight: bold; color: #764ba2;">⬇️ אדמין מחק חונכות ⬇️</div>
+                    
+                    <div style="font-weight: bold; color: #667eea; margin-bottom: 15px;">💾 מה קורה במערכת:</div>
+                    <div class="step" style="background: #d4edda; border-right-color: #28a745;">דוד כהן בטבלת חונכים</div>
+                    <div class="step" style="background: #d4edda; border-right-color: #28a745;">tutorship_status = "אין_חניך" ✅ (חוזר לסטטוס נכון - אין עוד חונכות)</div>
+                    <div class="step" style="background: #d4edda; border-right-color: #28a745;">is_t_imported = FALSE ✅ (כבר לא מיובא - זה מה שצפוי לחונך מיובא)</div>
+                </div>
+            </section>
+            
+            <!-- Why It Matters -->
+            <section>
+                <h2><span class="emoji">🎯</span> למה זה חשוב?</h2>
+                
+                <table>
+                    <thead>
+                        <tr>
+                            <th>בעיה</th>
+                            <th>פתרון</th>
+                            <th>תוצאה</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>קובץ אומר "יש חניך" אבל אנחנו לא יודעים שהרשומה מיובאת</td>
+                            <td>סימון עם <code>is_t_imported=TRUE</code></td>
+                            <td>✅ אנחנו יודעים מה היה מיובא</td>
+                        </tr>
+                        <tr>
+                            <td>מחיקת חונכות של חונך מיובא משאירה אותו בסטטוס הלא נכון</td>
+                            <td>בדיקת הדגל <code>is_t_imported</code> בעת מחיקה</td>
+                            <td>✅ החונך חוזר לסטטוס נכון אחרי מחיקה</td>
+                        </tr>
+                        <tr>
+                            <td>חניך מיובא נשאר "יש חונך" אחרי מחיקת כל החניכויות</td>
+                            <td>בדיקת הדגל <code>is_c_imported</code> בעת מחיקה</td>
+                            <td>✅ החניך חוזר לסטטוס נכון אחרי מחיקה</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+            
+            <!-- Testing Section -->
+            <section>
+                <h2><span class="emoji">🧪</span> נקודות חשובות לבדיקה</h2>
+                
+                <div class="solution-box">
+                    <strong>📊 אחרי הוספת העמודות SQL:</strong>
+                    <pre><code>SELECT COUNT(*) FROM childsmile_app_tutors WHERE is_t_imported = TRUE;
+SELECT COUNT(*) FROM childsmile_app_children WHERE is_c_imported = TRUE;</code></pre>
+                </div>
+                
+                <h3>בדיקת ייבוא:</h3>
+                <ul class="checklist">
+                    <li>יבאו חונך עם סטטוס "יש חניך" בקובץ</li>
+                    <li>בדקו בטבלה: <code>tutorship_status</code> צריך להיות "אין_חניך"</li>
+                    <li>בדקו בטבלה: <code>is_t_imported</code> צריך להיות TRUE</li>
+                </ul>
+                
+                <h3>בדיקת מחיקה:</h3>
+                <ul class="checklist">
+                    <li>יצרו חונכות להחונך המיובא</li>
+                    <li>מחקו את החונכות</li>
+                    <li>בדקו בטבלה: <code>tutorship_status</code> צריך להיות "אין_חניך" (לא "יש חניך")</li>
+                    <li>בדקו בטבלה: <code>is_t_imported</code> צריך להיות FALSE</li>
+                </ul>
+            </section>
+            
+            <!-- Summary Box -->
+            <div class="summary-box">
+                <h3>🎉 תוצאה סופית</h3>
+                <p style="font-size: 1.1em; margin-top: 15px;"><strong>לא עוד בעיית "יש חניך"!</strong></p>
+                <p style="margin-top: 10px;">כאשר מחקנים חונכות, סטטוסי החונך/ה חוזרים לנכון ולא נשארים "תפוסים" בטעות.</p>
+            </div>
+            
+            <!-- Files Changed Section -->
+            <section>
+                <h2><span class="emoji">📁</span> הקבצים ששונו</h2>
+                
+                <div class="file-box">
+                    <strong>1. childsmile_app/models.py</strong><br>
+                    <span style="color: #666;">הוספת השדות <code>is_t_imported</code> ו-<code>is_c_imported</code> למודלים</span>
+                </div>
+                
+                <div class="file-box">
+                    <strong>2. childsmile_app/views_volunteer.py</strong><br>
+                    <span style="color: #666;">שינוי לוגיקת ייבוא (שורות 1913-1937) - הוספת <code>is_t_imported=True</code></span>
+                </div>
+                
+                <div class="file-box">
+                    <strong>3. childsmile_app/tutorship_views.py</strong><br>
+                    <span style="color: #666;">שינוי לוגיקת מחיקה - ניקוי סטטוסי בריאות וזוגיות + הגדרת דגלי ייבוא</span>
+                </div>
+                
+                <div class="file-box">
+                    <strong>4. add_imported_flags.sql</strong><br>
+                    <span style="color: #666;">SQL להוספת העמודות <code>is_t_imported</code> ו-<code>is_c_imported</code></span>
+                </div>
+                
+                <div class="file-box" style="background: #fff3cd; border-right-color: #ffc107;">
+                    <strong>5. cleanup_tutor_wellness_prod.sql</strong> 🆕<br>
+                    <span style="color: #666;">SQL לניקוי נתוני בריאות וזוגיות לחונכים עם סטטוס "אין_חניך" בייצור</span>
+                </div>
+            </section>
+            
+            <!-- Deployment Section -->
+            <section>
+                <h2><span class="emoji">🚀</span> הוראות הטלקה</h2>
+                
+                <h3>הוסיפו את העמודות לטבלאות:</h3>
+                <div class="command-box">
+                    <code># הריצו את SQL זה בישירות במסד הנתונים:</code><br><br>
+                    <code>psql -h your_host -U your_user -d your_database -f childsmile/add_imported_flags.sql</code><br><br>
+                    <code style="color: #888;">// או אם מקומי:</code><br>
+                    <code>psql -U your_user -d your_database -f childsmile/add_imported_flags.sql</code>
+                </div>
+                
+                <h3 style="margin-top: 20px;">אחרי זה:</h3>
+                <ol style="margin: 15px 0 0 20px; list-style: decimal;">
+                    <li>בדקו שהעמודות הוספו בהצלחה</li>
+                    <li>עדכנו את הקוד מ Git (models.py, views_volunteer.py, tutorship_views.py)</li>
+                    <li>הפעילו מחדש את האפליקציה</li>
+                    <li><strong>🆕 ריצת ניקוי הנתונים הישנים:</strong> <code>psql -h your_host -U your_user -d your_database -f childsmile/cleanup_tutor_wellness_prod.sql</code></li>
+                    <li>בצעו בדיקות לפי הנקודות לעיל</li>
+                </ol>
+            </section>
+            
+            <!-- Tutor Wellness Cleanup -->
+            <section>
+                <h2><span class="emoji">🧹</span> ניקוי נתוני בריאות חניך וסטטוס זוגיות</h2>
+                
+                <div class="solution-box">
+                    <strong>🆕 שדות שנוקו:</strong><br>
+                    בעת מחיקת חונכות, המערכת כעת מנקה גם את:
+                    <ul style="margin-top: 10px; margin-right: 20px;">
+                        <li><code>tutee_wellness</code> - נתוני בריאות החניך</li>
+                        <li><code>relationship_status</code> - סטטוס הקשר בין חונך לחניך</li>
+                    </ul>
+                    <p style="margin-top: 10px; color: #155724;"><strong>✅ הרציונל:</strong> שדות אלו צריכים להיות מלאים <strong>רק</strong> כאשר החונך בפעילות (חונכות פעילה). בעת סיום החונכות, הם צריכים להיות NULL.</p>
+                </div>
+                
+                <h3>לניקוי הנתונים הישנים בייצור:</h3>
+                <div class="problem-box">
+                    <strong>⚠️ קבצי SQL חדשים:</strong><br><br>
+                    <code>cleanup_tutor_wellness_prod.sql</code><br>
+                    <span style="color: #666; margin-top: 5px; display: block;">סקריפט לניקוי כל החונכים עם סטטוס "אין_חניך" שעדיין יש להם נתוני בריאות או זוגיות</span>
+                </div>
+                
+                <h3 style="margin-top: 20px;">הריצת ניקוי הנתונים הישנים:</h3>
+                <div class="command-box">
+                    <code># ניקוי בטוח - מנקה רק אם סטטוס הוא "אין_חניך":</code><br><br>
+                    <code>psql -h your_host -U your_user -d your_database -f childsmile/cleanup_tutor_wellness_prod.sql</code>
+                </div>
+                
+                <div class="solution-box">
+                    <strong>✅ מה זה עושה:</strong>
+                    <ul style="margin-top: 10px; margin-right: 20px;">
+                        <li>מוצא את כל החונכים עם <code>tutorship_status = 'אין_חניך'</code></li>
+                        <li>מנקה את <code>tutee_wellness</code> ו-<code>relationship_status</code> עבורם</li>
+                        <li>מעדכן את <code>updated</code> timestamp</li>
+                        <li><strong>בטוח:</strong> לא משפיע על חונכים בחונכות פעילה</li>
+                    </ul>
+                </div>
+            </section>
+            
+            <!-- Fields Summary -->
+            <section>
+                <h2><span class="emoji">📋</span> סיכום השדות החדשים</h2>
+                
+                <div class="file-box" style="border-right-color: #28a745;">
+                    <strong style="color: #28a745;">Tutors.is_t_imported</strong><br>
+                    <span style="color: #666;">האם החונך יובא מקובץ Excel (TRUE = יובא, FALSE = יצור ישיר)</span>
+                </div>
+                
+                <div class="file-box" style="border-right-color: #28a745;">
+                    <strong style="color: #28a745;">Children.is_c_imported</strong><br>
+                    <span style="color: #666;">האם החניך יובא מקובץ Excel (TRUE = יובא, FALSE = יצור ישיר)</span>
+                </div>
+            </section>
+        </div>
+        
+        <!-- Footer -->
+        <div class="footer">
+            <p><strong>🔧 דוקומנטציה טכנית</strong></p>
+            <p>סיכום התיקון של בעיית הסטטוסים בייבוא חונכים וחניכים</p>
+            <p style="margin-top: 20px; color: #999; font-size: 0.9em;">תאריך: 15/03/2026</p>
+        </div>
+    </div>
+</body>
+</html>

@@ -1014,15 +1014,27 @@ def delete_tutorship(request, tutorship_id):
         status_restored = False
         
         # Always restore tutor status (tutor only has one tutee)
-        if prev_status:
+        # If tutor was imported, set to אין_חניך and mark as no longer imported
+        if tutor.is_t_imported:
+            tutor.tutorship_status = "אין_חניך"
+            tutor.is_t_imported = False
+        elif prev_status:
             tutor.tutorship_status = prev_status.tutor_tut_status
         else:
             tutor.tutorship_status = "אין_חניך"
+        
+        # Clean up tutor wellness and relationship status when tutorship ends
+        tutor.tutee_wellness = None
+        tutor.relationship_status = None
         tutor.save()
         
         # MULTI-TUTOR SUPPORT: Only restore child status if this is the LAST tutorship
         if not other_child_tutorships:
-            if prev_status:
+            # If child was imported, set to אין_חונך and mark as no longer imported
+            if child.is_c_imported:
+                child.tutoring_status = "אין_חונך"
+                child.is_c_imported = False
+            elif prev_status:
                 child.tutoring_status = prev_status.child_tut_status
             else:
                 # Use "למצוא_חונך" which is the valid enum value (not "מחפש_חונך")
