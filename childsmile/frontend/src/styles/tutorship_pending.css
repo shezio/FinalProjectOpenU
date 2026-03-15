@@ -220,3 +220,21 @@
   opacity: 0.5;
   cursor: not-allowed;
 }
+
+/* Search bar styling for Families Waiting Report */
+.families-waiting-report-main-content .actions .search-bar,
+.families-waiting-report-main-content .actions .search-bar:focus,
+.families-waiting-report-main-content .actions .search-bar:active,
+.families-waiting-report-main-content .actions .search-bar:focus:active,
+.families-waiting-report-main-content .actions .tutorship-status-filter {
+  max-width: 170px;
+}
+
+.families-waiting-report-main-content .actions .search-bar
+{
+  margin-top: 20px;
+}
+
+.families-waiting-report-main-content .actions .date-input {
+  max-width: 125px;
+}

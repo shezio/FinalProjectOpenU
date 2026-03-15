@@ -24,6 +24,8 @@ def update_staff_member(request, staff_id):
     Update a staff member's details
     """
     api_logger.info(f"update_staff_member called for staff_id: {staff_id}")
+    
+    # AUTHENTICATION FIRST - fail fast if not authenticated
     user_id = request.session.get("user_id")
     if not user_id:
         log_api_action(
@@ -35,16 +37,28 @@ def update_staff_member(request, staff_id):
         )
         return JsonResponse({"detail": "Authentication credentials were not provided."}, status=403)
 
-    user = Staff.objects.get(staff_id=user_id)
+    # Then check if user is admin - only then proceed
+    try:
+        user = Staff.objects.get(staff_id=user_id)
+    except Staff.DoesNotExist:
+        log_api_action(
+            request=request,
+            action='UPDATE_STAFF_FAILED',
+            success=False,
+            error_message="User not found",
+            status_code=403
+        )
+        return JsonResponse({"detail": "User not found."}, status=403)
+    
     if not is_admin(user):
         log_api_action(
             request=request,
             action='UPDATE_STAFF_FAILED',
             success=False,
-            error_message="You do not have permission to update staff",
+            error_message="Admin access required",
             status_code=401
         )
-        return JsonResponse({"error": "You do not have permission to update staff."}, status=401)
+        return JsonResponse({"error": "Admin access required."}, status=401)
 
     try:
         staff_member = Staff.objects.get(staff_id=staff_id)

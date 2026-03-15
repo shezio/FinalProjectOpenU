@@ -24,6 +24,27 @@ const FamiliesWaitingForTutorshipReport = () => {
   const [sortOrderRegistrationDate, setSortOrderRegistrationDate] = useState('asc'); // Default to ascending
   const hasCreatePermission = hasCreatePermissionForTable("tutorships");
   const [selectedFamily, setSelectedFamily] = useState(null);
+  const [searchTerm, setSearchTerm] = useState(""); // Search by child name
+  const [selectedTutoringStatus, setSelectedTutoringStatus] = useState(""); // Single tutorship status filter
+  
+  // Hardcoded tutoring statuses supported in the system
+  const tutoringStatuses = [
+    "למצוא חונך",
+    "יש חונך",
+    "אין חונך",
+    "בוגר",
+    "שידוך בסימן שאלה",
+    "למצוא חונך בעדיפות גבוהה",
+    "למצוא חונך אין באיזור שלו",
+    "לא רוצים",
+    "לא רלוונטי"
+  ];
+
+  // Format status for display (remove underscores)
+  const formatStatusDisplay = (status) => {
+    if (!status) return status;
+    return String(status).replace(/_/g, ' ');
+  };
 
   const parseDate = (dateString) => {
     if (!dateString) return new Date(0); // Handle missing dates
@@ -135,6 +156,17 @@ const FamiliesWaitingForTutorshipReport = () => {
     }
   }, [hasPermissionToView]);
 
+  // Filter families by search term (child name only) and tutoring status
+  const filteredFamilies = families.filter((family) => {
+    const matchesSearch = !searchTerm.trim() || 
+      `${family.first_name} ${family.last_name}`.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesTutoringStatus = !selectedTutoringStatus || 
+      formatStatusDisplay(family.tutoring_status) === selectedTutoringStatus;
+    
+    return matchesSearch && matchesTutoringStatus;
+  });
+
   if (!hasPermissionToView) {
     return (
       <div className="families-waiting-report-main-content">
@@ -159,16 +191,39 @@ const FamiliesWaitingForTutorshipReport = () => {
           <div className="actions">
             <button
               className="export-button excel-button"
-              onClick={() => exportTutorshipPendingToExcel(families, t)}
+              onClick={() => exportTutorshipPendingToExcel(filteredFamilies, t)}
             >
               <img src="/assets/excel-icon.png" alt="Excel" />
             </button>
             <button
               className="export-button pdf-button"
-              onClick={() => exportTutorshipPendingToPDF(families, t)}
+              onClick={() => exportTutorshipPendingToPDF(filteredFamilies, t)}
             >
               <img src="/assets/pdf-icon.png" alt="PDF" />
             </button>
+            <input
+              className="search-bar"
+              type="text"
+              placeholder={t("Search by child name")}
+              value={searchTerm}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                setCurrentPage(1);
+              }}
+            />
+            <select
+              className="tutorship-status-filter"
+              value={selectedTutoringStatus}
+              onChange={(e) => {
+                setSelectedTutoringStatus(e.target.value);
+                setCurrentPage(1);
+              }}
+            >
+              <option value="">{t("All Statuses")}</option>
+              {tutoringStatuses.map(status => (
+                <option key={status} value={status}>{formatStatusDisplay(status)}</option>
+              ))}
+            </select>
             {hasCreatePermission && (
               <button
                 className="filter-button"
@@ -217,7 +272,7 @@ const FamiliesWaitingForTutorshipReport = () => {
           <div className="loader">{t("Loading data...")}</div>
         ) : (
           <div className="tutorship-pending-grid-container">
-            {families.length === 0 ? (
+            {filteredFamilies.length === 0 ? (
               <div className="no-data">{t("No data to display")}</div>
             ) : (
               <>
@@ -248,15 +303,15 @@ const FamiliesWaitingForTutorshipReport = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {families.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE).map((family, idx) => {
-                    const realIndex = (currentPage - 1) * PAGE_SIZE + idx;
+                  {filteredFamilies.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE).map((family, idx) => {
+                    const filteredIndex = (currentPage - 1) * PAGE_SIZE + idx;
                     return (
-                      <tr key={realIndex}>
+                      <tr key={filteredIndex}>
                         <td>
                           <input
                             type="checkbox"
                             checked={family.selected || false}
-                            onChange={() => handleCheckboxChange(realIndex)}
+                            onChange={() => handleCheckboxChange(filteredIndex)}
                           />
                         </td>
                         <td>{family.first_name} {family.last_name} {getGenderIcon(family.gender)}</td>
@@ -264,7 +319,7 @@ const FamiliesWaitingForTutorshipReport = () => {
                         <td>{family.father_phone}</td>
                         <td>{family.mother_name}</td>
                         <td>{family.mother_phone}</td>
-                        <td>{family.tutoring_status}</td>
+                        <td>{formatStatusDisplay(family.tutoring_status)}</td>
                         <td>{family.registration_date}</td>
                       </tr>
                     );
@@ -274,9 +329,9 @@ const FamiliesWaitingForTutorshipReport = () => {
               <div className="pagination">
                 <button onClick={() => setCurrentPage(1)} disabled={currentPage === 1} className="pagination-arrow">&laquo;</button>
                 <button onClick={() => setCurrentPage(currentPage - 1)} disabled={currentPage === 1} className="pagination-arrow">&lsaquo;</button>
-                {Array.from({ length: Math.ceil(families.length / PAGE_SIZE) }, (_, i) => {
+                {Array.from({ length: Math.ceil(filteredFamilies.length / PAGE_SIZE) }, (_, i) => {
                   const pageNum = i + 1;
-                  const totalPages = Math.ceil(families.length / PAGE_SIZE);
+                  const totalPages = Math.ceil(filteredFamilies.length / PAGE_SIZE);
                   const maxButtons = 5;
                   const halfRange = Math.floor(maxButtons / 2);
                   let start = Math.max(1, currentPage - halfRange);
@@ -294,8 +349,8 @@ const FamiliesWaitingForTutorshipReport = () => {
                     </button>
                   ) : null;
                 })}
-                <button onClick={() => setCurrentPage(currentPage + 1)} disabled={currentPage === Math.ceil(families.length / PAGE_SIZE)} className="pagination-arrow">&rsaquo;</button>
-                <button onClick={() => setCurrentPage(Math.ceil(families.length / PAGE_SIZE))} disabled={currentPage === Math.ceil(families.length / PAGE_SIZE)} className="pagination-arrow">&raquo;</button>
+                <button onClick={() => setCurrentPage(currentPage + 1)} disabled={currentPage === Math.ceil(filteredFamilies.length / PAGE_SIZE)} className="pagination-arrow">&rsaquo;</button>
+                <button onClick={() => setCurrentPage(Math.ceil(filteredFamilies.length / PAGE_SIZE))} disabled={currentPage === Math.ceil(filteredFamilies.length / PAGE_SIZE)} className="pagination-arrow">&raquo;</button>
               </div>
               </>
             )}

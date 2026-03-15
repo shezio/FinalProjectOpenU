@@ -1756,6 +1756,7 @@ button:disabled {
 
 .tutor-selection {
   margin-bottom: 2rem;
+  position: relative;
 }
 
 .tutor-selection label {
@@ -1788,6 +1789,70 @@ button:disabled {
   outline: none;
   border-color: #667eea;
   box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.2);
+}
+
+/* Searchable Tutor Dropdown Styles */
+.tutor-search-input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 24px;
+  background-color: #fff;
+  color: #333;
+  font-family: inherit;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.tutor-search-input:hover {
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.tutor-search-input:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.2);
+}
+
+.tutor-dropdown-list {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background-color: #fff;
+  border: 2px solid #e0e0e0;
+  border-top: none;
+  border-radius: 0 0 8px 8px;
+  max-height: 300px;
+  overflow-y: auto;
+  z-index: 1000;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.tutor-dropdown-item {
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  color: #333;
+  font-size: 16px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.tutor-dropdown-item:hover {
+  background-color: #f5f5f5;
+}
+
+.tutor-dropdown-item.no-results {
+  cursor: default;
+  color: #999;
+  text-align: center;
+  padding: 1rem;
+  font-style: italic;
+}
+
+.tutor-dropdown-item.no-results:hover {
+  background-color: #fff;
 }
 
 .selected-tutor-info {
@@ -1876,7 +1941,7 @@ button:disabled {
 }
 
 .modal-header h2 {
-margin-right: 150px;
+  margin-right: 150px;
   font-size: 36px;
   color: #667eea;
   font-weight: 600;
@@ -1943,6 +2008,16 @@ margin-right: 150px;
   overflow-y: auto;
   font-size: 24px;
   padding-right: 0.5rem;
+}
+
+.ReactModal__Content.ReactModal__Content--after-open.modal-content .modal-body {
+  overflow-y: hidden !important;
+  min-height: 60vh !important;
+}
+
+.ReactModal__Content.ReactModal__Content--after-open.modal-content .modal-header h2 {
+  margin-right: 150px !important;
+  font-size: 32px !important;
 }
 
 .modal-actions {
