@@ -122,6 +122,8 @@ const Tutorships = () => {
   const [manualMatchChildGender, setManualMatchChildGender] = useState(null);
   const [availableTutors, setAvailableTutors] = useState([]);
   const [selectedTutorForMatch, setSelectedTutorForMatch] = useState(null);
+  const [manualMatchTutorSearchQuery, setManualMatchTutorSearchQuery] = useState('');
+  const [showTutorDropdown, setShowTutorDropdown] = useState(false);
   const [isCalculatingManualMatch, setIsCalculatingManualMatch] = useState(false);
   const [manualMatchResult, setManualMatchResult] = useState(null);
   const [isManualMatchModalOpen, setIsManualMatchModalOpen] = useState(false);
@@ -935,6 +937,8 @@ const Tutorships = () => {
     setSelectedTutorForMatch(null);
     setManualMatchResult(null);
     setShowCrossGenderManual(false);
+    setManualMatchTutorSearchQuery('');
+    setShowTutorDropdown(false);
   };
 
   useEffect(() => {
@@ -1882,24 +1886,54 @@ const Tutorships = () => {
               </div>
 
               <div className="tutor-selection">
-                <label htmlFor="tutor-select">{t('Select Tutor')}:</label>
-                <select
-                  id="tutor-select"
-                  value={selectedTutorForMatch ? selectedTutorForMatch.tutor_id : ''}
-                  onChange={(e) => {
-                    const tutorId = parseInt(e.target.value);
-                    const tutor = availableTutors.find(t => t.tutor_id === tutorId);
-                    setSelectedTutorForMatch(tutor);
-                  }}
-                  className="tutor-dropdown"
-                >
-                  <option value="">{t('Choose a tutor...')}</option>
-                  {availableTutors.map((tutor) => (
-                    <option key={tutor.tutor_id} value={tutor.tutor_id}>
-                      {tutor.tutor_full_name} {getGenderIcon(tutor.tutor_gender)}, {tutor.tutor_city}, {t('age')} {tutor.tutor_age}
-                    </option>
-                  ))}
-                </select>
+                <label htmlFor="tutor-search">{t('Search Tutor')}:</label>
+                <input
+                  id="tutor-search"
+                  type="text"
+                  placeholder={t('Search by name, city, or age')}
+                  value={manualMatchTutorSearchQuery}
+                  onChange={(e) => setManualMatchTutorSearchQuery(e.target.value)}
+                  onFocus={() => setShowTutorDropdown(true)}
+                  className="tutor-search-input"
+                />
+                {showTutorDropdown && (
+                  <div className="tutor-dropdown-list">
+                    {availableTutors
+                      .filter((tutor) => {
+                        const searchLower = manualMatchTutorSearchQuery.toLowerCase();
+                        return (
+                          tutor.tutor_full_name.toLowerCase().includes(searchLower) ||
+                          tutor.tutor_city.toLowerCase().includes(searchLower) ||
+                          tutor.tutor_age.toString().includes(searchLower)
+                        );
+                      })
+                      .map((tutor) => (
+                        <div
+                          key={tutor.tutor_id}
+                          className="tutor-dropdown-item"
+                          onClick={() => {
+                            setSelectedTutorForMatch(tutor);
+                            setManualMatchTutorSearchQuery('');
+                            setShowTutorDropdown(false);
+                          }}
+                        >
+                          {tutor.tutor_full_name} {getGenderIcon(tutor.tutor_gender)}, {tutor.tutor_city}, {t('age')} {tutor.tutor_age}
+                        </div>
+                      ))}
+                    {availableTutors.filter((tutor) => {
+                      const searchLower = manualMatchTutorSearchQuery.toLowerCase();
+                      return (
+                        tutor.tutor_full_name.toLowerCase().includes(searchLower) ||
+                        tutor.tutor_city.toLowerCase().includes(searchLower) ||
+                        tutor.tutor_age.toString().includes(searchLower)
+                      );
+                    }).length === 0 && manualMatchTutorSearchQuery && (
+                      <div className="tutor-dropdown-item no-results">
+                        {t('No tutors found')}
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
 
               {selectedTutorForMatch && (

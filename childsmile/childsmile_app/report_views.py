@@ -104,6 +104,11 @@ def get_families_per_location_report(request):
             location = get_or_update_city_location(
                 child.city
             )  # Use the helper function
+            
+            # Handle case where location is None (geocoding API unavailable or city not found)
+            if location is None:
+                location = {"latitude": None, "longitude": None}
+            
             children_data.append(
                 {
                     "first_name": child.childfirstname,
