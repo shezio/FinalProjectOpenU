@@ -10,6 +10,12 @@ cd /Users/shlomosmac/Applications/dev/FinalProjectOpenU/childsmile/frontend && n
 BE
 cd /Users/shlomosmac/Applications/dev/FinalProjectOpenU/childsmile && source myenv/bin/activate && python manage.py runserver
 
+local running of FE and BE is on localhost:3000 and localhost:8000 respectively
+FE
+cd /Users/shlomosmac/Applications/dev/FinalProjectOpenU/childsmile/frontend && npm start 
+BE
+cd /Users/shlomosmac/Applications/dev/FinalProjectOpenU/childsmile && source myenv/bin/activate && python manage.py runserver 0.0.0.0:8000
+
   git config --global user.email "shlezi0@gmail.com"
   git config --global user.name "shezio"
 

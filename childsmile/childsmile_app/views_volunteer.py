@@ -1345,21 +1345,23 @@ def update_tutor(request, tutor_id):
             tutor.tutorship_status = new_tutor_status
             updated = True
 
-            # Find existing prev record
-            prev = PrevTutorshipStatuses.objects.filter(tutor_id=tutor).order_by('-last_updated').first()
+            # Only create PrevTutorshipStatuses if there's a child assigned
+            if child:
+                # Find existing prev record
+                prev = PrevTutorshipStatuses.objects.filter(tutor_id=tutor).order_by('-last_updated').first()
 
-            if prev:
-                prev.tutor_tut_status = new_tutor_status
-                prev.save()
-                affected_tables.append('childsmile_app_prevtutorshipstatuses')
-            else:
-                PrevTutorshipStatuses.objects.create(
-                    tutor_id=tutor,
-                    child_id=child if child else None,
-                    tutor_tut_status=new_tutor_status,
-                    child_tut_status=child.tutorship_status if child else "",
-                )
-                affected_tables.append('childsmile_app_prevtutorshipstatuses')
+                if prev:
+                    prev.tutor_tut_status = new_tutor_status
+                    prev.save()
+                    affected_tables.append('childsmile_app_prevtutorshipstatuses')
+                else:
+                    PrevTutorshipStatuses.objects.create(
+                        tutor_id=tutor,
+                        child_id=child,
+                        tutor_tut_status=new_tutor_status,
+                        child_tut_status=child.tutorship_status,
+                    )
+                    affected_tables.append('childsmile_app_prevtutorshipstatuses')
 
     # --- Child status logic (if provided) ---
     if "child_tut_status" in data and child:
