@@ -156,6 +156,7 @@ class Tutors(models.Model):
     )
     tutee_wellness = models.CharField(max_length=255, null=True, blank=True)
     updated = models.DateTimeField(auto_now=True)
+    is_t_imported = models.BooleanField(default=False)
 
     def __str__(self):
         return f"Tutor {self.id.first_name} {self.id.surname}"
@@ -222,6 +223,8 @@ class Children(models.Model):
     is_in_frame = models.TextField(null=True, blank=True)
     # Feature #5: Coordinator comments - imported from "הערות רכז" column
     coordinator_comments = models.TextField(null=True, blank=True)
+    # Track if child was added via bulk import
+    is_c_imported = models.BooleanField(default=False)
 
     def __str__(self):
         return f"{self.childfirstname} {self.childsurname}"
