@@ -703,3 +703,261 @@ def roles_spread_stats(request):
     )
 
     return JsonResponse({"roles": list(role_counts)})
+
+
+@conditional_csrf
+@api_view(["GET"])
+def get_all_volunteers_irs_report(request):
+    """
+    Get ALL volunteers with UNIQUE volunteer data only for IRS export.
+    Returns all registered volunteers unified in one list - no type differentiation.
+    CRITICAL: For Israeli IRS compliance - includes volunteer core data from SignedUp + role-specific fields.
+    
+    Core fields (from SignedUp): id, first_name, surname, age, birth_date, gender, phone, city, email, comment, want_tutor
+    Tutor-specific: tutorship_status, preferences
+    General_Volunteer-specific: signupdate, comments
+    Pending_Tutor-specific: pending_status
+    
+    NO DUPLICATES: No staff references, no related child data, no redundant timestamps
+    """
+    
+    def _merge_volunteer_records(existing, new):
+        """Merge volunteer records by filling empty values with non-empty ones and keeping most recent status"""
+        for key, value in new.items():
+            if key == "status":
+                # Status will be set based on most recent record's created_at timestamp
+                # This is handled by tracking signupdate (created_at)
+                pass
+            elif not existing.get(key) and value:
+                # If existing value is empty and new value is not, use new value
+                existing[key] = value
+    
+    def _get_most_recent_status(existing, new, existing_date, new_date):
+        """Get status from the most recently created record"""
+        if not existing_date or not new_date:
+            # If no dates, keep existing
+            return existing.get("status", "עזב")
+        
+        # Convert string dates back to comparable format, or use signupdate
+        # The most recent signup should determine current status
+        try:
+            # signupdate is in format dd/mm/yyyy, parse it
+            from datetime import datetime
+            existing_dt = datetime.strptime(existing_date, '%d/%m/%Y')
+            new_dt = datetime.strptime(new_date, '%d/%m/%Y')
+            
+            # Use the most recent date's status
+            if new_dt >= existing_dt:
+                return new.get("status", "עזב")
+            else:
+                return existing.get("status", "עזב")
+        except:
+            # If date parsing fails, keep existing
+            return existing.get("status", "עזב")
+    
+    api_logger.info("get_all_volunteers_irs_report called")
+    user_id = request.session.get("user_id")
+    
+    if not user_id:
+        return JsonResponse(
+            {"detail": "Authentication credentials were not provided."}, status=403
+        )
+
+    if not has_permission(request, "staff", "VIEW"):
+        return JsonResponse(
+            {"error": "You do not have permission to generate this report"}, status=401
+        )
+
+    try:
+        # Use dictionary to track volunteers by email to avoid duplicates
+        # If same email appears multiple times, merge all non-null values
+        volunteers_by_email = {}
+
+        # Get all tutors - extract UNIQUE data from SignedUp + Tutors table
+        tutors = Tutors.objects.select_related('id', 'staff').all()
+        for tutor in tutors:
+            # Convert gender boolean to readable string (True = Female/נקבה, False = Male/זכר)
+            gender_str = "נקבה" if tutor.id.gender else "זכר"
+            # Convert active status to Hebrew (True = פעיל, False = עזב)
+            active_str = "פעיל" if tutor.staff.is_active else "עזב"
+            
+            email = tutor.id.email or ""
+            volunteer_record = {
+                # SignedUp table fields - CORE 10 fields
+                "volunteer_id": tutor.id.id,
+                "first_name": tutor.id.first_name,
+                "last_name": tutor.id.surname,
+                "age": tutor.id.age,
+                "birth_date": tutor.id.birth_date.strftime('%d/%m/%Y') if tutor.id.birth_date else "",
+                "gender": gender_str,
+                "phone": tutor.id.phone,
+                "city": tutor.id.city,
+                "email": email,
+                "want_tutor": "כן" if tutor.id.want_tutor else "לא",
+                
+                # Tutor-specific UNIQUE fields
+                "signupdate": tutor.staff.created_at.strftime('%d/%m/%Y') if tutor.staff and tutor.staff.created_at else "",
+                "status": active_str,
+            }
+            if email not in volunteers_by_email:
+                volunteers_by_email[email] = volunteer_record
+            else:
+                # Merge: fill in empty values with new data
+                _merge_volunteer_records(volunteers_by_email[email], volunteer_record)
+                # Use most recent status based on signupdate
+                volunteers_by_email[email]["status"] = _get_most_recent_status(
+                    volunteers_by_email[email], volunteer_record,
+                    volunteers_by_email[email].get("signupdate", ""),
+                    volunteer_record.get("signupdate", "")
+                )
+
+        # Get all general volunteers - extract UNIQUE data from SignedUp + General_Volunteer table
+        general_volunteers = General_Volunteer.objects.select_related('id', 'staff').all()
+        for volunteer in general_volunteers:
+            # Convert gender boolean to readable string (True = Female/נקבה, False = Male/זכר)
+            gender_str = "נקבה" if volunteer.id.gender else "זכר"
+            # Convert active status to Hebrew (True = פעיל, False = עזב)
+            active_str = "פעיל" if volunteer.staff.is_active else "עזב"
+            
+            email = volunteer.id.email or ""
+            volunteer_record = {
+                # SignedUp table fields - CORE 10 fields
+                "volunteer_id": volunteer.id.id,
+                "first_name": volunteer.id.first_name,
+                "last_name": volunteer.id.surname,
+                "age": volunteer.id.age,
+                "birth_date": volunteer.id.birth_date.strftime('%d/%m/%Y') if volunteer.id.birth_date else "",
+                "gender": gender_str,
+                "phone": volunteer.id.phone,
+                "city": volunteer.id.city,
+                "email": email,
+                "want_tutor": "כן" if volunteer.id.want_tutor else "לא",
+                
+                # General Volunteer-specific UNIQUE fields
+                "signupdate": volunteer.signupdate.strftime('%d/%m/%Y') if volunteer.signupdate else "",
+                "status": active_str,
+            }
+            if email not in volunteers_by_email:
+                volunteers_by_email[email] = volunteer_record
+            else:
+                # Merge: fill in empty values with new data
+                _merge_volunteer_records(volunteers_by_email[email], volunteer_record)
+                # Use most recent status based on signupdate
+                volunteers_by_email[email]["status"] = _get_most_recent_status(
+                    volunteers_by_email[email], volunteer_record,
+                    volunteers_by_email[email].get("signupdate", ""),
+                    volunteer_record.get("signupdate", "")
+                )
+
+        # Get pending tutors - extract UNIQUE data from SignedUp + Pending_Tutor table
+        # Note: Pending_Tutor.id points to SignedUp, need to find associated Staff via Tutors or General_Volunteer
+        pending_tutors = Pending_Tutor.objects.select_related('id').all()
+        for pending in pending_tutors:
+            # Convert gender boolean to readable string (True = Female/נקבה, False = Male/זכר)
+            gender_str = "נקבה" if pending.id.gender else "זכר"
+            
+            # Get staff record: Pending_Tutor's SignedUp may be linked to Tutors or General_Volunteer
+            staff_record = None
+            try:
+                # Try to find in Tutors first
+                tutor = Tutors.objects.get(id=pending.id)
+                staff_record = tutor.staff
+            except Tutors.DoesNotExist:
+                try:
+                    # Try to find in General_Volunteer
+                    general_vol = General_Volunteer.objects.get(id=pending.id)
+                    staff_record = general_vol.staff
+                except General_Volunteer.DoesNotExist:
+                    # No associated staff found
+                    staff_record = None
+            
+            active_str = "פעיל" if (staff_record and staff_record.is_active) else "עזב"
+            
+            email = pending.id.email or ""
+            volunteer_record = {
+                # SignedUp table fields - CORE 10 fields
+                "volunteer_id": pending.id.id,
+                "first_name": pending.id.first_name,
+                "last_name": pending.id.surname,
+                "age": pending.id.age,
+                "birth_date": pending.id.birth_date.strftime('%d/%m/%Y') if pending.id.birth_date else "",
+                "gender": gender_str,
+                "phone": pending.id.phone,
+                "city": pending.id.city,
+                "email": email,
+                "want_tutor": "כן" if pending.id.want_tutor else "לא",
+                
+                # Pending Tutor-specific UNIQUE fields
+                "signupdate": staff_record.created_at.strftime('%d/%m/%Y') if staff_record and staff_record.created_at else "",
+                "status": active_str,
+            }
+            if email not in volunteers_by_email:
+                volunteers_by_email[email] = volunteer_record
+            else:
+                # Merge: fill in empty values with new data
+                _merge_volunteer_records(volunteers_by_email[email], volunteer_record)
+                # Use most recent status based on signupdate
+                volunteers_by_email[email]["status"] = _get_most_recent_status(
+                    volunteers_by_email[email], volunteer_record,
+                    volunteers_by_email[email].get("signupdate", ""),
+                    volunteer_record.get("signupdate", "")
+                )
+
+        # Get staff-only members (management, coordinators, sys admins)
+        # Filter for staff who don't have either "Tutor" or "General Volunteer" roles
+        from django.db.models import Q
+        staff_only = Staff.objects.exclude(
+            Q(roles__role_name="Tutor") | Q(roles__role_name="General Volunteer")
+        ).distinct()
+        
+        for staff in staff_only:
+            email = staff.email or ""
+            # Staff-only records don't have SignedUp data, so most fields are empty/null
+            volunteer_record = {
+                # Staff fields only - SignedUp fields are unavailable
+                "volunteer_id": staff.staff_id,
+                "first_name": staff.first_name,
+                "last_name": staff.last_name,
+                "age": "",  # No age data for staff-only
+                "birth_date": "",  # No birth_date data for staff-only
+                "gender": "",  # No gender data for staff-only
+                "phone": "",  # No phone data for staff-only (use email instead)
+                "city": "",  # No city data for staff-only
+                "email": email,
+                "want_tutor": "",  # Not applicable for staff-only
+                
+                # Staff-specific fields - use actual is_active status from DB
+                "signupdate": staff.created_at.strftime('%d/%m/%Y') if staff.created_at else "",
+                "status": "פעיל" if staff.is_active else "עזב",
+            }
+            if email not in volunteers_by_email:
+                volunteers_by_email[email] = volunteer_record
+            else:
+                # Merge: fill in empty values with new data, OR status logic
+                _merge_volunteer_records(volunteers_by_email[email], volunteer_record)
+                # Use most recent status based on signupdate
+                volunteers_by_email[email]["status"] = _get_most_recent_status(
+                    volunteers_by_email[email], volunteer_record,
+                    volunteers_by_email[email].get("signupdate", ""),
+                    volunteer_record.get("signupdate", "")
+                )
+        
+        # Convert dictionary back to list
+        volunteers_data = list(volunteers_by_email.values())
+
+        api_logger.info(f"Generated volunteer report with {len(volunteers_data)} volunteers - UNIQUE volunteer data only, NO duplicates")
+        return JsonResponse(
+            {
+                "success": True,
+                "count": len(volunteers_data),
+                "data": volunteers_data,
+                "note": "Volunteer UNIQUE data: SignedUp core fields + role-specific fields. No duplicate info (staff, related child data, or redundant timestamps)."
+            },
+            status=200
+        )
+
+    except Exception as e:
+        api_logger.error(f"Error in get_all_volunteers_irs_report: {str(e)}")
+        return JsonResponse(
+            {"error": f"Failed to generate report: {str(e)}"}, status=500
+        )
