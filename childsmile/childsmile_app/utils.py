@@ -418,7 +418,7 @@ def fetch_possible_matches():
         AND (
             EXTRACT(YEAR FROM AGE(current_date, child.date_of_birth))::int -
             CASE WHEN (EXTRACT(MONTH FROM current_date), EXTRACT(DAY FROM current_date)) < 
-                      (EXTRACT(MONTH FROM child.date_of_birth), EXTRACT(DAY FROM child.date_of_birth))
+                      (EXTRACT(MONTH FROM child.date_of_birth), EXTRACT(DAY FROM current_date))
                  THEN 1 ELSE 0 END
         ) < 16
     """
@@ -1826,3 +1826,107 @@ def check_and_handle_age_maturity(child):
             'tasks_deleted': 0,
             'error': str(e)
         }
+
+
+# ============================================================================
+# STAFF PROFILE VALIDATION UTILITIES
+# ============================================================================
+
+def validate_staff_israel_id(israel_id):
+    """
+    Validate Israeli ID (תעודת זהות).
+    - Must be 9 digits
+    - First digit cannot be 0
+    - Valid format
+    
+    :param israel_id: String representation of Israeli ID
+    :return: Tuple (is_valid, error_message)
+    """
+    if not israel_id:
+        return True, None  # Optional field
+    
+    israel_id_str = str(israel_id).strip()
+    
+    # Check format: exactly 9 digits
+    if not israel_id_str.isdigit() or len(israel_id_str) != 9:
+        return False, "תעודת זהות חייבת להיות 9 ספרות"
+    
+    # Check first digit isn't 0
+    if israel_id_str[0] == '0':
+        return False, "ספרה ראשונה של תעודת זהות לא יכולה להיות 0"
+    
+    return True, None
+
+
+def validate_staff_phone(phone):
+    """
+    Validate Israeli phone number.
+    - Must be 10 digits (starting with 05 or 02-09)
+    - Or international format with +
+    
+    :param phone: String representation of phone
+    :return: Tuple (is_valid, error_message)
+    """
+    if not phone:
+        return True, None  # Optional field
+    
+    phone_str = str(phone).strip()
+    
+    # Remove spaces and hyphens
+    phone_clean = phone_str.replace(" ", "").replace("-", "").replace(".", "")
+    
+    # Israeli format: 10 digits starting with 0
+    if phone_clean.isdigit():
+        if len(phone_clean) != 10 or not phone_clean.startswith('0'):
+            return False, "טלפון חייב להיות 10 ספרות ולהתחיל ב-0"
+        return True, None
+    
+    # International format
+    if phone_clean.startswith('+'):
+        # Remove + and check remaining
+        remaining = phone_clean[1:]
+        if remaining.isdigit() and len(remaining) >= 10:
+            return True, None
+    
+    return False, "פורמט טלפון לא תקין"
+
+
+def validate_staff_age(age_value, birth_date_value=None):
+    """
+    Validate staff age.
+    - If age is provided, must be >= 18
+    - If birth_date is provided, calculate age and verify >= 18
+    - At least one must be provided for validation
+    
+    :param age_value: Integer age or None
+    :param birth_date_value: Date object or string in dd/mm/yyyy format or None
+    :return: Tuple (is_valid, error_message, calculated_age)
+    """
+    # If both are provided, calculate from birth_date
+    if birth_date_value:
+        # Parse if string
+        if isinstance(birth_date_value, str):
+            birth_date_value = parse_date_string(birth_date_value)
+        
+        if birth_date_value:
+            calculated_age = calculate_age_from_birth_date(birth_date_value)
+            if calculated_age is None:
+                return False, "תאריך לידה לא תקין", None
+            
+            if calculated_age < 18:
+                return False, f"גיל צריך להיות לפחות 18. הגיל המחושב הוא {calculated_age}", calculated_age
+            
+            return True, None, calculated_age
+    
+    # Fall back to direct age value
+    if age_value:
+        try:
+            age_int = int(age_value)
+            if age_int < 18:
+                return False, "גיל צריך להיות לפחות 18", age_int
+            return True, None, age_int
+        except (ValueError, TypeError):
+            return False, "גיל חייב להיות מספר", None
+    
+    # Both empty is OK - optional fields
+    return True, None, None

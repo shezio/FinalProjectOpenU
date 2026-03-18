@@ -46,6 +46,12 @@ const SystemManagement = () => {
     first_name: '',
     last_name: '',
     roles: [],
+    staff_israel_id: '',
+    staff_birth_date: '',
+    staff_age: '',
+    staff_gender: '',
+    staff_phone: '',
+    staff_city: '',
   });
   const [showStaffTotpModal, setShowStaffTotpModal] = useState(false);
   const [staffTotpCode, setStaffTotpCode] = useState('');
@@ -78,9 +84,17 @@ const SystemManagement = () => {
   const [isMailSending, setIsMailSending] = useState(false);
   const [mailRecipientEmail, setMailRecipientEmail] = useState('');
 
+  // Staff info modal state
+  const [isStaffInfoModalOpen, setIsStaffInfoModalOpen] = useState(false);
+  const [staffInfoData, setStaffInfoData] = useState(null);
+
+  // Cities for dropdown
+  const [citiesOptions, setCitiesOptions] = useState([]);
+
   useEffect(() => {
     if (hasPermissionOnSystemManagement) {
       fetchAllStaff();
+      fetchCities();
     }
     else {
       setLoading(false);
@@ -236,6 +250,15 @@ const SystemManagement = () => {
     }
   };
 
+  const fetchCities = async () => {
+    try {
+      const response = await axios.get('/api/tutors/');
+      setCitiesOptions(response.data.cities_options || []);
+    } catch (error) {
+      console.error('Error fetching cities:', error);
+    }
+  };
+
   const openDeleteModal = (user) => {
     console.log('Opening delete modal for user:', user); // Debug log
     setStaffToDelete(user);
@@ -296,6 +319,68 @@ const SystemManagement = () => {
     );
     setFilteredStaff(filtered);
     setTotalCount(filtered.length);
+  };
+
+  const calculateAgeFromBirthDate = (birthDateStr) => {
+    if (!birthDateStr) return '';
+    
+    // Parse dd/mm/yyyy format
+    const parts = birthDateStr.split('/');
+    if (parts.length !== 3) return '';
+    
+    const day = parseInt(parts[0], 10);
+    const month = parseInt(parts[1], 10);
+    const year = parseInt(parts[2], 10);
+    
+    const birthDate = new Date(year, month - 1, day);
+    const today = new Date();
+    
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    
+    return age >= 0 ? age : '';
+  };
+
+  const openStaffInfoModal = async (staff) => {
+    // Fetch profile data from the endpoint
+    try {
+      const response = await axios.get(`/api/get_staff_profile_data/${staff.email}/`);
+      const profileData = response.data.profile_data;
+      
+      // Merge profile data with staff data
+      const enrichedStaff = {
+        ...staff,
+        staff_israel_id: profileData?.staff_israel_id || staff.staff_israel_id,
+        staff_birth_date: profileData?.staff_birth_date || staff.staff_birth_date,
+        staff_age: profileData?.staff_age || staff.staff_age,
+        staff_gender: profileData?.staff_gender !== undefined ? profileData.staff_gender : staff.staff_gender,
+        staff_phone: profileData?.staff_phone || staff.staff_phone,
+        staff_city: profileData?.staff_city || staff.staff_city,
+      };
+      
+      setStaffInfoData(enrichedStaff);
+    } catch (error) {
+      console.debug('No additional profile data found, using existing staff data');
+      setStaffInfoData(staff);
+    }
+    setIsStaffInfoModalOpen(true);
+  };
+
+  const closeStaffInfoModal = () => {
+    setIsStaffInfoModalOpen(false);
+    setStaffInfoData(null);
+  };
+
+  // Check if profile fields should be enabled based on roles
+  const isProfileFieldsEnabled = () => {
+    // Disable if user is ONLY Tutor or ONLY General Volunteer
+    const hasOnlyTutor = staffData.roles.length === 1 && staffData.roles.includes('Tutor');
+    const hasOnlyGeneralVolunteer = staffData.roles.length === 1 && staffData.roles.includes('General Volunteer');
+    return !(hasOnlyTutor || hasOnlyGeneralVolunteer);
   };
 
   const toggleInactiveFilter = () => {
@@ -408,7 +493,16 @@ const SystemManagement = () => {
         first_name: staff.first_name,
         last_name: staff.last_name,
         roles: staff.roles,
+        staff_israel_id: staff.staff_israel_id || '',
+        staff_birth_date: staff.staff_birth_date || '',
+        staff_age: staff.staff_age || '',
+        staff_gender: staff.staff_gender !== null ? (staff.staff_gender ? 'female' : 'male') : '',
+        staff_phone: staff.staff_phone || '',
+        staff_city: staff.staff_city || '',
       });
+      
+      // For non-management staff, fetch their profile data from SignedUp table
+      fetchProfileDataFromSignUp(staff.id, staff.email);
     } else {
       setStaffData({
         username: '',
@@ -416,7 +510,36 @@ const SystemManagement = () => {
         first_name: '',
         last_name: '',
         roles: [],
+        staff_israel_id: '',
+        staff_birth_date: '',
+        staff_age: '',
+        staff_gender: '',
+        staff_phone: '',
+        staff_city: '',
       });
+    }
+  };
+
+  // Fetch profile data from SignedUp or Staff model - get data from either table
+  const fetchProfileDataFromSignUp = async (staffId, email) => {
+    try {
+      const response = await axios.get(`/api/get_staff_profile_data/${email}/`);
+      if (response.data && response.data.profile_data) {
+        const profileData = response.data.profile_data;
+        // Update staffData with profile data from SignedUp or Staff
+        setStaffData(prev => ({
+          ...prev,
+          staff_israel_id: profileData.staff_israel_id || prev.staff_israel_id || '',
+          staff_birth_date: profileData.staff_birth_date || prev.staff_birth_date || '',
+          staff_age: profileData.staff_age || prev.staff_age || '',
+          staff_gender: profileData.staff_gender !== null ? (profileData.staff_gender ? 'female' : 'male') : (prev.staff_gender || ''),
+          staff_phone: profileData.staff_phone || prev.staff_phone || '',
+          staff_city: profileData.staff_city || prev.staff_city || '',
+        }));
+      }
+    } catch (error) {
+      // Silently fail - profile data may not exist
+      console.debug('No profile data found:', error.message);
     }
   };
 
@@ -446,6 +569,12 @@ const SystemManagement = () => {
       first_name: '',
       last_name: '',
       roles: [],
+      staff_israel_id: '',
+      staff_birth_date: '',
+      staff_age: '',
+      staff_gender: '',
+      staff_phone: '',
+      staff_city: '',
     });
     setErrors({}); // Reset errors when closing the modal
   };
@@ -600,14 +729,34 @@ const SystemManagement = () => {
     try {
       setTotpLoading(true);
       
-      // Call the update API endpoint
-      const response = await axios.put(`/api/update_staff_member/${staffData.id}/`, {
+      // Build the update payload with profile fields
+      const updatePayload = {
         username: staffData.username,
         email: staffData.email,
         first_name: staffData.first_name,
         last_name: staffData.last_name,
         roles: staffData.roles,
-      });
+      };
+
+      // Add optional profile fields if they have values
+      if (staffData.staff_israel_id) {
+        updatePayload.staff_israel_id = staffData.staff_israel_id;
+      }
+      if (staffData.staff_birth_date) {
+        updatePayload.staff_birth_date = staffData.staff_birth_date;
+      }
+      if (staffData.staff_gender) {
+        updatePayload.staff_gender = staffData.staff_gender;
+      }
+      if (staffData.staff_phone) {
+        updatePayload.staff_phone = staffData.staff_phone;
+      }
+      if (staffData.staff_city) {
+        updatePayload.staff_city = staffData.staff_city;
+      }
+      
+      // Call the update API endpoint
+      const response = await axios.put(`/api/update_staff_member/${staffData.id}/`, updatePayload);
       
       // If TOTP verification is required (email changed)
       if (response.data.requires_verification) {
@@ -1072,7 +1221,17 @@ const SystemManagement = () => {
                             }}
                           />
                         </td>}
-                        <td>{user.username.replace(/_/g, ' ')}</td>
+                        <td>
+                          <button
+                            onClick={() => openStaffInfoModal(user)}
+                            className="info-button"
+                            title={t('View staff information')}
+                            style={{ cursor: 'pointer', background: 'none', border: 'none', fontSize: '18px', padding: '0 5px', marginRight: '5px' }}
+                          >
+                            ℹ️
+                          </button>
+                          {user.username.replace(/_/g, ' ')}
+                        </td>
                         <td>{user.email}</td>
                         <td>{user.first_name}</td>
                         <td>{user.last_name}</td>
@@ -1369,6 +1528,83 @@ const SystemManagement = () => {
                 {errors.roles && <span className="staff-error-message">{errors.roles}</span>}
               </div>
 
+              {/* Optional Staff Profile Fields - Only show for management staff */}
+              {isProfileFieldsEnabled() && (
+                <>
+                  <div style={{ gridColumn: '1 / -1', marginTop: '20px', paddingTop: '20px', borderTop: '1px solid #ddd' }}>
+                    <p style={{ fontSize: '0.9em', color: '#666', marginBottom: '15px' }}>
+                      {t('For use of management staff only')}
+                    </p>
+                  </div>
+
+                  <div className="staff-form-row">
+                    <label>{t('Israeli ID')}</label>
+                    <input
+                      type="text"
+                      placeholder="123456789"
+                      value={staffData.staff_israel_id || ''}
+                      onChange={(e) => updateStaffData('staff_israel_id', e.target.value)}
+                      maxLength="20"
+                    />
+                  </div>
+
+                  <div className="staff-form-row">
+                    <label>{t('Birth Date')} {staffData.staff_birth_date && `(${t('Age')}: ${calculateAgeFromBirthDate(staffData.staff_birth_date)})`}</label>
+                    <input
+                      type="date"
+                      value={staffData.staff_birth_date ? staffData.staff_birth_date.split('/').reverse().join('-') : ''}
+                      onChange={(e) => {
+                        const dateValue = e.target.value;
+                        if (dateValue) {
+                          const [year, month, day] = dateValue.split('-');
+                          updateStaffData('staff_birth_date', `${day}/${month}/${year}`);
+                        } else {
+                          updateStaffData('staff_birth_date', '');
+                        }
+                      }}
+                      style={{ direction: 'rtl' }}
+                    />
+                  </div>
+
+                  <div className="staff-form-row">
+                    <label>{t('Gender')}</label>
+                    <select
+                      value={staffData.staff_gender || ''}
+                      onChange={(e) => updateStaffData('staff_gender', e.target.value)}
+                    >
+                      <option value="">{t('Select...')}</option>
+                      <option value="male">{t('Male')}</option>
+                      <option value="female">{t('Female')}</option>
+                    </select>
+                  </div>
+
+                  <div className="staff-form-row">
+                    <label>{t('Phone')}</label>
+                    <input
+                      type="text"
+                      placeholder="0501234567"
+                      value={staffData.staff_phone || ''}
+                      onChange={(e) => updateStaffData('staff_phone', e.target.value)}
+                      maxLength="20"
+                    />
+                  </div>
+
+                  <div className="staff-form-row">
+                    <label>{t('City')}</label>
+                    <select
+                      placeholder={t('City name')}
+                      value={staffData.staff_city || ''}
+                      onChange={(e) => updateStaffData('staff_city', e.target.value)}
+                    >
+                      <option value="">{t('Select a city')}</option>
+                      {citiesOptions.map((city, idx) => (
+                        <option key={idx} value={city}>{city}</option>
+                      ))}
+                    </select>
+                  </div>
+                </>
+              )}
+
               <div className="staff-form-actions">
                 <button type="submit">{modalType === 'edit' ? t('Edit Staff') : t('Add Staff Member')}</button>
                 <button type="button" onClick={closeAddStaffModal}>
@@ -1376,6 +1612,82 @@ const SystemManagement = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Staff Info Modal */}
+      {isStaffInfoModalOpen && staffInfoData && (
+        <div className="staff-modal-overlay">
+          <div className="staff-modal-content">
+            <span className="staff-close" onClick={closeStaffInfoModal}>&times;</span>
+            <h2 className="staff-info-modal-title">{t('Staff Information')}</h2>
+            <div className="staff-info-modal-container">
+              <div className="staff-info-section">
+                <div className="staff-info-section-title">{t('Basic Information')}</div>
+                <div className="staff-info-content">
+                  <div className="staff-info-item">
+                    <strong>{t('Username')}:</strong> {staffInfoData.username}
+                  </div>
+                  <div className="staff-info-item">
+                    <strong>{t('Email')}:</strong> {staffInfoData.email}
+                  </div>
+                  <div className="staff-info-item">
+                    <strong>{t('Name')}:</strong> {staffInfoData.first_name} {staffInfoData.last_name}
+                  </div>
+                  <div className="staff-info-item">
+                    <strong>{t('Created At')}:</strong> {staffInfoData.created_at}
+                  </div>
+                </div>
+              </div>
+
+              <div className="staff-info-section">
+                <div className="staff-info-section-title">{t('Demographic Information')}</div>
+                <div className="staff-info-content">
+                  <div className="staff-info-item">
+                    <strong>{t('Israeli ID')}:</strong> {staffInfoData.staff_israel_id || '---'}
+                  </div>
+                  <div className="staff-info-item">
+                    <strong>{t('Birth Date')}:</strong> {staffInfoData.staff_birth_date || '---'}
+                  </div>
+                  <div className="staff-info-item">
+                    <strong>{t('Age')}:</strong> {staffInfoData.staff_age !== null && staffInfoData.staff_age !== undefined ? `${staffInfoData.staff_age} ${t('years')}` : '---'}
+                  </div>
+                  <div className="staff-info-item">
+                    <strong>{t('Gender')}:</strong> {staffInfoData.staff_gender !== null && staffInfoData.staff_gender !== undefined ? (staffInfoData.staff_gender ? t('Female') : t('Male')) : '---'}
+                  </div>
+                  <div className="staff-info-item">
+                    <strong>{t('Phone')}:</strong> {staffInfoData.staff_phone || '---'}
+                  </div>
+                  <div className="staff-info-item">
+                    <strong>{t('City')}:</strong> {staffInfoData.staff_city || '---'}
+                  </div>
+                </div>
+              </div>
+
+              <div className="staff-info-roles-container">
+                <div className="staff-info-section-title">{t('Roles')}:</div>
+                <div>
+                  {staffInfoData.roles && staffInfoData.roles.length > 0 ? (
+                    staffInfoData.roles.map((role, idx) => (
+                      <span key={idx} className="staff-info-role-item">
+                        {t(role)}
+                      </span>
+                    ))
+                  ) : (
+                    <div className="staff-info-item">{t('No roles assigned')}</div>
+                  )}
+                </div>
+              </div>
+            </div>
+            <div className="staff-info-modal-close-container">
+              <button 
+                onClick={closeStaffInfoModal}
+                className="staff-info-modal-close-button"
+              >
+                {t('Close')}
+              </button>
+            </div>
           </div>
         </div>
       )}

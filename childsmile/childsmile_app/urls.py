@@ -27,6 +27,7 @@ from .views_staff import (
     staff_creation_send_totp,
     staff_creation_verify_totp,
     bulk_clear_suspension,
+    get_staff_profile_data,
 )
 from .mail_views import (
     send_mail_via_ui,
@@ -285,6 +286,11 @@ urlpatterns = [
         "api/bulk_clear_suspension/",
         bulk_clear_suspension,
         name="bulk_clear_suspension",
+    ),
+    path(
+        "api/get_staff_profile_data/<str:email>/",
+        get_staff_profile_data,
+        name="get_staff_profile_data",
     ),
     path(
         "api/delete_staff_member/<int:staff_id>/",

@@ -819,6 +819,150 @@ def update_staff_member(request, staff_id):
         staff_member.email = data.get("email", staff_member.email)
         staff_member.first_name = data.get("first_name", staff_member.first_name)
         staff_member.last_name = data.get("last_name", staff_member.last_name)
+        
+        # Handle optional staff profile fields (for coordinators/managers reporting)
+        if "staff_israel_id" in data:
+            israel_id = data.get("staff_israel_id", "").strip()
+            if israel_id:
+                is_valid, error_msg = validate_staff_israel_id(israel_id)
+                if not is_valid:
+                    log_api_action(
+                        request=request,
+                        action='UPDATE_STAFF_FAILED',
+                        success=False,
+                        error_message=error_msg,
+                        status_code=400,
+                        entity_type='Staff',
+                        entity_ids=[staff_id]
+                    )
+                    return JsonResponse({"error": error_msg}, status=400)
+                
+                # Check uniqueness (case-insensitive, excluding current staff)
+                if Staff.objects.filter(staff_israel_id=israel_id).exclude(staff_id=staff_id).exists():
+                    log_api_action(
+                        request=request,
+                        action='UPDATE_STAFF_FAILED',
+                        success=False,
+                        error_message="תעודת זהות זו כבר קיימת במערכת",
+                        status_code=400,
+                        entity_type='Staff',
+                        entity_ids=[staff_id]
+                    )
+                    return JsonResponse({"error": "תעודת זהות זו כבר קיימת במערכת"}, status=400)
+            
+            staff_member.staff_israel_id = israel_id if israel_id else None
+        
+        if "staff_age" in data:
+            age_val = data.get("staff_age")
+            birth_date_val = data.get("staff_birth_date") or staff_member.staff_birth_date
+            
+            is_valid, error_msg, calculated_age = validate_staff_age(age_val, birth_date_val)
+            if not is_valid:
+                log_api_action(
+                    request=request,
+                    action='UPDATE_STAFF_FAILED',
+                    success=False,
+                    error_message=error_msg,
+                    status_code=400,
+                    entity_type='Staff',
+                    entity_ids=[staff_id]
+                )
+                return JsonResponse({"error": error_msg}, status=400)
+            
+            # Age is auto-calculated from birth_date, don't set manually
+            # if age_val:
+            #     staff_member.staff_age = int(age_val)
+            # elif birth_date_val and calculated_age:
+            #     staff_member.staff_age = calculated_age
+        
+        if "staff_birth_date" in data:
+            birth_date_str = data.get("staff_birth_date", "").strip()
+            if birth_date_str:
+                birth_date = parse_date_string(birth_date_str)
+                if not birth_date:
+                    log_api_action(
+                        request=request,
+                        action='UPDATE_STAFF_FAILED',
+                        success=False,
+                        error_message="תאריך לידה לא תקין. אנא השתמש בפורמט dd/mm/yyyy",
+                        status_code=400,
+                        entity_type='Staff',
+                        entity_ids=[staff_id]
+                    )
+                    return JsonResponse(
+                        {"error": "תאריך לידה לא תקין. אנא השתמש בפורמט dd/mm/yyyy"}, 
+                        status=400
+                    )
+                
+                # Validate age if birth_date is provided
+                is_valid, error_msg, calculated_age = validate_staff_age(None, birth_date)
+                if not is_valid:
+                    log_api_action(
+                        request=request,
+                        action='UPDATE_STAFF_FAILED',
+                        success=False,
+                        error_message=error_msg,
+                        status_code=400,
+                        entity_type='Staff',
+                        entity_ids=[staff_id]
+                    )
+                    return JsonResponse({"error": error_msg}, status=400)
+                
+                staff_member.staff_birth_date = birth_date
+                # Auto-calculate and save age from birth_date
+                if calculated_age:
+                    staff_member.staff_age = calculated_age
+            else:
+                staff_member.staff_birth_date = None
+        
+        if "staff_gender" in data:
+            gender_val = data.get("staff_gender")
+            if gender_val is not None:
+                # Convert to boolean: "male"/"זכר" → False, "female"/"נקבה" → True
+                if isinstance(gender_val, bool):
+                    staff_member.staff_gender = gender_val
+                elif isinstance(gender_val, str):
+                    gender_lower = gender_val.lower()
+                    if gender_lower in ['female', 'נקבה', '1', 'true']:
+                        staff_member.staff_gender = True
+                    elif gender_lower in ['male', 'זכר', '0', 'false']:
+                        staff_member.staff_gender = False
+                    else:
+                        log_api_action(
+                            request=request,
+                            action='UPDATE_STAFF_FAILED',
+                            success=False,
+                            error_message="מין לא תקין. יש להשתמש ב: male/זכר או female/נקבה",
+                            status_code=400,
+                            entity_type='Staff',
+                            entity_ids=[staff_id]
+                        )
+                        return JsonResponse(
+                            {"error": "מין לא תקין. יש להשתמש ב: male/זכר או female/נקבה"}, 
+                            status=400
+                        )
+        
+        if "staff_phone" in data:
+            phone = data.get("staff_phone", "").strip()
+            if phone:
+                is_valid, error_msg = validate_staff_phone(phone)
+                if not is_valid:
+                    log_api_action(
+                        request=request,
+                        action='UPDATE_STAFF_FAILED',
+                        success=False,
+                        error_message=error_msg,
+                        status_code=400,
+                        entity_type='Staff',
+                        entity_ids=[staff_id]
+                    )
+                    return JsonResponse({"error": error_msg}, status=400)
+            
+            staff_member.staff_phone = phone if phone else None
+        
+        if "staff_city" in data:
+            city = data.get("staff_city", "").strip()
+            staff_member.staff_city = city if city else None
 
         # Save the updated staff record
         try:
@@ -1106,12 +1250,130 @@ def create_staff_member(request):
                 {"error": f"Email '{data['email']}' already exists."}, status=400
             )
 
+        # Validate optional staff profile fields BEFORE creating
+        staff_israel_id = data.get("staff_israel_id", "").strip() if data.get("staff_israel_id") else None
+        if staff_israel_id:
+            is_valid, error_msg = validate_staff_israel_id(staff_israel_id)
+            if not is_valid:
+                log_api_action(
+                    request=request,
+                    action='CREATE_STAFF_FAILED',
+                    success=False,
+                    error_message=error_msg,
+                    status_code=400
+                )
+                return JsonResponse({"error": error_msg}, status=400)
+            
+            if Staff.objects.filter(staff_israel_id=staff_israel_id).exists():
+                log_api_action(
+                    request=request,
+                    action='CREATE_STAFF_FAILED',
+                    success=False,
+                    error_message="תעודת זהות זו כבר קיימת במערכת",
+                    status_code=400
+                )
+                return JsonResponse({"error": "תעודת זהות זו כבר קיימת במערכת"}, status=400)
+        
+        # Validate age and birth date
+        staff_age = data.get("staff_age")
+        staff_birth_date_str = data.get("staff_birth_date")
+        staff_birth_date = None
+        calculated_age = None
+        
+        if staff_birth_date_str:
+            staff_birth_date = parse_date_string(staff_birth_date_str)
+            if not staff_birth_date:
+                log_api_action(
+                    request=request,
+                    action='CREATE_STAFF_FAILED',
+                    success=False,
+                    error_message="תאריך לידה לא תקין. אנא השתמש בפורמט dd/mm/yyyy",
+                    status_code=400
+                )
+                return JsonResponse(
+                    {"error": "תאריך לידה לא תקין. אנא השתמש בפורמט dd/mm/yyyy"}, 
+                    status=400
+                )
+            
+            # Validate age from birth_date
+            is_valid, error_msg, calculated_age = validate_staff_age(None, staff_birth_date)
+            if not is_valid:
+                log_api_action(
+                    request=request,
+                    action='CREATE_STAFF_FAILED',
+                    success=False,
+                    error_message=error_msg,
+                    status_code=400
+                )
+                return JsonResponse({"error": error_msg}, status=400)
+        else:
+            # If no birth_date but age is provided, just validate it
+            if staff_age:
+                is_valid, error_msg, validated_age = validate_staff_age(staff_age, None)
+                if not is_valid:
+                    log_api_action(
+                        request=request,
+                        action='CREATE_STAFF_FAILED',
+                        success=False,
+                        error_message=error_msg,
+                        status_code=400
+                    )
+                    return JsonResponse({"error": error_msg}, status=400)
+        
+        # Validate phone
+        staff_phone = data.get("staff_phone", "").strip() if data.get("staff_phone") else None
+        if staff_phone:
+            is_valid, error_msg = validate_staff_phone(staff_phone)
+            if not is_valid:
+                log_api_action(
+                    request=request,
+                    action='CREATE_STAFF_FAILED',
+                    success=False,
+                    error_message=error_msg,
+                    status_code=400
+                )
+                return JsonResponse({"error": error_msg}, status=400)
+        
+        # Validate city (optional, just trim whitespace)
+        staff_city = data.get("staff_city", "").strip() if data.get("staff_city") else None
+        
+        # Validate gender
+        staff_gender = None
+        if "staff_gender" in data and data.get("staff_gender") is not None:
+            gender_val = data.get("staff_gender")
+            if isinstance(gender_val, bool):
+                staff_gender = gender_val
+            elif isinstance(gender_val, str):
+                gender_lower = gender_val.lower()
+                if gender_lower in ['female', 'נקבה', '1', 'true']:
+                    staff_gender = True
+                elif gender_lower in ['male', 'זכר', '0', 'false']:
+                    staff_gender = False
+                else:
+                    log_api_action(
+                        request=request,
+                        action='CREATE_STAFF_FAILED',
+                        success=False,
+                        error_message="מין לא תקין. יש להשתמש ב: male/זכר או female/נקבה",
+                        status_code=400
+                    )
+                    return JsonResponse(
+                        {"error": "מין לא תקין. יש להשתמש ב: male/זכר או female/נקבה"}, 
+                        status=400
+                    )
+
         staff_member = Staff.objects.create(
             username=data["username"],
             email=data["email"],
             first_name=data["first_name"],
             last_name=data["last_name"],
             created_at=datetime.datetime.now(),
+            staff_israel_id=staff_israel_id,
+            staff_age=calculated_age,  # Auto-calculated from birth_date
+            staff_birth_date=staff_birth_date,
+            staff_gender=staff_gender,
+            staff_phone=staff_phone,
+            staff_city=staff_city,
         )
 
         roles = data["roles"]
@@ -1714,3 +1976,86 @@ def bulk_clear_suspension(request):
             entity_type='Staff'
         )
         return JsonResponse({"error": str(e)}, status=500)
+
+
+@conditional_csrf
+@api_view(["GET"])
+def get_staff_profile_data(request, email):
+    """
+    Get profile data for a staff member.
+    For management staff: use Staff model fields
+    For non-management staff (tutors, volunteers): use SignedUp model fields
+    """
+    api_logger.info(f"get_staff_profile_data called for email: {email}")
+    
+    try:
+        # First get the staff member to check their roles
+        staff = Staff.objects.filter(email__iexact=email).first()
+        
+        if not staff:
+            api_logger.info(f"No staff member found for {email}")
+            return JsonResponse({
+                "message": "Staff member not found",
+                "profile_data": None,
+                "source": None
+            }, status=200)
+        
+        # Check if user is management staff
+        # Management roles: any role except Tutor and General Volunteer
+        roles = [role.role_name for role in staff.roles.all()]
+        is_management = not (len(roles) == 1 and roles[0] in ["Tutor", "General Volunteer"])
+        
+        if is_management:
+            # For management staff, use Staff model
+            birth_date = staff.staff_birth_date
+            profile_data = {
+                "staff_israel_id": staff.staff_israel_id,
+                "staff_birth_date": birth_date.strftime("%d/%m/%Y") if birth_date else None,
+                "staff_age": staff.staff_age,
+                "staff_gender": staff.staff_gender,
+                "staff_phone": staff.staff_phone,
+                "staff_city": staff.staff_city,
+            }
+            api_logger.info(f"Management staff: fetched profile data from Staff model for {email}")
+            
+            return JsonResponse({
+                "message": "Profile data retrieved successfully",
+                "profile_data": profile_data,
+                "source": "Staff"
+            }, status=200)
+        else:
+            # For non-management staff, use SignedUp model - id field IS the Israeli ID
+            signup = SignedUp.objects.filter(email__iexact=email).first()
+            
+            if signup:
+                birth_date = getattr(signup, 'birth_date', None)
+                profile_data = {
+                    "staff_israel_id": signup.id,  # The 'id' field in SignedUp IS the Israeli ID
+                    "staff_birth_date": birth_date.strftime("%d/%m/%Y") if birth_date else None,
+                    "staff_age": getattr(signup, 'age', None),
+                    "staff_gender": getattr(signup, 'gender', None),
+                    "staff_phone": getattr(signup, 'phone', None),
+                    "staff_city": getattr(signup, 'city', None),
+                }
+                api_logger.info(f"Non-management staff: fetched profile data from SignedUp model for {email}")
+                
+                return JsonResponse({
+                    "message": "Profile data retrieved successfully",
+                    "profile_data": profile_data,
+                    "source": "SignedUp"
+                }, status=200)
+            else:
+                api_logger.info(f"No SignedUp record found for non-management staff {email}")
+                return JsonResponse({
+                    "message": "No profile data found in SignedUp",
+                    "profile_data": None,
+                    "source": None
+                }, status=200)
+        
+    except Exception as e:
+        api_logger.error(f"Error in get_staff_profile_data: {str(e)}")
+        api_logger.error(f"Full traceback: {traceback.format_exc()}")
+        return JsonResponse({
+            "error": str(e),
+            "profile_data": None
+        }, status=500)
