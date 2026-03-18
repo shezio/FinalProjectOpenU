@@ -62,6 +62,7 @@ from .report_views import (
     families_tutorships_stats,
     pending_tutors_stats,
     roles_spread_stats,
+    get_all_volunteers_irs_report,
 )
 from .family_views import (
     get_complete_family_details,
@@ -334,6 +335,11 @@ urlpatterns = [
         "api/roles_spread_stats/",
         roles_spread_stats,
         name="roles_spread_stats",
+    ),
+    path(
+        "api/reports/all-volunteers-irs-report/",
+        get_all_volunteers_irs_report,
+        name="all_volunteers_irs_report",
     ),
     path(
         "api/create_tutor_feedback/",

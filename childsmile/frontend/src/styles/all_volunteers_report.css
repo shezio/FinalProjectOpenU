@@ -1,0 +1,94 @@
+/* ===== ALL VOLUNTEERS REPORT - CUSTOM STYLING ===== */
+
+.all-volunteers-report-main-content {
+    direction: rtl;
+    overflow: hidden;
+}
+
+.all-volunteers-report-main-content .page-content {
+    padding: 20px;
+    overflow: hidden;
+}
+
+/* ===== FILTER/CONTROLS STYLING ===== */
+.all-volunteers-report-main-content .filter-create-container {
+    font-size: 24px;
+}
+
+.all-volunteers-report-main-content .filter-create-container .actions {
+    font-size: 24px;
+}
+
+.all-volunteers-report-main-content .search-input,
+.all-volunteers-report-main-content .search-bar,
+.all-volunteers-report-main-content .filter-select {
+    font-size: 24px;
+    padding: 12px;
+}
+
+.all-volunteers-report-main-content .search-input::placeholder,
+.all-volunteers-report-main-content .search-bar::placeholder {
+    font-size: 24px;
+}
+
+.all-volunteers-report-main-content .export-button,
+.all-volunteers-report-main-content .refresh-button {
+    font-size: 24px;
+    padding: 12px 18px;
+}
+
+/* ===== SEARCH BAR STYLING (like families waiting report) ===== */
+.all-volunteers-report-main-content .actions .search-bar,
+.all-volunteers-report-main-content .actions .search-bar:focus,
+.all-volunteers-report-main-content .actions .search-bar:active {
+    margin-top: 20px;
+    width: 400px;
+}
+
+/* ===== GRID CONTAINER WITH SPECIFIC MARGINS ===== */
+.all-volunteers-report-main-content .page-content .grid-container {
+    margin-top: 150px;
+    margin-right: 180px;
+    overflow: hidden;
+}
+
+/* ===== DATA GRID TABLE ===== */
+.all-volunteers-report-main-content .data-grid {
+    margin-top: 50px;
+    margin-right: 50px;
+    overflow-x: hidden;
+    overflow-y: auto;
+}
+
+/* ===== TABLE COLUMN WIDTHS (8 columns) ===== */
+/* check box column is 50px, so remaining 7 columns should be 1750px total */
+.all-volunteers-report-main-content .data-grid th:nth-child(1),
+.all-volunteers-report-main-content .data-grid td:nth-child(1),
+.all-volunteers-report-main-content .data-grid th:nth-child(4),
+.all-volunteers-report-main-content .data-grid td:nth-child(4),
+.all-volunteers-report-main-content .data-grid th:nth-child(5),
+.all-volunteers-report-main-content .data-grid td:nth-child(5),
+.all-volunteers-report-main-content .data-grid th:nth-child(9),
+.all-volunteers-report-main-content .data-grid td:nth-child(9) {
+    width: 50px;
+}
+
+.all-volunteers-report-main-content .data-grid th:nth-child(2),
+.all-volunteers-report-main-content .data-grid td:nth-child(2),
+.all-volunteers-report-main-content .data-grid th:nth-child(3),
+.all-volunteers-report-main-content .data-grid td:nth-child(3) {
+    width: 150px;
+}
+
+
+.all-volunteers-report-main-content .data-grid th:nth-child(6),
+.all-volunteers-report-main-content .data-grid td:nth-child(6),
+.all-volunteers-report-main-content .data-grid th:nth-child(8),
+.all-volunteers-report-main-content .data-grid td:nth-child(8) {
+    width: 200px;
+}
+
+.all-volunteers-report-main-content .data-grid th:nth-child(7),
+.all-volunteers-report-main-content .data-grid td:nth-child(7) {
+    width: 100px !important;
+}

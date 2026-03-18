@@ -1627,4 +1627,58 @@ export const exportAuditToPDF = async (auditLogs, t) => {
   }
 };
 
+// ===== ALL VOLUNTEERS IRS REPORT EXPORT =====
+export const exportAllVolunteersIRSToExcel = async (volunteers, t) => {
+  const reportName = 'all_volunteers_irs_report';
+  const format = 'EXCEL';
+  
+  try {
+    if (!volunteers || volunteers.length === 0) {
+      const errorMsg = 'אנא בחר לפחות רשומה אחת ליצירת דוח';
+      await auditExportFailure(format, reportName, errorMsg, 'VALIDATION');
+      showErrorToast(t, '', { message: errorMsg });
+      return;
+    }
+
+    // Get headers from the first volunteer object (already has Hebrew headers as keys)
+    const headers = Object.keys(volunteers[0]);
+    console.log('Export headers:', headers); // DEBUG: Check if all 16 headers are present
+    console.log('First volunteer data:', volunteers[0]); // DEBUG: Check first volunteer
+    console.log('Total volunteers to export:', volunteers.length); // DEBUG: Check count
+    
+    const rows = volunteers.map(volunteer => 
+      headers.map(header => volunteer[header] || '')
+    );
+
+    const worksheetData = [headers, ...rows];
+    const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
+
+    // Adjust column widths to fit content
+    const columnWidths = worksheetData[0].map((_, colIndex) => ({
+      wch: Math.max(
+        ...worksheetData.map(row => (row[colIndex] ? row[colIndex].toString().length : 0))
+      ) + 2,
+    }));
+    worksheet['!cols'] = columnWidths;
+
+    // Set worksheet direction to RTL
+    worksheet['!dir'] = 'rtl';
+
+    const workbook = XLSX.utils.book_new();
+    const sheetName = 'דוח מתנדבים כללי'; // Hebrew sheet name
+    XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
+    const fileName = 'דוח מתנדבים כללי';
+    XLSX.writeFile(workbook, `${fileName}.xlsx`);
+    toast.success(t('Report generated successfully'));
+
+    // **ADD AUDIT SUCCESS**
+    await auditExportSuccess(format, volunteers.length, reportName, ['volunteer_data', 'contact_info', 'tutorship_data']);
+    
+  } catch (error) {
+    console.error('Export failed:', error);
+    await auditExportFailure(format, reportName, error.message, 'TECHNICAL');
+    showErrorToast(t, '', { message: 'Export failed' });
+  }
+};
+
 export { auditExportFailure, auditExportSuccess};
