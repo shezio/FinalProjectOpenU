@@ -524,23 +524,8 @@ def get_complete_family_details(request):
             {"error": "You do not have permission to view this report."}, status=401
         )
     try:
-        # Get pagination parameters
-        page = int(request.GET.get('page', 1))
-        page_size = int(request.GET.get('page_size', 50))  # Default 50 per page (smaller due to complex data)
-        
-        # Limit page_size to prevent abuse
-        if page_size > 500:
-            page_size = 500
-        
-        # Calculate offset
-        offset = (page - 1) * page_size
-        
-        # Fetch total count
-        families_queryset = Children.objects.all()
-        total_count = families_queryset.count()
-        
-        # Fetch paginated results
-        families = families_queryset[offset:offset + page_size]
+        # Fetch all families
+        families = Children.objects.all()
         
         # MULTI-TUTOR SUPPORT: Prefetch all tutorships for efficiency
         # Only 'active' and 'pending_first_approval' exist (no second approval state)
@@ -639,13 +624,7 @@ def get_complete_family_details(request):
                 "families": families_data,
                 "marital_statuses": marital_statuses_data,
                 "tutoring_statuses": tutoring_statuses_data,
-                "statuses": statuses_data,
-                "pagination": {
-                    "page": page,
-                    "page_size": page_size,
-                    "total_count": total_count,
-                    "total_pages": (total_count + page_size - 1) // page_size
-                }
+                "statuses": statuses_data
             },
             status=200,
         )
