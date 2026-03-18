@@ -8,6 +8,11 @@ on:
       - '!childsmile/frontend/**'
       - '!childsmile/postgres remote'
       - '.github/workflows/azure-deploy.yml'
+      - '!childsmile/AGGRESSIVE_PT_RESULTS.html'
+      - '!childsmile/pt_tests.py'
+      - '!childsmile/aggressive_pt_tests.py'
+      - '!childsmile/pt_tests_direct.py'
+      - '!childsmile/pt_tests_django.py'
   workflow_dispatch:
 
 jobs:
