@@ -91,6 +91,14 @@ class Staff(models.Model):
     is_active = models.BooleanField(default=True)
     previous_roles = models.JSONField(default=None, null=True, blank=True)  # {"role_ids": [1, 3, 5]}
     deactivation_reason = models.CharField(max_length=200, null=True, blank=True)
+    
+    # Staff profile fields (for coordinators/managers reporting) - optional
+    staff_israel_id = models.CharField(max_length=20, unique=True, null=True, blank=True)
+    staff_age = models.IntegerField(null=True, blank=True)
+    staff_birth_date = models.DateField(null=True, blank=True)
+    staff_gender = models.BooleanField(null=True, blank=True)  # False=Male, True=Female
+    staff_phone = models.CharField(max_length=20, null=True, blank=True)
+    staff_city = models.CharField(max_length=255, null=True, blank=True)
 
     def __str__(self):
         return self.username

@@ -213,9 +213,25 @@ def get_children(request):
 def get_tutors(request):
     api_logger.info("get_tutors called")
     """
-    Retrieve all tutors along with their tutorship status.
+    Retrieve all tutors along with their tutorship status with pagination.
     """
-    tutors = Tutors.objects.select_related("staff", "id").filter(staff__is_active=True)
+    # Get pagination parameters
+    page = int(request.GET.get('page', 1))
+    page_size = int(request.GET.get('page_size', 100))  # Default 100 per page
+    
+    # Limit page_size to prevent abuse
+    if page_size > 1000:
+        page_size = 1000
+    
+    # Calculate offset
+    offset = (page - 1) * page_size
+    
+    # Fetch total count
+    tutors_queryset = Tutors.objects.select_related("staff", "id").filter(staff__is_active=True)
+    total_count = tutors_queryset.count()
+    
+    # Fetch paginated results
+    tutors = tutors_queryset[offset:offset + page_size]
     
     # Get all pending tutor IDs for eligibility check
     pending_tutor_ids = set(Pending_Tutor.objects.values_list('id_id', flat=True))
@@ -260,12 +276,18 @@ def get_tutors(request):
     
     user_id = request.session.get("user_id")
     api_logger.info(f"get_tutors completed successfully for user_id: {user_id}")
-    api_logger.debug(f"get_tutors response: {tutors_data}")
+    api_logger.debug(f"get_tutors response: {len(tutors_data)} tutors returned")
     return JsonResponse({
         "tutors": tutors_data,
         "tutorship_status_options": status_options,
         "marital_status_options": marital_status_options,
         "cities_options": cities_options,
+        "pagination": {
+            "page": page,
+            "page_size": page_size,
+            "total_count": total_count,
+            "total_pages": (total_count + page_size - 1) // page_size
+        }
     })
 
 @conditional_csrf
@@ -301,7 +323,7 @@ def get_pending_tutors(request):
 @api_view(["GET"])
 def get_signedup(request):
     """
-    Retrieve all signed-up users.
+    Retrieve all signed-up users with pagination to prevent memory overload.
     """
     user_id = request.session.get("user_id")
     if not user_id:
@@ -316,7 +338,23 @@ def get_signedup(request):
         )
 
     try:
-        signedup_users = SignedUp.objects.all()
+        # Get pagination parameters
+        page = int(request.GET.get('page', 1))
+        page_size = int(request.GET.get('page_size', 100))  # Default 100 per page
+        
+        # Limit page_size to prevent abuse
+        if page_size > 1000:
+            page_size = 1000
+        
+        # Calculate offset
+        offset = (page - 1) * page_size
+        
+        # Fetch total count
+        total_count = SignedUp.objects.count()
+        
+        # Fetch paginated results
+        signedup_users = SignedUp.objects.all()[offset:offset + page_size]
+        
         signedup_data = [
             {
                 "id": user.id,
@@ -333,7 +371,16 @@ def get_signedup(request):
             }
             for user in signedup_users
         ]
-        return JsonResponse({"signedup_users": signedup_data}, status=200)
+        
+        return JsonResponse({
+            "signedup_users": signedup_data,
+            "pagination": {
+                "page": page,
+                "page_size": page_size,
+                "total_count": total_count,
+                "total_pages": (total_count + page_size - 1) // page_size
+            }
+        }, status=200)
     except Exception as e:
         api_logger.error(f"Error fetching signed-up users: {str(e)}")
         return JsonResponse({"error": str(e)}, status=500)
