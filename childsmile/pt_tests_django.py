@@ -89,11 +89,6 @@ class RegistrationSecurityTests(TestCase):
     
     def setUp(self):
         self.client = Client()
-        # Create roles
-        self.coordinator_role = Role.objects.get_or_create(
-            name='Coordinator',
-            defaults={'is_coordinator': True}
-        )[0]
     
     def test_unapproved_user_login_block(self):
         """Verify unapproved users cannot login"""
@@ -103,7 +98,6 @@ class RegistrationSecurityTests(TestCase):
             first_name='Test',
             last_name='User',
             phone='0541234567',
-            role=self.coordinator_role,
             registration_approved=False,  # Not approved
             is_active=True
         )
@@ -128,7 +122,6 @@ class RegistrationSecurityTests(TestCase):
             first_name='Test',
             last_name='User',
             phone='0541234567',
-            role=self.coordinator_role,
             registration_approved=True,
             is_active=False  # Inactive
         )
@@ -190,10 +183,6 @@ class PermissionTests(TestCase):
     
     def setUp(self):
         self.client = Client()
-        self.coordinator_role = Role.objects.get_or_create(
-            name='Coordinator',
-            defaults={'is_coordinator': True}
-        )[0]
         
         # Create an approved, active user
         self.user = Staff.objects.create(
@@ -201,7 +190,6 @@ class PermissionTests(TestCase):
             first_name='Test',
             last_name='User',
             phone='0541234567',
-            role=self.coordinator_role,
             registration_approved=True,
             is_active=True
         )
