@@ -311,12 +311,24 @@ const SystemManagement = () => {
       return;
     }
 
-    const filtered = baseList.filter((user) =>
-      [user.username, user.email, user.first_name, user.last_name]
-        .some((field) => field.toLowerCase().includes(query)) ||
-      // Also search in roles (translate to Hebrew for comparison)
-      user.roles.some((role) => t(role).toLowerCase().includes(query))
-    );
+    const filtered = baseList.filter((user) => {
+      // Check standard fields (email, first_name, last_name)
+      const standardFieldsMatch = [user.email, user.first_name, user.last_name]
+        .some((field) => field.toLowerCase().includes(query));
+      
+      // Check username with both underscore and space variations
+      const usernameWithUnderscore = user.username.toLowerCase().includes(query);
+      const usernameWithSpaces = user.username.toLowerCase().replace(/_/g, ' ').includes(query);
+      
+      // Check full name (first name + last name combined)
+      const fullName = `${user.first_name} ${user.last_name}`.toLowerCase();
+      const fullNameMatch = fullName.includes(query);
+      
+      // Check roles
+      const rolesMatch = user.roles.some((role) => t(role).toLowerCase().includes(query));
+      
+      return standardFieldsMatch || usernameWithUnderscore || usernameWithSpaces || fullNameMatch || rolesMatch;
+    });
     setFilteredStaff(filtered);
     setTotalCount(filtered.length);
   };
