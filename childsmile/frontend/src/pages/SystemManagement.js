@@ -1608,7 +1608,10 @@ const SystemManagement = () => {
                       value={staffData.staff_city || ''}
                       onChange={(e) => updateStaffData('staff_city', e.target.value)}
                     >
-                      <option value="">{t('Select a city')}</option>
+                      {!staffData.staff_city && <option value="">{t('Select a city')}</option>}
+                      {staffData.staff_city && !citiesOptions.includes(staffData.staff_city) && (
+                        <option key="current" value={staffData.staff_city}>{staffData.staff_city}</option>
+                      )}
                       {citiesOptions.map((city, idx) => (
                         <option key={idx} value={city}>{city}</option>
                       ))}
