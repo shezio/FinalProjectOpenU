@@ -592,6 +592,7 @@ const resources = {
       'Error updating family': 'שגיאה בעדכון משפחה',
       'Error deleting family': 'שגיאה במחיקת משפחה',
       'Error fetching family details': 'שגיאה בטעינת פרטי משפחה',
+      'This child ID already exists in the system. Please use a different ID.': 'תעודת זהות זו קיימת כבר במערכת. אנא בחר תעודת זהות אחרת.',
       'Are you sure you want to delete this family?': 'האם אתה בטוח שברצונך למחוק משפחה זו?',
       'Deleting a family will remove all associated data': 'מחיקת משפחה תסיר את כל הנתונים הקשורים אליה',
       'This action cannot be undone': 'פעולה זו אינה ניתנת לביטול!',

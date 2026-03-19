@@ -384,7 +384,14 @@ const Families = () => {
       fetchFamilies(); // Refresh the families list
     } catch (error) {
       console.error('Error adding family:', error);
-      showErrorToast(t, 'Error adding family', error); // Use the toast utility for error messages);
+      
+      // Check for duplicate ID constraint violation
+      const errorMessage = error.response?.data?.error || error.message || '';
+      if (errorMessage.includes('duplicate key') && errorMessage.includes('child_id')) {
+        showErrorToast(t, '', { message: t('This child ID already exists in the system. Please use a different ID.') });
+      } else {
+        showErrorToast(t, 'Error adding family', error); // Use the toast utility for error messages
+      }
     }
   };
 
