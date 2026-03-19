@@ -67,7 +67,7 @@ def update_staff_member(request, staff_id):
         
         # Store original values for audit
         original_username = staff_member.username
-        original_email = staff_member.email
+        original_email = staff_member.email.lower()  # Lowercase for case-insensitive comparison
         original_first_name = staff_member.first_name
         original_last_name = staff_member.last_name
         original_roles = list(staff_member.roles.values_list("role_name", flat=True))

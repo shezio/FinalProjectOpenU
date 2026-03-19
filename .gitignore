@@ -181,3 +181,4 @@ client_secret_*.json
 */proddbsettings.py
 ילדים מוכן לעלייה לפרוד.xlsx
 volunteer_registration_insert_yuval_wolloch.sql
+cleanup_roles.sql
