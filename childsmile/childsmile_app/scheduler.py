@@ -124,14 +124,22 @@ def _run_monthly_review_check():
 def _run_cleanup_old_tasks():
     """
     Execute the cleanup of old completed tasks.
-    This function is called by the scheduler weekly.
+    This function is called by the scheduler weekly on Friday at 11 PM.
+    
+    SAFETY: Only deletes tasks that:
+    - Status = 'הושלמה' (Completed)
+    - Updated more than 7 days ago
+    - Have NO linked InitialFamilyData (prevents CASCADE deletes)
     """
     try:
         from django.core.management import call_command
         
-        api_logger.info('🔄 Cleanup old tasks triggered by scheduler')
+        api_logger.info('🔄 Cleanup old tasks triggered by scheduler (Friday 11 PM)')
+        
+        # Run the cleanup command
         call_command('cleanup_old_tasks', '--days=7')
+        
         api_logger.info('✅ Successfully cleaned up old completed tasks')
         
     except Exception as e:
-        api_logger.error(f'❌ Error in scheduled cleanup old tasks: {str(e)}')
+        api_logger.error(f'❌ CRITICAL ERROR in scheduled cleanup old tasks: {str(e)}')
