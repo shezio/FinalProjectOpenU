@@ -64,8 +64,18 @@ def start_scheduler():
                 misfire_grace_time=300  # 5-minute grace period for missed executions
             )
             
+            # Add job: Clean up old completed tasks every Friday at 11 PM (Israel timezone)
+            _scheduler.add_job(
+                func=_run_cleanup_old_tasks,
+                trigger=CronTrigger(day_of_week=4, hour=23, minute=0, timezone=israel_tz),
+                id='cleanup_old_tasks',
+                name='Cleanup Old Completed Tasks',
+                replace_existing=True,
+                misfire_grace_time=300  # 5-minute grace period for missed executions
+            )
+            
             _scheduler.start()
-            api_logger.info(f'✅ Monthly review task scheduler started | Scheduled time: {scheduled_time} Israel time')
+            api_logger.info(f'✅ Scheduler started | Monthly review: {scheduled_time} Israel time | Cleanup: Friday 11 PM Israel time')
             
         except Exception as e:
             api_logger.error(f'❌ Error starting scheduler: {str(e)}')
@@ -109,3 +119,19 @@ def _run_monthly_review_check():
         
     except Exception as e:
         api_logger.error(f'❌ Error in scheduled monthly review task check: {str(e)}')
+
+
+def _run_cleanup_old_tasks():
+    """
+    Execute the cleanup of old completed tasks.
+    This function is called by the scheduler weekly.
+    """
+    try:
+        from django.core.management import call_command
+        
+        api_logger.info('🔄 Cleanup old tasks triggered by scheduler')
+        call_command('cleanup_old_tasks', '--days=7')
+        api_logger.info('✅ Successfully cleaned up old completed tasks')
+        
+    except Exception as e:
+        api_logger.error(f'❌ Error in scheduled cleanup old tasks: {str(e)}')
