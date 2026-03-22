@@ -29,7 +29,7 @@ class Command(BaseCommand):
         # Calculate the cutoff date
         cutoff_date = timezone.now() - timedelta(days=days)
         
-        # Find and delete completed tasks older than cutoff date
+        # Find tasks to delete
         tasks_to_delete = Tasks.objects.filter(
             status='הושלמה',
             updated_at__lt=cutoff_date
@@ -41,22 +41,27 @@ class Command(BaseCommand):
             self.stdout.write(
                 self.style.SUCCESS('No completed tasks older than {} days found.'.format(days))
             )
-            # Log to audit log
-            AuditLog.objects.create(
-                user_email='system',
-                username='scheduler',
-                action='CLEANUP_OLD_TASKS',
-                endpoint='management_command',
-                method='cleanup_old_tasks',
-                affected_tables=['childsmile_app_tasks'],
-                user_roles=['System'],
-                permissions=[],
-                status_code=200,
-                success=True,
-                error_message=None,
-                additional_data={'days': days, 'deleted_count': 0},
-                description=f'Scheduler: Cleanup old tasks executed. No tasks older than {days} days found.'
-            )
+            # Log to audit log (non-critical, don't fail if audit fails)
+            try:
+                AuditLog.objects.create(
+                    user_email='system',
+                    username='scheduler',
+                    action='CLEANUP_OLD_TASKS',
+                    endpoint='management_command',
+                    method='cleanup_old_tasks',
+                    affected_tables=['childsmile_app_tasks'],
+                    user_roles=[],
+                    permissions=[],
+                    status_code=200,
+                    success=True,
+                    error_message=None,
+                    additional_data={'days': days, 'deleted_count': 0},
+                    description=f'Scheduler: Cleanup old tasks executed. No tasks older than {days} days found.'
+                )
+            except Exception as audit_error:
+                self.stdout.write(
+                    self.style.WARNING(f'Warning: Could not log to audit: {str(audit_error)}')
+                )
             return
         
         # Delete the tasks in a transaction for safety
@@ -74,43 +79,57 @@ class Command(BaseCommand):
                     )
                 )
                 
-                # Log to audit log
-                AuditLog.objects.create(
-                    user_email='system',
-                    username='scheduler',
-                    action='CLEANUP_OLD_TASKS',
-                    endpoint='management_command',
-                    method='cleanup_old_tasks',
-                    affected_tables=['childsmile_app_tasks'],
-                    user_roles=['System'],
-                    permissions=[],
-                    entity_type='Task',
-                    entity_ids=task_ids,
-                    status_code=200,
-                    success=True,
-                    error_message=None,
-                    additional_data={'days': days, 'deleted_count': deleted_count, 'task_ids': task_ids},
-                    description=f'Scheduler: Cleanup old tasks executed. Deleted {deleted_count} completed tasks older than {days} days.'
-                )
+                # Log to audit log (non-critical, don't fail if audit fails)
+                try:
+                    AuditLog.objects.create(
+                        user_email='system',
+                        username='scheduler',
+                        action='CLEANUP_OLD_TASKS',
+                        endpoint='management_command',
+                        method='cleanup_old_tasks',
+                        affected_tables=['childsmile_app_tasks'],
+                        user_roles=[],
+                        permissions=[],
+                        entity_type='Task',
+                        entity_ids=task_ids[:100] if len(task_ids) > 100 else task_ids,  # Cap IDs for readability
+                        status_code=200,
+                        success=True,
+                        error_message=None,
+                        additional_data={
+                            'days': days, 
+                            'deleted_count': deleted_count, 
+                            'task_ids_count': len(task_ids)
+                        },
+                        description=f'Scheduler: Cleanup old tasks executed. Deleted {deleted_count} completed tasks older than {days} days.'
+                    )
+                except Exception as audit_error:
+                    self.stdout.write(
+                        self.style.WARNING(f'Warning: Could not log to audit: {str(audit_error)}')
+                    )
                     
         except Exception as e:
             self.stdout.write(
                 self.style.ERROR(f'Error during deletion: {str(e)}')
             )
-            # Log failure to audit log
-            AuditLog.objects.create(
-                user_email='system',
-                username='scheduler',
-                action='CLEANUP_OLD_TASKS_FAILED',
-                endpoint='management_command',
-                method='cleanup_old_tasks',
-                affected_tables=['childsmile_app_tasks'],
-                user_roles=['System'],
-                permissions=[],
-                status_code=500,
-                success=False,
-                error_message=str(e),
-                additional_data={'days': days},
-                description=f'Scheduler: Cleanup old tasks FAILED. Error: {str(e)}'
-            )
+            # Log failure to audit log (best-effort, don't fail if audit fails)
+            try:
+                AuditLog.objects.create(
+                    user_email='system',
+                    username='scheduler',
+                    action='CLEANUP_OLD_TASKS_FAILED',
+                    endpoint='management_command',
+                    method='cleanup_old_tasks',
+                    affected_tables=['childsmile_app_tasks'],
+                    user_roles=[],
+                    permissions=[],
+                    status_code=500,
+                    success=False,
+                    error_message=str(e),
+                    additional_data={'days': days, 'attempted_count': count},
+                    description=f'Scheduler: Cleanup old tasks FAILED. Error: {str(e)}'
+                )
+            except Exception as audit_error:
+                self.stdout.write(
+                    self.style.WARNING(f'Warning: Could not log failure to audit: {str(audit_error)}')
+                )
             raise

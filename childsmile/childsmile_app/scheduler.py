@@ -129,7 +129,6 @@ def _run_cleanup_old_tasks():
     SAFETY: Only deletes tasks that:
     - Status = 'הושלמה' (Completed)
     - Updated more than 7 days ago
-    - Have NO linked InitialFamilyData (prevents CASCADE deletes)
     """
     try:
         from django.core.management import call_command
