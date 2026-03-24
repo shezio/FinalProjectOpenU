@@ -1158,7 +1158,7 @@ const TutorVolunteerMgmt = () => {
   const activeSide = showTutors ? "front" : "back";
 
   return (
-    <div className="families-main-content">
+    <div className="tutor-volunteer-main-content">
       <Sidebar />
       <div className="content">
         <InnerPageHeader title={showTutors ? t("Tutors Management") : t("Volunteers Management")} />
