@@ -67,6 +67,8 @@ def start_scheduler():
             # Add job: Clean up old completed tasks every Friday at 11 PM (Israel timezone)
             _scheduler.add_job(
                 func=_run_cleanup_old_tasks,
+                # trigger in 2 minutes from now for testing
+                #trigger=CronTrigger(second='*/10'),
                 trigger=CronTrigger(day_of_week=4, hour=23, minute=0, timezone=israel_tz),
                 id='cleanup_old_tasks',
                 name='Cleanup Old Completed Tasks',
