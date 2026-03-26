@@ -90,6 +90,12 @@ const Reports = () => {
   ];
   const hasPermissionToAllVolunteersIRSReport = hasSomePermissions(all_volunteers_irs_report_permissions);
 
+  // All Families Export Report permissions
+  const all_families_export_report_permissions = [
+    { resource: families_resource, action: actions },
+  ];
+  const hasPermissionToAllFamiliesExportReport = hasSomePermissions(all_families_export_report_permissions);
+
   const reportDetails = {
     get_families_per_location_report: { name: 'דוח משפחות לפי מיקום', path: '/reports/families_per_location_report' },
     roles_spread_stats_report: { name: 'דוח התפלגות הרשאות', path: '/reports/roles_spread_stats_report' },
@@ -102,6 +108,7 @@ const Reports = () => {
     families_tutorship_stats_report: { name: 'דוח התפלגות משפחות ממתינות לחונכות', path: '/reports/families_tutorship_stats_report' },
     pending_tutors_stats_report: { name: 'דוח התפלגות חונכים ממתינים לראיון', path: '/reports/pending_tutors_stats_report' },
     all_volunteers_irs_report: { name: 'דוח מתנדבים כללי', path: '/reports/all_volunteers_irs_report' },
+    all_families_export_report: { name: 'דוח משפחות כללי', path: '/reports/all_families_export_report' },
   };
 
   const reportPermissions = {
@@ -116,6 +123,7 @@ const Reports = () => {
     families_tutorship_stats_report: hasPermissionToFamiliesTutorshipStatsReport,
     pending_tutors_stats_report: hasPermissionToPendingTutorsStatsReport,
     all_volunteers_irs_report: hasPermissionToAllVolunteersIRSReport,
+    all_families_export_report: hasPermissionToAllFamiliesExportReport,
   };
 
   return (
