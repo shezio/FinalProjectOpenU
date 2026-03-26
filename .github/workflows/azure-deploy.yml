@@ -33,6 +33,32 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
+      - name: Send WhatsApp - Deployment Started
+        continue-on-error: true
+        run: |
+          python3 << 'EOF'
+          import requests
+          
+          account_sid = "${{ secrets.TWILIO_ACCOUNT_SID }}"
+          auth_token = "${{ secrets.TWILIO_AUTH_TOKEN }}"
+          twilio_from = "${{ secrets.TWILIO_WHATSAPP_FROM }}"
+          content_sid = "${{ secrets.TWILIO_CONTENT_SID }}"
+          
+          recipients = "${{ secrets.TWILIO_RECIPIENTS_TEST }}".split(',')
+          recipients = [r.strip() for r in recipients if r.strip()]
+          
+          url = f"https://api.twilio.com/2010-04-01/Accounts/{account_sid}/Messages.json"
+          
+          for recipient in recipients:
+              payload = {
+                  "From": twilio_from,
+                  "To": recipient,
+                  "ContentSid": content_sid,
+                  "ContentVariables": '{"1":"שרת","2":"התחיל"}'
+              }
+              requests.post(url, data=payload, auth=(account_sid, auth_token))
+          EOF
+
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
         with:
@@ -40,3 +66,57 @@ jobs:
           package: .
           clean: true
           startup-command: bash -c "export PYTHONPATH=\$PYTHONPATH:/home/site/wwwroot/childsmile:/home/site/wwwroot/childsmile/childsmile_app && gunicorn childsmile.wsgi:application --workers 1 --timeout 600 --bind 0.0.0.0:8000"
+
+      - name: Send WhatsApp - Deployment Successful
+        if: success()
+        continue-on-error: true
+        run: |
+          python3 << 'EOF'
+          import requests
+          
+          account_sid = "${{ secrets.TWILIO_ACCOUNT_SID }}"
+          auth_token = "${{ secrets.TWILIO_AUTH_TOKEN }}"
+          twilio_from = "${{ secrets.TWILIO_WHATSAPP_FROM }}"
+          content_sid = "${{ secrets.TWILIO_CONTENT_SID }}"
+          
+          recipients = "${{ secrets.TWILIO_RECIPIENTS_TEST }}".split(',')
+          recipients = [r.strip() for r in recipients if r.strip()]
+          
+          url = f"https://api.twilio.com/2010-04-01/Accounts/{account_sid}/Messages.json"
+          
+          for recipient in recipients:
+              payload = {
+                  "From": twilio_from,
+                  "To": recipient,
+                  "ContentSid": content_sid,
+                  "ContentVariables": '{"1":"שרת","2":"הצליח"}'
+              }
+              requests.post(url, data=payload, auth=(account_sid, auth_token))
+          EOF
+
+      - name: Send WhatsApp - Deployment Failed
+        if: failure()
+        continue-on-error: true
+        run: |
+          python3 << 'EOF'
+          import requests
+          
+          account_sid = "${{ secrets.TWILIO_ACCOUNT_SID }}"
+          auth_token = "${{ secrets.TWILIO_AUTH_TOKEN }}"
+          twilio_from = "${{ secrets.TWILIO_WHATSAPP_FROM }}"
+          content_sid = "${{ secrets.TWILIO_CONTENT_SID }}"
+          
+          recipients = "${{ secrets.TWILIO_RECIPIENTS_TEST }}".split(',')
+          recipients = [r.strip() for r in recipients if r.strip()]
+          
+          url = f"https://api.twilio.com/2010-04-01/Accounts/{account_sid}/Messages.json"
+          
+          for recipient in recipients:
+              payload = {
+                  "From": twilio_from,
+                  "To": recipient,
+                  "ContentSid": content_sid,
+                  "ContentVariables": '{"1":"שרת","2":"נכשל"}'
+              }
+              requests.post(url, data=payload, auth=(account_sid, auth_token))
+          EOF
