@@ -18,7 +18,7 @@ cd /Users/shlomosmac/Applications/dev/FinalProjectOpenU/childsmile && source mye
 
   git config --global user.email "shlezi0@gmail.com"
   git config --global user.name "shezio"
-
+whatsapp:+972526112711,whatsapp:+⁦972502020453⁩,whatsapp:+972507225027,whatsapp:+972546752187⁩,whatsapp:⁦+972545606494⁩,whatsapp:⁦+972534887434⁩
 connect to db:
 psql -U child_smile_user -h localhost -p 5432 -d child_smile_db
 
