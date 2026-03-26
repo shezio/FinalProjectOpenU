@@ -309,7 +309,7 @@ const InitialFamilyData = () => {
   const canManage = currentUserRoles.includes('System Administrator') || currentUserRoles.includes('Technical Coordinator');
 
   return (
-    <div className="families-main-content">
+    <div className="initial-family-main-content">
       <Sidebar />
       <InnerPageHeader title={t('Initial Family Data')} />
       <div className="filter-create-container">

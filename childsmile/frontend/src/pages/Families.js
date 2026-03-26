@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import axios from '../axiosConfig';
 import Sidebar from '../components/Sidebar';
 import InnerPageHeader from '../components/InnerPageHeader';
-import { isGuestUser, hasUpdatePermissionForTable, hasDeletePermissionForTable } from '../components/utils';
+import { isGuestUser, hasUpdatePermissionForTable, hasDeletePermissionForTable, hasCreatePermissionForTable } from '../components/utils';
 import { toast } from 'react-toastify';
 import { useTranslation } from 'react-i18next';
 import '../styles/common.css';
@@ -38,6 +38,7 @@ const Families = () => {
   const [totalCount, setTotalCount] = useState(0); // Total number of families after filtering
   const [selectedStatuses, setSelectedStatuses] = useState([]); // State for selected status filters (checkboxes)
   const [showStatusDropdown, setShowStatusDropdown] = useState(false); // State for status filter dropdown visibility
+  const [selectedTutoringStatus, setSelectedTutoringStatus] = useState(""); // Single tutorship status filter
   const [dropdownStyle, setDropdownStyle] = useState({}); // State for dropdown positioning
   const statusFilterRef = useRef(null); // Ref for status filter button
   const statusDropdownRef = useRef(null); // Ref for status filter dropdown
@@ -141,6 +142,12 @@ const Families = () => {
     }
   };
 
+  // Format status text: replace underscores with spaces
+  const formatStatus = (status) => {
+    if (!status) return '---';
+    return status.replace(/_/g, ' ');
+  };
+
   let filteredFamilies = families;
   // Apply search filter for child name, ID, and phone
   if (searchTerm.trim()) {
@@ -170,6 +177,10 @@ const Families = () => {
   if (selectedStatuses.length > 0) {
     filteredFamilies = filteredFamilies.filter((family) => selectedStatuses.includes(family.status));
   }
+  // Apply tutorship status filter
+  if (selectedTutoringStatus) {
+    filteredFamilies = filteredFamilies.filter((family) => family.tutoring_status === selectedTutoringStatus);
+  }
   // Apply max age filter
   filteredFamilies = filteredFamilies.filter((family) => family.age <= maxAge);
   const paginatedFamilies = filteredFamilies.slice((page - 1) * pageSize, page * pageSize);
@@ -184,7 +195,7 @@ const Families = () => {
   useEffect(() => {
     setTotalCount(filteredFamilies.length);
     setPage(1); // Reset to page 1 only when filters actually change
-  }, [showMatureOnly, selectedStatuses, maxAge, searchTerm, families]);
+  }, [showMatureOnly, selectedStatuses, maxAge, searchTerm, families, selectedTutoringStatus]);
 
   // Initialize selectedStatuses with all possible statuses (hardcoded from model)
   useEffect(() => {
@@ -547,6 +558,17 @@ const Families = () => {
     setSelectedFamily(null);
   };
 
+  const handleManualMatch = (family) => {
+    // Navigate to Tutorships page with the selected child ID for manual matching
+    navigate("/tutorships", { 
+      state: {
+        manualMatchChildId: family.id,
+        childName: `${family.first_name} ${family.last_name}`,
+        childGender: family.gender
+      }
+    });
+  };
+
   const openEditModal = (family) => {
     console.log("Editing family:", family);
     const streetAndApartment = family.street_and_apartment_number ? family.street_and_apartment_number.split(' ') : ['', ''];
@@ -774,12 +796,6 @@ const Families = () => {
     return new Date(`${year}-${month}-${day}`);
   };
 
-  // Format status text: replace underscores with spaces
-  const formatStatus = (status) => {
-    if (!status) return '---';
-    return status.replace(/_/g, ' ');
-  };
-
   // Format age display for young children
   // Under 1 year: show "X חודשים"
   // 1-2 years: show "שנה וX חודשים"
@@ -961,6 +977,7 @@ const Families = () => {
       <div className="content">
         <InnerPageHeader title={t('Families Management')} />
         <div className="filter-create-container">
+          <div className="create-task init-family-data-button">
             <button 
               className="refresh-icon-button"
               onClick={fetchFamilies}
@@ -973,7 +990,6 @@ const Families = () => {
                 <RotateCcw size={20} strokeWidth={2} />
               )}
             </button>
-          <div className="create-task init-family-data-button">
             <button
               onClick={() => navigate('/initial-family-data')}
             >
@@ -993,57 +1009,70 @@ const Families = () => {
             >
               {showMatureOnly ? t('Show All Ages') : t('Show Matures Only')}
             </button>
-          </div>
-          <div className="status-filter">
-            <button 
-              ref={statusFilterRef}
-              className="status-filter-button"
-              onClick={() => setShowStatusDropdown(!showStatusDropdown)}
+            <div className="status-filter">
+              <button 
+                ref={statusFilterRef}
+                className="status-filter-button"
+                onClick={() => setShowStatusDropdown(!showStatusDropdown)}
+              >
+                {t('Status Filter')}
+                <span className={`status-filter-chevron ${showStatusDropdown ? 'open' : ''}`}>▼</span>
+              </button>
+              {showStatusDropdown && createPortal(
+                <div ref={statusDropdownRef} className="status-checkboxes-dropdown" style={dropdownStyle}>
+                  {statuses.map((status, idx) => (
+                    <label key={idx} className="status-checkbox-label">
+                      <input
+                        type="checkbox"
+                        checked={selectedStatuses.includes(status)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedStatuses([...selectedStatuses, status]);
+                          } else {
+                            setSelectedStatuses(selectedStatuses.filter(s => s !== status));
+                          }
+                        }}
+                      />
+                      {status}
+                    </label>
+                  ))}
+                </div>,
+                document.body
+              )}
+            </div>
+            <select
+              className="tutorship-status-filter"
+              value={selectedTutoringStatus}
+              onChange={(e) => {
+                setSelectedTutoringStatus(e.target.value);
+                setPage(1);
+              }}
             >
-              {t('Status Filter')}
-              <span className={`status-filter-chevron ${showStatusDropdown ? 'open' : ''}`}>▼</span>
-            </button>
-            {showStatusDropdown && createPortal(
-              <div ref={statusDropdownRef} className="status-checkboxes-dropdown" style={dropdownStyle}>
-                {statuses.map((status, idx) => (
-                  <label key={idx} className="status-checkbox-label">
-                    <input
-                      type="checkbox"
-                      checked={selectedStatuses.includes(status)}
-                      onChange={(e) => {
-                        if (e.target.checked) {
-                          setSelectedStatuses([...selectedStatuses, status]);
-                        } else {
-                          setSelectedStatuses(selectedStatuses.filter(s => s !== status));
-                        }
-                      }}
-                    />
-                    {status}
-                  </label>
-                ))}
-              </div>,
-              document.body
-            )}
-          </div>
-          <div className="max-age-filter">
-            <label>{t('Max Age')}: {maxAge}</label>
+              <option value="">{t("All Statuses")}</option>
+              {tutoringStatuses.map(status => (
+                <option key={status} value={status}>{formatStatus(status)}</option>
+              ))}
+            </select>
+            <div className="max-age-filter">
+              <label>{t('Max Age')}: {maxAge}</label>
+              <input
+                type="range"
+                name="maxAge"
+                min="0"
+                max="30"
+                value={maxAge}
+                onChange={(e) => setMaxAge(parseInt(e.target.value))}
+                className="age-slider-input"
+              />
+            </div>
             <input
-              type="range"
-              name="maxAge"
-              min="0"
-              max="30"
-              value={maxAge}
-              onChange={(e) => setMaxAge(parseInt(e.target.value))}
-              className="age-slider-input"
+              className="families-search-bar"
+              type="text"
+              placeholder={t("Search by name, ID, or phone")}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          <input
-            className="families-search-bar"
-            type="text"
-            placeholder={t("Search by name, ID, or phone")}
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
         </div>
         {loading ? (
           <div className="loader">{t('Loading data...')}</div>
@@ -1257,7 +1286,18 @@ const Families = () => {
                 <p>{t('Details for Tutoring')}: {selectedFamily.details_for_tutoring || '---'}</p>
                 <p>{t('Last Review Talk Conducted')}: {selectedFamily.last_review_talk_conducted || '---'}</p>
               </div>
-              <button onClick={closeFamilyDetails}>{t('Close')}</button>
+              <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', marginTop: '20px' }}>
+                {hasCreatePermissionForTable("tutorships") && (
+                  <button
+                    className="filter-button"
+                    onClick={() => handleManualMatch(selectedFamily)}
+                    title={t("Create manual tutorship match for this family")}
+                  >
+                    {t("Manual Match")}
+                  </button>
+                )}
+                <button onClick={closeFamilyDetails} style={{ marginLeft: 'auto' }}>{t('Close')}</button>
+              </div>
             </div>
           </div>
         )}

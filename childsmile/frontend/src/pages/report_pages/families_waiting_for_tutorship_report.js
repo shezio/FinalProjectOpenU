@@ -224,16 +224,6 @@ const FamiliesWaitingForTutorshipReport = () => {
                 <option key={status} value={status}>{formatStatusDisplay(status)}</option>
               ))}
             </select>
-            {hasCreatePermission && (
-              <button
-                className="filter-button"
-                onClick={handleManualMatch}
-                disabled={!selectedFamily}
-                title={selectedFamily ? t("Create manual tutorship match for selected family") : t("Select exactly one family to create a manual match")}
-              >
-                {t("Manual Match")}
-              </button>
-            )}
             <label htmlFor="date-from">{t("From Date")}:</label>
             <input
               type="date"
