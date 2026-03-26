@@ -43,7 +43,7 @@ jobs:
           twilio_from = "${{ secrets.TWILIO_WHATSAPP_FROM }}"
           content_sid = "${{ secrets.TWILIO_CONTENT_SID }}"
           
-          recipients = "${{ secrets.TWILIO_RECIPIENTS_TEST }}".split(',')
+          raw_recipients = "${{ secrets.TWILIO_RECIPIENTS_TEST }}".split(',')
           
           url = f"https://api.twilio.com/2010-04-01/Accounts/{account_sid}/Messages.json"
           
@@ -52,19 +52,28 @@ jobs:
               "2": "התחיל"
           })
           
-          for recipient in recipients:
-              r_clean = recipient.strip()
-              if not r_clean: continue
+          for r in raw_recipients:
+              # Clean: keep only alphanumeric and special chars needed for Twilio (: and +)
+              clean_to = "".join(c for c in r if c.isalnum() or c in [':', '+'] or ord(c) > 127).strip()
+              # Remove any BiDi control characters
+              bidi_chars = [8206, 8207, 8234, 8235, 8236, 8237, 8238, 8239, 8294, 8295, 8296, 8297]
+              clean_to = "".join(c for c in clean_to if ord(c) not in bidi_chars)
+              
+              if not clean_to:
+                  continue
               
               payload = {
                   "From": twilio_from,
-                  "To": r_clean,
+                  "To": clean_to,
                   "ContentSid": content_sid,
                   "ContentVariables": vars_json
               }
               
               response = requests.post(url, data=payload, auth=(account_sid, auth_token))
-              print(f"Sending to {r_clean}: Status {response.status_code}, Response: {response.text}")
+              if response.status_code == 201:
+                  print(f"✅ Message sent to {clean_to}")
+              else:
+                  print(f"❌ Failed for {clean_to}: {response.status_code} - {response.text}")
           EOF
       - name: Build And Deploy
         uses: Azure/static-web-apps-deploy@v1
@@ -91,7 +100,7 @@ jobs:
           twilio_from = "${{ secrets.TWILIO_WHATSAPP_FROM }}"
           content_sid = "${{ secrets.TWILIO_CONTENT_SID }}"
           
-          recipients = "${{ secrets.TWILIO_RECIPIENTS_TEST }}".split(',')
+          raw_recipients = "${{ secrets.TWILIO_RECIPIENTS_TEST }}".split(',')
           
           url = f"https://api.twilio.com/2010-04-01/Accounts/{account_sid}/Messages.json"
           
@@ -100,19 +109,28 @@ jobs:
               "2": "הצליח"
           })
           
-          for recipient in recipients:
-              r_clean = recipient.strip()
-              if not r_clean: continue
+          for r in raw_recipients:
+              # Clean: keep only alphanumeric and special chars needed for Twilio (: and +)
+              clean_to = "".join(c for c in r if c.isalnum() or c in [':', '+'] or ord(c) > 127).strip()
+              # Remove any BiDi control characters
+              bidi_chars = [8206, 8207, 8234, 8235, 8236, 8237, 8238, 8239, 8294, 8295, 8296, 8297]
+              clean_to = "".join(c for c in clean_to if ord(c) not in bidi_chars)
+              
+              if not clean_to:
+                  continue
               
               payload = {
                   "From": twilio_from,
-                  "To": r_clean,
+                  "To": clean_to,
                   "ContentSid": content_sid,
                   "ContentVariables": vars_json
               }
               
               response = requests.post(url, data=payload, auth=(account_sid, auth_token))
-              print(f"Sending to {r_clean}: Status {response.status_code}, Response: {response.text}")
+              if response.status_code == 201:
+                  print(f"✅ Message sent to {clean_to}")
+              else:
+                  print(f"❌ Failed for {clean_to}: {response.status_code} - {response.text}")
           EOF
       - name: Send WhatsApp - Deployment Failed
         if: failure()
@@ -127,7 +145,7 @@ jobs:
           twilio_from = "${{ secrets.TWILIO_WHATSAPP_FROM }}"
           content_sid = "${{ secrets.TWILIO_CONTENT_SID }}"
           
-          recipients = "${{ secrets.TWILIO_RECIPIENTS_TEST }}".split(',')
+          raw_recipients = "${{ secrets.TWILIO_RECIPIENTS_TEST }}".split(',')
           
           url = f"https://api.twilio.com/2010-04-01/Accounts/{account_sid}/Messages.json"
           
@@ -136,17 +154,26 @@ jobs:
               "2": "נכשל"
           })
           
-          for recipient in recipients:
-              r_clean = recipient.strip()
-              if not r_clean: continue
+          for r in raw_recipients:
+              # Clean: keep only alphanumeric and special chars needed for Twilio (: and +)
+              clean_to = "".join(c for c in r if c.isalnum() or c in [':', '+'] or ord(c) > 127).strip()
+              # Remove any BiDi control characters
+              bidi_chars = [8206, 8207, 8234, 8235, 8236, 8237, 8238, 8239, 8294, 8295, 8296, 8297]
+              clean_to = "".join(c for c in clean_to if ord(c) not in bidi_chars)
+              
+              if not clean_to:
+                  continue
               
               payload = {
                   "From": twilio_from,
-                  "To": r_clean,
+                  "To": clean_to,
                   "ContentSid": content_sid,
                   "ContentVariables": vars_json
               }
               
               response = requests.post(url, data=payload, auth=(account_sid, auth_token))
-              print(f"Sending to {r_clean}: Status {response.status_code}, Response: {response.text}")
+              if response.status_code == 201:
+                  print(f"✅ Message sent to {clean_to}")
+              else:
+                  print(f"❌ Failed for {clean_to}: {response.status_code} - {response.text}")
           EOF
