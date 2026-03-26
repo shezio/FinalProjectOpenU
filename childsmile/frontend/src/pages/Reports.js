@@ -108,7 +108,7 @@ const Reports = () => {
     families_tutorship_stats_report: { name: 'דוח התפלגות משפחות ממתינות לחונכות', path: '/reports/families_tutorship_stats_report' },
     pending_tutors_stats_report: { name: 'דוח התפלגות חונכים ממתינים לראיון', path: '/reports/pending_tutors_stats_report' },
     all_volunteers_irs_report: { name: 'דוח מתנדבים כללי', path: '/reports/all_volunteers_irs_report' },
-    all_families_export_report: { name: 'דוח ייצוא משפחות', path: '/reports/all_families_export_report' },
+    all_families_export_report: { name: 'דוח משפחות כללי', path: '/reports/all_families_export_report' },
   };
 
   const reportPermissions = {

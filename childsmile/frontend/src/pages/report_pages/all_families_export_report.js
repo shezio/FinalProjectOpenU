@@ -167,7 +167,7 @@ const AllFamiliesExportReport = () => {
     return (
         <div className="all-volunteers-report-main-content">
             <Sidebar />
-            <InnerPageHeader title="📋 דוח ייצוא משפחות" />
+            <InnerPageHeader title="📋 דוח משפחות כללי" />
             <div className="page-content">
                 <div className="filter-create-container">
                     <div className="actions">
