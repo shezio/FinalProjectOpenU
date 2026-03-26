@@ -36,6 +36,7 @@ jobs:
         run: |
           python3 << 'EOF'
           import requests
+          import json
           
           account_sid = "${{ secrets.TWILIO_ACCOUNT_SID }}"
           auth_token = "${{ secrets.TWILIO_AUTH_TOKEN }}"
@@ -43,18 +44,27 @@ jobs:
           content_sid = "${{ secrets.TWILIO_CONTENT_SID }}"
           
           recipients = "${{ secrets.TWILIO_RECIPIENTS_TEST }}".split(',')
-          recipients = [r.strip() for r in recipients if r.strip()]
           
           url = f"https://api.twilio.com/2010-04-01/Accounts/{account_sid}/Messages.json"
           
+          vars_json = json.dumps({
+              "1": "ממשק",
+              "2": "התחיל"
+          })
+          
           for recipient in recipients:
+              r_clean = recipient.strip()
+              if not r_clean: continue
+              
               payload = {
                   "From": twilio_from,
-                  "To": recipient,
+                  "To": r_clean,
                   "ContentSid": content_sid,
-                  "ContentVariables": '{"1":"ממשק","2":"התחיל"}'
+                  "ContentVariables": vars_json
               }
-              requests.post(url, data=payload, auth=(account_sid, auth_token))
+              
+              response = requests.post(url, data=payload, auth=(account_sid, auth_token))
+              print(f"Sending to {r_clean}: Status {response.status_code}, Response: {response.text}")
           EOF
       - name: Build And Deploy
         uses: Azure/static-web-apps-deploy@v1
@@ -74,6 +84,7 @@ jobs:
         run: |
           python3 << 'EOF'
           import requests
+          import json
           
           account_sid = "${{ secrets.TWILIO_ACCOUNT_SID }}"
           auth_token = "${{ secrets.TWILIO_AUTH_TOKEN }}"
@@ -81,18 +92,27 @@ jobs:
           content_sid = "${{ secrets.TWILIO_CONTENT_SID }}"
           
           recipients = "${{ secrets.TWILIO_RECIPIENTS_TEST }}".split(',')
-          recipients = [r.strip() for r in recipients if r.strip()]
           
           url = f"https://api.twilio.com/2010-04-01/Accounts/{account_sid}/Messages.json"
           
+          vars_json = json.dumps({
+              "1": "ממשק",
+              "2": "הצליח"
+          })
+          
           for recipient in recipients:
+              r_clean = recipient.strip()
+              if not r_clean: continue
+              
               payload = {
                   "From": twilio_from,
-                  "To": recipient,
+                  "To": r_clean,
                   "ContentSid": content_sid,
-                  "ContentVariables": '{"1":"ממשק","2":"הצליח"}'
+                  "ContentVariables": vars_json
               }
-              requests.post(url, data=payload, auth=(account_sid, auth_token))
+              
+              response = requests.post(url, data=payload, auth=(account_sid, auth_token))
+              print(f"Sending to {r_clean}: Status {response.status_code}, Response: {response.text}")
           EOF
       - name: Send WhatsApp - Deployment Failed
         if: failure()
@@ -100,6 +120,7 @@ jobs:
         run: |
           python3 << 'EOF'
           import requests
+          import json
           
           account_sid = "${{ secrets.TWILIO_ACCOUNT_SID }}"
           auth_token = "${{ secrets.TWILIO_AUTH_TOKEN }}"
@@ -107,16 +128,25 @@ jobs:
           content_sid = "${{ secrets.TWILIO_CONTENT_SID }}"
           
           recipients = "${{ secrets.TWILIO_RECIPIENTS_TEST }}".split(',')
-          recipients = [r.strip() for r in recipients if r.strip()]
           
           url = f"https://api.twilio.com/2010-04-01/Accounts/{account_sid}/Messages.json"
           
+          vars_json = json.dumps({
+              "1": "ממשק",
+              "2": "נכשל"
+          })
+          
           for recipient in recipients:
+              r_clean = recipient.strip()
+              if not r_clean: continue
+              
               payload = {
                   "From": twilio_from,
-                  "To": recipient,
+                  "To": r_clean,
                   "ContentSid": content_sid,
-                  "ContentVariables": '{"1":"ממשק","2":"נכשל"}'
+                  "ContentVariables": vars_json
               }
-              requests.post(url, data=payload, auth=(account_sid, auth_token))
+              
+              response = requests.post(url, data=payload, auth=(account_sid, auth_token))
+              print(f"Sending to {r_clean}: Status {response.status_code}, Response: {response.text}")
           EOF

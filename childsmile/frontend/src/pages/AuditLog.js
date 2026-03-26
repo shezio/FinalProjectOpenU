@@ -89,7 +89,7 @@ const AuditLog = () => {
       const translatedValue = t(key);
       translated = translated.replace(key, translatedValue);
     });
-    console.log("test");
+    console.log("tests");
     return translated;
   };
 
