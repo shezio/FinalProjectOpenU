@@ -534,7 +534,7 @@ def get_complete_family_details(request):
         ).select_related('tutor__staff', 'tutor__id')
 
         # log that all tutorships fetched
-        api_logger.info("Fetched all tutorships")
+        api_logger.info("Fetched alls tutorships")
 
         # Build a dict of child_id -> list of tutors
         child_tutors_map = {}
