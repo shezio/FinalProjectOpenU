@@ -1627,6 +1627,60 @@ export const exportAuditToPDF = async (auditLogs, t) => {
   }
 };
 
+// ===== ALL FAMILIES EXPORT REPORT =====
+export const exportAllFamiliesToExcel = async (families, t) => {
+  const reportName = 'all_families_export_report';
+  const format = 'EXCEL';
+  
+  try {
+    if (!families || families.length === 0) {
+      const errorMsg = 'אנא בחר לפחות רשומה אחת ליצירת דוח';
+      await auditExportFailure(format, reportName, errorMsg, 'VALIDATION');
+      showErrorToast(t, '', { message: errorMsg });
+      return;
+    }
+
+    // Get headers from the first family object (already has Hebrew headers as keys)
+    const headers = Object.keys(families[0]);
+    console.log('Export headers:', headers); // DEBUG: Check if all headers are present
+    console.log('First family data:', families[0]); // DEBUG: Check first family
+    console.log('Total families to export:', families.length); // DEBUG: Check count
+    
+    const rows = families.map(family => 
+      headers.map(header => family[header] || '')
+    );
+
+    const worksheetData = [headers, ...rows];
+    const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
+
+    // Adjust column widths to fit content
+    const columnWidths = worksheetData[0].map((_, colIndex) => ({
+      wch: Math.max(
+        ...worksheetData.map(row => (row[colIndex] ? row[colIndex].toString().length : 0))
+      ) + 2,
+    }));
+    worksheet['!cols'] = columnWidths;
+
+    // Set worksheet direction to RTL
+    worksheet['!dir'] = 'rtl';
+
+    const workbook = XLSX.utils.book_new();
+    const sheetName = 'דוח ייצוא משפחות'; // Hebrew sheet name
+    XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
+    const fileName = 'דוח ייצוא משפחות';
+    XLSX.writeFile(workbook, `${fileName}.xlsx`);
+    toast.success(t('Report generated successfully'));
+
+    // **ADD AUDIT SUCCESS**
+    await auditExportSuccess(format, families.length, reportName, ['family_data', 'child_info', 'contact_info', 'tutorship_status', 'medical_info']);
+    
+  } catch (error) {
+    console.error('Export failed:', error);
+    await auditExportFailure(format, reportName, error.message, 'TECHNICAL');
+    showErrorToast(t, '', { message: 'Export failed' });
+  }
+};
+
 // ===== ALL VOLUNTEERS IRS REPORT EXPORT =====
 export const exportAllVolunteersIRSToExcel = async (volunteers, t) => {
   const reportName = 'all_volunteers_irs_report';
