@@ -671,7 +671,7 @@ def delete_task(request, task_id):
                         
                         # Delete any admin approval tasks that might have been created
                         admin_approval_tasks = Tasks.objects.filter(
-                            task_type__task_type="אישور הרשמה",
+                            task_type__task_type="אישור הרשמה",
                             status="לא הושלמה"
                         )
                         admin_tasks_to_delete = []
@@ -1018,7 +1018,6 @@ def update_task_status(request, task_id):
         elif new_status == "בביצוע" and task.task_type and task.task_type.task_type == "אישור הרשמה":
             from .utils import delete_other_registration_approval_tasks
             delete_other_registration_approval_tasks(task)  # Run synchronously to ensure deletion happens
-            api_logger.info(f"Deleted other registration approval tasks for task {task_id}")
         
         # Delete all previous status records for this task since it's now completed
         if new_status == "הושלמה":
@@ -1070,15 +1069,24 @@ def update_task_status(request, task_id):
                                 message = f"""
 <html dir="rtl">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
-        body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
+        body {{ direction: rtl; text-align: right; font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 20px; background-color: #f5f5f5; }}
         .container {{ max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9f9f9; border-radius: 8px; }}
-        .header {{ background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }}
-        .content {{ background-color: white; padding: 30px; border-radius: 0 0 8px 8px; }}
+        .header {{ background: linear-gradient(to right, #667eea 0%, #764ba2 100%); color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }}
+        .header h1 {{ margin: 0; font-size: 24px; }}
+        .header p {{ margin: 10px 0 0 0; opacity: 0.9; }}
+        .content {{ background-color: white; padding: 30px; border-radius: 0 0 8px 8px; text-align: right; direction: rtl; }}
         .step {{ margin: 20px 0; padding: 15px; background-color: #f0f4ff; border-right: 4px solid #667eea; border-radius: 4px; }}
+        .step h3 {{ margin: 0 0 10px 0; color: #667eea; font-size: 16px; }}
+        .step p {{ margin: 0; font-size: 14px; text-align: right; }}
         .button {{ display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px 40px; text-decoration: none; border-radius: 5px; margin: 20px 0; text-align: center; font-weight: bold; }}
-        .footer {{ text-align: center; padding: 20px; color: #666; font-size: 12px; }}
-        .success-icon {{ font-size: 48px; margin: 20px 0; }}
+        .button:hover {{ opacity: 0.9; }}
+        .footer {{ text-align: center; padding: 20px; color: #666; font-size: 12px; background-color: #f9f9f9; border-radius: 0 0 8px 8px; }}
+        p {{ margin: 15px 0; text-align: right; font-size: 14px; }}
+        .contact-section {{ text-align: center; margin: 15px 0; direction: ltr; }}
+        .contact-section a {{ display: inline-block; margin: 0 10px; text-decoration: none; }}
     </style>
 </head>
 <body>
@@ -1101,11 +1109,11 @@ def update_task_status(request, task_id):
             <div class="step">
                 <h3>📱 השלב הבא: הצטרף לקבוצת הווטסאפ</h3>
                 <p>כדי להשלים את תהליך ההרשמה, אנא הצטרף לקבוצת הווטסאפ של הקהילה שלנו:</p>
-                <p style="text-align: center;">
+                <div style="text-align: center;">
                     <a href="https://chat.whatsapp.com/B7UcLqApSTzCpppWR221DB" class="button">
                         הצטרף לקבוצת הווטסאפ 👥
                     </a>
-                </p>
+                </div>
             </div>
             
             <div class="step">
@@ -1117,9 +1125,9 @@ def update_task_status(request, task_id):
                 <h3>❓ שאלות?</h3>
                 <p>אם יש לך שאלות או צריך עזרה, צור קשר עם צוות הניהול שלנו דרך קבוצת הווטסאפ.</p>
                 <p><strong>ניתן לפנות לטל חלימי רכזת מתנדבים</strong></p>
-                <div style="direction: ltr; text-align: right; margin: 10px 0;">
-                    <a href="tel:+972507225027" style="display: inline-block; margin-left: 15px; text-decoration: none; color: #667eea;"><strong>📞 +972 50-722-5027</strong></a>
-                    <a href="https://wa.me/972507225027" style="display: inline-block; text-decoration: none; color: #25D366;"><strong>💬 WhatsApp</strong></a>
+                <div class="contact-section">
+                    <a href="https://wa.me/972507225027" style="display: inline-block; margin: 0 15px; text-decoration: none; color: #25D366; font-size: 16px;"><strong>WhatsApp 💬</strong></a>
+                    <a href="tel:+972507225027" style="display: inline-block; margin: 0 15px; text-decoration: none; color: #667eea; font-size: 16px;"><strong>+972 50-722-5027 📱</strong></a>
                 </div>
             </div>
             
@@ -1176,14 +1184,22 @@ def update_task_status(request, task_id):
                                 message = f"""
 <html dir="rtl">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
-        body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
+        body {{ direction: rtl; text-align: right; font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 20px; background-color: #f5f5f5; }}
         .container {{ max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9f9f9; border-radius: 8px; }}
-        .header {{ background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }}
-        .content {{ background-color: white; padding: 30px; border-radius: 0 0 8px 8px; }}
+        .header {{ background: linear-gradient(to right, #28a745 0%, #20c997 100%); color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }}
+        .header h1 {{ margin: 0; font-size: 24px; }}
+        .content {{ background-color: white; padding: 30px; border-radius: 0 0 8px 8px; text-align: right; direction: rtl; }}
         .step {{ margin: 20px 0; padding: 15px; background-color: #e8f5e9; border-right: 4px solid #28a745; border-radius: 4px; }}
-        .footer {{ text-align: center; padding: 20px; color: #666; font-size: 12px; }}
+        .step h3 {{ margin: 0 0 10px 0; color: #28a745; font-size: 16px; }}
+        .step p {{ margin: 0; font-size: 14px; text-align: right; }}
+        .footer {{ text-align: center; padding: 20px; color: #666; font-size: 12px; background-color: #f9f9f9; border-radius: 0 0 8px 8px; }}
         .success-badge {{ background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; padding: 10px 20px; border-radius: 25px; display: inline-block; margin: 15px 0; font-weight: bold; }}
+        p {{ margin: 15px 0; text-align: right; font-size: 14px; }}
+        .contact-section {{ text-align: center; margin: 15px 0; direction: ltr; }}
+        .contact-section a {{ display: inline-block; margin: 0 10px; text-decoration: none; }}
     </style>
 </head>
 <body>
@@ -1212,9 +1228,9 @@ def update_task_status(request, task_id):
                 <h3>❓ שאלות?</h3>
                 <p>אם יש לך שאלות או צריך עזרה, צור קשר עם צוות הניהול שלנו דרך קבוצת הווטסאפ או אתר החיוך של ילד.</p>
                 <p><strong>ניתן לפנות לטל חלימי רכזת מתנדבים</strong></p>
-                <div style="direction: ltr; text-align: right; margin: 10px 0;">
-                    <a href="tel:+972507225027" style="display: inline-block; margin-left: 15px; text-decoration: none; color: #28a745;"><strong>📞 +972 50-722-5027</strong></a>
-                    <a href="https://wa.me/972507225027" style="display: inline-block; text-decoration: none; color: #25D366;"><strong>💬 WhatsApp</strong></a>
+                <div class="contact-section">
+                    <a href="https://wa.me/972507225027" style="display: inline-block; margin: 0 15px; text-decoration: none; color: #25D366; font-size: 16px;"><strong>WhatsApp 💬</strong></a>
+                    <a href="tel:+972507225027" style="display: inline-block; margin: 0 15px; text-decoration: none; color: #28a745; font-size: 16px;"><strong>+972 50-722-5027 📱</strong></a>
                 </div>
             </div>
             
@@ -1699,8 +1715,8 @@ def update_task(request, task_id):
                 except Exception as e:
                     api_logger.error(f"Error regenerating audit-call task descriptions for child {task.related_child.child_id}: {str(e)}")
             except Exception as e:
-                api_logger.error(f"Error updating last_review_talk_conducted in update_task for child {task.related_child_id}: {str(e)}")
-        
+                api_logger.error(f"Error updating last_review_talk_conducted for child {task.related_child_id}: {str(e)}")
+
         if new_status == "הושלמה":
             task_type = getattr(task, "task_type", None)
             if task_type and getattr(task_type, "name", "") == "ראיון מועמד לחונכות":

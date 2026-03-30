@@ -23,12 +23,22 @@ const statusColumns = [
 
 const getFirstDayOfMonth = () => {
   const now = new Date();
-  return new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
+  // Get the last day of the previous month by setting day to 0 of current month
+  const lastDayPrevMonth = new Date(now.getFullYear(), now.getMonth(), 0);
+  const day = String(lastDayPrevMonth.getDate()).padStart(2, '0');
+  const month = String(lastDayPrevMonth.getMonth() + 1).padStart(2, '0');
+  const year = lastDayPrevMonth.getFullYear();
+  return `${year}-${month}-${day}`;
 };
 
 const getLastDayOfMonth = () => {
   const now = new Date();
-  return new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
+  // Get the last day of the current month by setting day to 0 of next month
+  const lastDayCurrMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+  const day = String(lastDayCurrMonth.getDate()).padStart(2, '0');
+  const month = String(lastDayCurrMonth.getMonth() + 1).padStart(2, '0');
+  const year = lastDayCurrMonth.getFullYear();
+  return `${year}-${month}-${day}`;
 };
 
 const Tasks = () => {
