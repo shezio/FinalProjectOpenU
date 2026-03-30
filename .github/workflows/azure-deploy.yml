@@ -86,9 +86,7 @@ jobs:
           clean: true
           images: 'python:3.10'
           #startup-command: bash -c "export PYTHONPATH=\$PYTHONPATH:/home/site/wwwroot/childsmile:/home/site/wwwroot/childsmile/childsmile_app && gunicorn childsmile.wsgi:application --workers 1 --timeout 600 --bind 0.0.0.0:8000"
-          startup-command: |
-            export PYTHONPATH=$PYTHONPATH:/home/site/wwwroot/childsmile:/home/site/wwwroot/childsmile/childsmile_app
-            gunicorn childsmile.wsgi:application --workers 1 --timeout 600 --bind 0.0.0.0:8000
+          startup-command: "gunicorn childsmile.wsgi:application --workers 1 --timeout 600 --bind 0.0.0.0:8000"
           #startup-command: "gunicorn --bind=0.0.0.0:8000 --chdir childsmile childsmile.wsgi:application --workers 1 --timeout 600"
 
       - name: Send WhatsApp - Deployment Successful
