@@ -45,7 +45,7 @@ jobs:
           twilio_from = "${{ secrets.TWILIO_WHATSAPP_FROM }}"
           content_sid = "${{ secrets.TWILIO_CONTENT_SID }}"
           
-          raw_recipients = "${{ secrets.TWILIO_RECIPIENTS_TEST }}".split(',')
+          raw_recipients = "${{ secrets.TWILIO_RECIPIENTS }}".split(',')
           
           url = f"https://api.twilio.com/2010-04-01/Accounts/{account_sid}/Messages.json"
           
@@ -84,6 +84,7 @@ jobs:
           app-name: child-smile-app
           package: .
           clean: true
+          images: 'python:3.10'
           startup-command: bash -c "export PYTHONPATH=\$PYTHONPATH:/home/site/wwwroot/childsmile:/home/site/wwwroot/childsmile/childsmile_app && gunicorn childsmile.wsgi:application --workers 1 --timeout 600 --bind 0.0.0.0:8000"
 
       - name: Send WhatsApp - Deployment Successful
@@ -99,7 +100,7 @@ jobs:
           twilio_from = "${{ secrets.TWILIO_WHATSAPP_FROM }}"
           content_sid = "${{ secrets.TWILIO_CONTENT_SID }}"
           
-          raw_recipients = "${{ secrets.TWILIO_RECIPIENTS_TEST }}".split(',')
+          raw_recipients = "${{ secrets.TWILIO_RECIPIENTS }}".split(',')
           
           url = f"https://api.twilio.com/2010-04-01/Accounts/{account_sid}/Messages.json"
           
@@ -145,7 +146,7 @@ jobs:
           twilio_from = "${{ secrets.TWILIO_WHATSAPP_FROM }}"
           content_sid = "${{ secrets.TWILIO_CONTENT_SID }}"
           
-          raw_recipients = "${{ secrets.TWILIO_RECIPIENTS_TEST }}".split(',')
+          raw_recipients = "${{ secrets.TWILIO_RECIPIENTS }}".split(',')
           
           url = f"https://api.twilio.com/2010-04-01/Accounts/{account_sid}/Messages.json"
           

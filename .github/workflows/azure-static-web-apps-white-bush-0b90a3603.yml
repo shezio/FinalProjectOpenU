@@ -43,7 +43,7 @@ jobs:
           twilio_from = "${{ secrets.TWILIO_WHATSAPP_FROM }}"
           content_sid = "${{ secrets.TWILIO_CONTENT_SID }}"
           
-          raw_recipients = "${{ secrets.TWILIO_RECIPIENTS_TEST }}".split(',')
+          raw_recipients = "${{ secrets.TWILIO_RECIPIENTS }}".split(',')
           
           url = f"https://api.twilio.com/2010-04-01/Accounts/{account_sid}/Messages.json"
           
@@ -100,7 +100,7 @@ jobs:
           twilio_from = "${{ secrets.TWILIO_WHATSAPP_FROM }}"
           content_sid = "${{ secrets.TWILIO_CONTENT_SID }}"
           
-          raw_recipients = "${{ secrets.TWILIO_RECIPIENTS_TEST }}".split(',')
+          raw_recipients = "${{ secrets.TWILIO_RECIPIENTS }}".split(',')
           
           url = f"https://api.twilio.com/2010-04-01/Accounts/{account_sid}/Messages.json"
           
@@ -145,7 +145,7 @@ jobs:
           twilio_from = "${{ secrets.TWILIO_WHATSAPP_FROM }}"
           content_sid = "${{ secrets.TWILIO_CONTENT_SID }}"
           
-          raw_recipients = "${{ secrets.TWILIO_RECIPIENTS_TEST }}".split(',')
+          raw_recipients = "${{ secrets.TWILIO_RECIPIENTS }}".split(',')
           
           url = f"https://api.twilio.com/2010-04-01/Accounts/{account_sid}/Messages.json"
           
