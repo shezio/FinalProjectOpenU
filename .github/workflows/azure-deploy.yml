@@ -33,50 +33,50 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      # - name: Send WhatsApp - Deployment Started
-      #   continue-on-error: true
-      #   run: |
-      #     python3 << 'EOF'
-      #     import requests
-      #     import json
-      #     
-      #     account_sid = "${{ secrets.TWILIO_ACCOUNT_SID }}"
-      #     auth_token = "${{ secrets.TWILIO_AUTH_TOKEN }}"
-      #     twilio_from = "${{ secrets.TWILIO_WHATSAPP_FROM }}"
-      #     content_sid = "${{ secrets.TWILIO_CONTENT_SID }}"
-      #     
-      #     raw_recipients = "${{ secrets.TWILIO_RECIPIENTS_TEST }}".split(',')
-      #     
-      #     url = f"https://api.twilio.com/2010-04-01/Accounts/{account_sid}/Messages.json"
-      #     
-      #     vars_json = json.dumps({
-      #         "1": "שרת",
-      #         "2": "התחיל"
-      #     })
-      #     
-      #     for r in raw_recipients:
-      #         # Clean: keep only alphanumeric and special chars needed for Twilio (: and +)
-      #         clean_to = "".join(c for c in r if c.isalnum() or c in [':', '+'] or ord(c) > 127).strip()
-      #         # Remove any BiDi control characters
-      #         bidi_chars = [8206, 8207, 8234, 8235, 8236, 8237, 8238, 8239, 8294, 8295, 8296, 8297]
-      #         clean_to = "".join(c for c in clean_to if ord(c) not in bidi_chars)
-      #         
-      #         if not clean_to:
-      #             continue
-      #         
-      #         payload = {
-      #             "From": twilio_from,
-      #             "To": clean_to,
-      #             "ContentSid": content_sid,
-      #             "ContentVariables": vars_json
-      #         }
-      #         
-      #         response = requests.post(url, data=payload, auth=(account_sid, auth_token))
-      #         if response.status_code == 201:
-      #             print(f"✅ Message sent to {clean_to}")
-      #         else:
-      #             print(f"❌ Failed for {clean_to}: {response.status_code} - {response.text}")
-      #     EOF
+      - name: Send WhatsApp - Deployment Started
+        continue-on-error: true
+        run: |
+          python3 << 'EOF'
+          import requests
+          import json
+          
+          account_sid = "${{ secrets.TWILIO_ACCOUNT_SID }}"
+          auth_token = "${{ secrets.TWILIO_AUTH_TOKEN }}"
+          twilio_from = "${{ secrets.TWILIO_WHATSAPP_FROM }}"
+          content_sid = "${{ secrets.TWILIO_CONTENT_SID }}"
+          
+          raw_recipients = "${{ secrets.TWILIO_RECIPIENTS_TEST }}".split(',')
+          
+          url = f"https://api.twilio.com/2010-04-01/Accounts/{account_sid}/Messages.json"
+          
+          vars_json = json.dumps({
+              "1": "שרת",
+              "2": "התחיל"
+          })
+          
+          for r in raw_recipients:
+              # Clean: keep only alphanumeric and special chars needed for Twilio (: and +)
+              clean_to = "".join(c for c in r if c.isalnum() or c in [':', '+'] or ord(c) > 127).strip()
+              # Remove any BiDi control characters
+              bidi_chars = [8206, 8207, 8234, 8235, 8236, 8237, 8238, 8239, 8294, 8295, 8296, 8297]
+              clean_to = "".join(c for c in clean_to if ord(c) not in bidi_chars)
+              
+              if not clean_to:
+                  continue
+              
+              payload = {
+                  "From": twilio_from,
+                  "To": clean_to,
+                  "ContentSid": content_sid,
+                  "ContentVariables": vars_json
+              }
+              
+              response = requests.post(url, data=payload, auth=(account_sid, auth_token))
+              if response.status_code == 201:
+                  print(f"✅ Message sent to {clean_to}")
+              else:
+                  print(f"❌ Failed for {clean_to}: {response.status_code} - {response.text}")
+          EOF
 
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
@@ -86,94 +86,94 @@ jobs:
           clean: true
           startup-command: bash -c "export PYTHONPATH=\$PYTHONPATH:/home/site/wwwroot/childsmile:/home/site/wwwroot/childsmile/childsmile_app && gunicorn childsmile.wsgi:application --workers 1 --timeout 600 --bind 0.0.0.0:8000"
 
-      # - name: Send WhatsApp - Deployment Successful
-      #   if: success()
-      #   continue-on-error: true
-      #   run: |
-      #     python3 << 'EOF'
-      #     import requests
-      #     import json
-      #     
-      #     account_sid = "${{ secrets.TWILIO_ACCOUNT_SID }}"
-      #     auth_token = "${{ secrets.TWILIO_AUTH_TOKEN }}"
-      #     twilio_from = "${{ secrets.TWILIO_WHATSAPP_FROM }}"
-      #     content_sid = "${{ secrets.TWILIO_CONTENT_SID }}"
-      #     
-      #     raw_recipients = "${{ secrets.TWILIO_RECIPIENTS_TEST }}".split(',')
-      #     
-      #     url = f"https://api.twilio.com/2010-04-01/Accounts/{account_sid}/Messages.json"
-      #     
-      #     vars_json = json.dumps({
-      #         "1": "שרת",
-      #         "2": "הצליח"
-      #     })
-      #     
-      #     for r in raw_recipients:
-      #         # Clean: keep only alphanumeric and special chars needed for Twilio (: and +)
-      #         clean_to = "".join(c for c in r if c.isalnum() or c in [':', '+'] or ord(c) > 127).strip()
-      #         # Remove any BiDi control characters
-      #         bidi_chars = [8206, 8207, 8234, 8235, 8236, 8237, 8238, 8239, 8294, 8295, 8296, 8297]
-      #         clean_to = "".join(c for c in clean_to if ord(c) not in bidi_chars)
-      #         
-      #         if not clean_to:
-      #             continue
-      #         
-      #         payload = {
-      #             "From": twilio_from,
-      #             "To": clean_to,
-      #             "ContentSid": content_sid,
-      #             "ContentVariables": vars_json
-      #         }
-      #         
-      #         response = requests.post(url, data=payload, auth=(account_sid, auth_token))
-      #         if response.status_code == 201:
-      #             print(f"✅ Message sent to {clean_to}")
-      #         else:
-      #             print(f"❌ Failed for {clean_to}: {response.status_code} - {response.text}")
-      #     EOF
+      - name: Send WhatsApp - Deployment Successful
+        if: success()
+        continue-on-error: true
+        run: |
+          python3 << 'EOF'
+          import requests
+          import json
+          
+          account_sid = "${{ secrets.TWILIO_ACCOUNT_SID }}"
+          auth_token = "${{ secrets.TWILIO_AUTH_TOKEN }}"
+          twilio_from = "${{ secrets.TWILIO_WHATSAPP_FROM }}"
+          content_sid = "${{ secrets.TWILIO_CONTENT_SID }}"
+          
+          raw_recipients = "${{ secrets.TWILIO_RECIPIENTS_TEST }}".split(',')
+          
+          url = f"https://api.twilio.com/2010-04-01/Accounts/{account_sid}/Messages.json"
+          
+          vars_json = json.dumps({
+              "1": "שרת",
+              "2": "הצליח"
+          })
+          
+          for r in raw_recipients:
+              # Clean: keep only alphanumeric and special chars needed for Twilio (: and +)
+              clean_to = "".join(c for c in r if c.isalnum() or c in [':', '+'] or ord(c) > 127).strip()
+              # Remove any BiDi control characters
+              bidi_chars = [8206, 8207, 8234, 8235, 8236, 8237, 8238, 8239, 8294, 8295, 8296, 8297]
+              clean_to = "".join(c for c in clean_to if ord(c) not in bidi_chars)
+              
+              if not clean_to:
+                  continue
+              
+              payload = {
+                  "From": twilio_from,
+                  "To": clean_to,
+                  "ContentSid": content_sid,
+                  "ContentVariables": vars_json
+              }
+              
+              response = requests.post(url, data=payload, auth=(account_sid, auth_token))
+              if response.status_code == 201:
+                  print(f"✅ Message sent to {clean_to}")
+              else:
+                  print(f"❌ Failed for {clean_to}: {response.status_code} - {response.text}")
+          EOF
 
-      # - name: Send WhatsApp - Deployment Failed
-      #   if: failure()
-      #   continue-on-error: true
-      #   run: |
-      #     python3 << 'EOF'
-      #     import requests
-      #     import json
-      #     
-      #     account_sid = "${{ secrets.TWILIO_ACCOUNT_SID }}"
-      #     auth_token = "${{ secrets.TWILIO_AUTH_TOKEN }}"
-      #     twilio_from = "${{ secrets.TWILIO_WHATSAPP_FROM }}"
-      #     content_sid = "${{ secrets.TWILIO_CONTENT_SID }}"
-      #     
-      #     raw_recipients = "${{ secrets.TWILIO_RECIPIENTS_TEST }}".split(',')
-      #     
-      #     url = f"https://api.twilio.com/2010-04-01/Accounts/{account_sid}/Messages.json"
-      #     
-      #     vars_json = json.dumps({
-      #         "1": "שרת",
-      #         "2": "נכשל"
-      #     })
-      #     
-      #     for r in raw_recipients:
-      #         # Clean: keep only alphanumeric and special chars needed for Twilio (: and +)
-      #         clean_to = "".join(c for c in r if c.isalnum() or c in [':', '+'] or ord(c) > 127).strip()
-      #         # Remove any BiDi control characters
-      #         bidi_chars = [8206, 8207, 8234, 8235, 8236, 8237, 8238, 8239, 8294, 8295, 8296, 8297]
-      #         clean_to = "".join(c for c in clean_to if ord(c) not in bidi_chars)
-      #         
-      #         if not clean_to:
-      #             continue
-      #         
-      #         payload = {
-      #             "From": twilio_from,
-      #             "To": clean_to,
-      #             "ContentSid": content_sid,
-      #             "ContentVariables": vars_json
-      #         }
-      #         
-      #         response = requests.post(url, data=payload, auth=(account_sid, auth_token))
-      #         if response.status_code == 201:
-      #             print(f"✅ Message sent to {clean_to}")
-      #         else:
-      #             print(f"❌ Failed for {clean_to}: {response.status_code} - {response.text}")
-      #     EOF
+      - name: Send WhatsApp - Deployment Failed
+        if: failure()
+        continue-on-error: true
+        run: |
+          python3 << 'EOF'
+          import requests
+          import json
+          
+          account_sid = "${{ secrets.TWILIO_ACCOUNT_SID }}"
+          auth_token = "${{ secrets.TWILIO_AUTH_TOKEN }}"
+          twilio_from = "${{ secrets.TWILIO_WHATSAPP_FROM }}"
+          content_sid = "${{ secrets.TWILIO_CONTENT_SID }}"
+          
+          raw_recipients = "${{ secrets.TWILIO_RECIPIENTS_TEST }}".split(',')
+          
+          url = f"https://api.twilio.com/2010-04-01/Accounts/{account_sid}/Messages.json"
+          
+          vars_json = json.dumps({
+              "1": "שרת",
+              "2": "נכשל"
+          })
+          
+          for r in raw_recipients:
+              # Clean: keep only alphanumeric and special chars needed for Twilio (: and +)
+              clean_to = "".join(c for c in r if c.isalnum() or c in [':', '+'] or ord(c) > 127).strip()
+              # Remove any BiDi control characters
+              bidi_chars = [8206, 8207, 8234, 8235, 8236, 8237, 8238, 8239, 8294, 8295, 8296, 8297]
+              clean_to = "".join(c for c in clean_to if ord(c) not in bidi_chars)
+              
+              if not clean_to:
+                  continue
+              
+              payload = {
+                  "From": twilio_from,
+                  "To": clean_to,
+                  "ContentSid": content_sid,
+                  "ContentVariables": vars_json
+              }
+              
+              response = requests.post(url, data=payload, auth=(account_sid, auth_token))
+              if response.status_code == 201:
+                  print(f"✅ Message sent to {clean_to}")
+              else:
+                  print(f"❌ Failed for {clean_to}: {response.status_code} - {response.text}")
+          EOF
