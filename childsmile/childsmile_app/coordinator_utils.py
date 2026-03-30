@@ -130,84 +130,59 @@ def create_tasks_for_admins(staff_user_id, user_name, user_email):
 <html dir="rtl" lang="he">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
-        * {{ direction: rtl; unicode-bidi: embed; }}
-        body {{ direction: rtl; text-align: right; font-family: Arial, sans-serif; line-height: 1.6; margin: 0; padding: 0; }}
-        .container {{ max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9f9f9; }}
-        .header {{ background-color: #4CAF50; color: white; padding: 20px; border-radius: 5px 5px 0 0; text-align: center; display: flex; align-items: center; justify-content: center; gap: 15px; }}
+        * {{ direction: rtl; unicode-bidi: bidi-override; }}
+        body {{ direction: rtl; text-align: right; font-family: Arial, sans-serif; line-height: 1.6; margin: 0; padding: 20px; background-color: #f5f5f5; }}
+        .container {{ max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9f9f9; border-radius: 8px; }}
+        .header {{ background: linear-gradient(to right, #4CAF50 0%, #45a049 100%); color: white; padding: 20px; border-radius: 8px 8px 0 0; text-align: center; }}
         .header h2 {{ margin: 0; font-size: 20px; }}
-        .header img {{ max-width: 60px; height: auto; }}
-        .content {{ background-color: white; padding: 20px; border: 1px solid #ddd; direction: rtl; }}
-        .section-title {{ font-weight: bold; margin-top: 20px; margin-bottom: 10px; border-bottom: 2px solid #4CAF50; padding-bottom: 5px; text-align: right; direction: rtl; }}
-        .field {{ margin: 8px 0; direction: rtl; text-align: right; display: flex; justify-content: flex-end; align-items: center; flex-direction: row-reverse; }}
-        .field-label {{ font-weight: bold; color: #333; margin-left: 10px; }}
-        .field-value {{ color: #555; }}
-        .footer {{ background-color: #f0f0f0; padding: 15px; text-align: center; font-size: 12px; color: #666; border-radius: 0 0 5px 5px; direction: rtl; }}
-        .divider {{ border-top: 1px solid #4CAF50; margin: 15px 0; }}
-        p {{ margin: 10px 0; text-align: right; direction: rtl; unicode-bidi: embed; }}
+        .content {{ background-color: white; padding: 30px; border-radius: 0 0 0 0; text-align: right; }}
+        .section-title {{ font-weight: bold; margin: 25px 0 15px 0; padding-bottom: 10px; border-bottom: 3px solid #4CAF50; text-align: right; color: #333; }}
+        .field {{ margin: 12px 0; padding: 10px; background-color: #f5f5f5; border-radius: 4px; text-align: right; }}
+        .field-label {{ font-weight: bold; color: #333; }}
+        .field-value {{ color: #666; margin-right: 10px; }}
+        .footer {{ background-color: #f0f0f0; padding: 15px; text-align: center; font-size: 12px; color: #666; border-radius: 0 0 8px 8px; }}
+        .divider {{ border-top: 2px solid #4CAF50; margin: 20px 0; }}
+        p {{ margin: 15px 0; text-align: right; font-size: 14px; color: #333; }}
+        p strong {{ color: #2e7d32; }}
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <div>
-                <h2>משימה חדשה: אישור הרשמה ראשוני</h2>
-            </div>
+            <h2>משימה חדשה: אישור הרשמה ראשוני</h2>
         </div>
         <div class="content">
-            <p style="text-align: right; direction: rtl; unicode-bidi: embed;">שלום {coordinator_name},</p>
+            <p>שלום {coordinator_name},</p>
             
-            <p style="text-align: right; direction: rtl; unicode-bidi: embed;">קיים משתמש חדש הממתין לאישורך לרישום במערכת חיוך של ילד.</p>
-            
-            <div class="divider"></div>
-            
-            <div class="section-title" style="text-align: right; direction: rtl; unicode-bidi: embed;">פרטי המשתמש החדש:</div>
-            
-            <div class="field">
-                <span class="field-label">שם מלא:</span>
-                <span class="field-value">{user_full_name}</span>
-            </div>
-            <div class="field">
-                <span class="field-label">דואר אלקטרוני:</span>
-                <span class="field-value">{user_email_display}</span>
-            </div>
-            <div class="field">
-                <span class="field-label">תעודת זהות:</span>
-                <span class="field-value">{user_id}</span>
-            </div>
-            <div class="field">
-                <span class="field-label">גיל:</span>
-                <span class="field-value">{user_age}</span>
-            </div>
-            <div class="field">
-                <span class="field-label">מין:</span>
-                <span class="field-value">{user_gender}</span>
-            </div>
-            <div class="field">
-                <span class="field-label">טלפון:</span>
-                <span class="field-value">{user_phone}</span>
-            </div>
-            <div class="field">
-                <span class="field-label">עיר מגורים:</span>
-                <span class="field-value">{user_city}</span>
-            </div>
-            <div class="field">
-                <span class="field-label">מעוניין להיות חונך:</span>
-                <span class="field-value">{user_wants_tutor}</span>
-            </div>
-            <div class="field">
-                <span class="field-label">תאריך הרשמה:</span>
-                <span class="field-value">{created_at}</span>
-            </div>
+            <p>קיים משתמש חדש הממתין לאישורך לרישום במערכת חיוך של ילד.</p>
             
             <div class="divider"></div>
             
-            <p style="text-align: right; font-weight: bold; color: #333; direction: rtl; unicode-bidi: embed;">אנא בדוק את פרטי המשתמש במערכת וקבע הערות/תנאים אם יש צורך.</p>
-            <p style="text-align: right; font-weight: bold; color: #333; direction: rtl; unicode-bidi: embed;">לאחר מכן אשר או דחה את ההרשמה כנדרש.</p>
+            <div class="section-title">פרטי המשתמש החדש:</div>
+            
+            <div class="field"><span class="field-label">שם מלא:</span> <span class="field-value">{user_full_name}</span></div>
+            <div class="field"><span class="field-label">דואר אלקטרוני:</span> <span class="field-value">{user_email_display}</span></div>
+            <div class="field"><span class="field-label">תעודת זהות:</span> <span class="field-value">{user_id}</span></div>
+            <div class="field"><span class="field-label">גיל:</span> <span class="field-value">{user_age}</span></div>
+            <div class="field"><span class="field-label">מין:</span> <span class="field-value">{user_gender}</span></div>
+            <div class="field"><span class="field-label">טלפון:</span> <span class="field-value">{user_phone}</span></div>
+            <div class="field"><span class="field-label">עיר מגורים:</span> <span class="field-value">{user_city}</span></div>
+            <div class="field"><span class="field-label">מעוניין להיות חונך:</span> <span class="field-value">{user_wants_tutor}</span></div>
+            <div class="field"><span class="field-label">תאריך הרשמה:</span> <span class="field-value">{created_at}</span></div>
+            
+            <div class="divider"></div>
+            
+            <p><strong>אנא בדוק את פרטי המשתמש במערכת וקבע הערות/תנאים אם יש צורך.</strong></p>
+            <p><strong>לאחר מכן אשר או דחה את ההרשמה כנדרש.</strong></p>
+            
+            <div class="divider"></div>
+            
+            <p style="color: #666; font-size: 12px;">בברכה,<br>צוות חיוך של ילד</p>
         </div>
         <div class="footer">
-            <p style="text-align: center; margin: 0; direction: rtl; unicode-bidi: embed;">בברכה,</p>
-            <p style="text-align: center; margin: 0; direction: rtl; unicode-bidi: embed;">צוות חיוך של ילד</p>
+            <p>זוהי הודעה אוטומטית - אנא אל תשיב לאימייל זה</p>
         </div>
     </div>
 </body>
