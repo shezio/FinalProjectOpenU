@@ -1897,24 +1897,24 @@ textarea.error {
 }
 
 /* Max Age Filter */
-.max-age-filter {
+.age-range-filter {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  padding: 12px 24px;
+  padding: 12px 16px;
   background: linear-gradient(135deg,
     rgba(20, 184, 166, 0.95) 0%,
     rgba(13, 148, 136, 0.95) 100%);
   border: 2px solid rgba(255, 255, 255, 0.3);
   border-radius: 14px;
-  min-width: 220px;
+  min-width: 200px;
   box-shadow: 
     0 6px 20px rgba(20, 184, 166, 0.3),
     inset 0 1px 0 rgba(255, 255, 255, 0.3);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.max-age-filter:hover {
+.age-range-filter:hover {
   background: linear-gradient(135deg,
     rgba(20, 184, 166, 1) 0%,
     rgba(13, 148, 136, 1) 100%);
@@ -1924,12 +1924,34 @@ textarea.error {
     inset 0 1px 0 rgba(255, 255, 255, 0.4);
 }
 
-.max-age-filter label {
+.age-range-filter > label {
   font-size: 24px;
   font-family: Rubik, sans-serif;
   font-weight: 600;
   color: white;
   letter-spacing: 0.3px;
+  text-align: center;
+  margin-bottom: 4px;
+}
+
+.age-sliders {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.age-sliders > div {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.age-sliders label {
+  font-size: 18px;
+  font-family: Rubik, sans-serif;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.95);
+  text-align: center;
 }
 
 .age-slider-input {
@@ -2075,7 +2097,7 @@ select[name="responsible_coordinator"] option {
 .families-main-content .filter-create-container .create-task.init-family-data-button .toggle-mature-btn,
 .families-main-content .filter-create-container .create-task.init-family-data-button .tutorship-status-filter,
 .families-main-content .filter-create-container .create-task.init-family-data-button .status-filter,
-.families-main-content .filter-create-container .create-task.init-family-data-button .max-age-filter,
+.families-main-content .filter-create-container .create-task.init-family-data-button .age-range-filter,
 .families-main-content .filter-create-container .create-task.init-family-data-button .refresh-icon-button {
   flex-shrink: 0 !important;
   display: inline-flex !important;
@@ -2089,8 +2111,8 @@ select[name="responsible_coordinator"] option {
   width: auto;
 }
 
-.families-main-content .filter-create-container .create-task.init-family-data-button .max-age-filter {
-  max-width: 250px;
+.families-main-content .filter-create-container .create-task.init-family-data-button .age-range-filter {
+  max-width: 280px;
   margin-right: 5px !important;
   margin-left: 5px !important;
 }

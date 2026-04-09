@@ -1030,6 +1030,7 @@ const resources = {
       "back to Todo": "בטל התחלת ביצוע משימה",
       "Age Range": "טווח גילאים",
       "All Tutorship Statuses": "כל מצבי החונכות",
+      'Min Age': 'גיל מינימלי',
       'Max Age': 'גיל מקסימלי',
       // Dashboard translations
       "dashboard": "לוח בקרה",
