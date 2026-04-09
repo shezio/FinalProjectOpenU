@@ -346,6 +346,8 @@ const resources = {
       "Status Filter": "סנן לפי סטטוס",
       "Parent Phone": "טלפון הורה",
       "Search by name, ID, or phone": "חפש לפי שם, ת.ז או טלפון",
+      "Search by city name": "חפש לפי עיר",
+      "No families found for this city": "לא נמצאו משפחות בעיר זו",
       "Export Map and Grid": "ייצא כתמונה",
       "Export to Excel": "ייצוא לאקסל",
       "Export to PDF": "ייצוא לPDF",

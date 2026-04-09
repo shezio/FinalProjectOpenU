@@ -35,6 +35,7 @@ const FamiliesPerLocationReport = () => {
   const [mapLoading, setMapLoading] = useState(true);
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
+  const [citySearchTerm, setCitySearchTerm] = useState("");
   const { t } = useTranslation();
   const mapRef = useRef();
   const hasPermissionToView = hasViewPermissionForTable("children");
@@ -334,6 +335,13 @@ const FamiliesPerLocationReport = () => {
               onChange={(e) => setToDate(e.target.value)}
               className="date-input"
             />
+            <input
+              type="text"
+              placeholder={t("Search by city name")}
+              value={citySearchTerm}
+              onChange={(e) => setCitySearchTerm(e.target.value)}
+              className="date-input"
+            />
             <button className="filter-button" onClick={fetchData}>
               {t("Filter")}
             </button>
@@ -363,45 +371,60 @@ const FamiliesPerLocationReport = () => {
             ) : families.length === 0 ? (
               <div className="no-data">{t("No data to display")}</div>
             ) : (
-              <table className="families-data-grid">
-                <thead>
-                  <tr>
-                    <th>
-                      <input
-                        type="checkbox"
-                        onChange={(e) => handleSelectAllCheckbox(e.target.checked)}
-                      />
-                    </th>
-                    <th>{t("Child Full Name")}</th>
-                    <th>{t("City")}</th>
-                    <th className="wide-column">
-                      {t("Registration Date")}
-                      <button
-                        className="sort-button"
-                        onClick={toggleSortOrderRegistrationDate}
-                      >
-                        {sortOrderRegistrationDate === 'asc' ? '▲' : '▼'}
-                      </button>
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {families.map((family, index) => (
-                    <tr key={index}>
-                      <td>
-                        <input
-                          type="checkbox"
-                          checked={family.selected || false} // Ensure `selected` is false if undefined
-                          onChange={() => handleCheckboxChange(index)}
-                        />
-                      </td>
-                      <td>{`${family.first_name} ${family.last_name}`}</td>
-                      <td>{family.city}</td>
-                      <td>{family.registration_date}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+              <>
+                {(() => {
+                  // Filter families by city name
+                  const filteredFamilies = citySearchTerm.trim() 
+                    ? families.filter((family) => 
+                        family.city.toLowerCase().includes(citySearchTerm.toLowerCase())
+                      )
+                    : families;
+
+                  return filteredFamilies.length === 0 ? (
+                    <div className="no-data">{t("No families found for this city")}</div>
+                  ) : (
+                    <table className="families-data-grid">
+                      <thead>
+                        <tr>
+                          <th>
+                            <input
+                              type="checkbox"
+                              onChange={(e) => handleSelectAllCheckbox(e.target.checked)}
+                            />
+                          </th>
+                          <th>{t("Child Full Name")}</th>
+                          <th>{t("City")}</th>
+                          <th className="wide-column">
+                            {t("Registration Date")}
+                            <button
+                              className="sort-button"
+                              onClick={toggleSortOrderRegistrationDate}
+                            >
+                              {sortOrderRegistrationDate === 'asc' ? '▲' : '▼'}
+                            </button>
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {filteredFamilies.map((family, index) => (
+                          <tr key={index}>
+                            <td>
+                              <input
+                                type="checkbox"
+                                checked={family.selected || false}
+                                onChange={() => handleCheckboxChange(index)}
+                              />
+                            </td>
+                            <td>{`${family.first_name} ${family.last_name}`}</td>
+                            <td>{family.city}</td>
+                            <td>{family.registration_date}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  );
+                })()}
+              </>
             )}
           </div>
           {/* Map Section */}
@@ -426,21 +449,30 @@ const FamiliesPerLocationReport = () => {
                   onError={handleMapError} // Handle tile loading error
                   bounds={[[90, -180], [-90, 180]]} /* Optional: restrict map bounds */
                 />
-                {families.map(
-                  (family, index) =>
-                    family.latitude &&
-                    family.longitude && (
-                      <Marker
-                        key={index}
-                        position={[family.latitude, family.longitude]}
-                        icon={familyMarkerIcon}
-                      >
-                        <Popup className="popup-text">
-                          {`${family.first_name} ${family.last_name}`} - {family.city}
-                        </Popup>
-                      </Marker>
-                    )
-                )}
+                {(() => {
+                  // Apply city filter to map markers
+                  const filteredFamiliesForMap = citySearchTerm.trim()
+                    ? families.filter((family) => 
+                        family.city.toLowerCase().includes(citySearchTerm.toLowerCase())
+                      )
+                    : families;
+
+                  return filteredFamiliesForMap.map(
+                    (family, index) =>
+                      family.latitude &&
+                      family.longitude && (
+                        <Marker
+                          key={index}
+                          position={[family.latitude, family.longitude]}
+                          icon={familyMarkerIcon}
+                        >
+                          <Popup className="popup-text">
+                            {`${family.first_name} ${family.last_name}`} - {family.city}
+                          </Popup>
+                        </Marker>
+                      )
+                  );
+                })()}
               </MapContainer>
             )}
           </div>
