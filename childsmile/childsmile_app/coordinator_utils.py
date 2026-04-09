@@ -20,7 +20,14 @@ from .models import (
 from .logger import api_logger
 from datetime import timedelta
 from .utils import create_task_internal
-from .whatsapp_utils import send_coordinator_notification_whatsapp
+
+# Import WhatsApp utils if available (optional feature - graceful fallback)
+try:
+    from .whatsapp_utils import send_coordinator_notification_whatsapp
+    WHATSAPP_AVAILABLE = True
+except ImportError:
+    WHATSAPP_AVAILABLE = False
+    api_logger.warning("whatsapp_utils module not found - WhatsApp notifications disabled")
 
 
 # ============================================================================
@@ -239,7 +246,8 @@ def create_tasks_for_admins(staff_user_id, user_name, user_email):
                     )
                     
                     # Send WhatsApp message to coordinator (async - fire and forget)
-                    if staff_member.phone:
+                    # Only if WhatsApp utils are available
+                    if WHATSAPP_AVAILABLE and staff_member.phone:
                         try:
                             whatsapp_result = send_coordinator_notification_whatsapp(
                                 coordinator_phone=staff_member.phone,
@@ -260,7 +268,9 @@ def create_tasks_for_admins(staff_user_id, user_name, user_email):
                                 api_logger.warning(f"Failed to send WhatsApp to coordinator {staff_member.staff_id}: {whatsapp_result.get('error')}")
                         except Exception as wa_error:
                             api_logger.error(f"Error sending WhatsApp to coordinator {staff_member.staff_id}: {str(wa_error)}")
-                    else:
+                    elif not WHATSAPP_AVAILABLE and staff_member.phone:
+                        api_logger.debug(f"WhatsApp utils not available - skipping WhatsApp for coordinator {staff_member.staff_id}")
+                    elif not staff_member.phone:
                         api_logger.debug(f"Coordinator {staff_member.staff_id} has no phone number - skipping WhatsApp")
                 
                 api_logger.info(f"Registration approval notifications (email + WhatsApp) sent to {len(approval_staff)} Volunteer Coordinators for user {user_email}")
