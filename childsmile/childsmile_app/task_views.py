@@ -1066,84 +1066,105 @@ def update_task_status(request, task_id):
                             # SEND EMAIL WITH WHATSAPP GROUP LINK - volunteer must join group before admin can approve
                             try:
                                 subject = "הרשמתך אושרה - הצטרף לקבוצת הווטסאפ!"
-                                message = f"""
-<html dir="rtl">
+                                message = f"""<!DOCTYPE html>
+<html dir="rtl" lang="he">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <style>
-        body {{ direction: rtl; text-align: right; font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 20px; background-color: #f5f5f5; }}
-        .container {{ max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9f9f9; border-radius: 8px; }}
-        .header {{ background: linear-gradient(to right, #667eea 0%, #764ba2 100%); color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }}
-        .header h1 {{ margin: 0; font-size: 24px; }}
-        .header p {{ margin: 10px 0 0 0; opacity: 0.9; }}
-        .content {{ background-color: white; padding: 30px; border-radius: 0 0 8px 8px; text-align: right; direction: rtl; }}
-        .step {{ margin: 20px 0; padding: 15px; background-color: #f0f4ff; border-right: 4px solid #667eea; border-radius: 4px; }}
-        .step h3 {{ margin: 0 0 10px 0; color: #667eea; font-size: 16px; }}
-        .step p {{ margin: 0; font-size: 14px; text-align: right; }}
-        .button {{ display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px 40px; text-decoration: none; border-radius: 5px; margin: 20px 0; text-align: center; font-weight: bold; }}
-        .button:hover {{ opacity: 0.9; }}
-        .footer {{ text-align: center; padding: 20px; color: #666; font-size: 12px; background-color: #f9f9f9; border-radius: 0 0 8px 8px; }}
-        p {{ margin: 15px 0; text-align: right; font-size: 14px; }}
-        .contact-section {{ text-align: center; margin: 15px 0; direction: ltr; }}
-        .contact-section a {{ display: inline-block; margin: 0 10px; text-decoration: none; }}
-    </style>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 </head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1>ברוכים הבאים לחיוך של ילד!</h1>
-            <p>הרשמתך אושרה בשלב הראשון</p>
-        </div>
-        
-        <div class="content">
-            <p>שלום {staff_user.first_name},</p>
-            
-            <p>תודה על הרשמתך לעמותת <strong>חיוך של ילד</strong>!</p>
-            
-            <div class="step">
-                <h3>✅ שלב ראשוני הסתיים בהצלחה</h3>
-                <p>הרשמתך עברה את השלב הראשון בהצלחה. אנחנו שמחים שהצטרפת אלינו!</p>
-            </div>
-            
-            <div class="step">
-                <h3>📱 השלב הבא: הצטרף לקבוצת הווטסאפ</h3>
-                <p>כדי להשלים את תהליך ההרשמה, אנא הצטרף לקבוצת הווטסאפ של הקהילה שלנו:</p>
-                <div style="text-align: center;">
-                    <a href="https://chat.whatsapp.com/B7UcLqApSTzCpppWR221DB" class="button">
-                        הצטרף לקבוצת הווטסאפ 👥
-                    </a>
-                </div>
-            </div>
-            
-            <div class="step">
-                <h3>⏳ מה קורה כעת?</h3>
-                <p>לאחר שתצטרף לקבוצת הווטסאפ שלנו, צוות הניהול שלנו יבדוק את הפרטים ויסיים את תהליך האישור הסופי בקרוב.</p>
-            </div>
-            
-            <div class="step">
-                <h3>❓ שאלות?</h3>
-                <p>אם יש לך שאלות או צריך עזרה, צור קשר עם צוות הניהול שלנו דרך קבוצת הווטסאפ.</p>
-                <p><strong>ניתן לפנות לטל חלימי רכזת מתנדבים</strong></p>
-                <div class="contact-section">
-                    <a href="https://wa.me/972507225027" style="display: inline-block; margin: 0 15px; text-decoration: none; color: #25D366; font-size: 16px;"><strong>WhatsApp 💬</strong></a>
-                    <a href="tel:+972507225027" style="display: inline-block; margin: 0 15px; text-decoration: none; color: #667eea; font-size: 16px;"><strong>+972 50-722-5027 📱</strong></a>
-                </div>
-            </div>
-            
-            <p style="margin-top: 30px; color: #666;">
-                בברכה,<br>
-                <strong>צוות חיוך של ילד</strong>
-            </p>
-        </div>
-        
-        <div class="footer">
-            <p>זוהי הודעה אוטומטית - אנא אל תשיב לאימייל זה</p>
-        </div>
-    </div>
+<body dir="rtl" style="direction: rtl; text-align: right; font-family: Arial, sans-serif; line-height: 1.6; margin: 0; padding: 20px; background-color: #f5f5f5;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f5f5f5;">
+        <tr>
+            <td align="right" style="padding: 0;">
+                <table width="600" cellpadding="0" cellspacing="0" style="background-color: #f9f9f9; margin: 0 auto;">
+                    <!-- HEADER -->
+                    <tr>
+                        <td style="background-color: #667eea; color: white; padding: 30px; text-align: center;">
+                            <h1 dir="rtl" style="margin: 0; font-size: 24px; font-weight: bold;">ברוכים הבאים לחיוך של ילד!</h1>
+                            <p dir="rtl" style="margin: 10px 0 0 0; opacity: 0.9; font-size: 16px;">הרשמתך אושרה בשלב הראשון</p>
+                        </td>
+                    </tr>
+                    <!-- CONTENT -->
+                    <tr>
+                        <td style="background-color: white; padding: 30px;">
+                            <p dir="rtl" style="text-align: right; margin: 15px 0;">שלום {staff_user.first_name},</p>
+                            
+                            <p dir="rtl" style="text-align: right; margin: 15px 0;">תודה על הרשמתך לעמותת <strong>חיוך של ילד</strong>!</p>
+                            
+                            <!-- STEP 1 -->
+                            <table width="100%" cellpadding="0" cellspacing="0" style="margin: 20px 0; background-color: #f0f4ff; border-right: 4px solid #667eea; padding: 15px;">
+                                <tr>
+                                    <td style="padding: 0; text-align: right;">
+                                        <h3 dir="rtl" style="margin: 0 0 10px 0; color: #667eea; font-size: 16px;">✅ שלב ראשוני הסתיים בהצלחה</h3>
+                                        <p dir="rtl" style="margin: 0; font-size: 14px; text-align: right;">הרשמתך עברה את השלב הראשון בהצלחה. אנחנו שמחים שהצטרפת אלינו!</p>
+                                    </td>
+                                </tr>
+                            </table>
+                            
+                            <!-- STEP 2 -->
+                            <table width="100%" cellpadding="0" cellspacing="0" style="margin: 20px 0; background-color: #f0f4ff; border-right: 4px solid #667eea; padding: 15px;">
+                                <tr>
+                                    <td style="padding: 0; text-align: right;">
+                                        <h3 dir="rtl" style="margin: 0 0 10px 0; color: #667eea; font-size: 16px;">📱 השלב הבא: הצטרף לקבוצת הווטסאפ</h3>
+                                        <p dir="rtl" style="margin: 0 0 15px 0; font-size: 14px; text-align: right;">כדי להשלים את תהליך ההרשמה, אנא הצטרף לקבוצת הווטסאפ של הקהילה שלנו:</p>
+                                        <table width="100%" cellpadding="0" cellspacing="0">
+                                            <tr>
+                                                <td style="text-align: center;">
+                                                    <a href="https://chat.whatsapp.com/B7UcLqApSTzCpppWR221DB" style="display: inline-block; background-color: #667eea; color: white; padding: 15px 40px; text-decoration: none; border-radius: 5px; font-weight: bold; margin: 15px 0;">הצטרף לקבוצת הווטסאפ 👥</a>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+                            
+                            <!-- STEP 3 -->
+                            <table width="100%" cellpadding="0" cellspacing="0" style="margin: 20px 0; background-color: #f0f4ff; border-right: 4px solid #667eea; padding: 15px;">
+                                <tr>
+                                    <td style="padding: 0; text-align: right;">
+                                        <h3 dir="rtl" style="margin: 0 0 10px 0; color: #667eea; font-size: 16px;">⏳ מה קורה כעת?</h3>
+                                        <p dir="rtl" style="margin: 0; font-size: 14px; text-align: right;">לאחר שתצטרף לקבוצת הווטסאפ שלנו, צוות הניהול שלנו יבדוק את הפרטים ויסיים את תהליך האישור הסופי בקרוב.</p>
+                                    </td>
+                                </tr>
+                            </table>
+                            
+                            <!-- STEP 4 -->
+                            <table width="100%" cellpadding="0" cellspacing="0" style="margin: 20px 0; background-color: #f0f4ff; border-right: 4px solid #667eea; padding: 15px;">
+                                <tr>
+                                    <td style="padding: 0; text-align: right;">
+                                        <h3 dir="rtl" style="margin: 0 0 10px 0; color: #667eea; font-size: 16px;">❓ שאלות?</h3>
+                                        <p dir="rtl" style="margin: 0 0 10px 0; font-size: 14px; text-align: right;">אם יש לך שאלות או צריך עזרה, צור קשר עם צוות הניהול שלנו דרך קבוצת הווטסאפ.</p>
+                                        <p dir="rtl" style="margin: 0 0 10px 0; font-size: 14px; text-align: right;"><strong>ניתן לפנות לטל חלימי רכזת מתנדבים</strong></p>
+                                        <table width="100%" cellpadding="0" cellspacing="0">
+                                            <tr>
+                                                <td style="text-align: center; padding: 10px 0;">
+                                                    <a href="https://wa.me/972507225027" style="display: inline-block; margin: 0 15px; text-decoration: none; color: #25D366; font-weight: bold; font-size: 16px;">WhatsApp 💬</a>
+                                                    <a href="tel:+972507225027" style="display: inline-block; margin: 0 15px; text-decoration: none; color: #667eea; font-weight: bold; font-size: 16px;">+972 50-722-5027 📱</a>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+                            
+                            <p dir="rtl" style="text-align: right; margin: 30px 0 0 0; color: #666;">
+                                בברכה,<br>
+                                <strong>צוות חיוך של ילד</strong>
+                            </p>
+                        </td>
+                    </tr>
+                    <!-- FOOTER -->
+                    <tr>
+                        <td style="background-color: #f0f0f0; padding: 15px; text-align: center; font-size: 12px; color: #666;">
+                            <p dir="rtl" style="text-align: center; margin: 0;">זוהי הודעה אוטומטית - אנא אל תשיב לאימייל זה</p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
 </body>
-</html>
-                                """
+</html>"""
                                 send_mail(
                                     subject,
                                     message,
@@ -1181,73 +1202,89 @@ def update_task_status(request, task_id):
                             try:
                                 subject = "הרשמתך אושרה סופית!"
                                 
-                                message = f"""
-<html dir="rtl">
+                                message = f"""<!DOCTYPE html>
+<html dir="rtl" lang="he">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <style>
-        body {{ direction: rtl; text-align: right; font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 20px; background-color: #f5f5f5; }}
-        .container {{ max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9f9f9; border-radius: 8px; }}
-        .header {{ background: linear-gradient(to right, #28a745 0%, #20c997 100%); color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }}
-        .header h1 {{ margin: 0; font-size: 24px; }}
-        .content {{ background-color: white; padding: 30px; border-radius: 0 0 8px 8px; text-align: right; direction: rtl; }}
-        .step {{ margin: 20px 0; padding: 15px; background-color: #e8f5e9; border-right: 4px solid #28a745; border-radius: 4px; }}
-        .step h3 {{ margin: 0 0 10px 0; color: #28a745; font-size: 16px; }}
-        .step p {{ margin: 0; font-size: 14px; text-align: right; }}
-        .footer {{ text-align: center; padding: 20px; color: #666; font-size: 12px; background-color: #f9f9f9; border-radius: 0 0 8px 8px; }}
-        .success-badge {{ background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; padding: 10px 20px; border-radius: 25px; display: inline-block; margin: 15px 0; font-weight: bold; }}
-        p {{ margin: 15px 0; text-align: right; font-size: 14px; }}
-        .contact-section {{ text-align: center; margin: 15px 0; direction: ltr; }}
-        .contact-section a {{ display: inline-block; margin: 0 10px; text-decoration: none; }}
-    </style>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 </head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1>ברכותינו!</h1>
-            <div class="success-badge">הרשמתך אושרה סופית</div>
-        </div>
-        
-        <div class="content">
-            <p>שלום {staff_user.first_name},</p>
-            
-            <p>אנחנו שמחים להודיע לך שהרשמתך בחיוך של ילד <strong>אושרה סופית</strong>! 🎉</p>
-            
-            <div class="step">
-                <h3>✅ כל השלבים הסתיימו בהצלחה</h3>
-                <p>עברת בהצלחה את כל שלבי התהליך.</p>
-            </div>
-            
-            <div class="step">
-                <h3>👥 קבוצת הווטסאפ</h3>
-                <p>תודה שהצטרפת לקבוצת הווטסאפ שלנו - זה חלק חשוב מהקהילה שלנו. כאן תקבל עדכונים, תוכל לשתף חוויות, ותהיה בקשר קבוע עם שאר החברים.</p>
-            </div>
-            
-            <div class="step">
-                <h3>❓ שאלות?</h3>
-                <p>אם יש לך שאלות או צריך עזרה, צור קשר עם צוות הניהול שלנו דרך קבוצת הווטסאפ או אתר החיוך של ילד.</p>
-                <p><strong>ניתן לפנות לטל חלימי רכזת מתנדבים</strong></p>
-                <div class="contact-section">
-                    <a href="https://wa.me/972507225027" style="display: inline-block; margin: 0 15px; text-decoration: none; color: #25D366; font-size: 16px;"><strong>WhatsApp 💬</strong></a>
-                    <a href="tel:+972507225027" style="display: inline-block; margin: 0 15px; text-decoration: none; color: #28a745; font-size: 16px;"><strong>+972 50-722-5027 📱</strong></a>
-                </div>
-            </div>
-            
-            <p style="margin-top: 30px; color: #666;">
-                בברכה,<br>
-                <strong>צוות חיוך של ילד</strong><br>
-                <small>🤝 יחד אנחנו עושים הבדל בחיי הילדים</small>
-            </p>
-        </div>
-        
-        <div class="footer">
-            <p>זוהי הודעה אוטומטית - אנא אל תשיב לאימייל זה</p>
-        </div>
-    </div>
+<body dir="rtl" style="direction: rtl; text-align: right; font-family: Arial, sans-serif; line-height: 1.6; margin: 0; padding: 20px; background-color: #f5f5f5;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f5f5f5;">
+        <tr>
+            <td align="right" style="padding: 0;">
+                <table width="600" cellpadding="0" cellspacing="0" style="background-color: #f9f9f9; margin: 0 auto;">
+                    <!-- HEADER -->
+                    <tr>
+                        <td style="background-color: #28a745; color: white; padding: 30px; text-align: center;">
+                            <h1 dir="rtl" style="margin: 0; font-size: 24px; font-weight: bold;">ברכותינו!</h1>
+                            <div style="background-color: rgba(255,255,255,0.2); color: white; padding: 10px 20px; border-radius: 25px; display: inline-block; margin: 15px 0; font-weight: bold;">הרשמתך אושרה סופית</div>
+                        </td>
+                    </tr>
+                    <!-- CONTENT -->
+                    <tr>
+                        <td style="background-color: white; padding: 30px;">
+                            <p dir="rtl" style="text-align: right; margin: 15px 0;">שלום {staff_user.first_name},</p>
+                            
+                            <p dir="rtl" style="text-align: right; margin: 15px 0;">אנחנו שמחים להודיע לך שהרשמתך בחיוך של ילד <strong>אושרה סופית</strong>! 🎉</p>
+                            
+                            <!-- STEP 1 -->
+                            <table width="100%" cellpadding="0" cellspacing="0" style="margin: 20px 0; background-color: #e8f5e9; border-right: 4px solid #28a745; padding: 15px;">
+                                <tr>
+                                    <td style="padding: 0; text-align: right;">
+                                        <h3 dir="rtl" style="margin: 0 0 10px 0; color: #28a745; font-size: 16px;">✅ כל השלבים הסתיימו בהצלחה</h3>
+                                        <p dir="rtl" style="margin: 0; font-size: 14px; text-align: right;">עברת בהצלחה את כל שלבי התהליך.</p>
+                                    </td>
+                                </tr>
+                            </table>
+                            
+                            <!-- STEP 2 -->
+                            <table width="100%" cellpadding="0" cellspacing="0" style="margin: 20px 0; background-color: #e8f5e9; border-right: 4px solid #28a745; padding: 15px;">
+                                <tr>
+                                    <td style="padding: 0; text-align: right;">
+                                        <h3 dir="rtl" style="margin: 0 0 10px 0; color: #28a745; font-size: 16px;">👥 קבוצת הווטסאפ</h3>
+                                        <p dir="rtl" style="margin: 0; font-size: 14px; text-align: right;">תודה שהצטרפת לקבוצת הווטסאפ שלנו - זה חלק חשוב מהקהילה שלנו. כאן תקבל עדכונים, תוכל לשתף חוויות, ותהיה בקשר קבוע עם שאר החברים.</p>
+                                    </td>
+                                </tr>
+                            </table>
+                            
+                            <!-- STEP 3 -->
+                            <table width="100%" cellpadding="0" cellspacing="0" style="margin: 20px 0; background-color: #e8f5e9; border-right: 4px solid #28a745; padding: 15px;">
+                                <tr>
+                                    <td style="padding: 0; text-align: right;">
+                                        <h3 dir="rtl" style="margin: 0 0 10px 0; color: #28a745; font-size: 16px;">❓ שאלות?</h3>
+                                        <p dir="rtl" style="margin: 0 0 10px 0; font-size: 14px; text-align: right;">אם יש לך שאלות או צריך עזרה, צור קשר עם צוות הניהול שלנו דרך קבוצת הווטסאפ או אתר החיוך של ילד.</p>
+                                        <p dir="rtl" style="margin: 0 0 10px 0; font-size: 14px; text-align: right;"><strong>ניתן לפנות לטל חלימי רכזת מתנדבים</strong></p>
+                                        <table width="100%" cellpadding="0" cellspacing="0">
+                                            <tr>
+                                                <td style="text-align: center; padding: 10px 0;">
+                                                    <a href="https://wa.me/972507225027" style="display: inline-block; margin: 0 15px; text-decoration: none; color: #25D366; font-weight: bold; font-size: 16px;">WhatsApp 💬</a>
+                                                    <a href="tel:+972507225027" style="display: inline-block; margin: 0 15px; text-decoration: none; color: #28a745; font-weight: bold; font-size: 16px;">+972 50-722-5027 📱</a>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+                            
+                            <p dir="rtl" style="text-align: right; margin: 30px 0 0 0; color: #666;">
+                                בברכה,<br>
+                                <strong>צוות חיוך של ילד</strong><br>
+                                <small>🤝 יחד אנחנו עושים הבדל בחיי הילדים</small>
+                            </p>
+                        </td>
+                    </tr>
+                    <!-- FOOTER -->
+                    <tr>
+                        <td style="background-color: #f0f0f0; padding: 15px; text-align: center; font-size: 12px; color: #666;">
+                            <p dir="rtl" style="text-align: center; margin: 0;">זוהי הודעה אוטומטית - אנא אל תשיב לאימייל זה</p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
 </body>
-</html>
-                                """
+</html>"""
                                 send_mail(
                                     subject,
                                     message,

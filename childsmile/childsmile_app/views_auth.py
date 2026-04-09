@@ -254,24 +254,65 @@ def login_email(request):
 
         # Send email
         subject = "קוד הכניסה שלך - חיוך של ילד"
-        message = f"""
-        שלום,
-        
-        קוד הכניסה שלך הוא: {code}
-        
-        הקוד יפוג בעוד 5 דקות.
-        
-        אם לא ביקשת קוד זה, אנא התעלם מהודעה זו.
-        
-        בברכה,
-        צוות חיוך של ילד
-        """
+        html_message = f"""<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+</head>
+<body dir="rtl" style="direction: rtl; text-align: right; font-family: Arial, sans-serif; line-height: 1.6; margin: 0; padding: 20px; background-color: #f5f5f5;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f5f5f5;">
+        <tr>
+            <td align="right" style="padding: 0;">
+                <table width="600" cellpadding="0" cellspacing="0" style="background-color: #f9f9f9; margin: 0 auto;">
+                    <!-- HEADER -->
+                    <tr>
+                        <td style="background-color: #4CAF50; color: white; padding: 20px; text-align: center; font-size: 20px; font-weight: bold;">
+                            קוד הכניסה שלך
+                        </td>
+                    </tr>
+                    <!-- CONTENT -->
+                    <tr>
+                        <td style="background-color: white; padding: 30px;">
+                            <p dir="rtl" style="text-align: right; margin: 15px 0;">שלום,</p>
+                            
+                            <p dir="rtl" style="text-align: right; margin: 15px 0;">קוד הכניסה שלך הוא:</p>
+                            
+                            <table width="100%" cellpadding="0" cellspacing="0" style="margin: 20px 0;">
+                                <tr>
+                                    <td style="text-align: center; padding: 20px; background-color: #f0f0f0; border: 2px solid #4CAF50; border-radius: 8px;">
+                                        <span style="font-size: 32px; font-weight: bold; color: #4CAF50; letter-spacing: 8px; direction: ltr; unicode-bidi: embed;">{code}</span>
+                                    </td>
+                                </tr>
+                            </table>
+                            
+                            <hr style="border: none; border-top: 1px solid #ddd; margin: 20px 0;">
+                            
+                            <p dir="rtl" style="text-align: right; margin: 15px 0; color: #d32f2f;">⏱ הקוד יפוג בעוד 5 דקות.</p>
+                            
+                            <p dir="rtl" style="text-align: right; margin: 15px 0;">אם לא ביקשת קוד זה, אנא התעלם מהודעה זו.</p>
+                        </td>
+                    </tr>
+                    <!-- FOOTER -->
+                    <tr>
+                        <td style="background-color: #f0f0f0; padding: 15px; text-align: center; font-size: 12px; color: #666;">
+                            <p dir="rtl" style="text-align: center; margin: 0;">בברכה,</p>
+                            <p dir="rtl" style="text-align: center; margin: 0;">צוות חיוך של ילד</p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>"""
         
         send_mail(
             subject,
-            message,
+            "קוד הכניסה שלך הוא: " + code,  # Fallback plain text for clients that don't support HTML
             settings.DEFAULT_FROM_EMAIL,
             [email],
+            html_message=html_message,
             fail_silently=False,
         )
         
