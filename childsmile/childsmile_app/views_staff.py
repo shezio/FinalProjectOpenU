@@ -221,18 +221,65 @@ def update_staff_member(request, staff_id):
                     # print(f"[DEACTIVATION DEBUG] Verification code for {staff_member.email}: {code}")
                     
                     subject = "אישור כיבוי חשבון - חיוך של ילד"
-                    message = f"""
-                    בקשה לכיבוי חשבון במערכת חיוך של ילד.
-                    
-                    קוד האימות שלך: {code}
-                    
-                    הקוד יפוג תוקף בעוד 5 דקות.
-                    
-                    אם לא ביקשת זאת, אנא צור קשר עם מנהלי המערכת בדחיפות!
-                    """
+                    html_message = f"""<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+</head>
+<body dir="rtl" style="direction: rtl; text-align: right; font-family: Arial, sans-serif; line-height: 1.6; margin: 0; padding: 20px; background-color: #f5f5f5;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f5f5f5;">
+        <tr>
+            <td align="right" style="padding: 0;">
+                <table width="600" cellpadding="0" cellspacing="0" style="background-color: #f9f9f9; margin: 0 auto;">
+                    <!-- HEADER -->
+                    <tr>
+                        <td style="background-color: #d32f2f; color: white; padding: 20px; text-align: center; font-size: 20px; font-weight: bold;">
+                            אישור כיבוי חשבון
+                        </td>
+                    </tr>
+                    <!-- CONTENT -->
+                    <tr>
+                        <td style="background-color: white; padding: 30px;">
+                            <p dir="rtl" style="text-align: right; margin: 15px 0;">שלום,</p>
+                            
+                            <p dir="rtl" style="text-align: right; margin: 15px 0; color: #d32f2f; font-weight: bold;">בקשה לכיבוי חשבון במערכת חיוך של ילד.</p>
+                            
+                            <hr style="border: none; border-top: 1px solid #ddd; margin: 20px 0;">
+                            
+                            <p dir="rtl" style="text-align: right; margin: 15px 0;">קוד האימות שלך הוא:</p>
+                            
+                            <table width="100%" cellpadding="0" cellspacing="0" style="margin: 20px 0;">
+                                <tr>
+                                    <td style="text-align: center; padding: 20px; background-color: #f0f0f0; border: 2px solid #d32f2f; border-radius: 8px;">
+                                        <span style="font-size: 32px; font-weight: bold; color: #d32f2f; letter-spacing: 8px; direction: ltr; unicode-bidi: embed;">{code}</span>
+                                    </td>
+                                </tr>
+                            </table>
+                            
+                            <hr style="border: none; border-top: 1px solid #ddd; margin: 20px 0;">
+                            
+                            <p dir="rtl" style="text-align: right; margin: 15px 0; color: #d32f2f;">⏱ הקוד יפוג תוקף בעוד 5 דקות.</p>
+                            
+                            <p dir="rtl" style="text-align: right; margin: 15px 0;"><strong>⚠️ אם לא ביקשת זאת, אנא צור קשר עם מנהלי המערכת בדחיפות!</strong></p>
+                        </td>
+                    </tr>
+                    <!-- FOOTER -->
+                    <tr>
+                        <td style="background-color: #f0f0f0; padding: 15px; text-align: center; font-size: 12px; color: #666;">
+                            <p dir="rtl" style="text-align: center; margin: 0;">בברכה,</p>
+                            <p dir="rtl" style="text-align: center; margin: 0;">צוות חיוך של ילד</p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>"""
                     
                     try:
-                        send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [staff_member.email])
+                        send_mail(subject, f"קוד האימות שלך: {code}", settings.DEFAULT_FROM_EMAIL, [staff_member.email], html_message=html_message)
                         return JsonResponse({
                             "message": "Verification code sent to your email",
                             "requires_verification": True
@@ -380,18 +427,65 @@ def update_staff_member(request, staff_id):
                 # print(f"[REACTIVATION DEBUG] Verification code for {staff_member.email}: {code}")
                 
                 subject = "אישור הפעלה של חשבון - חיוך של ילד"
-                message = f"""
-                בקשה להפעלה של חשבון במערכת חיוך של ילד.
-                
-                קוד האימות שלך: {code}
-                
-                הקוד יפוג תוקף בעוד 5 דקות.
-                
-                אם לא ביקשת זאת, אנא צור קשר עם מנהלי המערכת בדחיפות!
-                """
+                html_message = f"""<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+</head>
+<body dir="rtl" style="direction: rtl; text-align: right; font-family: Arial, sans-serif; line-height: 1.6; margin: 0; padding: 20px; background-color: #f5f5f5;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f5f5f5;">
+        <tr>
+            <td align="right" style="padding: 0;">
+                <table width="600" cellpadding="0" cellspacing="0" style="background-color: #f9f9f9; margin: 0 auto;">
+                    <!-- HEADER -->
+                    <tr>
+                        <td style="background-color: #28a745; color: white; padding: 20px; text-align: center; font-size: 20px; font-weight: bold;">
+                            אישור הפעלה של חשבון
+                        </td>
+                    </tr>
+                    <!-- CONTENT -->
+                    <tr>
+                        <td style="background-color: white; padding: 30px;">
+                            <p dir="rtl" style="text-align: right; margin: 15px 0;">שלום,</p>
+                            
+                            <p dir="rtl" style="text-align: right; margin: 15px 0;">בקשה להפעלה של חשבון במערכת חיוך של ילד.</p>
+                            
+                            <hr style="border: none; border-top: 1px solid #ddd; margin: 20px 0;">
+                            
+                            <p dir="rtl" style="text-align: right; margin: 15px 0;">קוד האימות שלך הוא:</p>
+                            
+                            <table width="100%" cellpadding="0" cellspacing="0" style="margin: 20px 0;">
+                                <tr>
+                                    <td style="text-align: center; padding: 20px; background-color: #f0f0f0; border: 2px solid #28a745; border-radius: 8px;">
+                                        <span style="font-size: 32px; font-weight: bold; color: #28a745; letter-spacing: 8px; direction: ltr; unicode-bidi: embed;">{code}</span>
+                                    </td>
+                                </tr>
+                            </table>
+                            
+                            <hr style="border: none; border-top: 1px solid #ddd; margin: 20px 0;">
+                            
+                            <p dir="rtl" style="text-align: right; margin: 15px 0;">⏱ הקוד יפוג תוקף בעוד 5 דקות.</p>
+                            
+                            <p dir="rtl" style="text-align: right; margin: 15px 0;"><strong>⚠️ אם לא ביקשת זאת, אנא צור קשר עם מנהלי המערכת בדחיפות!</strong></p>
+                        </td>
+                    </tr>
+                    <!-- FOOTER -->
+                    <tr>
+                        <td style="background-color: #f0f0f0; padding: 15px; text-align: center; font-size: 12px; color: #666;">
+                            <p dir="rtl" style="text-align: center; margin: 0;">בברכה,</p>
+                            <p dir="rtl" style="text-align: center; margin: 0;">צוות חיוך של ילד</p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>"""
                 
                 try:
-                    send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [staff_member.email])
+                    send_mail(subject, f"קוד האימות שלך: {code}", settings.DEFAULT_FROM_EMAIL, [staff_member.email], html_message=html_message)
                     return JsonResponse({
                         "message": "Verification code sent to your email",
                         "requires_verification": True
@@ -493,6 +587,48 @@ def update_staff_member(request, staff_id):
                 
                 # Send email to staff member (only Hebrew)
                 subject = "חשבונך הופעל - חיוך של ילד"
+                html_message = f"""<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+</head>
+<body dir="rtl" style="direction: rtl; text-align: right; font-family: Arial, sans-serif; line-height: 1.6; margin: 0; padding: 20px; background-color: #f5f5f5;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f5f5f5;">
+        <tr>
+            <td align="right" style="padding: 0;">
+                <table width="600" cellpadding="0" cellspacing="0" style="background-color: #f9f9f9; margin: 0 auto;">
+                    <!-- HEADER -->
+                    <tr>
+                        <td style="background-color: #28a745; color: white; padding: 20px; text-align: center; font-size: 20px; font-weight: bold;">
+                            חשבונך הופעל
+                        </td>
+                    </tr>
+                    <!-- CONTENT -->
+                    <tr>
+                        <td style="background-color: white; padding: 30px;">
+                            <p dir="rtl" style="text-align: right; margin: 15px 0;">שלום {staff_member.first_name},</p>
+                            
+                            <p dir="rtl" style="text-align: right; margin: 15px 0;">חשבונך בחיוך של ילד הופעל מחדש.</p>
+                            
+                            <hr style="border: none; border-top: 1px solid #ddd; margin: 20px 0;">
+                            
+                            <p dir="rtl" style="text-align: right; margin: 15px 0; font-weight: bold; color: #28a745;">✅ תוכל להתחבר למערכת כעת.</p>
+                        </td>
+                    </tr>
+                    <!-- FOOTER -->
+                    <tr>
+                        <td style="background-color: #f0f0f0; padding: 15px; text-align: center; font-size: 12px; color: #666;">
+                            <p dir="rtl" style="text-align: center; margin: 0;">בברכה,</p>
+                            <p dir="rtl" style="text-align: center; margin: 0;">צוות חיוך של ילד</p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>"""
                 message = f"""
                 שלום {staff_member.first_name},
                 
@@ -510,6 +646,7 @@ def update_staff_member(request, staff_id):
                         message,
                         settings.DEFAULT_FROM_EMAIL,
                         [staff_member.email],
+                        html_message=html_message,
                         fail_silently=False
                     )
                 except Exception as e:
@@ -554,6 +691,62 @@ def update_staff_member(request, staff_id):
                 TOTPCode.objects.create(email=new_email, code=code)
                 
                 subject = "אימות שינוי כתובת מייל - חיוך של ילד"
+                html_message = f"""<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+</head>
+<body dir="rtl" style="direction: rtl; text-align: right; font-family: Arial, sans-serif; line-height: 1.6; margin: 0; padding: 20px; background-color: #f5f5f5;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f5f5f5;">
+        <tr>
+            <td align="right" style="padding: 0;">
+                <table width="600" cellpadding="0" cellspacing="0" style="background-color: #f9f9f9; margin: 0 auto;">
+                    <!-- HEADER -->
+                    <tr>
+                        <td style="background-color: #2196F3; color: white; padding: 20px; text-align: center; font-size: 20px; font-weight: bold;">
+                            אימות שינוי כתובת מייל
+                        </td>
+                    </tr>
+                    <!-- CONTENT -->
+                    <tr>
+                        <td style="background-color: white; padding: 30px;">
+                            <p dir="rtl" style="text-align: right; margin: 15px 0;">שלום {data.get('first_name', staff_member.first_name)},</p>
+                            
+                            <p dir="rtl" style="text-align: right; margin: 15px 0;">מייל זה נשלח לשם אימות שינוי כתובת המייל שלך במערכת חיוך של ילד.</p>
+                            
+                            <hr style="border: none; border-top: 1px solid #ddd; margin: 20px 0;">
+                            
+                            <p dir="rtl" style="text-align: right; margin: 15px 0;">קוד האימות שלך הוא:</p>
+                            
+                            <table width="100%" cellpadding="0" cellspacing="0" style="margin: 20px 0;">
+                                <tr>
+                                    <td style="text-align: center; padding: 20px; background-color: #f0f0f0; border: 2px solid #2196F3; border-radius: 8px;">
+                                        <span style="font-size: 32px; font-weight: bold; color: #2196F3; letter-spacing: 8px; direction: ltr; unicode-bidi: embed;">{code}</span>
+                                    </td>
+                                </tr>
+                            </table>
+                            
+                            <hr style="border: none; border-top: 1px solid #ddd; margin: 20px 0;">
+                            
+                            <p dir="rtl" style="text-align: right; margin: 15px 0;">⏱ קוד זה יפוג תוך 5 דקות.</p>
+                            
+                            <p dir="rtl" style="text-align: right; margin: 15px 0;">אנא הזן את הקוד במערכת כדי לאמת ולהשלים את שינוי כתובת המייל.</p>
+                        </td>
+                    </tr>
+                    <!-- FOOTER -->
+                    <tr>
+                        <td style="background-color: #f0f0f0; padding: 15px; text-align: center; font-size: 12px; color: #666;">
+                            <p dir="rtl" style="text-align: center; margin: 0;">בברכה,</p>
+                            <p dir="rtl" style="text-align: center; margin: 0;">צוות חיוך של ילד</p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>"""
                 message = f"""
                 שלום {data.get('first_name', staff_member.first_name)},
                 
@@ -575,6 +768,7 @@ def update_staff_member(request, staff_id):
                         message,
                         settings.DEFAULT_FROM_EMAIL,
                         [new_email],
+                        html_message=html_message,
                         fail_silently=False,
                     )
                     
@@ -1634,6 +1828,62 @@ def staff_creation_send_totp(request):
         TOTPCode.objects.create(email=email, code=code)
 
         subject = "אימות יצירת חשבון סגל - חיוך של ילד"
+        html_message = f"""<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+</head>
+<body dir="rtl" style="direction: rtl; text-align: right; font-family: Arial, sans-serif; line-height: 1.6; margin: 0; padding: 20px; background-color: #f5f5f5;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f5f5f5;">
+        <tr>
+            <td align="right" style="padding: 0;">
+                <table width="600" cellpadding="0" cellspacing="0" style="background-color: #f9f9f9; margin: 0 auto;">
+                    <!-- HEADER -->
+                    <tr>
+                        <td style="background-color: #2196F3; color: white; padding: 20px; text-align: center; font-size: 20px; font-weight: bold;">
+                            קוד אימות יצירת חשבון
+                        </td>
+                    </tr>
+                    <!-- CONTENT -->
+                    <tr>
+                        <td style="background-color: white; padding: 30px;">
+                            <p dir="rtl" style="text-align: right; margin: 15px 0;">שלום {first_name},</p>
+                            
+                            <p dir="rtl" style="text-align: right; margin: 15px 0;">מנהל מערכת יוצר לך חשבון סגל.</p>
+                            
+                            <hr style="border: none; border-top: 1px solid #ddd; margin: 20px 0;">
+                            
+                            <p dir="rtl" style="text-align: right; margin: 15px 0;">קוד האימות שלך הוא:</p>
+                            
+                            <table width="100%" cellpadding="0" cellspacing="0" style="margin: 20px 0;">
+                                <tr>
+                                    <td style="text-align: center; padding: 20px; background-color: #f0f0f0; border: 2px solid #2196F3; border-radius: 8px;">
+                                        <span style="font-size: 32px; font-weight: bold; color: #2196F3; letter-spacing: 8px; direction: ltr; unicode-bidi: embed;">{code}</span>
+                                    </td>
+                                </tr>
+                            </table>
+                            
+                            <hr style="border: none; border-top: 1px solid #ddd; margin: 20px 0;">
+                            
+                            <p dir="rtl" style="text-align: right; margin: 15px 0;">⏱ הקוד יפוג בעוד 5 דקות.</p>
+                            
+                            <p dir="rtl" style="text-align: right; margin: 15px 0;">אנא מסור קוד זה למנהל המערכת כדי להשלים את יצירת החשבון.</p>
+                        </td>
+                    </tr>
+                    <!-- FOOTER -->
+                    <tr>
+                        <td style="background-color: #f0f0f0; padding: 15px; text-align: center; font-size: 12px; color: #666;">
+                            <p dir="rtl" style="text-align: center; margin: 0;">בברכה,</p>
+                            <p dir="rtl" style="text-align: center; margin: 0;">צוות חיוך של ילד</p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>"""
         message = f"""
         שלום {first_name},
 
@@ -1655,6 +1905,7 @@ def staff_creation_send_totp(request):
                 message,
                 settings.DEFAULT_FROM_EMAIL,
                 [email],
+                html_message=html_message,
                 fail_silently=False,
             )
             

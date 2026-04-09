@@ -1,5 +1,6 @@
 """
 Coordinator notification utilities - handles email notifications to different coordinator types.
+Also sends WhatsApp notifications alongside emails.
 """
 
 import datetime
@@ -19,6 +20,7 @@ from .models import (
 from .logger import api_logger
 from datetime import timedelta
 from .utils import create_task_internal
+from .whatsapp_utils import send_coordinator_notification_whatsapp
 
 
 # ============================================================================
@@ -122,7 +124,7 @@ def create_tasks_for_admins(staff_user_id, user_name, user_email):
                 
                 subject = f"משימה חדשה: אישור הרשמה ראשוני - {user_full_name}"
                 
-                # Send individual emails with personalized coordinator name
+                # Send individual emails and WhatsApp messages with personalized coordinator name
                 for staff_member in approval_staff:
                     coordinator_name = f"{staff_member.first_name} {staff_member.last_name}"
                     
@@ -130,64 +132,103 @@ def create_tasks_for_admins(staff_user_id, user_name, user_email):
 <html dir="rtl" lang="he">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <style>
-        * {{ direction: rtl; unicode-bidi: bidi-override; }}
-        body {{ direction: rtl; text-align: right; font-family: Arial, sans-serif; line-height: 1.6; margin: 0; padding: 20px; background-color: #f5f5f5; }}
-        .container {{ max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9f9f9; border-radius: 8px; }}
-        .header {{ background: linear-gradient(to right, #4CAF50 0%, #45a049 100%); color: white; padding: 20px; border-radius: 8px 8px 0 0; text-align: center; }}
-        .header h2 {{ margin: 0; font-size: 20px; }}
-        .content {{ background-color: white; padding: 30px; border-radius: 0 0 0 0; text-align: right; }}
-        .section-title {{ font-weight: bold; margin: 25px 0 15px 0; padding-bottom: 10px; border-bottom: 3px solid #4CAF50; text-align: right; color: #333; }}
-        .field {{ margin: 12px 0; padding: 10px; background-color: #f5f5f5; border-radius: 4px; text-align: right; }}
-        .field-label {{ font-weight: bold; color: #333; }}
-        .field-value {{ color: #666; margin-right: 10px; }}
-        .footer {{ background-color: #f0f0f0; padding: 15px; text-align: center; font-size: 12px; color: #666; border-radius: 0 0 8px 8px; }}
-        .divider {{ border-top: 2px solid #4CAF50; margin: 20px 0; }}
-        p {{ margin: 15px 0; text-align: right; font-size: 14px; color: #333; }}
-        p strong {{ color: #2e7d32; }}
-    </style>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 </head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h2>משימה חדשה: אישור הרשמה ראשוני</h2>
-        </div>
-        <div class="content">
-            <p>שלום {coordinator_name},</p>
-            
-            <p>קיים משתמש חדש הממתין לאישורך לרישום במערכת חיוך של ילד.</p>
-            
-            <div class="divider"></div>
-            
-            <div class="section-title">פרטי המשתמש החדש:</div>
-            
-            <div class="field"><span class="field-label">שם מלא:</span> <span class="field-value">{user_full_name}</span></div>
-            <div class="field"><span class="field-label">דואר אלקטרוני:</span> <span class="field-value">{user_email_display}</span></div>
-            <div class="field"><span class="field-label">תעודת זהות:</span> <span class="field-value">{user_id}</span></div>
-            <div class="field"><span class="field-label">גיל:</span> <span class="field-value">{user_age}</span></div>
-            <div class="field"><span class="field-label">מין:</span> <span class="field-value">{user_gender}</span></div>
-            <div class="field"><span class="field-label">טלפון:</span> <span class="field-value">{user_phone}</span></div>
-            <div class="field"><span class="field-label">עיר מגורים:</span> <span class="field-value">{user_city}</span></div>
-            <div class="field"><span class="field-label">מעוניין להיות חונך:</span> <span class="field-value">{user_wants_tutor}</span></div>
-            <div class="field"><span class="field-label">תאריך הרשמה:</span> <span class="field-value">{created_at}</span></div>
-            
-            <div class="divider"></div>
-            
-            <p><strong>אנא בדוק את פרטי המשתמש במערכת וקבע הערות/תנאים אם יש צורך.</strong></p>
-            <p><strong>לאחר מכן אשר או דחה את ההרשמה כנדרש.</strong></p>
-            
-            <div class="divider"></div>
-            
-            <p style="color: #666; font-size: 12px;">בברכה,<br>צוות חיוך של ילד</p>
-        </div>
-        <div class="footer">
-            <p>זוהי הודעה אוטומטית - אנא אל תשיב לאימייל זה</p>
-        </div>
-    </div>
+<body dir="rtl" style="direction: rtl; text-align: right; font-family: Arial, sans-serif; line-height: 1.6; margin: 0; padding: 20px; background-color: #f5f5f5;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f5f5f5;">
+        <tr>
+            <td align="right" style="padding: 0;">
+                <table width="600" cellpadding="0" cellspacing="0" style="background-color: #f9f9f9; margin: 0 auto;">
+                    <!-- HEADER -->
+                    <tr>
+                        <td style="background: linear-gradient(to right, #4CAF50 0%, #45a049 100%); color: white; padding: 20px; text-align: center; font-size: 20px; font-weight: bold; border-radius: 8px 8px 0 0;">
+                            משימה חדשה: אישור הרשמה ראשוני
+                        </td>
+                    </tr>
+                    <!-- CONTENT -->
+                    <tr>
+                        <td style="background-color: white; padding: 30px; border-radius: 0;">
+                            <p dir="rtl" style="text-align: right; margin: 15px 0;">שלום {coordinator_name},</p>
+                            
+                            <p dir="rtl" style="text-align: right; margin: 15px 0;">קיים משתמש חדש הממתין לאישורך לרישום במערכת חיוך של ילד.</p>
+                            
+                            <hr style="border: none; border-top: 2px solid #4CAF50; margin: 20px 0;">
+                            
+                            <p dir="rtl" style="text-align: right; font-weight: bold; margin: 15px 0; padding-bottom: 10px; border-bottom: 3px solid #4CAF50; color: #333;">פרטי המשתמש החדש:</p>
+                            
+                            <!-- FIELDS TABLE -->
+                            <table width="100%" cellpadding="0" cellspacing="0" dir="rtl">
+                                <tr>
+                                    <td style="margin: 12px 0; padding: 10px; background-color: #f5f5f5; border-radius: 4px; text-align: right; direction: rtl;">
+                                        <span style="font-weight: bold; color: #333; display: inline-block; margin-left: 10px;">שם מלא:</span><span style="color: #666; direction: ltr; unicode-bidi: embed;">{user_full_name}</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="margin: 12px 0; padding: 10px; background-color: #f5f5f5; border-radius: 4px; text-align: right; direction: rtl;">
+                                        <span style="font-weight: bold; color: #333; display: inline-block; margin-left: 10px;">דואר אלקטרוני:</span><span style="color: #666; direction: ltr; unicode-bidi: embed;">{user_email_display}</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="margin: 12px 0; padding: 10px; background-color: #f5f5f5; border-radius: 4px; text-align: right; direction: rtl;">
+                                        <span style="font-weight: bold; color: #333; display: inline-block; margin-left: 10px;">תעודת זהות:</span><span style="color: #666; direction: ltr; unicode-bidi: embed;">{user_id}</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="margin: 12px 0; padding: 10px; background-color: #f5f5f5; border-radius: 4px; text-align: right; direction: rtl;">
+                                        <span style="font-weight: bold; color: #333; display: inline-block; margin-left: 10px;">גיל:</span><span style="color: #666; direction: ltr; unicode-bidi: embed;">{user_age}</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="margin: 12px 0; padding: 10px; background-color: #f5f5f5; border-radius: 4px; text-align: right; direction: rtl;">
+                                        <span style="font-weight: bold; color: #333; display: inline-block; margin-left: 10px;">מין:</span><span style="color: #666; direction: ltr; unicode-bidi: embed;">{user_gender}</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="margin: 12px 0; padding: 10px; background-color: #f5f5f5; border-radius: 4px; text-align: right; direction: rtl;">
+                                        <span style="font-weight: bold; color: #333; display: inline-block; margin-left: 10px;">טלפון:</span><span style="color: #666; direction: ltr; unicode-bidi: embed;">{user_phone}</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="margin: 12px 0; padding: 10px; background-color: #f5f5f5; border-radius: 4px; text-align: right; direction: rtl;">
+                                        <span style="font-weight: bold; color: #333; display: inline-block; margin-left: 10px;">עיר מגורים:</span><span style="color: #666; direction: ltr; unicode-bidi: embed;">{user_city}</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="margin: 12px 0; padding: 10px; background-color: #f5f5f5; border-radius: 4px; text-align: right; direction: rtl;">
+                                        <span style="font-weight: bold; color: #333; display: inline-block; margin-left: 10px;">מעוניין להיות חונך:</span><span style="color: #666; direction: ltr; unicode-bidi: embed;">{user_wants_tutor}</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="margin: 12px 0; padding: 10px; background-color: #f5f5f5; border-radius: 4px; text-align: right; direction: rtl;">
+                                        <span style="font-weight: bold; color: #333; display: inline-block; margin-left: 10px;">תאריך הרשמה:</span><span style="color: #666; direction: ltr; unicode-bidi: embed;">{created_at}</span>
+                                    </td>
+                                </tr>
+                            </table>
+                            
+                            <hr style="border: none; border-top: 2px solid #4CAF50; margin: 20px 0;">
+                            
+                            <p dir="rtl" style="text-align: right; margin: 15px 0;"><strong style="color: #2e7d32;">אנא בדוק את פרטי המשתמש במערכת וקבע הערות/תנאים אם יש צורך.</strong></p>
+                            <p dir="rtl" style="text-align: right; margin: 15px 0;"><strong style="color: #2e7d32;">לאחר מכן אשר או דחה את ההרשמה כנדרש.</strong></p>
+                            
+                            <hr style="border: none; border-top: 2px solid #4CAF50; margin: 20px 0;">
+                            
+                            <p dir="rtl" style="text-align: right; color: #666; font-size: 12px; margin: 15px 0;">בברכה,<br>צוות חיוך של ילד</p>
+                        </td>
+                    </tr>
+                    <!-- FOOTER -->
+                    <tr>
+                        <td style="background-color: #f0f0f0; padding: 15px; text-align: center; font-size: 12px; color: #666; border-radius: 0 0 8px 8px;">
+                            <p dir="rtl" style="text-align: center; margin: 0;">זוהי הודעה אוטומטית - אנא אל תשיב לאימייל זה</p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
 </body>
 </html>"""
 
+                    # Send email
                     send_mail(
                         subject,
                         message,
@@ -196,7 +237,33 @@ def create_tasks_for_admins(staff_user_id, user_name, user_email):
                         fail_silently=True,
                         html_message=message
                     )
-                api_logger.info(f"Registration approval notification sent to {len(approval_staff)} Volunteer Coordinators for user {user_email}")
+                    
+                    # Send WhatsApp message to coordinator (async - fire and forget)
+                    if staff_member.phone:
+                        try:
+                            whatsapp_result = send_coordinator_notification_whatsapp(
+                                coordinator_phone=staff_member.phone,
+                                coordinator_name=coordinator_name,
+                                user_name=user_full_name,
+                                user_email=user_email_display,
+                                user_id=user_id,
+                                user_age=user_age,
+                                user_gender=user_gender,
+                                user_phone=user_phone,
+                                user_city=user_city,
+                                user_wants_tutor=user_info.get("want_tutor"),
+                                created_at=created_at
+                            )
+                            if whatsapp_result.get("success"):
+                                api_logger.info(f"WhatsApp notification sent to coordinator {staff_member.staff_id}: {whatsapp_result.get('message_sid')}")
+                            else:
+                                api_logger.warning(f"Failed to send WhatsApp to coordinator {staff_member.staff_id}: {whatsapp_result.get('error')}")
+                        except Exception as wa_error:
+                            api_logger.error(f"Error sending WhatsApp to coordinator {staff_member.staff_id}: {str(wa_error)}")
+                    else:
+                        api_logger.debug(f"Coordinator {staff_member.staff_id} has no phone number - skipping WhatsApp")
+                
+                api_logger.info(f"Registration approval notifications (email + WhatsApp) sent to {len(approval_staff)} Volunteer Coordinators for user {user_email}")
                 
                 # Create approval task for each Volunteer Coordinator
                 try:
@@ -345,98 +412,116 @@ def notify_tutored_families_coordinators(child_id):
 <html dir="rtl" lang="he">
 <head>
     <meta charset="UTF-8">
-    <style>
-        * {{ direction: rtl; unicode-bidi: embed; }}
-        body {{ direction: rtl; text-align: right; font-family: Arial, sans-serif; line-height: 1.6; margin: 0; padding: 0; }}
-        .container {{ max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9f9f9; }}
-        .header {{ background-color: #2196F3; color: white; padding: 20px; border-radius: 5px 5px 0 0; text-align: center; display: flex; align-items: center; justify-content: center; gap: 15px; }}
-        .header h2 {{ margin: 0; font-size: 20px; }}
-        .content {{ background-color: white; padding: 20px; border: 1px solid #ddd; direction: rtl; }}
-        .section-title {{ font-weight: bold; margin-top: 20px; margin-bottom: 10px; border-bottom: 2px solid #2196F3; padding-bottom: 5px; text-align: right; direction: rtl; }}
-        .field {{ margin: 8px 0; direction: rtl; text-align: right; display: flex; justify-content: flex-end; align-items: center; flex-direction: row-reverse; }}
-        .field-label {{ font-weight: bold; color: #333; margin-left: 10px; }}
-        .field-value {{ color: #555; }}
-        .footer {{ background-color: #f0f0f0; padding: 15px; text-align: center; font-size: 12px; color: #666; border-radius: 0 0 5px 5px; direction: rtl; }}
-        .divider {{ border-top: 1px solid #2196F3; margin: 15px 0; }}
-        p {{ margin: 10px 0; text-align: right; direction: rtl; unicode-bidi: embed; }}
-    </style>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 </head>
-<body>
-    <div class="container">
-        <div class="header">
-            <div>
-                <h2>משפחה חדשה ממתינה לחונך</h2>
-            </div>
-        </div>
-        <div class="content">
-            <p style="text-align: right; direction: rtl; unicode-bidi: embed;">שלום {coordinator_name},</p>
-            
-            <p style="text-align: right; direction: rtl; unicode-bidi: embed;">משפחה חדשה נוספה למערכת והם ממתינים לחונך מתאים.</p>
-            
-            <div class="divider"></div>
-            
-            <div class="section-title" style="text-align: right; direction: rtl; unicode-bidi: embed;">פרטי הילד:</div>
-            
-            <div class="field">
-                <span class="field-label">שם מלא:</span>
-                <span class="field-value">{child_full_name}</span>
-            </div>
-            <div class="field">
-                <span class="field-label">תעודת זהות:</span>
-                <span class="field-value">{child_id}</span>
-            </div>
-            <div class="field">
-                <span class="field-label">גיל:</span>
-                <span class="field-value">{child_age} שנים</span>
-            </div>
-            <div class="field">
-                <span class="field-label">מין:</span>
-                <span class="field-value">{child_gender}</span>
-            </div>
-            <div class="field">
-                <span class="field-label">עיר מגורים:</span>
-                <span class="field-value">{child_city}</span>
-            </div>
-            <div class="field">
-                <span class="field-label">טלפון הורים:</span>
-                <span class="field-value">{parent_phone}</span>
-            </div>
-            
-            <div class="divider"></div>
-            
-            <div class="section-title" style="text-align: right; direction: rtl; unicode-bidi: embed;">מידע רפואי:</div>
-            
-            <div class="field">
-                <span class="field-label">אבחנה:</span>
-                <span class="field-value">{child_diagnosis}</span>
-            </div>
-            <div class="field">
-                <span class="field-label">בית חולים/מוסד:</span>
-                <span class="field-value">{child_hospital}</span>
-            </div>
-            
-            <div class="divider"></div>
-            
-            <div class="section-title" style="text-align: right; direction: rtl; unicode-bidi: embed;">פרטי החונכות:</div>
-            
-            <div class="field">
-                <span class="field-label">סטטוס חונכות:</span>
-                <span class="field-value">{tutoring_status_display}</span>
-            </div>
-            <div class="field">
-                <span class="field-label">תאריך הוספה:</span>
-                <span class="field-value">{registration_date}</span>
-            </div>
-            
-            <div class="divider"></div>
-            
-            <p style="text-align: right; font-weight: bold; color: #333; direction: rtl; unicode-bidi: embed;">אנא בדוק את פרטי המשפחה וצור קשר עם חונך מתאים.</p>
-        </div>
-        <div class="footer">
-            <p style="text-align: center; margin: 0; direction: rtl; unicode-bidi: embed;">בברכה,</p>
-            <p style="text-align: center; margin: 0; direction: rtl; unicode-bidi: embed;">צוות חיוך של ילד</p>
-        </div>
-    </div>
+<body dir="rtl" style="direction: rtl; text-align: right; font-family: Arial, sans-serif; line-height: 1.6; margin: 0; padding: 20px; background-color: #f5f5f5;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f5f5f5;">
+        <tr>
+            <td align="right" style="padding: 0;">
+                <table width="600" cellpadding="0" cellspacing="0" style="background-color: #f9f9f9; margin: 0 auto;">
+                    <!-- HEADER -->
+                    <tr>
+                        <td style="background-color: #2196F3; color: white; padding: 20px; text-align: center; font-size: 20px; font-weight: bold;">
+                            משפחה חדשה ממתינה לחונך
+                        </td>
+                    </tr>
+                    <!-- CONTENT -->
+                    <tr>
+                        <td style="background-color: white; padding: 30px;">
+                            <p dir="rtl" style="text-align: right; margin: 15px 0;">שלום {coordinator_name},</p>
+                            
+                            <p dir="rtl" style="text-align: right; margin: 15px 0;">משפחה חדשה נוספה למערכת והם ממתינים לחונך מתאים.</p>
+                            
+                            <hr style="border: none; border-top: 2px solid #2196F3; margin: 20px 0;">
+                            
+                            <p dir="rtl" style="text-align: right; font-weight: bold; margin: 15px 0; padding-bottom: 10px; border-bottom: 3px solid #2196F3; color: #333;">פרטי הילד:</p>
+                            
+                            <!-- CHILD FIELDS TABLE -->
+                            <table width="100%" cellpadding="0" cellspacing="0" dir="rtl">
+                                <tr>
+                                    <td style="margin: 12px 0; padding: 10px; background-color: #f5f5f5; border-radius: 4px; text-align: right; direction: rtl;">
+                                        <span style="font-weight: bold; color: #333; display: inline-block; margin-left: 10px;">שם מלא:</span><span style="color: #666; direction: ltr; unicode-bidi: embed;">{child_full_name}</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="margin: 12px 0; padding: 10px; background-color: #f5f5f5; border-radius: 4px; text-align: right; direction: rtl;">
+                                        <span style="font-weight: bold; color: #333; display: inline-block; margin-left: 10px;">תעודת זהות:</span><span style="color: #666; direction: ltr; unicode-bidi: embed;">{child_id}</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="margin: 12px 0; padding: 10px; background-color: #f5f5f5; border-radius: 4px; text-align: right; direction: rtl;">
+                                        <span style="font-weight: bold; color: #333; display: inline-block; margin-left: 10px;">גיל:</span><span style="color: #666; direction: ltr; unicode-bidi: embed;">{child_age} שנים</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="margin: 12px 0; padding: 10px; background-color: #f5f5f5; border-radius: 4px; text-align: right; direction: rtl;">
+                                        <span style="font-weight: bold; color: #333; display: inline-block; margin-left: 10px;">מין:</span><span style="color: #666; direction: ltr; unicode-bidi: embed;">{child_gender}</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="margin: 12px 0; padding: 10px; background-color: #f5f5f5; border-radius: 4px; text-align: right; direction: rtl;">
+                                        <span style="font-weight: bold; color: #333; display: inline-block; margin-left: 10px;">עיר מגורים:</span><span style="color: #666; direction: ltr; unicode-bidi: embed;">{child_city}</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="margin: 12px 0; padding: 10px; background-color: #f5f5f5; border-radius: 4px; text-align: right; direction: rtl;">
+                                        <span style="font-weight: bold; color: #333; display: inline-block; margin-left: 10px;">טלפון הורים:</span><span style="color: #666; direction: ltr; unicode-bidi: embed;">{parent_phone}</span>
+                                    </td>
+                                </tr>
+                            </table>
+                            
+                            <hr style="border: none; border-top: 2px solid #2196F3; margin: 20px 0;">
+                            
+                            <p dir="rtl" style="text-align: right; font-weight: bold; margin: 15px 0; padding-bottom: 10px; border-bottom: 3px solid #2196F3; color: #333;">מידע רפואי:</p>
+                            
+                            <!-- MEDICAL FIELDS TABLE -->
+                            <table width="100%" cellpadding="0" cellspacing="0" dir="rtl">
+                                <tr>
+                                    <td style="margin: 12px 0; padding: 10px; background-color: #f5f5f5; border-radius: 4px; text-align: right; direction: rtl;">
+                                        <span style="font-weight: bold; color: #333; display: inline-block; margin-left: 10px;">אבחנה:</span><span style="color: #666; direction: ltr; unicode-bidi: embed;">{child_diagnosis}</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="margin: 12px 0; padding: 10px; background-color: #f5f5f5; border-radius: 4px; text-align: right; direction: rtl;">
+                                        <span style="font-weight: bold; color: #333; display: inline-block; margin-left: 10px;">בית חולים/מוסד:</span><span style="color: #666; direction: ltr; unicode-bidi: embed;">{child_hospital}</span>
+                                    </td>
+                                </tr>
+                            </table>
+                            
+                            <hr style="border: none; border-top: 2px solid #2196F3; margin: 20px 0;">
+                            
+                            <p dir="rtl" style="text-align: right; font-weight: bold; margin: 15px 0; padding-bottom: 10px; border-bottom: 3px solid #2196F3; color: #333;">פרטי החונכות:</p>
+                            
+                            <!-- TUTORING FIELDS TABLE -->
+                            <table width="100%" cellpadding="0" cellspacing="0" dir="rtl">
+                                <tr>
+                                    <td style="margin: 12px 0; padding: 10px; background-color: #f5f5f5; border-radius: 4px; text-align: right; direction: rtl;">
+                                        <span style="font-weight: bold; color: #333; display: inline-block; margin-left: 10px;">סטטוס חונכות:</span><span style="color: #666; direction: ltr; unicode-bidi: embed;">{tutoring_status_display}</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="margin: 12px 0; padding: 10px; background-color: #f5f5f5; border-radius: 4px; text-align: right; direction: rtl;">
+                                        <span style="font-weight: bold; color: #333; display: inline-block; margin-left: 10px;">תאריך הוספה:</span><span style="color: #666; direction: ltr; unicode-bidi: embed;">{registration_date}</span>
+                                    </td>
+                                </tr>
+                            </table>
+                            
+                            <hr style="border: none; border-top: 2px solid #2196F3; margin: 20px 0;">
+                            
+                            <p dir="rtl" style="text-align: right; margin: 15px 0;"><strong style="color: #1976D2;">אנא בדוק את פרטי המשפחה וצור קשר עם חונך מתאים.</strong></p>
+                        </td>
+                    </tr>
+                    <!-- FOOTER -->
+                    <tr>
+                        <td style="background-color: #f0f0f0; padding: 15px; text-align: center; font-size: 12px; color: #666;">
+                            <p dir="rtl" style="text-align: center; margin: 0;">בברכה,</p>
+                            <p dir="rtl" style="text-align: center; margin: 0;">צוות חיוך של ילד</p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
 </body>
 </html>"""
 
