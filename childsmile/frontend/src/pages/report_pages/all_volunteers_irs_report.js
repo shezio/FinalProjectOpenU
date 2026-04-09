@@ -9,7 +9,7 @@ import '../../styles/common.css';
 import '../../styles/reports.css';
 import '../../styles/all_volunteers_report.css';
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 6;
 
 const AllVolunteersIRSReport = () => {
     const [volunteers, setVolunteers] = useState([]);

@@ -3,11 +3,15 @@
 .all-volunteers-report-main-content {
     direction: rtl;
     overflow: hidden;
+    height: 100vh;
+    width: 100%;
 }
 
 .all-volunteers-report-main-content .page-content {
     padding: 20px;
-    overflow: hidden;
+    overflow-y: auto;
+    overflow-x: hidden;
+    max-height: calc(100vh - 80px);
 }
 
 /* ===== FILTER/CONTROLS STYLING ===== */
@@ -49,15 +53,16 @@
 .all-volunteers-report-main-content .page-content .grid-container {
     margin-top: 150px;
     margin-right: 180px;
-    overflow: hidden;
+    overflow: visible;
+    position: relative;
 }
 
 /* ===== DATA GRID TABLE ===== */
 .all-volunteers-report-main-content .data-grid {
     margin-top: 50px;
     margin-right: 50px;
-    overflow-x: hidden;
-    overflow-y: auto;
+    overflow: visible;
+    width: calc(100% - 50px);
 }
 
 /* ===== TABLE COLUMN WIDTHS (8 columns) ===== */
