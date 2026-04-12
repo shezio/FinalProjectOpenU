@@ -23,7 +23,7 @@ from .utils import create_task_internal
 
 # Import WhatsApp utils if available (optional feature - graceful fallback)
 try:
-    from .whatsapp_utils import send_coordinator_notification_whatsapp, send_coordinator_notification_whatsapp_family
+    from .whatsapp_utils import send_coordinator_notification_whatsapp, send_coordinator_notification_whatsapp_family, send_coordinator_notification_whatsapp_family_with_age_unit
     WHATSAPP_AVAILABLE = True
 except ImportError:
     WHATSAPP_AVAILABLE = False
@@ -548,3 +548,144 @@ def notify_tutored_families_coordinators(child_id):
         
     except Exception as e:
         api_logger.error(f"ERROR: An error occurred while notifying tutored families coordinators: {str(e)}")
+
+
+# ============================================================================
+# ADMIN NOTIFICATIONS FOR NEW FAMILIES
+# ============================================================================
+
+def notify_admins_of_new_family_async(child_id):
+    """
+    Async wrapper to notify all system admins (except shlezi0@gmail.com) about a new family creation.
+    """
+    thread = threading.Thread(
+        target=notify_admins_of_new_family,
+        args=(child_id,),
+        daemon=True
+    )
+    thread.start()
+
+
+def notify_admins_of_new_family(child_id):
+    """
+    Send WhatsApp notification to all System Administrators about a new family,
+    excluding the admin with email shlezi0@gmail.com.
+    
+    Uses Twilio content template (NEW_FAMILY_ADMIN_SID) with 9 variables:
+    1. Admin name
+    2. Child name
+    3. Age display (e.g., "7 שנים" or "5 חודשים")
+    4. Gender
+    5. City
+    6. Parent phone
+    7. Hospital
+    8. Tutoring status
+    9. Registration date
+    
+    Args:
+        child_id: The child ID of the newly created family
+    """
+    try:
+        from .utils import calculate_age_from_birth_date
+        from datetime import date
+        
+        # Fetch the child/family details
+        child = Children.objects.get(child_id=child_id)
+        child_name = f"{child.childfirstname} {child.childsurname}"
+        
+        # Calculate age in years and determine unit
+        if child.date_of_birth:
+            today = date.today()
+            age_years = (
+                today.year
+                - child.date_of_birth.year
+                - (
+                    (today.month, today.day)
+                    < (child.date_of_birth.month, child.date_of_birth.day)
+                )
+            )
+            
+            # If less than 1 year old, calculate months
+            if age_years < 1:
+                # Calculate months
+                if today.month >= child.date_of_birth.month:
+                    age_number = today.month - child.date_of_birth.month
+                else:
+                    age_number = 12 + today.month - child.date_of_birth.month
+                age_unit = "חודשים"
+            else:
+                age_number = age_years
+                age_unit = "שנים"
+        else:
+            age_number = "N/A"
+            age_unit = ""
+        
+        child_gender = "נקבה" if child.gender else "זכר"
+        parent_phone = child.father_phone or child.mother_phone or "לא זמין"
+        child_city = child.city or "לא זמין"
+        child_hospital = child.treating_hospital or "לא זמין"
+        tutoring_status = child.tutoring_status or "לא זמין"
+        registration_date = child.registrationdate.strftime("%d/%m/%Y") if child.registrationdate else "לא זמין"
+        
+        api_logger.info(f"Notifying system admins about new family: {child_name} (ID: {child_id})")
+        
+        # Get System Administrator role
+        admin_role = Role.objects.filter(role_name="System Administrator").first()
+        if not admin_role:
+            api_logger.debug("Role 'System Administrator' not found in the database.")
+            return
+        
+        # Get all System Admins EXCEPT shlezi0@gmail.com
+        all_admins = Staff.objects.filter(roles=admin_role, is_active=True).distinct()
+        
+        # Filter out shlezi0@gmail.com (case-insensitive email check)
+        admins_to_notify = [
+            admin for admin in all_admins 
+            if admin.email.lower() != 'shlezi0@gmail.com'
+        ]
+        
+        if not admins_to_notify:
+            api_logger.debug("No System Administrators (excluding shlezi0@gmail.com) found to notify about new family.")
+            return
+        
+        api_logger.info(f"Notifying {len(admins_to_notify)} system admins (excluding shlezi0@gmail.com) about new family")
+        
+        # Send WhatsApp to each admin
+        if WHATSAPP_AVAILABLE:
+            for admin in admins_to_notify:
+                if not admin.staff_phone:
+                    api_logger.debug(f"Admin {admin.staff_id} ({admin.username}) has no phone number - skipping WhatsApp")
+                    continue
+                
+                try:
+                    admin_name = f"{admin.first_name} {admin.last_name}"
+                    
+                    # Send WhatsApp notification using template with age unit variable
+                    whatsapp_result = send_coordinator_notification_whatsapp_family_with_age_unit(
+                        coordinator_phone=admin.staff_phone,
+                        coordinator_name=admin_name,
+                        child_name=child_name,
+                        age_number=str(age_number),
+                        age_unit=age_unit,
+                        child_gender=child_gender,
+                        parent_phone=parent_phone,
+                        child_city=child_city,
+                        child_hospital=child_hospital,
+                        tutoring_status=tutoring_status,
+                        registration_date=registration_date
+                    )
+                    
+                    if whatsapp_result.get("success"):
+                        api_logger.info(f"WhatsApp notification sent to admin {admin.staff_id} ({admin.username}): {whatsapp_result.get('message_sid')}")
+                    else:
+                        api_logger.warning(f"Failed to send WhatsApp to admin {admin.staff_id} ({admin.username}): {whatsapp_result.get('error')}")
+                        
+                except Exception as wa_error:
+                    api_logger.error(f"Error sending WhatsApp to admin {admin.staff_id}: {str(wa_error)}")
+        else:
+            api_logger.debug("WhatsApp utils not available - skipping WhatsApp notifications for new family")
+            
+    except Children.DoesNotExist:
+        api_logger.error(f"Child with ID {child_id} not found for admin notification")
+    except Exception as e:
+        api_logger.error(f"ERROR: An error occurred while notifying admins of new family: {str(e)}")
