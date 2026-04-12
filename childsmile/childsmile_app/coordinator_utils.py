@@ -23,7 +23,7 @@ from .utils import create_task_internal
 
 # Import WhatsApp utils if available (optional feature - graceful fallback)
 try:
-    from .whatsapp_utils import send_coordinator_notification_whatsapp
+    from .whatsapp_utils import send_coordinator_notification_whatsapp, send_coordinator_notification_whatsapp_family
     WHATSAPP_AVAILABLE = True
 except ImportError:
     WHATSAPP_AVAILABLE = False
@@ -53,7 +53,7 @@ def create_tasks_for_admins(staff_user_id, user_name, user_email):
     
     Email includes:
     - Personalized greeting with coordinator name
-    - User details (name, ID, email, age, gender, phone, city, tutor interest)
+    - User details (name, email, age, gender, phone, city, tutor interest)
     - HTML formatted with RTL support for Hebrew
     - Green header (#4CAF50) for registration emails
     """
@@ -113,7 +113,6 @@ def create_tasks_for_admins(staff_user_id, user_name, user_email):
                 # Format user information for the email in a human-readable way
                 user_full_name = user_info.get("full_name", "לא זמין")
                 user_email_display = user_info.get("email", "לא זמין")
-                user_id = user_info.get("ID", "לא זמין")
                 user_age = user_info.get("age", "לא זמין")
                 user_phone = user_info.get("phone", "לא זמין")
                 user_city = user_info.get("city", "לא זמין")
@@ -173,11 +172,6 @@ def create_tasks_for_admins(staff_user_id, user_name, user_email):
                                 <tr>
                                     <td style="margin: 12px 0; padding: 10px; background-color: #f5f5f5; border-radius: 4px; text-align: right; direction: rtl;">
                                         <span style="font-weight: bold; color: #333; display: inline-block; margin-left: 10px;">דואר אלקטרוני:</span><span style="color: #666; direction: ltr; unicode-bidi: embed;">{user_email_display}</span>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td style="margin: 12px 0; padding: 10px; background-color: #f5f5f5; border-radius: 4px; text-align: right; direction: rtl;">
-                                        <span style="font-weight: bold; color: #333; display: inline-block; margin-left: 10px;">תעודת זהות:</span><span style="color: #666; direction: ltr; unicode-bidi: embed;">{user_id}</span>
                                     </td>
                                 </tr>
                                 <tr>
@@ -254,7 +248,6 @@ def create_tasks_for_admins(staff_user_id, user_name, user_email):
                                 coordinator_name=coordinator_name,
                                 user_name=user_full_name,
                                 user_email=user_email_display,
-                                user_id=user_id,
                                 user_age=user_age,
                                 user_gender=user_gender,
                                 user_phone=user_phone,
@@ -334,8 +327,7 @@ def notify_tutored_families_coordinators(child_id):
     Triggered when a family is added via create_family API with tutoring_status requiring a tutor.
     
     Email includes:
-    - Child demographics (name, ID, age, gender, city, phone)
-    - Medical information (diagnosis, hospital)
+    - Child demographics (name, age, gender, city, phone)
     - Tutoring details (status, requirements, registration date)
     - HTML formatted with RTL support for Hebrew
     - Blue header (#2196F3) to differentiate from registration emails
@@ -396,7 +388,6 @@ def notify_tutored_families_coordinators(child_id):
             parent_phone = "לא זמין"
         
         child_city = child.city if child.city else "לא זמין"
-        child_diagnosis = child.medical_diagnosis if child.medical_diagnosis else "לא ידוע"
         child_hospital = child.treating_hospital if child.treating_hospital else "לא ידוע"
         
         # Format tutoring status in Hebrew
@@ -455,11 +446,6 @@ def notify_tutored_families_coordinators(child_id):
                                 </tr>
                                 <tr>
                                     <td style="margin: 12px 0; padding: 10px; background-color: #f5f5f5; border-radius: 4px; text-align: right; direction: rtl;">
-                                        <span style="font-weight: bold; color: #333; display: inline-block; margin-left: 10px;">תעודת זהות:</span><span style="color: #666; direction: ltr; unicode-bidi: embed;">{child_id}</span>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td style="margin: 12px 0; padding: 10px; background-color: #f5f5f5; border-radius: 4px; text-align: right; direction: rtl;">
                                         <span style="font-weight: bold; color: #333; display: inline-block; margin-left: 10px;">גיל:</span><span style="color: #666; direction: ltr; unicode-bidi: embed;">{child_age} שנים</span>
                                     </td>
                                 </tr>
@@ -476,19 +462,6 @@ def notify_tutored_families_coordinators(child_id):
                                 <tr>
                                     <td style="margin: 12px 0; padding: 10px; background-color: #f5f5f5; border-radius: 4px; text-align: right; direction: rtl;">
                                         <span style="font-weight: bold; color: #333; display: inline-block; margin-left: 10px;">טלפון הורים:</span><span style="color: #666; direction: ltr; unicode-bidi: embed;">{parent_phone}</span>
-                                    </td>
-                                </tr>
-                            </table>
-                            
-                            <hr style="border: none; border-top: 2px solid #2196F3; margin: 20px 0;">
-                            
-                            <p dir="rtl" style="text-align: right; font-weight: bold; margin: 15px 0; padding-bottom: 10px; border-bottom: 3px solid #2196F3; color: #333;">מידע רפואי:</p>
-                            
-                            <!-- MEDICAL FIELDS TABLE -->
-                            <table width="100%" cellpadding="0" cellspacing="0" dir="rtl">
-                                <tr>
-                                    <td style="margin: 12px 0; padding: 10px; background-color: #f5f5f5; border-radius: 4px; text-align: right; direction: rtl;">
-                                        <span style="font-weight: bold; color: #333; display: inline-block; margin-left: 10px;">אבחנה:</span><span style="color: #666; direction: ltr; unicode-bidi: embed;">{child_diagnosis}</span>
                                     </td>
                                 </tr>
                                 <tr>
@@ -543,6 +516,33 @@ def notify_tutored_families_coordinators(child_id):
                 fail_silently=True,
                 html_message=message
             )
+            
+            # Send WhatsApp message to coordinator (async - fire and forget)
+            # Only if WhatsApp utils are available
+            if WHATSAPP_AVAILABLE and coordinator.phone:
+                try:
+                    whatsapp_result = send_coordinator_notification_whatsapp_family(
+                        coordinator_phone=coordinator.phone,
+                        coordinator_name=coordinator_name,
+                        child_name=child_full_name,
+                        child_age=child_age,
+                        child_gender=child_gender,
+                        parent_phone=parent_phone,
+                        child_city=child_city,
+                        child_hospital=child_hospital,
+                        tutoring_status=tutoring_status_display,
+                        registration_date=registration_date
+                    )
+                    if whatsapp_result.get("success"):
+                        api_logger.info(f"WhatsApp notification sent to Tutored Families Coordinator {coordinator.staff_id}: {whatsapp_result.get('message_sid')}")
+                    else:
+                        api_logger.warning(f"Failed to send WhatsApp to coordinator {coordinator.staff_id}: {whatsapp_result.get('error')}")
+                except Exception as wa_error:
+                    api_logger.error(f"Error sending WhatsApp to coordinator {coordinator.staff_id}: {str(wa_error)}")
+            elif not WHATSAPP_AVAILABLE and coordinator.phone:
+                api_logger.debug(f"WhatsApp utils not available - skipping WhatsApp for coordinator {coordinator.staff_id}")
+            elif not coordinator.phone:
+                api_logger.debug(f"Coordinator {coordinator.staff_id} has no phone number - skipping WhatsApp")
         
         api_logger.info(f"Family notification email sent to {coordinators.count()} Tutored Families Coordinators for child {child_id}")
         

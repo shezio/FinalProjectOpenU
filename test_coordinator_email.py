@@ -20,13 +20,12 @@ import datetime
 # ============================================================================
 
 # Email address to send the test to
-TEST_EMAIL = "talan7225@gmail.com"  # CHANGE THIS!
+TEST_EMAIL = "shlezi0@gmail.com"  # CHANGE THIS!
 
 # Dummy coordinator data
 COORDINATOR_NAME = "בדיקה חשובה"
 USER_FULL_NAME = "שם המתנדב"
 USER_EMAIL = "test2.user@example.com"
-USER_ID = "123456789"
 USER_AGE = "28"
 USER_GENDER = "זכר"  # or "נקבה"
 USER_PHONE = "054-2652949"
@@ -78,11 +77,6 @@ message = f"""<!DOCTYPE html>
                                 <tr>
                                     <td style="margin: 12px 0; padding: 10px; background-color: #f5f5f5; border-radius: 4px; text-align: right; direction: rtl;">
                                         <span style="font-weight: bold; color: #333; display: inline-block; margin-left: 10px;">דואר אלקטרוני:</span><span style="color: #666; direction: ltr; unicode-bidi: embed;">{USER_EMAIL}</span>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td style="margin: 12px 0; padding: 10px; background-color: #f5f5f5; border-radius: 4px; text-align: right; direction: rtl;">
-                                        <span style="font-weight: bold; color: #333; display: inline-block; margin-left: 10px;">תעודת זהות:</span><span style="color: #666; direction: ltr; unicode-bidi: embed;">{USER_ID}</span>
                                     </td>
                                 </tr>
                                 <tr>
