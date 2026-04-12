@@ -301,7 +301,7 @@ def send_coordinator_notification_whatsapp_family(coordinator_phone, coordinator
     Returns:
         dict: Response from send_whatsapp_message
     """
-    # Get template SID from GitHub Secrets (NEW_FAMILY_SID)
+    # Get template SID from environment variable (NEW_FAMILY_SID)
     family_template_sid = os.getenv('NEW_FAMILY_SID')
     
     if family_template_sid:
@@ -354,7 +354,7 @@ def send_coordinator_notification_whatsapp_family(coordinator_phone, coordinator
         )
 
 
-def send_totp_login_code_whatsapp(staff_phone, staff_name, totp_code):
+def send_totp_login_code_whatsapp(staff_phone, totp_code):
     """
     Send TOTP login code to staff member via WhatsApp.
     Uses Twilio Authentication template if available, falls back to plain text.
@@ -372,12 +372,10 @@ def send_totp_login_code_whatsapp(staff_phone, staff_name, totp_code):
     
     if auth_template_sid:
         # Using Twilio Authentication template with 2 variables
-        # Variable 1: Staff name
-        # Variable 2: TOTP code (6 digits)
+        # Variable 1: TOTP code (6 digits)
         # Template includes: "קוד הכניסה שלך הוא: {{2}}" and "⏱️ הקוד תקף למשך 5 דקות בלבד"
         template_variables = {
-            "1": staff_name or "User",
-            "2": totp_code
+            "1": totp_code
         }
         return send_whatsapp_message(
             staff_phone,
@@ -388,8 +386,7 @@ def send_totp_login_code_whatsapp(staff_phone, staff_name, totp_code):
         )
     else:
         # Fallback to plain text if template SID not configured
-        message = f"""שלום {staff_name},
-
+        message = f"""
 קוד הכניסה שלך הוא: {totp_code}
 
 ⏱️ הקוד תקף למשך 5 דקות בלבד
@@ -401,6 +398,90 @@ def send_totp_login_code_whatsapp(staff_phone, staff_name, totp_code):
         
         return send_whatsapp_message(
             staff_phone,
+            message_body=message,
+            use_template=False
+        )
+
+
+def send_coordinator_notification_whatsapp_family_with_age_unit(coordinator_phone, coordinator_name, child_name, age_number, age_unit, child_gender, parent_phone, child_city, child_hospital, tutoring_status, registration_date):
+    """
+    Send a WhatsApp notification to a System Admin about a new family with age display string.
+    Uses Twilio content template with 9 variables (age combined into single display string).
+    
+    Template variables:
+    1. Coordinator name
+    2. Child name
+    3. Age display (e.g., "7 שנים" or "5 חודשים")
+    4. Gender
+    5. City
+    6. Parent phone
+    7. Hospital
+    8. Tutoring status
+    9. Registration date
+    
+    Args:
+        coordinator_phone (str): Admin's phone number
+        coordinator_name (str): Admin's full name
+        child_name (str): Child's full name
+        age_number (str): Age as number (e.g., "3" or "8")
+        age_unit (str): Age unit in Hebrew (חודשים or שנים)
+        child_gender (str): Child's gender (Hebrew: "נקבה" or "זכר")
+        parent_phone (str): Parent contact phone
+        child_city (str): City where child lives
+        child_hospital (str): Treating hospital/institution
+        tutoring_status (str): Tutoring status
+        registration_date (str): Date family was registered
+    
+    Returns:
+        dict: Response from send_whatsapp_message
+    """
+    # Get template SID from env var (NEW_FAMILY_ADMIN_SID)
+    family_template_sid = os.getenv('NEW_FAMILY_ADMIN_SID')
+    
+    # Create combined age display string: "7 שנים" or "5 חודשים"
+    age_display = f"{str(age_number)} {age_unit}"
+
+    if family_template_sid:
+        # Using Twilio content template with 9 variables (age combined in var 3)
+        template_variables = {
+            "1": coordinator_name,
+            "2": child_name,
+            "3": age_display,
+            "4": child_gender,
+            "5": child_city,
+            "6": parent_phone,
+            "7": child_hospital,
+            "8": tutoring_status,
+            "9": registration_date
+        }
+        return send_whatsapp_message(
+            coordinator_phone,
+            message_body=None,
+            use_template=True,
+            template_sid=family_template_sid,
+            template_variables=template_variables
+        )
+    else:
+        # Fallback to plain text if template SID not configured
+        message = f"""משפחה חדשה נוספה למערכת
+
+שלום {coordinator_name},
+
+משפחה חדשה נוספה למערכת.
+
+👤 שם מלא: {child_name}
+📅 גיל: {age_display}
+👥 מין: {child_gender}
+📍 עיר: {child_city}
+📱 טלפון הורים: {parent_phone}
+🏢 בית חולים: {child_hospital}
+
+🎓 פרטי החונכות:
+📌 סטטוס: {tutoring_status}
+📆 תאריך הרשמה: {registration_date}"""
+        
+        return send_whatsapp_message(
+            coordinator_phone,
             message_body=message,
             use_template=False
         )
