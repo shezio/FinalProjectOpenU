@@ -650,8 +650,27 @@ def delete_task(request, task_id):
                     try:
                         staff_user = Staff.objects.get(email__iexact=rejected_email, registration_approved=False)
                         staff_user_id = staff_user.staff_id
+                        volunteer_name = f"{staff_user.first_name} {staff_user.last_name}".strip()
+                        volunteer_phone = staff_user.phone
                         
                         api_logger.info(f"Coordinator rejected: Deleting user {staff_user_id} ({rejected_email})")
+                        
+                        # Send WhatsApp rejection notification BEFORE deleting the user
+                        if volunteer_phone:
+                            try:
+                                from .whatsapp_utils import send_registration_rejection_whatsapp
+                                whatsapp_result = send_registration_rejection_whatsapp(
+                                    volunteer_phone=volunteer_phone,
+                                    volunteer_name=volunteer_name
+                                )
+                                if whatsapp_result.get("success"):
+                                    api_logger.info(f"Rejection WhatsApp sent to {rejected_email} ({volunteer_phone}): {whatsapp_result.get('message_sid')}")
+                                else:
+                                    api_logger.warning(f"Failed to send rejection WhatsApp to {rejected_email}: {whatsapp_result.get('error')}")
+                            except Exception as wa_error:
+                                api_logger.error(f"Error sending rejection WhatsApp to {rejected_email}: {str(wa_error)}")
+                        else:
+                            api_logger.debug(f"No phone number available for rejection WhatsApp to {rejected_email}")
                         
                         # Delete associated SignedUp records
                         signed_up_count = SignedUp.objects.filter(email=rejected_email).count()
@@ -715,8 +734,27 @@ def delete_task(request, task_id):
                     try:
                         staff_user = Staff.objects.get(email__iexact=rejected_email, registration_approved=False)
                         staff_user_id = staff_user.staff_id
+                        volunteer_name = f"{staff_user.first_name} {staff_user.last_name}".strip()
+                        volunteer_phone = staff_user.phone
                         
                         api_logger.info(f"Admin rejected: Deleting user {staff_user_id} ({rejected_email})")
+                        
+                        # Send WhatsApp rejection notification BEFORE deleting the user
+                        if volunteer_phone:
+                            try:
+                                from .whatsapp_utils import send_registration_rejection_whatsapp
+                                whatsapp_result = send_registration_rejection_whatsapp(
+                                    volunteer_phone=volunteer_phone,
+                                    volunteer_name=volunteer_name
+                                )
+                                if whatsapp_result.get("success"):
+                                    api_logger.info(f"Rejection WhatsApp sent to {rejected_email} ({volunteer_phone}): {whatsapp_result.get('message_sid')}")
+                                else:
+                                    api_logger.warning(f"Failed to send rejection WhatsApp to {rejected_email}: {whatsapp_result.get('error')}")
+                            except Exception as wa_error:
+                                api_logger.error(f"Error sending rejection WhatsApp to {rejected_email}: {str(wa_error)}")
+                        else:
+                            api_logger.debug(f"No phone number available for rejection WhatsApp to {rejected_email}")
                         
                         # Delete associated SignedUp records
                         signed_up_count = SignedUp.objects.filter(email=rejected_email).count()
@@ -734,39 +772,8 @@ def delete_task(request, task_id):
                         staff_user.delete()
                         api_logger.info(f"Deleted unapproved user {staff_user_id} ({rejected_email})")
                         
-                        # Send rejection notification to Volunteer Coordinators
-                        try:
-                            coordinator_role = Role.objects.get(role_name="Volunteer Coordinator")
-                            coordinator_emails = Staff.objects.filter(
-                                roles=coordinator_role
-                            ).exclude(staff_id=user_id).values_list('email', flat=True)
-                            
-                            if coordinator_emails:
-                                current_admin_user = Staff.objects.get(staff_id=user_id)
-                                current_admin_name = f"{current_admin_user.first_name} {current_admin_user.last_name}"
-                                                            
-                                rejection_reason_text = task.rejection_reason or "No reason provided"
-                                
-                                subject = "הרשמה נדחתה - החלטה מנהלית סופית"
-                                message = f"""
-                                שלום,
-
-                                הרשמה של {rejected_email} נדחתה על ידי {current_admin_name} (החלטה מנהלית סופית).
-
-                                סיבת דחייה:
-                                {rejection_reason_text}
-
-                                המשתמש והנתונים הקשורים אליו הוסרו מהמערכת.
-                                """
-                                
-                                messages = [
-                                    (subject, message, settings.DEFAULT_FROM_EMAIL, [coord_email])
-                                    for coord_email in coordinator_emails
-                                ]
-                                send_mass_mail(messages, fail_silently=True)
-                                api_logger.info(f"Sent rejection notification to {len(coordinator_emails)} coordinators")
-                        except Exception as e:
-                            api_logger.error(f"Error sending rejection notification: {str(e)}")
+                        # Coordinator rejection notification email removed - deprecated in favor of WhatsApp
+                        api_logger.info(f"Admin rejected registration for {rejected_email} - coordinator notification email deprecated")
                         
                     except Staff.DoesNotExist:
                         api_logger.warning(f"Staff user not found for email {rejected_email} - may have already been deleted")
@@ -1177,6 +1184,24 @@ def update_task_status(request, task_id):
                             except Exception as email_error:
                                 api_logger.error(f"Error sending coordinator approval email to {user_email}: {str(email_error)}")
                             
+                            # Send WhatsApp notification for coordinator approval (Tier 1)
+                            if staff_user.phone:
+                                try:
+                                    from .whatsapp_utils import send_registration_coordinator_approval_whatsapp
+                                    volunteer_name = f"{staff_user.first_name} {staff_user.last_name}".strip()
+                                    whatsapp_result = send_registration_coordinator_approval_whatsapp(
+                                        volunteer_phone=staff_user.phone,
+                                        volunteer_name=volunteer_name
+                                    )
+                                    if whatsapp_result.get("success"):
+                                        api_logger.info(f"Coordinator approval WhatsApp sent to {user_email} ({staff_user.phone}): {whatsapp_result.get('message_sid')}")
+                                    else:
+                                        api_logger.warning(f"Failed to send coordinator approval WhatsApp to {user_email}: {whatsapp_result.get('error')}")
+                                except Exception as wa_error:
+                                    api_logger.error(f"Error sending coordinator approval WhatsApp to {user_email}: {str(wa_error)}")
+                            else:
+                                api_logger.debug(f"No phone number available for coordinator approval WhatsApp to {user_email}")
+                            
                             # Create admin final approval tasks (tier 2)
                             from .utils import create_admin_approval_tasks_async
                             create_admin_approval_tasks_async(staff_user.staff_id, user_email)
@@ -1296,6 +1321,24 @@ def update_task_status(request, task_id):
                                 api_logger.info(f"Final approval confirmation email sent to {user_email}")
                             except Exception as email_error:
                                 api_logger.error(f"Error sending final approval email to {user_email}: {str(email_error)}")
+                            
+                            # Send WhatsApp notification for final approval (Tier 2)
+                            if staff_user.phone:
+                                try:
+                                    from .whatsapp_utils import send_registration_final_approval_whatsapp
+                                    volunteer_name = f"{staff_user.first_name} {staff_user.last_name}".strip()
+                                    whatsapp_result = send_registration_final_approval_whatsapp(
+                                        volunteer_phone=staff_user.phone,
+                                        volunteer_name=volunteer_name
+                                    )
+                                    if whatsapp_result.get("success"):
+                                        api_logger.info(f"Final approval WhatsApp sent to {user_email} ({staff_user.phone}): {whatsapp_result.get('message_sid')}")
+                                    else:
+                                        api_logger.warning(f"Failed to send final approval WhatsApp to {user_email}: {whatsapp_result.get('error')}")
+                                except Exception as wa_error:
+                                    api_logger.error(f"Error sending final approval WhatsApp to {user_email}: {str(wa_error)}")
+                            else:
+                                api_logger.debug(f"No phone number available for final approval WhatsApp to {user_email}")
                             
                             # NOW CHECK IF THIS USER WANTED TO BE A TUTOR - DIRECTLY PROMOTE TO TUTOR
                             # No more interview task - the "התאמת חניך" task will be created when tutorship is created
@@ -1800,39 +1843,8 @@ def update_task(request, task_id):
                                 }
                             )
                             
-                            # Send congratulation email to the newly promoted tutor
-                            try:
-                                tutor_email = pending_tutor_record.id.email
-                                tutor_name = pending_tutor_volunteer_name
-                                
-                                subject = "!ברוכים הבאים לצוות החונכים שלנו"
-                                message = f"""
-                                שלום {tutor_name},
-
-                                אנו שמחים להודיע לך שעברת את הראיון לחונכות! 
-
-                                כעת יש לך הרשאות חונך ותוכל להתחיל לעזור לילדים בקרוב.
-
-                                תפקידך כחונך הוא ללוות ילד בדרכו החינוכית, להעניק לו תמיכה רגשית וחברתית, ולעזור בהשגת יעדיו.
-
-                                אנו מודים לך על בחירתך להיות חלק מהמשימה החשובה הזו.
-
-                                אם יש לך שאלות, אנא צור קשר עם צוות התמיכה שלנו.
-
-                                בברכה,
-                                צוות חיוך של ילד
-                                """
-                                
-                                send_mail(
-                                    subject,
-                                    message,
-                                    settings.DEFAULT_FROM_EMAIL,
-                                    [tutor_email],
-                                    fail_silently=False,
-                                )
-                                api_logger.info(f"Congratulation email sent to {tutor_email}")
-                            except Exception as email_error:
-                                api_logger.error(f"Error sending promotion email to {tutor_email}: {str(email_error)}")
+                            # Tutor promotion email removed - deprecated in favor of WhatsApp
+                            api_logger.info(f"Pending tutor promoted - email notifications deprecated")
 
         # Get assignee name if exists
         assignee_name = None

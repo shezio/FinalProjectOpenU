@@ -12,6 +12,7 @@ from .models import Staff, Role, TOTPCode, SignedUp, Tutors, Pending_Tutor, Task
 from .utils import *
 from .audit_utils import log_api_action
 from .logger import api_logger
+from .whatsapp_utils import send_totp_login_code_whatsapp
 import json
 import datetime
 import traceback
@@ -280,6 +281,22 @@ def update_staff_member(request, staff_id):
                     
                     try:
                         send_mail(subject, f"קוד האימות שלך: {code}", settings.DEFAULT_FROM_EMAIL, [staff_member.email], html_message=html_message)
+                        
+                        # Send TOTP code via WhatsApp if phone number available (deactivation)
+                        if staff_member.staff_phone:
+                            try:
+                                whatsapp_result = send_totp_login_code_whatsapp(
+                                    staff_phone=staff_member.staff_phone,
+                                    totp_code=code
+                                )
+                                
+                                if whatsapp_result.get("success"):
+                                    api_logger.info(f"Deactivation TOTP code sent via WhatsApp to {staff_member.email}: {whatsapp_result.get('message_sid')}")
+                                else:
+                                    api_logger.warning(f"WhatsApp deactivation TOTP send failed for {staff_member.email}: {whatsapp_result.get('error')} - {whatsapp_result.get('details', '')}")
+                            except Exception as wa_error:
+                                api_logger.error(f"Error sending deactivation TOTP via WhatsApp to {staff_member.email}: {str(wa_error)}")
+                        
                         return JsonResponse({
                             "message": "Verification code sent to your email",
                             "requires_verification": True
@@ -486,6 +503,22 @@ def update_staff_member(request, staff_id):
                 
                 try:
                     send_mail(subject, f"קוד האימות שלך: {code}", settings.DEFAULT_FROM_EMAIL, [staff_member.email], html_message=html_message)
+                    
+                    # Send TOTP code via WhatsApp if phone number available (reactivation)
+                    if staff_member.staff_phone:
+                        try:
+                            whatsapp_result = send_totp_login_code_whatsapp(
+                                staff_phone=staff_member.staff_phone,
+                                totp_code=code
+                            )
+                            
+                            if whatsapp_result.get("success"):
+                                api_logger.info(f"Reactivation TOTP code sent via WhatsApp to {staff_member.email}: {whatsapp_result.get('message_sid')}")
+                            else:
+                                api_logger.warning(f"WhatsApp reactivation TOTP send failed for {staff_member.email}: {whatsapp_result.get('error')} - {whatsapp_result.get('details', '')}")
+                        except Exception as wa_error:
+                            api_logger.error(f"Error sending reactivation TOTP via WhatsApp to {staff_member.email}: {str(wa_error)}")
+                    
                     return JsonResponse({
                         "message": "Verification code sent to your email",
                         "requires_verification": True
@@ -651,6 +684,24 @@ def update_staff_member(request, staff_id):
                     )
                 except Exception as e:
                     api_logger.error(f"Failed to send reactivation email: {str(e)}")
+                
+                # Send WhatsApp activation notification
+                if staff_member.phone:
+                    try:
+                        from .whatsapp_utils import send_account_activation_whatsapp
+                        staff_name = f"{staff_member.first_name} {staff_member.last_name}".strip()
+                        whatsapp_result = send_account_activation_whatsapp(
+                            staff_phone=staff_member.phone,
+                            staff_name=staff_name
+                        )
+                        if whatsapp_result.get("success"):
+                            api_logger.info(f"Account activation WhatsApp sent to {staff_member.email} ({staff_member.phone}): {whatsapp_result.get('message_sid')}")
+                        else:
+                            api_logger.warning(f"Failed to send account activation WhatsApp to {staff_member.email}: {whatsapp_result.get('error')}")
+                    except Exception as wa_error:
+                        api_logger.error(f"Error sending account activation WhatsApp to {staff_member.email}: {str(wa_error)}")
+                else:
+                    api_logger.debug(f"No phone number available for account activation WhatsApp to {staff_member.email}")
                 
                 return JsonResponse({
                     "message": "Staff reactivated successfully",
@@ -1000,19 +1051,69 @@ def update_staff_member(request, staff_id):
             except Task_Types.DoesNotExist:
                 api_logger.warning("Review task type 'שיחת ביקורת' not found when attempting to delete tasks.")
 
-        # Propagate email changes to related tables
-        old_email = staff_member.email
-        if old_email != data["email"]:
-            SignedUp.objects.filter(email=old_email).update(email=data["email"])
-            Tutors.objects.filter(tutor_email=old_email).update(
-                tutor_email=data["email"]
-            )
-
+        # Store original values for propagation BEFORE updating fields
+        old_email = staff_member.email.lower() if staff_member.email else None
+        old_phone = staff_member.staff_phone
+        api_logger.debug(f"BEFORE UPDATE: staff_id={staff_id}, old_phone={old_phone}, old_email={old_email}")
+        
         # Update fields
         staff_member.username = data.get("username", staff_member.username)
         staff_member.email = data.get("email", staff_member.email)
         staff_member.first_name = data.get("first_name", staff_member.first_name)
         staff_member.last_name = data.get("last_name", staff_member.last_name)
+        
+        # Handle staff_phone update
+        if "staff_phone" in data:
+            phone = data.get("staff_phone", "").strip()
+            api_logger.debug(f"Phone update requested: staff_id={staff_id}, new_phone={phone}")
+            if phone:
+                is_valid, error_msg = validate_staff_phone(phone)
+                if not is_valid:
+                    log_api_action(
+                        request=request,
+                        action='UPDATE_STAFF_FAILED',
+                        success=False,
+                        error_message=error_msg,
+                        status_code=400,
+                        entity_type='Staff',
+                        entity_ids=[staff_id]
+                    )
+                    return JsonResponse({"error": error_msg}, status=400)
+            
+            staff_member.staff_phone = phone if phone else None
+            api_logger.debug(f"Phone set to: staff_id={staff_id}, staff_member.staff_phone={staff_member.staff_phone}")
+        
+        # Propagate email changes to related tables (case-insensitive comparison)
+        # This handles cases where staff members were previously volunteers/tutors
+        new_email = staff_member.email.lower() if staff_member.email else None
+        if old_email and new_email and old_email != new_email:
+            SignedUp.objects.filter(email__iexact=old_email).update(email=staff_member.email)
+            Tutors.objects.filter(tutor_email__iexact=old_email).update(
+                tutor_email=staff_member.email
+            )
+        
+        # Propagate phone changes to SignedUp records by matching EMAIL
+        # If a person was a volunteer first (has SignedUp record) and then became staff,
+        # updating their phone in Staff should also update their SignedUp record
+        # KEY: Match by EMAIL, not by old phone number!
+        new_phone = staff_member.staff_phone
+        staff_email = staff_member.email.lower() if staff_member.email else None
+        
+        api_logger.debug(f"Phone propagation check: old_phone={old_phone}, new_phone={new_phone}, staff_email={staff_email}, staff_id={staff_id}")
+        
+        if old_phone and new_phone and old_phone != new_phone and staff_email:
+            # Match SignedUp records by email (case-insensitive)
+            email_match_count = SignedUp.objects.filter(email__iexact=staff_email).count()
+            api_logger.debug(f"Email match for '{staff_email}': {email_match_count} records")
+            
+            if email_match_count > 0:
+                # Update SignedUp records with matching email
+                updated_count = SignedUp.objects.filter(email__iexact=staff_email).update(phone=new_phone)
+                api_logger.info(f"Phone propagation for staff {staff_id}: Updated {updated_count} SignedUp records (email match) for {staff_email} from {old_phone} to {new_phone}")
+            else:
+                api_logger.debug(f"Phone propagation for staff {staff_id}: No matching SignedUp records found for email {staff_email}")
+        else:
+            api_logger.debug(f"Phone propagation skipped: old_phone={old_phone}, new_phone={new_phone}, email={staff_email}")
         
         # Handle optional staff profile fields (for coordinators/managers reporting)
         if "staff_israel_id" in data:
@@ -1136,31 +1237,15 @@ def update_staff_member(request, staff_id):
                             status=400
                         )
         
-        if "staff_phone" in data:
-            phone = data.get("staff_phone", "").strip()
-            if phone:
-                is_valid, error_msg = validate_staff_phone(phone)
-                if not is_valid:
-                    log_api_action(
-                        request=request,
-                        action='UPDATE_STAFF_FAILED',
-                        success=False,
-                        error_message=error_msg,
-                        status_code=400,
-                        entity_type='Staff',
-                        entity_ids=[staff_id]
-                    )
-                    return JsonResponse({"error": error_msg}, status=400)
-            
-            staff_member.staff_phone = phone if phone else None
-        
         if "staff_city" in data:
             city = data.get("staff_city", "").strip()
             staff_member.staff_city = city if city else None
 
         # Save the updated staff record
         try:
+            api_logger.debug(f"BEFORE SAVE: staff_id={staff_id}, staff_phone={staff_member.staff_phone}, email={staff_member.email}")
             staff_member.save()
+            api_logger.debug(f"AFTER SAVE: staff_id={staff_id}, staff_phone={staff_member.staff_phone}, email={staff_member.email}")
         except DatabaseError as db_error:
             log_api_action(
                 request=request,
@@ -1908,6 +1993,22 @@ def staff_creation_send_totp(request):
                 html_message=html_message,
                 fail_silently=False,
             )
+            
+            # Send TOTP code via WhatsApp if phone number available (staff creation)
+            staff_phone = data.get("staff_phone", "").strip()
+            if staff_phone:
+                try:
+                    whatsapp_result = send_totp_login_code_whatsapp(
+                        staff_phone=staff_phone,
+                        totp_code=code
+                    )
+                    
+                    if whatsapp_result.get("success"):
+                        api_logger.info(f"Staff creation TOTP code sent via WhatsApp to {email}: {whatsapp_result.get('message_sid')}")
+                    else:
+                        api_logger.warning(f"WhatsApp staff creation TOTP send failed for {email}: {whatsapp_result.get('error')} - {whatsapp_result.get('details', '')}")
+                except Exception as wa_error:
+                    api_logger.error(f"Error sending staff creation TOTP via WhatsApp to {email}: {str(wa_error)}")
             
             api_logger.debug(f"Sent staff creation TOTP code {code} to {email}")
             

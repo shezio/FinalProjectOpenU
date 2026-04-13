@@ -37,6 +37,7 @@ import re
 import os
 import base64
 import pandas as pd
+from .whatsapp_utils import send_totp_registration_code_whatsapp
 
 
 
@@ -180,6 +181,20 @@ def register_send_totp(request):
                 [email],
                 fail_silently=False,
             )
+            
+            # Send TOTP code via WhatsApp if phone number available (registration)
+            if phone:
+                try:
+                    whatsapp_result = send_totp_registration_code_whatsapp(
+                        registrant_phone=phone,
+                        totp_code=code
+                    )                    
+                    if whatsapp_result.get("success"):
+                        api_logger.info(f"Registration TOTP code sent via WhatsApp to {email}: {whatsapp_result.get('message_sid')}")
+                    else:
+                        api_logger.warning(f"WhatsApp registration TOTP send failed for {email}: {whatsapp_result.get('error')}")
+                except Exception as wa_error:
+                    api_logger.error(f"Error sending registration TOTP via WhatsApp to {email}: {str(wa_error)}")
             
             return JsonResponse({
                 "message": "Verification code sent to your email",

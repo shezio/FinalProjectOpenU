@@ -357,23 +357,34 @@ def send_coordinator_notification_whatsapp_family(coordinator_phone, coordinator
 def send_totp_login_code_whatsapp(staff_phone, totp_code):
     """
     Send TOTP login code to staff member via WhatsApp.
-    Uses Twilio Authentication template if available, falls back to plain text.
+    Uses Twilio Authentication template (TOTP_LOGIN_SID) with security features.
+    
+    Template: "logintotp" (HXd035723708b47d63f0d85276e26ccc25)
+    Content Type: Authentication
+    WhatsApp Category: Authentication
+    Variables:
+    1. Code value (6 digits) - Twilio will add security header automatically
     
     Args:
         staff_phone (str): Staff member's phone number (any format)
-        staff_name (str): Staff member's full name
         totp_code (str): 6-digit TOTP code
     
     Returns:
         dict: Response from send_whatsapp_message with success/error status
+        
+    Note: Twilio Authentication templates include:
+    - Automatic security header: "[#] Your verification code is: {code}"
+    - Copy button: "לחץ להעתקת הקוד" (Copy Code button)
+    - Footer: "Code Expiration Time: 5 minutes"
+    - Security recommendation to not share code
     """
-    # Get template SID from environment variable
-    auth_template_sid = os.getenv('TWILIO_AUTH_TEMPLATE_SID')
+    # Get template SID from environment variable (logintotp Twilio template)
+    totp_template_sid = os.getenv('TOTP_LOGIN_SID')
     
-    if auth_template_sid:
-        # Using Twilio Authentication template with 2 variables
-        # Variable 1: TOTP code (6 digits)
-        # Template includes: "קוד הכניסה שלך הוא: {{2}}" and "⏱️ הקוד תקף למשך 5 דקות בלבד"
+    if totp_template_sid:
+        # Using Twilio Authentication template with code variable
+        # Twilio will auto-format: "[#] Your verification code is: {1}"
+        # Plus copy button and expiration footer
         template_variables = {
             "1": totp_code
         }
@@ -381,23 +392,67 @@ def send_totp_login_code_whatsapp(staff_phone, totp_code):
             staff_phone,
             message_body=None,
             use_template=True,
-            template_sid=auth_template_sid,
+            template_sid=totp_template_sid,
+            template_variables=template_variables
+        )
+    else:
+        # Fallback to plain text if template SID not configured (rare in production)
+        message = f"""קוד האימות שלך: {totp_code}
+
+לאבטחתך, אל תשתף קוד זה עם אף אחד.
+הקוד יפוג בעוד 5 דקות."""
+        
+        return send_whatsapp_message(
+            staff_phone,
+            message_body=message,
+            use_template=False
+        )
+
+
+def send_totp_registration_code_whatsapp(registrant_phone, totp_code):
+    """
+    Send TOTP code to new registrant via WhatsApp during initial registration.
+    Uses same Twilio Authentication template as login TOTP (TOTP_LOGIN_SID).
+    
+    This sends the verification code that a new user receives when they first register.
+    Template: "logintotp" (set via TOTP_LOGIN_SID environment variable)
+    
+    Args:
+        registrant_phone (str): New registrant's phone number (any format)
+        totp_code (str): 6-digit TOTP code for initial registration verification
+    
+    Returns:
+        dict: Response from send_whatsapp_message with success/error status
+        
+    Note: Uses same Twilio Authentication template as login for consistency:
+    - Automatic security header: "[#] Your verification code is: {code}"
+    - Copy button: "לחץ להעתקת הקוד" (Copy Code button)
+    - Footer: "Code Expiration Time: 5 minutes"
+    """
+    # Get template SID from environment variable (same as login TOTP)
+    totp_template_sid = os.getenv('TOTP_LOGIN_SID')
+    
+    if totp_template_sid:
+        # Using Twilio Authentication template with code variable
+        template_variables = {
+            "1": totp_code
+        }
+        return send_whatsapp_message(
+            registrant_phone,
+            message_body=None,
+            use_template=True,
+            template_sid=totp_template_sid,
             template_variables=template_variables
         )
     else:
         # Fallback to plain text if template SID not configured
-        message = f"""
-קוד הכניסה שלך הוא: {totp_code}
+        message = f"""קוד האימות שלך: {totp_code}
 
-⏱️ הקוד תקף למשך 5 דקות בלבד
-
-אם לא ביקשת קוד זה, אנא התעלם מהודעה זו.
-
-בברכה,
-צוות חיוך של ילד"""
+לאבטחתך, אל תשתף קוד זה עם אף אחד.
+הקוד יפוג בעוד 5 דקות."""
         
         return send_whatsapp_message(
-            staff_phone,
+            registrant_phone,
             message_body=message,
             use_template=False
         )
@@ -482,6 +537,222 @@ def send_coordinator_notification_whatsapp_family_with_age_unit(coordinator_phon
         
         return send_whatsapp_message(
             coordinator_phone,
+            message_body=message,
+            use_template=False
+        )
+
+
+# ============================================================================
+# REGISTRATION APPROVAL NOTIFICATIONS
+# ============================================================================
+
+def send_registration_coordinator_approval_whatsapp(volunteer_phone, volunteer_name):
+    """
+    Send WhatsApp message when volunteer is approved by coordinator (Tier 1).
+    Message includes WhatsApp group link for the volunteer community.
+    
+    Template: registration_coordinator_approval (TWILIO_REGISTRATION_COORDINATOR_APPROVAL_SID)
+    Variables:
+    1. Volunteer name
+    
+    Args:
+        volunteer_phone (str): Volunteer's phone number (any format)
+        volunteer_name (str): Volunteer's full name
+    
+    Returns:
+        dict: Response from send_whatsapp_message with success/error status
+    """
+    coordinator_template_sid = os.getenv('TWILIO_REGISTRATION_COORDINATOR_APPROVAL_SID')
+    
+    if coordinator_template_sid:
+        # Using Twilio content template with name variable
+        template_variables = {
+            "1": volunteer_name
+        }
+        return send_whatsapp_message(
+            volunteer_phone,
+            message_body=None,
+            use_template=True,
+            template_sid=coordinator_template_sid,
+            template_variables=template_variables
+        )
+    else:
+        # Fallback to plain text if template SID not configured
+        message = f"""🎉 הרשמתך אושרה בשלב הראשון!
+
+שלום {volunteer_name},
+
+תודה על הרשמתך לחיוך של ילד ✨
+
+הרשמתך עברה את השלב הראשוני בהצלחה! 
+
+👥 השלב הבא - הצטרף לקבוצת הווטסאפ:
+https://chat.whatsapp.com/B7UcLqApSTzCpppWR221DB
+
+לאחר הצטרפות, צוות הניהול יבדוק את הפרטים ויסיים את האישור הסופי בקרוב ⏳
+
+עם שאלות:
+📱 +972 50-722-5027 (טל - רכזת מתנדבים)"""
+        
+        return send_whatsapp_message(
+            volunteer_phone,
+            message_body=message,
+            use_template=False
+        )
+
+
+def send_registration_final_approval_whatsapp(volunteer_phone, volunteer_name):
+    """
+    Send WhatsApp message when volunteer gets final approval from admin (Tier 2).
+    Message confirms full approval and system access.
+    
+    Template: registration_final_approval (TWILIO_REGISTRATION_FINAL_APPROVAL_SID)
+    Variables:
+    1. Volunteer name
+    
+    Args:
+        volunteer_phone (str): Volunteer's phone number (any format)
+        volunteer_name (str): Volunteer's full name
+    
+    Returns:
+        dict: Response from send_whatsapp_message with success/error status
+    """
+    final_template_sid = os.getenv('TWILIO_REGISTRATION_FINAL_APPROVAL_SID')
+    
+    if final_template_sid:
+        # Using Twilio content template with name variable
+        template_variables = {
+            "1": volunteer_name
+        }
+        return send_whatsapp_message(
+            volunteer_phone,
+            message_body=None,
+            use_template=True,
+            template_sid=final_template_sid,
+            template_variables=template_variables
+        )
+    else:
+        # Fallback to plain text if template SID not configured
+        message = f"""✅ הרשמתך אושרה סופית!
+
+שלום {volunteer_name},
+
+ברכותינו! 🎉
+
+הרשמתך בחיוך של ילד אושרה סופית!
+
+עברת בהצלחה את כל שלבי התהליך ✨
+
+🚀 תוכל להתחבר למערכת כעת
+
+תודה שהצטרפת לקהילה שלנו! 
+יחד אנחנו עושים הבדל בחיי הילדים 💚
+
+עם שאלות:
+📱 +972 50-722-5027 (טל - רכזת מתנדבים)"""
+        
+        return send_whatsapp_message(
+            volunteer_phone,
+            message_body=message,
+            use_template=False
+        )
+
+
+def send_registration_rejection_whatsapp(volunteer_phone, volunteer_name):
+    """
+    Send WhatsApp message when volunteer's registration is rejected.
+    Message informs them their application was rejected.
+    
+    Template: registration_rejected (TWILIO_REGISTRATION_REJECTED_SID)
+    Variables:
+    1. Volunteer name
+    
+    Args:
+        volunteer_phone (str): Volunteer's phone number (any format)
+        volunteer_name (str): Volunteer's full name
+    
+    Returns:
+        dict: Response from send_whatsapp_message with success/error status
+    """
+    rejection_template_sid = os.getenv('TWILIO_REGISTRATION_REJECTED_SID')
+    
+    if rejection_template_sid:
+        # Using Twilio content template with name variable
+        template_variables = {
+            "1": volunteer_name
+        }
+        return send_whatsapp_message(
+            volunteer_phone,
+            message_body=None,
+            use_template=True,
+            template_sid=rejection_template_sid,
+            template_variables=template_variables
+        )
+    else:
+        # Fallback to plain text if template SID not configured
+        message = f"""הודעה בנוגע להרשמתך
+
+שלום {volunteer_name},
+
+לצערנו, בקשת ההרשמה שלך בחיוך של ילד נדחתה.
+
+אם יש לך שאלות, אנא צור קשר:
+📱 +972 50-722-5027 (טל - רכזת מתנדבים)
+
+תודה על הבנתך."""
+        
+        return send_whatsapp_message(
+            volunteer_phone,
+            message_body=message,
+            use_template=False
+        )
+
+
+def send_account_activation_whatsapp(staff_phone, staff_name):
+    """
+    Send WhatsApp message when staff account is activated/reactivated.
+    Message confirms they can now access the system.
+    
+    Template: account_activation (TWILIO_ACCOUNT_ACTIVATION_SID)
+    Variables:
+    1. Staff name
+    
+    Args:
+        staff_phone (str): Staff member's phone number (any format)
+        staff_name (str): Staff member's full name
+    
+    Returns:
+        dict: Response from send_whatsapp_message with success/error status
+    """
+    activation_template_sid = os.getenv('TWILIO_ACCOUNT_ACTIVATION_SID')
+    
+    if activation_template_sid:
+        # Using Twilio content template with name variable
+        template_variables = {
+            "1": staff_name
+        }
+        return send_whatsapp_message(
+            staff_phone,
+            message_body=None,
+            use_template=True,
+            template_sid=activation_template_sid,
+            template_variables=template_variables
+        )
+    else:
+        # Fallback to plain text if template SID not configured
+        message = f"""✅ חשבונך הופעל
+
+שלום {staff_name},
+
+חשבונך בחיוך של ילד הופעל בהצלחה! 🎉
+
+תוכל להתחבר למערכת כעת.
+
+בברכה,
+צוות חיוך של ילד"""
+        
+        return send_whatsapp_message(
+            staff_phone,
             message_body=message,
             use_template=False
         )

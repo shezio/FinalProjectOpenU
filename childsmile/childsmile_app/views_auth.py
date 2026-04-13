@@ -16,6 +16,7 @@ from .models import Staff, TOTPCode
 from .utils import *
 from .audit_utils import log_api_action
 from .logger import api_logger
+from .whatsapp_utils import send_totp_login_code_whatsapp, send_totp_registration_code_whatsapp
 
 
 def logout_all_other_sessions(user_id, current_session_key):
@@ -201,6 +202,20 @@ def login_email(request):
                 fail_silently=False,
             )
             
+            # Send TOTP code via WhatsApp if phone number available
+            if staff_user.staff_phone:
+                try:
+                    whatsapp_result = send_totp_login_code_whatsapp(
+                        staff_phone=staff_user.staff_phone,
+                        totp_code=code
+                    )
+                    if whatsapp_result.get("success"):
+                        api_logger.info(f"TOTP code sent via WhatsApp to {email}: {whatsapp_result.get('message_sid')}")
+                    else:
+                        api_logger.warning(f"WhatsApp TOTP send failed for {email}: {whatsapp_result.get('error')}")
+                except Exception as wa_error:
+                    api_logger.error(f"Error sending TOTP via WhatsApp to {email}: {str(wa_error)}")
+            
             log_api_action(
                 request=request,
                 action='LOGIN_CODE_SENT',
@@ -223,106 +238,7 @@ def login_email(request):
             )
             api_logger.error(f"Error sending login code: {str(e)}")
             return JsonResponse({"error": "Failed to send login code"}, status=500)
-        
-        # CHECK IF USER IS APPROVED FOR REGISTRATION
-        if not staff_user.registration_approved:
-            log_api_action(
-                request=request,
-                action='USER_LOGIN_FAILED',
-                success=False,
-                error_message="Registration not yet approved by administrator",
-                status_code=403,
-                additional_data={
-                    'attempted_email': email,
-                    'reason': 'registration_not_approved'
-                }
-            )
-            api_logger.warning(f"TOTP send attempt by non-approved user {staff_user.staff_id} ({email})")
-            return JsonResponse({
-                "error": "הרשמתך בהמתנה לאישור מנהל המערכת. אנא המתן לאישור.",
-                "pending_approval": True
-            }, status=403)
-        
-        # Invalidate any existing codes for this email
-        TOTPCode.objects.filter(email=email, used=False).update(used=True)
-        
-        # Generate new TOTP code
-        code = TOTPCode.generate_code()
-        totp_record = TOTPCode.objects.create(email=email, code=code)
-        print(f"Generated TOTP code {code} for {email}, record ID {totp_record.id}")
-        api_logger.debug(f"Generated TOTP code {code} for {email}, record ID {totp_record.id}")
-
-        # Send email
-        subject = "קוד הכניסה שלך - חיוך של ילד"
-        html_message = f"""<!DOCTYPE html>
-<html dir="rtl" lang="he">
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-</head>
-<body dir="rtl" style="direction: rtl; text-align: right; font-family: Arial, sans-serif; line-height: 1.6; margin: 0; padding: 20px; background-color: #f5f5f5;">
-    <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f5f5f5;">
-        <tr>
-            <td align="right" style="padding: 0;">
-                <table width="600" cellpadding="0" cellspacing="0" style="background-color: #f9f9f9; margin: 0 auto;">
-                    <!-- HEADER -->
-                    <tr>
-                        <td style="background-color: #4CAF50; color: white; padding: 20px; text-align: center; font-size: 20px; font-weight: bold;">
-                            קוד הכניסה שלך
-                        </td>
-                    </tr>
-                    <!-- CONTENT -->
-                    <tr>
-                        <td style="background-color: white; padding: 30px;">
-                            <p dir="rtl" style="text-align: right; margin: 15px 0;">שלום,</p>
-                            
-                            <p dir="rtl" style="text-align: right; margin: 15px 0;">קוד הכניסה שלך הוא:</p>
-                            
-                            <table width="100%" cellpadding="0" cellspacing="0" style="margin: 20px 0;">
-                                <tr>
-                                    <td style="text-align: center; padding: 20px; background-color: #f0f0f0; border: 2px solid #4CAF50; border-radius: 8px;">
-                                        <span style="font-size: 32px; font-weight: bold; color: #4CAF50; letter-spacing: 8px; direction: ltr; unicode-bidi: embed;">{code}</span>
-                                    </td>
-                                </tr>
-                            </table>
-                            
-                            <hr style="border: none; border-top: 1px solid #ddd; margin: 20px 0;">
-                            
-                            <p dir="rtl" style="text-align: right; margin: 15px 0; color: #d32f2f;">⏱ הקוד יפוג בעוד 5 דקות.</p>
-                            
-                            <p dir="rtl" style="text-align: right; margin: 15px 0;">אם לא ביקשת קוד זה, אנא התעלם מהודעה זו.</p>
-                        </td>
-                    </tr>
-                    <!-- FOOTER -->
-                    <tr>
-                        <td style="background-color: #f0f0f0; padding: 15px; text-align: center; font-size: 12px; color: #666;">
-                            <p dir="rtl" style="text-align: center; margin: 0;">בברכה,</p>
-                            <p dir="rtl" style="text-align: center; margin: 0;">צוות חיוך של ילד</p>
-                        </td>
-                    </tr>
-                </table>
-            </td>
-        </tr>
-    </table>
-</body>
-</html>"""
-        
-        send_mail(
-            subject,
-            "קוד הכניסה שלך הוא: " + code,  # Fallback plain text for clients that don't support HTML
-            settings.DEFAULT_FROM_EMAIL,
-            [email],
-            html_message=html_message,
-            fail_silently=False,
-        )
-        
-        api_logger.debug(f"Sent TOTP code {code} to {email}")
-        
-        return JsonResponse({
-            "message": "Login code sent to your email",
-            "email": email
-        })
-        
+    
     except Exception as e:
         api_logger.error(f"Error in login_email: {str(e)}")
         log_api_action(
