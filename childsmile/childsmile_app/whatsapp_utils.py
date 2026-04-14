@@ -490,13 +490,19 @@ def send_coordinator_notification_whatsapp_family_with_age_unit(coordinator_phon
     Returns:
         dict: Response from send_whatsapp_message
     """
+    api_logger.info(f"🔵 send_coordinator_notification_whatsapp_family_with_age_unit CALLED")
+    api_logger.info(f"   phone={coordinator_phone}, name={coordinator_name}, child={child_name}")
+    
     # Get template SID from env var (NEW_FAMILY_ADMIN_SID)
     family_template_sid = os.getenv('NEW_FAMILY_ADMIN_SID')
+    api_logger.info(f"🔵 Template SID from env: {family_template_sid}")
     
     # Create combined age display string: "7 שנים" or "5 חודשים"
     age_display = f"{str(age_number)} {age_unit}"
+    api_logger.info(f"🔵 Age display: {age_display}")
 
     if family_template_sid:
+        api_logger.info(f"🔵 Using Twilio template SID: {family_template_sid}")
         # Using Twilio content template with 9 variables (age combined in var 3)
         template_variables = {
             "1": coordinator_name,
@@ -509,15 +515,18 @@ def send_coordinator_notification_whatsapp_family_with_age_unit(coordinator_phon
             "8": tutoring_status,
             "9": registration_date
         }
-        return send_whatsapp_message(
+        api_logger.info(f"🔵 Template variables: {template_variables}")
+        result = send_whatsapp_message(
             coordinator_phone,
             message_body=None,
             use_template=True,
             template_sid=family_template_sid,
             template_variables=template_variables
         )
+        api_logger.info(f"🔵 send_whatsapp_message returned: {result}")
+        return result
     else:
-        # Fallback to plain text if template SID not configured
+        api_logger.warning(f"❌ No template SID configured (NEW_FAMILY_ADMIN_SID env var not set)")
         message = f"""משפחה חדשה נוספה למערכת
 
 שלום {coordinator_name},
