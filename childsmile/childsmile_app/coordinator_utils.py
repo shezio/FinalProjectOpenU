@@ -553,12 +553,15 @@ def notify_admins_of_new_family_async(child_id):
     """
     Async wrapper to notify all system admins (except shlezi0@gmail.com) about a new family creation.
     """
+    api_logger.info(f"🔴 CRITICAL: notify_admins_of_new_family_async called with child_id={child_id}")
     thread = threading.Thread(
         target=notify_admins_of_new_family,
         args=(child_id,),
         daemon=True
     )
+    api_logger.info(f"🔴 CRITICAL: Starting background thread for notify_admins_of_new_family")
     thread.start()
+    api_logger.info(f"🔴 CRITICAL: Background thread started")
 
 
 def notify_admins_of_new_family(child_id):
