@@ -234,9 +234,8 @@ def create_tasks_for_admins(staff_user_id, user_name, user_email):
                         html_message=message
                     )
                     
-                    # Send WhatsApp message to coordinator (async - fire and forget)
-                    # Only if WhatsApp utils are available
-                    if WHATSAPP_AVAILABLE and staff_member.phone:
+                    # Send WhatsApp message to coordinator
+                    if staff_member.phone:
                         try:
                             whatsapp_result = send_coordinator_notification_whatsapp(
                                 coordinator_phone=staff_member.phone,
@@ -256,9 +255,7 @@ def create_tasks_for_admins(staff_user_id, user_name, user_email):
                                 api_logger.warning(f"Failed to send WhatsApp to coordinator {staff_member.staff_id}: {whatsapp_result.get('error')}")
                         except Exception as wa_error:
                             api_logger.error(f"Error sending WhatsApp to coordinator {staff_member.staff_id}: {str(wa_error)}")
-                    elif not WHATSAPP_AVAILABLE and staff_member.phone:
-                        api_logger.debug(f"WhatsApp utils not available - skipping WhatsApp for coordinator {staff_member.staff_id}")
-                    elif not staff_member.phone:
+                    else:
                         api_logger.debug(f"Coordinator {staff_member.staff_id} has no phone number - skipping WhatsApp")
                 
                 api_logger.info(f"Registration approval notifications (email + WhatsApp) sent to {len(approval_staff)} Volunteer Coordinators for user {user_email}")
@@ -512,9 +509,8 @@ def notify_tutored_families_coordinators(child_id):
                 html_message=message
             )
             
-            # Send WhatsApp message to coordinator (async - fire and forget)
-            # Only if WhatsApp utils are available
-            if WHATSAPP_AVAILABLE and coordinator.phone:
+            # Send WhatsApp message to coordinator
+            if coordinator.phone:
                 try:
                     whatsapp_result = send_coordinator_notification_whatsapp_family(
                         coordinator_phone=coordinator.phone,
@@ -534,9 +530,7 @@ def notify_tutored_families_coordinators(child_id):
                         api_logger.warning(f"Failed to send WhatsApp to coordinator {coordinator.staff_id}: {whatsapp_result.get('error')}")
                 except Exception as wa_error:
                     api_logger.error(f"Error sending WhatsApp to coordinator {coordinator.staff_id}: {str(wa_error)}")
-            elif not WHATSAPP_AVAILABLE and coordinator.phone:
-                api_logger.debug(f"WhatsApp utils not available - skipping WhatsApp for coordinator {coordinator.staff_id}")
-            elif not coordinator.phone:
+            else:
                 api_logger.debug(f"Coordinator {coordinator.staff_id} has no phone number - skipping WhatsApp")
         
         api_logger.info(f"Family notification email sent to {coordinators.count()} Tutored Families Coordinators for child {child_id}")
@@ -548,21 +542,6 @@ def notify_tutored_families_coordinators(child_id):
 # ============================================================================
 # ADMIN NOTIFICATIONS FOR NEW FAMILIES
 # ============================================================================
-
-def notify_admins_of_new_family_async(child_id):
-    """
-    Async wrapper to notify all system admins (except shlezi0@gmail.com) about a new family creation.
-    """
-    api_logger.info(f"🔴 CRITICAL: notify_admins_of_new_family_async called with child_id={child_id}")
-    thread = threading.Thread(
-        target=notify_admins_of_new_family,
-        args=(child_id,),
-        daemon=True
-    )
-    api_logger.info(f"🔴 CRITICAL: Starting background thread for notify_admins_of_new_family")
-    thread.start()
-    api_logger.info(f"🔴 CRITICAL: Background thread started")
-
 
 def notify_admins_of_new_family(child_id):
     """
@@ -654,43 +633,40 @@ def notify_admins_of_new_family(child_id):
         
         api_logger.info(f"🔵 Notifying {len(admins_to_notify)} system admins (excluding shlezi0@gmail.com) about new family")
         
-        # Send WhatsApp to each admin
-        if WHATSAPP_AVAILABLE:
-            api_logger.info(f"🔵 WHATSAPP_AVAILABLE=True, proceeding with WhatsApp sends")
-            for admin in admins_to_notify:
-                api_logger.info(f"🔵 Processing admin {admin.staff_id}: {admin.username}")
-                if not admin.staff_phone:
-                    api_logger.debug(f"Admin {admin.staff_id} ({admin.username}) has no phone number - skipping WhatsApp")
-                    continue
+        # Send WhatsApp to each admin SYNCHRONOUSLY
+        api_logger.info(f"🔵 Proceeding with WhatsApp sends to {len(admins_to_notify)} admins")
+        for admin in admins_to_notify:
+            api_logger.info(f"🔵 Processing admin {admin.staff_id}: {admin.username}")
+            if not admin.staff_phone:
+                api_logger.debug(f"Admin {admin.staff_id} ({admin.username}) has no phone number - skipping WhatsApp")
+                continue
+            
+            try:
+                admin_name = f"{admin.first_name} {admin.last_name}"
+                api_logger.info(f"🔵 Sending WhatsApp to {admin_name} at {admin.staff_phone}")
                 
-                try:
-                    admin_name = f"{admin.first_name} {admin.last_name}"
-                    api_logger.info(f"🔵 Sending WhatsApp to {admin_name} at {admin.staff_phone}")
+                # Send WhatsApp notification using template with age unit variable
+                whatsapp_result = send_coordinator_notification_whatsapp_family_with_age_unit(
+                    coordinator_phone=admin.staff_phone,
+                    coordinator_name=admin_name,
+                    child_name=child_name,
+                    age_number=str(age_number),
+                    age_unit=age_unit,
+                    child_gender=child_gender,
+                    parent_phone=parent_phone,
+                    child_city=child_city,
+                    child_hospital=child_hospital,
+                    tutoring_status=tutoring_status,
+                    registration_date=registration_date
+                )
+                
+                if whatsapp_result.get("success"):
+                    api_logger.info(f"✅ WhatsApp notification sent to admin {admin.staff_id} ({admin.username}): {whatsapp_result.get('message_sid')}")
+                else:
+                    api_logger.warning(f"❌ Failed to send WhatsApp to admin {admin.staff_id} ({admin.username}): {whatsapp_result.get('error')}")
                     
-                    # Send WhatsApp notification using template with age unit variable
-                    whatsapp_result = send_coordinator_notification_whatsapp_family_with_age_unit(
-                        coordinator_phone=admin.staff_phone,
-                        coordinator_name=admin_name,
-                        child_name=child_name,
-                        age_number=str(age_number),
-                        age_unit=age_unit,
-                        child_gender=child_gender,
-                        parent_phone=parent_phone,
-                        child_city=child_city,
-                        child_hospital=child_hospital,
-                        tutoring_status=tutoring_status,
-                        registration_date=registration_date
-                    )
-                    
-                    if whatsapp_result.get("success"):
-                        api_logger.info(f"✅ WhatsApp notification sent to admin {admin.staff_id} ({admin.username}): {whatsapp_result.get('message_sid')}")
-                    else:
-                        api_logger.warning(f"❌ Failed to send WhatsApp to admin {admin.staff_id} ({admin.username}): {whatsapp_result.get('error')}")
-                        
-                except Exception as wa_error:
-                    api_logger.error(f"❌ Error sending WhatsApp to admin {admin.staff_id}: {str(wa_error)}")
-        else:
-            api_logger.warning(f"❌ WHATSAPP_AVAILABLE=False - skipping WhatsApp notifications for new family")
+            except Exception as wa_error:
+                api_logger.error(f"❌ Error sending WhatsApp to admin {admin.staff_id}: {str(wa_error)}")
             
     except Children.DoesNotExist:
         api_logger.error(f"Child with ID {child_id} not found for admin notification")

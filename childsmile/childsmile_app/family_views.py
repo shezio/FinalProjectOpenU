@@ -63,7 +63,7 @@ import threading, time
 from time import sleep
 from math import sin, cos, sqrt, atan2, radians, ceil
 import json
-from .coordinator_utils import notify_tutored_families_coordinators_async, notify_admins_of_new_family_async
+from .coordinator_utils import notify_tutored_families_coordinators_async, notify_admins_of_new_family
 import os
 import traceback
 import re
@@ -870,7 +870,9 @@ def create_family(request):
         notify_tutored_families_coordinators_async(family.child_id)
         
         # Send WhatsApp notification to all System Admins (except בונצל) about the new family
-        notify_admins_of_new_family_async(family.child_id)
+        api_logger.info(f"🔴 CRITICAL: GOING TO CALL notify_admins_of_new_family with child_id={child_id}")
+        
+        notify_admins_of_new_family(family.child_id)
 
         return JsonResponse(
             {"message": "Family created successfully", "ID": family.child_id},
