@@ -235,10 +235,10 @@ def create_tasks_for_admins(staff_user_id, user_name, user_email):
                     )
                     
                     # Send WhatsApp message to coordinator
-                    if staff_member.phone:
+                    if staff_member.staff_phone:
                         try:
                             whatsapp_result = send_coordinator_notification_whatsapp(
-                                coordinator_phone=staff_member.phone,
+                                coordinator_phone=staff_member.staff_phone,
                                 coordinator_name=coordinator_name,
                                 user_name=user_full_name,
                                 user_email=user_email_display,
@@ -256,7 +256,7 @@ def create_tasks_for_admins(staff_user_id, user_name, user_email):
                         except Exception as wa_error:
                             api_logger.error(f"Error sending WhatsApp to coordinator {staff_member.staff_id}: {str(wa_error)}")
                     else:
-                        api_logger.debug(f"Coordinator {staff_member.staff_id} has no phone number - skipping WhatsApp")
+                        api_logger.info(f"🔔 Coordinator {staff_member.staff_id} has no phone number - WhatsApp notification will NOT be sent")
                 
                 api_logger.info(f"Registration approval notifications (email + WhatsApp) sent to {len(approval_staff)} Volunteer Coordinators for user {user_email}")
                 
@@ -510,10 +510,10 @@ def notify_tutored_families_coordinators(child_id):
             )
             
             # Send WhatsApp message to coordinator
-            if coordinator.phone:
+            if coordinator.staff_phone:
                 try:
                     whatsapp_result = send_coordinator_notification_whatsapp_family(
-                        coordinator_phone=coordinator.phone,
+                        coordinator_phone=coordinator.staff_phone,
                         coordinator_name=coordinator_name,
                         child_name=child_full_name,
                         child_age=child_age,
@@ -531,7 +531,7 @@ def notify_tutored_families_coordinators(child_id):
                 except Exception as wa_error:
                     api_logger.error(f"Error sending WhatsApp to coordinator {coordinator.staff_id}: {str(wa_error)}")
             else:
-                api_logger.debug(f"Coordinator {coordinator.staff_id} has no phone number - skipping WhatsApp")
+                api_logger.info(f"🔔 Coordinator {coordinator.staff_id} has no phone number - WhatsApp notification will NOT be sent")
         
         api_logger.info(f"Family notification email sent to {coordinators.count()} Tutored Families Coordinators for child {child_id}")
         

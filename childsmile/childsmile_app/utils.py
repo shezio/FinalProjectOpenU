@@ -1676,10 +1676,21 @@ def activate_staff(staff, performed_by_user, request=None):
     # Step 5: Restore all roles atomically
     staff.roles.set(roles_to_restore)
     
-    # Step 6: Set active flag (DO NOT clear deactivation_reason - keep for audit trail)
+    # Step 6: Set active flag and handle deactivation_reason based on feature flag
+    # If BLOCK_ACCESS_AFTER_APPROVAL is enabled, set deactivation_reason='suspended'
+    # so they stay blocked until admin manually grants access via UI (grant_access_to_suspended_users)
+    # Otherwise, leave deactivation_reason as-is
     staff.is_active = True
+    block_access_after_approval = os.environ.get('BLOCK_ACCESS_AFTER_APPROVAL', 'false').lower() in ('true', '1', 'yes')
+    if block_access_after_approval:
+        staff.deactivation_reason = 'suspended'  # Keep them blocked - admin must grant access via UI
+    # else: leave deactivation_reason as-is (don't clear it)
     staff.previous_roles = None  # Clear the JSON backup
     staff.save()
+    
+    # Log if no phone number - no WhatsApp notification will be sent
+    if not staff.staff_phone:
+        api_logger.info(f"🔔 Staff member reactivated without phone number: {staff.email} - WhatsApp notifications will NOT be sent for this user")
     
     # Step 7: Log to audit
     restored_role_names = [r.role_name for r in roles_to_restore]

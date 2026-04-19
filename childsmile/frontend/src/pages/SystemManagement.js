@@ -67,6 +67,8 @@ const SystemManagement = () => {
   const [isDeactivationLoading, setIsDeactivationLoading] = useState(false);
   const [showInactiveOnly, setShowInactiveOnly] = useState(false);
   const [showSuspendedOnly, setShowSuspendedOnly] = useState(false); // For suspended users filter
+  const [reactivationUpdateEmail, setReactivationUpdateEmail] = useState(false); // Checkbox for email update
+  const [reactivationNewEmail, setReactivationNewEmail] = useState(''); // New email field
   const [selectedStaff, setSelectedStaff] = useState([]); // For bulk delete
   const [selectedRoleFilter, setSelectedRoleFilter] = useState(''); // For role filtering
   const [isThawModalOpen, setIsThawModalOpen] = useState(false); // For thaw suspension confirmation
@@ -812,6 +814,8 @@ const SystemManagement = () => {
   const closeReactivationModal = () => {
     setIsReactivationModalOpen(false);
     setStaffToModify(null);
+    setReactivationUpdateEmail(false);
+    setReactivationNewEmail('');
   };
 
   const handleDeactivateStaff = async () => {
@@ -868,17 +872,22 @@ const SystemManagement = () => {
   const handleReactivateStaff = async () => {
     try {
       setIsDeactivationLoading(true);
-      const response = await axios.put(`/api/update_staff_member/${staffToModify.id}/`, {
+      
+      // Prepare data - include new email only if checkbox is checked and field has value
+      const reactivationData = {
         username: staffToModify.username,
-        email: staffToModify.email,
+        email: reactivationUpdateEmail && reactivationNewEmail.trim() ? reactivationNewEmail.trim() : staffToModify.email,
         first_name: staffToModify.first_name,
         last_name: staffToModify.last_name,
         is_active: true,
-      });
+      };
+      
+      const response = await axios.put(`/api/update_staff_member/${staffToModify.id}/`, reactivationData);
 
       // Check if TOTP verification is required (always for reactivation)
       if (response.data.requires_verification) {
-        setNewUserEmail(staffToModify.email);
+        // Use the email that TOTP was sent to (could be new email or original)
+        setNewUserEmail(response.data.email || staffToModify.email);
         setShowStaffTotpModal(true);
         // Store flag and staff ID that this is for reactivation
         window.isReactivationRequest = true;
@@ -1794,26 +1803,57 @@ const SystemManagement = () => {
           <div className="staff-modal-content">
             <span className="staff-close" onClick={closeReactivationModal}>&times;</span>
             <h2 className="reactivation-modal-header">{t('Reactivate Staff Member')}</h2>
-          <p>
-            {t('Are you sure you want to reactivate')} <strong>{staffToModify?.first_name} {staffToModify?.last_name}</strong>?
-          </p>
-          <p className="reactivation-modal-info">
-            {t('They will receive an email notification and will be able to log in again')}
-          </p>
-          <div className="modal-actions-deactivation">
-            <button
-              onClick={handleReactivateStaff}
-              className="reactivation-button"
-            >
-              {t('Reactivate')}
-            </button>
-            <button
-              onClick={closeReactivationModal}
-              className="no-button"
-            >
-              {t('Cancel')}
-            </button>
-          </div>
+            <p>
+              {t('Are you sure you want to reactivate')} <strong>{staffToModify?.first_name} {staffToModify?.last_name}</strong>?
+            </p>
+            <p className="reactivation-modal-info">
+              {t('They will receive an email notification and will be able to log in again')}
+            </p>
+            
+            {/* Optional email update section */}
+            <div className="reactivation-email-section">
+              <label className="reactivation-email-checkbox">
+                <input
+                  type="checkbox"
+                  checked={reactivationUpdateEmail}
+                  onChange={(e) => {
+                    setReactivationUpdateEmail(e.target.checked);
+                    // Clear email if unchecked
+                    if (!e.target.checked) {
+                      setReactivationNewEmail('');
+                    }
+                  }}
+                />
+                <span>{t('Update email address')}</span>
+              </label>
+              
+              {reactivationUpdateEmail && (
+                <input
+                  type="email"
+                  className="reactivation-email-input"
+                  placeholder={t('Enter new email address')}
+                  value={reactivationNewEmail}
+                  onChange={(e) => setReactivationNewEmail(e.target.value)}
+                  disabled={!reactivationUpdateEmail}
+                />
+              )}
+            </div>
+            
+            <div className="modal-actions-deactivation">
+              <button
+                onClick={handleReactivateStaff}
+                className="reactivation-button"
+                disabled={reactivationUpdateEmail && !reactivationNewEmail.trim()}
+              >
+                {t('Reactivate')}
+              </button>
+              <button
+                onClick={closeReactivationModal}
+                className="no-button"
+              >
+                {t('Cancel')}
+              </button>
+            </div>
           </div>
         </div>
       )}
