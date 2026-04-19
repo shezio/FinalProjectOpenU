@@ -434,16 +434,28 @@ def update_staff_member(request, staff_id):
             # TOTP verification required for ALL users on reactivation
             totp_code = request.data.get("totp_code", "").strip()
             
+            # Support optional email update during reactivation
+            new_email = request.data.get("email", "").strip().lower() if request.data.get("email") else None
+            
             if not totp_code:
-                # First call: send TOTP to staff member's email
-                TOTPCode.objects.filter(email=staff_member.email, used=False).update(used=True)
+                # First call: send TOTP to new email (if provided) or current email
+                email_for_totp = new_email if new_email else staff_member.email
+                
+                # Clear old TOTP codes
+                TOTPCode.objects.filter(email=email_for_totp, used=False).update(used=True)
                 code = TOTPCode.generate_code()
-                TOTPCode.objects.create(email=staff_member.email, code=code)
+                TOTPCode.objects.create(email=email_for_totp, code=code)
+                
+                # Store in session for verification step
+                request.session['reactivation_new_email'] = new_email
                 
                 # DEBUG: Print the code for reactivation testing
-                # print(f"[REACTIVATION DEBUG] Verification code for {staff_member.email}: {code}")
+                # print(f"[REACTIVATION DEBUG] Verification code for {email_for_totp}: {code}")
                 
                 subject = "אישור הפעלה של חשבון - חיוך של ילד"
+                if new_email:
+                    subject = "אישור הפעלה של חשבון ושינוי מייל - חיוך של ילד"
+                
                 html_message = f"""<!DOCTYPE html>
 <html dir="rtl" lang="he">
 <head>
@@ -466,7 +478,7 @@ def update_staff_member(request, staff_id):
                         <td style="background-color: white; padding: 30px;">
                             <p dir="rtl" style="text-align: right; margin: 15px 0;">שלום,</p>
                             
-                            <p dir="rtl" style="text-align: right; margin: 15px 0;">בקשה להפעלה של חשבון במערכת חיוך של ילד.</p>
+                            <p dir="rtl" style="text-align: right; margin: 15px 0;">בקשה להפעלה של חשבון במערכת חיוך של ילד{'ושינוי כתובת מייל' if new_email else ''}.</p>
                             
                             <hr style="border: none; border-top: 1px solid #ddd; margin: 20px 0;">
                             
@@ -502,7 +514,7 @@ def update_staff_member(request, staff_id):
 </html>"""
                 
                 try:
-                    send_mail(subject, f"קוד האימות שלך: {code}", settings.DEFAULT_FROM_EMAIL, [staff_member.email], html_message=html_message)
+                    send_mail(subject, f"קוד האימות שלך: {code}", settings.DEFAULT_FROM_EMAIL, [email_for_totp], html_message=html_message)
                     
                     # Send TOTP code via WhatsApp if phone number available (reactivation)
                     if staff_member.staff_phone:
@@ -521,7 +533,8 @@ def update_staff_member(request, staff_id):
                     
                     return JsonResponse({
                         "message": "Verification code sent to your email",
-                        "requires_verification": True
+                        "requires_verification": True,
+                        "email": email_for_totp
                     })
                 except Exception as e:
                     log_api_action(
@@ -541,8 +554,11 @@ def update_staff_member(request, staff_id):
             
             else:
                 # Second call: verify TOTP code
+                # Get the email TOTP was sent to (could be new email or original)
+                email_for_verification = request.session.get('reactivation_new_email') or staff_member.email
+                
                 totp_record = TOTPCode.objects.filter(
-                    email=staff_member.email,
+                    email=email_for_verification,
                     used=False
                 ).order_by('-created_at').first()
                 
@@ -614,11 +630,21 @@ def update_staff_member(request, staff_id):
                 # Mark TOTP as used - verified, continue to reactivation below
                 totp_record.used = True
                 totp_record.save()
+                
+                # If a new email was provided, update it now
+                new_email_from_session = request.session.get('reactivation_new_email')
+                if new_email_from_session:
+                    staff_member.email = new_email_from_session
+                    staff_member.save()
+                    api_logger.info(f"Email updated during reactivation for {staff_id}: {new_email_from_session}")
+                    # Clean up session
+                    if 'reactivation_new_email' in request.session:
+                        del request.session['reactivation_new_email']
             
             try:
                 activate_staff(staff_member, user, request)
                 
-                # Send email to staff member (only Hebrew)
+                # Send activation confirmation email to the (possibly updated) email
                 subject = "חשבונך הופעל - חיוך של ילד"
                 html_message = f"""<!DOCTYPE html>
 <html dir="rtl" lang="he">
@@ -686,22 +712,22 @@ def update_staff_member(request, staff_id):
                     api_logger.error(f"Failed to send reactivation email: {str(e)}")
                 
                 # Send WhatsApp activation notification
-                if staff_member.phone:
+                if staff_member.staff_phone:
                     try:
                         from .whatsapp_utils import send_account_activation_whatsapp
                         staff_name = f"{staff_member.first_name} {staff_member.last_name}".strip()
                         whatsapp_result = send_account_activation_whatsapp(
-                            staff_phone=staff_member.phone,
+                            staff_phone=staff_member.staff_phone,
                             staff_name=staff_name
                         )
                         if whatsapp_result.get("success"):
-                            api_logger.info(f"Account activation WhatsApp sent to {staff_member.email} ({staff_member.phone}): {whatsapp_result.get('message_sid')}")
+                            api_logger.info(f"✅ Account activation WhatsApp sent to {staff_member.email} ({staff_member.staff_phone}): {whatsapp_result.get('message_sid')}")
                         else:
-                            api_logger.warning(f"Failed to send account activation WhatsApp to {staff_member.email}: {whatsapp_result.get('error')}")
+                            api_logger.warning(f"❌ Failed to send account activation WhatsApp to {staff_member.email}: {whatsapp_result.get('error')}")
                     except Exception as wa_error:
-                        api_logger.error(f"Error sending account activation WhatsApp to {staff_member.email}: {str(wa_error)}")
+                        api_logger.error(f"❌ Error sending account activation WhatsApp to {staff_member.email}: {str(wa_error)}")
                 else:
-                    api_logger.debug(f"No phone number available for account activation WhatsApp to {staff_member.email}")
+                    api_logger.info(f"🔔 No phone number available for {staff_member.email} - WhatsApp activation notification will NOT be sent")
                 
                 return JsonResponse({
                     "message": "Staff reactivated successfully",

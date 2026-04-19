@@ -870,7 +870,7 @@ def create_family(request):
         notify_tutored_families_coordinators_async(family.child_id)
         
         # Send WhatsApp notification to all System Admins (except בונצל) about the new family
-        api_logger.info(f"🔴 CRITICAL: GOING TO CALL notify_admins_of_new_family with child_id={child_id}")
+        api_logger.info(f"🔴 CRITICAL: GOING TO CALL notify_admins_of_new_family with child_id={family.child_id}")
         
         notify_admins_of_new_family(family.child_id)
 

@@ -1357,6 +1357,53 @@
     inset 0 1px 0 rgba(255, 255, 255, 0.4);
 }
 
+/* Reactivation Email Update Section */
+.reactivation-email-section {
+  margin: 20px 0;
+  padding: 15px;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+}
+
+.reactivation-email-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  font-size: 24px;
+  margin-bottom: 10px;
+}
+
+.reactivation-email-checkbox input {
+  cursor: pointer;
+  width: 18px;
+  height: 18px;
+}
+
+.reactivation-email-input {
+  width: 90%;
+  padding: 10px 12px;
+  margin-top: 10px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 24px;
+  font-family: inherit;
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.reactivation-email-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.reactivation-email-input:disabled {
+  background-color: #f5f5f5;
+  color: #999;
+  cursor: not-allowed;
+}
+
 /* Reactivation Modal Styles */
 .reactivation-modal-header {
   margin-bottom: 15px;
@@ -1417,6 +1464,16 @@
   box-shadow: 
     0 10px 30px rgba(59, 130, 246, 0.4),
     inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+.reactivation-button:disabled {
+  background: linear-gradient(135deg, 
+    rgba(200, 200, 200, 0.6) 0%,
+    rgba(180, 180, 180, 0.6) 100%);
+  cursor: not-allowed;
+  opacity: 0.6;
+  transform: none;
+  box-shadow: none;
 }
 
 /* Modal Actions Container */
