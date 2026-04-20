@@ -614,27 +614,21 @@ def notify_admins_of_new_family(child_id):
             api_logger.debug("Role 'System Administrator' not found in the database.")
             return
         
-        # Get all System Admins EXCEPT shlezi0@gmail.com
-        all_admins = Staff.objects.filter(roles=admin_role, is_active=True).distinct()
-        api_logger.info(f"🔵 Found {all_admins.count()} total active System Administrators")
+        # Get all System Admins
+        admins_to_notify = Staff.objects.filter(roles=admin_role, is_active=True).distinct()
+        api_logger.info(f"🔵 Found {admins_to_notify.count()} total active System Administrators to notify")
         
-        # Filter out shlezi0@gmail.com (case-insensitive email check)
-        admins_to_notify = [
-            admin for admin in all_admins 
-            if admin.email.lower() != 'shlezi0@gmail.com'
-        ]
-        api_logger.info(f"🔵 After filtering (excluding shlezi0@gmail.com): {len(admins_to_notify)} admins to notify")
         for admin in admins_to_notify:
             api_logger.info(f"   - Admin: {admin.username} ({admin.email}) - phone: {admin.staff_phone}")
         
-        if not admins_to_notify:
-            api_logger.debug("No System Administrators (excluding shlezi0@gmail.com) found to notify about new family.")
+        if not admins_to_notify.exists():
+            api_logger.debug("No System Administrators found to notify about new family.")
             return
         
-        api_logger.info(f"🔵 Notifying {len(admins_to_notify)} system admins (excluding shlezi0@gmail.com) about new family")
+        api_logger.info(f"🔵 Notifying {admins_to_notify.count()} system admins about new family")
         
         # Send WhatsApp to each admin SYNCHRONOUSLY
-        api_logger.info(f"🔵 Proceeding with WhatsApp sends to {len(admins_to_notify)} admins")
+        api_logger.info(f"🔵 Proceeding with WhatsApp sends to {admins_to_notify.count()} admins")
         for admin in admins_to_notify:
             api_logger.info(f"🔵 Processing admin {admin.staff_id}: {admin.username}")
             if not admin.staff_phone:
