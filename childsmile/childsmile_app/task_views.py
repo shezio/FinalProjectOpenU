@@ -664,7 +664,7 @@ def delete_task(request, task_id):
                                     volunteer_name=volunteer_name
                                 )
                                 if whatsapp_result.get("success"):
-                                    api_logger.info(f"Rejection WhatsApp sent to {rejected_email} ({volunteer_phone}): {whatsapp_result.get('message_sid')}")
+                                    api_logger.debug(f"Rejection WhatsApp sent to {rejected_email} ({volunteer_phone}): {whatsapp_result.get('message_sid')}")
                                 else:
                                     api_logger.warning(f"Failed to send rejection WhatsApp to {rejected_email}: {whatsapp_result.get('error')}")
                             except Exception as wa_error:
@@ -748,13 +748,13 @@ def delete_task(request, task_id):
                                     volunteer_name=volunteer_name
                                 )
                                 if whatsapp_result.get("success"):
-                                    api_logger.info(f"Rejection WhatsApp sent to {rejected_email} ({volunteer_phone}): {whatsapp_result.get('message_sid')}")
+                                    api_logger.debug(f"Rejection WhatsApp sent to {rejected_email} ({volunteer_phone}): {whatsapp_result.get('message_sid')}")
                                 else:
                                     api_logger.warning(f"Failed to send rejection WhatsApp to {rejected_email}: {whatsapp_result.get('error')}")
                             except Exception as wa_error:
                                 api_logger.error(f"Error sending rejection WhatsApp to {rejected_email}: {str(wa_error)}")
                         else:
-                            api_logger.info(f"🔔 No phone number available for {rejected_email} - WhatsApp rejection notification will NOT be sent")
+                            api_logger.debug(f"🔔 No phone number available for {rejected_email} - WhatsApp rejection notification will NOT be sent")
                         
                         # Delete associated SignedUp records
                         signed_up_count = SignedUp.objects.filter(email=rejected_email).count()
@@ -1064,7 +1064,7 @@ def update_task_status(request, task_id):
                     
                     # ========== TIER 1: COORDINATOR APPROVAL ==========
                     if approval_level == "coordinator":
-                        api_logger.info(f"Coordinator approved registration for {user_email} - sending WhatsApp group link and creating admin approval tasks")
+                        api_logger.debug(f"Coordinator approved registration for {user_email} - sending WhatsApp group link and creating admin approval tasks")
                         
                         # Get the staff user
                         try:
@@ -1180,7 +1180,7 @@ def update_task_status(request, task_id):
                                     fail_silently=False,
                                     html_message=message,
                                 )
-                                api_logger.info(f"Coordinator approval email with WhatsApp link sent to {user_email}")
+                                api_logger.debug(f"Coordinator approval email with WhatsApp link sent to {user_email}")
                             except Exception as email_error:
                                 api_logger.error(f"Error sending coordinator approval email to {user_email}: {str(email_error)}")
                             
@@ -1194,13 +1194,13 @@ def update_task_status(request, task_id):
                                         volunteer_name=volunteer_name
                                     )
                                     if whatsapp_result.get("success"):
-                                        api_logger.info(f"Coordinator approval WhatsApp sent to {user_email} ({staff_user.staff_phone}): {whatsapp_result.get('message_sid')}")
+                                        api_logger.debug(f"Coordinator approval WhatsApp sent to {user_email} ({staff_user.staff_phone}): {whatsapp_result.get('message_sid')}")
                                     else:
                                         api_logger.warning(f"Failed to send coordinator approval WhatsApp to {user_email}: {whatsapp_result.get('error')}")
                                 except Exception as wa_error:
                                     api_logger.error(f"Error sending coordinator approval WhatsApp to {user_email}: {str(wa_error)}")
                             else:
-                                api_logger.info(f"🔔 No phone number available for {user_email} - WhatsApp coordinator approval notification will NOT be sent")
+                                api_logger.debug(f"🔔 No phone number available for {user_email} - WhatsApp coordinator approval notification will NOT be sent")
                             
                             # Create admin final approval tasks (tier 2)
                             from .utils import create_admin_approval_tasks_async
@@ -1332,7 +1332,7 @@ def update_task_status(request, task_id):
                                         volunteer_name=volunteer_name
                                     )
                                     if whatsapp_result.get("success"):
-                                        api_logger.info(f"Final approval WhatsApp sent to {user_email} ({staff_user.staff_phone}): {whatsapp_result.get('message_sid')}")
+                                        api_logger.debug(f"Final approval WhatsApp sent to {user_email} ({staff_user.staff_phone}): {whatsapp_result.get('message_sid')}")
                                     else:
                                         api_logger.warning(f"Failed to send final approval WhatsApp to {user_email}: {whatsapp_result.get('error')}")
                                 except Exception as wa_error:

@@ -72,7 +72,7 @@ def send_whatsapp_message(recipient_phone, message_body, use_template=False, tem
         
         if response.status_code == 201:
             data = response.json()
-            api_logger.info(f"WhatsApp message sent successfully to {clean_phone} (SID: {data.get('sid')})")
+            api_logger.debug(f"WhatsApp message sent successfully to {clean_phone} (SID: {data.get('sid')})")
             return {
                 "success": True,
                 "message_sid": data.get('sid'),
@@ -148,7 +148,7 @@ def send_whatsapp_to_multiple(recipient_phones, message_body=None, use_template=
         else:
             results["failed"] += 1
     
-    api_logger.info(f"WhatsApp bulk send completed: {results['successful']}/{results['total']} successful")
+    api_logger.debug(f"WhatsApp bulk send completed: {results['successful']}/{results['total']} successful")
     return results
 
 
@@ -490,19 +490,19 @@ def send_coordinator_notification_whatsapp_family_with_age_unit(coordinator_phon
     Returns:
         dict: Response from send_whatsapp_message
     """
-    api_logger.info(f"🔵 send_coordinator_notification_whatsapp_family_with_age_unit CALLED")
-    api_logger.info(f"   phone={coordinator_phone}, name={coordinator_name}, child={child_name}")
+    api_logger.debug(f"🔵 send_coordinator_notification_whatsapp_family_with_age_unit CALLED")
+    api_logger.debug(f"   phone={coordinator_phone}, name={coordinator_name}, child={child_name}")
     
     # Get template SID from env var (NEW_FAMILY_ADMIN_SID)
     family_template_sid = os.getenv('NEW_FAMILY_ADMIN_SID')
-    api_logger.info(f"🔵 Template SID from env: {family_template_sid}")
+    api_logger.debug(f"🔵 Template SID from env: {family_template_sid}")
     
     # Create combined age display string: "7 שנים" or "5 חודשים"
     age_display = f"{str(age_number)} {age_unit}"
-    api_logger.info(f"🔵 Age display: {age_display}")
+    api_logger.debug(f"🔵 Age display: {age_display}")
 
     if family_template_sid:
-        api_logger.info(f"🔵 Using Twilio template SID: {family_template_sid}")
+        api_logger.debug(f"🔵 Using Twilio template SID: {family_template_sid}")
         # Using Twilio content template with 9 variables (age combined in var 3)
         template_variables = {
             "1": coordinator_name,
@@ -515,7 +515,7 @@ def send_coordinator_notification_whatsapp_family_with_age_unit(coordinator_phon
             "8": tutoring_status,
             "9": registration_date
         }
-        api_logger.info(f"🔵 Template variables: {template_variables}")
+        api_logger.debug(f"🔵 Template variables: {template_variables}")
         result = send_whatsapp_message(
             coordinator_phone,
             message_body=None,
@@ -523,7 +523,7 @@ def send_coordinator_notification_whatsapp_family_with_age_unit(coordinator_phon
             template_sid=family_template_sid,
             template_variables=template_variables
         )
-        api_logger.info(f"🔵 send_whatsapp_message returned: {result}")
+        api_logger.debug(f"🔵 send_whatsapp_message returned: {result}")
         return result
     else:
         api_logger.warning(f"❌ No template SID configured (NEW_FAMILY_ADMIN_SID env var not set)")

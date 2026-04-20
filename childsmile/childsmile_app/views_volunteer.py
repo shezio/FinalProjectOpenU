@@ -190,7 +190,7 @@ def register_send_totp(request):
                         totp_code=code
                     )                    
                     if whatsapp_result.get("success"):
-                        api_logger.info(f"Registration TOTP code sent via WhatsApp to {email}: {whatsapp_result.get('message_sid')}")
+                        api_logger.debug(f"Registration TOTP code sent via WhatsApp to {email}: {whatsapp_result.get('message_sid')}")
                     else:
                         api_logger.warning(f"WhatsApp registration TOTP send failed for {email}: {whatsapp_result.get('error')}")
                 except Exception as wa_error:

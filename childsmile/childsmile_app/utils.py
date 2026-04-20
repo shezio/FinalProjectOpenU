@@ -1690,7 +1690,7 @@ def activate_staff(staff, performed_by_user, request=None):
     
     # Log if no phone number - no WhatsApp notification will be sent
     if not staff.staff_phone:
-        api_logger.info(f"🔔 Staff member reactivated without phone number: {staff.email} - WhatsApp notifications will NOT be sent for this user")
+        api_logger.debug(f"🔔 Staff member reactivated without phone number: {staff.email} - WhatsApp notifications will NOT be sent for this user")
     
     # Step 7: Log to audit
     restored_role_names = [r.role_name for r in roles_to_restore]
