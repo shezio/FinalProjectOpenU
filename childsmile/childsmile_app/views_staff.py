@@ -93,7 +93,7 @@ def update_staff_member(request, staff_id):
         # Validate required fields
         required_fields = ["username", "email", "first_name", "last_name"]
         missing_fields = [
-            field for field in required_fields if not data.get(field, "").strip()
+            field for field in required_fields if not str(data.get(field, "")).strip()
         ]
         if missing_fields:
             log_api_action(
@@ -748,10 +748,10 @@ def update_staff_member(request, staff_id):
                 )
 
         # IF EMAIL IS BEING CHANGED - Require TOTP verification
-        new_email = data.get("email", "").strip().lower()
+        new_email = str(data.get("email", "")).strip().lower()
         if new_email and new_email != original_email:
             # Check if TOTP code was provided for verification
-            totp_code = data.get("totp_code", "").strip()
+            totp_code = str(data.get("totp_code", "")).strip()
             
             if not totp_code:
                 # First call: send TOTP to new email
@@ -1090,7 +1090,7 @@ def update_staff_member(request, staff_id):
         
         # Handle staff_phone update
         if "staff_phone" in data:
-            phone = data.get("staff_phone", "").strip()
+            phone = str(data.get("staff_phone", "")).strip()
             api_logger.debug(f"Phone update requested: staff_id={staff_id}, new_phone={phone}")
             if phone:
                 is_valid, error_msg = validate_staff_phone(phone)
@@ -1143,7 +1143,7 @@ def update_staff_member(request, staff_id):
         
         # Handle optional staff profile fields (for coordinators/managers reporting)
         if "staff_israel_id" in data:
-            israel_id = data.get("staff_israel_id", "").strip()
+            israel_id = str(data.get("staff_israel_id", "")).strip()
             if israel_id:
                 is_valid, error_msg = validate_staff_israel_id(israel_id)
                 if not is_valid:
@@ -1197,7 +1197,7 @@ def update_staff_member(request, staff_id):
             #     staff_member.staff_age = calculated_age
         
         if "staff_birth_date" in data:
-            birth_date_str = data.get("staff_birth_date", "").strip()
+            birth_date_str = str(data.get("staff_birth_date", "")).strip()
             if birth_date_str:
                 birth_date = parse_date_string(birth_date_str)
                 if not birth_date:
@@ -1264,7 +1264,7 @@ def update_staff_member(request, staff_id):
                         )
         
         if "staff_city" in data:
-            city = data.get("staff_city", "").strip()
+            city = str(data.get("staff_city", "")).strip()
             staff_member.staff_city = city if city else None
 
         # Save the updated staff record
@@ -1511,7 +1511,7 @@ def create_staff_member(request):
 
         required_fields = ["username", "email", "first_name", "last_name"]
         missing_fields = [
-            field for field in required_fields if not data.get(field, "").strip()
+            field for field in required_fields if not str(data.get(field, "")).strip()
         ]
         if missing_fields:
             log_api_action(
@@ -1880,7 +1880,7 @@ def staff_creation_send_totp(request):
         data = request.data
         
         required_fields = ["username", "email", "first_name", "last_name"]
-        missing_fields = [field for field in required_fields if not data.get(field, "").strip()]
+        missing_fields = [field for field in required_fields if not str(data.get(field, "")).strip()]
         
         if not data.get("roles") or not isinstance(data.get("roles"), list) or len(data.get("roles")) == 0:
             missing_fields.append("roles")

@@ -97,3 +97,13 @@
 .all-volunteers-report-main-content .data-grid td:nth-child(7) {
     width: 100px !important;
 }
+
+/* ===== MATURE FILTER BUTTON - restore families.css styling ===== */
+.all-volunteers-report-main-content .actions .toggle-mature-btn {
+    padding: 12px 24px !important;
+    border: 2px solid rgba(255, 255, 255, 0.3) !important;
+    border-radius: 14px !important;
+    font-size: 24px !important;
+    font-weight: 600 !important;
+    font-family: Rubik, sans-serif !important;
+}
