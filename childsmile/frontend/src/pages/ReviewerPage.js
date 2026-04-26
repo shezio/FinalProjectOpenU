@@ -6,7 +6,7 @@ import Select from 'react-select';
 import { toast } from 'react-toastify';
 import { showErrorToast, showWarningToast } from '../components/toastUtils';
 import { useTranslation } from 'react-i18next';
-import { hasUpdatePermissionForTable, isGuestUser } from '../components/utils';
+import { hasUpdatePermissionForTable, isGuestUser, hasAllPermissions } from '../components/utils';
 import hospitals from '../components/hospitals.json';
 import '../styles/common.css';
 import '../styles/reviewer.css';
@@ -29,6 +29,10 @@ const ReviewerPage = () => {
 
   const canEditFamily = hasUpdatePermissionForTable('children');
   const canUpdateTask = hasUpdatePermissionForTable('tasks');
+  const isAdmin = hasAllPermissions([
+    { resource: 'childsmile_app_staff', action: 'VIEW' },
+    { resource: 'childsmile_app_staff', action: 'UPDATE' },
+  ]);
 
   const incomingFamily = location.state?.family || '';
 
@@ -68,6 +72,22 @@ const ReviewerPage = () => {
   const [settlementsAndStreets, setSettlementsAndStreets] = useState({});
   const [availableCoordinators, setAvailableCoordinators] = useState([]);
   const [autoAssignedCoordinator, setAutoAssignedCoordinator] = useState(null);
+
+  // Assign task modal (admin only)
+  const [isAssignModalOpen, setIsAssignModalOpen]   = useState(false);
+  const [taskToAssign,      setTaskToAssign]         = useState(null);
+  const [staffOptions,      setStaffOptions]         = useState([]);
+  const [selectedAssignee,  setSelectedAssignee]     = useState(null);
+
+  const fetchStaff = useCallback(async () => {
+    try {
+      const res = await axios.get('/api/get_all_staff/', { params: { page: 1, page_size: 10000 } });
+      const list = (res.data.staff || [])
+        .filter(u => u.is_active && u.username !== 'guest_demo')
+        .map(u => ({ value: u.username, label: `${u.first_name} ${u.last_name}` }));
+      setStaffOptions(list);
+    } catch { /* ignore */ }
+  }, []);
 
   const hospitalsList = hospitals.map(h => h.trim()).filter(Boolean);
 
@@ -133,7 +153,8 @@ const ReviewerPage = () => {
     fetchFamilyData();
     fetchCoordinators();
     fetchSettlements();
-  }, [fetchTasks, fetchFamilyData, fetchCoordinators, fetchSettlements]);
+    if (isAdmin) fetchStaff();
+  }, [fetchTasks, fetchFamilyData, fetchCoordinators, fetchSettlements, fetchStaff, isAdmin]);
 
   // Pagination
   const [page, setPage]           = useState(1);
@@ -174,6 +195,33 @@ const ReviewerPage = () => {
       fetchTasks();
     } catch (err) {
       showErrorToast(t, 'שגיאה בעדכון סטטוס', err);
+    }
+  };
+
+  // Assign task (admin only)
+  const openAssignModal = (task) => {
+    setTaskToAssign(task);
+    const current = staffOptions.find(o => o.value === task.assignee) || null;
+    setSelectedAssignee(current);
+    setIsAssignModalOpen(true);
+  };
+
+  const handleConfirmAssign = async () => {
+    if (!selectedAssignee || !taskToAssign) return;
+    try {
+      await axios.put(`/api/tasks/update/${taskToAssign.id}/`, {
+        description: taskToAssign.description,
+        due_date:    taskToAssign.due_date,
+        assigned_to: selectedAssignee.value,
+        type:        taskToAssign.type,
+        child:       taskToAssign.child,
+        tutor:       taskToAssign.tutor,
+      });
+      toast.success('המשימה שויכה בהצלחה');
+      setIsAssignModalOpen(false);
+      fetchTasks();
+    } catch (err) {
+      showErrorToast(t, 'שגיאה בשיוך משימה', err);
     }
   };
 
@@ -383,6 +431,14 @@ const ReviewerPage = () => {
                               עדכן סטטוס
                             </button>
                           )}
+                          {isAdmin && (
+                            <button
+                              className="reviewer-btn-action reviewer-btn-assign"
+                              onClick={() => openAssignModal(task)}
+                            >
+                              שייך משימה
+                            </button>
+                          )}
                           {canEditFamily && (
                             <button
                               className="reviewer-btn-action reviewer-btn-edit"
@@ -426,6 +482,36 @@ const ReviewerPage = () => {
           </div>
         )}
       </div>
+
+      {/* Assign task modal (admin only) */}
+      {isAssignModalOpen && (
+        <div className="reviewers-modal">
+          <div className="reviewers-modal-content" style={{ maxWidth: '460px' }}>
+            <span className="reviewers-close" onClick={() => setIsAssignModalOpen(false)}>&times;</span>
+            <h2>שיוך משימה</h2>
+            <p style={{ marginBottom: '12px', fontSize: '18px', color: '#444' }}>
+              <strong>ילד:</strong> {getChildName(taskToAssign)} &nbsp;|&nbsp;
+              <strong>תאריך ביצוע:</strong> {taskToAssign?.due_date || '---'}
+            </p>
+            <label style={{ fontWeight: 'bold', fontSize: '18px', display: 'block', marginBottom: '6px' }}>
+              שייך לעובד:
+            </label>
+            <Select
+              options={staffOptions}
+              value={selectedAssignee}
+              onChange={setSelectedAssignee}
+              placeholder="בחר עובד..."
+              isClearable
+              noOptionsMessage={() => 'אין עובדים זמינים'}
+              styles={{ menu: base => ({ ...base, direction: 'rtl', textAlign: 'right' }) }}
+            />
+            <div className="reviewers-form-actions" style={{ marginTop: '20px' }}>
+              <button onClick={handleConfirmAssign} disabled={!selectedAssignee}>שייך</button>
+              <button type="button" onClick={() => setIsAssignModalOpen(false)}>ביטול</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Status update modal */}
       {isStatusModalOpen && (

@@ -514,6 +514,8 @@
 .reviewer-btn-action:disabled { opacity: 0.45; cursor: not-allowed; }
 .reviewer-btn-status { background: #1a3a5c; color: #fff; }
 .reviewer-btn-status:hover:not(:disabled) { background: #253f6b; }
+.reviewer-btn-assign { background: #7c3aed; color: #fff; }
+.reviewer-btn-assign:hover:not(:disabled) { background: #6d28d9; }
 .reviewer-btn-edit   { background: #17a2b8; color: #fff; }
 .reviewer-btn-edit:hover { background: #138496; }
 
