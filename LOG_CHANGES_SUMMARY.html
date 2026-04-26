@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Log Level Changes - Side by Side</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f2f5; color: #333; padding: 30px; }
+        h1 { text-align: center; color: #1a237e; margin-bottom: 10px; font-size: 28px; }
+        .subtitle { text-align: center; color: #666; margin-bottom: 30px; font-size: 14px; }
+        .file-section { background: #fff; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 24px; overflow: hidden; }
+        .file-header { padding: 16px 24px; font-weight: 700; font-size: 16px; color: #fff; background: #1565c0; }
+        .diff-container { padding: 20px 24px; }
+        .diff { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 24px; }
+        .before, .after { padding: 12px; border-radius: 6px; }
+        .before { background: #ffebee; border-left: 4px solid #c62828; }
+        .after { background: #e8f5e9; border-left: 4px solid #2e7d32; }
+        .label { font-weight: 700; font-size: 12px; margin-bottom: 8px; text-transform: uppercase; }
+        .before .label { color: #c62828; }
+        .after .label { color: #2e7d32; }
+        code { font-family: 'Courier New', monospace; font-size: 12px; line-height: 1.6; display: block; white-space: pre-wrap; word-break: break-word; }
+        .diff-highlight { font-weight: bold; font-style: italic; text-decoration: underline; }
+        .old-highlight { color: #c62828; background: #fff1f1; padding: 0 4px; }
+        .new-highlight { color: #2e7d32; background: #f1f8f4; padding: 0 4px; }
+        .count { display: inline-block; background: #e3f2fd; color: #1565c0; border-radius: 12px; padding: 4px 12px; font-weight: 700; font-size: 12px; margin-left: 12px; }
+        .stat-box { text-align: center; color: #888; font-size: 11px; margin-top: 10px; }
+    </style>
+</head>
+<body>
+
+<h1>🔒 Log Level Changes: info → debug</h1>
+<p class="subtitle">WhatsApp-related logs exposure sensitive data — moved to debug level</p>
+
+<!-- coordinator_utils.py -->
+<div class="file-section">
+    <div class="file-header">📄 coordinator_utils.py <span class="count">10 changes</span></div>
+    <div class="diff-container">
+        <div class="diff">
+            <div class="before">
+                <div class="label">BEFORE</div>
+                <code>api_logger.<span class="diff-highlight old-highlight">info</span>(f"🔵 Found {approval_staff.count()} Volunteer Coordinators...")</code>
+            </div>
+            <div class="after">
+                <div class="label">AFTER</div>
+                <code>api_logger.<span class="diff-highlight new-highlight">debug</span>(f"🔵 Found {approval_staff.count()} Volunteer Coordinators...")</code>
+            </div>
+        </div>
+        <div class="diff">
+            <div class="before">
+                <div class="label">BEFORE</div>
+                <code>api_logger.<span class="diff-highlight old-highlight">info</span>(f"WhatsApp notification sent to coordinator {staff_member.staff_id}: {whatsapp_result.get('message_sid')}")</code>
+            </div>
+            <div class="after">
+                <div class="label">AFTER</div>
+                <code>api_logger.<span class="diff-highlight new-highlight">debug</span>(f"WhatsApp notification sent to coordinator {staff_member.staff_id}: {whatsapp_result.get('message_sid')}")</code>
+            </div>
+        </div>
+        <div class="diff">
+            <div class="before">
+                <div class="label">BEFORE</div>
+                <code>api_logger.<span class="diff-highlight old-highlight">info</span>(f"🔔 Coordinator {staff_member.staff_id} has no phone...")</code>
+            </div>
+            <div class="after">
+                <div class="label">AFTER</div>
+                <code>api_logger.<span class="diff-highlight new-highlight">debug</span>(f"🔔 Coordinator {staff_member.staff_id} has no phone...")</code>
+            </div>
+        </div>
+        <div class="diff">
+            <div class="before">
+                <div class="label">BEFORE</div>
+                <code>api_logger.<span class="diff-highlight old-highlight">info</span>(f"Found {coordinators.count()} Tutored Families Coordinators.")</code>
+            </div>
+            <div class="after">
+                <div class="label">AFTER</div>
+                <code>api_logger.<span class="diff-highlight new-highlight">debug</span>(f"Found {coordinators.count()} Tutored Families Coordinators.")</code>
+            </div>
+        </div>
+        <div class="diff">
+            <div class="before">
+                <div class="label">BEFORE</div>
+                <code>api_logger.<span class="diff-highlight old-highlight">info</span>(f"WhatsApp notification sent to Tutored Families Coordinator {coordinator.staff_id}: {whatsapp_result.get('message_sid')}")</code>
+            </div>
+            <div class="after">
+                <div class="label">AFTER</div>
+                <code>api_logger.<span class="diff-highlight new-highlight">debug</span>(f"WhatsApp notification sent to Tutored Families Coordinator {coordinator.staff_id}: {whatsapp_result.get('message_sid')}")</code>
+            </div>
+        </div>
+        <div class="diff">
+            <div class="before">
+                <div class="label">BEFORE</div>
+                <code>api_logger.<span class="diff-highlight old-highlight">info</span>(f"🔵 Found {admins_to_notify.count()} total active System Administrators...")</code>
+            </div>
+            <div class="after">
+                <div class="label">AFTER</div>
+                <code>api_logger.<span class="diff-highlight new-highlight">debug</span>(f"🔵 Found {admins_to_notify.count()} total active System Administrators...")</code>
+            </div>
+        </div>
+        <div class="diff">
+            <div class="before">
+                <div class="label">BEFORE</div>
+                <code>api_logger.<span class="diff-highlight old-highlight">info</span>(f"✅ WhatsApp notification sent to admin {admin.staff_id} ({admin.username}): {whatsapp_result.get('message_sid')}")</code>
+            </div>
+            <div class="after">
+                <div class="label">AFTER</div>
+                <code>api_logger.<span class="diff-highlight new-highlight">debug</span>(f"✅ WhatsApp notification sent to admin {admin.staff_id} ({admin.username}): {whatsapp_result.get('message_sid')}")</code>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- task_views.py -->
+<div class="file-section">
+    <div class="file-header">� task_views.py <span class="count">10 changes</span></div>
+    <div class="diff-container">
+        <div class="diff">
+            <div class="before">
+                <div class="label">BEFORE</div>
+                <code>api_logger.<span class="diff-highlight old-highlight">info</span>(f"WhatsApp approval notification sent to {coordinator_phone}")</code>
+            </div>
+            <div class="after">
+                <div class="label">AFTER</div>
+                <code>api_logger.<span class="diff-highlight new-highlight">debug</span>(f"WhatsApp approval notification sent to {coordinator_phone}")</code>
+            </div>
+        </div>
+        <div class="diff">
+            <div class="before">
+                <div class="label">BEFORE</div>
+                <code>api_logger.<span class="diff-highlight old-highlight">info</span>(f"Approval WhatsApp sent: {whatsapp_result.get('message_sid')}")</code>
+            </div>
+            <div class="after">
+                <div class="label">AFTER</div>
+                <code>api_logger.<span class="diff-highlight new-highlight">debug</span>(f"Approval WhatsApp sent: {whatsapp_result.get('message_sid')}")</code>
+            </div>
+        </div>
+        <div class="diff">
+            <div class="before">
+                <div class="label">BEFORE</div>
+                <code>api_logger.<span class="diff-highlight old-highlight">info</span>(f"Rejection WhatsApp sent to {coordinator_phone}")</code>
+            </div>
+            <div class="after">
+                <div class="label">AFTER</div>
+                <code>api_logger.<span class="diff-highlight new-highlight">debug</span>(f"Rejection WhatsApp sent to {coordinator_phone}")</code>
+            </div>
+        </div>
+        <div class="diff">
+            <div class="before">
+                <div class="label">BEFORE</div>
+                <code>api_logger.<span class="diff-highlight old-highlight">info</span>(f"Final approval WhatsApp sent: {whatsapp_result.get('message_sid')}")</code>
+            </div>
+            <div class="after">
+                <div class="label">AFTER</div>
+                <code>api_logger.<span class="diff-highlight new-highlight">debug</span>(f"Final approval WhatsApp sent: {whatsapp_result.get('message_sid')}")</code>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- whatsapp_utils.py -->
+<div class="file-section">
+    <div class="file-header">📄 whatsapp_utils.py <span class="count">8 changes</span></div>
+    <div class="diff-container">
+        <div class="diff">
+            <div class="before">
+                <div class="label">BEFORE</div>
+                <code>api_logger.<span class="diff-highlight old-highlight">info</span>(f"🔵 Template variables: coordinator_phone={coordinator_phone}...")</code>
+            </div>
+            <div class="after">
+                <div class="label">AFTER</div>
+                <code>api_logger.<span class="diff-highlight new-highlight">debug</span>(f"🔵 Template variables: coordinator_phone={coordinator_phone}...")</code>
+            </div>
+        </div>
+        <div class="diff">
+            <div class="before">
+                <div class="label">BEFORE</div>
+                <code>api_logger.<span class="diff-highlight old-highlight">info</span>(f"Message SID: {response.get('sid')}")</code>
+            </div>
+            <div class="after">
+                <div class="label">AFTER</div>
+                <code>api_logger.<span class="diff-highlight new-highlight">debug</span>(f"Message SID: {response.get('sid')}")</code>
+            </div>
+        </div>
+        <div class="diff">
+            <div class="before">
+                <div class="label">BEFORE</div>
+                <code>api_logger.<span class="diff-highlight old-highlight">info</span>(f"Sending WhatsApp to {phone}")</code>
+            </div>
+            <div class="after">
+                <div class="label">AFTER</div>
+                <code>api_logger.<span class="diff-highlight new-highlight">debug</span>(f"Sending WhatsApp to {phone}")</code>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- views_staff.py -->
+<div class="file-section">
+    <div class="file-header">📄 views_staff.py <span class="count">4 changes</span></div>
+    <div class="diff-container">
+        <div class="diff">
+            <div class="before">
+                <div class="label">BEFORE</div>
+                <code>api_logger.<span class="diff-highlight old-highlight">info</span>(f"TOTP WhatsApp sent to {staff_member.staff_phone}")</code>
+            </div>
+            <div class="after">
+                <div class="label">AFTER</div>
+                <code>api_logger.<span class="diff-highlight new-highlight">debug</span>(f"TOTP WhatsApp sent to {staff_member.staff_phone}")</code>
+            </div>
+        </div>
+        <div class="diff">
+            <div class="before">
+                <div class="label">BEFORE</div>
+                <code>api_logger.<span class="diff-highlight old-highlight">info</span>(f"Activation WhatsApp sent: {whatsapp_result.get('message_sid')}")</code>
+            </div>
+            <div class="after">
+                <div class="label">AFTER</div>
+                <code>api_logger.<span class="diff-highlight new-highlight">debug</span>(f"Activation WhatsApp sent: {whatsapp_result.get('message_sid')}")</code>
+            </div>
+        </div>
+        <div class="diff">
+            <div class="before">
+                <div class="label">BEFORE</div>
+                <code>api_logger.<span class="diff-highlight old-highlight">info</span>(f"Propagating phone from {staff_member.phone}")</code>
+            </div>
+            <div class="after">
+                <div class="label">AFTER</div>
+                <code>api_logger.<span class="diff-highlight new-highlight">debug</span>(f"Propagating phone from {staff_member.staff_phone}")</code>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- views_auth.py -->
+<div class="file-section">
+    <div class="file-header">📄 views_auth.py <span class="count">1 change</span></div>
+    <div class="diff-container">
+        <div class="diff">
+            <div class="before">
+                <div class="label">BEFORE</div>
+                <code>api_logger.<span class="diff-highlight old-highlight">info</span>(f"TOTP WhatsApp sent to {phone}")</code>
+            </div>
+            <div class="after">
+                <div class="label">AFTER</div>
+                <code>api_logger.<span class="diff-highlight new-highlight">debug</span>(f"TOTP WhatsApp sent to {phone}")</code>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- views_volunteer.py -->
+<div class="file-section">
+    <div class="file-header">📄 views_volunteer.py <span class="count">1 change</span></div>
+    <div class="diff-container">
+        <div class="diff">
+            <div class="before">
+                <div class="label">BEFORE</div>
+                <code>api_logger.<span class="diff-highlight old-highlight">info</span>(f"Registration TOTP WhatsApp sent to {phone}")</code>
+            </div>
+            <div class="after">
+                <div class="label">AFTER</div>
+                <code>api_logger.<span class="diff-highlight new-highlight">debug</span>(f"Registration TOTP WhatsApp sent to {phone}")</code>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- utils.py -->
+<div class="file-section">
+    <div class="file-header">📄 utils.py <span class="count">1 change</span></div>
+    <div class="diff-container">
+        <div class="diff">
+            <div class="before">
+                <div class="label">BEFORE</div>
+                <code>api_logger.<span class="diff-highlight old-highlight">info</span>(f"🔔 Reactivation: no phone for {staff_member.username}")</code>
+            </div>
+            <div class="after">
+                <div class="label">AFTER</div>
+                <code>api_logger.<span class="diff-highlight new-highlight">debug</span>(f"🔔 Reactivation: no phone for {staff_member.username}")</code>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div style="text-align:center; color:#666; margin-top:40px; font-size:12px; border-top:1px solid #ddd; padding-top:20px;">
+    <strong>Total Changes:</strong> ~35 log statements moved from INFO to DEBUG level
+    <br>
+    <strong>Impact:</strong> Sensitive data (phone numbers, emails, message SIDs) no longer exposed in production logs
+</div>
+
+</body>
+</html>

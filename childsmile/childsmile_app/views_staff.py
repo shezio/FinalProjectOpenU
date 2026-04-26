@@ -291,7 +291,7 @@ def update_staff_member(request, staff_id):
                                 )
                                 
                                 if whatsapp_result.get("success"):
-                                    api_logger.info(f"Deactivation TOTP code sent via WhatsApp to {staff_member.email}: {whatsapp_result.get('message_sid')}")
+                                    api_logger.debug(f"Deactivation TOTP code sent via WhatsApp to {staff_member.email}: {whatsapp_result.get('message_sid')}")
                                 else:
                                     api_logger.warning(f"WhatsApp deactivation TOTP send failed for {staff_member.email}: {whatsapp_result.get('error')} - {whatsapp_result.get('details', '')}")
                             except Exception as wa_error:
@@ -525,7 +525,7 @@ def update_staff_member(request, staff_id):
                             )
                             
                             if whatsapp_result.get("success"):
-                                api_logger.info(f"Reactivation TOTP code sent via WhatsApp to {staff_member.email}: {whatsapp_result.get('message_sid')}")
+                                api_logger.debug(f"Reactivation TOTP code sent via WhatsApp to {staff_member.email}: {whatsapp_result.get('message_sid')}")
                             else:
                                 api_logger.warning(f"WhatsApp reactivation TOTP send failed for {staff_member.email}: {whatsapp_result.get('error')} - {whatsapp_result.get('details', '')}")
                         except Exception as wa_error:
@@ -721,13 +721,13 @@ def update_staff_member(request, staff_id):
                             staff_name=staff_name
                         )
                         if whatsapp_result.get("success"):
-                            api_logger.info(f"✅ Account activation WhatsApp sent to {staff_member.email} ({staff_member.staff_phone}): {whatsapp_result.get('message_sid')}")
+                            api_logger.debug(f"✅ Account activation WhatsApp sent to {staff_member.email} ({staff_member.staff_phone}): {whatsapp_result.get('message_sid')}")
                         else:
                             api_logger.warning(f"❌ Failed to send account activation WhatsApp to {staff_member.email}: {whatsapp_result.get('error')}")
                     except Exception as wa_error:
                         api_logger.error(f"❌ Error sending account activation WhatsApp to {staff_member.email}: {str(wa_error)}")
                 else:
-                    api_logger.info(f"🔔 No phone number available for {staff_member.email} - WhatsApp activation notification will NOT be sent")
+                    api_logger.debug(f"🔔 No phone number available for {staff_member.email} - WhatsApp activation notification will NOT be sent")
                 
                 return JsonResponse({
                     "message": "Staff reactivated successfully",
@@ -1135,7 +1135,7 @@ def update_staff_member(request, staff_id):
             if email_match_count > 0:
                 # Update SignedUp records with matching email
                 updated_count = SignedUp.objects.filter(email__iexact=staff_email).update(phone=new_phone)
-                api_logger.info(f"Phone propagation for staff {staff_id}: Updated {updated_count} SignedUp records (email match) for {staff_email} from {old_phone} to {new_phone}")
+                api_logger.debug(f"Phone propagation for staff {staff_id}: Updated {updated_count} SignedUp records (email match) for {staff_email} from {old_phone} to {new_phone}")
             else:
                 api_logger.debug(f"Phone propagation for staff {staff_id}: No matching SignedUp records found for email {staff_email}")
         else:
@@ -2030,7 +2030,7 @@ def staff_creation_send_totp(request):
                     )
                     
                     if whatsapp_result.get("success"):
-                        api_logger.info(f"Staff creation TOTP code sent via WhatsApp to {email}: {whatsapp_result.get('message_sid')}")
+                        api_logger.debug(f"Staff creation TOTP code sent via WhatsApp to {email}: {whatsapp_result.get('message_sid')}")
                     else:
                         api_logger.warning(f"WhatsApp staff creation TOTP send failed for {email}: {whatsapp_result.get('error')} - {whatsapp_result.get('details', '')}")
                 except Exception as wa_error:
