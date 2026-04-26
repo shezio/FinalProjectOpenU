@@ -1,0 +1,833 @@
+/* reviewer.css */
+* {
+  font-family: Rubik, sans-serif;
+}
+
+.reviewer-page {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: #f4f6fb;
+  direction: rtl;
+}
+
+.reviewer-main-content {
+  flex-grow: 1;
+  padding: 24px 32px;
+  margin-top: 200px;
+  padding-right: 320px;
+}
+
+.reviewer-header-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.reviewer-title {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #1a3a5c;
+}
+
+.reviewer-filters {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-bottom: 20px;
+  background: #fff;
+  padding: 14px 18px;
+  border-radius: 10px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+}
+
+.reviewer-filters label {
+  font-weight: 600;
+  color: #444;
+  margin-left: 6px;
+}
+
+.reviewer-filters input,
+.reviewer-filters select {
+  padding: 7px 12px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  background: #fafafa;
+  min-width: 130px;
+}
+
+.reviewer-filters input:focus,
+.reviewer-filters select:focus {
+  outline: none;
+  border-color: #4a90d9;
+}
+
+.reviewer-tabs {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.reviewer-tab {
+  padding: 10px 24px;
+  border: 2px solid #1a3a5c;
+  border-radius: 8px;
+  background: #fff;
+  color: #1a3a5c;
+  font-weight: 700;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+.reviewer-tab.active,
+.reviewer-tab:hover {
+  background: #1a3a5c;
+  color: #fff;
+}
+
+.reviewer-section {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  padding: 22px 24px;
+  margin-bottom: 28px;
+}
+
+.reviewer-section-title {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #1a3a5c;
+  margin-bottom: 16px;
+  border-bottom: 2px solid #e3eaf5;
+  padding-bottom: 8px;
+}
+
+/* Table */
+.reviewer-table-wrapper {
+  overflow-x: auto;
+}
+
+.reviewer-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.93rem;
+}
+
+.reviewer-table th {
+  background: #1a3a5c;
+  color: #fff;
+  padding: 10px 12px;
+  text-align: right;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.reviewer-table td {
+  padding: 9px 12px;
+  border-bottom: 1px solid #eef0f5;
+  text-align: right;
+  color: #333;
+  vertical-align: middle;
+}
+
+.reviewer-table tr:hover td {
+  background: #f0f5ff;
+}
+
+.reviewer-table .status-badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.reviewer-table .status-done    { background: #d4edda; color: #155724; }
+.reviewer-table .status-pending { background: #fff3cd; color: #856404; }
+.reviewer-table .status-inprog  { background: #cce5ff; color: #004085; }
+
+/* Action buttons inside table */
+.reviewer-table .btn-edit,
+.reviewer-table .btn-delete {
+  padding: 5px 12px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-left: 6px;
+  transition: opacity 0.15s;
+}
+
+.reviewer-table .btn-edit   { background: #4a90d9; color: #fff; }
+.reviewer-table .btn-delete { background: #e74c3c; color: #fff; }
+.reviewer-table .btn-edit:hover,
+.reviewer-table .btn-delete:hover { opacity: 0.82; }
+
+/* Create task button */
+.btn-create-task {
+  padding: 10px 22px;
+  background: #27ae60;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-create-task:hover { background: #1e8449; }
+
+/* Modal */
+.reviewer-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.reviewer-modal {
+  background: #fff;
+  border-radius: 12px;
+  padding: 32px 30px 24px;
+  min-width: 400px;
+  max-width: 560px;
+  width: 90%;
+  direction: rtl;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+  position: relative;
+}
+
+.reviewer-modal h3 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1a3a5c;
+  margin-bottom: 20px;
+}
+
+.reviewer-modal .form-group {
+  margin-bottom: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.reviewer-modal .form-group label {
+  font-weight: 600;
+  color: #444;
+  font-size: 0.93rem;
+}
+
+.reviewer-modal .form-group input,
+.reviewer-modal .form-group select,
+.reviewer-modal .form-group textarea {
+  padding: 8px 12px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 0.93rem;
+  font-family: Rubik, sans-serif;
+}
+
+.reviewer-modal .form-group textarea {
+  resize: vertical;
+  min-height: 70px;
+}
+
+.reviewer-modal .modal-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 20px;
+}
+
+.reviewer-modal .btn-save {
+  padding: 9px 22px;
+  background: #27ae60;
+  color: #fff;
+  border: none;
+  border-radius: 7px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.reviewer-modal .btn-cancel {
+  padding: 9px 22px;
+  background: #e0e0e0;
+  color: #333;
+  border: none;
+  border-radius: 7px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.reviewer-modal .btn-save:hover   { background: #1e8449; }
+.reviewer-modal .btn-cancel:hover { background: #bdbdbd; }
+
+.reviewer-no-data {
+  text-align: center;
+  color: #888;
+  font-size: 1rem;
+  padding: 28px 0;
+}
+
+.reviewer-loading {
+  text-align: center;
+  color: #555;
+  padding: 40px 0;
+  font-size: 1.1rem;
+}
+
+.reviewer-error-banner {
+  background: #fdecea;
+  color: #c0392b;
+  border-radius: 8px;
+  padding: 12px 18px;
+  margin-bottom: 16px;
+  font-weight: 600;
+}
+
+.reviewer-pagination {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 16px;
+  align-items: center;
+}
+
+.reviewer-pagination button {
+  padding: 6px 16px;
+  border: 1px solid #1a3a5c;
+  border-radius: 6px;
+  background: #fff;
+  color: #1a3a5c;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.reviewer-pagination button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.reviewer-pagination .page-info {
+  font-size: 0.95rem;
+  color: #555;
+}
+
+/* ============================================================
+   REVIEWER PAGE — fully independent layout, mirrors Families UI
+   All rules scoped to .reviewers-main-content
+   ============================================================ */
+
+.reviewers-main-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  flex-grow: 1;
+  margin-top: 30px;
+  font-family: Rubik, sans-serif;
+  direction: rtl;
+}
+
+/* Inner content wrapper - clears sidebar */
+.reviewers-content {
+  width: calc(100% - 310px);
+  margin-right: 270px;
+  padding: 24px 24px;
+  box-sizing: border-box;
+}
+
+/* ---- Filter bar ---- */
+.reviewers-filter-bar {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 14px 18px;
+  background: rgba(255,255,255,0.8);
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  margin-bottom: 24px;
+  margin-top: 220px;
+}
+
+.reviewers-search-input,
+.reviewers-select,
+.reviewers-date-input,
+.reviewers-btn-refresh {
+  height: 44px;
+  font-size: 24px;
+  font-family: Rubik, sans-serif;
+  padding: 0 14px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  box-sizing: border-box;
+  outline: none;
+  background: #fff;
+}
+
+.reviewers-search-input {
+  min-width: 360px;
+  flex: 0 1 260px;
+}
+
+.reviewers-select {
+  min-width: 160px;
+}
+
+.reviewers-date-input {
+  width: 220px;
+  flex: none;
+}
+
+.reviewers-label {
+  font-size: 24px;
+  font-weight: 600;
+  color: #444;
+  white-space: nowrap;
+}
+
+.reviewers-btn-refresh {
+  background: #1a3a5c;
+  color: #fff;
+  border-color: #1a3a5c;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s;
+  padding: 0 20px;
+}
+.reviewers-btn-refresh:hover { background: #253f6b; }
+
+/* ---- Grid container ---- */
+.reviewers-grid-container {
+  width: 100%;
+  overflow-x: auto;
+  border-radius: 12px;
+  box-shadow: 0 4px 18px rgba(26,58,92,0.10);
+  background: rgba(255,255,255,0.7);
+}
+
+/* ---- Table ---- */
+.reviewers-data-grid {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 24px;
+  font-family: Rubik, sans-serif;
+  background: linear-gradient(135deg,
+    rgba(255,255,255,0.65) 0%,
+    rgba(240,246,255,0.70) 100%);
+  border: 2px solid rgba(255,255,255,0.5);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.reviewers-data-grid th {
+  background: linear-gradient(135deg, #1a3a5c 0%, #2a5298 100%);
+  color: #fff;
+  padding: 14px 18px;
+  text-align: right;
+  font-size: 24px;
+  font-weight: 700;
+  white-space: nowrap;
+  border-bottom: 2px solid rgba(255,255,255,0.2);
+}
+
+.reviewers-data-grid td {
+  padding: 13px 18px;
+  text-align: right;
+  font-size: 24px;
+  color: #2c3e50;
+  border-bottom: 1px solid rgba(200,215,235,0.5);
+  vertical-align: middle;
+  background: transparent;
+}
+
+.reviewers-data-grid tbody tr:hover td {
+  background: rgba(74,144,217,0.07);
+}
+
+.reviewers-no-data {
+  text-align: center;
+  padding: 32px;
+  color: #888;
+  font-size: 24px;
+}
+
+/* ---- Task details cell ---- */
+.reviewer-task-details {
+  font-size: 15px;
+  color: #444;
+  line-height: 1.8;
+}
+.reviewer-task-details strong {
+  color: #1a3a5c;
+}
+
+/* ---- Status badges ---- */
+.reviewer-status-badge {
+  display: inline-block;
+  padding: 4px 13px;
+  border-radius: 12px;
+  font-size: 24px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.reviewer-status-done    { background: #d4edda; color: #155724; }
+.reviewer-status-inprog  { background: #fff3cd; color: #856404; }
+.reviewer-status-pending { background: #e8eef6; color: #1a3a5c; }
+
+/* ---- Action buttons cell ---- */
+.reviewer-actions-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: stretch;
+  min-width: 130px;
+}
+.reviewer-btn-action {
+  padding: 7px 14px;
+  border: none;
+  border-radius: 7px;
+  font-size: 14px;
+  font-weight: 700;
+  font-family: Rubik, sans-serif;
+  cursor: pointer;
+  transition: opacity 0.15s, background 0.15s;
+  text-align: center;
+  white-space: nowrap;
+}
+.reviewer-btn-action:disabled { opacity: 0.45; cursor: not-allowed; }
+.reviewer-btn-status { background: #1a3a5c; color: #fff; }
+.reviewer-btn-status:hover:not(:disabled) { background: #253f6b; }
+.reviewer-btn-edit   { background: #17a2b8; color: #fff; }
+.reviewer-btn-edit:hover { background: #138496; }
+
+/* ================================================================
+   MODAL — exact copy of families.css modal styles
+   ================================================================ */
+
+.reviewers-modal {
+  position: fixed;
+  z-index: 1000;
+  left: 0; top: 0;
+  width: 100%; height: 100%;
+  overflow: auto;
+  background-color: rgba(0,0,0,0.3);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.reviewers-modal-content {
+  background: linear-gradient(135deg,
+    rgba(255,255,255,0.95) 0%,
+    rgba(249,250,251,0.95) 100%);
+  backdrop-filter: blur(30px) saturate(180%);
+  -webkit-backdrop-filter: blur(30px) saturate(180%);
+  border-radius: 24px;
+  border: 2px solid rgba(255,255,255,0.5);
+  padding: 50px;
+  width: 70%;
+  max-width: 1920px;
+  max-height: 110vh;
+  overflow-y: auto;
+  box-shadow:
+    0 25px 80px rgba(99,102,241,0.3),
+    0 15px 40px rgba(168,85,247,0.2),
+    inset 0 1px 0 rgba(255,255,255,0.8);
+  font-size: 1em;
+  margin-right: 30px;
+  position: relative;
+  direction: rtl;
+  font-family: Rubik, sans-serif;
+}
+
+.reviewers-modal-content::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 4px;
+  background: linear-gradient(90deg,
+    rgba(99,102,241,1) 0%,
+    rgba(168,85,247,1) 50%,
+    rgba(236,72,153,1) 100%);
+}
+
+.reviewers-modal-content h2 {
+  font-size: 2.5em;
+  background: linear-gradient(135deg, rgba(99,102,241,1) 0%, rgba(168,85,247,1) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 20px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+}
+
+.reviewers-modal-content button {
+  background: linear-gradient(135deg,
+    rgba(16,185,129,0.95) 0%,
+    rgba(5,150,105,0.95) 100%);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  color: white;
+  padding: 12px 24px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 24px;
+  font-weight: 600;
+  font-family: Rubik, sans-serif;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow:
+    0 6px 20px rgba(16,185,129,0.3),
+    inset 0 1px 0 rgba(255,255,255,0.3);
+}
+.reviewers-modal-content button:hover {
+  background: linear-gradient(135deg,
+    rgba(16,185,129,1) 0%,
+    rgba(5,150,105,1) 100%);
+  transform: translateY(-3px) scale(1.05);
+  box-shadow:
+    0 10px 30px rgba(16,185,129,0.4),
+    inset 0 1px 0 rgba(255,255,255,0.4);
+}
+
+.reviewers-close {
+  color: #64748b;
+  position: absolute;
+  top: 15px; right: 20px;
+  font-size: 2.5em;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  background: linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(248,250,252,0.9) 100%);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  width: 56px; height: 56px;
+  border-radius: 50%;
+  border: 2px solid rgba(255,255,255,0.6);
+  display: flex; align-items: center; justify-content: center;
+  line-height: 1;
+  box-shadow:
+    0 4px 15px rgba(0,0,0,0.1),
+    inset 0 1px 0 rgba(255,255,255,0.8);
+}
+.reviewers-close:hover {
+  color: white;
+  background: linear-gradient(135deg, rgba(239,68,68,0.95) 0%, rgba(220,38,38,0.95) 100%);
+  transform: rotate(90deg) scale(1.1);
+  box-shadow:
+    0 8px 25px rgba(239,68,68,0.4),
+    inset 0 1px 0 rgba(255,255,255,0.4);
+}
+
+/* Form grid */
+.reviewers-form-grid {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+.reviewers-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 5px;
+  width: 100%;
+  font-size: 2em;
+  margin-top: 20px;
+}
+
+.reviewers-form-column {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.reviewers-form-column label {
+  font-weight: bold;
+  font-size: 1.2em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
+  font-family: Rubik, sans-serif;
+  margin-top: 14px;
+}
+
+.reviewers-form-column label:first-child {
+  margin-top: 0;
+}
+
+.reviewers-form-column input {
+  width: 90%;
+  padding: 12px;
+  border: 2px solid rgba(99,102,241,0.3);
+  background: linear-gradient(135deg,
+    rgba(255,255,255,0.95) 0%,
+    rgba(249,250,251,0.95) 100%);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-radius: 10px;
+  font-size: 1em;
+  font-weight: 500;
+  font-family: Rubik, sans-serif;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow:
+    0 2px 10px rgba(99,102,241,0.1),
+    inset 0 1px 0 rgba(255,255,255,0.6);
+}
+.reviewers-form-column input:focus {
+  outline: none;
+  border-color: rgba(99,102,241,0.6);
+  box-shadow:
+    0 4px 20px rgba(99,102,241,0.2),
+    0 0 0 4px rgba(99,102,241,0.1),
+    inset 0 1px 0 rgba(255,255,255,0.8);
+  transform: translateY(-1px);
+}
+
+.reviewers-form-column select,
+.reviewers-form-column textarea {
+  width: 100%;
+  padding: 12px;
+  border: 2px solid rgba(168,85,247,0.3);
+  background: linear-gradient(135deg,
+    rgba(255,255,255,0.95) 0%,
+    rgba(249,250,251,0.95) 100%);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-radius: 10px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow:
+    0 2px 10px rgba(168,85,247,0.1),
+    inset 0 1px 0 rgba(255,255,255,0.6);
+}
+.reviewers-form-column select:focus,
+.reviewers-form-column textarea:focus {
+  outline: none;
+  border-color: rgba(168,85,247,0.6);
+  box-shadow:
+    0 4px 20px rgba(168,85,247,0.2),
+    0 0 0 4px rgba(168,85,247,0.1),
+    inset 0 1px 0 rgba(255,255,255,0.8);
+  transform: translateY(-1px);
+}
+.reviewers-form-column select {
+  font-size: 1em;
+  font-weight: 500;
+  font-family: Rubik, sans-serif;
+}
+.reviewers-form-column textarea {
+  font-size: 1.5em;
+  font-family: Rubik, sans-serif;
+}
+
+.reviewers-scrollable-textarea {
+  height: 50px !important;
+  resize: none;
+  width: 230px !important;
+  font-family: Rubik, sans-serif;
+  overflow-y: scroll;
+  font-size: 18px !important;
+}
+
+.reviewers-input-error {
+  border-color: red !important;
+}
+
+.reviewers-error-msg {
+  color: red;
+  font-size: 14px;
+  display: block;
+  font-family: Rubik, sans-serif;
+}
+
+.reviewers-auto-assigned-note {
+  background-color: rgba(59,130,246,0.1);
+  border-left: 3px solid rgba(59,130,246,0.8);
+  padding: 8px 12px;
+  margin: 8px 0;
+  font-size: 0.85rem;
+  color: rgba(59,130,246,0.9);
+  border-radius: 4px;
+  font-weight: 500;
+  font-family: Rubik, sans-serif;
+}
+
+/* ================================================================
+   PAGINATION — copied from families pattern, scoped here
+   ================================================================ */
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 5px;
+  margin-top: 20px;
+}
+
+.pagination button {
+  padding: 10px 16px;
+  border: 2px solid rgba(204,204,204,0.3);
+  background: linear-gradient(135deg,
+    rgba(255,255,255,0.95) 0%,
+    rgba(249,250,251,0.95) 100%);
+  backdrop-filter: blur(15px) saturate(180%);
+  -webkit-backdrop-filter: blur(15px) saturate(180%);
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 20px;
+  font-weight: 600;
+  font-family: Rubik, sans-serif;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.6);
+}
+
+.pagination button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(99,102,241,0.2), inset 0 1px 0 rgba(255,255,255,0.8);
+  border-color: rgba(99,102,241,0.5);
+}
+
+.pagination button.active {
+  background: linear-gradient(135deg,
+    rgba(99,102,241,0.95) 0%,
+    rgba(139,92,246,0.95) 100%);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  color: white;
+  font-weight: 700;
+  border: 2px solid rgba(255,255,255,0.4);
+  box-shadow: 0 6px 25px rgba(99,102,241,0.4), inset 0 1px 0 rgba(255,255,255,0.4);
+}
+
+.pagination button:disabled {
+  background: rgba(240,240,240,0.5);
+  color: #cbd5e1;
+  cursor: not-allowed;
+  border: 2px solid rgba(204,204,204,0.2);
+  box-shadow: none;
+}
+
+.pagination-arrow {
+  font-size: 20px;
+  font-weight: bold;
+}

@@ -27,6 +27,7 @@ import TutorVolunteerMgmt from './pages/TutorVolunteerMgmt'; // Import the Tutor
 import GoogleSuccess from './pages/GoogleSuccess';
 import AuditLog from './pages/AuditLog'; // Import the Audit Log component
 import Dashboard from './pages/Dashboard'; // Import the Dashboard component
+import ReviewerPage from './pages/ReviewerPage'; // Import the Reviewer page
 
 // Add this route to your router:
 
@@ -74,6 +75,7 @@ const App = () => {
       <Route path="/register" element={<Registration />} />
       <Route path="/google-success" element={<GoogleSuccess />} />
       <Route path="/audit-log" element={<AuditLog />} /> {/* Add Audit Log route */}
+      <Route path="/reviewer" element={<ReviewerPage />} /> {/* Add Reviewer page route */}
     </Routes>
   );
 };

@@ -72,14 +72,22 @@ const Sidebar = () => {
   // Check if user has only tutor or volunteer role
   // roles is an array like ['General Volunteer'] or ['Tutor']
   const isOnlyTutorOrVolunteer = roles && roles.length === 1 && (roles[0] === 'General Volunteer' || roles[0] === 'Tutor');
-  
-  const hasPermissionToTasks = isGuest || hasViewPermissionForTable('tasks');
-  const hasPermissionToFamilies = !isOnlyTutorOrVolunteer && (isGuest || hasViewPermissionForTable('children'));
-  const hasPermissionToFeedbacks = isGuest || hasViewPermissionForTable('general_v_feedback') || hasViewPermissionForTable('tutor_feedback');
-  const hasPermissionToTutorships = isGuest || hasViewPermissionForTable('tutorships');
-  const hasPermissionToSystemManagement = isGuest || hasDeletePermissionForTable('staff');
-  const hasPermissionToAnyReport = !isOnlyTutorOrVolunteer && (isGuest || hasViewPermissionForReports());
-  const hasPermissionToTutorVolunteerMgmt = !isOnlyTutorOrVolunteer && (isGuest || hasViewPermissionForTable('tutors') || hasViewPermissionForTable('volunteers'));
+  const isOnlyReviewer = roles && roles.length === 1 && roles[0] === 'Reviewer';
+
+  const hasPermissionToTasks = !isOnlyReviewer && (isGuest || hasViewPermissionForTable('tasks'));
+  const hasPermissionToFamilies = !isOnlyReviewer && !isOnlyTutorOrVolunteer && (isGuest || hasViewPermissionForTable('children'));
+  const hasPermissionToFeedbacks = !isOnlyReviewer && (isGuest || hasViewPermissionForTable('general_v_feedback') || hasViewPermissionForTable('tutor_feedback'));
+  const hasPermissionToTutorships = !isOnlyReviewer && (isGuest || hasViewPermissionForTable('tutorships'));
+  const hasPermissionToSystemManagement = !isOnlyReviewer && (isGuest || hasDeletePermissionForTable('staff'));
+  const hasPermissionToAnyReport = !isOnlyReviewer && !isOnlyTutorOrVolunteer && (isGuest || hasViewPermissionForReports());
+  const hasPermissionToTutorVolunteerMgmt = !isOnlyReviewer && !isOnlyTutorOrVolunteer && (isGuest || hasViewPermissionForTable('tutors') || hasViewPermissionForTable('volunteers'));
+
+  // Reviewer page: accessible to System Administrator, any Coordinator role, or Reviewer role
+  const hasPermissionToReviewer = isGuest || roles.some(r =>
+    r === 'System Administrator' ||
+    r === 'Reviewer' ||
+    (typeof r === 'string' && r.includes('Coordinator'))
+  );
 
   return (
     <div className="sidebar">
@@ -175,6 +183,15 @@ const Sidebar = () => {
           onClick={() => goTo('/system-management')}
         >
           ניהול מערכת
+        </button>
+      )}
+      {hasPermissionToReviewer && (
+        <button
+          data-path="/reviewer"
+          className={location.pathname.startsWith('/reviewer') ? 'active' : ''}
+          onClick={() => goTo('/reviewer')}
+        >
+          שיחות ביקורת
         </button>
       )}
     </div>

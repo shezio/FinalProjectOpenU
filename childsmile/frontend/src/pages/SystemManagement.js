@@ -243,7 +243,14 @@ const SystemManagement = () => {
       setTotalCount(baseList.length); // Total now based on filtered set
       
       const rolesResponse = await axios.get('/api/get_roles/');
-      setRoles(rolesResponse.data.roles); // Set roles for the dropdown
+      // Sort roles: Inactive always last, Reviewer second-to-last
+      const rolesOrder = (role) => {
+        if (role.role_name === 'Inactive') return 2;
+        if (role.role_name === 'Reviewer') return 1;
+        return 0;
+      };
+      const sortedRoles = [...rolesResponse.data.roles].sort((a, b) => rolesOrder(a) - rolesOrder(b));
+      setRoles(sortedRoles);
     } catch (error) {
       console.error('Error fetching staff:', error);
       showErrorToast(t, 'Failed to fetch staff.', error);
