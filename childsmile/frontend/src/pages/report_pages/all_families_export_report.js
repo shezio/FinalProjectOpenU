@@ -8,6 +8,7 @@ import { exportAllFamiliesToExcel } from '../../components/export_utils';
 import '../../styles/common.css';
 import '../../styles/reports.css';
 import '../../styles/all_volunteers_report.css';
+import '../../styles/families.css';
 
 const PAGE_SIZE = 6;
 
@@ -17,6 +18,7 @@ const AllFamiliesExportReport = () => {
     const [error, setError] = useState(null);
     const [currentPage, setCurrentPage] = useState(1);
     const [searchTerm, setSearchTerm] = useState('');
+    const [showMatureOnly, setShowMatureOnly] = useState(false);
     const { t } = useTranslation();
 
     // Permission check
@@ -66,6 +68,10 @@ const AllFamiliesExportReport = () => {
                     f.mother_phone?.toLowerCase().includes(search)
                 );
             });
+        }
+        
+        if (showMatureOnly) {
+            filtered = filtered.filter(f => f.age >= 16);
         }
         
         return filtered;
@@ -147,6 +153,7 @@ const AllFamiliesExportReport = () => {
     const refreshData = () => {
         setCurrentPage(1);
         setSearchTerm('');
+        setShowMatureOnly(false);
         fetchFamilies();
     };
 
@@ -188,6 +195,12 @@ const AllFamiliesExportReport = () => {
                             }}
                             className="search-bar"
                         />
+                        <button
+                            className={`toggle-mature-btn${showMatureOnly ? ' active' : ''}`}
+                            onClick={() => { setShowMatureOnly(prev => !prev); setCurrentPage(1); }}
+                        >
+                            {showMatureOnly ? t('Show All Ages') : t('Show Matures Only')}
+                        </button>
                         <button className="refresh-button" onClick={refreshData} disabled={loading}>
                             {t('Refresh')}
                         </button>
