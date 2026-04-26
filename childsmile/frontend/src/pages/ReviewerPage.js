@@ -209,9 +209,13 @@ const ReviewerPage = () => {
   const handleConfirmAssign = async () => {
     if (!selectedAssignee || !taskToAssign) return;
     try {
+      const rawDate = taskToAssign.due_date || '';
+      const formattedDueDate = /^\d{2}\/\d{2}\/\d{4}$/.test(rawDate)
+        ? rawDate.split('/').reverse().join('-')
+        : rawDate;
       await axios.put(`/api/tasks/update/${taskToAssign.id}/`, {
-        description: taskToAssign.description,
-        due_date:    taskToAssign.due_date,
+        explanation: taskToAssign.explanation || taskToAssign.description || '',
+        due_date:    formattedDueDate,
         assigned_to: selectedAssignee.value,
         type:        taskToAssign.type,
         child:       taskToAssign.child,
