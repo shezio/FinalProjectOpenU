@@ -13,6 +13,7 @@ import { showErrorToast, showWarningToast } from '../components/toastUtils';
 import { useTranslation } from 'react-i18next';
 import "../i18n";
 import { useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import Modal from 'react-modal';
 
 const statusColumns = [
@@ -93,6 +94,7 @@ const Tasks = () => {
   const menuRef = useRef();
   const taskTypeFilterRef = useRef();
   const location = useLocation();
+  const navigate = useNavigate();
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -988,6 +990,23 @@ const Tasks = () => {
                                           <p>סטטוס: {task.status}</p>
                                         )}
                                         <p className='strong-p'>לביצוע על ידי: {task.assignee.replace(/_/g, ' ')}</p>
+                                        {task.type_name === 'שיחת ביקורת' && (() => {
+                                          const childName = getChildFullName(task.child, childrenOptions);
+                                          const nameForFilter = childName !== '---' ? childName : (parseMonthlyReviewTask(task.description)?.childName || '');
+                                          if (!nameForFilter) return null;
+                                          return (
+                                            <button
+                                              className="review-page-link-btn"
+                                              onClick={e => {
+                                                e.stopPropagation();
+                                                navigate('/reviewer', { state: { family: nameForFilter } });
+                                              }}
+                                              style={{ marginTop: '6px', fontSize: '0.78rem', background: 'transparent', color: '#1a3a5c', border: '1px solid #1a3a5c', borderRadius: '4px', padding: '3px 8px', cursor: 'pointer', fontWeight: '600' }}
+                                            >
+                                              ← שיחות ביקורת
+                                            </button>
+                                          );
+                                        })()}
                                       </div>
                                     )}
                                   </Draggable>
