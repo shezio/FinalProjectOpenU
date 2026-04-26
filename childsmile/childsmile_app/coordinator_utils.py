@@ -545,10 +545,11 @@ def notify_tutored_families_coordinators(child_id):
 
 def notify_admins_of_new_family(child_id):
     """
-    Send WhatsApp notification to all System Administrators about a new family,
-    excluding the admin with email shlezi0@gmail.com.
+    Send notifications to all System Administrators about a new family:
+    - WhatsApp notifications to all admins EXCEPT shlezi0@gmail.com
+    - Email notification to shlezi0@gmail.com (uses free email instead of paid WhatsApp)
     
-    Uses Twilio content template (NEW_FAMILY_ADMIN_SID) with 9 variables:
+    WhatsApp uses Twilio content template (NEW_FAMILY_ADMIN_SID) with 9 variables:
     1. Admin name
     2. Child name
     3. Age display (e.g., "7 שנים" or "5 חודשים")
@@ -558,6 +559,8 @@ def notify_admins_of_new_family(child_id):
     7. Hospital
     8. Tutoring status
     9. Registration date
+    
+    Email includes: Child name, age, gender, city, parent phone, hospital, tutoring status, registration date
     
     Args:
         child_id: The child ID of the newly created family
@@ -615,21 +618,25 @@ def notify_admins_of_new_family(child_id):
             return
         
         # Get all System Admins
-        admins_to_notify = Staff.objects.filter(roles=admin_role, is_active=True).distinct()
-        api_logger.debug(f"🔵 Found {admins_to_notify.count()} total active System Administrators to notify")
+        all_admins = Staff.objects.filter(roles=admin_role, is_active=True).distinct()
+        api_logger.debug(f"🔵 Found {all_admins.count()} total active System Administrators to notify")
         
-        for admin in admins_to_notify:
+        for admin in all_admins:
             api_logger.debug(f"   - Admin: {admin.username} ({admin.email}) - phone: {admin.staff_phone}")
         
-        if not admins_to_notify.exists():
+        if not all_admins.exists():
             api_logger.debug("No System Administrators found to notify about new family.")
             return
         
-        api_logger.debug(f"🔵 Notifying {admins_to_notify.count()} system admins about new family")
+        # Separate admins: shlezi0@gmail.com gets email, others get WhatsApp
+        special_admin = all_admins.filter(email="shlezi0@gmail.com").first()
+        whatsapp_admins = all_admins.exclude(email="shlezi0@gmail.com")
         
-        # Send WhatsApp to each admin SYNCHRONOUSLY
-        api_logger.debug(f"🔵 Proceeding with WhatsApp sends to {admins_to_notify.count()} admins")
-        for admin in admins_to_notify:
+        api_logger.debug(f"🔵 Sending WhatsApp to {whatsapp_admins.count()} admins, email to special admin: {special_admin is not None}")
+        
+        # Send WhatsApp to all admins except shlezi0@gmail.com
+        api_logger.debug(f"🔵 Proceeding with WhatsApp sends to {whatsapp_admins.count()} admins")
+        for admin in whatsapp_admins:
             api_logger.debug(f"🔵 Processing admin {admin.staff_id}: {admin.username}")
             if not admin.staff_phone:
                 api_logger.debug(f"Admin {admin.staff_id} ({admin.username}) has no phone number - skipping WhatsApp")
@@ -661,6 +668,117 @@ def notify_admins_of_new_family(child_id):
                     
             except Exception as wa_error:
                 api_logger.error(f"❌ Error sending WhatsApp to admin {admin.staff_id}: {str(wa_error)}")
+        
+        # Send email to shlezi0@gmail.com admin instead of WhatsApp
+        if special_admin:
+            try:
+                api_logger.debug(f"🔵 Sending email to special admin {special_admin.staff_id} ({special_admin.email})")
+                admin_name = f"{special_admin.first_name} {special_admin.last_name}"
+                
+                subject = f"משפחה חדשה נוספה - {child_name}"
+                
+                message = f"""<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+</head>
+<body dir="rtl" style="direction: rtl; text-align: right; font-family: Arial, sans-serif; line-height: 1.6; margin: 0; padding: 20px; background-color: #f5f5f5;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f5f5f5;">
+        <tr>
+            <td align="right" style="padding: 0;">
+                <table width="600" cellpadding="0" cellspacing="0" style="background-color: #f9f9f9; margin: 0 auto;">
+                    <!-- HEADER -->
+                    <tr>
+                        <td style="background: linear-gradient(to right, #FF9800 0%, #F57C00 100%); color: white; padding: 20px; text-align: center; font-size: 20px; font-weight: bold; border-radius: 8px 8px 0 0;">
+                            משפחה חדשה נוספה למערכת
+                        </td>
+                    </tr>
+                    <!-- CONTENT -->
+                    <tr>
+                        <td style="background-color: white; padding: 30px; border-radius: 0;">
+                            <p dir="rtl" style="text-align: right; margin: 15px 0;">שלום {admin_name},</p>
+                            
+                            <p dir="rtl" style="text-align: right; margin: 15px 0;">משפחה חדשה נוספה למערכת.</p>
+                            
+                            <hr style="border: none; border-top: 2px solid #FF9800; margin: 20px 0;">
+                            
+                            <p dir="rtl" style="text-align: right; font-weight: bold; margin: 15px 0; padding-bottom: 10px; border-bottom: 3px solid #FF9800; color: #333;">פרטי הילד:</p>
+                            
+                            <!-- CHILD FIELDS TABLE -->
+                            <table width="100%" cellpadding="0" cellspacing="0" dir="rtl">
+                                <tr>
+                                    <td style="margin: 12px 0; padding: 10px; background-color: #f5f5f5; border-radius: 4px; text-align: right; direction: rtl;">
+                                        <span style="font-weight: bold; color: #333; display: inline-block; margin-left: 10px;">שם מלא:</span><span style="color: #666; direction: ltr; unicode-bidi: embed;">{child_name}</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="margin: 12px 0; padding: 10px; background-color: #f5f5f5; border-radius: 4px; text-align: right; direction: rtl;">
+                                        <span style="font-weight: bold; color: #333; display: inline-block; margin-left: 10px;">גיל:</span><span style="color: #666; direction: ltr; unicode-bidi: embed;">{age_number} {age_unit}</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="margin: 12px 0; padding: 10px; background-color: #f5f5f5; border-radius: 4px; text-align: right; direction: rtl;">
+                                        <span style="font-weight: bold; color: #333; display: inline-block; margin-left: 10px;">מין:</span><span style="color: #666; direction: ltr; unicode-bidi: embed;">{child_gender}</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="margin: 12px 0; padding: 10px; background-color: #f5f5f5; border-radius: 4px; text-align: right; direction: rtl;">
+                                        <span style="font-weight: bold; color: #333; display: inline-block; margin-left: 10px;">עיר מגורים:</span><span style="color: #666; direction: ltr; unicode-bidi: embed;">{child_city}</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="margin: 12px 0; padding: 10px; background-color: #f5f5f5; border-radius: 4px; text-align: right; direction: rtl;">
+                                        <span style="font-weight: bold; color: #333; display: inline-block; margin-left: 10px;">טלפון הורים:</span><span style="color: #666; direction: ltr; unicode-bidi: embed;">{parent_phone}</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="margin: 12px 0; padding: 10px; background-color: #f5f5f5; border-radius: 4px; text-align: right; direction: rtl;">
+                                        <span style="font-weight: bold; color: #333; display: inline-block; margin-left: 10px;">בית חולים/מוסד:</span><span style="color: #666; direction: ltr; unicode-bidi: embed;">{child_hospital}</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="margin: 12px 0; padding: 10px; background-color: #f5f5f5; border-radius: 4px; text-align: right; direction: rtl;">
+                                        <span style="font-weight: bold; color: #333; display: inline-block; margin-left: 10px;">סטטוס חונכות:</span><span style="color: #666; direction: ltr; unicode-bidi: embed;">{tutoring_status}</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="margin: 12px 0; padding: 10px; background-color: #f5f5f5; border-radius: 4px; text-align: right; direction: rtl;">
+                                        <span style="font-weight: bold; color: #333; display: inline-block; margin-left: 10px;">תאריך הוספה:</span><span style="color: #666; direction: ltr; unicode-bidi: embed;">{registration_date}</span>
+                                    </td>
+                                </tr>
+                            </table>
+                            
+                            <hr style="border: none; border-top: 2px solid #FF9800; margin: 20px 0;">
+                            
+                            <p dir="rtl" style="text-align: right; color: #666; font-size: 12px; margin: 15px 0;">בברכה,<br>צוות חיוך של ילד</p>
+                        </td>
+                    </tr>
+                    <!-- FOOTER -->
+                    <tr>
+                        <td style="background-color: #f0f0f0; padding: 15px; text-align: center; font-size: 12px; color: #666; border-radius: 0 0 8px 8px;">
+                            <p dir="rtl" style="text-align: center; margin: 0;">זוהי הודעה אוטומטית - אנא אל תשיב לאימייל זה</p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>"""
+                
+                send_mail(
+                    subject,
+                    message,
+                    settings.DEFAULT_FROM_EMAIL,
+                    [special_admin.email],
+                    fail_silently=True,
+                    html_message=message
+                )
+                api_logger.debug(f"✅ Email notification sent to special admin {special_admin.staff_id} ({special_admin.email})")
+                
+            except Exception as email_error:
+                api_logger.error(f"❌ Error sending email to special admin {special_admin.staff_id}: {str(email_error)}")
             
     except Children.DoesNotExist:
         api_logger.error(f"Child with ID {child_id} not found for admin notification")

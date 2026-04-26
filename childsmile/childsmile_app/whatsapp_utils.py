@@ -305,18 +305,17 @@ def send_coordinator_notification_whatsapp_family(coordinator_phone, coordinator
     family_template_sid = os.getenv('NEW_FAMILY_SID')
     
     if family_template_sid:
-        # Using Twilio content template with 12 variables
+        # Using Twilio content template with 9 variables
         template_variables = {
             "1": coordinator_name,
             "2": child_name,
             "3": str(child_age),
             "4": child_gender,
-            "5": parent_phone,
-            "6": child_city,
+            "5": child_city,
+            "6": parent_phone,
             "7": child_hospital,
             "8": tutoring_status,
-            "9": registration_date,
-            "11": "משפחה חדשה ממתינה לחונך"  # Message type header
+            "9": registration_date
         }
         return send_whatsapp_message(
             coordinator_phone,
