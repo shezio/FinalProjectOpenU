@@ -717,7 +717,24 @@ const Tutorships = () => {
         fetchAllTutorsWithDetails()
       ]);
 
-      const tutorshipsRaw = tutorshipsResponse.data.tutorships || [];
+      let tutorshipsRaw = tutorshipsResponse.data.tutorships || [];
+
+      // If user is ONLY a Tutor or General Volunteer, filter to only their tutorships
+      const isOnlyTutorOrVolunteer = roles && roles.length === 1 && 
+        (roles[0] === 'General Volunteer' || roles[0] === 'Tutor');
+      
+      if (isOnlyTutorOrVolunteer) {
+        // Get current user's staff ID
+        const currentUsername = localStorage.getItem('origUsername');
+        const currentUser = staff.find((user) => user.username === currentUsername);
+        const currentUserId = currentUser?.id;
+        
+        if (currentUserId) {
+          // Filter to only tutorships where this user is the tutor
+          tutorshipsRaw = tutorshipsRaw.filter(t => t.tutor_id === currentUserId);
+          console.log(`DEBUG: Filtered tutorships for tutor ${currentUserId}. Count: ${tutorshipsRaw.length}`);
+        }
+      }
 
       const enrichedTutorships = tutorshipsRaw.map(tutorship => {
         // Use the correct field for family (if you only have one family, just use families[0])
