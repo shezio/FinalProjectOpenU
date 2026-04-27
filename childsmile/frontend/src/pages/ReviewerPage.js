@@ -126,8 +126,8 @@ const ReviewerPage = () => {
       ).filter(tk => {
         // Exclude completed tasks
         if (tk.status === 'הושלמה') return false;
-        // Only tasks created 3+ months ago (or no date = include)
-        const dateStr = tk.created;
+        // Only tasks where last conducted talk was 3+ months ago (or never = include)
+        const dateStr = tk.child_last_review_talk_conducted;
         if (!dateStr) return true;
         // Parse DD/MM/YYYY or YYYY-MM-DD
         let d;

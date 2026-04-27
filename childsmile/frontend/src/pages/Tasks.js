@@ -992,19 +992,21 @@ const Tasks = () => {
                                         <p className='strong-p'>לביצוע על ידי: {task.assignee.replace(/_/g, ' ')}</p>
                                         {task.type_name === 'שיחת ביקורת' && (() => {
                                           if (task.status === 'הושלמה') return null;
-                                          // Only show link if task was created 3+ months ago
+                                          // Only show link if last conducted talk was 3+ months ago (or never)
                                           const threeMonthsAgo = new Date();
                                           threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
-                                          let createdDate = null;
-                                          if (task.created) {
-                                            if (/^\d{2}\/\d{2}\/\d{4}$/.test(task.created)) {
-                                              const [d, m, y] = task.created.split('/');
-                                              createdDate = new Date(`${y}-${m}-${d}`);
+                                          let lastTalkDate = null;
+                                          const lastTalkStr = task.child_last_review_talk_conducted;
+                                          if (lastTalkStr) {
+                                            if (/^\d{2}\/\d{2}\/\d{4}$/.test(lastTalkStr)) {
+                                              const [d, m, y] = lastTalkStr.split('/');
+                                              lastTalkDate = new Date(`${y}-${m}-${d}`);
                                             } else {
-                                              createdDate = new Date(task.created);
+                                              lastTalkDate = new Date(lastTalkStr);
                                             }
                                           }
-                                          if (createdDate && !isNaN(createdDate.getTime()) && createdDate > threeMonthsAgo) return null;
+                                          // If there's a recent talk (within 3 months), don't show the link
+                                          if (lastTalkDate && !isNaN(lastTalkDate.getTime()) && lastTalkDate > threeMonthsAgo) return null;
                                           const childName = getChildFullName(task.child, childrenOptions);
                                           const nameForFilter = childName !== '---' ? childName : (parseMonthlyReviewTask(task.description)?.childName || '');
                                           if (!nameForFilter) return null;
