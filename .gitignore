@@ -182,3 +182,4 @@ client_secret_*.json
 ילדים מוכן לעלייה לפרוד.xlsx
 volunteer_registration_insert_yuval_wolloch.sql
 cleanup_roles.sql
+.github/workflows/backup.yaml
