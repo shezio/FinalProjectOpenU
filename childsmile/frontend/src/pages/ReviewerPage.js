@@ -265,7 +265,15 @@ const ReviewerPage = () => {
 
   const handleAddFamilyChange = (e) => {
     const { name, value } = e.target;
-    setNewFamily(prev => ({ ...prev, [name]: value }));
+    const TREATMENT_COMPLETION_STATUSES = ['מעקבים', 'אחזקה', 'בריא'];
+    const todayStr = new Date().toISOString().split('T')[0];
+    setNewFamily(prev => {
+      const updates = { [name]: value };
+      if (name === 'status' && TREATMENT_COMPLETION_STATUSES.includes(value) && prev.status === 'טיפולים') {
+        updates.when_completed_treatments = todayStr;
+      }
+      return { ...prev, ...updates };
+    });
     if (name === 'city') setStreets(processedSettlementsAndStreets[value.trim()] || []);
   };
 
@@ -639,8 +647,6 @@ const ReviewerPage = () => {
                 {errors.mother_phone && <span className="reviewers-error-msg">{errors.mother_phone}</span>}
               </div>
               <div className="reviewers-form-column">
-                <label>{t('Expected End Treatment by Protocol')}</label>
-                <input type="date" name="expected_end_treatment_by_protocol" value={newFamily.expected_end_treatment_by_protocol} onChange={handleAddFamilyChange} />
                 <label>{t('Has Completed Treatments')}</label>
                 <select name="has_completed_treatments" value={newFamily.has_completed_treatments ? 'Yes' : 'No'} onChange={e => handleAddFamilyChange({ target: { name: 'has_completed_treatments', value: e.target.value === 'Yes' } })}>
                   <option value="No">{t('No')}</option>

@@ -112,7 +112,6 @@ const AllFamiliesExportReport = () => {
             'תאריך אבחנה': f.diagnosis_date || '',
             'מצב רפואי נוכחי': f.current_medical_state || '',
             'תאריך סיום טיפולים': f.when_completed_treatments || '',
-            'הצפי לסיום טיפולים': f.expected_end_treatment_by_protocol || '',
             'סיים טיפולים': f.has_completed_treatments ? 'כן' : 'לא',
             'סטטוס': f.status || '',
             'סטטוס חונכות': (f.tutoring_status || '').replace(/_/g, ' ') || '',
