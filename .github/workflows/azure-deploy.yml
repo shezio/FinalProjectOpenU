@@ -84,8 +84,8 @@ jobs:
           app-name: child-smile-app
           package: .
           clean: true
-          #images: 'python:3.12'
-          startup-command: bash -c "export PYTHONPATH=\$PYTHONPATH:/home/site/wwwroot/childsmile:/home/site/wwwroot/childsmile/childsmile_app && gunicorn childsmile.wsgi:application --workers 1 --timeout 600 --bind 0.0.0.0:8000"
+          startup-command: |
+            bash -c "ROOT_DIR='/home/site/wwwroot' && TMP_DIR=$(ls -td /tmp/8* 2>/dev/null | head -1) && V_ROOT=$(cat /home/site/wwwroot/childsmile/childsmile_app/version.txt 2>/dev/null || echo '0') && V_TMP=$(cat $(ls -td /tmp/8* 2>/dev/null | head -1)/childsmile/childsmile_app/version.txt 2>/dev/null || echo '0') && if [ \"$V_TMP\" != \"$V_ROOT\" ]; then echo \"[Deploy-Check] Mismatch: Root($V_ROOT) vs Tmp($V_TMP). Syncing...\" && cp -r $TMP_DIR/* $ROOT_DIR/; else echo \"[Deploy-Check] Versions match ($V_ROOT). Skipping sync.\"; fi && export PYTHONPATH=$PYTHONPATH:/home/site/wwwroot/childsmile:/home/site/wwwroot/childsmile/childsmile_app && gunicorn childsmile.wsgi:application --workers 1 --timeout 600 --bind 0.0.0.0:8000"
 
       - name: Send WhatsApp - Deployment Successful
         if: success()
