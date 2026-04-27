@@ -84,8 +84,7 @@ jobs:
           app-name: child-smile-app
           package: .
           clean: true
-          startup-command: |
-            bash -c "ROOT_DIR='/home/site/wwwroot' && TMP_DIR=\$(ls -td /tmp/8* 2>/dev/null | head -1) && V_PATH='childsmile/childsmile_app/version.txt' && if ! cmp -s \"\$TMP_DIR/\$V_PATH\" \"\$ROOT_DIR/\$V_PATH\"; then echo '[Deploy-Check] Change detected or missing file. Syncing...' && cp -r \$TMP_DIR/* \$ROOT_DIR/; else echo '[Deploy-Check] Versions match. Skipping sync.'; fi && export PYTHONPATH=\$PYTHONPATH:/home/site/wwwroot/childsmile:/home/site/wwwroot/childsmile/childsmile_app && gunicorn childsmile.wsgi:application --workers 1 --timeout 600 --bind 0.0.0.0:8000"
+          startup-command: bash -c "if ! cmp -s /tmp/8*/childsmile/childsmile_app/version.txt /home/site/wwwroot/childsmile/childsmile_app/version.txt; then echo Deploy Mismatch - Syncing... && cp -r /tmp/8*/* /home/site/wwwroot/; else echo Deploy Versions match - Skipping; fi && export PYTHONPATH=$PYTHONPATH:/home/site/wwwroot/childsmile:/home/site/wwwroot/childsmile/childsmile_app && gunicorn childsmile.wsgi:application --workers 1 --timeout 600 --bind 0.0.0.0:8000"
 
       - name: Send WhatsApp - Deployment Successful
         if: success()
