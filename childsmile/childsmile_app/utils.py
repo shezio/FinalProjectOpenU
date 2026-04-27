@@ -1905,8 +1905,8 @@ def validate_staff_phone(phone):
 def validate_staff_age(age_value, birth_date_value=None):
     """
     Validate staff age.
-    - If age is provided, must be >= 18
-    - If birth_date is provided, calculate age and verify >= 18
+    - If age is provided, must be >= 13
+    - If birth_date is provided, calculate age and verify >= 13
     - At least one must be provided for validation
     
     :param age_value: Integer age or None
@@ -1924,8 +1924,8 @@ def validate_staff_age(age_value, birth_date_value=None):
             if calculated_age is None:
                 return False, "תאריך לידה לא תקין", None
             
-            if calculated_age < 18:
-                return False, f"גיל צריך להיות לפחות 18. הגיל המחושב הוא {calculated_age}", calculated_age
+            if calculated_age < 13:
+                return False, f"גיל צריך להיות לפחות 13. הגיל המחושב הוא {calculated_age}", calculated_age
             
             return True, None, calculated_age
     
@@ -1933,8 +1933,8 @@ def validate_staff_age(age_value, birth_date_value=None):
     if age_value:
         try:
             age_int = int(age_value)
-            if age_int < 18:
-                return False, "גיל צריך להיות לפחות 18", age_int
+            if age_int < 13:
+                return False, "גיל צריך להיות לפחות 13", age_int
             return True, None, age_int
         except (ValueError, TypeError):
             return False, "גיל חייב להיות מספר", None
