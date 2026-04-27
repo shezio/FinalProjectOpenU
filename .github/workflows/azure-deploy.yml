@@ -85,7 +85,7 @@ jobs:
           package: .
           clean: true
           startup-command: |
-            bash -c "ROOT_DIR='/home/site/wwwroot' && TMP_DIR=$(ls -td /tmp/8* 2>/dev/null | head -1) && V_PATH='childsmile/childsmile_app/version.txt' && V_ROOT=$(cat /home/site/wwwroot/$V_PATH 2>/dev/null || echo 'none') && V_TMP=$(cat $(ls -td /tmp/8* 2>/dev/null | head -1)/$V_PATH 2>/dev/null || echo 'none') && if [ \"$V_TMP\" != \"$V_ROOT\" ] || [ \"$V_ROOT\" = \"none\" ]; then echo \"[Deploy-Check] Update needed: Root($V_ROOT) vs Tmp($V_TMP). Syncing...\" && cp -r $TMP_DIR/* $ROOT_DIR/; else echo \"[Deploy-Check] System up to date ($V_ROOT). Skipping sync.\"; fi && export PYTHONPATH=$PYTHONPATH:/home/site/wwwroot/childsmile:/home/site/wwwroot/childsmile/childsmile_app && gunicorn childsmile.wsgi:application --workers 1 --timeout 600 --bind 0.0.0.0:8000"
+            bash -c "ROOT_DIR='/home/site/wwwroot' && TMP_DIR=\$(ls -td /tmp/8* 2>/dev/null | head -1) && V_PATH='childsmile/childsmile_app/version.txt' && if ! cmp -s \"\$TMP_DIR/\$V_PATH\" \"\$ROOT_DIR/\$V_PATH\"; then echo '[Deploy-Check] Change detected or missing file. Syncing...' && cp -r \$TMP_DIR/* \$ROOT_DIR/; else echo '[Deploy-Check] Versions match. Skipping sync.'; fi && export PYTHONPATH=\$PYTHONPATH:/home/site/wwwroot/childsmile:/home/site/wwwroot/childsmile/childsmile_app && gunicorn childsmile.wsgi:application --workers 1 --timeout 600 --bind 0.0.0.0:8000"
 
       - name: Send WhatsApp - Deployment Successful
         if: success()
