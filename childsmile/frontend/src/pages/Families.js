@@ -1275,6 +1275,7 @@ const Families = () => {
                 <p>{t('ID')}: {selectedFamily.id}</p>
                 <p>{t('Full Name')}: {selectedFamily.first_name} {selectedFamily.last_name}</p>
                 <p>{t('Age')}: {formatAge(selectedFamily)}</p>
+                <p>{t('Registration Date')}: {selectedFamily.registration_date || '---'}</p>
                 <p>{t('Status')}: {formatStatus(selectedFamily.status)}</p>
                 <p>{t('Address')}: {selectedFamily.address}</p>
                 <p>{t('Child Phone')}: {selectedFamily.child_phone_number || '---'}</p>

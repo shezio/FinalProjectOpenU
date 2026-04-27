@@ -19,6 +19,11 @@ const STATUS_OPTIONS = [
   { value: '', label: 'כל הסטטוסים' },
   { value: 'לא הושלמה', label: 'לא הושלמה' },
   { value: 'בביצוע',    label: 'בביצוע'    },
+];
+
+const STATUS_UPDATE_OPTIONS = [
+  { value: 'לא הושלמה', label: 'לא הושלמה' },
+  { value: 'בביצוע',    label: 'בביצוע'    },
   { value: 'הושלמה',   label: 'הושלמה'   },
 ];
 
@@ -40,11 +45,6 @@ const ReviewerPage = () => {
   const [loading,         setLoading]         = useState(true);
   const [childNameFilter, setChildNameFilter] = useState(incomingFamily);
   const [statusFilter,    setStatusFilter]    = useState('');
-
-  const getDefaultStart = () => { const d = new Date(); d.setMonth(d.getMonth() - 1); return d.toISOString().split('T')[0]; };
-  const getDefaultEnd   = () => new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).toISOString().split('T')[0];
-  const [startDate, setStartDate] = useState(getDefaultStart());
-  const [endDate,   setEndDate]   = useState(getDefaultEnd());
 
   // Clear nav state after reading it
   useEffect(() => {
@@ -105,24 +105,48 @@ const ReviewerPage = () => {
   const fetchTasks = useCallback(async () => {
     setLoading(true);
     try {
-      const params = new URLSearchParams();
-      params.append('date_field', 'due_date');
-      params.append('start_date', startDate);
-      params.append('end_date',   endDate);
-      const res = await axios.get(`/api/tasks/?${params.toString()}`);
+      const res = await axios.get('/api/tasks/', {
+        params: {
+          date_field: 'created_at',
+          start_date: '2000-01-01',
+          end_date: new Date().toISOString().slice(0, 10),
+        },
+      });
       const allTasks = res.data?.tasks      || [];
       const allTypes = res.data?.task_types || [];
       const reviewTypeId = allTypes.find(ty => ty.name === REVIEW_TASK_TYPE_NAME)?.id;
-      const reviewTasks  = reviewTypeId
+
+      // 3 months ago threshold
+      const threeMonthsAgo = new Date();
+      threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+
+      const reviewTasks = (reviewTypeId
         ? allTasks.filter(tk => tk.type === reviewTypeId)
-        : allTasks.filter(tk => tk.type_name === REVIEW_TASK_TYPE_NAME);
+        : allTasks.filter(tk => tk.type_name === REVIEW_TASK_TYPE_NAME)
+      ).filter(tk => {
+        // Exclude completed tasks
+        if (tk.status === 'הושלמה') return false;
+        // Only tasks created 3+ months ago (or no date = include)
+        const dateStr = tk.created;
+        if (!dateStr) return true;
+        // Parse DD/MM/YYYY or YYYY-MM-DD
+        let d;
+        if (/^\d{2}\/\d{2}\/\d{4}$/.test(dateStr)) {
+          const [day, month, year] = dateStr.split('/');
+          d = new Date(`${year}-${month}-${day}`);
+        } else {
+          d = new Date(dateStr);
+        }
+        return isNaN(d.getTime()) || d <= threeMonthsAgo;
+      });
+
       setTasks(reviewTasks);
     } catch (err) {
       showErrorToast(t, 'שגיאה בטעינת משימות', err);
     } finally {
       setLoading(false);
     }
-  }, [startDate, endDate, t]);
+  }, [t]);
 
   const fetchFamilyData = useCallback(async () => {
     try {
@@ -175,7 +199,7 @@ const ReviewerPage = () => {
     setTotalCount(filteredTasks.length);
     setPage(1);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [childNameFilter, statusFilter, startDate, endDate, tasks]);
+  }, [childNameFilter, statusFilter, tasks]);
 
   const paginatedTasks = filteredTasks.slice((page - 1) * pageSize, page * pageSize);
 
@@ -374,10 +398,6 @@ const ReviewerPage = () => {
           >
             {STATUS_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
           </select>
-          <label className="reviewers-label">מ-</label>
-          <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="reviewers-date-input" />
-          <label className="reviewers-label">עד-</label>
-          <input type="date" value={endDate}   onChange={e => setEndDate(e.target.value)}   className="reviewers-date-input" />
           <button className="reviewers-btn-refresh" onClick={() => fetchTasks()}>רענן</button>
         </div>
 
@@ -390,7 +410,7 @@ const ReviewerPage = () => {
                 <tr>
                   <th>שם ילד</th>
                   <th>פרטי משימה</th>
-                  <th>תאריך ביצוע</th>
+                  <th>לבצע עד</th>
                   <th>שיחה אחרונה</th>
                   <th>סטטוס</th>
                   <th>לביצוע ע"י</th>
@@ -405,7 +425,7 @@ const ReviewerPage = () => {
                     const childName = getChildName(task);
                     const isCompleted = task.status === 'הושלמה';
                     return (
-                      <tr key={task.id} style={{ backgroundColor: isCompleted ? '#eaf6ed' : '' }}>
+                      <tr key={task.id}>
                         <td>{childName}</td>
                         <td>
                           <div className="reviewer-task-details">
@@ -524,7 +544,7 @@ const ReviewerPage = () => {
             <span className="reviewers-close" onClick={() => setIsStatusModalOpen(false)}>&times;</span>
             <h2>עדכון סטטוס משימה</h2>
             <select value={selectedStatus} onChange={e => setSelectedStatus(e.target.value)} style={{ width: '100%', padding: '8px', marginBottom: '16px', fontSize: '16px' }}>
-              {STATUS_OPTIONS.filter(o => o.value).map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+              {STATUS_UPDATE_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
             </select>
             <div className="reviewers-form-actions">
               <button onClick={handleConfirmStatusUpdate}>עדכן</button>

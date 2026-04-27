@@ -592,6 +592,7 @@ def get_complete_family_details(request):
                 "need_review": family.need_review,
                 "is_in_frame": family.is_in_frame,
                 "coordinator_comments": family.coordinator_comments,
+                "last_review_talk_conducted": family.last_review_talk_conducted.strftime("%d/%m/%Y") if family.last_review_talk_conducted else None,
                 # MULTI-TUTOR SUPPORT: Add list of tutors
                 "tutors": child_tutors_map.get(family.child_id, []),
                 "tutors_count": len(child_tutors_map.get(family.child_id, [])),
@@ -849,6 +850,7 @@ def create_family(request):
             coordinator_comments=data.get("coordinator_comments"),
             # Feature #2 + #3: Set need_review based on age, status, and tutoring_status
             need_review=need_review_value,
+            last_review_talk_conducted=datetime.datetime.now(),
         )
 
         # Log successful family creation

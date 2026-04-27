@@ -991,6 +991,20 @@ const Tasks = () => {
                                         )}
                                         <p className='strong-p'>לביצוע על ידי: {task.assignee.replace(/_/g, ' ')}</p>
                                         {task.type_name === 'שיחת ביקורת' && (() => {
+                                          if (task.status === 'הושלמה') return null;
+                                          // Only show link if task was created 3+ months ago
+                                          const threeMonthsAgo = new Date();
+                                          threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+                                          let createdDate = null;
+                                          if (task.created) {
+                                            if (/^\d{2}\/\d{2}\/\d{4}$/.test(task.created)) {
+                                              const [d, m, y] = task.created.split('/');
+                                              createdDate = new Date(`${y}-${m}-${d}`);
+                                            } else {
+                                              createdDate = new Date(task.created);
+                                            }
+                                          }
+                                          if (createdDate && !isNaN(createdDate.getTime()) && createdDate > threeMonthsAgo) return null;
                                           const childName = getChildFullName(task.child, childrenOptions);
                                           const nameForFilter = childName !== '---' ? childName : (parseMonthlyReviewTask(task.description)?.childName || '');
                                           if (!nameForFilter) return null;
