@@ -1459,7 +1459,6 @@ const Tutorships = () => {
                         <tr><td>{t('Father Phone')}</td><td> {selectedMatchForInfo.father_phone || '---'}</td></tr>
                         <tr><td>{t('Mother Name')}</td><td> {selectedMatchForInfo.mother_name || '---'}</td></tr>
                         <tr><td>{t('Mother Phone')}</td><td> {selectedMatchForInfo.mother_phone || '---'}</td></tr>
-                        <tr><td>{t('Expected End Treatment by Protocol')}</td><td> {selectedMatchForInfo.expected_end_treatment_by_protocol || '---'}</td></tr>
                         <tr><td>{t('Has Completed Treatments')}</td><td> {selectedMatchForInfo.has_completed_treatments ? t('Yes') : t('No')}</td></tr>
                         <tr><td>{t('Details for Tutoring')}</td><td> {selectedMatchForInfo.details_for_tutoring || '---'}</td></tr>
                         <tr><td>{t('Last Review Talk Conducted')}</td><td> {selectedMatchForInfo.last_review_talk_conducted || '---'}</td></tr>

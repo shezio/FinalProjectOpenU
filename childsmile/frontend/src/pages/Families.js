@@ -252,10 +252,16 @@ const Families = () => {
   const handleAddFamilyChange = (e) => {
     const { name, value } = e.target;
 
-    setNewFamily((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    const TREATMENT_COMPLETION_STATUSES = ['מעקבים', 'אחזקה', 'בריא'];
+    const todayStr = new Date().toISOString().split('T')[0];
+
+    setNewFamily((prev) => {
+      const updates = { [name]: value };
+      if (name === 'status' && TREATMENT_COMPLETION_STATUSES.includes(value) && prev.status === 'טיפולים') {
+        updates.when_completed_treatments = todayStr;
+      }
+      return { ...prev, ...updates };
+    });
 
     // If the city is selected, update the streets
     if (name === "city") {
@@ -1304,7 +1310,6 @@ const Families = () => {
                 <p>{t('Father Phone')}: {selectedFamily.father_phone || '---'}</p>
                 <p>{t('Mother Name')}: {selectedFamily.mother_name || '---'}</p>
                 <p>{t('Mother Phone')}: {selectedFamily.mother_phone || '---'}</p>
-                <p>{t('Expected End Treatment by Protocol')}: {selectedFamily.expected_end_treatment_by_protocol || '---'}</p>
                 <p>{t('Has Completed Treatments')}: {selectedFamily.has_completed_treatments ? t('Yes') : t('No')}</p>
                 <p>{t('Details for Tutoring')}: {selectedFamily.details_for_tutoring || '---'}</p>
                 <p>{t('Last Review Talk Conducted')}: {selectedFamily.last_review_talk_conducted || '---'}</p>
@@ -1634,16 +1639,6 @@ const Families = () => {
 
                 {/* Sixth form-column */}
                 <div className="form-column">
-                  <label>{t('Expected End Treatment by Protocol')}</label>
-                  <input
-                    type="date"
-                    name="expected_end_treatment_by_protocol"
-                    value={newFamily.expected_end_treatment_by_protocol}
-                    onChange={handleAddFamilyChange}
-                    className={errors.expected_end_treatment_by_protocol ? "error" : ""}
-                  />
-                  {errors.expected_end_treatment_by_protocol && <span className="families-error-message">{errors.expected_end_treatment_by_protocol}</span>}
-
                   <label>{t('Has Completed Treatments')}</label>
                   <select
                     name="has_completed_treatments"
@@ -2055,16 +2050,6 @@ const Families = () => {
 
                 </div>
                 <div className="form-column">
-                  <label>{t('Expected End Treatment by Protocol')}</label>
-                  <input
-                    type="date"
-                    name="expected_end_treatment_by_protocol"
-                    value={newFamily.expected_end_treatment_by_protocol}
-                    onChange={handleAddFamilyChange}
-                    className={errors.expected_end_treatment_by_protocol ? "error" : ""}
-                  />
-                  {errors.expected_end_treatment_by_protocol && <span className="families-error-message">{errors.expected_end_treatment_by_protocol}</span>}
-
                   <label>{t('Has Completed Treatments')}</label>
                   <select
                     name="has_completed_treatments"
