@@ -800,6 +800,60 @@ def create_family(request):
             # Allow explicit override only if not in permanent condition
             need_review_value = data.get("need_review", True)
 
+        # ── Duplicate check ──────────────────────────────────────────────────
+        # Check if a family already exists that matches key identity criteria.
+        # Returns 409 with candidates so the UI can show a side-by-side warning.
+        # The caller can re-submit with  force_create=true  to bypass this check.
+        if not data.get("force_create"):
+            surname      = (data.get("childsurname") or "").strip()
+            m_phone      = (data.get("mother_phone") or "").strip()
+            f_phone      = (data.get("father_phone") or "").strip()
+            c_phone      = (data.get("child_phone_number") or "").strip()
+            dob          = data.get("date_of_birth")
+
+            from django.db.models import Q as _Q
+            dup_query = _Q()
+            if surname and m_phone:
+                dup_query |= _Q(childsurname__iexact=surname, mother_phone=m_phone)
+            if surname and f_phone:
+                dup_query |= _Q(childsurname__iexact=surname, father_phone=f_phone)
+            if m_phone and f_phone:
+                dup_query |= _Q(mother_phone=m_phone, father_phone=f_phone)
+            if c_phone:
+                dup_query |= _Q(child_phone_number=c_phone)
+            if dob and surname:
+                dup_query |= _Q(date_of_birth=dob, childsurname__iexact=surname)
+
+            if dup_query:
+                candidates = Children.objects.filter(dup_query)
+                if candidates.exists():
+                    def _fmt(d):
+                        if not d: return ""
+                        return d.strftime("%d/%m/%Y") if hasattr(d, 'strftime') else str(d)
+                    result = []
+                    for c in candidates:
+                        result.append({
+                            "id":                    c.child_id,
+                            "first_name":            c.childfirstname,
+                            "last_name":             c.childsurname,
+                            "date_of_birth":         _fmt(c.date_of_birth),
+                            "gender":                "נקבה" if c.gender else "זכר",
+                            "city":                  c.city or "",
+                            "street_and_apartment_number": c.street_and_apartment_number or "",
+                            "child_phone_number":    c.child_phone_number or "",
+                            "mother_name":           c.mother_name or "",
+                            "mother_phone":          c.mother_phone or "",
+                            "father_name":           c.father_name or "",
+                            "father_phone":          c.father_phone or "",
+                            "treating_hospital":     c.treating_hospital or "",
+                            "medical_diagnosis":     c.medical_diagnosis or "",
+                            "tutoring_status":       c.tutoring_status or "",
+                            "status":                c.status or "",
+                            "registration_date":     _fmt(c.registrationdate),
+                        })
+                    return JsonResponse({"duplicates": result}, status=409)
+        # ─────────────────────────────────────────────────────────────────────
+
         # Create a new family record in the database
         family = Children.objects.create(
             child_id=data["child_id"],

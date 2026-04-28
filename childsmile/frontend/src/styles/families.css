@@ -2242,3 +2242,138 @@ select[name="responsible_coordinator"] option {
     rgba(251, 146, 60, 0.95) 0%,
     rgba(249, 115, 22, 0.95) 100%) !important;
 }
+/* ========================================
+   DUPLICATE FAMILY DETECTION MODALS
+   ======================================== */
+
+/* Modal size overrides */
+.dup-modal-wide {
+  max-width: 960px !important;
+  width: 95vw !important;
+  max-height: 90vh !important;
+  overflow-y: auto !important;
+}
+
+.dup-modal-medium {
+  max-width: 900px !important;
+  width: 95vw !important;
+  max-height: 90vh !important;
+  overflow-y: auto !important;
+}
+
+/* Body padding + RTL override for dup modals */
+.dup-modal-body {
+  padding: 16px !important;
+  text-align: right !important;
+}
+
+/* Warning intro text */
+.dup-warning-text {
+  margin-bottom: 14px;
+  color: #b00020;
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+/* Shared table base */
+.dup-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.dup-table td {
+  padding: 7px 10px;
+  border: 1px solid #ddd;
+  text-align: right;
+}
+
+/* Grid headers — blue gradient */
+.dup-grid-th {
+  padding: 8px 10px;
+  border: 1px solid rgba(59, 130, 246, 0.5);
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.88rem;
+  text-align: right;
+}
+
+/* Grid row hover */
+.dup-grid-row {
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.dup-grid-row:hover {
+  background: #fffbeb;
+}
+
+/* Comparison table headers */
+.dup-compare-label-th {
+  padding: 8px 10px;
+  border: 1px solid #ddd;
+  background: #f0f4ff;
+  font-weight: 700;
+  color: #374151;
+  text-align: right;
+}
+
+.dup-compare-label-td {
+  background: #fafafa;
+  font-weight: 600;
+}
+
+.dup-compare-new-th {
+  padding: 8px 10px;
+  border: 1px solid rgba(59, 130, 246, 0.4);
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  color: #fff;
+  font-weight: 700;
+  text-align: right;
+}
+
+.dup-compare-existing-th {
+  padding: 8px 10px;
+  border: 1px solid rgba(249, 115, 22, 0.4);
+  background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+  color: #fff;
+  font-weight: 700;
+  text-align: right;
+}
+
+/* Normal cell */
+.dup-compare-cell {
+  /* inherits .dup-table td */
+}
+
+/* Matching / highlighted cell */
+.dup-compare-cell.match {
+  background: #ffebee !important;
+  color: #b00020 !important;
+  font-weight: 600 !important;
+}
+
+/* Hint text */
+.dup-hint-text {
+  margin-top: 14px;
+  color: #555;
+  font-size: 0.88rem;
+}
+
+/* Back button spacing */
+.dup-footer-back {
+  margin-left: 8px;
+}
+
+/* "Create Anyway" danger red override */
+.dup-btn-danger {
+  background: linear-gradient(135deg, #b00020 0%, #8b0000 100%) !important;
+  box-shadow: 0 6px 20px rgba(176, 0, 32, 0.3), inset 0 1px 0 rgba(255,255,255,0.2) !important;
+}
+
+.dup-btn-danger:hover {
+  background: linear-gradient(135deg, #c0002a 0%, #a00000 100%) !important;
+  box-shadow: 0 10px 30px rgba(176, 0, 32, 0.45), inset 0 1px 0 rgba(255,255,255,0.3) !important;
+  transform: translateY(-3px) scale(1.05);
+}
