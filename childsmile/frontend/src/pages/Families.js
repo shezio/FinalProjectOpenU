@@ -385,30 +385,58 @@ const Families = () => {
 
 
 
+  // Duplicate check state
+  const [dupCandidates, setDupCandidates] = useState([]);
+  const [showDupModal, setShowDupModal] = useState(false);       // grid of all candidates
+  const [showDupDetailModal, setShowDupDetailModal] = useState(false); // side-by-side for one
+  const [selectedDupFamily, setSelectedDupFamily] = useState(null);
+  const [pendingFamilyData, setPendingFamilyData] = useState(null);
+
   const handleAddFamilySubmit = async (e) => {
     e.preventDefault();
     if (!validate()) {
-      return; // Prevent submission if validation fails
+      return;
     }
     const combinedStreetAndApartment = `${newFamily.street} ${newFamily.apartment_number}`;
     const familyData = {
       ...newFamily,
       street_and_apartment_number: combinedStreetAndApartment,
     };
+
+    // --- Single call: create_family returns 409 if duplicates found ---
+    await doCreateFamily(familyData, false);
+  };
+
+  const doCreateFamily = async (familyData, forceCreate = false) => {
     try {
-      const response = await axios.post('/api/create_family/', familyData);
+      const payload = forceCreate ? { ...familyData, force_create: true } : familyData;
+      await axios.post('/api/create_family/', payload);
       toast.success(t('Family added successfully!'));
       setShowAddModal(false);
-      fetchFamilies(); // Refresh the families list
+      setShowDupModal(false);
+      setShowDupDetailModal(false);
+      setPendingFamilyData(null);
+      setDupCandidates([]);
+      setSelectedDupFamily(null);
+      fetchFamilies();
     } catch (error) {
+      // 409 = possible duplicates found — show comparison modal
+      if (error.response?.status === 409) {
+        const duplicates = error.response.data?.duplicates || [];
+        if (duplicates.length > 0) {
+          setDupCandidates(duplicates);
+          setSelectedDupFamily(duplicates[0]);
+          setPendingFamilyData(familyData);
+          setShowDupModal(true);
+          return;
+        }
+      }
       console.error('Error adding family:', error);
-      
-      // Check for duplicate ID constraint violation
       const errorMessage = error.response?.data?.error || error.message || '';
       if (errorMessage.includes('duplicate key') && errorMessage.includes('child_id')) {
         showErrorToast(t, '', { message: t('This child ID already exists in the system. Please use a different ID.') });
       } else {
-        showErrorToast(t, 'Error adding family', error); // Use the toast utility for error messages
+        showErrorToast(t, 'Error adding family', error);
       }
     }
   };
@@ -2246,6 +2274,163 @@ const Families = () => {
               </div>
             </div>
           </>
+        )}
+
+        {/* ===== DUPLICATE FAMILY CHECK MODAL ===== */}
+        {/* ── Step 1: Grid of all duplicate candidates ── */}
+        {showDupModal && !showDupDetailModal && pendingFamilyData && (
+          <div className="tutor-vol-modal-overlay" onClick={() => setShowDupModal(false)}>
+            <div className="tutor-vol-modal-content dup-modal-wide" onClick={e => e.stopPropagation()}>
+              <div className="tutor-vol-modal-header">
+                <h2>⚠️ {t('Possible Duplicate Families Detected')}</h2>
+                <span className="tutor-vol-modal-close" onClick={() => setShowDupModal(false)}>&times;</span>
+              </div>
+              <div className="tutor-vol-modal-body dup-modal-body">
+                <p className="dup-warning-text">
+                  {t('The following existing families share key details. Click a row to compare side-by-side.')}
+                </p>
+                <table className="dup-table">
+                  <thead>
+                    <tr>
+                      {[t('ID'), t('First Name'), t('Last Name'), t('Date of Birth'), t('City'), t('Mother Phone'), t('Father Phone'), t('Status')].map(h => (
+                        <th key={h} className="dup-grid-th">{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {dupCandidates.map((c) => (
+                      <tr
+                        key={c.id}
+                        className="dup-grid-row"
+                        onClick={() => { setSelectedDupFamily(c); setShowDupDetailModal(true); }}
+                      >
+                        <td>{c.id}</td>
+                        <td>{c.first_name}</td>
+                        <td>{c.last_name}</td>
+                        <td>{c.date_of_birth}</td>
+                        <td>{c.city}</td>
+                        <td>{c.mother_phone || '—'}</td>
+                        <td>{c.father_phone || '—'}</td>
+                        <td>{c.status}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <div className="tutor-vol-modal-footer">
+                <button
+                  className="tutor-vol-btn-cancel"
+                  onClick={() => { setShowDupModal(false); setPendingFamilyData(null); }}
+                >
+                  {t('Close & Fix')}
+                </button>
+                <button
+                  className="tutor-vol-btn-confirm dup-btn-danger"
+                  onClick={() => doCreateFamily(pendingFamilyData, true)}
+                >
+                  {t('Create Anyway')}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ── Step 2: Side-by-side comparison for selected candidate ── */}
+        {showDupDetailModal && selectedDupFamily && pendingFamilyData && (
+          <div className="tutor-vol-modal-overlay" onClick={() => setShowDupDetailModal(false)}>
+            <div className="tutor-vol-modal-content dup-modal-medium" onClick={e => e.stopPropagation()}>
+              <div className="tutor-vol-modal-header">
+                <h2>🔍 {selectedDupFamily.first_name} {selectedDupFamily.last_name} (#{selectedDupFamily.id})</h2>
+                <span className="tutor-vol-modal-close" onClick={() => setShowDupDetailModal(false)}>&times;</span>
+              </div>
+              <div className="tutor-vol-modal-body dup-modal-body">
+                {(() => {
+                  const fmtDate = (v) => {
+                    if (!v) return '';
+                    if (/^\d{4}-\d{2}-\d{2}$/.test(v)) {
+                      const [y, m, d] = v.split('-');
+                      return `${d}/${m}/${y}`;
+                    }
+                    return v;
+                  };
+
+                  const COMPARE_FIELDS = [
+                    { key: 'childfirstname',    existingKey: 'first_name',        label: t('First Name') },
+                    { key: 'childsurname',       existingKey: 'last_name',         label: t('Last Name') },
+                    { key: 'date_of_birth',      existingKey: 'date_of_birth',     label: t('Date of Birth'), fmt: fmtDate },
+                    { key: 'gender',             existingKey: 'gender',            label: t('Gender'), newDisplay: pendingFamilyData.gender },
+                    { key: 'city',               existingKey: 'city',              label: t('City') },
+                    { key: 'child_phone_number', existingKey: 'child_phone_number',label: t('Child Phone') },
+                    { key: 'mother_name',        existingKey: 'mother_name',       label: t('Mother Name') },
+                    { key: 'mother_phone',       existingKey: 'mother_phone',      label: t('Mother Phone') },
+                    { key: 'father_name',        existingKey: 'father_name',       label: t('Father Name') },
+                    { key: 'father_phone',       existingKey: 'father_phone',      label: t('Father Phone') },
+                    { key: 'treating_hospital',  existingKey: 'treating_hospital', label: t('Treating Hospital') },
+                    { key: 'medical_diagnosis',  existingKey: 'medical_diagnosis', label: t('Medical Diagnosis') },
+                    { key: 'tutoring_status',    existingKey: 'tutoring_status',   label: t('Tutoring Status') },
+                    { key: 'status',             existingKey: 'status',            label: t('Status') },
+                  ];
+
+                  const isSimilar = (a, b) => {
+                    const na = (a || '').toString().trim().toLowerCase();
+                    const nb = (b || '').toString().trim().toLowerCase();
+                    return na && nb && na === nb;
+                  };
+
+                  return (
+                    <table className="dup-table">
+                      <thead>
+                        <tr>
+                          <th className="dup-compare-label-th">{t('Field')}</th>
+                          <th className="dup-compare-new-th">🆕 {t('New Family')}</th>
+                          <th className="dup-compare-existing-th">📁 {t('Existing')}</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {COMPARE_FIELDS.map(({ key, existingKey, label, newDisplay, fmt }) => {
+                          const rawNew   = newDisplay !== undefined ? newDisplay : (pendingFamilyData[key] || '');
+                          const rawExist = selectedDupFamily[existingKey] || '';
+                          const newVal   = fmt ? fmt(rawNew)   : rawNew;
+                          const existVal = fmt ? fmt(rawExist) : rawExist;
+                          const highlight = isSimilar(newVal, existVal);
+                          return (
+                            <tr key={key}>
+                              <td className="dup-compare-label-td">{label}</td>
+                              <td className={`dup-compare-cell${highlight ? ' match' : ''}`}>{newVal || '—'}</td>
+                              <td className={`dup-compare-cell${highlight ? ' match' : ''}`}>{existVal || '—'}</td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  );
+                })()}
+                <p className="dup-hint-text">
+                  {t('If you are sure this is a different family, you can proceed. Otherwise, close this window and correct the highlighted fields.')}
+                </p>
+              </div>
+              <div className="tutor-vol-modal-footer">
+                <button
+                  className="tutor-vol-btn-cancel dup-footer-back"
+                  onClick={() => setShowDupDetailModal(false)}
+                >
+                  ← {t('Back to List')}
+                </button>
+                <button
+                  className="tutor-vol-btn-cancel"
+                  onClick={() => { setShowDupModal(false); setShowDupDetailModal(false); setPendingFamilyData(null); }}
+                >
+                  {t('Close & Fix')}
+                </button>
+                <button
+                  className="tutor-vol-btn-confirm dup-btn-danger"
+                  onClick={() => doCreateFamily(pendingFamilyData, true)}
+                >
+                  {t('Create Anyway')}
+                </button>
+              </div>
+            </div>
+          </div>
         )}
       </div>
     </div>

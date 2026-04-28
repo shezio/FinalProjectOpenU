@@ -234,8 +234,8 @@ def create_tasks_for_admins(staff_user_id, user_name, user_email):
                         html_message=message
                     )
                     
-                    # Send WhatsApp message to coordinator
-                    if staff_member.staff_phone:
+                    # Send WhatsApp message to coordinator (prod only)
+                    if staff_member.staff_phone and getattr(settings, 'IS_PROD', False):
                         try:
                             whatsapp_result = send_coordinator_notification_whatsapp(
                                 coordinator_phone=staff_member.staff_phone,
@@ -509,8 +509,8 @@ def notify_tutored_families_coordinators(child_id):
                 html_message=message
             )
             
-            # Send WhatsApp message to coordinator
-            if coordinator.staff_phone:
+            # Send WhatsApp message to coordinator (prod only)
+            if coordinator.staff_phone and getattr(settings, 'IS_PROD', False):
                 try:
                     whatsapp_result = send_coordinator_notification_whatsapp_family(
                         coordinator_phone=coordinator.staff_phone,
@@ -643,8 +643,11 @@ def notify_admins_of_new_family(child_id):
         api_logger.debug(f"🔵 Proceeding with WhatsApp sends to {whatsapp_admins.count()} admins")
         for admin in whatsapp_admins:
             api_logger.debug(f"🔵 Processing admin {admin.staff_id}: {admin.username}")
-            if not admin.staff_phone:
-                api_logger.debug(f"Admin {admin.staff_id} ({admin.username}) has no phone number - skipping WhatsApp")
+            if not admin.staff_phone or not getattr(settings, 'IS_PROD', False):
+                if not admin.staff_phone:
+                    api_logger.debug(f"Admin {admin.staff_id} ({admin.username}) has no phone number - skipping WhatsApp")
+                else:
+                    api_logger.debug(f"Admin {admin.staff_id} ({admin.username}) - WhatsApp skipped (not prod)")
                 continue
             
             try:
