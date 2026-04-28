@@ -603,7 +603,12 @@ def notify_admins_of_new_family(child_id):
             age_unit = ""
         
         child_gender = "נקבה" if child.gender else "זכר"
-        parent_phone = child.father_phone or child.mother_phone or "לא זמין"
+        if child.mother_phone:
+            parent_phone = str(child.mother_phone)
+        elif child.father_phone:
+            parent_phone = str(child.father_phone)
+        else:
+            parent_phone = "לא זמין"
         child_city = child.city or "לא זמין"
         child_hospital = child.treating_hospital or "לא זמין"
         tutoring_status = child.tutoring_status or "לא זמין"

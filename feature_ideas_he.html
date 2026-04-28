@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>רעיונות לפיצ'רים חדשים – מערכת חייך בחיוך</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: linear-gradient(135deg, #f0f4ff 0%, #fdf6ff 100%);
+      color: #1a1a2e;
+      padding: 40px 20px;
+      min-height: 100vh;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 50px;
+    }
+
+    header h1 {
+      font-size: 2.4rem;
+      color: #4a2f7e;
+      margin-bottom: 10px;
+    }
+
+    header p {
+      font-size: 1.1rem;
+      color: #666;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+      gap: 28px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .category {
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+      padding: 28px;
+      border-top: 5px solid var(--accent);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .category:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 30px rgba(0,0,0,0.13);
+    }
+
+    .category-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .category-icon {
+      font-size: 2rem;
+      line-height: 1;
+    }
+
+    .category-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    ul li {
+      padding: 10px 0;
+      border-bottom: 1px dashed #eee;
+      font-size: 0.97rem;
+      line-height: 1.6;
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+    }
+
+    ul li:last-child {
+      border-bottom: none;
+    }
+
+    .idea-num {
+      background: var(--accent);
+      color: #fff;
+      border-radius: 50%;
+      min-width: 26px;
+      height: 26px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.8rem;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    .idea-text strong {
+      display: block;
+      margin-bottom: 3px;
+      color: #222;
+    }
+
+    .idea-text span {
+      color: #555;
+      font-size: 0.9rem;
+    }
+
+    /* Category colors */
+    .cat-automation  { --accent: #e05a2b; }
+    .cat-screens     { --accent: #2b7de0; }
+    .cat-comms       { --accent: #2bc47b; }
+    .cat-quality     { --accent: #c42b8c; }
+    .cat-analytics   { --accent: #8b2be0; }
+
+    footer {
+      text-align: center;
+      margin-top: 60px;
+      color: #999;
+      font-size: 0.9rem;
+    }
+
+    @media (max-width: 600px) {
+      header h1 { font-size: 1.7rem; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>💡 רעיונות לפיצ'רים חדשים</h1>
+  <p>אוטומציות, מסכים, תקשורת, איכות נתונים ואנליטיקס – למערכת ניהול משפחות חייך בחיוך</p>
+</header>
+
+<div class="grid">
+
+  <!-- AUTOMATION -->
+  <div class="category cat-automation">
+    <div class="category-header">
+      <span class="category-icon">🤖</span>
+      <span class="category-title">אוטומציות</span>
+    </div>
+    <ul>
+      <li>
+        <span class="idea-num">1</span>
+        <div class="idea-text">
+          <strong>סגירה אוטומטית של משימות ישנות</strong>
+          <span>אם משימת שיחת ביקורת לא טופלה במשך X ימים – דגל אותה אוטומטית או העבר אותה למנהל</span>
+        </div>
+      </li>
+      <li>
+        <span class="idea-num">2</span>
+        <div class="idea-text">
+          <strong>יצירת משימת ביקורת הבאה אוטומטית</strong>
+          <span>כשמתעדכן last_review_talk_conducted – ייצר אוטומטית משימת ביקורת חדשה ל-3 חודשים קדימה</span>
+        </div>
+      </li>
+      <li>
+        <span class="idea-num">3</span>
+        <div class="idea-text">
+          <strong>טריגר התאמה מחדש לחונכות</strong>
+          <span>כשעיר המשפחה משתנה או חונך מנותק – צור משימת "נדרש שיבוץ מחדש" אוטומטית</span>
+        </div>
+      </li>
+      <li>
+        <span class="idea-num">4</span>
+        <div class="idea-text">
+          <strong>וורקפלו סיום טיפולים</strong>
+          <span>כשסטטוס משתנה לבריא/מעקבים/אחזקה – צור אוטומטית משימת מעקב "בדיקת מצב לאחר סיום טיפולים"</span>
+        </div>
+      </li>
+    </ul>
+  </div>
+
+  <!-- NEW SCREENS -->
+  <div class="category cat-screens">
+    <div class="category-header">
+      <span class="category-icon">📊</span>
+      <span class="category-title">מסכים חדשים / דשבורדים</span>
+    </div>
+    <ul>
+      <li>
+        <span class="idea-num">5</span>
+        <div class="idea-text">
+          <strong>דשבורד עומס רכזים</strong>
+          <span>הצגת כל רכז עם: כמה משפחות, משימות פתוחות, ביקורות באיחור – לאיזון עומסים בין רכזים</span>
+        </div>
+      </li>
+      <li>
+        <span class="idea-num">6</span>
+        <div class="idea-text">
+          <strong>ציר זמן למשפחה</strong>
+          <span>תצוגה כרונולוגית של שינויי סטטוס, שיחות ביקורת, שיבוצי חונכים ופידבקים – כמו היסטוריה רפואית</span>
+        </div>
+      </li>
+      <li>
+        <span class="idea-num">7</span>
+        <div class="idea-text">
+          <strong>מסך ילדים מתבגרים</strong>
+          <span>ילדים שמתקרבים לגיל 18 עם חונכות פעילה – נדרשת תכנון מעבר</span>
+        </div>
+      </li>
+      <li>
+        <span class="idea-num">8</span>
+        <div class="idea-text">
+          <strong>מסך "בריאות חונכויות"</strong>
+          <span>חונכויות ללא פידבק שהוגש ב-60+ ימים – מסומנות לטיפול</span>
+        </div>
+      </li>
+    </ul>
+  </div>
+
+  <!-- COMMUNICATIONS -->
+  <div class="category cat-comms">
+    <div class="category-header">
+      <span class="category-icon">📬</span>
+      <span class="category-title">תקשורת והתראות</span>
+    </div>
+    <ul>
+      <li>
+        <span class="idea-num">9</span>
+        <div class="idea-text">
+          <strong>דוח שבועי לרכזים בוואטסאפ/מייל</strong>
+          <span>סיכום שבועי: משימות פתוחות, ביקורות באיחור, משפחות ללא חונך – נשלח אוטומטית</span>
+        </div>
+      </li>
+      <li>
+        <span class="idea-num">10</span>
+        <div class="idea-text">
+          <strong>תזכורות ימי הולדת</strong>
+          <span>התראה לרכז כשיום הולדתו של ילד מתקרב – לחיזוק הקשר והמורל</span>
+        </div>
+      </li>
+      <li>
+        <span class="idea-num">11</span>
+        <div class="idea-text">
+          <strong>יום שנה לחונכות</strong>
+          <span>התראה כשחונך מלאה שנה להתאמה – הזדמנות להכרה ותודה</span>
+        </div>
+      </li>
+    </ul>
+  </div>
+
+  <!-- DATA QUALITY -->
+  <div class="category cat-quality">
+    <div class="category-header">
+      <span class="category-icon">📋</span>
+      <span class="category-title">איכות נתונים</span>
+    </div>
+    <ul>
+      <li>
+        <span class="idea-num">12</span>
+        <div class="idea-text">
+          <strong>התראות פרופיל חסר</strong>
+          <span>מסך המציג משפחות עם טלפון חסר, תאריך אבחון חסר, או ללא רכז – לתיקון פרואקטיבי</span>
+        </div>
+      </li>
+      <li>
+        <span class="idea-num">13</span>
+        <div class="idea-text">
+          <strong>זיהוי כפילויות</strong>
+          <span>סימון משפחות עם אותו מספר טלפון או שם דומה מאוד לפני שמירה</span>
+        </div>
+      </li>
+      <li>
+        <span class="idea-num">14</span>
+        <div class="idea-text">
+          <strong>מעבר סטטוס מרובה</strong>
+          <span>בחירת מספר משפחות ממעקבים והעברתן לאחזקה בפעולה אחת</span>
+        </div>
+      </li>
+    </ul>
+  </div>
+
+  <!-- ANALYTICS -->
+  <div class="category cat-analytics">
+    <div class="category-header">
+      <span class="category-icon">📈</span>
+      <span class="category-title">אנליטיקס ודוחות</span>
+    </div>
+    <ul>
+      <li>
+        <span class="idea-num">15</span>
+        <div class="idea-text">
+          <strong>מגמות תוצאות טיפולים</strong>
+          <span>גרף המציג כמה משפחות עברו לסטטוס "בריא" לאורך זמן – לפי בית חולים / עיר</span>
+        </div>
+      </li>
+      <li>
+        <span class="idea-num">16</span>
+        <div class="idea-text">
+          <strong>שיעור הצלחת חונכות</strong>
+          <span>מתוך כל ההתאמות שנעשו – כמה % נמשכו 6+ חודשים? לפי רכז? לפי עיר?</span>
+        </div>
+      </li>
+      <li>
+        <span class="idea-num">17</span>
+        <div class="idea-text">
+          <strong>דוח שימור מתנדבים</strong>
+          <span>אילו מתנדבים נרשמו ולא שובצו? מי שובץ ונעלם? לזיהוי נקודות נשירה</span>
+        </div>
+      </li>
+    </ul>
+  </div>
+
+</div>
+
+<footer>
+  <p>נוצר עבור מערכת חייך בחיוך · אפריל 2026</p>
+</footer>
+
+</body>
+</html>
