@@ -19,6 +19,7 @@ import PendingTutorsStatsReport from './pages/report_pages/pending_tutors_stats_
 import RolesSpreadStatsReport from './pages/report_pages/roles_spread_stats_report'; // Import the Roles Spread Stats Report component
 import AllVolunteersIRSReport from './pages/report_pages/all_volunteers_irs_report'; // Import the IRS Volunteers Report component
 import AllFamiliesExportReport from './pages/report_pages/all_families_export_report'; // Import the All Families Export Report component
+import FamiliesMissingDataReport from './pages/report_pages/families_missing_data_report'; // Import the Families Missing Data Report component
 import Registration from './pages/Registration'; // Import the Registration component
 import VolunteerFeedbacks from './pages/VolunteerFeedbacks'; // Import the Volunteer Feedbacks component
 import TutorFeedbacks from './pages/TutorFeedbacks'; // Import the Tutor Feedbacks component
@@ -68,6 +69,7 @@ const App = () => {
       <Route path="/reports/roles_spread_stats_report" element={<RolesSpreadStatsReport />} /> {/* Add Roles Spread Stats Report route */}
       <Route path="/reports/all_volunteers_irs_report" element={<AllVolunteersIRSReport />} /> {/* Add IRS Volunteers Report route */}
       <Route path="/reports/all_families_export_report" element={<AllFamiliesExportReport />} /> {/* Add All Families Export Report route */}
+      <Route path="/reports/families_missing_data_report" element={<FamiliesMissingDataReport />} /> {/* Add Families Missing Data Report route */}
       <Route path="/feedbacks/VolunteerFeedbacks" element={<VolunteerFeedbacks />} /> {/* Add Volunteer Feedbacks route */}
       <Route path="/feedbacks/TutorFeedbacks" element={<TutorFeedbacks />} /> {/* Add Tutor Feedbacks route */}
       <Route path="/initial-family-data" element={<InitialFamilyData />} /> {/* Add Initial Family Data route */}
