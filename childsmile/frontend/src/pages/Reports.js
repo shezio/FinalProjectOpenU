@@ -96,6 +96,13 @@ const Reports = () => {
   ];
   const hasPermissionToAllFamiliesExportReport = hasSomePermissions(all_families_export_report_permissions);
 
+  // Families Missing Data Report permissions (coordinator + admin = families CREATE + staff CREATE)
+  const families_missing_data_report_permissions = [
+    { resource: families_resource, action: actions },
+    { resource: staff_resource, action: actions },
+  ];
+  const hasPermissionToFamiliesMissingDataReport = hasSomePermissions(families_missing_data_report_permissions);
+
   const reportDetails = {
     get_families_per_location_report: { name: 'דוח משפחות לפי מיקום', path: '/reports/families_per_location_report' },
     roles_spread_stats_report: { name: 'דוח התפלגות הרשאות', path: '/reports/roles_spread_stats_report' },
@@ -109,6 +116,7 @@ const Reports = () => {
     pending_tutors_stats_report: { name: 'דוח התפלגות חונכים ממתינים לראיון', path: '/reports/pending_tutors_stats_report' },
     all_volunteers_irs_report: { name: 'דוח מתנדבים כללי', path: '/reports/all_volunteers_irs_report' },
     all_families_export_report: { name: 'דוח משפחות כללי', path: '/reports/all_families_export_report' },
+    families_missing_data_report: { name: 'דוח משפחות עם נתונים חסרים', path: '/reports/families_missing_data_report' },
   };
 
   const reportPermissions = {
@@ -124,6 +132,7 @@ const Reports = () => {
     pending_tutors_stats_report: hasPermissionToPendingTutorsStatsReport,
     all_volunteers_irs_report: hasPermissionToAllVolunteersIRSReport,
     all_families_export_report: hasPermissionToAllFamiliesExportReport,
+    families_missing_data_report: hasPermissionToFamiliesMissingDataReport,
   };
 
   return (
