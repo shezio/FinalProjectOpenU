@@ -1606,3 +1606,165 @@
 .page-content .volunteer-feedback-report-grid-container::-webkit-scrollbar-track {
     background: rgba(0, 0, 0, 0.1);
 }
+
+/* ===== REPORTS GRID PAGE ===== */
+
+.reports-grid-page {
+  direction: rtl;
+  padding: 24px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  max-width: 860px;
+}
+
+/* Toolbar: search + filter buttons */
+.reports-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.reports-search-input {
+  flex: 1;
+  min-width: 180px;
+  padding: 9px 14px;
+  border: 1.5px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 28px;
+  font-family: Rubik, sans-serif;
+  background: #fff;
+  outline: none;
+  transition: border-color 0.2s;
+  direction: rtl;
+}
+
+.reports-search-input:focus {
+  border-color: #7c5cbf;
+}
+
+.reports-filter-btns {
+  display: flex;
+  gap: 6px;
+}
+
+.reports-filter-btn {
+  padding: 8px 18px;
+  border: 1.5px solid #c4b5e0;
+  border-radius: 20px;
+  background: #fff;
+  color: #7c5cbf;
+  font-family: Rubik, sans-serif;
+  font-size: 28px;
+  cursor: pointer;
+  transition: all 0.18s;
+}
+
+.reports-filter-btn:hover {
+  background: #ede9f7;
+}
+
+.reports-filter-btn--active {
+  background: #7c5cbf;
+  color: #fff;
+  border-color: #7c5cbf;
+}
+
+/* Table */
+.reports-table-wrapper {
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+  overflow: hidden;
+}
+
+.reports-grid-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: Rubik, sans-serif;
+  font-size: 28px;
+}
+
+.reports-th {
+  background: #f3eff9;
+  color: #5a3d8c;
+  font-weight: 600;
+  padding: 12px 16px;
+  text-align: right;
+  border-bottom: 2px solid #e2d9f3;
+}
+
+.reports-th-num {
+  width: 48px;
+  text-align: center;
+}
+
+.reports-th-cat {
+  width: 130px;
+  text-align: center;
+}
+
+.reports-td {
+  padding: 13px 16px;
+  border-bottom: 1px solid #f0ecf8;
+  text-align: right;
+  color: #222;
+}
+
+.reports-td-num {
+  text-align: center;
+  color: #888;
+  font-size: 13px;
+}
+
+.reports-td-cat {
+  text-align: center;
+}
+
+.reports-grid-row {
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.reports-grid-row:hover {
+  background: #f7f3ff;
+}
+
+.reports-grid-row:last-child .reports-td {
+  border-bottom: none;
+}
+
+.reports-empty-row {
+  text-align: center;
+  color: #aaa;
+  padding: 28px;
+  font-size: 15px;
+}
+
+/* Category badges */
+.reports-cat-badge {
+  display: inline-block;
+  padding: 3px 12px;
+  border-radius: 12px;
+  font-size: 22px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.reports-cat-badge--families {
+  background: #dff4e8;
+  color: #1e7c45;
+}
+
+.reports-cat-badge--volunteers {
+  background: #e8eeff;
+  color: #2d57c5;
+}
+
+.reports-cat-badge--other {
+  background: #f3f0fb;
+  color: #7c5cbf;
+}
+
+/* (pagination handled by shared .pagination / .pagination-arrow classes) */
