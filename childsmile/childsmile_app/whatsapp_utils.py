@@ -227,8 +227,9 @@ def send_coordinator_notification_whatsapp(coordinator_phone, coordinator_name, 
         dict: Response from send_whatsapp_message
     """
     # Format user information for WhatsApp template
+    # user_gender is already a Hebrew string ("נקבה"/"זכר") — pass through as-is
     user_wants_tutor_str = "כן" if user_wants_tutor else "לא"
-    user_gender_str = "נקבה" if user_gender else "זכר"
+    user_gender_str = user_gender  # already formatted by caller
     
     # Get template SID from GitHub Secrets (NEW_REGISTER_SID)
     coordinator_template_sid = os.getenv('NEW_REGISTER_SID')
