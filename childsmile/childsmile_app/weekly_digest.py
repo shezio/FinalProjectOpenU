@@ -47,25 +47,41 @@ TUTORING_STATUSES_REQUIRING_TUTOR = {
 # ---------------------------------------------------------------------------
 
 def _is_coordinator_or_admin(staff_member):
-    """Return True if the staff member has at least one coordinator/admin role."""
+    """Return True if the staff member has a coordinator or administrator role."""
     roles = staff_member.roles.values_list("role_name", flat=True)
     for r in roles:
-        rl = r.lower()
-        if "coordinator" in rl or "admin" in rl:
+        if "coordinator" in r.lower() or "administrator" in r.lower():
             return True
     return False
 
 
 def _get_digest_recipients():
-    """Return queryset of active Staff who are coordinators or admins."""
-    coordinator_or_admin_roles = Role.objects.filter(
+    """
+    Return queryset of active Staff who should receive the weekly digest.
+    Allowed roles (by name pattern): anything containing 'Coordinator' or 'Administrator'.
+    This covers: Technical Coordinator, Volunteer Coordinator, Families Coordinator,
+    Tutors Coordinator, Matures Coordinator, Tutored Families Coordinator,
+    and System Administrator.
+    Explicitly excluded (no matter what other roles they hold):
+      General Volunteer, Tutor, Reviewer, Inactive.
+    NOTE: icontains="volunteer" is intentionally NOT used for exclusion because
+    'Volunteer Coordinator' legitimately contains the word 'volunteer'.
+    """
+    digest_roles = Role.objects.filter(
         role_name__icontains="coordinator"
     ) | Role.objects.filter(
-        role_name__icontains="admin"
+        role_name__icontains="administrator"
     )
+    excluded_roles = Role.objects.filter(role_name__in=[
+        "General Volunteer",
+        "Tutor",
+        "Reviewer",
+        "Inactive",
+    ])
     return (
         Staff.objects
-        .filter(is_active=True, roles__in=coordinator_or_admin_roles)
+        .filter(is_active=True, roles__in=digest_roles)
+        .exclude(roles__in=excluded_roles)
         .exclude(email="")
         .distinct()
     )
