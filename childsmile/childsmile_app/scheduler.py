@@ -67,15 +67,33 @@ def start_scheduler():
             # Add job: Clean up old completed tasks every Friday at 11 PM (Israel timezone)
             _scheduler.add_job(
                 func=_run_cleanup_old_tasks,
-                # trigger in 2 minutes from now for testing
-                #trigger=CronTrigger(second='*/10'),
                 trigger=CronTrigger(day_of_week=4, hour=23, minute=0, timezone=israel_tz),
                 id='cleanup_old_tasks',
                 name='Cleanup Old Completed Tasks',
                 replace_existing=True,
                 misfire_grace_time=300  # 5-minute grace period for missed executions
             )
-            
+
+            # Add job: Send weekly digest every Sunday at 8:00 AM Israel time
+            # Controlled by WEEKLY_DIGEST_TIME env var (e.g. "08:00").  Day controlled
+            # by WEEKLY_DIGEST_DAY (0=Mon…6=Sun, default 6=Sunday).
+            weekly_time = os.environ.get('WEEKLY_DIGEST_TIME', '').strip()
+            if weekly_time:
+                try:
+                    w_hour, w_minute = map(int, weekly_time.split(':'))
+                    w_day = int(os.environ.get('WEEKLY_DIGEST_DAY', '6'))
+                    _scheduler.add_job(
+                        func=_run_weekly_digest,
+                        trigger=CronTrigger(day_of_week=w_day, hour=w_hour, minute=w_minute, timezone=israel_tz),
+                        id='weekly_digest',
+                        name='Weekly Digest Email',
+                        replace_existing=True,
+                        misfire_grace_time=600,
+                    )
+                    api_logger.info(f'📧 Weekly digest scheduled: day={w_day} {weekly_time} Israel time')
+                except Exception as wd_err:
+                    api_logger.error(f'❌ Could not schedule weekly digest: {wd_err}')
+
             _scheduler.start()
             api_logger.info(f'✅ Scheduler started | Monthly review: {scheduled_time} Israel time | Cleanup: Friday 11 PM Israel time')
             
@@ -144,3 +162,17 @@ def _run_cleanup_old_tasks():
         
     except Exception as e:
         api_logger.error(f'❌ CRITICAL ERROR in scheduled cleanup old tasks: {str(e)}')
+
+
+def _run_weekly_digest():
+    """
+    Send the weekly digest email to all active staff members.
+    Called by the scheduler every Sunday at the configured time.
+    """
+    try:
+        from .weekly_digest import send_weekly_digest
+        api_logger.info('📧 Weekly digest triggered by scheduler')
+        result = send_weekly_digest()
+        api_logger.info(f'✅ Weekly digest done | sent={result.get("sent")} failed={result.get("failed")}')
+    except Exception as e:
+        api_logger.error(f'❌ Error in scheduled weekly digest: {str(e)}')
