@@ -4,7 +4,7 @@ import InnerPageHeader from "../../components/InnerPageHeader";
 import "../../styles/common.css";
 import "../../styles/reports.css";
 import "../../styles/families_missing_data_report.css";
-import { hasSomePermissions, navigateTo } from "../../components/utils";
+import { hasSomePermissions } from "../../components/utils";
 import axios from "../../axiosConfig";
 import { useNavigate } from "react-router-dom";
 
@@ -206,7 +206,7 @@ const FamiliesDuplicateReport = () => {
             </span>
             <button
               className="back-button"
-              onClick={() => navigateTo(navigate, "/reports")}
+              onClick={() => navigate("/reports")}
               style={{ marginRight: "auto" }}
             >
               ← חזרה לדוחות
