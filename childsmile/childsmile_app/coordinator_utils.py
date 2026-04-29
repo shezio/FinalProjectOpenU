@@ -235,7 +235,12 @@ def create_tasks_for_admins(staff_user_id, user_name, user_email):
                     )
                     
                     # Send WhatsApp message to coordinator (prod only)
-                    if staff_member.staff_phone and getattr(settings, 'IS_PROD', False):
+                    if not getattr(settings, 'IS_PROD', False):
+                        api_logger.warning(f"⚠️ IS_PROD=False — WhatsApp skipped for coordinator {staff_member.staff_id} ({staff_member.email})")
+                    elif not staff_member.staff_phone:
+                        api_logger.warning(f"⚠️ Coordinator {staff_member.staff_id} ({staff_member.email}) has NO staff_phone in DB — WhatsApp notification will NOT be sent")
+                    else:
+                        api_logger.info(f"📱 Sending WhatsApp to coordinator {staff_member.staff_id} at {staff_member.staff_phone}")
                         try:
                             whatsapp_result = send_coordinator_notification_whatsapp(
                                 coordinator_phone=staff_member.staff_phone,
@@ -255,8 +260,6 @@ def create_tasks_for_admins(staff_user_id, user_name, user_email):
                                 api_logger.warning(f"Failed to send WhatsApp to coordinator {staff_member.staff_id}: {whatsapp_result.get('error')}")
                         except Exception as wa_error:
                             api_logger.error(f"Error sending WhatsApp to coordinator {staff_member.staff_id}: {str(wa_error)}")
-                    else:
-                        api_logger.debug(f"🔔 Coordinator {staff_member.staff_id} has no phone number - WhatsApp notification will NOT be sent")
                 
                 api_logger.debug(f"Registration approval notifications (email + WhatsApp) sent to {len(approval_staff)} Volunteer Coordinators for user {user_email}")
                 
