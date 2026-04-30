@@ -6,4 +6,5 @@ urlpatterns = [
     path("recipients/", meeting_views.meeting_recipients, name="meeting_recipients"),
     path("<int:meeting_id>/", meeting_views.meeting_detail, name="meeting_detail"),
     path("<int:meeting_id>/send-reminders/", meeting_views.send_reminders_now, name="send_reminders_now"),
+    path("<int:meeting_id>/delete/", meeting_views.meeting_hard_delete, name="meeting_hard_delete"),
 ]

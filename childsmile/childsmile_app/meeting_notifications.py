@@ -123,17 +123,32 @@ def send_meeting_reminder(meeting, reminder_type):
                 failed_email += 1
                 api_logger.error(f"meeting_reminder email failed for {staff.email}: {e}")
 
-    # WhatsApp — only if the meeting has send_whatsapp enabled (set by user in UI)
+    # WhatsApp — only for coordinators/admins (they are Staff with staff_phone).
+    # Other staff (non-coordinator) get email only — no WhatsApp.
     wa_sent = 0
     wa_failed = 0
     if getattr(meeting, 'send_whatsapp', True):
-        phones = [s.staff_phone for s in recipients if s.staff_phone]
+        from django.db.models import Q
+        coordinator_ids = set(
+            Staff.objects.filter(
+                is_active=True,
+                registration_approved=True,
+            ).filter(
+                Q(roles__role_name__icontains='coordinator') | Q(roles__role_name__icontains='admin')
+            ).values_list('staff_id', flat=True)
+        )
+        # Only send WhatsApp to coordinators/admins in the recipient list
+        wa_recipients = [s for s in recipients if s.staff_id in coordinator_ids]
+        phones = [s.staff_phone for s in wa_recipients if s.staff_phone]
         if phones:
             wa_results = send_meeting_reminder_whatsapp(
                 phones, reminder_type, meeting.title, date_str, location, urgency
             )
             wa_sent = wa_results.get('successful', 0)
             wa_failed = wa_results.get('failed', 0)
+        non_wa_count = len([s for s in recipients if s.staff_id not in coordinator_ids])
+        if non_wa_count:
+            api_logger.info(f"meeting_reminder: {non_wa_count} non-coordinator staff got email only (no WhatsApp)")
     else:
         api_logger.info(f"meeting_reminder: WhatsApp skipped (disabled for meeting {meeting.id})")
 

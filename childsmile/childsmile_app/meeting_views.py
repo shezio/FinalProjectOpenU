@@ -65,6 +65,35 @@ def _get_all_recipients():
             "name": f"{s.first_name} {s.last_name}".strip(),
             "email": s.email or "",
             "phone": s.staff_phone or "",
+            "is_coordinator": True,
+        }
+        for s in qs
+    ]
+
+
+def _get_other_staff():
+    """Return all active approved staff who are NOT coordinators or admins."""
+    from .models import Staff
+    from django.db.models import Q
+    coordinator_ids = Staff.objects.filter(
+        is_active=True,
+        registration_approved=True,
+    ).filter(
+        Q(roles__role_name__icontains='coordinator') | Q(roles__role_name__icontains='admin')
+    ).values_list('staff_id', flat=True).distinct()
+
+    qs = Staff.objects.filter(
+        is_active=True,
+        registration_approved=True,
+    ).exclude(staff_id__in=coordinator_ids).distinct()
+
+    return [
+        {
+            "id": s.staff_id,
+            "name": f"{s.first_name} {s.last_name}".strip(),
+            "email": s.email or "",
+            "phone": s.staff_phone or "",
+            "is_coordinator": False,
         }
         for s in qs
     ]
@@ -112,7 +141,7 @@ def meetings_list(request):
 
 @csrf_exempt
 def meeting_recipients(request):
-    """GET: return all potential meeting invitees (coordinators + admins)"""
+    """GET: return all potential meeting invitees split into coordinators/admins and other staff"""
     staff = _get_staff(request)
     if not staff:
         return JsonResponse({"error": "Unauthorized"}, status=401)
@@ -120,7 +149,13 @@ def meeting_recipients(request):
         return JsonResponse({"error": "Forbidden"}, status=403)
     if request.method != "GET":
         return JsonResponse({"error": "Method not allowed"}, status=405)
-    return JsonResponse({"recipients": _get_all_recipients()})
+    coordinators = _get_all_recipients()
+    others = _get_other_staff()
+    return JsonResponse({
+        "recipients": coordinators + others,   # flat list for backwards compat
+        "coordinators": coordinators,
+        "other_staff": others,
+    })
 
 
 @csrf_exempt
@@ -159,6 +194,31 @@ def meeting_detail(request, meeting_id):
         return JsonResponse({"message": "Meeting cancelled", "id": meeting.id})
 
     return JsonResponse({"error": "Method not allowed"}, status=405)
+
+
+@csrf_exempt
+def meeting_hard_delete(request, meeting_id):
+    """DELETE: permanently delete a cancelled meeting"""
+    if request.method != "DELETE":
+        return JsonResponse({"error": "Method not allowed"}, status=405)
+
+    staff = _get_staff(request)
+    if not staff:
+        return JsonResponse({"error": "Unauthorized"}, status=401)
+    if not is_admin(staff):
+        return JsonResponse({"error": "Forbidden"}, status=403)
+
+    try:
+        meeting = StaffMeeting.objects.get(id=meeting_id)
+    except StaffMeeting.DoesNotExist:
+        return JsonResponse({"error": "Meeting not found"}, status=404)
+
+    if not meeting.is_cancelled:
+        return JsonResponse({"error": "Only cancelled meetings can be permanently deleted"}, status=400)
+
+    meeting.delete()
+    api_logger.info(f"[MEETINGS] Hard-deleted meeting {meeting_id} by {staff.username}")
+    return JsonResponse({"message": "Meeting permanently deleted", "id": meeting_id})
 
 
 @csrf_exempt
