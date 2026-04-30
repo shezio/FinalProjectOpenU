@@ -765,3 +765,88 @@ def send_account_activation_whatsapp(staff_phone, staff_name):
             message_body=message,
             use_template=False
         )
+
+
+# ============================================================================
+# MEETING REMINDER WHATSAPP
+# ============================================================================
+
+# Twilio content template SIDs for meeting reminders.
+# Set these env vars once your templates are approved by Meta in Twilio console.
+# If env var is not set, falls back to plain freeform text (sandbox only).
+import os
+
+MEETING_TEMPLATE_SID_WEEK       = os.getenv('TWILIO_MEETING_TEMPLATE_WEEK')
+MEETING_TEMPLATE_SID_TWO_DAYS   = os.getenv('TWILIO_MEETING_TEMPLATE_TWO_DAYS')
+MEETING_TEMPLATE_SID_SAME_DAY   = os.getenv('TWILIO_MEETING_TEMPLATE_SAME_DAY')
+
+
+def send_meeting_reminder_whatsapp(phones, reminder_type, meeting_title, date_str, location, urgency):
+    """
+    Send a meeting reminder WhatsApp message to a list of phones.
+
+    Uses an approved Twilio content template when the matching env var is set.
+    Falls back to plain freeform text (works only in Twilio sandbox) when not set.
+
+    Template variables:
+        {{1}} = date_str      (e.g. "יום שני 05/05/2026 בשעה 10:00")
+        {{2}} = location      (e.g. "חדר ישיבות 2")
+        {{3}} = meeting_title (e.g. "פגישת צוות חודשית")
+
+    Args:
+        phones (list):         Phone numbers of invitees.
+        reminder_type (str):   'week_before' | 'two_days_before' | 'same_day'
+        meeting_title (str):   Meeting title as entered in the UI.
+        date_str (str):        Formatted date+time string.
+        location (str):        Meeting location.
+        urgency (str):         Optional closing note (used only in freeform fallback).
+
+    Returns:
+        dict: {"total": N, "successful": N, "failed": N, "results": [...]}
+    """
+    if not phones:
+        return {"total": 0, "successful": 0, "failed": 0, "results": []}
+
+    template_sid_map = {
+        'week_before':      MEETING_TEMPLATE_SID_WEEK,
+        'two_days_before':  MEETING_TEMPLATE_SID_TWO_DAYS,
+        'same_day':         MEETING_TEMPLATE_SID_SAME_DAY,
+    }
+    template_sid = template_sid_map.get(reminder_type)
+
+    if template_sid:
+        # For same_day template, {{1}} is time-only ("10:00") since template says "🗓 שעה: {{1}}"
+        # For week/two_days templates, {{1}} is the full date+time string
+        var1 = date_str
+        if reminder_type == 'same_day':
+            # Extract HH:MM from the end of date_str ("יום שני 30/04/2026 בשעה 10:00" → "10:00")
+            try:
+                var1 = date_str.split('בשעה')[-1].strip()
+            except Exception:
+                var1 = date_str  # fallback to full string if parsing fails
+
+        return send_whatsapp_to_multiple(
+            phones,
+            message_body=None,
+            use_template=True,
+            template_sid=template_sid,
+            template_variables={
+                "1": var1,
+                "2": location,
+                "3": meeting_title,
+            }
+        )
+    else:
+        api_logger.warning(
+            f"meeting_reminder_whatsapp: no template SID for '{reminder_type}' "
+            f"(set TWILIO_MEETING_TEMPLATE_WEEK / _TWO_DAYS / _SAME_DAY). "
+            f"Falling back to freeform text (sandbox only)."
+        )
+        freeform = (
+            f"📅 *{meeting_title}*\n\n"
+            f"🗓 {date_str}\n"
+            f"📍 מיקום: {location}\n"
+            f"{(urgency + chr(10)) if urgency else ''}"
+            f"\nמערכת חיוך של ילד"
+        )
+        return send_whatsapp_to_multiple(phones, message_body=freeform)

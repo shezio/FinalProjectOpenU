@@ -94,6 +94,22 @@ def start_scheduler():
                 except Exception as wd_err:
                     api_logger.error(f'❌ Could not schedule weekly digest: {wd_err}')
 
+            # Add job: Send meeting reminders daily (controlled by MEETING_REMINDER_TIME, default 08:00)
+            meeting_reminder_time = os.environ.get('MEETING_REMINDER_TIME', '08:00').strip()
+            try:
+                mr_hour, mr_minute = map(int, meeting_reminder_time.split(':'))
+                _scheduler.add_job(
+                    func=_run_meeting_reminders,
+                    trigger=CronTrigger(hour=mr_hour, minute=mr_minute, timezone=israel_tz),
+                    id='meeting_reminders',
+                    name='Staff Meeting Reminders',
+                    replace_existing=True,
+                    misfire_grace_time=300,
+                )
+                api_logger.info(f'📅 Meeting reminders scheduled daily at {meeting_reminder_time} Israel time')
+            except Exception as mr_err:
+                api_logger.error(f'❌ Could not schedule meeting reminders: {mr_err}')
+
             _scheduler.start()
             api_logger.info(f'✅ Scheduler started | Monthly review: {scheduled_time} Israel time | Cleanup: Friday 11 PM Israel time')
             
@@ -176,3 +192,17 @@ def _run_weekly_digest():
         api_logger.info(f'✅ Weekly digest done | sent={result.get("sent")} failed={result.get("failed")}')
     except Exception as e:
         api_logger.error(f'❌ Error in scheduled weekly digest: {str(e)}')
+
+
+def _run_meeting_reminders():
+    """
+    Check for upcoming meetings and send reminders (7 days, 2 days, same day).
+    Called daily at the configured MEETING_REMINDER_TIME (default 08:00 Israel time).
+    """
+    try:
+        from .meeting_notifications import check_and_send_meeting_reminders
+        api_logger.info('📅 Meeting reminder check triggered by scheduler')
+        check_and_send_meeting_reminders()
+        api_logger.info('✅ Meeting reminder check completed')
+    except Exception as e:
+        api_logger.error(f'❌ Error in scheduled meeting reminders: {str(e)}')

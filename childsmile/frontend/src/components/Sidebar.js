@@ -185,6 +185,15 @@ const Sidebar = () => {
           ניהול מערכת
         </button>
       )}
+      {hasPermissionToSystemManagement && (
+        <button
+          data-path="/meeting-management"
+          className={location.pathname.startsWith('/meeting-management') ? 'active' : ''}
+          onClick={() => goTo('/meeting-management')}
+        >
+          ניהול פגישות
+        </button>
+      )}
       {hasPermissionToReviewer && (
         <button
           data-path="/reviewer"

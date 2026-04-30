@@ -462,4 +462,6 @@ urlpatterns = [
     path("api/settlements/", get_settlements_data, name="get_settlements"),
     # Dashboard endpoints
     path("api/dashboard/", include("childsmile_app.urls_dashboard")),
+    # Staff meeting management endpoints
+    path("api/meetings/", include("childsmile_app.urls_meetings")),
 ]
