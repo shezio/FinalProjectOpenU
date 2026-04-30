@@ -7,6 +7,7 @@ import Feedbacks from './pages/Feedbacks'; // Import the Feedbacks component
 import Tutorships from './pages/Tutorships';  // Import the Tutorships component
 import Reports from './pages/Reports'; // Import the Reports component
 import SystemManagement from './pages/SystemManagement'; // Import the System Management component
+import MeetingManagement from './pages/MeetingManagement'; // Import the Meeting Management component
 import ActiveTutorsReport from './pages/report_pages/active_tutors_report';
 import FamiliesPerLocationReport from './pages/report_pages/families_per_location_report'; // Import the Families Per Location Report component
 import NewFamiliesReport from './pages/report_pages/new_families_report'; // Import the New Families Report component
@@ -80,6 +81,7 @@ const App = () => {
       <Route path="/google-success" element={<GoogleSuccess />} />
       <Route path="/audit-log" element={<AuditLog />} /> {/* Add Audit Log route */}
       <Route path="/reviewer" element={<ReviewerPage />} /> {/* Add Reviewer page route */}
+      <Route path="/meeting-management" element={<MeetingManagement />} /> {/* Staff meeting management */}
     </Routes>
   );
 };

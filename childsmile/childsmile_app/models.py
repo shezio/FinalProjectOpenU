@@ -641,3 +641,35 @@ class SettlementsStreets(models.Model):
     def __str__(self):
         return f"{self.city_name} ({len(self.streets)} streets)"
 
+class StaffMeeting(models.Model):
+    """Scheduled staff meetings with automatic reminder tracking."""
+    id = models.AutoField(primary_key=True)
+    title = models.CharField(max_length=255, default='פגישת צוות')
+    meeting_date = models.DateField()
+    meeting_time = models.TimeField()
+    location = models.CharField(max_length=255, null=True, blank=True)
+    notes = models.TextField(null=True, blank=True)
+    is_cancelled = models.BooleanField(default=False)
+    created_by = models.ForeignKey(
+        Staff, on_delete=models.SET_NULL, null=True, blank=True, related_name='meetings_created'
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    # Reminder sent timestamps (null = not yet sent)
+    reminder_week_sent_at = models.DateTimeField(null=True, blank=True)
+    reminder_two_days_sent_at = models.DateTimeField(null=True, blank=True)
+    reminder_same_day_sent_at = models.DateTimeField(null=True, blank=True)
+
+    # Invitees: list of staff_id integers stored as JSON; empty = all coordinators+admins
+    invited_staff_ids = models.JSONField(default=list, blank=True)
+    # Whether to send WhatsApp in addition to email
+    send_whatsapp = models.BooleanField(default=True)
+
+    class Meta:
+        db_table = "childsmile_app_staffmeeting"
+        ordering = ['meeting_date', 'meeting_time']
+
+    def __str__(self):
+        return f"{self.title} – {self.meeting_date} {self.meeting_time}"
+
