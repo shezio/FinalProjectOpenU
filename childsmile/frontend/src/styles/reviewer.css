@@ -503,7 +503,7 @@
   padding: 7px 14px;
   border: none;
   border-radius: 7px;
-  font-size: 14px;
+  font-size: 24px;
   font-weight: 700;
   font-family: Rubik, sans-serif;
   cursor: pointer;
@@ -832,4 +832,102 @@
 .pagination-arrow {
   font-size: 20px;
   font-weight: bold;
+}
+
+/* ================================================================
+   BULK SELECTION BAR
+   ================================================================ */
+
+.reviewer-bulk-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  background: #f0ebfa;
+  border: 2px solid #7c5cbf;
+  border-radius: 8px;
+  padding: 10px 18px;
+  margin-bottom: 12px;
+  direction: rtl;
+}
+
+.reviewer-bulk-bar__count {
+  font-weight: 700;
+  font-size: 24px;
+  color: #5a3d8c;
+  font-family: Rubik, sans-serif;
+}
+
+.reviewer-btn-cancel {
+  background: #e0e0e0;
+  color: #555;
+}
+
+/* ================================================================
+   BULK ASSIGN MODAL — tall enough for the react-select dropdown
+   ================================================================ */
+
+.reviewer-bulk-modal {
+  max-width: 460px;
+  min-height: 340px;   /* room for the Select dropdown to open inside */
+  overflow: visible;
+}
+
+.reviewer-bulk-modal .reviewers-modal-content {
+  overflow: visible;   /* let react-select menu escape the modal box */
+}
+
+.reviewer-bulk-modal h2 {
+  font-size: 36px;
+}
+
+.reviewer-bulk-modal label {
+  font-size: 24px;
+  font-weight: bold;
+  display: block;
+  margin-bottom: 6px;
+}
+
+.reviewer-bulk-progress {
+  margin-top: 16px;
+  direction: rtl;
+}
+
+.reviewer-bulk-progress__label {
+  margin-bottom: 6px;
+  font-size: 18px;
+  color: #5a3d8c;
+  font-weight: 600;
+  font-family: Rubik, sans-serif;
+}
+
+.reviewer-bulk-progress__track {
+  background: #e2d9f3;
+  border-radius: 6px;
+  height: 12px;
+  overflow: hidden;
+}
+
+.reviewer-bulk-progress__fill {
+  background: #7c5cbf;
+  height: 100%;
+  transition: width 0.2s ease;
+}
+
+/* ================================================================
+   SINGLE ASSIGN MODAL — 24px font
+   ================================================================ */
+
+.reviewer-assign-modal {
+  max-width: 460px;
+}
+
+.reviewer-assign-modal h2,
+.reviewer-assign-modal p,
+.reviewer-assign-modal label {
+  font-size: 24px;
+}
+
+.reviewer-assign-modal p strong {
+  font-size: 24px;
 }

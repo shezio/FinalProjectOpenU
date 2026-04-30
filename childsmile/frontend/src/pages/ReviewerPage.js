@@ -79,6 +79,75 @@ const ReviewerPage = () => {
   const [staffOptions,      setStaffOptions]         = useState([]);
   const [selectedAssignee,  setSelectedAssignee]     = useState(null);
 
+  // ── Bulk selection (persists across pages) ───────────────────────────────
+  const [selectedTaskIds,  setSelectedTaskIds]  = useState(new Set());
+  const [isBulkAssignOpen, setIsBulkAssignOpen] = useState(false);
+  const [bulkAssignee,     setBulkAssignee]     = useState(null);
+  const [bulkProgress,     setBulkProgress]     = useState(null); // {done,total} or null
+
+  const toggleTaskSelection = (id) => {
+    setSelectedTaskIds(prev => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  };
+
+  const togglePageSelection = () => {
+    const pageIds = paginatedTasks.map(t => t.id);
+    const allSelected = pageIds.length > 0 && pageIds.every(id => selectedTaskIds.has(id));
+    setSelectedTaskIds(prev => {
+      const next = new Set(prev);
+      if (allSelected) { pageIds.forEach(id => next.delete(id)); }
+      else             { pageIds.forEach(id => next.add(id)); }
+      return next;
+    });
+  };
+
+  const clearSelection = () => setSelectedTaskIds(new Set());
+
+  // Send in small batches to avoid overwhelming the backend
+  const BATCH_SIZE   = 5;
+  const BATCH_DELAY  = 300; // ms between batches
+
+  const handleBulkAssignConfirm = async () => {
+    if (!bulkAssignee) return;
+    const ids = [...selectedTaskIds];
+    setBulkProgress({ done: 0, total: ids.length });
+    let done = 0;
+    for (let i = 0; i < ids.length; i += BATCH_SIZE) {
+      const batch = ids.slice(i, i + BATCH_SIZE);
+      await Promise.all(batch.map(async (id) => {
+        const task = tasks.find(t => t.id === id);
+        if (!task) return;
+        const rawDate = task.due_date || '';
+        const formattedDueDate = /^\d{2}\/\d{2}\/\d{4}$/.test(rawDate)
+          ? rawDate.split('/').reverse().join('-') : rawDate;
+        try {
+          await axios.put(`/api/tasks/update/${id}/`, {
+            explanation: task.explanation || task.description || '',
+            due_date:    formattedDueDate,
+            assigned_to: bulkAssignee.value,
+            type:        task.type,
+            child:       task.child,
+            tutor:       task.tutor,
+          });
+        } catch { /* silent — show final count */ }
+      }));
+      done += batch.length;
+      setBulkProgress({ done, total: ids.length });
+      if (i + BATCH_SIZE < ids.length) {
+        await new Promise(r => setTimeout(r, BATCH_DELAY));
+      }
+    }
+    toast.success(`שויכו ${done} משימות ל-${bulkAssignee.label}`);
+    setIsBulkAssignOpen(false);
+    setBulkAssignee(null);
+    setBulkProgress(null);
+    clearSelection();
+    fetchTasks();
+  };
+
   const fetchStaff = useCallback(async () => {
     try {
       const res = await axios.get('/api/get_all_staff/', { params: { page: 1, page_size: 10000 } });
@@ -183,7 +252,7 @@ const ReviewerPage = () => {
   // Pagination
   const [page, setPage]           = useState(1);
   const [totalCount, setTotalCount] = useState(0);
-  const pageSize = 5;
+  const pageSize = 4;
 
   // Filtered rows
   const filteredTasks = tasks.filter(tk => {
@@ -412,10 +481,42 @@ const ReviewerPage = () => {
         {loading ? (
           <div className="loader">טוען נתונים...</div>
         ) : (
+          <>
+          {/* Bulk action bar — visible when tasks are selected */}
+          {selectedTaskIds.size > 0 && isAdmin && (
+            <div className="reviewer-bulk-bar">
+              <span className="reviewer-bulk-bar__count">
+                {selectedTaskIds.size} משימות נבחרו
+              </span>
+              <button
+                className="reviewer-btn-action reviewer-btn-assign"
+                onClick={() => { setBulkAssignee(null); setIsBulkAssignOpen(true); }}
+              >
+                שייך לעובד
+              </button>
+              <button
+                className="reviewer-btn-action reviewer-btn-cancel"
+                onClick={clearSelection}
+              >
+                בטל בחירה
+              </button>
+            </div>
+          )}
           <div className="reviewers-grid-container">
             <table className="reviewers-data-grid">
               <thead>
                 <tr>
+                  {isAdmin && (
+                    <th style={{ width: 40, textAlign: 'center' }}>
+                      <input
+                        type="checkbox"
+                        title="בחר/בטל בחירה לכל הדף"
+                        checked={paginatedTasks.length > 0 && paginatedTasks.every(t => selectedTaskIds.has(t.id))}
+                        onChange={togglePageSelection}
+                        style={{ width: 18, height: 18, cursor: 'pointer' }}
+                      />
+                    </th>
+                  )}
                   <th>שם ילד</th>
                   <th>פרטי משימה</th>
                   <th>לבצע עד</th>
@@ -434,6 +535,16 @@ const ReviewerPage = () => {
                     const isCompleted = task.status === 'הושלמה';
                     return (
                       <tr key={task.id}>
+                        {isAdmin && (
+                          <td style={{ textAlign: 'center', verticalAlign: 'middle' }}>
+                            <input
+                              type="checkbox"
+                              checked={selectedTaskIds.has(task.id)}
+                              onChange={() => toggleTaskSelection(task.id)}
+                              style={{ width: 18, height: 18, cursor: 'pointer' }}
+                            />
+                          </td>
+                        )}
                         <td>{childName}</td>
                         <td>
                           <div className="reviewer-task-details">
@@ -487,6 +598,7 @@ const ReviewerPage = () => {
               </tbody>
             </table>
           </div>
+          </>
         )}
 
         {/* Pagination Controls */}
@@ -518,14 +630,14 @@ const ReviewerPage = () => {
       {/* Assign task modal (admin only) */}
       {isAssignModalOpen && (
         <div className="reviewers-modal">
-          <div className="reviewers-modal-content" style={{ maxWidth: '460px' }}>
+          <div className="reviewers-modal-content reviewer-assign-modal">
             <span className="reviewers-close" onClick={() => setIsAssignModalOpen(false)}>&times;</span>
             <h2>שיוך משימה</h2>
-            <p style={{ marginBottom: '12px', fontSize: '18px', color: '#444' }}>
+            <p style={{ marginBottom: '12px', color: '#444' }}>
               <strong>ילד:</strong> {getChildName(taskToAssign)} &nbsp;|&nbsp;
               <strong>תאריך ביצוע:</strong> {taskToAssign?.due_date || '---'}
             </p>
-            <label style={{ fontWeight: 'bold', fontSize: '18px', display: 'block', marginBottom: '6px' }}>
+            <label style={{ display: 'block', marginBottom: '6px' }}>
               שייך לעובד:
             </label>
             <Select
@@ -686,6 +798,46 @@ const ReviewerPage = () => {
           </div>
         </div>
       )}
+      {/* Bulk assign modal */}
+      {isBulkAssignOpen && (
+        <div className="reviewers-modal">
+          <div className="reviewers-modal-content reviewer-bulk-modal">
+            <span className="reviewers-close" onClick={() => { setIsBulkAssignOpen(false); setBulkProgress(null); }}>&times;</span>
+            <h2>שיוך {selectedTaskIds.size} משימות</h2>
+            <label>שייך לעובד:</label>
+            <Select
+              options={staffOptions}
+              value={bulkAssignee}
+              onChange={setBulkAssignee}
+              placeholder="בחר עובד..."
+              isClearable
+              noOptionsMessage={() => 'אין עובדים זמינים'}
+              styles={{ menu: base => ({ ...base, direction: 'rtl', textAlign: 'right' }) }}
+              isDisabled={!!bulkProgress}
+            />
+            {bulkProgress && (
+              <div className="reviewer-bulk-progress">
+                <div className="reviewer-bulk-progress__label">
+                  מעבד... {bulkProgress.done} / {bulkProgress.total}
+                </div>
+                <div className="reviewer-bulk-progress__track">
+                  <div
+                    className="reviewer-bulk-progress__fill"
+                    style={{ width: `${Math.round((bulkProgress.done / bulkProgress.total) * 100)}%` }}
+                  />
+                </div>
+              </div>
+            )}
+            <div className="reviewers-form-actions" style={{ marginTop: '20px' }}>
+              <button onClick={handleBulkAssignConfirm} disabled={!bulkAssignee || !!bulkProgress}>
+                {bulkProgress ? 'מעבד...' : 'שייך'}
+              </button>
+              <button type="button" onClick={() => { setIsBulkAssignOpen(false); setBulkProgress(null); }} disabled={!!bulkProgress}>ביטול</button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };
