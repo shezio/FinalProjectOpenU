@@ -272,41 +272,13 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* Charts Section */}
+      {/* Charts Section — includes table as last page */}
       <DashboardCharts 
         data={dashboardData} 
         timeframe={feedbackTimeframe}
         onTimeframeChange={setFeedbackTimeframe}
       />
 
-      {/* Table Section */}
-      <div className="table-section">
-        <h2>📋 {t('recent_active_tutorships')}</h2>
-        <div className="table-card">
-          <table>
-            <thead>
-              <tr>
-                <th>{t('child_name')}</th>
-                <th>{t('tutor_name')}</th>
-                <th>{t('start_date')}</th>
-                <th>{t('tutorship_duration')}</th>
-                <th>{t('status')}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {dashboardData?.table?.map((row, index) => (
-                <tr key={index}>
-                  <td>{row.child_name}</td>
-                  <td>{row.tutor_name}</td>
-                  <td>{row.start_date}</td>
-                  <td>{row.duration}</td>
-                  <td>{row.status}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
       </div>
       <AIChatBot />
     </div>

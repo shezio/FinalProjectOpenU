@@ -7,6 +7,7 @@ from . import dashboard_views
 urlpatterns = [
     path('data/', dashboard_views.get_dashboard_data, name='dashboard_data'),
     path('feedback/', dashboard_views.get_feedback_data, name='feedback_data'),
+    path('coordinator-workload/', dashboard_views.get_coordinator_workload, name='coordinator_workload'),
     path('generate-video/', dashboard_views.generate_video_ai, name='generate_video'),
     path('video-status/<str:video_id>/', dashboard_views.video_generation_status, name='video_status'),
     path('download-video/<str:video_id>/', dashboard_views.download_video, name='download_video'),

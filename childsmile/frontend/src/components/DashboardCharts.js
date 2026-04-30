@@ -3,17 +3,24 @@ import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearSca
 import { Pie, Bar } from 'react-chartjs-2';
 import axios from '../axiosConfig';
 import './DashboardCharts.css';
-
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement);
 
 const DashboardCharts = ({ data, timeframe, onTimeframeChange }) => {
   const [feedbackChartData, setFeedbackChartData] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [chartPage, setChartPage] = useState(1);
+  const [workload, setWorkload] = useState(null);
 
   // Fetch feedback data when timeframe changes
   useEffect(() => {
     fetchFeedbackData();
   }, [timeframe]);
+
+  useEffect(() => {
+    axios.get('/api/dashboard/coordinator-workload/')
+      .then(res => setWorkload(res.data.coordinators))
+      .catch(() => setWorkload([]));
+  }, []);
 
   const fetchFeedbackData = async () => {
     try {
@@ -121,9 +128,13 @@ const DashboardCharts = ({ data, timeframe, onTimeframeChange }) => {
     plugins: {
       legend: {
         labels: {
-          font: { size: 12, weight: 'bold' },
+          font: { size: 24, weight: 'bold' },
           padding: 20
         }
+      },
+      tooltip: {
+        bodyFont: { size: 20 },
+        titleFont: { size: 22, weight: 'bold' }
       }
     }
   };
@@ -132,7 +143,12 @@ const DashboardCharts = ({ data, timeframe, onTimeframeChange }) => {
     ...chartOptions,
     scales: {
       y: {
-        beginAtZero: true
+        beginAtZero: true,
+        ticks: { font: { size: 20 } },
+        title: { display: false }
+      },
+      x: {
+        ticks: { font: { size: 20 } }
       }
     }
   };
@@ -142,104 +158,191 @@ const DashboardCharts = ({ data, timeframe, onTimeframeChange }) => {
     indexAxis: 'y',
     scales: {
       x: {
-        beginAtZero: true
+        beginAtZero: true,
+        ticks: { font: { size: 20 } }
+      },
+      y: {
+        ticks: { font: { size: 20 } }
       }
     }
   };
 
+  // ── Chart registry — each entry is its own page ──────────────────────────
+  const allCharts = [
+    {
+      key: 'tutorship_status',
+      title: 'סטטוס חונכויות משפחות',
+      render: () => <div className="chart-container"><Pie data={tutorshipStatusData} options={chartOptions} /></div>,
+    },
+    {
+      key: 'tutors_status',
+      title: 'חונכים: ממתינים מול פעילים',
+      render: () => <div className="chart-container"><Pie data={tutorsStatusData} options={chartOptions} /></div>,
+    },
+    {
+      key: 'feedback',
+      title: 'משוב לפי סוג',
+      extra: (
+        <div className="timeframe-selector">
+          {['week','month','year','all'].map(tf => (
+            <button key={tf} className={`timeframe-btn ${timeframe === tf ? 'active' : ''}`} onClick={() => handleTimeframeChange(tf)}>
+              {{ week: 'שבוע', month: 'חודש', year: 'שנה', all: 'הכל' }[tf]}
+            </button>
+          ))}
+        </div>
+      ),
+      render: () => <div className="chart-container"><Pie data={feedbackData} options={chartOptions} /></div>,
+    },
+    {
+      key: 'new_families',
+      title: 'משפחות חדשות בחודש זה',
+      render: () => (
+        <div className="new-families-card">
+          <div className="big-number">{data?.kpis?.new_families_month || 0}</div>
+          <div className="subtitle">משפחות חדשות</div>
+          <div className="growth">+12% מהחודש שעבר</div>
+        </div>
+      ),
+    },
+    {
+      key: 'cities',
+      title: 'ערים עם מרבית משפחות הממתינות',
+      render: () => <div className="chart-container-large"><Bar data={citiesData} options={barOptionsHorizontal} /></div>,
+    },
+    {
+      key: 'recent_tutorships',
+      title: 'חונכויות אחרונות (10 פעילויות)',
+      render: () => <div className="chart-container-large"><Bar data={recentTutorshipsData} options={barOptionsVertical} /></div>,
+    },
+    {
+      key: 'age_groups',
+      title: 'הזדמנויות התאמה לפי קבוצות גיל',
+      render: () => <div className="chart-container-large"><Bar data={ageGroupsData} options={barOptionsVertical} /></div>,
+    },
+    {
+      key: 'tutorships_table',
+      title: '📋 חונכויות פעילות אחרונות',
+      render: () => (
+        <div className="table-card">
+          <table className="dashboard-table">
+            <thead>
+              <tr>
+                <th>שם הילד</th>
+                <th>שם החונך</th>
+                <th>תאריך התחלה</th>
+                <th>משך חונכות</th>
+                <th>סטטוס</th>
+              </tr>
+            </thead>
+            <tbody>
+              {(data?.table || []).map((row, i) => (
+                <tr key={i}>
+                  <td>{row.child_name}</td>
+                  <td>{row.tutor_name}</td>
+                  <td>{row.start_date}</td>
+                  <td>{row.duration}</td>
+                  <td>{row.status}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ),
+    },
+    {
+      key: 'coordinator_workload',
+      title: '👥 עומס רכזים',
+      render: () => {
+        if (!workload) return <p className="workload-loading">טוען נתונים...</p>;
+        if (workload.length === 0) return <p className="workload-loading">אין נתונים</p>;
+
+        const names = workload.map(c => c.name);
+        const colors = ['#667eea','#764ba2','#ff6b6b','#4caf50','#ffa726','#26c6da','#ab47bc'];
+
+        const familiesPie = {
+          labels: names,
+          datasets: [{ data: workload.map(c => c.families), backgroundColor: colors, borderWidth: 0 }]
+        };
+        const tasksPie = {
+          labels: names,
+          datasets: [{ data: workload.map(c => c.open_tasks), backgroundColor: colors, borderWidth: 0 }]
+        };
+        const overduePie = {
+          labels: names,
+          datasets: [{ data: workload.map(c => c.overdue_reviews), backgroundColor: colors, borderWidth: 0 }]
+        };
+
+        return (
+          <div>
+            <div className="charts-row workload-pies-row">
+              <div className="chart-card">
+                <h3>משפחות באחריות</h3>
+                <div className="chart-container"><Pie data={familiesPie} options={chartOptions} /></div>
+              </div>
+              <div className="chart-card">
+                <h3>משימות פתוחות</h3>
+                <div className="chart-container"><Pie data={tasksPie} options={chartOptions} /></div>
+              </div>
+            </div>
+            <div className="chart-card workload-overdue-card">
+              <h3>שיחות ביקורת באיחור</h3>
+              <div className="chart-container"><Pie data={overduePie} options={chartOptions} /></div>
+            </div>
+            <div className="table-card">
+              <table className="dashboard-table">
+                <thead>
+                  <tr>
+                    <th>רכז/ת</th>
+                    <th>משפחות</th>
+                    <th>משימות פתוחות</th>
+                    <th>ביקורות באיחור</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {workload.map((coord, i) => (
+                    <tr key={i} className={coord.overdue_reviews > 0 ? 'workload-row-alert' : ''}>
+                      <td>{coord.name}</td>
+                      <td>{coord.families}</td>
+                      <td>{coord.open_tasks}</td>
+                      <td className={coord.overdue_reviews > 0 ? 'workload-overdue' : ''}>{coord.overdue_reviews}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        );
+      },
+    },
+  ];
+
+  const totalPages = allCharts.length;
+  const currentChart = allCharts[chartPage - 1];
+
   return (
     <div className="charts-section">
-      <h2>📊 תצוגות בהתפלגות</h2>
-      
-      {/* Pie Charts Row */}
-      <div className="charts-row">
-        <div className="chart-card">
-          <h3>סטטוס חונכויות משפחות</h3>
-          <div className="chart-container">
-            <Pie data={tutorshipStatusData} options={chartOptions} />
-          </div>
-        </div>
-        
-        <div className="chart-card">
-          <h3>חונכים: ממתינים מול פעילים</h3>
-          <div className="chart-container">
-            <Pie data={tutorsStatusData} options={chartOptions} />
-          </div>
+      <div className="charts-header">
+        <h2>📊 תצוגות בהתפלגות</h2>
+        <div className="charts-pagination">
+          <button
+            onClick={() => setChartPage(p => Math.max(1, p - 1))}
+            disabled={chartPage === 1}
+            className="charts-page-btn"
+          >&lsaquo;</button>
+          <span className="charts-page-indicator">{chartPage} / {totalPages}</span>
+          <button
+            onClick={() => setChartPage(p => Math.min(totalPages, p + 1))}
+            disabled={chartPage === totalPages}
+            className="charts-page-btn"
+          >&rsaquo;</button>
         </div>
       </div>
 
-      {/* Feedback and New Families Row */}
-      <div className="charts-row">
-        <div className="chart-card">
-          <h3>
-            <span className="new-badge">חדש</span>
-            משוב לפי סוג
-          </h3>
-          <div className="timeframe-selector">
-            <button 
-              className={`timeframe-btn ${timeframe === 'week' ? 'active' : ''}`}
-              onClick={() => handleTimeframeChange('week')}
-            >
-              שבוע
-            </button>
-            <button 
-              className={`timeframe-btn ${timeframe === 'month' ? 'active' : ''}`}
-              onClick={() => handleTimeframeChange('month')}
-            >
-              חודש
-            </button>
-            <button 
-              className={`timeframe-btn ${timeframe === 'year' ? 'active' : ''}`}
-              onClick={() => handleTimeframeChange('year')}
-            >
-              שנה
-            </button>
-            <button 
-              className={`timeframe-btn ${timeframe === 'all' ? 'active' : ''}`}
-              onClick={() => handleTimeframeChange('all')}
-            >
-              הכל
-            </button>
-          </div>
-          <div className="chart-container">
-            <Pie data={feedbackData} options={chartOptions} />
-          </div>
-        </div>
-        
-        <div className="chart-card">
-          <h3>משפחות חדשות בחודש זה</h3>
-          <div className="new-families-card">
-            <div className="big-number">{data?.kpis?.new_families_month || 0}</div>
-            <div className="subtitle">משפחות חדשות</div>
-            <div className="growth">+12% מהחודש שעבר</div>
-          </div>
-        </div>
-      </div>
-
-      {/* Bar Charts */}
-      <div className="data-viz-section">
-        <h2>📊 ויזואליזציה של נתונים</h2>
-
-        <div className="full-width-chart">
-          <h3>ערים עם מרבית משפחות הממתינות</h3>
-          <div className="chart-container-large">
-            <Bar data={citiesData} options={barOptionsHorizontal} />
-          </div>
-        </div>
-
-        <div className="full-width-chart">
-          <h3>חונכויות אחרונות (10 פעילויות)</h3>
-          <div className="chart-container-large">
-            <Bar data={recentTutorshipsData} options={barOptionsVertical} />
-          </div>
-        </div>
-
-        <div className="full-width-chart">
-          <h3>הזדמנויות התאמה לפי קבוצות גיל</h3>
-          <div className="chart-container-large">
-            <Bar data={ageGroupsData} options={barOptionsVertical} />
-          </div>
-        </div>
+      {/* One item per page — key forces canvas remount on page change */}
+      <div key={chartPage} className="full-width-chart">
+        <h3>{currentChart.title}</h3>
+        {currentChart.extra}
+        {currentChart.render()}
       </div>
     </div>
   );

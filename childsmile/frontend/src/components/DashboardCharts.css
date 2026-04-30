@@ -3,10 +3,95 @@
   margin-bottom: 40px;
 }
 
-.charts-section h2 {
-  font-size: 24px;
+.charts-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  direction: rtl;
+}
+
+.charts-header h2 {
+  margin: 0;
+  font-size: 36px;
   color: #333;
-  margin-bottom: 20px;
+  font-weight: 700;
+}
+
+.charts-pagination {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.charts-page-btn {
+  font-size: 22px;
+  padding: 4px 14px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  background: #fff;
+  cursor: pointer;
+}
+
+.charts-page-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+}
+
+.charts-page-indicator {
+  font-size: 24px;
+  font-weight: 600;
+  color: #5a3d8c;
+}
+
+.dashboard-table {
+  width: 100%;
+  border-collapse: collapse;
+  direction: rtl;
+}
+
+.dashboard-table th {
+  padding: 10px;
+  border-bottom: 2px solid #eee;
+  text-align: right;
+  font-weight: 700;
+  font-size: 24px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #fff;
+}
+
+.dashboard-table td {
+  padding: 10px;
+  text-align: right;
+  font-size: 24px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.dashboard-table tbody tr:nth-child(even) {
+  background: #fafafa;
+}
+
+.workload-overdue-card {
+  margin-bottom: 30px;
+}
+
+.workload-pies-row {
+  margin-bottom: 30px;
+}
+
+.workload-loading {
+  font-size: 24px;
+  text-align: center;
+  padding: 40px;
+  color: #888;
+}
+
+.workload-row-alert {
+  background: #fff8f0 !important;
+}
+
+.workload-overdue {
+  color: #e53935;
   font-weight: 700;
 }
 
@@ -30,7 +115,7 @@
 }
 
 .chart-card h3 {
-  font-size: 18px;
+  font-size: 28px;
   color: #333;
   margin-bottom: 20px;
   font-weight: 700;
@@ -56,7 +141,7 @@
   padding: 8px 16px;
   border-radius: 8px;
   cursor: pointer;
-  font-size: 12px;
+  font-size: 24px;
   font-weight: 600;
   transition: all 0.3s ease;
 }
@@ -88,18 +173,18 @@
 }
 
 .big-number {
-  font-size: 72px;
+  font-size: 96px;
   font-weight: 700;
 }
 
 .subtitle {
-  font-size: 18px;
+  font-size: 28px;
   margin-top: 15px;
   opacity: 0.9;
 }
 
 .growth {
-  font-size: 14px;
+  font-size: 24px;
   margin-top: 10px;
   opacity: 0.8;
 }
@@ -125,7 +210,7 @@
 }
 
 .full-width-chart h3 {
-  font-size: 18px;
+  font-size: 28px;
   color: #333;
   margin-bottom: 20px;
   font-weight: 700;
