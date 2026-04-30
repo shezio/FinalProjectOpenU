@@ -88,14 +88,18 @@ const MeetingManagement = () => {
   const [viewMonth, setViewMonth] = useState(today.getMonth()); // 0-based
 
   const [meetings,   setMeetings]   = useState([]);
-  const [recipients, setRecipients] = useState([]); // all potential invitees
+  const [recipients, setRecipients] = useState([]); // all potential invitees (flat)
+  const [coordinators, setCoordinators] = useState([]); // coordinators + admins
+  const [otherStaff,   setOtherStaff]   = useState([]); // other staff
   const [loading,    setLoading]    = useState(true);
   const [modalMode,  setModalMode]  = useState(null); // null | 'create' | 'edit' | 'detail' | 'cancel' | 'remind'
   const [selectedMeeting, setSelectedMeeting] = useState(null);
   const [cancelTarget, setCancelTarget] = useState(null);
   const [remindTarget, setRemindTarget] = useState(null);
+  const [deleteTarget, setDeleteTarget] = useState(null);
   const [form,       setForm]       = useState(EMPTY_FORM);
   const [saving,     setSaving]     = useState(false);
+  const [staffSearch, setStaffSearch] = useState('');
 
   const fetchMeetings = useCallback(async () => {
     setLoading(true);
@@ -105,7 +109,10 @@ const MeetingManagement = () => {
         axios.get('/api/meetings/recipients/'),
       ]);
       setMeetings(meetRes.data.meetings || []);
-      setRecipients(recRes.data.recipients || []);
+      const allRecipients = recRes.data.recipients || [];
+      setRecipients(allRecipients);
+      setCoordinators(recRes.data.coordinators || []);
+      setOtherStaff(recRes.data.other_staff || []);
     } catch {
       showErrorToast('שגיאה בטעינת הפגישות');
     } finally {
@@ -128,7 +135,9 @@ const MeetingManagement = () => {
   // open modals
   const openCreate = (preDate = '') => {
     setSelectedMeeting(null);
-    setForm({ ...EMPTY_FORM, meeting_date: preDate, invited_staff_ids: recipients.map(r => r.id) });
+    setStaffSearch('');
+    // Start with nobody selected — CEO picks manually
+    setForm({ ...EMPTY_FORM, meeting_date: preDate, invited_staff_ids: [] });
     setModalMode('create');
   };
   const openDetail = (meeting) => {
@@ -137,9 +146,8 @@ const MeetingManagement = () => {
   };
   const openEdit = (meeting) => {
     setSelectedMeeting(meeting);
-    const invitedIds = (meeting.invited_staff_ids && meeting.invited_staff_ids.length > 0)
-      ? meeting.invited_staff_ids
-      : recipients.map(r => r.id);
+    setStaffSearch('');
+    const invitedIds = meeting.invited_staff_ids || [];
     setForm({
       title: meeting.title,
       meeting_date: meeting.meeting_date,
@@ -188,6 +196,21 @@ const MeetingManagement = () => {
   const handleSendReminders = (meeting) => {
     setRemindTarget(meeting);
     setModalMode('remind');
+  };
+
+  const handleHardDelete = (meeting) => {
+    setDeleteTarget(meeting);
+    setModalMode('delete');
+  };
+
+  const confirmHardDelete = async () => {
+    try {
+      await axios.delete(`/api/meetings/${deleteTarget.id}/delete/`);
+      toast.success('הפגישה נמחקה לצמיתות');
+      setDeleteTarget(null);
+      closeModal();
+      fetchMeetings();
+    } catch { showErrorToast('שגיאה במחיקת הפגישה'); }
   };
 
   const confirmSendReminders = async () => {
@@ -252,7 +275,7 @@ const MeetingManagement = () => {
                     <div
                       key={idx}
                       className={classes}
-                      onClick={() => dayMeetings.length === 0 && cell.current && !isSaturday(cell.date) && cell.date >= isoToday && openCreate(cell.date)}
+                      onClick={() => cell.current && !isSaturday(cell.date) && cell.date >= isoToday && openCreate(cell.date)}
                     >
                       <span className="cal-day-num">{Number(cell.date.split('-')[2])}</span>
                       {dayMeetings.slice(0, 2).map(m => (
@@ -358,6 +381,13 @@ const MeetingManagement = () => {
                 <button className="meeting-cancel-modal-btn" onClick={() => handleCancel(selectedMeeting)}>🗑 ביטול פגישה</button>
               </div>
             )}
+            {selectedMeeting.is_cancelled && (
+              <div className="meeting-modal-actions" style={{ justifyContent: 'center' }}>
+                <button className="meeting-hard-delete-btn" onClick={() => handleHardDelete(selectedMeeting)}>
+                  🗑 מחק לצמיתות
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -405,44 +435,84 @@ const MeetingManagement = () => {
                 onChange={e => setForm({...form, notes: e.target.value})} />
             </div>
 
-            {/* ── Invitees checklist ── */}
+            {/* ── Invitees ── */}
             <div className="meeting-invitees-section">
               <div className="meeting-invitees-header">
                 <span className="meeting-invitees-title">👥 משתתפים מוזמנים</span>
-                <div className="meeting-invitees-toggle-all">
-                  <button type="button" className="meeting-toggle-all-btn"
-                    onClick={() => setForm({...form, invited_staff_ids: recipients.map(r => r.id)})}>
-                    בחר הכל
-                  </button>
-                  <button type="button" className="meeting-toggle-all-btn meeting-toggle-none-btn"
-                    onClick={() => setForm({...form, invited_staff_ids: []})}>
-                    נקה הכל
-                  </button>
+                <button type="button" className="meeting-toggle-all-btn meeting-toggle-none-btn"
+                  onClick={() => setForm({...form, invited_staff_ids: []})}>
+                  נקה הכל
+                </button>
+              </div>
+
+              {/* Selected chips */}
+              {form.invited_staff_ids.length > 0 && (
+                <div className="other-staff-chips">
+                  {form.invited_staff_ids
+                    .map(id => recipients.find(r => r.id === id))
+                    .filter(Boolean)
+                    .map(r => (
+                      <span key={r.id} className="other-staff-chip">
+                        {r.name}
+                        <button type="button" className="chip-remove-btn"
+                          onClick={() => setForm(f => ({
+                            ...f,
+                            invited_staff_ids: f.invited_staff_ids.filter(id => id !== r.id)
+                          }))}>✕</button>
+                      </span>
+                    ))
+                  }
                 </div>
-              </div>
-              <div className="meeting-invitees-list">
-                {recipients.map(r => {
-                  const checked = form.invited_staff_ids.includes(r.id);
-                  return (
-                    <label key={r.id} className={`meeting-invitee-row${checked ? ' checked' : ''}`}>
-                      <input
-                        type="checkbox"
-                        checked={checked}
-                        onChange={e => {
-                          const ids = e.target.checked
-                            ? [...form.invited_staff_ids, r.id]
-                            : form.invited_staff_ids.filter(id => id !== r.id);
-                          setForm({...form, invited_staff_ids: ids});
-                        }}
-                      />
-                      <span className="invitee-name">{r.name}</span>
-                      {r.email && <span className="invitee-email">✉️ {r.email}</span>}
-                      {r.phone && <span className="invitee-phone">📞 {r.phone}</span>}
-                    </label>
+              )}
+
+              {/* Unified search */}
+              <div className="other-staff-search-wrap">
+                <input
+                  type="text"
+                  className="other-staff-search-input"
+                  placeholder="🔍 חפש משתתף להוספה..."
+                  value={staffSearch}
+                  onChange={e => setStaffSearch(e.target.value)}
+                />
+                {staffSearch.trim() && (() => {
+                  const q = staffSearch.trim().toLowerCase();
+                  const results = recipients.filter(r =>
+                    r.name.toLowerCase().includes(q) ||
+                    (r.email && r.email.toLowerCase().includes(q))
+                  ).slice(0, 8);
+                  return results.length > 0 ? (
+                    <div className="other-staff-dropdown">
+                      {results.map(r => {
+                        const already = form.invited_staff_ids.includes(r.id);
+                        const isCoord = coordinators.some(c => c.id === r.id);
+                        return (
+                          <div key={r.id}
+                            className={`other-staff-option${already ? ' already-added' : ''}`}
+                            onClick={() => {
+                              if (!already) setForm(f => ({...f, invited_staff_ids: [...f.invited_staff_ids, r.id]}));
+                              setStaffSearch('');
+                            }}>
+                            <span>{r.name}</span>
+                            {isCoord
+                              ? <span className="option-role-badge coord-badge">רכז/ית</span>
+                              : <span className="option-role-badge other-badge">צוות</span>
+                            }
+                            {r.email && <span className="option-email">{r.email}</span>}
+                            {already && <span className="option-added-badge">✓ נוסף</span>}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="other-staff-dropdown">
+                      <div className="other-staff-option" style={{color:'#aaa',cursor:'default'}}>לא נמצאו תוצאות</div>
+                    </div>
                   );
-                })}
-                {recipients.length === 0 && <p className="invitees-empty">אין רכזים/מנהלים פעילים</p>}
+                })()}
               </div>
+              {form.invited_staff_ids.length === 0 && (
+                <p className="invitees-empty">חפש והוסף משתתפים...</p>
+              )}
             </div>
 
             {/* ── WhatsApp toggle ── */}
@@ -471,6 +541,8 @@ const MeetingManagement = () => {
         const invitees = invitedIds.length > 0
           ? recipients.filter(r => invitedIds.includes(r.id))
           : recipients;
+        const coordIdSet = new Set(coordinators.map(r => r.id));
+        const hasNonCoord = invitees.some(r => !coordIdSet.has(r.id));
         return (
           <div className="meeting-modal-overlay" onClick={() => setModalMode('detail')}>
             <div className="meeting-modal-box" onClick={e => e.stopPropagation()}
@@ -486,19 +558,34 @@ const MeetingManagement = () => {
               <div className="remind-invitees-list">
                 {invitees.length === 0
                   ? <p style={{ color: '#aaa', textAlign: 'center', fontSize: '18px' }}>אין משתתפים</p>
-                  : invitees.map(r => (
-                    <div key={r.id} className="detail-invitee-row">
-                      <span className="invitee-name">{r.name}</span>
-                      {r.email && <span className="invitee-email">✉️ {r.email}</span>}
-                      {r.phone && remindTarget.send_whatsapp && <span className="invitee-phone">💬 {r.phone}</span>}
-                    </div>
-                  ))
+                  : invitees.map(r => {
+                    const isCoord = coordIdSet.has(r.id);
+                    return (
+                      <div key={r.id} className="detail-invitee-row">
+                        <span className="invitee-name">{r.name}</span>
+                        {r.email && <span className="invitee-email">✉️ {r.email}</span>}
+                        {r.phone && remindTarget.send_whatsapp && isCoord && (
+                          <span className="invitee-phone">💬 {r.phone}</span>
+                        )}
+                        {!isCoord && (
+                          <span className="invitee-email-only-badge" title="צוות נוסף מקבל אימייל בלבד — ללא WhatsApp">
+                            ⚠️ אימייל בלבד
+                          </span>
+                        )}
+                      </div>
+                    );
+                  })
                 }
               </div>
 
               {remindTarget.send_whatsapp && (
                 <p style={{ fontSize: '17px', color: '#059669', marginTop: '12px', textAlign: 'center' }}>
-                  💬 תישלח גם הודעת וואטסאפ
+                  💬 תישלח הודעת וואטסאפ לרכזים ומנהלים בלבד
+                </p>
+              )}
+              {hasNonCoord && (
+                <p style={{ fontSize: '15px', color: '#b45309', marginTop: '6px', textAlign: 'center' }}>
+                  ⚠️ צוות נוסף יקבל אימייל בלבד (ללא WhatsApp)
                 </p>
               )}
 
@@ -528,6 +615,31 @@ const MeetingManagement = () => {
             </p>
             <div className="meeting-modal-actions" style={{ justifyContent: 'center' }}>
               <button className="meeting-cancel-modal-btn" onClick={confirmCancel}>כן, בטל</button>
+              <button className="meeting-discard-btn" onClick={() => setModalMode('detail')}>חזור</button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* ── Hard delete confirmation modal ── */}
+      {modalMode === 'delete' && deleteTarget && (
+        <div className="meeting-modal-overlay" onClick={() => setModalMode('detail')}>
+          <div className="meeting-modal-box" onClick={e => e.stopPropagation()}
+               style={{ maxWidth: '440px', textAlign: 'center' }}>
+            <h2 className="meeting-modal-title">🗑 מחיקה לצמיתות</h2>
+            <p style={{ fontSize: '20px', color: '#444', marginBottom: '8px' }}>
+              האם למחוק לצמיתות את הפגישה:
+            </p>
+            <p style={{ fontSize: '22px', fontWeight: '700', color: '#dc2626', marginBottom: '8px' }}>
+              {deleteTarget.title}
+            </p>
+            <p style={{ fontSize: '18px', color: '#666', marginBottom: '8px' }}>
+              {formatDate(deleteTarget.meeting_date)} בשעה {deleteTarget.meeting_time?.slice(0, 5)}
+            </p>
+            <p style={{ fontSize: '16px', color: '#b45309', background: '#fef3c7', borderRadius: '10px', padding: '8px 14px', marginBottom: '20px' }}>
+              ⚠️ פעולה זו אינה ניתנת לביטול
+            </p>
+            <div className="meeting-modal-actions" style={{ justifyContent: 'center' }}>
+              <button className="meeting-hard-delete-btn" onClick={confirmHardDelete}>כן, מחק לצמיתות</button>
               <button className="meeting-discard-btn" onClick={() => setModalMode('detail')}>חזור</button>
             </div>
           </div>

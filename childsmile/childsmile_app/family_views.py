@@ -63,7 +63,7 @@ import threading, time
 from time import sleep
 from math import sin, cos, sqrt, atan2, radians, ceil
 import json
-from .coordinator_utils import notify_tutored_families_coordinators_async, notify_admins_of_new_family
+from .coordinator_utils import notify_tutored_families_coordinators_async, notify_admins_of_new_family, notify_families_coordinator_of_new_family
 import os
 import traceback
 import re
@@ -924,7 +924,10 @@ def create_family(request):
 
         # Send email notification to Tutored Families Coordinators if tutoring status requires a tutor
         notify_tutored_families_coordinators_async(family.child_id)
-        
+
+        # Send email notification to Families Coordinators for non-tutored statuses (לא_רוצים / לא_רלוונטי / בוגר)
+        notify_families_coordinator_of_new_family(family.child_id)
+
         # Send WhatsApp notification to all System Admins (except בונצל) about the new family
         api_logger.info(f"🔴 CRITICAL: GOING TO CALL notify_admins_of_new_family with child_id={family.child_id}")
         
