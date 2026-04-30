@@ -668,3 +668,53 @@ def get_ai_chat_response(message):
         '• התאמת אפשרויות הסרטון<br>'
         '• או כל שאלה אחרת 😊'
     )
+
+
+@conditional_csrf
+@api_view(['GET'])
+def get_coordinator_workload(request):
+    """Return workload stats per coordinator: families, open tasks, overdue reviews"""
+    user_id = request.session.get("user_id")
+    if not user_id:
+        return JsonResponse({"detail": "Authentication credentials were not provided."}, status=403)
+
+    today = timezone.now().date()
+
+    # Get all coordinators (roles containing 'coordinator')
+    coordinators = Staff.objects.filter(
+        roles__role_name__icontains='coordinator',
+        is_active=True
+    ).distinct()
+
+    result = []
+    for coord in coordinators:
+        full_name = f"{coord.first_name} {coord.last_name}"
+
+        # Families this coordinator is responsible for
+        families_count = Children.objects.filter(
+            responsible_coordinator=full_name
+        ).count()
+
+        # Open tasks assigned to this coordinator (not completed)
+        open_tasks = Tasks.objects.filter(
+            assigned_to=coord,
+        ).exclude(status='הושלמה').count()
+
+        # Overdue reviews: 'שיחת ביקורת' tasks past due_date and not completed
+        overdue_reviews = Tasks.objects.filter(
+            assigned_to=coord,
+            task_type__task_type='שיחת ביקורת',
+            due_date__lt=today,
+        ).exclude(status='הושלמה').count()
+
+        result.append({
+            'name': full_name,
+            'families': families_count,
+            'open_tasks': open_tasks,
+            'overdue_reviews': overdue_reviews,
+        })
+
+    # Sort by open_tasks descending so the busiest coordinator is first
+    result.sort(key=lambda x: x['open_tasks'], reverse=True)
+
+    return JsonResponse({'coordinators': result})
