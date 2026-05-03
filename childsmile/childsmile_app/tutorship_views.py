@@ -741,6 +741,7 @@ def update_tutorship(request, tutorship_id):
     data = request.data
     api_logger.debug(f"Incoming request data for update: {data}")
     staff_role_id = data.get("staff_role_id")
+    bypass_incomplete_task = data.get("bypass_incomplete_task", False)  # Admin bypass flag
     if not staff_role_id:
         log_api_action(
             request=request,
@@ -800,17 +801,20 @@ def update_tutorship(request, tutorship_id):
         old_approval_counter = tutorship.approval_counter
         
         # NEW WORKFLOW: Block final approval if "התאמת חניך" task is not completed
+        # ADMIN BYPASS: Allow admins to bypass with explicit confirmation
         would_be_final_approval = (old_approval_counter == 1)  # Next approval would make it 2
+        incomplete_tutee_match_tasks = []
         if would_be_final_approval:
-            # Check if there's an incomplete "התאמת חניך" task for this tutor
+            # Check if there are incomplete "התאמת חניך" tasks for this tutor
             tutee_match_task_type = Task_Types.objects.filter(task_type="התאמת חניך").first()
             if tutee_match_task_type:
-                incomplete_tutee_match_task = Tasks.objects.filter(
+                incomplete_tutee_match_tasks = list(Tasks.objects.filter(
                     related_tutor_id=tutorship.tutor_id,
                     task_type=tutee_match_task_type,
                     status__in=["לא הושלמה", "בביצוע"]
-                ).first()
-                if incomplete_tutee_match_task:
+                ))
+                if incomplete_tutee_match_tasks and not bypass_incomplete_task:
+                    # Tasks are incomplete and not bypassed - return error
                     child_name = f"{tutorship.child.childfirstname} {tutorship.child.childsurname}" if tutorship.child else "Unknown"
                     tutor_name = f"{tutorship.tutor.staff.first_name} {tutorship.tutor.staff.last_name}" if tutorship.tutor and tutorship.tutor.staff else "Unknown"
                     
@@ -818,7 +822,7 @@ def update_tutorship(request, tutorship_id):
                         request=request,
                         action='UPDATE_TUTORSHIP_FAILED',
                         success=False,
-                        error_message="Cannot final approve: Tutee match task not completed",
+                        error_message="Cannot final approve: Tutee match tasks not completed",
                         status_code=400,
                         entity_type='Tutorship',
                         entity_ids=[tutorship_id],
@@ -826,14 +830,23 @@ def update_tutorship(request, tutorship_id):
                             'child_name': child_name,
                             'tutor_name': tutor_name,
                             'reason': 'tutee_match_task_incomplete',
-                            'incomplete_task_id': incomplete_tutee_match_task.task_id
+                            'incomplete_task_count': len(incomplete_tutee_match_tasks),
+                            'incomplete_task_ids': [t.task_id for t in incomplete_tutee_match_tasks]
                         }
                     )
                     return JsonResponse({
                         "error": "לא ניתן לאשר סופית - משימת התאמת חניך לא הושלמה",
                         "error_code": "TUTEE_MATCH_INCOMPLETE",
-                        "task_id": incomplete_tutee_match_task.task_id
+                        "task_count": len(incomplete_tutee_match_tasks)
                     }, status=400)
+                elif incomplete_tutee_match_tasks and bypass_incomplete_task:
+                    # Admin is bypassing - mark ALL tasks as completed
+                    completed_count = 0
+                    for task in incomplete_tutee_match_tasks:
+                        task.status = "הושלמה"
+                        task.save()
+                        completed_count += 1
+                    api_logger.info(f"Admin bypassed {completed_count} incomplete tasks for tutorship {tutorship_id}")
         
         tutorship.last_approver.append(staff_role_id)
         if tutorship.approval_counter <= 2:
@@ -923,6 +936,41 @@ def update_tutorship(request, tutorship_id):
             }
         )
         return JsonResponse({"error": str(e)}, status=500)
+
+
+@conditional_csrf
+@api_view(["GET"])
+def check_incomplete_tutee_match_task(request, tutorship_id):
+    """
+    Check if tutorship has ANY incomplete "התאמת חניך" tasks before final approval.
+    Used by frontend to determine if admin bypass modal should be shown.
+    Returns: { "has_incomplete_task": bool }
+    """
+    api_logger.info(f"check_incomplete_tutee_match_task called for tutorship_id: {tutorship_id}")
+    
+    try:
+        tutorship = Tutorships.objects.get(id=tutorship_id)
+    except Tutorships.DoesNotExist:
+        return JsonResponse({"error": "Tutorship not found"}, status=404)
+    
+    # Check if this would be final approval
+    if tutorship.approval_counter != 1:
+        # Not at the final approval stage
+        return JsonResponse({"has_incomplete_task": False}, status=200)
+    
+    # Check for ANY incomplete "התאמת חניך" tasks for this tutor
+    tutee_match_task_type = Task_Types.objects.filter(task_type="התאמת חניך").first()
+    if tutee_match_task_type:
+        incomplete_tutee_match_tasks = Tasks.objects.filter(
+            related_tutor_id=tutorship.tutor_id,
+            task_type=tutee_match_task_type,
+            status__in=["לא הושלמה", "בביצוע"]
+        ).exists()
+        if incomplete_tutee_match_tasks:
+            return JsonResponse({"has_incomplete_task": True}, status=200)
+    
+    return JsonResponse({"has_incomplete_task": False}, status=200)
+
 
 @conditional_csrf
 @api_view(["DELETE"])

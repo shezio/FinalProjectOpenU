@@ -97,6 +97,7 @@ from .tutorship_views import (
     get_available_tutors,
     calculate_manual_match,
     update_tutorship_created_date,
+    check_incomplete_tutee_match_task,
 )
 
 from .unused_views import (
@@ -311,6 +312,11 @@ urlpatterns = [
         "api/update_tutorship/<int:tutorship_id>/",
         update_tutorship,
         name="update_tutorship",
+    ),
+    path(
+        "api/check_incomplete_tutee_match_task/<int:tutorship_id>/",
+        check_incomplete_tutee_match_task,
+        name="check_incomplete_tutee_match_task",
     ),
     path(
         "api/get_available_tutors/",
