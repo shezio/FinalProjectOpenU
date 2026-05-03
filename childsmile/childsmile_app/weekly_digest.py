@@ -42,6 +42,30 @@ TUTORING_STATUSES_REQUIRING_TUTOR = {
     "שידוך_בסימן_שאלה",
 }
 
+
+def _clean_task_description(description: str) -> str:
+    """
+    Strip English boilerplate from task descriptions and translate known phrases to Hebrew.
+    e.g. "Monthly family review talk for ניתאי איתן - Last talk: Never - Conduct check-up"
+      →  "ניתאי איתן — שיחה אחרונה: מעולם"
+    """
+    import re
+    d = (description or "").strip()
+    # Remove English prefix patterns
+    d = re.sub(r'^Monthly\s+family\s+review\s+talk\s+for\s*', '', d, flags=re.IGNORECASE)
+    d = re.sub(r'^Monthly\s+review\s+talk\s+for\s*', '', d, flags=re.IGNORECASE)
+    d = re.sub(r'^Review\s+talk\s+for\s*', '', d, flags=re.IGNORECASE)
+    # Translate "Last talk: Never" / "Last talk: <date>"
+    d = re.sub(r'[-–]\s*Last\s+talk:\s*Never', ' — שיחה אחרונה: מעולם', d, flags=re.IGNORECASE)
+    d = re.sub(r'[-–]\s*Last\s+talk:\s*', ' — שיחה אחרונה: ', d, flags=re.IGNORECASE)
+    # Remove trailing English noise
+    d = re.sub(r'[-–]\s*Conduct\s+check-?up\s+call\s+with\s+family\s*[-–]?\s*', '', d, flags=re.IGNORECASE)
+    d = re.sub(r'[-–]\s*Conduct\s+check-?up\s*$', '', d, flags=re.IGNORECASE)
+    d = re.sub(r'[-–]\s*conduct\s+review\s*$', '', d, flags=re.IGNORECASE)
+    # Also strip if it appears at the start
+    d = re.sub(r'^Conduct\s+check-?up\s+call\s+with\s+family\s*[-–]?\s*', '', d, flags=re.IGNORECASE)
+    return d.strip(' -–—')
+
 # ---------------------------------------------------------------------------
 # Recipient filtering — only coordinators and admins
 # ---------------------------------------------------------------------------
@@ -392,7 +416,7 @@ def build_digest_data():
         entry = {
             "id": t.task_id,
             "type": t.task_type.task_type if t.task_type else "",
-            "description": (t.description or "")[:80],
+            "description": _clean_task_description((t.description or "")[:120]),
             "due": t.due_date.strftime("%d/%m/%Y") if t.due_date else "—",
         }
         if t.due_date and t.due_date < today:

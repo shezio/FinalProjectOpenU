@@ -82,6 +82,7 @@ const Tutorships = () => {
   const [selectedMatchForInfo, setSelectedMatchForInfo] = useState(null);
   const [selectedTutorship, setSelectedTutorship] = useState(null);
   const [isApprovalModalOpen, setIsApprovalModalOpen] = useState(false);
+  const [isTaskBypassModalOpen, setIsTaskBypassModalOpen] = useState(false);  // NEW: Task bypass modal
   const { t } = useTranslation(); // Initialize the translation hook
   const mapRef = useRef();
   const [staff, setStaff] = useState([]);
@@ -418,26 +419,50 @@ const Tutorships = () => {
     setTutorshipToDelete(null);
   };
 
-  const openApprovalModal = (tutorship) => {
-    setSelectedTutorship(tutorship); // Set the selected tutorship
-    setIsApprovalModalOpen(true); // Open the approval modal
+  const openApprovalModal = async (tutorship) => {
+    setSelectedTutorship(tutorship);
+    
+    // Check if this is a final approval (approval_counter == 1) and check for incomplete task
+    if (tutorship.approval_counter === 1) {
+      try {
+        const response = await axios.get(`/api/check_incomplete_tutee_match_task/${tutorship.id}/`);
+        if (response.data.has_incomplete_task) {
+          // Admin bypass modal needed
+          setIsTaskBypassModalOpen(true);
+          return;
+        }
+      } catch (error) {
+        console.error('Error checking incomplete task:', error);
+        // Continue with normal approval modal
+      }
+    }
+    
+    // Normal approval modal
+    setIsApprovalModalOpen(true);
   };
 
   const closeApprovalModal = () => {
-    setSelectedTutorship(null); // Clear the selected tutorship
-    setIsApprovalModalOpen(false); // Close the approval modal
+    setSelectedTutorship(null);
+    setIsApprovalModalOpen(false);
   };
 
-  const confirmApproval = async () => {
+  const closeTaskBypassModal = () => {
+    setSelectedTutorship(null);
+    setIsTaskBypassModalOpen(false);
+  };
+
+  const confirmApproval = async (bypassIncompleteTask = false) => {
     if (!selectedTutorship || !currentUserRoleId) return;
 
     try {
       const response = await axios.post(`/api/update_tutorship/${selectedTutorship.id}/`, {
         staff_role_id: currentUserRoleId, // Use dynamically fetched role ID
+        bypass_incomplete_task: bypassIncompleteTask,  // NEW: Pass bypass flag
       });
       toast.success(t('Tutorship approved successfully!'));
       fetchFullTutorships(); // Refresh the tutorships list
       closeApprovalModal();
+      closeTaskBypassModal();
     } catch (error) {
       console.error('Error approving tutorship:', error);
       const userRoleName = t(currentRoleName); // Translate the user's role name
@@ -1403,6 +1428,31 @@ const Tutorships = () => {
               </button>
               <button onClick={closeApprovalModal} className="no-button">
                 {t('Cancel')}
+              </button>
+            </div>
+          </Modal>
+        )}
+        {/* NEW: Task Bypass Modal for Admins */}
+        {isTaskBypassModalOpen && selectedTutorship && (
+          <Modal
+            isOpen={isTaskBypassModalOpen}
+            onRequestClose={closeTaskBypassModal}
+            className="approval-modal"
+            overlayClassName="approval-modal-overlay"
+          >
+            <h2>{t('Incomplete Task')}</h2>
+            <p>
+              {t('There is an open task on this tutorship - approve anyway?')}
+            </p>
+            <div className="modal-actions">
+              <button 
+                onClick={() => confirmApproval(true)} 
+                className="yes-button"
+              >
+                {t('Yes')}
+              </button>
+              <button onClick={closeTaskBypassModal} className="no-button">
+                {t('No')}
               </button>
             </div>
           </Modal>
