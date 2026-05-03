@@ -19,6 +19,7 @@ const STATUS_OPTIONS = [
   { value: '', label: 'כל הסטטוסים' },
   { value: 'לא הושלמה', label: 'לא הושלמה' },
   { value: 'בביצוע',    label: 'בביצוע'    },
+  { value: 'הושלמה',    label: 'הושלמה'    },
 ];
 
 const STATUS_UPDATE_OPTIONS = [
@@ -193,9 +194,8 @@ const ReviewerPage = () => {
         ? allTasks.filter(tk => tk.type === reviewTypeId)
         : allTasks.filter(tk => tk.type_name === REVIEW_TASK_TYPE_NAME)
       ).filter(tk => {
-        // Exclude completed tasks
-        if (tk.status === 'הושלמה') return false;
-        // Only tasks where last conducted talk was 3+ months ago (or never = include)
+        // Include all completed tasks, or tasks where last conducted talk was 3+ months ago (or never)
+        if (tk.status === 'הושלמה') return true;
         const dateStr = tk.child_last_review_talk_conducted;
         if (!dateStr) return true;
         // Parse DD/MM/YYYY or YYYY-MM-DD
