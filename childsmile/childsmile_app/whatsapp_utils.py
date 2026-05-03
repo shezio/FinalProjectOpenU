@@ -776,9 +776,15 @@ def send_account_activation_whatsapp(staff_phone, staff_name):
 # If env var is not set, falls back to plain freeform text (sandbox only).
 import os
 
+# Scheduler-based reminders (7 days, 2 days, same day before meeting)
 MEETING_TEMPLATE_SID_WEEK       = os.getenv('TWILIO_MEETING_TEMPLATE_WEEK')
 MEETING_TEMPLATE_SID_TWO_DAYS   = os.getenv('TWILIO_MEETING_TEMPLATE_TWO_DAYS')
 MEETING_TEMPLATE_SID_SAME_DAY   = os.getenv('TWILIO_MEETING_TEMPLATE_SAME_DAY')
+
+# Instant event notifications (on create, update, cancel)
+MEETING_TEMPLATE_SID_CREATED    = os.getenv('TWILIO_MEETING_TEMPLATE_CREATED')
+MEETING_TEMPLATE_SID_UPDATED    = os.getenv('TWILIO_MEETING_TEMPLATE_UPDATED')
+MEETING_TEMPLATE_SID_CANCELLED  = os.getenv('TWILIO_MEETING_TEMPLATE_CANCELLED')
 
 
 def send_meeting_reminder_whatsapp(phones, reminder_type, meeting_title, date_str, location, urgency):
@@ -847,6 +853,76 @@ def send_meeting_reminder_whatsapp(phones, reminder_type, meeting_title, date_st
             f"🗓 {date_str}\n"
             f"📍 מיקום: {location}\n"
             f"{(urgency + chr(10)) if urgency else ''}"
+            f"\nמערכת חיוך של ילד"
+        )
+        return send_whatsapp_to_multiple(phones, message_body=freeform)
+
+
+def send_meeting_event_notification_whatsapp(phones, event_type, meeting_title, date_str, location, urgency):
+    """
+    Send an instant meeting event notification (create/update/cancel) via WhatsApp.
+    
+    Uses approved Twilio content templates when available.
+    Falls back to plain freeform text (sandbox only) when templates not set.
+
+    Template variables (same pattern as send_meeting_reminder_whatsapp):
+        {{1}} = date_str      (e.g., "יום שני 05/05/2026 בשעה 10:00")
+        {{2}} = location      (e.g., "חדר ישיבות 2")
+        {{3}} = meeting_title (e.g., "פגישת צוות חודשית")
+
+    Args:
+        phones (list):         Phone numbers of recipients.
+        event_type (str):      'created' | 'updated' | 'cancelled'
+        meeting_title (str):   Meeting title.
+        date_str (str):        Formatted date+time string.
+        location (str):        Meeting location.
+        urgency (str):         Optional closing message.
+
+    Returns:
+        dict: {"total": N, "successful": N, "failed": N, "results": [...]}
+    """
+    if not phones:
+        return {"total": 0, "successful": 0, "failed": 0, "results": []}
+
+    template_sid_map = {
+        'created':   MEETING_TEMPLATE_SID_CREATED,
+        'updated':   MEETING_TEMPLATE_SID_UPDATED,
+        'cancelled': MEETING_TEMPLATE_SID_CANCELLED,
+    }
+    template_sid = template_sid_map.get(event_type)
+
+    if template_sid:
+        return send_whatsapp_to_multiple(
+            phones,
+            message_body=None,
+            use_template=True,
+            template_sid=template_sid,
+            template_variables={
+                "1": date_str,
+                "2": location,
+                "3": meeting_title,
+            }
+        )
+    else:
+        api_logger.warning(
+            f"meeting_event_notification_whatsapp: no template SID for '{event_type}' "
+            f"(set TWILIO_MEETING_TEMPLATE_CREATED / _UPDATED / _CANCELLED). "
+            f"Falling back to freeform text (sandbox only)."
+        )
+        # Create freeform message based on event type
+        if event_type == 'created':
+            header = "פגישה חדשה :"
+        elif event_type == 'updated':
+            header = "עדכון פגישה :"
+        elif event_type == 'cancelled':
+            header = "ביטול פגישה :"
+        else:
+            header = "עדכון פגישה :"
+
+        freeform = (
+            f"{header} {meeting_title}\n\n"
+            f"🗓 {date_str} מועד הפגישה:\n"
+            f"📍 מיקום: {location}\n"
             f"\nמערכת חיוך של ילד"
         )
         return send_whatsapp_to_multiple(phones, message_body=freeform)

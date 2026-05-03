@@ -10,9 +10,12 @@ Reminder schedule per meeting:
 
 from django.core.mail import send_mail
 from django.conf import settings
+from django.db.models import Q
 import datetime
+from datetime import datetime as dt
 from .logger import api_logger
-from .whatsapp_utils import send_meeting_reminder_whatsapp
+from .whatsapp_utils import send_meeting_reminder_whatsapp, send_meeting_event_notification_whatsapp
+from .models import Staff, StaffMeeting
 
 
 # ──────────────────────────────────────────────
@@ -21,8 +24,6 @@ from .whatsapp_utils import send_meeting_reminder_whatsapp
 
 def _get_coordinator_recipients():
     """Return all active coordinators + admins (staff with phone + email)."""
-    from .models import Staff
-    from django.db.models import Q
     return Staff.objects.filter(
         is_active=True,
         registration_approved=True,
@@ -51,8 +52,6 @@ def send_meeting_reminder(meeting, reminder_type):
 
     reminder_type: 'week_before' | 'two_days_before' | 'same_day'
     """
-    from .models import StaffMeeting, Staff
-
     # Resolve recipients
     if meeting.invited_staff_ids:
         recipients = Staff.objects.filter(staff_id__in=meeting.invited_staff_ids, is_active=True)
@@ -128,7 +127,6 @@ def send_meeting_reminder(meeting, reminder_type):
     wa_sent = 0
     wa_failed = 0
     if getattr(meeting, 'send_whatsapp', True):
-        from django.db.models import Q
         coordinator_ids = set(
             Staff.objects.filter(
                 is_active=True,
@@ -177,8 +175,6 @@ def check_and_send_meeting_reminders():
     Called daily by the scheduler.
     Checks all upcoming meetings and sends reminders that haven't been sent yet.
     """
-    from .models import StaffMeeting
-
     today = datetime.date.today()
 
     # Fetch all future (or today) meetings that are active
@@ -195,3 +191,317 @@ def check_and_send_meeting_reminders():
 
         if days_ahead == 0 and not meeting.reminder_same_day_sent_at:
             send_meeting_reminder(meeting, 'same_day')
+
+
+# ──────────────────────────────────────────────
+# Instant Event Notifications (not scheduled)
+# ──────────────────────────────────────────────
+
+def notify_meeting_created(meeting):
+    """
+    Send instant email + WhatsApp notifications when a meeting is CREATED.
+    Sends immediately on POST, not via scheduler.
+    """
+    # Resolve recipients
+    if meeting.invited_staff_ids:
+        recipients = Staff.objects.filter(staff_id__in=meeting.invited_staff_ids, is_active=True)
+    else:
+        recipients = _get_coordinator_recipients()
+
+    if not recipients.exists():
+        api_logger.warning("notify_meeting_created: no recipients found")
+        return
+
+    # Convert string date/time to proper objects if needed
+    meeting_date = meeting.meeting_date
+    meeting_time = meeting.meeting_time
+    if isinstance(meeting_date, str):
+        meeting_date = dt.strptime(meeting_date, '%Y-%m-%d').date()
+    if isinstance(meeting_time, str):
+        meeting_time = dt.strptime(meeting_time, '%H:%M').time()
+    
+    date_str = _format_meeting_date(meeting_date, meeting_time=meeting_time)
+    location = meeting.location or "לא צוין מיקום"
+    notes = meeting.notes or ""
+
+    subject = f"📢 פגישה חדשה – {date_str}"
+    header = "פגישה חדשה נוצרה!"
+    urgency = "אנא שימו בתאריך בלו״ז שלכם 📋"
+
+    body_text = (
+        f"{header}\n\n"
+        f"📅 תאריך ושעה: {date_str}\n"
+        f"📍 מיקום: {location}\n"
+        f"📝 כותרת: {meeting.title}\n"
+        f"{('הערות: ' + notes + chr(10)) if notes else ''}"
+        f"\n{urgency}\n\n"
+        f"– מערכת ChildSmile"
+    )
+
+    body_html = f"""
+<div dir="rtl" style="font-family:Arial,sans-serif;font-size:16px;color:#333">
+  <h2 style="color:#2196F3">{header}</h2>
+  <table style="border-collapse:collapse;width:100%;max-width:500px">
+    <tr><td style="padding:8px;font-weight:bold">📅 תאריך ושעה</td><td style="padding:8px">{date_str}</td></tr>
+    <tr style="background:#f5f5f5"><td style="padding:8px;font-weight:bold">📍 מיקום</td><td style="padding:8px">{location}</td></tr>
+    <tr><td style="padding:8px;font-weight:bold">📝 כותרת</td><td style="padding:8px">{meeting.title}</td></tr>
+    {'<tr style="background:#f5f5f5"><td style="padding:8px;font-weight:bold">הערות</td><td style="padding:8px">' + notes + '</td></tr>' if notes else ''}
+  </table>
+  <p style="margin-top:20px;color:#1976D2;font-weight:bold">{urgency}</p>
+  <hr style="margin-top:30px;border:1px solid #eee"/>
+  <small style="color:#999">– מערכת ChildSmile</small>
+</div>
+"""
+
+    sent_email = 0
+    failed_email = 0
+
+    # Send email to each invitee
+    for staff in recipients:
+        if staff.email:
+            try:
+                send_mail(
+                    subject=subject,
+                    message=body_text,
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    recipient_list=[staff.email],
+                    html_message=body_html,
+                    fail_silently=False,
+                )
+                sent_email += 1
+            except Exception as e:
+                failed_email += 1
+                api_logger.error(f"notify_meeting_created email failed for {staff.email}: {e}")
+
+    # WhatsApp — only for coordinators/admins
+    wa_sent = 0
+    wa_failed = 0
+    if getattr(meeting, 'send_whatsapp', True):
+        coordinator_ids = set(
+            Staff.objects.filter(
+                is_active=True,
+                registration_approved=True,
+            ).filter(
+                Q(roles__role_name__icontains='coordinator') | Q(roles__role_name__icontains='admin')
+            ).values_list('staff_id', flat=True)
+        )
+        wa_recipients = [s for s in recipients if s.staff_id in coordinator_ids]
+        phones = [s.staff_phone for s in wa_recipients if s.staff_phone]
+        if phones:
+            wa_results = send_meeting_event_notification_whatsapp(
+                phones, 'created', meeting.title, date_str, location, urgency
+            )
+            wa_sent = wa_results.get('successful', 0)
+            wa_failed = wa_results.get('failed', 0)
+
+    api_logger.info(
+        f"notify_meeting_created meeting_id={meeting.id} | "
+        f"email sent={sent_email} failed={failed_email} | "
+        f"whatsapp sent={wa_sent} failed={wa_failed}"
+    )
+
+
+def notify_meeting_updated(meeting):
+    """
+    Send instant email + WhatsApp notifications when a meeting is UPDATED.
+    Sends immediately on PUT, not via scheduler.
+    """
+    # Resolve recipients
+    if meeting.invited_staff_ids:
+        recipients = Staff.objects.filter(staff_id__in=meeting.invited_staff_ids, is_active=True)
+    else:
+        recipients = _get_coordinator_recipients()
+
+    if not recipients.exists():
+        api_logger.warning("notify_meeting_updated: no recipients found")
+        return
+
+    # Convert string date/time to proper objects if needed
+    meeting_date = meeting.meeting_date
+    meeting_time = meeting.meeting_time
+    if isinstance(meeting_date, str):
+        meeting_date = dt.strptime(meeting_date, '%Y-%m-%d').date()
+    if isinstance(meeting_time, str):
+        meeting_time = dt.strptime(meeting_time, '%H:%M').time()
+    
+    date_str = _format_meeting_date(meeting_date, meeting_time=meeting_time)
+    location = meeting.location or "לא צוין מיקום"
+    notes = meeting.notes or ""
+
+    subject = f"✏️ עדכון: פגישה עודכנה – {date_str}"
+    header = "פגישה עודכנה!"
+    urgency = "אנא בדקו את הפרטים המעודכנים 📋"
+
+    body_text = (
+        f"{header}\n\n"
+        f"📅 תאריך ושעה: {date_str}\n"
+        f"📍 מיקום: {location}\n"
+        f"📝 כותרת: {meeting.title}\n"
+        f"{('הערות: ' + notes + chr(10)) if notes else ''}"
+        f"\n{urgency}\n\n"
+        f"– מערכת ChildSmile"
+    )
+
+    body_html = f"""
+<div dir="rtl" style="font-family:Arial,sans-serif;font-size:16px;color:#333">
+  <h2 style="color:#FF9800">{header}</h2>
+  <table style="border-collapse:collapse;width:100%;max-width:500px">
+    <tr><td style="padding:8px;font-weight:bold">📅 תאריך ושעה</td><td style="padding:8px">{date_str}</td></tr>
+    <tr style="background:#f5f5f5"><td style="padding:8px;font-weight:bold">📍 מיקום</td><td style="padding:8px">{location}</td></tr>
+    <tr><td style="padding:8px;font-weight:bold">📝 כותרת</td><td style="padding:8px">{meeting.title}</td></tr>
+    {'<tr style="background:#f5f5f5"><td style="padding:8px;font-weight:bold">הערות</td><td style="padding:8px">' + notes + '</td></tr>' if notes else ''}
+  </table>
+  <p style="margin-top:20px;color:#E65100;font-weight:bold">{urgency}</p>
+  <hr style="margin-top:30px;border:1px solid #eee"/>
+  <small style="color:#999">– מערכת ChildSmile</small>
+</div>
+"""
+
+    sent_email = 0
+    failed_email = 0
+
+    for staff in recipients:
+        if staff.email:
+            try:
+                send_mail(
+                    subject=subject,
+                    message=body_text,
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    recipient_list=[staff.email],
+                    html_message=body_html,
+                    fail_silently=False,
+                )
+                sent_email += 1
+            except Exception as e:
+                failed_email += 1
+                api_logger.error(f"notify_meeting_updated email failed for {staff.email}: {e}")
+
+    # WhatsApp — only for coordinators/admins
+    wa_sent = 0
+    wa_failed = 0
+    if getattr(meeting, 'send_whatsapp', True):
+        coordinator_ids = set(
+            Staff.objects.filter(
+                is_active=True,
+                registration_approved=True,
+            ).filter(
+                Q(roles__role_name__icontains='coordinator') | Q(roles__role_name__icontains='admin')
+            ).values_list('staff_id', flat=True)
+        )
+        wa_recipients = [s for s in recipients if s.staff_id in coordinator_ids]
+        phones = [s.staff_phone for s in wa_recipients if s.staff_phone]
+        if phones:
+            wa_results = send_meeting_event_notification_whatsapp(
+                phones, 'updated', meeting.title, date_str, location, urgency
+            )
+            wa_sent = wa_results.get('successful', 0)
+            wa_failed = wa_results.get('failed', 0)
+
+    api_logger.info(
+        f"notify_meeting_updated meeting_id={meeting.id} | "
+        f"email sent={sent_email} failed={failed_email} | "
+        f"whatsapp sent={wa_sent} failed={wa_failed}"
+    )
+
+
+def notify_meeting_cancelled(meeting):
+    """
+    Send instant email + WhatsApp notifications when a meeting is CANCELLED.
+    Sends immediately on PUT (is_cancelled=True), not via scheduler.
+    """
+    # Resolve recipients
+    if meeting.invited_staff_ids:
+        recipients = Staff.objects.filter(staff_id__in=meeting.invited_staff_ids, is_active=True)
+    else:
+        recipients = _get_coordinator_recipients()
+
+    if not recipients.exists():
+        api_logger.warning("notify_meeting_cancelled: no recipients found")
+        return
+
+    # Convert string date/time to proper objects if needed
+    meeting_date = meeting.meeting_date
+    meeting_time = meeting.meeting_time
+    if isinstance(meeting_date, str):
+        meeting_date = dt.strptime(meeting_date, '%Y-%m-%d').date()
+    if isinstance(meeting_time, str):
+        meeting_time = dt.strptime(meeting_time, '%H:%M').time()
+    
+    date_str = _format_meeting_date(meeting_date, meeting_time=meeting_time)
+    location = meeting.location or "לא צוין מיקום"
+
+    subject = f"❌ ביטול: פגישה בוטלה – {date_str}"
+    header = "פגישה בוטלה!"
+    urgency = "אנא הסירו מהלו״ז שלכם 📋"
+
+    body_text = (
+        f"{header}\n\n"
+        f"פגישה בוטלה:\n\n"
+        f"📅 תאריך ושעה: {date_str}\n"
+        f"📍 מיקום: {location}\n"
+        f"📝 כותרת: {meeting.title}\n"
+        f"\n{urgency}\n\n"
+        f"– מערכת ChildSmile"
+    )
+
+    body_html = f"""
+<div dir="rtl" style="font-family:Arial,sans-serif;font-size:16px;color:#333">
+  <h2 style="color:#F44336">{header}</h2>
+  <p style="font-size:18px;margin:15px 0">פגישה בוטלה:</p>
+  <table style="border-collapse:collapse;width:100%;max-width:500px">
+    <tr><td style="padding:8px;font-weight:bold">📅 תאריך ושעה</td><td style="padding:8px">{date_str}</td></tr>
+    <tr style="background:#f5f5f5"><td style="padding:8px;font-weight:bold">📍 מיקום</td><td style="padding:8px">{location}</td></tr>
+    <tr><td style="padding:8px;font-weight:bold">📝 כותרת</td><td style="padding:8px">{meeting.title}</td></tr>
+  </table>
+  <p style="margin-top:20px;color:#C62828;font-weight:bold">{urgency}</p>
+  <hr style="margin-top:30px;border:1px solid #eee"/>
+  <small style="color:#999">– מערכת ChildSmile</small>
+</div>
+"""
+
+    sent_email = 0
+    failed_email = 0
+
+    for staff in recipients:
+        if staff.email:
+            try:
+                send_mail(
+                    subject=subject,
+                    message=body_text,
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    recipient_list=[staff.email],
+                    html_message=body_html,
+                    fail_silently=False,
+                )
+                sent_email += 1
+            except Exception as e:
+                failed_email += 1
+                api_logger.error(f"notify_meeting_cancelled email failed for {staff.email}: {e}")
+
+    # WhatsApp — only for coordinators/admins
+    wa_sent = 0
+    wa_failed = 0
+    if getattr(meeting, 'send_whatsapp', True):
+        coordinator_ids = set(
+            Staff.objects.filter(
+                is_active=True,
+                registration_approved=True,
+            ).filter(
+                Q(roles__role_name__icontains='coordinator') | Q(roles__role_name__icontains='admin')
+            ).values_list('staff_id', flat=True)
+        )
+        wa_recipients = [s for s in recipients if s.staff_id in coordinator_ids]
+        phones = [s.staff_phone for s in wa_recipients if s.staff_phone]
+        if phones:
+            wa_results = send_meeting_event_notification_whatsapp(
+                phones, 'cancelled', meeting.title, date_str, location, urgency
+            )
+            wa_sent = wa_results.get('successful', 0)
+            wa_failed = wa_results.get('failed', 0)
+
+    api_logger.info(
+        f"notify_meeting_cancelled meeting_id={meeting.id} | "
+        f"email sent={sent_email} failed={failed_email} | "
+        f"whatsapp sent={wa_sent} failed={wa_failed}"
+    )
+

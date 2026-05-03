@@ -15,7 +15,12 @@ from django.utils import timezone
 
 from .models import Staff, StaffMeeting
 from .audit_utils import is_admin
-from .meeting_notifications import send_meeting_reminder
+from .meeting_notifications import (
+    send_meeting_reminder,
+    notify_meeting_created,
+    notify_meeting_updated,
+    notify_meeting_cancelled,
+)
 from .logger import api_logger
 
 
@@ -134,6 +139,13 @@ def meetings_list(request):
             send_whatsapp=data.get("send_whatsapp", True),
         )
         api_logger.info(f"[MEETINGS] Created meeting {meeting.id} by {staff.username}")
+        
+        # Send instant notification to invitees
+        try:
+            notify_meeting_created(meeting)
+        except Exception as e:
+            api_logger.error(f"[MEETINGS] Error sending notify_meeting_created for {meeting.id}: {e}")
+        
         return JsonResponse({"meeting": _meeting_to_dict(meeting)}, status=201)
 
     return JsonResponse({"error": "Method not allowed"}, status=405)
@@ -178,20 +190,41 @@ def meeting_detail(request, meeting_id):
         except Exception:
             return JsonResponse({"error": "Invalid JSON"}, status=400)
 
+        # Check if this is a cancellation (is_cancelled changing to True)
+        was_cancelled = meeting.is_cancelled
+        is_being_cancelled = data.get("is_cancelled") is True
+
         for field in ("title", "meeting_date", "meeting_time", "location", "notes", "is_cancelled",
                       "invited_staff_ids", "send_whatsapp"):
             if field in data:
                 setattr(meeting, field, data[field])
         meeting.save()
         api_logger.info(f"[MEETINGS] Updated meeting {meeting.id} by {staff.username}")
+        
+        # Send appropriate notification
+        try:
+            if is_being_cancelled and not was_cancelled:
+                # Meeting is being cancelled — send cancellation notification
+                api_logger.info(f"[MEETINGS] Detected cancellation: was_cancelled={was_cancelled}, is_being_cancelled={is_being_cancelled}")
+                notify_meeting_cancelled(meeting)
+            elif not is_being_cancelled:
+                # Regular update — send update notification (only if not cancelling)
+                api_logger.info(f"[MEETINGS] Detected regular update, sending update notification")
+                notify_meeting_updated(meeting)
+        except Exception as e:
+            api_logger.error(f"[MEETINGS] Error sending notification for {meeting.id}: {e}")
+        
         return JsonResponse({"meeting": _meeting_to_dict(meeting)})
 
     if request.method == "DELETE":
-        # Soft cancel — set is_cancelled=True
-        meeting.is_cancelled = True
-        meeting.save()
-        api_logger.info(f"[MEETINGS] Cancelled meeting {meeting.id} by {staff.username}")
-        return JsonResponse({"message": "Meeting cancelled", "id": meeting.id})
+        # Only allow permanent deletion of cancelled meetings
+        if not meeting.is_cancelled:
+            api_logger.warning(f"[MEETINGS] Attempted hard-delete of active meeting {meeting.id} by {staff.username} - blocked")
+            return JsonResponse({"error": "Only cancelled meetings can be permanently deleted"}, status=400)
+        
+        meeting.delete()
+        api_logger.info(f"[MEETINGS] Hard-deleted meeting {meeting.id} by {staff.username}")
+        return JsonResponse({"message": "Meeting permanently deleted", "id": meeting.id})
 
     return JsonResponse({"error": "Method not allowed"}, status=405)
 
