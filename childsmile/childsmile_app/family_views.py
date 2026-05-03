@@ -1160,6 +1160,13 @@ def update_family(request, child_id):
             field_changes.append(f"In Frame: '{family.is_in_frame}' → '{data.get('is_in_frame')}'")
         if family.coordinator_comments != data.get("coordinator_comments", family.coordinator_comments):
             field_changes.append(f"Coordinator Comments: '{family.coordinator_comments}' → '{data.get('coordinator_comments')}'")
+        
+        # Handle last_review_talk_conducted (track changes)
+        new_last_review_talk = parse_date_field(data.get("last_review_talk_conducted"), "last_review_talk_conducted")
+        if family.last_review_talk_conducted != new_last_review_talk:
+            old_date = family.last_review_talk_conducted.strftime('%d/%m/%Y') if family.last_review_talk_conducted else 'Never'
+            new_date = new_last_review_talk.strftime('%d/%m/%Y') if new_last_review_talk else 'Never'
+            field_changes.append(f"Last Review Call Conducted: '{old_date}' → '{new_date}'")
 
         # Handle date fields separately (compare parsed dates)
         new_date_of_birth = parse_date_field(data.get("date_of_birth"), "date_of_birth")
@@ -1208,6 +1215,7 @@ def update_family(request, child_id):
         family.has_completed_treatments = data.get("has_completed_treatments", family.has_completed_treatments)
         family.is_in_frame = data.get("is_in_frame", family.is_in_frame)
         family.coordinator_comments = data.get("coordinator_comments", family.coordinator_comments)
+        family.last_review_talk_conducted = parse_date_field(data.get("last_review_talk_conducted"), "last_review_talk_conducted")
         
         # Handle tutoring_status change and auto-update coordinator
         old_tutoring_status = family.tutoring_status

@@ -62,6 +62,7 @@ const Families = () => {
     additional_info: '',
     is_in_frame: '',
     coordinator_comments: '',
+    last_review_talk_conducted: '',
     current_medical_state: '',
     when_completed_treatments: '',
     father_name: '',
@@ -651,6 +652,7 @@ const Families = () => {
       additional_info: family.additional_info || '',
       is_in_frame: family.is_in_frame || '',
       coordinator_comments: family.coordinator_comments || '',
+      last_review_talk_conducted: formatDate(family.last_review_talk_conducted) || '',
       current_medical_state: family.current_medical_state || '',
       when_completed_treatments: family.when_completed_treatments || '',
       father_name: family.father_name || '',
@@ -1618,6 +1620,16 @@ const Families = () => {
                     onChange={handleAddFamilyChange}
                     className="scrollable-textarea"
                   />
+
+                  <label>{t('Last Review Call Conducted')}</label>
+                  <input
+                    type="date"
+                    name="last_review_talk_conducted"
+                    value={newFamily.last_review_talk_conducted}
+                    onChange={handleAddFamilyChange}
+                    className={errors.last_review_talk_conducted ? "error" : ""}
+                  />
+                  {errors.last_review_talk_conducted && <span className="families-error-message">{errors.last_review_talk_conducted}</span>}
                 </div> {/* End of fourth form-column */}
 
                 {/* Fifth form-column */}
@@ -2031,6 +2043,16 @@ const Families = () => {
                     onChange={handleAddFamilyChange}
                     className="scrollable-textarea"
                   />
+
+                  <label>{t('Last Review Call Conducted')}</label>
+                  <input
+                    type="date"
+                    name="last_review_talk_conducted"
+                    value={newFamily.last_review_talk_conducted}
+                    onChange={handleAddFamilyChange}
+                    className={errors.last_review_talk_conducted ? "error" : ""}
+                  />
+                  {errors.last_review_talk_conducted && <span className="families-error-message">{errors.last_review_talk_conducted}</span>}
                 </div>
 
                 <div className="form-column">

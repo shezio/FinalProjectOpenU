@@ -707,6 +707,7 @@ const resources = {
       "Additional Info": "מידע נוסף",
       "Child Phone": "טלפון ילד",
       "Diagnosis Date": "תאריך אבחון",
+      "Last Review Call Conducted": "תאריך שיחת ביקורת אחרונה",
       "Show": "הצג",
       "Activate": "הפעל מחדש",
       "Final Approval": "אישור סופי",
