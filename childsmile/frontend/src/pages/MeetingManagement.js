@@ -185,7 +185,9 @@ const MeetingManagement = () => {
 
   const confirmCancel = async () => {
     try {
-      await axios.delete(`/api/meetings/${cancelTarget.id}/`);
+      // Soft-cancel the meeting by setting is_cancelled=true via PUT
+      // (don't hard-delete — hard-delete only happens via the separate hard-delete endpoint)
+      await axios.put(`/api/meetings/${cancelTarget.id}/`, { ...cancelTarget, is_cancelled: true });
       toast.success('הפגישה בוטלה');
       setCancelTarget(null);
       closeModal();
