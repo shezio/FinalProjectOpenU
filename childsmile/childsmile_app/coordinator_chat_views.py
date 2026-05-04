@@ -78,11 +78,11 @@ def coordinator_conversations_list(request):
     ).distinct().order_by('first_name', 'last_name')
 
     coordinator_count = all_coordinators.count()
-    api_logger.info(f"[COORDINATOR_CHAT] Found {coordinator_count} coordinators with roles containing 'Coordinator'")
+    api_logger.debug(f"[COORDINATOR_CHAT] Found {coordinator_count} coordinators with roles containing 'Coordinator'")
     
-    # Debug: Log available role names in DB
+    # Debug: Log available role names in DB (DEBUG level only for security)
     all_roles = Role.objects.all().values_list('role_name', flat=True).distinct()
-    api_logger.info(f"[COORDINATOR_CHAT] All roles in DB: {list(all_roles)}")
+    api_logger.debug(f"[COORDINATOR_CHAT] All roles in DB: {list(all_roles)}")
 
     conversations = []
     for coordinator in all_coordinators:
@@ -104,7 +104,10 @@ def coordinator_conversations_list(request):
         })
 
     # Sort by unread count (desc) then by last message time (desc)
-    conversations.sort(key=lambda x: (-x['unread_count'], -(x['last_message']['created_at'] if x['last_message'] else 0)))
+    conversations.sort(key=lambda x: (
+        -x['unread_count'],
+        -(datetime.fromisoformat(x['last_message']['created_at']).timestamp() if x['last_message'] else 0)
+    ))
 
     return JsonResponse({
         "conversations": conversations,
@@ -208,6 +211,8 @@ def send_message_to_coordinator(request, coordinator_id):
     try:
         data = json.loads(request.body)
         message_text = data.get('message', '').strip()
+        # Accept reply_to_id from frontend but don't store it (UI-only for now)
+        reply_to_id = data.get('reply_to_id')
 
         if not message_text:
             return JsonResponse({"error": "Message cannot be empty"}, status=400)
@@ -343,7 +348,7 @@ def send_message_to_many(request):
                 if template_sid:
                     # {{1}} = coordinator name, {{2}} = message text
                     result = send_whatsapp_message(
-                        recipient_phone=coordinator.phone,
+                        recipient_phone=coordinator.staff_phone,
                         message_body="",
                         use_template=True,
                         template_sid=template_sid,
@@ -354,7 +359,7 @@ def send_message_to_many(request):
                     )
                 else:
                     result = send_whatsapp_message(
-                        recipient_phone=coordinator.phone,
+                        recipient_phone=coordinator.staff_phone,
                         message_body=message_text,
                         use_template=False
                     )
@@ -396,6 +401,48 @@ def send_message_to_many(request):
         return JsonResponse({"error": "Invalid JSON"}, status=400)
     except Exception as e:
         api_logger.error(f"[COORDINATOR_CHAT] Error in send_to_many: {e}")
+        return JsonResponse({"error": "Internal error", "details": str(e)}, status=500)
+
+
+@conditional_csrf
+@api_view(["DELETE"])
+def delete_message(request, message_id):
+    """
+    DELETE: Delete a message from chat history
+    Only admins can delete messages
+    """
+    staff = _get_staff(request)
+    if not staff:
+        return JsonResponse({"error": "Unauthorized"}, status=401)
+    if not is_admin(staff):
+        return JsonResponse({"error": "Forbidden (admins only)"}, status=403)
+
+    # Check feature flag
+    if not os.getenv('WEEKLY_COORDINATOR_REPORTS_ENABLED', 'true').lower() in ('true', '1', 'yes'):
+        return JsonResponse({
+            "error": "Feature disabled",
+            "message": "Coordinator chat feature is currently disabled"
+        }, status=503)
+
+    try:
+        message = CoordinatorChatMessage.objects.get(id=message_id)
+        coordinator_name = f"{message.coordinator.first_name} {message.coordinator.last_name}"
+        message.delete()
+        
+        api_logger.info(
+            f"[COORDINATOR_CHAT] Admin {staff.username} deleted message {message_id} "
+            f"from conversation with {coordinator_name}"
+        )
+        
+        return JsonResponse({
+            "success": True,
+            "message_id": message_id,
+            "message": "Message deleted"
+        })
+    except CoordinatorChatMessage.DoesNotExist:
+        return JsonResponse({"error": "Message not found"}, status=404)
+    except Exception as e:
+        api_logger.error(f"[COORDINATOR_CHAT] Error deleting message {message_id}: {e}")
         return JsonResponse({"error": "Internal error", "details": str(e)}, status=500)
 
 
@@ -464,7 +511,7 @@ def send_message_to_all(request):
                 if template_sid:
                     # {{1}} = coordinator name, {{2}} = message text
                     result = send_whatsapp_message(
-                        recipient_phone=coordinator.phone,
+                        recipient_phone=coordinator.staff_phone,
                         message_body="",
                         use_template=True,
                         template_sid=template_sid,
@@ -475,7 +522,7 @@ def send_message_to_all(request):
                     )
                 else:
                     result = send_whatsapp_message(
-                        recipient_phone=coordinator.phone,
+                        recipient_phone=coordinator.staff_phone,
                         message_body=message_text,
                         use_template=False
                     )

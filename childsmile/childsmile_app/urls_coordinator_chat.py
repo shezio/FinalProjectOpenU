@@ -9,6 +9,7 @@ from .coordinator_chat_views import (
     send_message_to_coordinator,
     send_message_to_many,
     send_message_to_all,
+    delete_message,
 )
 
 urlpatterns = [
@@ -26,4 +27,7 @@ urlpatterns = [
     
     # Send message to all coordinators
     path('coordinator-chat/send-all/', send_message_to_all, name='send_message_to_all'),
+    
+    # Delete a message
+    path('coordinator-chat/message/<int:message_id>/', delete_message, name='delete_message'),
 ]

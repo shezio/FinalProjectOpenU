@@ -1360,6 +1360,18 @@ const resources = {
       "Team Updates": "עדכוני צוות",
       "loading": "טוען...",
       "no_coordinators": "לא נמצאו רכזים",
+      "search_coordinator": "🔍 חפש רכז להוסיף...",
+      "search_and_add_coordinators": "חפש והוסף רכזים...",
+      "no_results": "לא נמצאו תוצאות",
+      "added": "✓ נוסף",
+      "message_options": "אפשרויות הודעה",
+      "reply": "השב",
+      "delete": "מחק",
+      "confirm_delete": "אישור מחיקה?",
+      "reply_to": "ענה ל",
+      "Message sent successfully": "ההודעה נשלחה בהצלחה",
+      "message_sent_count": "ההודעה נשלחה ל-{{count}} רכזים{{failed}}",
+      "failed": "נכשלו",
     }
   }
 };

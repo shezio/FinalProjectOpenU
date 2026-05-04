@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import axios from '../axiosConfig';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'react-toastify';
+import { showErrorToast } from '../components/toastUtils';
 import Sidebar from '../components/Sidebar';
 import InnerPageHeader from '../components/InnerPageHeader';
 import '../styles/common.css';
@@ -18,7 +19,12 @@ const CoordinatorChat = () => {
   const [broadcastMessage, setBroadcastMessage] = useState('');
   const [sendingBroadcast, setSendingBroadcast] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [coordinatorSearch, setCoordinatorSearch] = useState('');
+  const [messageMenuOpen, setMessageMenuOpen] = useState(null); // Track which message menu is open
+  const [deleteConfirmId, setDeleteConfirmId] = useState(null); // Track which message awaits deletion confirmation
+  const [replyingTo, setReplyingTo] = useState(null); // Track which message we're replying to
   const chatEndRef = useRef(null);
+  const topSectionRef = useRef(null);
 
   // Helper function to get background class based on coordinator role
   const getBackgroundClass = (coordinator) => {
@@ -46,6 +52,18 @@ const CoordinatorChat = () => {
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [chatHistory]);
+
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = () => {
+      if (messageMenuOpen) {
+        setMessageMenuOpen(null);
+      }
+    };
+    
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, [messageMenuOpen]);
 
   const loadConversations = async () => {
     try {
@@ -77,6 +95,8 @@ const CoordinatorChat = () => {
       setChatHistory(response.data.messages);
       setSelectedCoordinator(response.data.coordinator);
       setMessageText('');
+      // Scroll to top after loading chat
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (error) {
       console.error('Error loading chat history:', error);
       console.error('Error response:', error.response?.data);
@@ -90,36 +110,46 @@ const CoordinatorChat = () => {
     try {
       const response = await axios.post(
         `/api/coordinator-chat/${selectedCoordinator.id}/send/`,
-        { message: messageText.trim() }
+        { 
+          message: messageText.trim(),
+          reply_to_id: replyingTo?.id || null
+        }
       );
 
       // Add message to local state immediately
       setChatHistory([...chatHistory, response.data.message]);
       setMessageText('');
+      setReplyingTo(null);
 
       // Reload conversations to update unread count
       loadConversations();
+      toast.success(t('Message sent successfully'));
     } catch (error) {
       console.error('Error sending message:', error);
-      alert(error.response?.data?.error || 'Failed to send message');
+      showErrorToast(t, 'Failed to send message', error);
     } finally {
       setSendingMessage(false);
     }
   };
 
-  const toggleCoordinatorSelection = (coordinatorId) => {
-    const newSelected = new Set(selectedCoordinatorIds);
-    if (newSelected.has(coordinatorId)) {
-      newSelected.delete(coordinatorId);
-    } else {
-      newSelected.add(coordinatorId);
+  const deleteMessage = async (messageId) => {
+    try {
+      await axios.delete(`/api/coordinator-chat/message/${messageId}/`);
+      // Remove from local state immediately
+      setChatHistory(chatHistory.filter(msg => msg.id !== messageId));
+      setDeleteConfirmId(null);
+      setMessageMenuOpen(null);
+      // Refresh to get latest state
+      loadConversations();
+    } catch (error) {
+      console.error('Error deleting message:', error);
+      showErrorToast(t, 'Failed to delete message', error);
     }
-    setSelectedCoordinatorIds(newSelected);
   };
 
   const sendBroadcastSelected = async () => {
     if (!broadcastMessage.trim() || selectedCoordinatorIds.size === 0) {
-      alert('Please select at least one coordinator and enter a message');
+      showErrorToast(t, 'Please select at least one coordinator and enter a message', '');
       return;
     }
 
@@ -134,17 +164,16 @@ const CoordinatorChat = () => {
       );
 
       const { sent, failed } = response.data.results;
-      alert(
-        `Message sent to ${sent.length} coordinators. ` +
-        (failed.length > 0 ? `${failed.length} failed.` : '')
-      );
+      const failedText = failed.length > 0 ? ` (${failed.length} ${t('failed')})` : '';
+      toast.success(t('message_sent_count', { count: sent.length, failed: failedText }));
 
       setBroadcastMessage('');
       setSelectedCoordinatorIds(new Set());
+      setCoordinatorSearch('');
       loadConversations();
     } catch (error) {
       console.error('Error sending broadcast:', error);
-      alert(error.response?.data?.error || 'Failed to send messages');
+      showErrorToast(t, 'Failed to send messages', error);
     } finally {
       setSendingBroadcast(false);
     }
@@ -152,11 +181,9 @@ const CoordinatorChat = () => {
 
   const sendBroadcastAll = async () => {
     if (!broadcastMessage.trim()) {
-      alert('Please enter a message');
+      showErrorToast(t, 'Please enter a message', '');
       return;
     }
-
-    if (!window.confirm('Send this message to ALL coordinators?')) return;
 
     setSendingBroadcast(true);
     try {
@@ -166,17 +193,16 @@ const CoordinatorChat = () => {
       );
 
       const { sent, failed } = response.data.results;
-      alert(
-        `Message sent to ${sent.length} coordinators. ` +
-        (failed.length > 0 ? `${failed.length} failed.` : '')
-      );
+      const failedText = failed.length > 0 ? ` (${failed.length} ${t('failed')})` : '';
+      toast.success(t('message_sent_count', { count: sent.length, failed: failedText }));
 
       setBroadcastMessage('');
       setSelectedCoordinatorIds(new Set());
+      setCoordinatorSearch('');
       loadConversations();
     } catch (error) {
       console.error('Error sending broadcast:', error);
-      alert(error.response?.data?.error || 'Failed to send messages');
+      showErrorToast(t, 'Failed to send messages', error);
     } finally {
       setSendingBroadcast(false);
     }
@@ -201,8 +227,8 @@ const CoordinatorChat = () => {
       <Sidebar />
       <InnerPageHeader title={t('Team Updates')} />
       <div className="coordinator-chat-page">
-        {/* TOP SECTION: Coordinator Selector for Broadcasting */}
-        <div className="coordinator-broadcast-section">
+        {/* TOP SECTION: Coordinator Search for Broadcasting */}
+        <div className="coordinator-broadcast-section" ref={topSectionRef}>
           <div className="broadcast-header">
             <h3>{t('broadcast_mode')}</h3>
             <span className="selection-count">
@@ -210,29 +236,82 @@ const CoordinatorChat = () => {
             </span>
           </div>
 
-          <div className="coordinators-selector">
-            {conversations.length === 0 ? (
-              <div style={{ padding: '20px', textAlign: 'center', color: '#999' }}>
-                {t('no_coordinators') || 'No coordinators found'}
-              </div>
-            ) : (
-              conversations.map((conv) => (
-                <div
-                  key={conv.coordinator_id}
-                  className={`coordinator-selection-item ${selectedCoordinatorIds.has(conv.coordinator_id) ? 'selected' : ''}`}
-                  onClick={() => toggleCoordinatorSelection(conv.coordinator_id)}
-                >
-                  <input
-                    type="checkbox"
-                    checked={selectedCoordinatorIds.has(conv.coordinator_id)}
-                    onChange={() => toggleCoordinatorSelection(conv.coordinator_id)}
-                    onClick={(e) => e.stopPropagation()}
-                  />
-                  <span className="coordinator-name">{conv.coordinator_name}</span>
+          {/* Selected chips */}
+          {selectedCoordinatorIds.size > 0 && (
+            <div className="coordinator-chips">
+              {Array.from(selectedCoordinatorIds)
+                .map(id => conversations.find(c => c.coordinator_id === id))
+                .filter(Boolean)
+                .map(coord => (
+                  <span key={coord.coordinator_id} className="coordinator-chip">
+                    {coord.coordinator_name}
+                    <button
+                      type="button"
+                      className="chip-remove-btn"
+                      onClick={() => {
+                        const newSet = new Set(selectedCoordinatorIds);
+                        newSet.delete(coord.coordinator_id);
+                        setSelectedCoordinatorIds(newSet);
+                      }}
+                    >
+                      ✕
+                    </button>
+                  </span>
+                ))}
+            </div>
+          )}
+
+          {/* Coordinator Search */}
+          <div className="coordinator-search-wrap">
+            <input
+              type="text"
+              className="coordinator-search-input"
+              placeholder={t('search_coordinator')}
+              value={coordinatorSearch}
+              onChange={(e) => setCoordinatorSearch(e.target.value)}
+            />
+            {coordinatorSearch.trim() && (() => {
+              const q = coordinatorSearch.trim().toLowerCase();
+              const results = conversations
+                .filter(conv =>
+                  conv.coordinator_name.toLowerCase().includes(q) ||
+                  (conv.coordinator_phone && conv.coordinator_phone.toLowerCase().includes(q))
+                )
+                .slice(0, 8);
+              return results.length > 0 ? (
+                <div className="coordinator-dropdown">
+                  {results.map(conv => {
+                    const already = selectedCoordinatorIds.has(conv.coordinator_id);
+                    return (
+                      <div
+                        key={conv.coordinator_id}
+                        className={`coordinator-option${already ? ' already-added' : ''}`}
+                        onClick={() => {
+                          if (!already) {
+                            setSelectedCoordinatorIds(prev => new Set([...prev, conv.coordinator_id]));
+                          }
+                          setCoordinatorSearch('');
+                        }}
+                      >
+                        <span>{conv.coordinator_name}</span>
+                        {conv.coordinator_phone && <span className="option-phone">{conv.coordinator_phone}</span>}
+                        {already && <span className="option-added-badge">{t('added')}</span>}
+                      </div>
+                    );
+                  })}
                 </div>
-              ))
-            )}
+              ) : (
+                <div className="coordinator-dropdown">
+                  <div className="coordinator-option" style={{ color: '#aaa', cursor: 'default' }}>
+                    {t('no_results')}
+                  </div>
+                </div>
+              );
+            })()}
           </div>
+          {selectedCoordinatorIds.size === 0 && (
+            <p className="coordinators-empty">{t('search_and_add_coordinators')}</p>
+          )}
 
           <div className="broadcast-message-section">
             <textarea
@@ -303,13 +382,12 @@ const CoordinatorChat = () => {
                   <h3>{selectedCoordinator.name}</h3>
                   <div className="coordinator-info">
                     <small>📱 {selectedCoordinator.phone || 'N/A'}</small>
-                    <small>📧 {selectedCoordinator.email || 'N/A'}</small>
                   </div>
                 </div>
 
                 <div className="messages-container">
                   {chatHistory.length === 0 ? (
-                    <div className="no-messages">{t('no_messages_yet') || 'אין הודעות עדיין בשיחה זו'}</div>
+                    <div className="no-messages">{t('no_messages_yet')}</div>
                   ) : (
                     chatHistory.map((msg) => (
                       <div
@@ -317,6 +395,47 @@ const CoordinatorChat = () => {
                         className={`message ${msg.sender_type === 'admin' ? 'admin-message' : 'coordinator-message'}`}
                       >
                         <div className="message-content">
+                          <div className="message-menu-wrapper">
+                            <button
+                              className="message-menu-btn"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setMessageMenuOpen(messageMenuOpen === msg.id ? null : msg.id);
+                              }}
+                              title={t('message_options')}
+                            >
+                              &gt;
+                            </button>
+                            {messageMenuOpen === msg.id && (
+                              <div className="message-menu-dropdown" onClick={(e) => e.stopPropagation()}>
+                                <button
+                                  className="menu-item reply-option"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setReplyingTo(msg);
+                                    setMessageMenuOpen(null);
+                                  }}
+                                >
+                                  {t('reply')}
+                                </button>
+                                <button
+                                  className="menu-item delete-option"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (deleteConfirmId === msg.id) {
+                                      // Confirmed - delete
+                                      deleteMessage(msg.id);
+                                    } else {
+                                      // First click - show confirmation
+                                      setDeleteConfirmId(msg.id);
+                                    }
+                                  }}
+                                >
+                                  {deleteConfirmId === msg.id ? t('confirm_delete') : t('delete')}
+                                </button>
+                              </div>
+                            )}
+                          </div>
                           <strong>{msg.sender_type === 'admin' ? '👨‍💼 ליאם' : '👤 רכז'}</strong>
                           <p>{msg.message_text}</p>
                           <small>{new Date(msg.created_at).toLocaleString('he-IL')}</small>
@@ -328,6 +447,20 @@ const CoordinatorChat = () => {
                 </div>
 
                 <div className="message-input-container">
+                  {replyingTo && (
+                    <div className="reply-preview">
+                      <div className="reply-preview-content">
+                        <strong>📍 {t('reply_to')}: {replyingTo.sender_type === 'admin' ? '👨‍💼 ליאם' : '👤 רכז'}</strong>
+                        <p>{replyingTo.message_text.substring(0, 60)}{replyingTo.message_text.length > 60 ? '...' : ''}</p>
+                      </div>
+                      <button 
+                        className="reply-close-btn"
+                        onClick={() => setReplyingTo(null)}
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  )}
                   <textarea
                     value={messageText}
                     onChange={(e) => setMessageText(e.target.value)}
