@@ -172,13 +172,17 @@ def handle_coordinator_response(phone, message_text, received_at):
     
     # Store message in chat history - coordinator's message should be displayed in their chat thread
     # The message is FROM the coordinator, TO ליאם אביבי (for UI display in coordinator-specific chat)
-    CoordinatorChatMessage.objects.create(
-        coordinator=coordinator,  # This is THE coordinator who sent the message
-        sender_type='coordinator',
-        sender_id=coordinator.staff_id,  # Sent BY the coordinator
-        message_text=message_text,
-        is_read=False
-    )
+    try:
+        msg = CoordinatorChatMessage.objects.create(
+            coordinator=coordinator,  # This is THE coordinator who sent the message
+            sender_type='coordinator',
+            sender_id=coordinator.staff_id,  # Sent BY the coordinator
+            message_text=message_text,
+            is_read=False
+        )
+        api_logger.info(f"[WEEKLY_REPORTS] Stored message in chat history (msg_id={msg.id}) for coordinator {coordinator.staff_id}")
+    except Exception as e:
+        api_logger.error(f"[WEEKLY_REPORTS] Failed to store message in CoordinatorChatMessage: {e}", exc_info=True)
     
     # Send WhatsApp notification to ליאם אביבי about the coordinator's response
     liam = Staff.objects.filter(first_name="ליאם", last_name="אביבי").first()
