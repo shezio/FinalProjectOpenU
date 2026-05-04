@@ -110,20 +110,23 @@ def start_scheduler():
             except Exception as mr_err:
                 api_logger.error(f'❌ Could not schedule meeting reminders: {mr_err}')
 
-            # Add job: Send weekly coordinator progress request (Monday 8:00 AM)
-            # Controlled by WEEKLY_COORDINATOR_REQUEST_TIME env var (default 08:00)
+            # Add job: Send weekly coordinator progress request
+            # Uses same day as WEEKLY_DIGEST_DAY (0=Mon…6=Sun, default 6=Sunday)
+            # Time controlled by WEEKLY_COORDINATOR_REQUEST_TIME env var (default 08:00)
             coordinator_request_time = os.environ.get('WEEKLY_COORDINATOR_REQUEST_TIME', '08:00').strip()
             try:
                 cr_hour, cr_minute = map(int, coordinator_request_time.split(':'))
+                cr_day = int(os.environ.get('WEEKLY_DIGEST_DAY', '6'))  # Same day as digest
                 _scheduler.add_job(
                     func=_run_weekly_coordinator_request,
-                    trigger=CronTrigger(day_of_week=0, hour=cr_hour, minute=cr_minute, timezone=israel_tz),  # Monday=0
+                    trigger=CronTrigger(day_of_week=cr_day, hour=cr_hour, minute=cr_minute, timezone=israel_tz),
                     id='weekly_coordinator_request',
                     name='Weekly Coordinator Progress Request',
                     replace_existing=True,
                     misfire_grace_time=300,
                 )
-                api_logger.info(f'📋 Weekly coordinator request scheduled Monday at {coordinator_request_time} Israel time')
+                day_names = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+                api_logger.info(f'📋 Weekly coordinator request scheduled {day_names[cr_day]} at {coordinator_request_time} Israel time')
             except Exception as cr_err:
                 api_logger.error(f'❌ Could not schedule weekly coordinator request: {cr_err}')
 

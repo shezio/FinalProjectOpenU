@@ -650,6 +650,7 @@
 .admin-message {
   justify-content: flex-end;
   flex-direction: row-reverse;
+  direction: rtl;
 }
 
 .admin-message .message-content {
@@ -660,7 +661,7 @@
 }
 
 .coordinator-message {
-  justify-content: flex-start;
+  justify-content: flex-end;
 }
 
 .coordinator-message .message-content {
@@ -668,6 +669,8 @@
   color: #2c3e50;
   border-radius: 12px 12px 12px 0;
   max-width: 70%;
+  direction: rtl;
+  text-align: right;
 }
 
 .message-content {
