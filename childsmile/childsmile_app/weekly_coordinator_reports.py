@@ -110,7 +110,7 @@ def handle_coordinator_response(phone, message_text, received_at):
     Called by Twilio webhook when coordinator replies.
     
     Args:
-        phone: Coordinator's phone number (with +)
+        phone: Coordinator's phone number (with + prefix from Twilio, e.g., +972546752187)
         message_text: Their progress update message
         received_at: When message was received (datetime)
     
@@ -119,15 +119,44 @@ def handle_coordinator_response(phone, message_text, received_at):
     """
     week_start = get_iso_week_start()
     
-    # Find coordinator by phone
+    # Normalize phone number: convert +972XXXXXXXXX to 0XXXXXXXXX
+    # Remove all non-digit characters first
+    phone_digits = ''.join(c for c in phone if c.isdigit())
+    
+    # Convert +972 prefix to 0
+    if phone_digits.startswith('972'):
+        normalized_phone = '0' + phone_digits[3:]  # Remove '972' and add '0'
+    else:
+        normalized_phone = phone_digits
+    
+    api_logger.debug(f"[WEEKLY_REPORTS] Normalized phone: {phone} → {normalized_phone}")
+    
+    # Find coordinator by phone (search for multiple formats)
+    # Try exact match first, then variations with dashes
     coordinator = Staff.objects.filter(
-        staff_phone=phone,
         is_active=True,
         registration_approved=True
+    ).filter(
+        Q(staff_phone=normalized_phone) |
+        Q(staff_phone__iexact=normalized_phone)  # Case-insensitive
     ).first()
     
     if not coordinator:
-        api_logger.warning(f"[WEEKLY_REPORTS] Received response from unknown phone: {phone}")
+        # Try to find by removing all dashes from stored phone
+        all_coords = Staff.objects.filter(
+            is_active=True,
+            registration_approved=True,
+            staff_phone__isnull=False
+        )
+        for coord in all_coords:
+            stored_digits = ''.join(c for c in coord.staff_phone if c.isdigit())
+            if stored_digits == phone_digits:
+                coordinator = coord
+                api_logger.debug(f"[WEEKLY_REPORTS] Found coordinator by digit matching: {coord.staff_phone}")
+                break
+    
+    if not coordinator:
+        api_logger.debug(f"[WEEKLY_REPORTS] Received response from unknown phone: {phone} (normalized: {normalized_phone})")
         return {"success": False, "error": "Coordinator not found"}
     
     # Create or update progress report

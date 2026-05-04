@@ -128,6 +128,11 @@ def meetings_list(request):
         if not meeting_date or not meeting_time:
             return JsonResponse({"error": "meeting_date and meeting_time are required"}, status=400)
 
+        # Validate at least one attendee
+        invited_staff_ids = data.get("invited_staff_ids", [])
+        if not invited_staff_ids or len(invited_staff_ids) == 0:
+            return JsonResponse({"error": "לפחות משתתף אחד נדרש (אי אפשר ליצור פגישה ללא משתתפים)"}, status=400)
+
         meeting = StaffMeeting.objects.create(
             title=data.get("title", "פגישת צוות"),
             meeting_date=meeting_date,
@@ -193,6 +198,12 @@ def meeting_detail(request, meeting_id):
         # Check if this is a cancellation (is_cancelled changing to True)
         was_cancelled = meeting.is_cancelled
         is_being_cancelled = data.get("is_cancelled") is True
+
+        # Validate at least one attendee (unless being cancelled)
+        if not is_being_cancelled:
+            invited_staff_ids = data.get("invited_staff_ids", meeting.invited_staff_ids or [])
+            if not invited_staff_ids or len(invited_staff_ids) == 0:
+                return JsonResponse({"error": "לפחות משתתף אחד נדרש (אי אפשר לעדכן פגישה ללא משתתפים)"}, status=400)
 
         for field in ("title", "meeting_date", "meeting_time", "location", "notes", "is_cancelled",
                       "invited_staff_ids", "send_whatsapp"):

@@ -164,6 +164,7 @@ const MeetingManagement = () => {
   const handleSave = async () => {
     if (!form.meeting_date || !form.meeting_time) { toast.error('תאריך ושעה הם שדות חובה'); return; }
     if (isSaturday(form.meeting_date)) { toast.error('לא ניתן לקבוע פגישה בשבת'); return; }
+    if (!form.invited_staff_ids || form.invited_staff_ids.length === 0) { toast.error('לפחות משתתף אחד נדרש'); return; }
     setSaving(true);
     try {
       if (modalMode === 'edit' && selectedMeeting) {
@@ -528,7 +529,7 @@ const MeetingManagement = () => {
             </label>
 
             <div className="meeting-modal-actions">
-              <button className="meeting-save-btn" onClick={handleSave} disabled={saving}>
+              <button className="meeting-save-btn" onClick={handleSave} disabled={saving || form.invited_staff_ids.length === 0}>
                 {saving ? 'שומר...' : 'שמור'}
               </button>
               <button className="meeting-discard-btn" onClick={closeModal}>ביטול</button>
