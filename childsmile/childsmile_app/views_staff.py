@@ -8,7 +8,8 @@ from django_ratelimit.decorators import ratelimit
 from django.core.mail import send_mail
 from django.conf import settings
 from django.db import DatabaseError, transaction
-from .models import Staff, Role, TOTPCode, SignedUp, Tutors, Pending_Tutor, Tasks, Task_Types
+from django.utils.timezone import now
+from .models import Staff, Role, TOTPCode, SignedUp, Tutors, Pending_Tutor, Tasks, Task_Types, General_Volunteer
 from .utils import *
 from .audit_utils import log_api_action
 from .logger import api_logger
@@ -1076,6 +1077,104 @@ def update_staff_member(request, staff_id):
                 api_logger.info(f"Deleted {deleted_count} review tasks for staff {staff_member.staff_id} after losing both Families Coordinator and Tutored Families Coordinator roles (only if other tasks exist per child).")
             except Task_Types.DoesNotExist:
                 api_logger.warning("Review task type 'שיחת ביקורת' not found when attempting to delete tasks.")
+
+        # HANDLE ROLE TRANSITIONS: Move person between General_Volunteer and Tutors tables
+        if "roles" in data:
+            try:
+                # Check if "Tutor" role was added (volunteer → tutor)
+                if "Tutor" in new_roles_set and "Tutor" not in original_roles_set:
+                    api_logger.info(f"Role transition: {staff_member.email} - Adding Tutor role")
+                    # Move from General_Volunteer to Tutors table
+                    try:
+                        general_volunteer = General_Volunteer.objects.get(staff=staff_member)
+                        # Get the SignedUp object for this person (shared between both tables)
+                        signed_up = general_volunteer.id  # This IS the SignedUp object
+                        
+                        # Create Tutors record with data from SignedUp
+                        # Use try/except instead of get_or_create to avoid validation issues
+                        try:
+                            tutor = Tutors.objects.get(id=signed_up)
+                            api_logger.debug(f"Tutors record already exists for {staff_member.email}")
+                        except Tutors.DoesNotExist:
+                            tutor = Tutors.objects.create(
+                                id=signed_up,
+                                staff=staff_member,
+                                tutor_email=staff_member.email,
+                                tutorship_status='אין_חניך',  # Default status for new tutor
+                                preferences='',
+                                relationship_status='',
+                                tutee_wellness=''
+                            )
+                            api_logger.info(f"Created Tutors record for {staff_member.email} (SignedUp id={signed_up.id})")
+                        
+                        # Delete from General_Volunteer table
+                        general_volunteer.delete()
+                        api_logger.info(f"Deleted General_Volunteer record for {staff_member.email}")
+                        
+                    except General_Volunteer.DoesNotExist:
+                        api_logger.debug(f"No General_Volunteer record found for {staff_member.email} - already transitioned or not a volunteer")
+                    except Exception as e:
+                        api_logger.error(f"Error transitioning {staff_member.email} from volunteer to tutor: {str(e)}")
+                
+                # Check if "Tutor" role was removed (tutor → volunteer)
+                elif "Tutor" not in new_roles_set and "Tutor" in original_roles_set:
+                    api_logger.info(f"Role transition: {staff_member.email} - Removing Tutor role")
+                    # Move from Tutors to General_Volunteer table
+                    try:
+                        tutor = Tutors.objects.get(staff=staff_member)
+                        # Get the SignedUp object for this person
+                        signed_up = tutor.id  # This IS the SignedUp object
+                        
+                        # Check if they have active tutorship - only allow conversion if no active tutee
+                        if tutor.tutorship_status == "יש_חניך":
+                            log_api_action(
+                                request=request,
+                                action='UPDATE_STAFF_FAILED',
+                                success=False,
+                                error_message="Cannot convert tutor to volunteer while they have an active tutee",
+                                status_code=400,
+                                entity_type='Staff',
+                                entity_ids=[staff_id],
+                                additional_data={
+                                    'staff_email': staff_member.email,
+                                    'staff_full_name': f"{staff_member.first_name} {staff_member.last_name}",
+                                    'attempted_changes': field_changes,
+                                    'changes_count': len(field_changes)
+                                }
+                            )
+                            return JsonResponse(
+                                {"error": "Cannot convert tutor to volunteer while they have an active tutee"},
+                                status=400
+                            )
+                        
+                        # Create General_Volunteer record with data from SignedUp
+                        # Use try/except instead of get_or_create to avoid validation issues
+                        try:
+                            volunteer = General_Volunteer.objects.get(id=signed_up)
+                            api_logger.debug(f"General_Volunteer record already exists for {staff_member.email}")
+                        except General_Volunteer.DoesNotExist:
+                            volunteer = General_Volunteer.objects.create(
+                                id=signed_up,
+                                staff=staff_member,
+                                signupdate=tutor.updated.date() if tutor.updated else now().date(),
+                                comments=''
+                            )
+                            api_logger.info(f"Created General_Volunteer record for {staff_member.email} (SignedUp id={signed_up.id})")
+                        
+                        # Remove from Pending_Tutor if they were there
+                        Pending_Tutor.objects.filter(id=signed_up).delete()
+                        
+                        # Delete from Tutors table
+                        tutor.delete()
+                        api_logger.info(f"Deleted Tutors record for {staff_member.email}")
+                        
+                    except Tutors.DoesNotExist:
+                        api_logger.debug(f"No Tutors record found for {staff_member.email} - already transitioned or not a tutor")
+                    except Exception as e:
+                        api_logger.error(f"Error transitioning {staff_member.email} from tutor to volunteer: {str(e)}")
+                        
+            except Exception as e:
+                api_logger.error(f"Unexpected error in role transition logic: {str(e)}")
 
         # Store original values for propagation BEFORE updating fields
         old_email = staff_member.email.lower() if staff_member.email else None
