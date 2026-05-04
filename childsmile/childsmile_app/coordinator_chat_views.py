@@ -56,63 +56,75 @@ def coordinator_conversations_list(request):
     Shows latest message, unread count, coordinator info
     Any admin can access, messages are sent/received by ליאם אביבי
     """
-    # Check feature flag
-    if not os.getenv('WEEKLY_COORDINATOR_REPORTS_ENABLED', 'true').lower() in ('true', '1', 'yes'):
+    try:
+        # Check feature flag
+        if not os.getenv('WEEKLY_COORDINATOR_REPORTS_ENABLED', 'true').lower() in ('true', '1', 'yes'):
+            return JsonResponse({
+                "error": "Feature disabled",
+                "message": "Coordinator chat feature is currently disabled"
+            }, status=503)
+        
+        staff = _get_staff(request)
+        if not staff:
+            return JsonResponse({"error": "Unauthorized"}, status=401)
+        if not is_admin(staff):
+            return JsonResponse({"error": "Forbidden (admins only)"}, status=403)
+
+        # Get all coordinators (even without messages yet) - for manual send UI
+        # Include all staff with roles containing "Coordinator" (staff can be created from System Management, not just registration)
+        all_coordinators = Staff.objects.filter(
+            roles__role_name__icontains='Coordinator',
+            is_active=True
+        ).distinct().order_by('first_name', 'last_name')
+
+        coordinator_count = all_coordinators.count()
+        api_logger.debug(f"[COORDINATOR_CHAT] Found {coordinator_count} coordinators with roles containing 'Coordinator'")
+        
+        # Debug: Log available role names in DB (DEBUG level only for security)
+        all_roles = Role.objects.all().values_list('role_name', flat=True).distinct()
+        api_logger.debug(f"[COORDINATOR_CHAT] All roles in DB: {list(all_roles)}")
+
+        conversations = []
+        for coordinator in all_coordinators:
+            try:
+                messages = CoordinatorChatMessage.objects.filter(
+                    coordinator=coordinator
+                ).order_by('-created_at')
+
+                last_message = messages.first()
+                unread_count = messages.filter(is_read=False, sender_type='coordinator').count()
+
+                conversations.append({
+                    "coordinator_id": coordinator.staff_id,
+                    "coordinator_name": f"{coordinator.first_name} {coordinator.last_name}",
+                    "coordinator_phone": coordinator.staff_phone or "",
+                    "last_message": _message_to_dict(last_message) if last_message else None,
+                    "unread_count": unread_count,
+                    "total_messages": messages.count(),
+                    "has_messages": messages.exists(),
+                })
+            except Exception as e:
+                api_logger.error(f"[COORDINATOR_CHAT] Error processing coordinator {coordinator.staff_id}: {str(e)}")
+                continue
+
+        # Sort by unread count (desc) then by last message time (desc)
+        try:
+            conversations.sort(key=lambda x: (
+                -x['unread_count'],
+                -(datetime.fromisoformat(x['last_message']['created_at']).timestamp() if x['last_message'] and x['last_message'].get('created_at') else 0)
+            ))
+        except Exception as sort_error:
+            api_logger.warning(f"[COORDINATOR_CHAT] Error sorting conversations: {str(sort_error)}")
+            # Continue without sorting if there's an error
+
         return JsonResponse({
-            "error": "Feature disabled",
-            "message": "Coordinator chat feature is currently disabled"
-        }, status=503)
-    
-    staff = _get_staff(request)
-    if not staff:
-        return JsonResponse({"error": "Unauthorized"}, status=401)
-    if not is_admin(staff):
-        return JsonResponse({"error": "Forbidden (admins only)"}, status=403)
-
-    # Get all coordinators (even without messages yet) - for manual send UI
-    # Include all staff with roles containing "Coordinator" (staff can be created from System Management, not just registration)
-    all_coordinators = Staff.objects.filter(
-        roles__role_name__icontains='Coordinator',
-        is_active=True
-    ).distinct().order_by('first_name', 'last_name')
-
-    coordinator_count = all_coordinators.count()
-    api_logger.debug(f"[COORDINATOR_CHAT] Found {coordinator_count} coordinators with roles containing 'Coordinator'")
-    
-    # Debug: Log available role names in DB (DEBUG level only for security)
-    all_roles = Role.objects.all().values_list('role_name', flat=True).distinct()
-    api_logger.debug(f"[COORDINATOR_CHAT] All roles in DB: {list(all_roles)}")
-
-    conversations = []
-    for coordinator in all_coordinators:
-        messages = CoordinatorChatMessage.objects.filter(
-            coordinator=coordinator
-        ).order_by('-created_at')
-
-        last_message = messages.first()
-        unread_count = messages.filter(is_read=False, sender_type='coordinator').count()
-
-        conversations.append({
-            "coordinator_id": coordinator.staff_id,
-            "coordinator_name": f"{coordinator.first_name} {coordinator.last_name}",
-            "coordinator_phone": coordinator.staff_phone or "",
-            "last_message": _message_to_dict(last_message) if last_message else None,
-            "unread_count": unread_count,
-            "total_messages": messages.count(),
-            "has_messages": messages.exists(),
+            "conversations": conversations,
+            "total_coordinators": len(conversations),
+            "total_unread": sum(c['unread_count'] for c in conversations),
         })
-
-    # Sort by unread count (desc) then by last message time (desc)
-    conversations.sort(key=lambda x: (
-        -x['unread_count'],
-        -(datetime.fromisoformat(x['last_message']['created_at']).timestamp() if x['last_message'] else 0)
-    ))
-
-    return JsonResponse({
-        "conversations": conversations,
-        "total_coordinators": len(conversations),
-        "total_unread": sum(c['unread_count'] for c in conversations),
-    })
+    except Exception as e:
+        api_logger.error(f"[COORDINATOR_CHAT] Unexpected error in coordinator_conversations_list: {str(e)}", exc_info=True)
+        return JsonResponse({"error": f"Server error: {str(e)}"}, status=500)
 
 
 @conditional_csrf
