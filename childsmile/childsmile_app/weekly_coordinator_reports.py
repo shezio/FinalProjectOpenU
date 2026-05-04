@@ -170,19 +170,57 @@ def handle_coordinator_response(phone, message_text, received_at):
         }
     )
     
-    # Store message in chat history - coordinator's message goes TO ליאם אביבי
-    # Get ליאם אביבי
+    # Store message in chat history - coordinator's message should be displayed in their chat thread
+    # The message is FROM the coordinator, TO ליאם אביבי (for UI display in coordinator-specific chat)
+    CoordinatorChatMessage.objects.create(
+        coordinator=coordinator,  # This is THE coordinator who sent the message
+        sender_type='coordinator',
+        sender_id=coordinator.staff_id,  # Sent BY the coordinator
+        message_text=message_text,
+        is_read=False
+    )
+    
+    # Send WhatsApp notification to ליאם אביבי about the coordinator's response
     liam = Staff.objects.filter(first_name="ליאם", last_name="אביבי").first()
-    if liam:
-        CoordinatorChatMessage.objects.create(
-            coordinator=liam,  # Message is stored for ליאם אביבי (the recipient)
-            sender_type='coordinator',
-            sender_id=coordinator.staff_id,  # Sent BY the coordinator
-            message_text=message_text,
-            is_read=False
-        )
+    if liam and liam.staff_phone:
+        try:
+            import os
+            from .whatsapp_utils import send_whatsapp_message
+            coordinator_name = f"{coordinator.first_name} {coordinator.last_name}"
+            
+            # Try to use existing admin message template
+            template_sid = os.getenv('TWILIO_ADMIN_MESSAGE_SID')
+            
+            if template_sid:
+                # Use template with coordinator name and message
+                # Template variables: {{1}} = name, {{2}} = message
+                send_whatsapp_message(
+                    recipient_phone=liam.staff_phone,
+                    message_body="",
+                    use_template=True,
+                    template_sid=template_sid,
+                    template_variables={
+                        "1": coordinator_name,
+                        "2": message_text
+                    }
+                )
+            else:
+                # Fallback to plain text if template not configured
+                wa_message = f"הודעה חדשה מ{coordinator_name}:\n\n{message_text}"
+                send_whatsapp_message(
+                    recipient_phone=liam.staff_phone,
+                    message_body=wa_message,
+                    use_template=False
+                )
+            
+            api_logger.info(f"[WEEKLY_REPORTS] WhatsApp notification sent to ליאם אביבי about response from {coordinator_name}")
+        except Exception as wa_error:
+            api_logger.warning(f"[WEEKLY_REPORTS] Failed to send WhatsApp to ליאם אביבי: {wa_error}")
     else:
-        api_logger.warning("[WEEKLY_REPORTS] ליאם אביבי not found in system - message not stored in chat")
+        if not liam:
+            api_logger.warning("[WEEKLY_REPORTS] ליאם אביבי not found in system")
+        else:
+            api_logger.warning("[WEEKLY_REPORTS] ליאם אביבי has no phone number - WhatsApp notification skipped")
     
     # Mark request as responded
     WeeklyCoordinatorRequest.objects.filter(
