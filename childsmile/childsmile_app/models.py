@@ -673,3 +673,50 @@ class StaffMeeting(models.Model):
     def __str__(self):
         return f"{self.title} – {self.meeting_date} {self.meeting_time}"
 
+# ──────────────────────────────────────────────
+# Weekly Coordinator Progress Reports
+# ──────────────────────────────────────────────
+
+class WeeklyCoordinatorRequest(models.Model):
+    """
+    Tracks when weekly progress request was sent to coordinators.
+    Used for auditing and tracking response status.
+    """
+    coordinator = models.ForeignKey(Staff, on_delete=models.CASCADE, related_name='weekly_requests')
+    week_starting = models.DateField()  # ISO week start date (Monday)
+    request_sent_at = models.DateTimeField()
+    response_received = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "childsmile_app_weeklycoordinatorrequest"
+        unique_together = ('coordinator', 'week_starting')
+        ordering = ['-week_starting', 'coordinator']
+
+    def __str__(self):
+        return f"Request to {self.coordinator.username} for week {self.week_starting}"
+
+
+class CoordinatorProgressReport(models.Model):
+    """
+    Stores free-text progress reports from coordinators.
+    Sent weekly via WhatsApp, received as replies.
+    Only admins can see these reports.
+    """
+    coordinator = models.ForeignKey(Staff, on_delete=models.CASCADE, related_name='progress_reports')
+    week_starting = models.DateField()  # ISO week start date (Monday)
+    message_text = models.TextField()  # The coordinator's response
+    received_at = models.DateTimeField()  # When WhatsApp reply came in
+    is_reviewed = models.BooleanField(default=False)
+    admin_notes = models.TextField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "childsmile_app_coordinatorprogressreport"
+        unique_together = ('coordinator', 'week_starting')
+        ordering = ['-week_starting', 'coordinator']
+
+    def __str__(self):
+        return f"Progress report from {self.coordinator.username} for week {self.week_starting}"
+
