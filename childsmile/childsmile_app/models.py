@@ -720,3 +720,32 @@ class CoordinatorProgressReport(models.Model):
     def __str__(self):
         return f"Progress report from {self.coordinator.username} for week {self.week_starting}"
 
+class CoordinatorChatMessage(models.Model):
+    """
+    Chat messages between admins and coordinators.
+    Supports both admin-initiated and coordinator-replied messages.
+    Creates a message thread per coordinator for UI display.
+    """
+    MESSAGE_TYPE_CHOICES = [
+        ('admin', 'Admin Message'),
+        ('coordinator', 'Coordinator Reply'),
+    ]
+
+    coordinator = models.ForeignKey(Staff, on_delete=models.CASCADE, related_name='chat_messages')
+    sender_type = models.CharField(max_length=20, choices=MESSAGE_TYPE_CHOICES)  # 'admin' or 'coordinator'
+    sender_id = models.IntegerField(null=True, blank=True)  # staff_id if admin, None if coordinator
+    message_text = models.TextField()
+    is_read = models.BooleanField(default=False)  # Track if coordinator/admin read it
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "childsmile_app_coordinatorchatmessage"
+        ordering = ['coordinator', 'created_at']
+        indexes = [
+            models.Index(fields=['coordinator', '-created_at']),
+            models.Index(fields=['coordinator', 'is_read']),
+        ]
+
+    def __str__(self):
+        return f"Message from {self.sender_type} to {self.coordinator.username}"
+

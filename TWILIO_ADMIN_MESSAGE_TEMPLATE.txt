@@ -1,0 +1,15 @@
+TWILIO MESSAGE TEMPLATE FOR COORDINATOR CHAT
+
+Template Name: admin_message_to_coordinator
+
+Template Body:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+שלום {{1}}!
+
+זה הודעה מליאם אביבי בנושא עדכוני התקדמות השבועי.
+
+{{2}}
+
+תודה!
+

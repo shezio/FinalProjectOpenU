@@ -475,6 +475,8 @@ urlpatterns = [
     path("api/meetings/", include("childsmile_app.urls_meetings")),
     # Coordinator progress reports (weekly updates)
     path("api/coordinator-reports/", include("childsmile_app.urls_coordinator_reports")),
+    # Coordinator chat / messaging interface
+    path("api/", include("childsmile_app.urls_coordinator_chat")),
     # Twilio WhatsApp webhooks
     path("api/webhooks/whatsapp-incoming/", whatsapp_incoming, name="whatsapp_incoming"),
 ]

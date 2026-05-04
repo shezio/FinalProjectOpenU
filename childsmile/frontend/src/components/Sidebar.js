@@ -194,6 +194,15 @@ const Sidebar = () => {
           ניהול פגישות
         </button>
       )}
+      {hasPermissionToSystemManagement && (
+        <button
+          data-path="/coordinator-chat"
+          className={location.pathname.startsWith('/coordinator-chat') ? 'active' : ''}
+          onClick={() => goTo('/coordinator-chat')}
+        >
+          {t('Team Updates')}
+        </button>
+      )}
       {hasPermissionToReviewer && (
         <button
           data-path="/reviewer"

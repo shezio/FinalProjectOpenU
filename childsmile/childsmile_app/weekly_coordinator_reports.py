@@ -10,7 +10,7 @@ from django.db.models import Q
 import datetime
 from datetime import datetime as dt
 from .logger import api_logger
-from .models import Staff, WeeklyCoordinatorRequest, CoordinatorProgressReport
+from .models import Staff, WeeklyCoordinatorRequest, CoordinatorProgressReport, CoordinatorChatMessage
 from .whatsapp_utils import send_whatsapp_message
 
 
@@ -27,13 +27,17 @@ def get_iso_week_start(date_obj=None):
 
 
 def get_all_coordinators():
-    """Return all active coordinators and admins with staff_phone."""
+    """
+    Return all active coordinators with staff_phone for WhatsApp messaging.
+    Uses same role names as get_available_coordinators:
+    - Families Coordinator
+    - Tutored Families Coordinator
+    """
     return Staff.objects.filter(
         is_active=True,
         registration_approved=True,
         staff_phone__isnull=False,  # Must have phone for WhatsApp
-    ).filter(
-        Q(roles__role_name__icontains='coordinator') | Q(roles__role_name__icontains='admin')
+        roles__role_name__in=['Families Coordinator', 'Tutored Families Coordinator']
     ).distinct()
 
 
@@ -136,6 +140,20 @@ def handle_coordinator_response(phone, message_text, received_at):
             "is_reviewed": False,
         }
     )
+    
+    # Store message in chat history - coordinator's message goes TO ליאם אביבי
+    # Get ליאם אביבי
+    liam = Staff.objects.filter(first_name="ליאם", last_name="אביבי").first()
+    if liam:
+        CoordinatorChatMessage.objects.create(
+            coordinator=liam,  # Message is stored for ליאם אביבי (the recipient)
+            sender_type='coordinator',
+            sender_id=coordinator.staff_id,  # Sent BY the coordinator
+            message_text=message_text,
+            is_read=False
+        )
+    else:
+        api_logger.warning("[WEEKLY_REPORTS] ליאם אביבי not found in system - message not stored in chat")
     
     # Mark request as responded
     WeeklyCoordinatorRequest.objects.filter(
