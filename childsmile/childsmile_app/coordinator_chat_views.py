@@ -72,10 +72,20 @@ def coordinator_conversations_list(request):
 
         # Get all coordinators (even without messages yet) - for manual send UI
         # Include all staff with roles containing "Coordinator" (staff can be created from System Management, not just registration)
+        # Exclude: דריה מקורה and דביר החמוד
+        exclude_names = [
+            ('דריה', 'מקורה'),
+            ('דביר', 'החמוד'),
+        ]
+        
         all_coordinators = Staff.objects.filter(
             roles__role_name__icontains='Coordinator',
             is_active=True
         ).distinct().order_by('first_name', 'last_name')
+        
+        # Filter out excluded coordinators
+        for first, last in exclude_names:
+            all_coordinators = all_coordinators.exclude(first_name=first, last_name=last)
 
         coordinator_count = all_coordinators.count()
         api_logger.debug(f"[COORDINATOR_CHAT] Found {coordinator_count} coordinators with roles containing 'Coordinator'")
