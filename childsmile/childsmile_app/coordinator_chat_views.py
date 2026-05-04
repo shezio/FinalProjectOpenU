@@ -70,11 +70,10 @@ def coordinator_conversations_list(request):
         return JsonResponse({"error": "Forbidden (admins only)"}, status=403)
 
     # Get all coordinators (even without messages yet) - for manual send UI
-    # Include all staff with roles containing "Coordinator"
+    # Include all staff with roles containing "Coordinator" (staff can be created from System Management, not just registration)
     all_coordinators = Staff.objects.filter(
         roles__role_name__icontains='Coordinator',
-        is_active=True,
-        registration_approved=True
+        is_active=True
     ).distinct().order_by('first_name', 'last_name')
 
     coordinator_count = all_coordinators.count()
