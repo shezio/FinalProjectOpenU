@@ -41,12 +41,23 @@ const CoordinatorChat = () => {
     return '';
   };
 
-  // Load conversations on mount
+  // Load conversations on mount and every 5 seconds
   useEffect(() => {
     loadConversations();
     const interval = setInterval(loadConversations, 5000); // Refresh every 5 seconds
     return () => clearInterval(interval);
   }, []);
+
+  // Auto-refresh chat history every 3 seconds when a coordinator is selected
+  useEffect(() => {
+    if (!selectedCoordinator) return;
+    
+    const interval = setInterval(() => {
+      loadChatHistory(selectedCoordinator.id);
+    }, 3000); // Refresh chat every 3 seconds
+    
+    return () => clearInterval(interval);
+  }, [selectedCoordinator]);
 
   // Scroll to bottom when chat updates
   useEffect(() => {
@@ -91,7 +102,15 @@ const CoordinatorChat = () => {
       const response = await axios.get(`/api/coordinator-chat/${coordinatorId}/`);
       console.log('Chat history response:', response.data);
       console.log('Coordinator object:', response.data.coordinator);
+      console.log('Messages count:', response.data.messages.length);
       console.log('Messages:', response.data.messages);
+      console.log('Total count from DB:', response.data.total_count);
+      
+      // Debug: Check if we're getting more messages than displayed
+      if (response.data.total_count > response.data.messages.length) {
+        console.warn(`⚠️ DB has ${response.data.total_count} messages but only ${response.data.messages.length} returned (pagination)`);
+      }
+      
       setChatHistory(response.data.messages);
       setSelectedCoordinator(response.data.coordinator);
       setMessageText('');
@@ -100,6 +119,7 @@ const CoordinatorChat = () => {
     } catch (error) {
       console.error('Error loading chat history:', error);
       console.error('Error response:', error.response?.data);
+      showErrorToast(t, 'Failed to load chat history', error);
     }
   };
 
@@ -382,6 +402,13 @@ const CoordinatorChat = () => {
                   <h3>{selectedCoordinator.name}</h3>
                   <div className="coordinator-info">
                     <small>📱 {selectedCoordinator.phone || 'N/A'}</small>
+                    <button 
+                      className="refresh-chat-btn" 
+                      onClick={() => loadChatHistory(selectedCoordinator.id)}
+                      title="Refresh chat"
+                    >
+                      🔄
+                    </button>
                   </div>
                 </div>
 

@@ -491,7 +491,30 @@
   gap: 20px;
   font-size: 24px;
   opacity: 0.9;
+  align-items: center;
 }
+
+.refresh-chat-btn {
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  opacity: 0.9;
+  transition: transform 0.3s, opacity 0.2s;
+  padding: 4px 8px;
+  border-radius: 6px;
+}
+
+.refresh-chat-btn:hover {
+  opacity: 1;
+  transform: rotate(180deg);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.refresh-chat-btn:active {
+  transform: rotate(180deg) scale(0.9);
+}
+
 
 .coordinator-info small {
   display: flex;
