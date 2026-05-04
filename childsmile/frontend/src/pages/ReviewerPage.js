@@ -74,6 +74,9 @@ const ReviewerPage = () => {
   const [availableCoordinators, setAvailableCoordinators] = useState([]);
   const [autoAssignedCoordinator, setAutoAssignedCoordinator] = useState(null);
 
+  // Info modal for family details (read-only)
+  const [selectedFamily, setSelectedFamily] = useState(null);
+
   // Assign task modal (admin only)
   const [isAssignModalOpen, setIsAssignModalOpen]   = useState(false);
   const [taskToAssign,      setTaskToAssign]         = useState(null);
@@ -108,7 +111,7 @@ const ReviewerPage = () => {
   const clearSelection = () => setSelectedTaskIds(new Set());
 
   // Send in small batches to avoid overwhelming the backend
-  const BATCH_SIZE   = 5;
+  const BATCH_SIZE   = 3;
   const BATCH_DELAY  = 300; // ms between batches
 
   const handleBulkAssignConfirm = async () => {
@@ -252,7 +255,7 @@ const ReviewerPage = () => {
   // Pagination
   const [page, setPage]           = useState(1);
   const [totalCount, setTotalCount] = useState(0);
-  const pageSize = 4;
+  const pageSize = 3;
 
   // Filtered rows
   const filteredTasks = tasks.filter(tk => {
@@ -395,6 +398,19 @@ const ReviewerPage = () => {
 
   const closeEditModal = () => { setEditFamily(null); setErrors({}); };
   const formatStatus = (s) => (s || '---').replace(/_/g, ' ');
+
+  // Info modal helpers
+  const openFamilyInfoModal = (task) => {
+    const childId = task.child;
+    if (!childId) { showWarningToast(t, 'אין ילד משויך למשימה זו', ''); return; }
+    const family = familyData.find(f => String(f.id) === String(childId));
+    if (!family) { showWarningToast(t, 'לא נמצאו פרטי משפחה', ''); return; }
+    setSelectedFamily(family);
+  };
+
+  const closeFamilyDetails = () => {
+    setSelectedFamily(null);
+  };
 
   const validateFamilyForm = () => {
     const errs = {};
@@ -580,6 +596,14 @@ const ReviewerPage = () => {
                               onClick={() => openAssignModal(task)}
                             >
                               שייך משימה
+                            </button>
+                          )}
+                          {canEditFamily && (
+                            <button
+                              className="reviewer-btn-action reviewer-btn-info"
+                              onClick={() => openFamilyInfoModal(task)}
+                            >
+                              🔍 פרטים
                             </button>
                           )}
                           {canEditFamily && (
@@ -795,6 +819,55 @@ const ReviewerPage = () => {
                 <button type="button" onClick={closeEditModal}>{t('Cancel')}</button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+      {/* Family info modal (read-only) */}
+      {selectedFamily && (
+        <div className="reviewers-modal">
+          <div className="reviewers-modal-content">
+            <span className="reviewers-close" onClick={closeFamilyDetails}>&times;</span>
+            <h2>{t('Family Details')} {selectedFamily.last_name}</h2>
+            <div className="family-details-grid">
+              <p>{t('ID')}: {selectedFamily.id}</p>
+              <p>{t('Full Name')}: {selectedFamily.first_name} {selectedFamily.last_name}</p>
+              <p>{t('Registration Date')}: {selectedFamily.registration_date || '---'}</p>
+              <p>{t('Status')}: {formatStatus(selectedFamily.status)}</p>
+              <p>{t('Child Phone')}: {selectedFamily.child_phone_number || '---'}</p>
+              <p>{t('Gender')}: {selectedFamily.gender ? t('Female') : t('Male')}</p>
+              <p>{t('Date of Birth')}: {selectedFamily.date_of_birth || '---'}</p>
+              <p>{t('Medical Diagnosis')}: {selectedFamily.medical_diagnosis || '---'}</p>
+              <p>{t('Diagnosis Date')}: {selectedFamily.diagnosis_date || '---'}</p>
+              <p>{t('Marital Status')}: {selectedFamily.marital_status || '---'}</p>
+              <p>{t('Number of Siblings')}: {selectedFamily.num_of_siblings || '---'}</p>
+              <p>{t('Tutoring Status')}: {formatStatus(selectedFamily.tutoring_status)}</p>
+              <p>{t('Treating Hospital')}: {selectedFamily.treating_hospital || '---'}</p>
+              <p>{t('Current Medical State')}: {selectedFamily.current_medical_state || '---'}</p>
+              <p>{t('When Completed Treatments')}: {selectedFamily.when_completed_treatments || '---'}</p>
+              <p>{t('Responsible Coordinator')}: {selectedFamily.responsible_coordinator || '---'}</p>
+              <p>{t('Father Name')}: {selectedFamily.father_name || '---'}</p>
+              <p>{t('Father Phone')}: {selectedFamily.father_phone || '---'}</p>
+              <p>{t('Mother Name')}: {selectedFamily.mother_name || '---'}</p>
+              <p>{t('Mother Phone')}: {selectedFamily.mother_phone || '---'}</p>
+              <p>{t('Has Completed Treatments')}: {selectedFamily.has_completed_treatments ? t('Yes') : t('No')}</p>
+              <p>{t('Need Review')}: {selectedFamily.need_review ? t('Yes') : t('No')}</p>
+              <p>{t('Is In Frame')}: {selectedFamily.is_in_frame || '---'}</p>
+              <p>{t('Coordinator Comments')}: {selectedFamily.coordinator_comments || '---'}</p>
+              <p>{t('Additional Info')}: {selectedFamily.additional_info || '---'}</p>
+              <p>{t('Details for Tutoring')}: {selectedFamily.details_for_tutoring || '---'}</p>
+            </div>
+            <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', marginTop: '20px' }}>
+              <button
+                className="filter-button"
+                onClick={() => {
+                  closeFamilyDetails();
+                  // Optional: You could trigger edit mode here if needed
+                  // For now, user can click the Edit button separately
+                }}
+              >
+                {t('Close')}
+              </button>
+            </div>
           </div>
         </div>
       )}
