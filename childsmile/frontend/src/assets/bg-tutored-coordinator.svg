@@ -1,0 +1,64 @@
+<svg viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
+  <!-- Gradient background -->
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#e3f2fd;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#bbdefb;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="bookGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#4a90d9;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#2c5aa0;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <rect width="1200" height="800" fill="url(#bgGradient)"/>
+  
+  <!-- Books stacked -->
+  <g opacity="0.15">
+    <!-- Bottom book (red) -->
+    <rect x="100" y="500" width="280" height="200" fill="#e74c3c" rx="5"/>
+    <rect x="100" y="500" width="280" height="20" fill="#c0392b"/>
+    
+    <!-- Middle book (green) -->
+    <rect x="130" y="420" width="280" height="200" fill="#27ae60" rx="5"/>
+    <rect x="130" y="420" width="280" height="20" fill="#229954"/>
+    
+    <!-- Top book (blue) -->
+    <rect x="160" y="340" width="280" height="200" fill="url(#bookGradient)" rx="5"/>
+    <rect x="160" y="340" width="280" height="20" fill="#1a3a5c"/>
+    
+    <!-- Book pages detail -->
+    <line x1="170" y1="360" x2="430" y2="360" stroke="#ffffff" stroke-width="3" opacity="0.6"/>
+    <line x1="170" y1="380" x2="430" y2="380" stroke="#ffffff" stroke-width="3" opacity="0.6"/>
+    <line x1="170" y1="400" x2="430" y2="400" stroke="#ffffff" stroke-width="3" opacity="0.6"/>
+  </g>
+  
+  <!-- Student figure -->
+  <g opacity="0.2">
+    <!-- Head -->
+    <circle cx="850" cy="200" r="50" fill="#f4a460"/>
+    <!-- Body -->
+    <rect x="800" y="260" width="100" height="120" fill="#4a90d9" rx="10"/>
+    <!-- Arms -->
+    <rect x="730" y="280" width="70" height="40" fill="#f4a460" rx="20"/>
+    <rect x="900" y="280" width="70" height="40" fill="#f4a460" rx="20"/>
+    <!-- Legs -->
+    <rect x="820" y="380" width="30" height="100" fill="#333" rx="10"/>
+    <rect x="850" y="380" width="30" height="100" fill="#333" rx="10"/>
+  </g>
+  
+  <!-- Pencil/pen icons -->
+  <g opacity="0.25">
+    <rect x="950" y="400" width="15" height="150" fill="#f39c12" rx="7"/>
+    <polygon points="957.5,550 945,565 970,565" fill="#333"/>
+    
+    <rect x="1000" y="350" width="12" height="180" fill="#e74c3c" rx="6"/>
+    <polygon points="1006,530 996,545 1016,545" fill="#333"/>
+  </g>
+  
+  <!-- Light rays -->
+  <g opacity="0.1">
+    <line x1="600" y1="0" x2="600" y2="800" stroke="#ffffff" stroke-width="40"/>
+    <line x1="750" y1="0" x2="750" y2="800" stroke="#ffffff" stroke-width="40"/>
+  </g>
+</svg>

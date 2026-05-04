@@ -1,0 +1,105 @@
+<svg viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
+  <!-- Gradient background -->
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#fff3e0;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#ffe0b2;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <rect width="1200" height="800" fill="url(#bgGradient)"/>
+  
+  <!-- Helping hands -->
+  <g opacity="0.15">
+    <!-- Hand 1 reaching down -->
+    <g transform="translate(200, 150)">
+      <ellipse cx="0" cy="0" rx="15" ry="50" fill="#d4a574"/>
+      <circle cx="-12" cy="-45" r="10" fill="#d4a574"/>
+      <circle cx="0" cy="-50" r="10" fill="#d4a574"/>
+      <circle cx="12" cy="-45" r="10" fill="#d4a574"/>
+    </g>
+    
+    <!-- Hand 2 reaching up -->
+    <g transform="translate(180, 350)">
+      <ellipse cx="0" cy="0" rx="14" ry="48" fill="#c9945f"/>
+      <circle cx="-10" cy="43" r="9" fill="#c9945f"/>
+      <circle cx="0" cy="48" r="9" fill="#c9945f"/>
+      <circle cx="10" cy="43" r="9" fill="#c9945f"/>
+    </g>
+    
+    <!-- Hand 3 reaching right -->
+    <g transform="translate(800, 250)">
+      <ellipse cx="0" cy="0" rx="50" ry="15" fill="#d4a574"/>
+      <circle cx="45" cy="-10" r="10" fill="#d4a574"/>
+      <circle cx="50" cy="0" r="10" fill="#d4a574"/>
+      <circle cx="45" cy="10" r="10" fill="#d4a574"/>
+    </g>
+    
+    <!-- Hand 4 reaching left -->
+    <g transform="translate(400, 280)">
+      <ellipse cx="0" cy="0" rx="48" ry="14" fill="#c9945f"/>
+      <circle cx="-43" cy="-9" r="10" fill="#c9945f"/>
+      <circle cx="-48" cy="0" r="10" fill="#c9945f"/>
+      <circle cx="-43" cy="9" r="10" fill="#c9945f"/>
+    </g>
+  </g>
+  
+  <!-- Community/people circles -->
+  <g opacity="0.12">
+    <!-- Person 1 -->
+    <circle cx="100" cy="600" r="30" fill="#e74c3c"/>
+    <circle cx="100" cy="550" r="18" fill="#d4a574"/>
+    
+    <!-- Person 2 -->
+    <circle cx="200" cy="620" r="28" fill="#3498db"/>
+    <circle cx="200" cy="572" r="16" fill="#d4a574"/>
+    
+    <!-- Person 3 -->
+    <circle cx="280" cy="610" r="26" fill="#2ecc71"/>
+    <circle cx="280" cy="566" r="15" fill="#d4a574"/>
+    
+    <!-- Person 4 -->
+    <circle cx="1100" cy="600" r="32" fill="#9b59b6"/>
+    <circle cx="1100" cy="545" r="19" fill="#d4a574"/>
+    
+    <!-- Person 5 -->
+    <circle cx="1000" cy="625" r="27" fill="#f39c12"/>
+    <circle cx="1000" cy="580" r="16" fill="#d4a574"/>
+  </g>
+  
+  <!-- Giving/sharing symbols -->
+  <g opacity="0.1">
+    <!-- Gift box 1 -->
+    <rect x="500" y="150" width="60" height="60" fill="#e74c3c"/>
+    <rect x="525" y="140" width="10" height="80" fill="#f1c40f"/>
+    <circle cx="530" cy="140" r="8" fill="#f1c40f"/>
+    
+    <!-- Gift box 2 -->
+    <rect x="700" y="450" width="55" height="55" fill="#2ecc71"/>
+    <rect x="722" y="442" width="9" height="71" fill="#f1c40f"/>
+    <circle cx="726.5" cy="442" r="7" fill="#f1c40f"/>
+    
+    <!-- Heart symbol -->
+    <g transform="translate(950, 350)">
+      <path d="M 0,-8 C -12,-20 -25,-12 -25,0 C -25,12 0,32 0,32 C 0,32 25,12 25,0 C 25,-12 12,-20 0,-8 Z" fill="#e74c3c"/>
+    </g>
+  </g>
+  
+  <!-- Helping signs/arrows -->
+  <g opacity="0.08">
+    <!-- Arrow pointing up -->
+    <line x1="600" y1="400" x2="600" y2="320" stroke="#27ae60" stroke-width="4" stroke-linecap="round"/>
+    <polygon points="600,310 590,330 610,330" fill="#27ae60"/>
+    
+    <!-- Arrow pointing down -->
+    <line x1="400" y1="200" x2="400" y2="280" stroke="#3498db" stroke-width="4" stroke-linecap="round"/>
+    <polygon points="400,290 390,270 410,270" fill="#3498db"/>
+  </g>
+  
+  <!-- Light rays -->
+  <g opacity="0.06">
+    <line x1="600" y1="0" x2="600" y2="800" stroke="#f39c12" stroke-width="2" stroke-dasharray="10,10"/>
+    <line x1="300" y1="0" x2="300" y2="800" stroke="#f39c12" stroke-width="2" stroke-dasharray="10,10"/>
+    <line x1="900" y1="0" x2="900" y2="800" stroke="#f39c12" stroke-width="2" stroke-dasharray="10,10"/>
+  </g>
+</svg>

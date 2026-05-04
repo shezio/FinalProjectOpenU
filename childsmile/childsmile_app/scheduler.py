@@ -110,6 +110,23 @@ def start_scheduler():
             except Exception as mr_err:
                 api_logger.error(f'❌ Could not schedule meeting reminders: {mr_err}')
 
+            # Add job: Send weekly coordinator progress request (Monday 8:00 AM)
+            # Controlled by WEEKLY_COORDINATOR_REQUEST_TIME env var (default 08:00)
+            coordinator_request_time = os.environ.get('WEEKLY_COORDINATOR_REQUEST_TIME', '08:00').strip()
+            try:
+                cr_hour, cr_minute = map(int, coordinator_request_time.split(':'))
+                _scheduler.add_job(
+                    func=_run_weekly_coordinator_request,
+                    trigger=CronTrigger(day_of_week=0, hour=cr_hour, minute=cr_minute, timezone=israel_tz),  # Monday=0
+                    id='weekly_coordinator_request',
+                    name='Weekly Coordinator Progress Request',
+                    replace_existing=True,
+                    misfire_grace_time=300,
+                )
+                api_logger.info(f'📋 Weekly coordinator request scheduled Monday at {coordinator_request_time} Israel time')
+            except Exception as cr_err:
+                api_logger.error(f'❌ Could not schedule weekly coordinator request: {cr_err}')
+
             _scheduler.start()
             api_logger.info(f'✅ Scheduler started | Monthly review: {scheduled_time} Israel time | Cleanup: Friday 11 PM Israel time')
             
@@ -206,3 +223,23 @@ def _run_meeting_reminders():
         api_logger.info('✅ Meeting reminder check completed')
     except Exception as e:
         api_logger.error(f'❌ Error in scheduled meeting reminders: {str(e)}')
+
+
+def _run_weekly_coordinator_request():
+    """
+    Send weekly progress request to all coordinators.
+    Called every Monday at the configured WEEKLY_COORDINATOR_REQUEST_TIME (default 08:00 Israel time).
+    Feature controlled by WEEKLY_COORDINATOR_REPORTS_ENABLED env var.
+    """
+    # Check if feature is enabled
+    if not os.environ.get('WEEKLY_COORDINATOR_REPORTS_ENABLED', 'true').lower() in ('true', '1', 'yes'):
+        api_logger.info('📋 Weekly coordinator progress request: Feature disabled (WEEKLY_COORDINATOR_REPORTS_ENABLED=false)')
+        return
+    
+    try:
+        from .weekly_coordinator_reports import send_weekly_coordinator_request
+        api_logger.info('📋 Weekly coordinator progress request triggered by scheduler')
+        send_weekly_coordinator_request()
+        api_logger.info('✅ Weekly coordinator request completed')
+    except Exception as e:
+        api_logger.error(f'❌ Error in scheduled weekly coordinator request: {str(e)}')
