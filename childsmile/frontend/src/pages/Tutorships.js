@@ -1764,24 +1764,20 @@ const Tutorships = () => {
                           </button>
                         </span>
                         {showGradeTooltip && ReactDOM.createPortal(
-                          <span className="grade-tooltip-text visible">
-                            {t('Each tutor-child match receives a grade based on:')}<br /><br />
-                            <b><u>{t('Base Score')}</u>:</b> {t('Starts from 0 to 100 depending on the match\'s position in the list.')}<br />
-                            <b>{t('with a base grade spreading linearly across matches')}.</b><br /><br />
-                            <b><u>{t('Then, the grade is adjusted based on:')}</u></b><br />
-                            <b><u>{t('Age Difference Bonus')}</u>:</b><br />
-                            {t('Less than 5 years')} ← 20+ {t('points')}<br />
-                            5–10 {t('years')} ← 10+ {t('points')}<br />
-                            10–15 {t('years')} ← 5+ {t('points')}<br /><br />
-                            <b><u>{t('Distance Bonus (based on how close they live)')}</u>:</b><br />
-                            {t('Less than 10 km')} ← 20+ {t('points')}<br />
-                            10–20 {t('km')} ← 10+ {t('points')}<br />
-                            20–30 {t('km')} ← 5+ {t('points')}<br /><br />
-                            <b><u>{t('Distance Penalty')}</u>:</b><br />
-                            {t('More than 50 km')} → {t('Grade set to')} 5-<br /><br />
-                            <b><u>{t('Final Grade')}</u>:</b><br />
-                            {t('Rounded up to the nearest whole number')}<br />
-                            {t('Always kept between -5 and 100')}
+                          <span className="grade-tooltip-text visible" style={{ direction: 'rtl', textAlign: 'right' }}>
+                            {t('Each tutor-child match receives a grade based ONLY on distance:')}<br /><br />
+                            <b><u>{t('Scoring Formula')}</u>:</b><br />
+                             ({t('distance')} × 2) - 100<br /><br />
+                            <b><u>{t('Distance Categories')}</u>:</b><br />
+                             {t('0 km')} = 100 <br />
+                             {t('25 km')} = 50 <br />
+                             {t('50 km')} = 0 <br />
+                             {t('Over 50 km')} {t('(Invalid/Penalty)')} = -5 <br /><br />
+                            <b><u>{t('Key Points')}</u>:</b><br />
+                            • {t('Age is NOT a factor in matching')}<br />
+                            • {t('Closer distance = Higher grade')}<br />
+                            • {t('Matches over 50km are automatically rejected')}<br />
+                            • {t('Matches are sorted by grade within gender groups')}
                           </span>,
                           document.body
                         )}
