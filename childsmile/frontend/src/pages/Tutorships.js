@@ -4,6 +4,7 @@ import { useLocation } from 'react-router-dom';
 import ReactSlider from 'react-slider';
 import Sidebar from '../components/Sidebar';
 import InnerPageHeader from '../components/InnerPageHeader';
+import CelebrationEffect from '../components/CelebrationEffect';
 import '../styles/common.css';
 import '../styles/reports.css';
 import '../styles/tutorships.css';
@@ -122,7 +123,8 @@ const Tutorships = () => {
   const [manualMatchChildName, setManualMatchChildName] = useState(null);
   const [manualMatchChildGender, setManualMatchChildGender] = useState(null);
   const [availableTutors, setAvailableTutors] = useState([]);
-  const [selectedTutorForMatch, setSelectedTutorForMatch] = useState(null);
+  const [showCelebration, setShowCelebration] = useState(false);
+  const [celebrationUserName, setCelebrationUserName] = useState('');
   const [manualMatchTutorSearchQuery, setManualMatchTutorSearchQuery] = useState('');
   const [showTutorDropdown, setShowTutorDropdown] = useState(false);
   const [isCalculatingManualMatch, setIsCalculatingManualMatch] = useState(false);
@@ -134,6 +136,7 @@ const Tutorships = () => {
   const dateInputRef = useRef(null);
   const [showGradeTooltip, setShowGradeTooltip] = useState(false);
   const tooltipRef = useRef(null);
+  const [selectedTutorForMatch, setSelectedTutorForMatch] = useState(null);
 
   const toggleMagnify = () => {
     setIsMagnifyActive((prevState) => !prevState);
@@ -715,6 +718,10 @@ const Tutorships = () => {
           ...match,
           ...family,
           ...tutor,
+          // Explicitly set gender fields to avoid overwrites
+          gender: family.gender ?? null,  // Child gender
+          tutor_gender: tutor.gender ?? null,  // Tutor gender
+          child_gender: family.gender ?? null,  // Child gender (explicit)
         };
       });
 
@@ -798,17 +805,19 @@ const Tutorships = () => {
           details_for_tutoring: family.details_for_tutoring ?? "---",
           last_review_talk_conducted: family.last_review_talk_conducted ?? "---",
           status: family.status ?? "---",
-          // Tutor fields
+          // Tutor fields (explicitly set AFTER spread to avoid overwrites)
           tutor_full_name: `${tutorship.tutor_firstname ?? tutor.first_name ?? "---"} ${tutorship.tutor_lastname ?? tutor.last_name ?? "---"}`,
           tutor_id: tutor.id ?? "---",
           tutor_city: tutor.city ?? "---",
           tutor_age: tutor.age ?? "---",
-          tutor_gender: tutor.gender ?? null,
+          tutor_gender: tutor.gender ?? null,  // Use tutor's gender, not child's
           phone: tutor.phone ?? "---",
           email: tutor.email ?? "---",
           want_tutor: tutor.want_tutor ?? false,
           comment: tutor.comment ?? "---",
           tutorship_status: tutor.tutorship_status ?? "---",
+          // Ensure child gender is not overwritten
+          child_gender: family.gender ?? null,
         };
       });
 
@@ -879,6 +888,11 @@ const Tutorships = () => {
     console.log('DEBUG: Current user role ID:', currentUserRoleId); // Add debug log
     if (!selectedMatch || !currentUserRoleId) return;
 
+    // Extract the names for the celebration
+    const tutorName = selectedMatch.tutor_name || selectedMatch.tutor_first_name || 'Tutor';
+    const childName = selectedMatch.child_name || 'Child';
+    const celebrationName = `${tutorName} & ${childName}`;
+
     axios
       .post('/api/create_tutorship/', {
         match: selectedMatch,
@@ -886,6 +900,8 @@ const Tutorships = () => {
       })
       .then(() => {
         toast.success(t('Tutorship created successfully!'));
+        setCelebrationUserName(celebrationName);
+        setShowCelebration(true);
         setSelectedMatch(null); // Clear the selected match after creation
         setSelectedMatchForInfo(null); // Clear the selected match for info
         setIsInfoModalOpen(false); // Close the info modal
@@ -956,6 +972,15 @@ const Tutorships = () => {
       })
       .then(() => {
         toast.success(t('Tutorship created successfully!'));
+        
+        // Extract the names for the celebration
+        const tutorName = manualMatchResult.tutor_name || manualMatchResult.tutor_full_name || 'Tutor';
+        const childName = manualMatchResult.child_name || manualMatchResult.child_full_name || 'Child';
+        const celebrationName = `${tutorName} & ${childName}`;
+        
+        setCelebrationUserName(celebrationName);
+        setShowCelebration(true);
+        
         setIsManualMatchModalOpen(false);
         setIsManualMatchMode(false);
         setManualMatchChildId(null);
@@ -1055,6 +1080,7 @@ const Tutorships = () => {
         comment: signedUpDetails.comment || '',
         city: signedUpDetails.city || '',
         age: signedUpDetails.age || '',
+        gender: signedUpDetails.gender ?? null,
       };
     });
   };
@@ -1738,24 +1764,20 @@ const Tutorships = () => {
                           </button>
                         </span>
                         {showGradeTooltip && ReactDOM.createPortal(
-                          <span className="grade-tooltip-text visible">
-                            {t(`Each tutor-child match receives a grade based on:`)}<br /><br />
-                            <b><u>{t('Base Score')}</u>:</b> {t('Starts from 0 to 100 depending on the match\'s position in the list.')}<br />
-                            <b>{t('with a base grade spreading linearly across matches')}.</b><br /><br />
-                            <b>{t('Then, the grade is adjusted based on:')}</b><br />
-                            <b><u>{t('Age Difference Bonus')}</u>:</b><br />
-                            {t('Less than 5 years')} ← 20+ {t('points')}<br />
-                            5–10 {t('years')} ← 10+ {t('points')}<br />
-                            10–15 {t('years')} ← 5+ {t('points')}<br /><br />
-                            <b><u>{t('Distance Bonus (based on how close they live)')}</u>:</b><br />
-                            {t('Less than 10 km')} ← 20+ {t('points')}<br />
-                            10–20 {t('km')} ← 10+ {t('points')}<br />
-                            20–30 {t('km')} ← 5+ {t('points')}<br /><br />
-                            <b><u>{t('Distance Penalty')}</u>:</b><br />
-                            {t('More than 50 km')} → {t('Grade set to')} 5-<br /><br />
-                            <b><u>{t('Final Grade')}</u>:</b><br />
-                            {t('Rounded up to the nearest whole number')}<br />
-                            {t('Always kept between -5 and 100')}
+                          <span className="grade-tooltip-text visible" style={{ direction: 'rtl', textAlign: 'right' }}>
+                            {t('Each tutor-child match receives a grade based ONLY on distance:')}<br /><br />
+                            <b><u>{t('Scoring Formula')}</u>:</b><br />
+                             ({t('distance')} × 2) - 100<br /><br />
+                            <b><u>{t('Distance Categories')}</u>:</b><br />
+                             {t('0 km')} = 100 <br />
+                             {t('25 km')} = 50 <br />
+                             {t('50 km')} = 0 <br />
+                             {t('Over 50 km')} {t('(Invalid/Penalty)')} = -5 <br /><br />
+                            <b><u>{t('Key Points')}</u>:</b><br />
+                            • {t('Age is NOT a factor in matching')}<br />
+                            • {t('Closer distance = Higher grade')}<br />
+                            • {t('Matches over 50km are automatically rejected')}<br />
+                            • {t('Matches are sorted by grade within gender groups')}
                           </span>,
                           document.body
                         )}
@@ -2128,6 +2150,15 @@ const Tutorships = () => {
             </div>
           </div>
         </Modal>
+
+        {/* Celebration Effect - Confetti */}
+        {showCelebration && (
+          <CelebrationEffect 
+            isActive={showCelebration}
+            onComplete={() => setShowCelebration(false)} 
+            userName={celebrationUserName}
+          />
+        )}
       </div>
     </div>
   );

@@ -1,0 +1,136 @@
+/* CelebrationEffect.css */
+
+.celebration-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 9999;
+  overflow: hidden;
+}
+
+.confetti-shower {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: 100vh;
+}
+
+.confetti-piece {
+  position: absolute;
+  pointer-events: none;
+}
+
+@keyframes fall {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes floatAround {
+  0% {
+    opacity: 1;
+    transform: translateX(0) translateY(0) rotateZ(0deg);
+  }
+  100% {
+    opacity: 0;
+    transform: var(--tx) var(--ty) rotateZ(360deg);
+  }
+}
+
+@keyframes rotate {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.celebration-message {
+  position: fixed;
+  z-index: 10000;
+  pointer-events: none;
+  animation: messageFloat 4s ease-in-out forwards;
+}
+
+@keyframes messageFloat {
+  0% {
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%) scale(0.3);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  40% {
+    left: 30%;
+    top: 20%;
+    opacity: 1;
+  }
+  70% {
+    left: 70%;
+    top: 70%;
+    opacity: 1;
+  }
+  90% {
+    left: 50%;
+    top: 10%;
+    opacity: 1;
+  }
+  100% {
+    left: 50%;
+    top: -100px;
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.5);
+  }
+}
+
+.message-content {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 30px 50px;
+  border-radius: 20px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3), 0 0 60px rgba(102, 126, 234, 0.4);
+  text-align: center;
+  border: 3px solid #fff;
+  backdrop-filter: blur(10px);
+}
+
+.message-text {
+  font-size: 32px;
+  font-weight: bold;
+  margin-bottom: 15px;
+  line-height: 1.4;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.user-name {
+  font-size: 24px;
+  font-weight: 600;
+  opacity: 0.95;
+  padding-top: 10px;
+  border-top: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .message-content {
+    padding: 20px 30px;
+  }
+
+  .message-text {
+    font-size: 24px;
+  }
+
+  .user-name {
+    font-size: 18px;
+  }
+}
