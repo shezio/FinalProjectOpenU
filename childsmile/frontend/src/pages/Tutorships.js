@@ -718,6 +718,10 @@ const Tutorships = () => {
           ...match,
           ...family,
           ...tutor,
+          // Explicitly set gender fields to avoid overwrites
+          gender: family.gender ?? null,  // Child gender
+          tutor_gender: tutor.gender ?? null,  // Tutor gender
+          child_gender: family.gender ?? null,  // Child gender (explicit)
         };
       });
 
@@ -801,17 +805,19 @@ const Tutorships = () => {
           details_for_tutoring: family.details_for_tutoring ?? "---",
           last_review_talk_conducted: family.last_review_talk_conducted ?? "---",
           status: family.status ?? "---",
-          // Tutor fields
+          // Tutor fields (explicitly set AFTER spread to avoid overwrites)
           tutor_full_name: `${tutorship.tutor_firstname ?? tutor.first_name ?? "---"} ${tutorship.tutor_lastname ?? tutor.last_name ?? "---"}`,
           tutor_id: tutor.id ?? "---",
           tutor_city: tutor.city ?? "---",
           tutor_age: tutor.age ?? "---",
-          tutor_gender: tutor.gender ?? null,
+          tutor_gender: tutor.gender ?? null,  // Use tutor's gender, not child's
           phone: tutor.phone ?? "---",
           email: tutor.email ?? "---",
           want_tutor: tutor.want_tutor ?? false,
           comment: tutor.comment ?? "---",
           tutorship_status: tutor.tutorship_status ?? "---",
+          // Ensure child gender is not overwritten
+          child_gender: family.gender ?? null,
         };
       });
 
@@ -1074,6 +1080,7 @@ const Tutorships = () => {
         comment: signedUpDetails.comment || '',
         city: signedUpDetails.city || '',
         age: signedUpDetails.age || '',
+        gender: signedUpDetails.gender ?? null,
       };
     });
   };
