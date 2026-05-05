@@ -4,6 +4,7 @@ import { useLocation } from 'react-router-dom';
 import ReactSlider from 'react-slider';
 import Sidebar from '../components/Sidebar';
 import InnerPageHeader from '../components/InnerPageHeader';
+import CelebrationEffect from '../components/CelebrationEffect';
 import '../styles/common.css';
 import '../styles/reports.css';
 import '../styles/tutorships.css';
@@ -122,7 +123,8 @@ const Tutorships = () => {
   const [manualMatchChildName, setManualMatchChildName] = useState(null);
   const [manualMatchChildGender, setManualMatchChildGender] = useState(null);
   const [availableTutors, setAvailableTutors] = useState([]);
-  const [selectedTutorForMatch, setSelectedTutorForMatch] = useState(null);
+  const [showCelebration, setShowCelebration] = useState(false);
+  const [celebrationUserName, setCelebrationUserName] = useState('');
   const [manualMatchTutorSearchQuery, setManualMatchTutorSearchQuery] = useState('');
   const [showTutorDropdown, setShowTutorDropdown] = useState(false);
   const [isCalculatingManualMatch, setIsCalculatingManualMatch] = useState(false);
@@ -134,6 +136,7 @@ const Tutorships = () => {
   const dateInputRef = useRef(null);
   const [showGradeTooltip, setShowGradeTooltip] = useState(false);
   const tooltipRef = useRef(null);
+  const [selectedTutorForMatch, setSelectedTutorForMatch] = useState(null);
 
   const toggleMagnify = () => {
     setIsMagnifyActive((prevState) => !prevState);
@@ -879,6 +882,11 @@ const Tutorships = () => {
     console.log('DEBUG: Current user role ID:', currentUserRoleId); // Add debug log
     if (!selectedMatch || !currentUserRoleId) return;
 
+    // Extract the names for the celebration
+    const tutorName = selectedMatch.tutor_name || selectedMatch.tutor_first_name || 'Tutor';
+    const childName = selectedMatch.child_name || 'Child';
+    const celebrationName = `${tutorName} & ${childName}`;
+
     axios
       .post('/api/create_tutorship/', {
         match: selectedMatch,
@@ -886,6 +894,8 @@ const Tutorships = () => {
       })
       .then(() => {
         toast.success(t('Tutorship created successfully!'));
+        setCelebrationUserName(celebrationName);
+        setShowCelebration(true);
         setSelectedMatch(null); // Clear the selected match after creation
         setSelectedMatchForInfo(null); // Clear the selected match for info
         setIsInfoModalOpen(false); // Close the info modal
@@ -956,6 +966,15 @@ const Tutorships = () => {
       })
       .then(() => {
         toast.success(t('Tutorship created successfully!'));
+        
+        // Extract the names for the celebration
+        const tutorName = manualMatchResult.tutor_name || manualMatchResult.tutor_full_name || 'Tutor';
+        const childName = manualMatchResult.child_name || manualMatchResult.child_full_name || 'Child';
+        const celebrationName = `${tutorName} & ${childName}`;
+        
+        setCelebrationUserName(celebrationName);
+        setShowCelebration(true);
+        
         setIsManualMatchModalOpen(false);
         setIsManualMatchMode(false);
         setManualMatchChildId(null);
@@ -1739,10 +1758,10 @@ const Tutorships = () => {
                         </span>
                         {showGradeTooltip && ReactDOM.createPortal(
                           <span className="grade-tooltip-text visible">
-                            {t(`Each tutor-child match receives a grade based on:`)}<br /><br />
+                            {t('Each tutor-child match receives a grade based on:')}<br /><br />
                             <b><u>{t('Base Score')}</u>:</b> {t('Starts from 0 to 100 depending on the match\'s position in the list.')}<br />
                             <b>{t('with a base grade spreading linearly across matches')}.</b><br /><br />
-                            <b>{t('Then, the grade is adjusted based on:')}</b><br />
+                            <b><u>{t('Then, the grade is adjusted based on:')}</u></b><br />
                             <b><u>{t('Age Difference Bonus')}</u>:</b><br />
                             {t('Less than 5 years')} ← 20+ {t('points')}<br />
                             5–10 {t('years')} ← 10+ {t('points')}<br />
@@ -2128,6 +2147,15 @@ const Tutorships = () => {
             </div>
           </div>
         </Modal>
+
+        {/* Celebration Effect - Confetti */}
+        {showCelebration && (
+          <CelebrationEffect 
+            isActive={showCelebration}
+            onComplete={() => setShowCelebration(false)} 
+            userName={celebrationUserName}
+          />
+        )}
       </div>
     </div>
   );

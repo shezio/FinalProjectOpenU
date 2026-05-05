@@ -1372,6 +1372,17 @@ const resources = {
       "Message sent successfully": "ההודעה נשלחה בהצלחה",
       "message_sent_count": "ההודעה נשלחה ל-{{count}} רכזים{{failed}}",
       "failed": "נכשלו",
+      // Confetti celebration messages
+      "confetti_message_1": "🚀 וואו! עוד חונכות נוצרה! אתה בגובה! 🔥",
+      "confetti_message_2": "💯 עבודה מעולה! אתה עושה הבדל! 🌟",
+      "confetti_message_3": "🎯 פגעת בול! שידוך מוצלח נוסף! 👌",
+      "confetti_message_4": "🏅 בום! עוד זוג חונך-ילד מוכנים לזרוח! ✨",
+      "confetti_message_5": "😎 אתה מכונת יצירת חונכויות! המשך כך! 🤖",
+      "confetti_message_6": "🌈 יפה! עוד מסע מתחיל! 💖",
+      "confetti_message_7": "⚡ מהיר כברק! יוצר חונכויות כמו מקצוען! ⚡",
+      "confetti_message_8": "🎪 ההצג חוזר! עוד הצלחה! 🎭",
+      "confetti_message_9": "🌺 מדהים! אתה יוצר קסם! ✨",
+      "confetti_message_10": "🚁 אין גבול לעננים! עבודה מעולה! 🌤️",
     }
   }
 };
