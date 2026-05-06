@@ -1661,36 +1661,6 @@ const Families = () => {
                     className="scrollable-textarea"
                   />
 
-                  <label>{t('Is In Group')}</label>
-                  <select
-                    name="is_in_group"
-                    value={newFamily.is_in_group ? "Yes" : "No"}
-                    onChange={(e) =>
-                      handleAddFamilyChange({
-                        target: {
-                          name: "is_in_group",
-                          value: e.target.value === "Yes",
-                        },
-                      })
-                    }
-                  >
-                    <option value="Yes">{t('Yes')}</option>
-                    <option value="No">{t('No')}</option>
-                  </select>
-
-                  {!newFamily.is_in_group && (
-                    <>
-                      <label>{t('Why Not In Group')}</label>
-                      <textarea
-                        name="why_not_in_group"
-                        value={newFamily.why_not_in_group}
-                        onChange={handleAddFamilyChange}
-                        placeholder={t('Reason for not being in group')}
-                        className="scrollable-textarea"
-                      />
-                    </>
-                  )}
-
                   <label>{t('Last Review Call Conducted')}</label>
                   <input
                     type="date"
