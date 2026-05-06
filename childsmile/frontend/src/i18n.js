@@ -1407,6 +1407,13 @@ const resources = {
       "family_message_8": "🎪 עוד הצלחה של {{userName}}! יום טוב! 🎉",
       "family_message_9": "💖 {{userName}} מגנוב לבבות! עוד משפחה בטיפול! 💫",
       "family_message_10": "🎈 {{userName}} כתב עמוד חדש בספר! סיפור מתחיל! 📖",
+      // Group participation fields
+      "Is In Group": "האם בקבוצה?",
+      "Why Not In Group": "למה לא בקבוצה?",
+      "Reason for not being in group": "סיבה לאי חברות בקבוצה",
+      "Not In Group": "לא בקבוצה",
+      "is_in_group": "בקבוצה",
+      "why_not_in_group": "סיבה לאי חברות בקבוצה",
     }
   }
 };

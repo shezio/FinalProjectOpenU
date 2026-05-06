@@ -384,7 +384,9 @@ const TutorVolunteerMgmt = () => {
       await axios.put(`/api/update_tutor/${tutorshipDetailsData.tutorId}/`, {
         preferences: tutorshipDetailsData.preferences,
         relationship_status: tutorshipDetailsData.relationship_status,
-        tutee_wellness: tutorshipDetailsData.tutee_wellness
+        tutee_wellness: tutorshipDetailsData.tutee_wellness,
+        is_in_group: tutorshipDetailsData.is_in_group,
+        why_not_in_group: tutorshipDetailsData.why_not_in_group,
       });
       toast.success(t("Tutorship details saved successfully"));
       fetchGridData();
@@ -404,7 +406,9 @@ const TutorVolunteerMgmt = () => {
     
     try {
       await axios.put(`/api/update_general_volunteer/${volunteerCommentsData.volunteerId}/`, {
-        comments: volunteerCommentsData.comments
+        comments: volunteerCommentsData.comments,
+        is_in_group: volunteerCommentsData.is_in_group,
+        why_not_in_group: volunteerCommentsData.why_not_in_group,
       });
       toast.success(t("Comments saved successfully"));
       fetchGridData();
@@ -929,6 +933,8 @@ const TutorVolunteerMgmt = () => {
                           preferences: entity.preferences || "",
                           relationship_status: entity.relationship_status || "",
                           tutee_wellness: entity.tutee_wellness || "",
+                          is_in_group: entity.is_in_group !== undefined ? entity.is_in_group : true,
+                          why_not_in_group: entity.why_not_in_group || "",
                         });
                         setShowTutorshipDetailsModal(true);
                       }}
@@ -1114,7 +1120,9 @@ const TutorVolunteerMgmt = () => {
                         onClick={() => {
                           setVolunteerCommentsData({
                             volunteerId: entity.id,
-                            comments: entity.comments || ""
+                            comments: entity.comments || "",
+                            is_in_group: entity.is_in_group !== undefined ? entity.is_in_group : true,
+                            why_not_in_group: entity.why_not_in_group || "",
                           });
                           setShowVolunteerCommentsModal(true);
                         }}
@@ -1284,6 +1292,35 @@ const TutorVolunteerMgmt = () => {
                   )}
                 </div>
               </div>
+              <div className="tutorship-detail-row">
+                <h3>{t("Is In Group")}</h3>
+                <select
+                  className="tutorship-detail-select"
+                  value={tutorshipDetailsData.is_in_group ? "Yes" : "No"}
+                  onChange={(e) => setTutorshipDetailsData({
+                    ...tutorshipDetailsData,
+                    is_in_group: e.target.value === "Yes",
+                    why_not_in_group: e.target.value === "Yes" ? "" : tutorshipDetailsData.why_not_in_group,
+                  })}
+                >
+                  <option value="Yes">{t("Yes")}</option>
+                  <option value="No">{t("No")}</option>
+                </select>
+              </div>
+              <div className="tutorship-detail-row">
+                <h3>{t("Why Not In Group")}</h3>
+                <textarea
+                  className="tutorship-detail-textarea"
+                  value={tutorshipDetailsData.why_not_in_group}
+                  onChange={(e) => setTutorshipDetailsData({
+                    ...tutorshipDetailsData,
+                    why_not_in_group: e.target.value
+                  })}
+                  disabled={tutorshipDetailsData.is_in_group}
+                  placeholder={tutorshipDetailsData.is_in_group ? '---' : t("Reason for not being in group")}
+                  style={{ opacity: tutorshipDetailsData.is_in_group ? 0.5 : 1 }}
+                />
+              </div>
             </div>
             <div className="tutor-vol-modal-footer">
               <button className="tutor-vol-btn-cancel" onClick={() => setShowTutorshipDetailsModal(false)}>
@@ -1303,7 +1340,7 @@ const TutorVolunteerMgmt = () => {
       {/* Volunteer Comments Modal */}
       {showVolunteerCommentsModal && volunteerCommentsData && (
         <div className="tutor-vol-modal-overlay" onClick={() => setShowVolunteerCommentsModal(false)}>
-          <div className="tutor-vol-modal-content" onClick={(e) => e.stopPropagation()}>
+          <div className="tutor-vol-modal-content volunteer-comments-modal" onClick={(e) => e.stopPropagation()}>
             <div className="tutor-vol-modal-header">
               <h2>{t("Volunteer Comments")}</h2>
               <span className="tutor-vol-modal-close" onClick={() => setShowVolunteerCommentsModal(false)}>&times;</span>
@@ -1328,6 +1365,34 @@ const TutorVolunteerMgmt = () => {
                   resize: 'vertical'
                 }}
               />
+              <div style={{ marginTop: '16px' }}>
+                <label style={{ fontWeight: 'bold', display: 'block', marginBottom: '6px' }}>{t("Is In Group")}</label>
+                <select
+                  value={volunteerCommentsData.is_in_group ? "Yes" : "No"}
+                  onChange={(e) => setVolunteerCommentsData({
+                    ...volunteerCommentsData,
+                    is_in_group: e.target.value === "Yes",
+                    why_not_in_group: e.target.value === "Yes" ? "" : volunteerCommentsData.why_not_in_group,
+                  })}
+                  style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ddd' }}
+                >
+                  <option value="Yes">{t("Yes")}</option>
+                  <option value="No">{t("No")}</option>
+                </select>
+              </div>
+              <div style={{ marginTop: '12px' }}>
+                <label style={{ fontWeight: 'bold', display: 'block', marginBottom: '6px' }}>{t("Why Not In Group")}</label>
+                <textarea
+                  value={volunteerCommentsData.why_not_in_group}
+                  onChange={(e) => setVolunteerCommentsData({
+                    ...volunteerCommentsData,
+                    why_not_in_group: e.target.value
+                  })}
+                  disabled={volunteerCommentsData.is_in_group}
+                  placeholder={volunteerCommentsData.is_in_group ? '---' : t("Reason for not being in group")}
+                  style={{ width: '100%', minHeight: '80px', padding: '8px', borderRadius: '4px', border: '1px solid #ddd', resize: 'vertical', opacity: volunteerCommentsData.is_in_group ? 0.5 : 1 }}
+                />
+              </div>
             </div>
             <div className="tutor-vol-modal-footer">
               <button className="tutor-vol-btn-cancel" onClick={() => setShowVolunteerCommentsModal(false)}>

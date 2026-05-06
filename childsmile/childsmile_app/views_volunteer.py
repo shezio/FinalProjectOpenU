@@ -889,6 +889,16 @@ def update_general_volunteer(request, volunteer_id):
     data = request.data
     old_comments = volunteer.comments
     volunteer.comments = data.get("comments", volunteer.comments)
+    volunteer.is_in_group = data.get("is_in_group", volunteer.is_in_group)
+    volunteer.why_not_in_group = data.get("why_not_in_group", volunteer.why_not_in_group)
+
+    # Auto-set group status when is_active is set to False
+    is_active = data.get("is_active")
+    if is_active is False or is_active == "false":
+        volunteer.is_in_group = False
+        if not volunteer.why_not_in_group:
+            volunteer.why_not_in_group = "עזב"
+
     volunteer.save()
 
     # Handle city update
@@ -1289,7 +1299,9 @@ def update_tutor(request, tutor_id):
         'relationship_status': tutor.relationship_status,
         'tutee_wellness': tutor.tutee_wellness,
         'tutorship_status': tutor.tutorship_status,
-        'preferences': tutor.preferences
+        'preferences': tutor.preferences,
+        'is_in_group': tutor.is_in_group,
+        'why_not_in_group': tutor.why_not_in_group,
     }
     
     affected_tables = ['childsmile_app_tutors']
@@ -1410,6 +1422,22 @@ def update_tutor(request, tutor_id):
 
     if "preferences" in data:
         tutor.preferences = data["preferences"]
+        updated = True
+
+    # Handle is_in_group and why_not_in_group
+    if "is_in_group" in data:
+        tutor.is_in_group = data["is_in_group"]
+        updated = True
+    if "why_not_in_group" in data:
+        tutor.why_not_in_group = data["why_not_in_group"]
+        updated = True
+
+    # Auto-set group status when is_active is set to False
+    is_active = data.get("is_active")
+    if is_active is False or is_active == "false":
+        tutor.is_in_group = False
+        if not tutor.why_not_in_group:
+            tutor.why_not_in_group = "עזב"
         updated = True
 
     # Handle city update

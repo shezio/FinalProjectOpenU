@@ -392,6 +392,8 @@ const ReviewerPage = () => {
       status:                            family.status || 'טיפולים',
       responsible_coordinator:           family.responsible_coordinator || '',
       need_review:                       family.need_review !== undefined ? family.need_review : true,
+      is_in_group:                       family.is_in_group !== undefined ? family.is_in_group : true,
+      why_not_in_group:                  family.why_not_in_group || '',
     });
     setEditFamily(family);
   };
@@ -781,6 +783,13 @@ const ReviewerPage = () => {
                 <label>{t('Mother Phone')}</label>
                 <input type="text" name="mother_phone" value={newFamily.mother_phone} onChange={handleAddFamilyChange} maxLength="10" className={errors.mother_phone ? 'reviewers-input-error' : ''} />
                 {errors.mother_phone && <span className="reviewers-error-msg">{errors.mother_phone}</span>}
+                <label>{t('Is In Group')}</label>
+                <select name="is_in_group" value={newFamily.is_in_group ? 'Yes' : 'No'} onChange={e => handleAddFamilyChange({ target: { name: 'is_in_group', value: e.target.value === 'Yes' } })}>
+                  <option value="Yes">{t('Yes')}</option>
+                  <option value="No">{t('No')}</option>
+                </select>
+                <label>{t('Why Not In Group')}</label>
+                <input type="text" name="why_not_in_group" value={newFamily.why_not_in_group} onChange={handleAddFamilyChange} disabled={newFamily.is_in_group} placeholder={newFamily.is_in_group ? '---' : t('Reason for not being in group')} style={{ opacity: newFamily.is_in_group ? 0.5 : 1 }} />
               </div>
               <div className="reviewers-form-column">
                 <label>{t('Has Completed Treatments')}</label>
@@ -855,6 +864,8 @@ const ReviewerPage = () => {
               <p>{t('Coordinator Comments')}: {selectedFamily.coordinator_comments || '---'}</p>
               <p>{t('Additional Info')}: {selectedFamily.additional_info || '---'}</p>
               <p>{t('Details for Tutoring')}: {selectedFamily.details_for_tutoring || '---'}</p>
+              <p>{t('Is In Group')}: {selectedFamily.is_in_group ? t('Yes') : t('No')}</p>
+              <p>{t('Why Not In Group')}: {selectedFamily.is_in_group ? '---' : (selectedFamily.why_not_in_group || '---')}</p>
             </div>
             <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', marginTop: '20px' }}>
               <button

@@ -592,6 +592,8 @@ def get_complete_family_details(request):
                 "need_review": family.need_review,
                 "is_in_frame": family.is_in_frame,
                 "coordinator_comments": family.coordinator_comments,
+                "is_in_group": family.is_in_group,
+                "why_not_in_group": family.why_not_in_group,
                 "last_review_talk_conducted": family.last_review_talk_conducted.strftime("%d/%m/%Y") if family.last_review_talk_conducted else None,
                 # MULTI-TUTOR SUPPORT: Add list of tutors
                 "tutors": child_tutors_map.get(family.child_id, []),
@@ -902,6 +904,8 @@ def create_family(request):
             status=(data["status"] if data.get("status") else "טיפולים"),
             is_in_frame=data.get("is_in_frame"),
             coordinator_comments=data.get("coordinator_comments"),
+            is_in_group=data.get("is_in_group", True),
+            why_not_in_group=data.get("why_not_in_group"),
             # Feature #2 + #3: Set need_review based on age, status, and tutoring_status
             need_review=need_review_value,
             last_review_talk_conducted=datetime.datetime.now(),
@@ -1215,6 +1219,8 @@ def update_family(request, child_id):
         family.has_completed_treatments = data.get("has_completed_treatments", family.has_completed_treatments)
         family.is_in_frame = data.get("is_in_frame", family.is_in_frame)
         family.coordinator_comments = data.get("coordinator_comments", family.coordinator_comments)
+        family.is_in_group = data.get("is_in_group", family.is_in_group)
+        family.why_not_in_group = data.get("why_not_in_group", family.why_not_in_group)
         family.last_review_talk_conducted = parse_date_field(data.get("last_review_talk_conducted"), "last_review_talk_conducted")
         
         # Handle tutoring_status change and auto-update coordinator
@@ -1226,6 +1232,11 @@ def update_family(request, child_id):
         old_status = family.status
         new_status = data.get("status", family.status)
         family.status = new_status
+        
+        # Auto-set group status when status is "עזב" or "בריא"
+        if new_status in ["עזב", "בריא"]:
+            family.is_in_group = False
+            family.why_not_in_group = new_status
         
         # Auto-update responsible_coordinator if tutoring_status changed OR if status changed to/from בריא/ז״ל
         # Only auto-update if coordinator wasn't manually set in the request

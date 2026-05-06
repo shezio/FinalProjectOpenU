@@ -643,6 +643,8 @@ const Tutorships = () => {
         has_completed_treatments: row.has_completed_treatments ?? false,
         details_for_tutoring: row.details_for_tutoring ?? "---",
         last_review_talk_conducted: row.last_review_talk_conducted ?? "---",
+        is_in_group: row.is_in_group ?? true,
+        why_not_in_group: row.why_not_in_group ?? "---",
         tutor_city: row.tutor_city ?? "---",
         tutor_age: row.tutor_age ?? "---",
         tutor_gender: row.tutor_gender ?? null,
@@ -782,6 +784,8 @@ const Tutorships = () => {
           has_completed_treatments: family.has_completed_treatments ?? false,
           details_for_tutoring: family.details_for_tutoring ?? "---",
           last_review_talk_conducted: family.last_review_talk_conducted ?? "---",
+          is_in_group: family.is_in_group ?? true,
+          why_not_in_group: family.why_not_in_group ?? "---",
           status: family.status ?? "---",
           // Tutor fields (explicitly set AFTER spread to avoid overwrites)
           tutor_full_name: `${tutorship.tutor_firstname ?? tutor.first_name ?? "---"} ${tutorship.tutor_lastname ?? tutor.last_name ?? "---"}`,
@@ -1369,6 +1373,8 @@ const Tutorships = () => {
                         <tr><td>{t('Details for Tutoring')}</td><td> {selectedMatchForInfo.details_for_tutoring || '---'}</td></tr>
                         <tr><td>{t('Last Review Talk Conducted')}</td><td> {selectedMatchForInfo.last_review_talk_conducted || '---'}</td></tr>
                         <tr><td>{t('Status')}</td><td> {selectedMatchForInfo.status}</td></tr>
+                        <tr><td>{t('Is In Group')}</td><td> {selectedMatchForInfo.is_in_group ? t('Yes') : t('No')}</td></tr>
+                        <tr><td>{t('Why Not In Group')}</td><td> {selectedMatchForInfo.is_in_group ? '---' : (selectedMatchForInfo.why_not_in_group || '---')}</td></tr>
                       </tbody>
                     </table>
                   </div>
