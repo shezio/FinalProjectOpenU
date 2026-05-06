@@ -1385,7 +1385,7 @@ const resources = {
       "Message sent successfully": "ההודעה נשלחה בהצלחה",
       "message_sent_count": "ההודעה נשלחה ל-{{count}} רכזים{{failed}}",
       "failed": "נכשלו",
-      // Confetti celebration messages
+      // Confetti celebration messages - Tutorship
       "confetti_message_1": "🚀 וואו! עוד חונכות נוצרה! אתה בגובה! 🔥",
       "confetti_message_2": "💯 עבודה מעולה! אתה עושה הבדל! 🌟",
       "confetti_message_3": "🎯 פגעת בול! שידוך מוצלח נוסף! 👌",
@@ -1396,6 +1396,17 @@ const resources = {
       "confetti_message_8": "🎪 ההצג חוזר! עוד הצלחה! 🎭",
       "confetti_message_9": "🌺 מדהים! אתה יוצר קסם! ✨",
       "confetti_message_10": "🚁 אין גבול לעננים! עבודה מעולה! 🌤️",
+      // Family celebration messages
+      "family_message_1": "👶 עוד ילד בדרך! {{userName}} אתה כוכב! 🎉",
+      "family_message_2": "💚 משפחה חדשה בנוסף! {{userName}} מדהים! 🏡",
+      "family_message_3": "🌟 {{userName}} הוסיף משפחה חדשה! ברוכים הבאים! ✨",
+      "family_message_4": "🎊 {{userName}} יוצר משפחה חדשה! בואו נעשה הצלחה! 🚀",
+      "family_message_5": "💪 {{userName}} עושה הבדל! משפחה חדשה בספר! 🙌",
+      "family_message_6": "🌈 {{userName}} הוסיף משפחה נוספת! חיוכים בכל הדרך! 😊",
+      "family_message_7": "⚡ בזק! {{userName}} יוצר פלא! ⚡",
+      "family_message_8": "🎪 עוד הצלחה של {{userName}}! יום טוב! 🎉",
+      "family_message_9": "💖 {{userName}} מגנוב לבבות! עוד משפחה בטיפול! 💫",
+      "family_message_10": "🎈 {{userName}} כתב עמוד חדש בספר! סיפור מתחיל! 📖",
     }
   }
 };

@@ -15,6 +15,7 @@ import Select from "react-select";
 import Modal from "react-modal";
 import { useNavigate } from 'react-router-dom'; // Add this import at the top with other imports
 import { RotateCcw, LoaderCircle } from 'lucide-react';
+import CelebrationEffect from '../components/CelebrationEffect';
 
 Modal.setAppElement('#root'); // Replace '#root' with the ID of your app's root element
 const Families = () => {
@@ -112,6 +113,10 @@ const Families = () => {
   
   // Settlements and streets data from API
   const [settlementsAndStreets, setSettlementsAndStreets] = useState({});
+
+  // Celebration effect state
+  const [showCelebration, setShowCelebration] = useState(false);
+  const [celebrationFamilyName, setCelebrationFamilyName] = useState('');
 
   const fetchFamilies = async () => {
     setIsRefreshing(true);
@@ -413,6 +418,29 @@ const Families = () => {
       const payload = forceCreate ? { ...familyData, force_create: true } : familyData;
       await axios.post('/api/create_family/', payload);
       toast.success(t('Family added successfully!'));
+      
+      // Get the current user's name for celebration
+      const currentUsername = localStorage.getItem('origUsername');
+      let celebrationUserName = 'User';
+      
+      // Try to fetch staff data to get the display name
+      if (currentUsername) {
+        try {
+          const staffResponse = await axios.get('/api/get_staff/');
+          const currentUser = staffResponse.data.find((user) => user.username === currentUsername);
+          if (currentUser) {
+            celebrationUserName = currentUser.first_name || currentUsername;
+          }
+        } catch (error) {
+          console.error('Error fetching staff data for celebration:', error);
+          celebrationUserName = currentUsername;
+        }
+      }
+      
+      // Trigger celebration effect with the creating user's name
+      setCelebrationFamilyName(celebrationUserName);
+      setShowCelebration(true);
+      
       setShowAddModal(false);
       setShowDupModal(false);
       setShowDupDetailModal(false);
@@ -2453,6 +2481,16 @@ const Families = () => {
               </div>
             </div>
           </div>
+        )}
+        
+        {/* Celebration Effect - Paper planes, toy emojis, butterflies */}
+        {showCelebration && (
+          <CelebrationEffect 
+            isActive={showCelebration}
+            onComplete={() => setShowCelebration(false)} 
+            userName={celebrationFamilyName}
+            celebrationType="family"
+          />
         )}
       </div>
     </div>

@@ -50,14 +50,14 @@ const CoordinatorChat = () => {
 
   // Auto-refresh chat history every 3 seconds when a coordinator is selected
   useEffect(() => {
-    if (!selectedCoordinator) return;
+    if (!selectedCoordinator || messageText.trim()) return; // Don't auto-refresh while user is typing
     
     const interval = setInterval(() => {
       loadChatHistory(selectedCoordinator.id);
     }, 3000); // Refresh chat every 3 seconds
     
     return () => clearInterval(interval);
-  }, [selectedCoordinator]);
+  }, [selectedCoordinator, messageText]);
 
   // Scroll to bottom when chat updates
   useEffect(() => {
