@@ -16,7 +16,6 @@ import PossibleTutorshipMatchesReport from './pages/report_pages/possible_tutors
 import VolunteerFeedbackReport from './pages/report_pages/volunteer_feedback_report'; // Import the Volunteer Feedback Report component
 import TutorFeedbackReport from './pages/report_pages/tutor_feedback_report'; // Import the Tutor Feedback Report component
 import FamiliesTutorshipStatsReport from './pages/report_pages/families_tutorship_stats_report'; // Import the Families Tutorship Stats Report component
-import PendingTutorsStatsReport from './pages/report_pages/pending_tutors_stats_report'; // Import the Pending Tutors Stats Report component
 import RolesSpreadStatsReport from './pages/report_pages/roles_spread_stats_report'; // Import the Roles Spread Stats Report component
 import AllVolunteersIRSReport from './pages/report_pages/all_volunteers_irs_report'; // Import the IRS Volunteers Report component
 import AllFamiliesExportReport from './pages/report_pages/all_families_export_report'; // Import the All Families Export Report component
@@ -32,6 +31,7 @@ import AuditLog from './pages/AuditLog'; // Import the Audit Log component
 import Dashboard from './pages/Dashboard'; // Import the Dashboard component
 import ReviewerPage from './pages/ReviewerPage'; // Import the Reviewer page
 import CoordinatorChat from './pages/CoordinatorChat'; // Import the Coordinator Chat component
+import NotFound from './pages/NotFound'; // Import the 404 Not Found page
 
 // Add this route to your router:
 
@@ -68,7 +68,6 @@ const App = () => {
       <Route path="/reports/volunteer-feedback" element={<VolunteerFeedbackReport />} /> {/* Add Volunteer Feedback Report route */}
       <Route path="/reports/tutor-feedback" element={<TutorFeedbackReport />} /> {/* Add Tutor Feedback Report route */}
       <Route path="/reports/families_tutorship_stats_report" element={<FamiliesTutorshipStatsReport />} /> {/* Add Families Tutorship Stats Report route */}
-      <Route path="/reports/pending_tutors_stats_report" element={<PendingTutorsStatsReport />} /> {/* Add Pending Tutors Stats Report route */}
       <Route path="/reports/roles_spread_stats_report" element={<RolesSpreadStatsReport />} /> {/* Add Roles Spread Stats Report route */}
       <Route path="/reports/all_volunteers_irs_report" element={<AllVolunteersIRSReport />} /> {/* Add IRS Volunteers Report route */}
       <Route path="/reports/all_families_export_report" element={<AllFamiliesExportReport />} /> {/* Add All Families Export Report route */}
@@ -84,6 +83,7 @@ const App = () => {
       <Route path="/reviewer" element={<ReviewerPage />} /> {/* Add Reviewer page route */}
       <Route path="/meeting-management" element={<MeetingManagement />} /> {/* Staff meeting management */}
       <Route path="/coordinator-chat" element={<CoordinatorChat />} /> {/* Coordinator messaging interface */}
+      <Route path="*" element={<NotFound />} /> {/* 404 catch-all */}
     </Routes>
   );
 };

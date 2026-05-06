@@ -1548,30 +1548,20 @@ def deactivate_staff(staff, performed_by_user, deactivation_reason, request=None
     staff.is_active = False
     staff.save()
     
-    # Step 6: Handle tutorships - EXACT DUPLICATE with ALL fields
-    active_tutorships = Tutorships.objects.filter(tutor__staff=staff)
-    tutorship_count = active_tutorships.count()
+    # Step 6: Handle tutorships - DELETE ALL (single-approval workflow)
+    # In the new workflow, when staff deactivates, all their tutorships are deleted
+    # (no historical inactive copies retained)
+    all_tutorships = Tutorships.objects.filter(tutor__staff=staff)
+    tutorship_count = all_tutorships.count()
+    deleted_tutorship_ids = list(all_tutorships.values_list('id', flat=True))
     
     # Track children who may need status update (MULTI-TUTOR SUPPORT)
-    affected_children = []
+    affected_children = list(set([t.child for t in all_tutorships]))
     
-    for tutorship in active_tutorships:
-        # Track the child for later status check
-        affected_children.append(tutorship.child)
-        
-        # Create EXACT duplicate with ALL fields from original
-        Tutorships.objects.create(
-            child=tutorship.child,
-            tutor=tutorship.tutor,
-            approval_counter=tutorship.approval_counter,  # Keep same counter
-            last_approver=tutorship.last_approver,
-            created_date=tutorship.created_date,  # Keep original created date
-            updated_at=datetime.datetime.now(),  # Set updated_at to now
-            tutorship_activation='inactive'  # Mark only this field as inactive
-        )
-        
-        # DELETE original tutorship (make room for the inactive copy)
-        tutorship.delete()
+    # Delete all tutorships for this staff member (all statuses: active, pending, inactive)
+    all_tutorships.delete()
+    
+    api_logger.info(f"Deleted {tutorship_count} tutorships for deactivated staff {staff.staff_id}: {deleted_tutorship_ids}")
     
     # MULTI-TUTOR SUPPORT: Update child status if they have no remaining active tutors
     for child in affected_children:
@@ -1607,7 +1597,8 @@ def deactivate_staff(staff, performed_by_user, deactivation_reason, request=None
             'staff_id': staff.staff_id,
             'previous_roles': [Role.objects.get(id=rid).role_name for rid in role_ids],
             'deactivation_reason': deactivation_reason,
-            'tutorships_affected': tutorship_count
+            'tutorships_deleted': tutorship_count,
+            'deleted_tutorship_ids': deleted_tutorship_ids
         },
         entity_type='Staff',
         entity_ids=[staff.staff_id]
@@ -1617,9 +1608,10 @@ def deactivate_staff(staff, performed_by_user, deactivation_reason, request=None
     
     return {
         'status': 'success',
-        'message': f'Staff {staff.first_name} {staff.last_name} deactivated successfully',
+        'message': f'Staff {staff.first_name} {staff.last_name} deactivated successfully. {tutorship_count} tutorships deleted.',
         'staff_id': staff.staff_id,
-        'tutorships_affected': tutorship_count
+        'tutorships_deleted': tutorship_count,
+        'deleted_tutorship_ids': deleted_tutorship_ids
     }
 
 

@@ -533,14 +533,15 @@ def create_tutorship(request):
             )
 
         # Create a new tutorship record in the database
+        # Single-approval workflow: tutorship is immediately active upon creation
         tutorship = Tutorships.objects.create(
             child_id=child_id,
             tutor_id=tutor_id,
             created_date=datetime.datetime.now(),
             updated_at=datetime.datetime.now(),
-            last_approver=[staff_role_id],  # Initialize with the creator's role ID
-            approval_counter=1,  # Start with 1 approver
-            tutorship_activation='pending_first_approval',  # INACTIVE STAFF FEATURE: Initially pending approval
+            last_approver=[staff_role_id],  # Creator's role ID is the single approver
+            approval_counter=1,  # Single approval - set to 1 immediately
+            tutorship_activation='active',  # Immediately active - no second approval needed
         )
 
         # INACTIVE STAFF FEATURE: Clean up inactive tutorships for this tutor
@@ -571,41 +572,23 @@ def create_tutorship(request):
         tutor.tutee_wellness = child.current_medical_state or ""
         tutor.save()
 
+        # SINGLE-APPROVAL: Tutorship is immediately active - assign Tutor role now
+        try:
+            tutor_role = Role.objects.filter(role_name="Tutor").first()
+            staff_member = tutor.staff
+            if tutor_role and staff_member and tutor_role not in staff_member.roles.all():
+                staff_member.roles.add(tutor_role)
+                staff_member.save()
+                api_logger.debug(f"Added 'Tutor' role to staff {staff_member.username} on tutorship creation")
+        except Exception as e:
+            api_logger.warning(f"Failed to assign Tutor role on creation: {str(e)}")
+
         # Get names for audit
         child_name = f"{child.childfirstname} {child.childsurname}" if child else "Unknown"
         tutor_name = f"{tutor.staff.first_name} {tutor.staff.last_name}" if tutor and tutor.staff else "Unknown"
         
-        # NEW WORKFLOW: Create "התאמת חניך" (Tutee Match) task for family coordinators
-        tutee_match_task_created = False
-        try:
-            tutee_match_task_type = Task_Types.objects.filter(task_type="התאמת חניך").first()
-            if tutee_match_task_type:
-                # Get family coordinators
-                family_coordinator_role = Role.objects.filter(role_name="Families Coordinator").first()
-                if family_coordinator_role:
-                    family_coordinators = Staff.objects.filter(roles=family_coordinator_role)
-                    for coordinator in family_coordinators:
-                        # Get tutor phone from SignedUp
-                        tutor_phone = tutor.id.phone if tutor.id else "לא ידוע"
-                        
-                        task_data = {
-                            "description": f"התאמת חניך - {tutor_name} ← {child_name}",
-                            "due_date": (now().date() + datetime.timedelta(days=7)).strftime("%Y-%m-%d"),
-                            "status": "לא הושלמה",
-                            "assigned_to": coordinator.staff_id,
-                            "tutor": tutor_id,
-                            "child": child_id,
-                            "type": tutee_match_task_type.id,
-                        }
-                        task = create_task_internal(task_data)
-                        api_logger.info(f"Created tutee match task {task.task_id} for tutorship {tutorship.id}")
-                        tutee_match_task_created = True
-                else:
-                    api_logger.warning("Families Coordinator role not found, skipping tutee match task creation")
-            else:
-                api_logger.warning("Task type 'התאמת חניך' not found in database")
-        except Exception as e:
-            api_logger.error(f"Error creating tutee match task: {str(e)}")
+        # SINGLE-APPROVAL WORKFLOW: No tutee match tasks created
+        # Tutorship is immediately active on creation, no additional task coordination needed
 
         log_api_action(
             request=request,
@@ -800,78 +783,35 @@ def update_tutorship(request, tutorship_id):
     try:
         old_approval_counter = tutorship.approval_counter
         
-        # NEW WORKFLOW: Block final approval if "התאמת חניך" task is not completed
-        # ADMIN BYPASS: Allow admins to bypass with explicit confirmation
-        would_be_final_approval = (old_approval_counter == 1)  # Next approval would make it 2
-        incomplete_tutee_match_tasks = []
-        if would_be_final_approval:
-            # Check if there are incomplete "התאמת חניך" tasks for this tutor
-            tutee_match_task_type = Task_Types.objects.filter(task_type="התאמת חניך").first()
-            if tutee_match_task_type:
-                incomplete_tutee_match_tasks = list(Tasks.objects.filter(
-                    related_tutor_id=tutorship.tutor_id,
-                    task_type=tutee_match_task_type,
-                    status__in=["לא הושלמה", "בביצוע"]
-                ))
-                if incomplete_tutee_match_tasks and not bypass_incomplete_task:
-                    # Tasks are incomplete and not bypassed - return error
-                    child_name = f"{tutorship.child.childfirstname} {tutorship.child.childsurname}" if tutorship.child else "Unknown"
-                    tutor_name = f"{tutorship.tutor.staff.first_name} {tutorship.tutor.staff.last_name}" if tutorship.tutor and tutorship.tutor.staff else "Unknown"
-                    
-                    log_api_action(
-                        request=request,
-                        action='UPDATE_TUTORSHIP_FAILED',
-                        success=False,
-                        error_message="Cannot final approve: Tutee match tasks not completed",
-                        status_code=400,
-                        entity_type='Tutorship',
-                        entity_ids=[tutorship_id],
-                        additional_data={
-                            'child_name': child_name,
-                            'tutor_name': tutor_name,
-                            'reason': 'tutee_match_task_incomplete',
-                            'incomplete_task_count': len(incomplete_tutee_match_tasks),
-                            'incomplete_task_ids': [t.task_id for t in incomplete_tutee_match_tasks]
-                        }
-                    )
-                    return JsonResponse({
-                        "error": "לא ניתן לאשר סופית - משימת התאמת חניך לא הושלמה",
-                        "error_code": "TUTEE_MATCH_INCOMPLETE",
-                        "task_count": len(incomplete_tutee_match_tasks)
-                    }, status=400)
-                elif incomplete_tutee_match_tasks and bypass_incomplete_task:
-                    # Admin is bypassing - mark ALL tasks as completed
-                    completed_count = 0
-                    for task in incomplete_tutee_match_tasks:
-                        task.status = "הושלמה"
-                        task.save()
-                        completed_count += 1
-                    api_logger.info(f"Admin bypassed {completed_count} incomplete tasks for tutorship {tutorship_id}")
+        # SINGLE-APPROVAL WORKFLOW: New tutorships are immediately active at creation.
+        # This update_tutorship endpoint now only handles legacy pending tutorships
+        # (those created before the single-approval change with approval_counter=1 and pending_first_approval).
+        # For any already-active tutorship, return an informative message.
+        if tutorship.tutorship_activation == 'active':
+            return JsonResponse(
+                {"message": "Tutorship is already active", "approval_counter": tutorship.approval_counter},
+                status=200,
+            )
         
+        # Legacy path: handle old pending_first_approval tutorships
+        # Check if there are incomplete "התאמת חניך" tasks for this tutor
+        # SINGLE-APPROVAL WORKFLOW: No tutee match task checks needed
+        # Tutorships are immediately active on creation
+        
+        # Activate the legacy pending tutorship
         tutorship.last_approver.append(staff_role_id)
-        if tutorship.approval_counter <= 2:
-            tutorship.approval_counter = len(tutorship.last_approver)
-        else:
-            raise ValueError("Approval counter cannot exceed 2")
-        
-        # INACTIVE STAFF FEATURE: Set tutorship_activation to 'active' when final approval is reached
-        if tutorship.approval_counter == 2:
-            tutorship.tutorship_activation = 'active'
-        
-        tutorship.updated_at = datetime.datetime.now()  # Updated to use datetime now()
+        tutorship.approval_counter = len(tutorship.last_approver)
+        tutorship.tutorship_activation = 'active'
+        tutorship.updated_at = datetime.datetime.now()
         tutorship.save()
 
-        # --- Add Tutor role if approval_counter becomes 2 ---
+        # --- Add Tutor role now that tutorship is active (legacy pending path) ---
         tutor_role_added = False
-        if tutorship.approval_counter == 2:
-            tutor_id = (
-                tutorship.tutor_id
-            )  # This is the id_id from Tutors (and SignedUp)
-            # Find the Tutors record
+        if tutorship.tutorship_activation == 'active':
+            tutor_id = tutorship.tutor_id
             tutor = Tutors.objects.filter(id_id=tutor_id).first()
             if tutor:
-                staff_member = tutor.staff  # ForeignKey to Staff
-                # Check if staff_member already has the Tutor role
+                staff_member = tutor.staff
                 tutor_role = Role.objects.filter(role_name="Tutor").first()
                 if tutor_role and tutor_role not in staff_member.roles.all():
                     staff_member.roles.add(tutor_role)
@@ -901,7 +841,7 @@ def update_tutorship(request, tutorship_id):
                 'new_approval_counter': tutorship.approval_counter,
                 'staff_role_id': staff_role_id,
                 'tutor_role_added': tutor_role_added,
-                'tutorship_approved': tutorship.approval_counter == 2
+                'tutorship_approved': tutorship.tutorship_activation == 'active'
             }
         )
 
@@ -936,40 +876,6 @@ def update_tutorship(request, tutorship_id):
             }
         )
         return JsonResponse({"error": str(e)}, status=500)
-
-
-@conditional_csrf
-@api_view(["GET"])
-def check_incomplete_tutee_match_task(request, tutorship_id):
-    """
-    Check if tutorship has ANY incomplete "התאמת חניך" tasks before final approval.
-    Used by frontend to determine if admin bypass modal should be shown.
-    Returns: { "has_incomplete_task": bool }
-    """
-    api_logger.info(f"check_incomplete_tutee_match_task called for tutorship_id: {tutorship_id}")
-    
-    try:
-        tutorship = Tutorships.objects.get(id=tutorship_id)
-    except Tutorships.DoesNotExist:
-        return JsonResponse({"error": "Tutorship not found"}, status=404)
-    
-    # Check if this would be final approval
-    if tutorship.approval_counter != 1:
-        # Not at the final approval stage
-        return JsonResponse({"has_incomplete_task": False}, status=200)
-    
-    # Check for ANY incomplete "התאמת חניך" tasks for this tutor
-    tutee_match_task_type = Task_Types.objects.filter(task_type="התאמת חניך").first()
-    if tutee_match_task_type:
-        incomplete_tutee_match_tasks = Tasks.objects.filter(
-            related_tutor_id=tutorship.tutor_id,
-            task_type=tutee_match_task_type,
-            status__in=["לא הושלמה", "בביצוע"]
-        ).exists()
-        if incomplete_tutee_match_tasks:
-            return JsonResponse({"has_incomplete_task": True}, status=200)
-    
-    return JsonResponse({"has_incomplete_task": False}, status=200)
 
 
 @conditional_csrf
@@ -1091,21 +997,8 @@ def delete_tutorship(request, tutorship_id):
             status_restored = True
         # If child has other tutorships, keep status as "יש_חונך"
         
-        # Delete the "התאמת חניך" task for this tutor if exists
-        try:
-            tutee_match_task_type = Task_Types.objects.filter(task_type="התאמת חניך").first()
-            if tutee_match_task_type:
-                tutee_match_tasks = Tasks.objects.filter(
-                    task_type=tutee_match_task_type,
-                    related_tutor=tutor,
-                    related_child=child
-                )
-                deleted_task_count = tutee_match_tasks.count()
-                tutee_match_tasks.delete()
-                if deleted_task_count > 0:
-                    api_logger.info(f"Deleted tutee match task for tutor {tutor_id} and child {child_id} after tutorship deletion")
-        except Exception as e:
-            api_logger.error(f"Error deleting tutee match task: {str(e)}")
+        # SINGLE-APPROVAL WORKFLOW: No tutee match tasks exist to delete
+        # Tutorships are immediately active, no intermediate tasks created
         
         # Delete the tutorship record FIRST (before deleting prev_status, so the FK isn't violated)
         tutorship.delete()

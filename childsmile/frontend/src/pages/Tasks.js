@@ -242,7 +242,9 @@ const Tasks = () => {
           (permission) =>
             permission.resource === taskType.resource &&
             permission.action === taskType.action
-        )
+        ) &&
+        taskType.name !== "ראיון מועמד לחונכות" && // Exclude interview task
+        taskType.name !== "התאמת חניך" // Exclude tutee match task
       );
       setFilteredTaskTypes(filteredTypes);
 
