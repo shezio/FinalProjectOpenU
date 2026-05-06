@@ -181,6 +181,8 @@ const NewFamiliesReport = () => {
                     <th>{t("Father Phone")}</th>
                     <th>{t("Mother Name")}</th>
                     <th>{t("Mother Phone")}</th>
+                    <th>{t("Is In Group")}</th>
+                    <th>{t("Why Not In Group")}</th>
                     <th className="wide-column">
                       {t("Registration Date")}
                       <button
@@ -207,6 +209,8 @@ const NewFamiliesReport = () => {
                       <td>{family.father_phone}</td>
                       <td>{family.mother_name}</td>
                       <td>{family.mother_phone}</td>
+                      <td>{family.is_in_group ? t('Yes') : t('No')}</td>
+                      <td>{family.is_in_group ? '---' : (family.why_not_in_group || '---')}</td>
                       <td>{family.registration_date}</td>
                     </tr>
                   ))}

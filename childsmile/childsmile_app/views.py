@@ -239,6 +239,8 @@ def get_tutors(request):
             "updated": t.updated,  # The new 'updated' field
             "in_tutorship": Tutorships.objects.filter(tutor_id=t.id_id, child__isnull=False).exists(),  # Add this flag
             "eligibility": "ממתין לראיון" if t.id_id in pending_tutor_ids else "עבר ראיון",  # Eligibility based on Pending_Tutor
+            "is_in_group": t.is_in_group,
+            "why_not_in_group": t.why_not_in_group,
         }
         for t in tutors
     ]
@@ -595,6 +597,8 @@ def get_general_volunteers_not_pending(request):
             "signupdate": gv.signupdate,
             "comments": gv.comments,
             "updated": gv.updated,
+            "is_in_group": gv.is_in_group,
+            "why_not_in_group": gv.why_not_in_group,
         }
         for gv in volunteers
     ]

@@ -75,6 +75,8 @@ const Families = () => {
     status: 'טיפולים', // Default status
     responsible_coordinator: '', // Auto-assigned coordinator
     need_review: true, // Feature #2: Default to true (child needs review tasks)
+    is_in_group: true, // Default to true
+    why_not_in_group: '', // Empty by default
   });
   const [familiesCoordinators, setFamiliesCoordinators] = useState([]); // For non-tutored families
   const [tutoredCoordinators, setTutoredCoordinators] = useState([]); // For tutored families
@@ -503,6 +505,8 @@ const Families = () => {
       status: 'טיפולים',
       responsible_coordinator: '', // Reset coordinator
       need_review: true, // Feature #2: Reset to true
+      is_in_group: true,
+      why_not_in_group: '',
     });
     setAutoAssignedCoordinator(null); // Reset auto-assigned flag
     setErrors({});
@@ -541,6 +545,8 @@ const Families = () => {
       has_completed_treatments: false,
       status: 'טיפולים', // Reset to default status
       need_review: true, // Feature #2: Reset to true
+      is_in_group: true,
+      why_not_in_group: '',
     });
     setErrors({}); // Clear errors when closing the modal
   };
@@ -692,6 +698,8 @@ const Families = () => {
       status: family.status || 'טיפולים',
       responsible_coordinator: family.responsible_coordinator || '', // Load current coordinator (can be "ללא" or staff_id)
       need_review: family.need_review !== undefined ? family.need_review : true, // Feature #2: Load need_review (default true)
+      is_in_group: family.is_in_group !== undefined ? family.is_in_group : true,
+      why_not_in_group: family.why_not_in_group || '',
     };
 
     const cityKey = family.city ? family.city.trim() : '';
@@ -811,6 +819,8 @@ const Families = () => {
       has_completed_treatments: false,
       status: 'טיפולים', // Reset to default status
       need_review: true, // Feature #2: Reset to true
+      is_in_group: true,
+      why_not_in_group: '',
     });
     setErrors({});
   };
@@ -1371,6 +1381,8 @@ const Families = () => {
                 <p>{t('Has Completed Treatments')}: {selectedFamily.has_completed_treatments ? t('Yes') : t('No')}</p>
                 <p>{t('Details for Tutoring')}: {selectedFamily.details_for_tutoring || '---'}</p>
                 <p>{t('Last Review Talk Conducted')}: {selectedFamily.last_review_talk_conducted || '---'}</p>
+                <p>{t('Is In Group')}: {selectedFamily.is_in_group ? t('Yes') : t('No')}</p>
+                <p>{t('Why Not In Group')}: {selectedFamily.is_in_group ? '---' : (selectedFamily.why_not_in_group || '---')}</p>
               </div>
               <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', marginTop: '20px' }}>
                 {hasCreatePermissionForTable("tutorships") && (
@@ -1649,6 +1661,36 @@ const Families = () => {
                     className="scrollable-textarea"
                   />
 
+                  <label>{t('Is In Group')}</label>
+                  <select
+                    name="is_in_group"
+                    value={newFamily.is_in_group ? "Yes" : "No"}
+                    onChange={(e) =>
+                      handleAddFamilyChange({
+                        target: {
+                          name: "is_in_group",
+                          value: e.target.value === "Yes",
+                        },
+                      })
+                    }
+                  >
+                    <option value="Yes">{t('Yes')}</option>
+                    <option value="No">{t('No')}</option>
+                  </select>
+
+                  {!newFamily.is_in_group && (
+                    <>
+                      <label>{t('Why Not In Group')}</label>
+                      <textarea
+                        name="why_not_in_group"
+                        value={newFamily.why_not_in_group}
+                        onChange={handleAddFamilyChange}
+                        placeholder={t('Reason for not being in group')}
+                        className="scrollable-textarea"
+                      />
+                    </>
+                  )}
+
                   <label>{t('Last Review Call Conducted')}</label>
                   <input
                     type="date"
@@ -1703,6 +1745,31 @@ const Families = () => {
                     className={errors.mother_phone ? "error" : ""}
                   />
                   {errors.mother_phone && <span className="families-error-message">{errors.mother_phone}</span>}
+
+                  <label>{t('Is In Group')}</label>
+                  <select
+                    name="is_in_group"
+                    value={newFamily.is_in_group ? "Yes" : "No"}
+                    onChange={(e) =>
+                      handleAddFamilyChange({
+                        target: { name: "is_in_group", value: e.target.value === "Yes" },
+                      })
+                    }
+                  >
+                    <option value="Yes">{t('Yes')}</option>
+                    <option value="No">{t('No')}</option>
+                  </select>
+
+                  <label>{t('Why Not In Group')}</label>
+                  <input
+                    type="text"
+                    name="why_not_in_group"
+                    value={newFamily.why_not_in_group}
+                    onChange={handleAddFamilyChange}
+                    disabled={newFamily.is_in_group}
+                    placeholder={newFamily.is_in_group ? '---' : t('Reason for not being in group')}
+                    style={{ opacity: newFamily.is_in_group ? 0.5 : 1 }}
+                  />
                 </div> {/* End of fifth form-column */}
 
                 {/* Sixth form-column */}
@@ -2125,6 +2192,31 @@ const Families = () => {
                     className={errors.mother_phone ? "error" : ""}
                   />
                   {errors.mother_phone && <span className="families-error-message">{errors.mother_phone}</span>}
+
+                  <label>{t('Is In Group')}</label>
+                  <select
+                    name="is_in_group"
+                    value={newFamily.is_in_group ? "Yes" : "No"}
+                    onChange={(e) =>
+                      handleAddFamilyChange({
+                        target: { name: "is_in_group", value: e.target.value === "Yes" },
+                      })
+                    }
+                  >
+                    <option value="Yes">{t('Yes')}</option>
+                    <option value="No">{t('No')}</option>
+                  </select>
+
+                  <label>{t('Why Not In Group')}</label>
+                  <input
+                    type="text"
+                    name="why_not_in_group"
+                    value={newFamily.why_not_in_group}
+                    onChange={handleAddFamilyChange}
+                    disabled={newFamily.is_in_group}
+                    placeholder={newFamily.is_in_group ? '---' : t('Reason for not being in group')}
+                    style={{ opacity: newFamily.is_in_group ? 0.5 : 1 }}
+                  />
 
                 </div>
                 <div className="form-column">

@@ -98,6 +98,8 @@ const AllVolunteersIRSReport = () => {
             // Volunteer-specific fields (2)
             'תאריך הרשמה': v.signupdate || '',
             'סטטוס': v.status || '',
+            'האם בקבוצה': v.is_in_group ? 'כן' : 'לא',
+            'סיבה לאי חברות בקבוצה': v.is_in_group ? '---' : (v.why_not_in_group || '---'),
         }));
         
         console.log('Export data count:', exportData.length); // DEBUG
@@ -210,6 +212,8 @@ const AllVolunteersIRSReport = () => {
                                             <th>{t('Email')}</th>
                                             <th>{t('City')}</th>
                                             <th>{t('Status')}</th>
+                                            <th>{t('Is In Group')}</th>
+                                            <th>{t('Why Not In Group')}</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -232,6 +236,8 @@ const AllVolunteersIRSReport = () => {
                                                 <td>{volunteer.email || '-'}</td>
                                                 <td>{volunteer.city || '-'}</td>
                                                 <td>{volunteer.status || '-'}</td>
+                                                <td>{volunteer.is_in_group ? t('Yes') : t('No')}</td>
+                                                <td>{volunteer.is_in_group ? '---' : (volunteer.why_not_in_group || '---')}</td>
                                             </tr>
                                             );
                                         })}

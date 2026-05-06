@@ -469,14 +469,32 @@ input.search-bar::placeholder {
   border-radius: 16px;
   width: 600px;
   max-width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+  overflow-x: hidden;
   border: 2px solid rgba(255, 255, 255, 0.5);
   box-shadow: 
     0 20px 60px rgba(0, 0, 0, 0.3),
     0 10px 30px rgba(102, 126, 234, 0.2),
     inset 0 2px 0 rgba(255, 255, 255, 0.8);
-  position: fixed;
-  top: 300px;
+  position: relative;
   animation: slideDown 0.3s ease;
+}
+
+/* Exact-path fix: no horizontal overflow inside tutorship details modal */
+.tutor-vol-modal-overlay .tutorship-details-modal,
+.tutor-vol-modal-overlay .volunteer-comments-modal {
+  box-sizing: border-box;
+}
+
+.tutor-vol-modal-overlay .tutorship-details-modal .tutorship-details-body textarea,
+.tutor-vol-modal-overlay .tutorship-details-modal .tutorship-details-body select,
+.tutor-vol-modal-overlay .tutorship-details-modal .tutorship-details-body input,
+.tutor-vol-modal-overlay .volunteer-comments-modal .tutor-vol-modal-body textarea,
+.tutor-vol-modal-overlay .volunteer-comments-modal .tutor-vol-modal-body select,
+.tutor-vol-modal-overlay .volunteer-comments-modal .tutor-vol-modal-body input {
+  box-sizing: border-box;
+  max-width: 100%;
 }
 
 @keyframes slideDown {
@@ -654,6 +672,9 @@ input.search-bar::placeholder {
 .tutorship-details-modal {
   min-width: 450px;
   max-width: 550px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
 }
 
 .tutorship-details-header {
@@ -675,6 +696,8 @@ input.search-bar::placeholder {
 
 .tutorship-details-body {
   padding: 24px;
+  overflow-y: auto;
+  flex: 1;
 }
 
 .tutorship-detail-row {

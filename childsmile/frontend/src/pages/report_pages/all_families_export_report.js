@@ -122,6 +122,8 @@ const AllFamiliesExportReport = () => {
             'הערות רכז': f.coordinator_comments || '',
             'פרטים לחונכות': f.details_for_tutoring || '',
             'מידע נוסף': f.additional_info || '',
+            'האם בקבוצה': f.is_in_group ? 'כן' : 'לא',
+            'סיבה לאי חברות בקבוצה': f.is_in_group ? '---' : (f.why_not_in_group || '---'),
         }));
         
         console.log('Export data count:', exportData.length);
@@ -240,6 +242,8 @@ const AllFamiliesExportReport = () => {
                                             <th>{t('City')}</th>
                                             <th>{t('Status')}</th>
                                             <th>{t('Tutorship Status')}</th>
+                                            <th>{t('Is In Group')}</th>
+                                            <th>{t('Why Not In Group')}</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -268,6 +272,8 @@ const AllFamiliesExportReport = () => {
                                                 <td>{family.city || '-'}</td>
                                                 <td>{family.status || '-'}</td>
                                                 <td>{tutorshipStatusDisplay}</td>
+                                                <td>{family.is_in_group ? t('Yes') : t('No')}</td>
+                                                <td>{family.is_in_group ? '---' : (family.why_not_in_group || '---')}</td>
                                             </tr>
                                             );
                                         })}
