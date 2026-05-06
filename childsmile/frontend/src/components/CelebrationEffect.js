@@ -3,8 +3,9 @@ import { useTranslation } from 'react-i18next';
 import '../styles/CelebrationEffect.css';
 
 const CONFETTI_EMOJIS = ['🎉', '🎊', '✨', '🌟', '⭐', '🎈', '🎁', '🏆', '👏', '💪', '🎯', '📈'];
+const FAMILY_CELEBRATION_EMOJIS = ['✈️', '🧸', '🪁', '🦋', '🎨', '🎪', '🎭', '🎬', '🎤', '🎸'];
 
-const CelebrationEffect = ({ isActive, userName }) => {
+const CelebrationEffect = ({ isActive, userName, celebrationType = 'tutorship' }) => {
   const { t } = useTranslation();
   const [confetti, setConfetti] = useState([]);
   const [messageIndex, setMessageIndex] = useState(0);
@@ -15,6 +16,9 @@ const CelebrationEffect = ({ isActive, userName }) => {
     // Pick a random meme message key (1-10)
     const messageNum = Math.floor(Math.random() * 10) + 1;
     setMessageIndex(messageNum);
+
+    // Select emoji array based on celebration type
+    const emojiArray = celebrationType === 'family' ? FAMILY_CELEBRATION_EMOJIS : CONFETTI_EMOJIS;
 
     // Generate confetti particles from ALL edges
     const confettiPieces = Array.from({ length: 80 }, (_, i) => {
@@ -51,7 +55,7 @@ const CelebrationEffect = ({ isActive, userName }) => {
         endTop,
         delay: Math.random() * 0.8,
         duration: 3 + Math.random() * 2,
-        emoji: CONFETTI_EMOJIS[Math.floor(Math.random() * CONFETTI_EMOJIS.length)],
+        emoji: emojiArray[Math.floor(Math.random() * emojiArray.length)],
         size: 20 + Math.random() * 30,
       };
     });
@@ -64,11 +68,14 @@ const CelebrationEffect = ({ isActive, userName }) => {
     }, 5500);
 
     return () => clearTimeout(timer);
-  }, [isActive]);
+  }, [isActive, celebrationType]);
 
   if (!isActive) return null;
 
-  const memeMessage = t(`confetti_message_${messageIndex}`);
+  const messageKeyPrefix = celebrationType === 'family' ? 'family_message_' : 'confetti_message_';
+  const memeMessage = t(messageKeyPrefix + messageIndex, { 
+    userName: userName || '' 
+  });
 
   return (
     <div className="celebration-container">
