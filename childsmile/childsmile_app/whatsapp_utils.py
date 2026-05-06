@@ -52,7 +52,10 @@ def send_whatsapp_message(recipient_phone, message_body, use_template=False, tem
         # Build payload
         if use_template and template_sid:
             # Using Twilio content template
-            variables_json = json.dumps(template_variables or {})
+            # All values MUST be strings — Twilio rejects integers/None (error 21656)
+            safe_variables = {k: str(v) if v is not None else "" for k, v in (template_variables or {}).items()}
+            variables_json = json.dumps(safe_variables)
+            api_logger.debug(f"📤 WhatsApp template payload — SID={template_sid} vars={variables_json} to={clean_phone}")
             payload = {
                 "From": twilio_from,
                 "To": clean_phone,
