@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <title>מה השתנה בעבור לנו? - מדריך למנהלים</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', 'Tahoma', Arial, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #333;
+      margin: 0;
+      padding: 20px;
+      direction: rtl;
+      min-height: 100vh;
+    }
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    h1 {
+      background: white;
+      color: #667eea;
+      padding: 40px;
+      border-radius: 15px;
+      font-size: 2.5em;
+      text-align: center;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+      margin: 0 0 30px 0;
+    }
+    .intro {
+      background: white;
+      padding: 30px;
+      border-radius: 15px;
+      margin-bottom: 30px;
+      font-size: 1.15em;
+      line-height: 1.9;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+    .section {
+      background: white;
+      border-radius: 15px;
+      padding: 35px;
+      margin-bottom: 25px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+    h2 {
+      color: #667eea;
+      font-size: 2em;
+      margin-top: 0;
+      margin-bottom: 25px;
+      padding-bottom: 15px;
+      border-bottom: 3px solid #667eea;
+    }
+    .use-case {
+      background: linear-gradient(to right, #f8f9fa, #ffffff);
+      border-right: 5px solid #667eea;
+      padding: 20px;
+      margin-bottom: 20px;
+      border-radius: 8px;
+    }
+    .use-case h3 {
+      color: #333;
+      margin-top: 0;
+      margin-bottom: 10px;
+      font-size: 1.3em;
+    }
+    .before-after {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin-top: 15px;
+    }
+    .before {
+      background: #fff5f7;
+      border: 2px solid #e74c3c;
+      border-radius: 8px;
+      padding: 15px;
+    }
+    .after {
+      background: #f0fdf4;
+      border: 2px solid #27ae60;
+      border-radius: 8px;
+      padding: 15px;
+    }
+    .before h4, .after h4 {
+      margin-top: 0;
+      font-size: 1.1em;
+    }
+    .before h4 { color: #e74c3c; }
+    .after h4 { color: #27ae60; }
+    .before p, .after p {
+      margin: 10px 0;
+      font-size: 0.95em;
+      line-height: 1.6;
+    }
+    .benefit {
+      background: #f0fdf4;
+      border-left: 4px solid #27ae60;
+      padding: 15px;
+      margin: 15px 0;
+      border-radius: 5px;
+    }
+    .benefit strong {
+      color: #27ae60;
+    }
+    .important {
+      background: #fff8e1;
+      border-left: 4px solid #f39c12;
+      padding: 15px;
+      margin: 15px 0;
+      border-radius: 5px;
+    }
+    .important strong {
+      color: #e67e22;
+    }
+    ul, ol {
+      margin: 15px 0;
+      padding-right: 25px;
+    }
+    li {
+      margin-bottom: 12px;
+      line-height: 1.8;
+    }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin: 25px 0;
+    }
+    .stat-box {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 25px;
+      border-radius: 10px;
+      text-align: center;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+    .stat-number {
+      font-size: 2.5em;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+    .stat-label {
+      font-size: 1em;
+      opacity: 0.95;
+    }
+    .timeline {
+      position: relative;
+      padding: 20px 0;
+    }
+    .timeline-item {
+      display: flex;
+      margin-bottom: 25px;
+      gap: 20px;
+    }
+    .timeline-marker {
+      width: 100px;
+      font-weight: bold;
+      color: #667eea;
+      text-align: center;
+      padding-top: 5px;
+    }
+    .timeline-content {
+      flex: 1;
+      background: #f8f9fa;
+      padding: 15px;
+      border-radius: 8px;
+      border-left: 3px solid #667eea;
+    }
+    .faq {
+      margin: 20px 0;
+    }
+    .faq-q {
+      background: #f8f9fa;
+      padding: 15px;
+      margin-bottom: 10px;
+      border-radius: 8px;
+      font-weight: bold;
+      color: #667eea;
+      cursor: pointer;
+    }
+    .faq-a {
+      padding: 15px 15px 15px 40px;
+      margin-bottom: 20px;
+      background: white;
+      border-left: 4px solid #667eea;
+      border-radius: 0 8px 8px 0;
+    }
+    @media (max-width: 768px) {
+      .before-after {
+        grid-template-columns: 1fr;
+      }
+      .stats {
+        grid-template-columns: 1fr;
+      }
+    }
+    footer {
+      text-align: center;
+      color: #999;
+      padding: 20px;
+      margin-top: 40px;
+      background: white;
+      border-radius: 10px;
+    }
+    .icon {
+      font-size: 1.2em;
+      margin-right: 8px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+
+<h1>✨ מה השתנה בעבורנו?</h1>
+<div class="intro" style="text-align: center; font-size: 1.2em;">
+  <p><strong>חדשות טובות!</strong> השינוי הזה עושה את העבודה שלנו <strong>יותר מהירה וקלה</strong>.</p>
+  <p>לא צריך עוד המתנות, לא צריך עוד אישור שני, ופשוט - <strong>חונכויות חדשות מתחילות מיד</strong>.</p>
+</div>
+
+<!-- ============================================================ -->
+<div class="section">
+  <h2><span class="icon">⏱️</span>השינוי הגדול: מהר יותר!</h2>
+  
+  <div class="stats">
+    <div class="stat-box">
+      <div class="stat-number">תרגום</div>
+      <div class="stat-label">מ-3-5 ימים של המתנה</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-number">↓</div>
+      <div class="stat-label">ל-מיידי (כמה שניות)</div>
+    </div>
+  </div>
+
+  <div class="use-case">
+    <h3>📊 כמה זמן כל שלב?</h3>
+    <div class="before-after">
+      <div class="before">
+        <h4>❌ היום - המתנה</h4>
+        <p><strong>יום 1:</strong> רכז יוצר חונכות</p>
+        <p><strong>יום 1-3:</strong> המתנה לרכז שני</p>
+        <p><strong>יום 2-5:</strong> רכז שני בודק ואישור</p>
+        <p><strong>סה"כ:</strong> 3-5 ימים עד שהחונכות בפועל פעילה</p>
+      </div>
+      <div class="after">
+        <h4>✅ מהיום - מיידי!</h4>
+        <p><strong>כמה שניות:</strong> רכז יוצר חונכות</p>
+        <p><strong>תוך שניה:</strong> ✓ חונכות כבר פעילה!</p>
+        <p><strong>תוך שניה:</strong> ✓ חונך יכול למלא משוב</p>
+        <p><strong>סה"כ:</strong> 0 ימים - זה קורה עכשיו!</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<div class="section">
+  <h2><span class="icon">👥</span> מה משתנה בעבודתנו?</h2>
+
+  <h3>רכז חונכים</h3>
+  <div class="use-case">
+    <h3>📝 דוגמה: רכז חונכים יוצר חונכות חדשה</h3>
+    <div class="before-after">
+      <div class="before">
+        <h4>❌ פעם</h4>
+        <ul style="margin: 0; padding-right: 20px;">
+          <li>1. משתמש באשף</li>
+          <li>2. בוחר חונך וילד</li>
+          <li>3. יוצר חונכות</li>
+          <li style="margin-bottom: 0;">4. <strong>ממתין</strong> לרכז שני שיאשר</li>
+        </ul>
+      </div>
+      <div class="after">
+        <h4>✅ מהיום</h4>
+        <ul style="margin: 0; padding-right: 20px;">
+          <li>1. משתמש באשף</li>
+          <li>2. בוחר חונך וילד</li>
+          <li>3. יוצר חונכות</li>
+          <li style="margin-bottom: 0;">4. <strong>סיום!</strong> זה כבר פעיל</li>
+        </ul>
+      </div>
+    </div>
+    <div class="benefit">
+      <strong>✓ יתרון:</strong> אין צורך לתאום עם רכז שני. עוזרים יותר חונכויות בפחות זמן.
+    </div>
+  </div>
+
+  <h3>רכז משפחות</h3>
+  <div class="use-case">
+    <h3>📋 מה קורה לרכז משפחות?</h3>
+    <div class="after" style="margin-top: 15px;">
+      <h4>✅ חדש</h4>
+      <ul style="margin: 0; padding-right: 20px;">
+        <li>כבר <strong>אתם לא צריכים לאשר</strong> חונכויות שרכז חונכים יצר</li>
+        <li>אין לכם רשימת "חונכויות ממתינות לאישור"</li>
+        <li>אתם יכולים להתמקד בדברים אחרים</li>
+      </ul>
+    </div>
+    <div class="benefit">
+      <strong>✓ יתרון:</strong> פחות עומס אדמינסטרטיבי, יותר זמן לעבודה חשובה.
+    </div>
+  </div>
+
+  <h3>חונכים</h3>
+  <div class="use-case">
+    <h3>💬 מה קורה לחונכים?</h3>
+    <div class="after" style="margin-top: 15px;">
+      <h4>✅ עם השינוי</h4>
+      <ul style="margin: 0; padding-right: 20px;">
+        <li>חונך מוכר כ"רשמי" <strong>מיד</strong></li>
+        <li>יכול למלא משוב על פגישות <strong>מהיום הראשון</strong></li>
+        <li>לא צריך להמתין ל"אישור שני"</li>
+      </ul>
+    </div>
+    <div class="benefit">
+      <strong>✓ יתרון:</strong> חונך מרגיש מוכר ורשמי. פחות אי-ודאות.
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<div class="section">
+  <h2><span class="icon">📊</span> מה זה אומר לדוחות שלנו?</h2>
+
+  <div class="use-case">
+    <h3>דוח "ילדים הממתינים לחונך"</h3>
+    <p><strong>פעם:</strong> ילד הופיע ברשימה, אבל אם רכז יצר חונכות - היא הייתה "ממתינה" לאישור שני. הילד בעצם כבר לא ממתין, אבל הדוח הציג בו עדיין כממתין.</p>
+    <p><strong>מהיום:</strong> כשנוצרת חונכות - הילד מסיר מהרשימה <strong>מיד</strong>. הדוח שלנו תמיד מדויק.</p>
+    <div class="benefit">
+      <strong>✓ תוצאה:</strong> דוחות מדויקים יותר, תמונה אמיתית של המצב.
+    </div>
+  </div>
+
+  <div class="use-case">
+    <h3>דוח "חונכים פעילים"</h3>
+    <p><strong>פעם:</strong> חונך הופיע בדוח רק אחרי שהרכז השני אישר - יכול להיות 3-5 ימים אחרי שנוצרה החונכות.</p>
+    <p><strong>מהיום:</strong> חונך מופיע כ"פעיל" <strong>מיד</strong> עם יצירת החונכות.</p>
+    <div class="benefit">
+      <strong>✓ תוצאה:</strong> ניתן לראות בזמן אמת את התוצאות שלנו.
+    </div>
+  </div>
+
+  <div class="use-case">
+    <h3>דוח "משוב חונכים"</h3>
+    <p><strong>פעם:</strong> כמו שחונך לא יכול למלא משוב לפני אישור - הדוח היה חלק.</p>
+    <p><strong>מהיום:</strong> חונך יכול למלא משוב <strong>מיד</strong> - יותר נתונים בדוח!</p>
+    <div class="benefit">
+      <strong>✓ תוצאה:</strong> דוחות עשירים בנתונים יותר, אנחנו רואים את הכל.
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<div class="section">
+  <h2><span class="icon">🚨</span> חשוב לדעת!</h2>
+
+  <div class="important">
+    <strong>⚠️ יצירה = סופי!</strong><br/>
+    כשרכז יוצר חונכות עכשיו, היא כבר פעילה. אם נוצרה בטעות - צריך למחוק אותה ידנית (לא סתם "לא לאשר").
+  </div>
+
+  <div class="important">
+    <strong>⚠️ קצב משימות מהר יותר</strong><br/>
+    משימות ביקור ראשון ומעקב מתפתחות עכשיו <strong>מיד</strong> עם יצירת החונכות. הרכזים צריכים להיות מוכנים לקצב מהיר יותר.
+  </div>
+
+  <div class="important">
+    <strong>⚠️ אין עוד "חונכויות ממתינות"</strong><br/>
+    המצב "ממתין לאישור" כמעט שלא קיים יותר. כל חונכות שנוצרה בחדשות הן כבר "פעילות".
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<div class="section">
+  <h2><span class="icon">❓</span> שאלות נפוצות</h2>
+
+  <div class="faq">
+    <div class="faq-q">שאלה: מה אם יצרנו חונכות בטעות?</div>
+    <div class="faq-a">
+      <strong>תשובה:</strong> כמו תמיד - ניתן למחוק אותה. אבל עכשיו היא כבר פעילה, אז המחיקה תביא את הילד חזרה לרשימת "ממתינים" וגם תעדכן את דוחות.
+    </div>
+  </div>
+
+  <div class="faq">
+    <div class="faq-q">שאלה: מה קורה לחונכויות ישנות שעדיין "ממתינות"?</div>
+    <div class="faq-a">
+      <strong>תשובה:</strong> יש לנו תהליך הפעלה שישדרג אותן כל אחת לפעילה. בקרוב, לא תהיה בעדנו חונכות "ממתינה".
+    </div>
+  </div>
+
+  <div class="faq">
+    <div class="faq-q">שאלה: האם חונך יכול לדחות חונכות או להגיד "לא מעוניין"?</div>
+    <div class="faq-a">
+      <strong>תשובה:</strong> לא דרך המערכת. זה עדיין משהו שאנחנו לא יכולים לעשות אוטומטית. אם חונך רוצה לבטל - אנחנו מטפלים בזה ידנית.
+    </div>
+  </div>
+
+  <div class="faq">
+    <div class="faq-q">שאלה: האם זה משפיע על גיבוי הנתונים?</div>
+    <div class="faq-a">
+      <strong>תשובה:</strong> לא! כל החונכויות - פעילות, ישנות, מחוקות - כל ההיסטוריה שמורה. אנחנו יכולים תמיד לראות מה קרה.
+    </div>
+  </div>
+
+  <div class="faq">
+    <div class="faq-q">שאלה: האם צריך לעדכן משהו בעבודה שלנו?</div>
+    <div class="faq-a">
+      <strong>תשובה:</strong> רק זיכרו: כשנוצרת חונכות, היא כבר פעילה. זה הכל. לא צריך לעשות משהו בנוסף.
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<div class="section">
+  <h2><span class="icon">✅</span> סיכום</h2>
+
+  <div class="use-case" style="border-right-color: #27ae60;">
+    <h3>מה קבלנו?</h3>
+    <ul>
+      <li><strong>⏱️ מהר יותר:</strong> חונכויות פעילות מיד, לא 3-5 ימים</li>
+      <li><strong>📊 דוחות מדויקים:</strong> תמיד מראים את המצב האמיתי</li>
+      <li><strong>👥 פחות עומס:</strong> רכזים לא צריכים לתאם אישורים</li>
+      <li><strong>😊 חונכים מאושרים:</strong> רגב מוכרים ולא מחכים</li>
+      <li><strong>📝 יותר משוב:</strong> חונכים מדווחים מהיום הראשון</li>
+    </ul>
+  </div>
+</div>
+
+<footer>
+  <p><strong>מערכת ChildSmile</strong></p>
+  <p>מדריך למנהלים ועובדי ה-NPO | מאי 2026</p>
+  <p style="font-size: 0.9em; opacity: 0.8;">זו העדכון החשוב שלנו - לעבודה יותר מהירה ופשוטה!</p>
+</footer>
+
+</div>
+
+</body>
+</html>

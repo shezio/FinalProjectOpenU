@@ -61,7 +61,6 @@ from .report_views import (
     volunteer_feedback_report,
     tutor_feedback_report,
     families_tutorships_stats,
-    pending_tutors_stats,
     roles_spread_stats,
     get_all_volunteers_irs_report,
 )
@@ -97,7 +96,6 @@ from .tutorship_views import (
     get_available_tutors,
     calculate_manual_match,
     update_tutorship_created_date,
-    check_incomplete_tutee_match_task,
 )
 
 from .unused_views import (
@@ -317,11 +315,6 @@ urlpatterns = [
         name="update_tutorship",
     ),
     path(
-        "api/check_incomplete_tutee_match_task/<int:tutorship_id>/",
-        check_incomplete_tutee_match_task,
-        name="check_incomplete_tutee_match_task",
-    ),
-    path(
         "api/get_available_tutors/",
         get_available_tutors,
         name="get_available_tutors",
@@ -340,11 +333,6 @@ urlpatterns = [
         "api/families_tutorships_stats/",
         families_tutorships_stats,
         name="families_tutorships_stats",
-    ),
-    path(
-        "api/pending_tutors_stats/",
-        pending_tutors_stats,
-        name="pending_tutors_stats",
     ),
     path(
         "api/roles_spread_stats/",

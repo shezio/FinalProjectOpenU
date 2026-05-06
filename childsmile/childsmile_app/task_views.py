@@ -562,12 +562,13 @@ def delete_task(request, task_id):
                 except Pending_Tutor.DoesNotExist:
                     api_logger.debug(f"Pending_Tutor with id_id {tutor_id} does not exist (already deleted or never existed)")
                 
-                # 2. Delete pending tutorship (pending_first_approval) for this tutor
+                # 2. Delete pending/active tutorship for this tutor (since tutee match task was rejected/deleted)
+                # New tutorships are immediately 'active', legacy ones were 'pending_first_approval'
                 try:
                     from .models import Tutorships, PrevTutorshipStatuses
                     pending_tutorship = Tutorships.objects.filter(
                         tutor=tutor,
-                        tutorship_activation='pending_first_approval'
+                        tutorship_activation__in=['pending_first_approval', 'active']
                     ).first()
                     if pending_tutorship:
                         # Restore child status if this was their only tutorship
@@ -989,23 +990,6 @@ def update_task_status(request, task_id):
         if new_status == "בביצוע" and task.initial_family_data_id_fk:
             # Delete all other tasks with the same initial_family_data_id_fk
             delete_other_tasks_with_initial_family_data_async(task)
-        # If status changed to "בביצוע" and task is tutee match task (התאמת חניך), delete other tutee match tasks for same tutor
-        elif new_status == "בביצוע" and task.task_type and task.task_type.task_type == "התאמת חניך":
-            # Delete all other tutee match tasks for this tutor (so only one coordinator handles the match)
-            # IMPORTANT: Only delete the task records, DO NOT delete the tutorships or pending tutors
-            if task.related_tutor:
-                try:
-                    other_tutee_match_tasks = Tasks.objects.filter(
-                        related_tutor=task.related_tutor,
-                        task_type__task_type="התאמת חניך"
-                    ).exclude(task_id=task_id)
-                    deleted_count = other_tutee_match_tasks.count()
-                    # Simply delete the task records without triggering tutorship cleanup
-                    other_tutee_match_tasks.delete()
-                    if deleted_count > 0:
-                        api_logger.info(f"Deleted {deleted_count} other tutee match task records (only tasks, not tutorships) for tutor {task.related_tutor.id_id} after coordinator {task.assigned_to.username} took task {task_id}")
-                except Exception as e:
-                    api_logger.error(f"Error deleting other tutee match tasks: {str(e)}")
         # If status changed to "בביצוע" and task is audit call task (שיחת ביקורת), delete other audit call tasks for same child
         elif new_status == "בביצוע" and task.task_type and task.task_type.task_type == "שיחת ביקורת":
             # Delete all other audit call tasks for this child (so only one coordinator calls the family)

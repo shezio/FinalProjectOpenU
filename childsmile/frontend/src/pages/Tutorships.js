@@ -83,7 +83,6 @@ const Tutorships = () => {
   const [selectedMatchForInfo, setSelectedMatchForInfo] = useState(null);
   const [selectedTutorship, setSelectedTutorship] = useState(null);
   const [isApprovalModalOpen, setIsApprovalModalOpen] = useState(false);
-  const [isTaskBypassModalOpen, setIsTaskBypassModalOpen] = useState(false);  // NEW: Task bypass modal
   const { t } = useTranslation(); // Initialize the translation hook
   const mapRef = useRef();
   const [staff, setStaff] = useState([]);
@@ -106,16 +105,6 @@ const Tutorships = () => {
   const showPendingDistancesWarning = matches.some(m => m.distance_pending);
   //const showPendingDistancesWarning = true; // Always show the warning for now
   const [CoordinatorOrAdmin, setCoordinatorOrAdmin] = useState(false);
-  const [statusFilter, setStatusFilter] = useState('');
-  const [showStatusDropdown, setShowStatusDropdown] = useState(false);
-  const statusFilterRef = useRef();
-  const [tutorshipActivationFilters, setTutorshipActivationFilters] = useState({
-    'pending_first_approval': true,
-    'active': true,
-    'inactive': false
-  });
-  const [showTutorshipActivationDropdown, setShowTutorshipActivationDropdown] = useState(false);
-  const tutorshipActivationFilterRef = useRef();
   const [selectedTutorships, setSelectedTutorships] = useState([]);
   const location = useLocation();
   const [isManualMatchMode, setIsManualMatchMode] = useState(false);
@@ -137,6 +126,9 @@ const Tutorships = () => {
   const [showGradeTooltip, setShowGradeTooltip] = useState(false);
   const tooltipRef = useRef(null);
   const [selectedTutorForMatch, setSelectedTutorForMatch] = useState(null);
+  const [showStatusDropdown, setShowStatusDropdown] = useState(false);
+  const [statusFilter, setStatusFilter] = useState('');
+  const statusFilterRef = useRef(null);
 
   const toggleMagnify = () => {
     setIsMagnifyActive((prevState) => !prevState);
@@ -425,33 +417,26 @@ const Tutorships = () => {
   const openApprovalModal = async (tutorship) => {
     setSelectedTutorship(tutorship);
     
-    // Check if this is a final approval (approval_counter == 1) and check for incomplete task
-    if (tutorship.approval_counter === 1) {
-      try {
-        const response = await axios.get(`/api/check_incomplete_tutee_match_task/${tutorship.id}/`);
-        if (response.data.has_incomplete_task) {
-          // Admin bypass modal needed
-          setIsTaskBypassModalOpen(true);
-          return;
-        }
-      } catch (error) {
-        console.error('Error checking incomplete task:', error);
-        // Continue with normal approval modal
-      }
+    // No confirmation needed — approve directly
+    if (!currentUserRoleId) return;
+    try {
+      await axios.post(`/api/update_tutorship/${tutorship.id}/`, {
+        staff_role_id: currentUserRoleId,
+        bypass_incomplete_task: false,
+      });
+      toast.success(t('Tutorship approved successfully!'));
+      fetchFullTutorships();
+    } catch (error) {
+      console.error('Error approving tutorship:', error);
+      const userRoleName = t(currentRoleName);
+      showErrorApprovalToast(t, error, userRoleName);
     }
-    
-    // Normal approval modal
-    setIsApprovalModalOpen(true);
+    setSelectedTutorship(null);
   };
 
   const closeApprovalModal = () => {
     setSelectedTutorship(null);
     setIsApprovalModalOpen(false);
-  };
-
-  const closeTaskBypassModal = () => {
-    setSelectedTutorship(null);
-    setIsTaskBypassModalOpen(false);
   };
 
   const confirmApproval = async (bypassIncompleteTask = false) => {
@@ -465,7 +450,6 @@ const Tutorships = () => {
       toast.success(t('Tutorship approved successfully!'));
       fetchFullTutorships(); // Refresh the tutorships list
       closeApprovalModal();
-      closeTaskBypassModal();
     } catch (error) {
       console.error('Error approving tutorship:', error);
       const userRoleName = t(currentRoleName); // Translate the user's role name
@@ -585,11 +569,6 @@ const Tutorships = () => {
 
   // Filter and sort the tutorships by created_date
   const filteredTutorships = enrichedTutorships.filter(tutorship => {
-    // Filter by activation status
-    if (tutorshipActivationFilters[tutorship.tutorship_activation] !== true) {
-      return false;
-    }
-    
     // Filter by search query
     if (tutorshipSearchQuery.trim()) {
       const query = tutorshipSearchQuery.toLowerCase();
@@ -598,7 +577,6 @@ const Tutorships = () => {
         (tutorship.tutor_full_name && tutorship.tutor_full_name.toLowerCase().includes(query))
       );
     }
-    
     return true;
   });
 
@@ -1093,14 +1071,8 @@ const Tutorships = () => {
       ) {
         setShowStatusDropdown(false);
       }
-      if (
-        tutorshipActivationFilterRef.current &&
-        !tutorshipActivationFilterRef.current.contains(event.target)
-      ) {
-        setShowTutorshipActivationDropdown(false);
-      }
     }
-    if (showStatusDropdown || showTutorshipActivationDropdown) {
+    if (showStatusDropdown) {
       document.addEventListener("mousedown", handleClickOutside);
     } else {
       document.removeEventListener("mousedown", handleClickOutside);
@@ -1108,7 +1080,7 @@ const Tutorships = () => {
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [showStatusDropdown, showTutorshipActivationDropdown]);
+  }, [showStatusDropdown]);
 
   // Handle click-outside to close grade tooltip
   useEffect(() => {
@@ -1165,58 +1137,7 @@ const Tutorships = () => {
             </button>
           </div>
           
-          {/* Tutorship Activation Status Filter - Dropdown Style */}
-          <div className="tutorship-activation-filter-container" ref={tutorshipActivationFilterRef}>
-            <button
-              className="tutorship-activation-filter-button"
-              onClick={() => setShowTutorshipActivationDropdown(!showTutorshipActivationDropdown)}
-            >
-              {t('Filter by Activation Status')}
-            </button>
-            {showTutorshipActivationDropdown && (
-              <div className="tutorship-activation-filter-dropdown">
-                <div className="tutorship-activation-filter-item">
-                  <label>
-                    <input
-                      type="checkbox"
-                      checked={tutorshipActivationFilters['pending_first_approval']}
-                      onChange={(e) => setTutorshipActivationFilters({
-                        ...tutorshipActivationFilters,
-                        'pending_first_approval': e.target.checked
-                      })}
-                    />
-                    {t('Pending Approval')}
-                  </label>
-                </div>
-                <div className="tutorship-activation-filter-item">
-                  <label>
-                    <input
-                      type="checkbox"
-                      checked={tutorshipActivationFilters['active']}
-                      onChange={(e) => setTutorshipActivationFilters({
-                        ...tutorshipActivationFilters,
-                        'active': e.target.checked
-                      })}
-                    />
-                    {t('Active')}
-                  </label>
-                </div>
-                <div className="tutorship-activation-filter-item">
-                  <label>
-                    <input
-                      type="checkbox"
-                      checked={tutorshipActivationFilters['inactive']}
-                      onChange={(e) => setTutorshipActivationFilters({
-                        ...tutorshipActivationFilters,
-                        'inactive': e.target.checked
-                      })}
-                    />
-                    {t('Not Active')}
-                  </label>
-                </div>
-              </div>
-            )}
-          </div>
+          {/* Status Filter */}
           
           <div className="refresh">
             <button onClick={fetchFullTutorships}>
@@ -1260,19 +1181,6 @@ const Tutorships = () => {
               <table className="tutorship-matching-data-grid">
                 <thead>
                   <tr>
-                    {ENABLE_BULK_DELETE && <th>
-                      <input
-                        type="checkbox"
-                        checked={selectedTutorships.length === tutorships.length}
-                        onChange={(e) => {
-                          if (e.target.checked) {
-                            setSelectedTutorships(tutorships.map(t => t.id));
-                          } else {
-                            setSelectedTutorships([]);
-                          }
-                        }}
-                      />
-                    </th>}
                     <th>{t('Info')}</th>
                     <th>{t('Child Name')}</th>
                     <th>{t('Tutor Name')}</th>
@@ -1292,21 +1200,7 @@ const Tutorships = () => {
                   {paginatedTutorships.map((tutorship, index) => (
                     <tr 
                       key={tutorship.id}
-                      className={tutorship.tutorship_activation === 'inactive' ? 'inactive-tutorship-row' : ''}
                     >
-                      {ENABLE_BULK_DELETE && <td>
-                        <input
-                          type="checkbox"
-                          checked={selectedTutorships.includes(tutorship.id)}
-                          onChange={(e) => {
-                            if (e.target.checked) {
-                              setSelectedTutorships([...selectedTutorships, tutorship.id]);
-                            } else {
-                              setSelectedTutorships(selectedTutorships.filter(id => id !== tutorship.id));
-                            }
-                          }}
-                        />
-                      </td>}
                       <td>
                         <div className="info-icon-container" onClick={() => openInfoModal(tutorship)}>
                           <i className="info-icon" title={t('Press to see full info')}>i</i>
@@ -1343,13 +1237,6 @@ const Tutorships = () => {
                       <td>
                         <div className="tutorship-actions">
                           <button
-                            className="approve-button"
-                            disabled={tutorship.approval_counter >= 2 || !CoordinatorOrAdmin || !hasUpdatePermission}
-                            onClick={() => openApprovalModal(tutorship)}
-                          >
-                            {t('Final Approval')}
-                          </button>
-                          <button
                             className="delete-button"
                             hidden={!hasDeletePermission}
                             onClick={() => openTutorshipDeleteModal(tutorship.id)}
@@ -1357,15 +1244,6 @@ const Tutorships = () => {
                             {t('Delete')}
                           </button>
                         </div>
-                        {tutorship.approval_counter >= 2 ? (
-                          <span className="approval-span">
-                            {t('Approved by Families and Tutors coordinators')}
-                          </span>
-                        ) : (
-                          <span className="approval-span">
-                            {t('Pending approval of', { roleName: t(determinePendingCoordinator(tutorship, roles)) })}
-                          </span>
-                        )}
                       </td>
                     </tr>
                   ))}
@@ -1434,54 +1312,6 @@ const Tutorships = () => {
               </div>
             )}
           </>
-        )}
-        {isApprovalModalOpen && selectedTutorship && (
-          <Modal
-            isOpen={isApprovalModalOpen}
-            onRequestClose={closeApprovalModal}
-            className="approval-modal"
-            overlayClassName="approval-modal-overlay"
-          >
-            <h2>{t('Are you sure you want to approve this tutorship?')}</h2>
-            <p>
-              <p>
-                {t('Discuss with a coordinator', { roleName: t(determinePendingCoordinator(selectedTutorship, roles)) })}
-              </p>
-            </p>
-            <div className="modal-actions">
-              <button onClick={confirmApproval} className="yes-button">
-                {t('Approve')}
-              </button>
-              <button onClick={closeApprovalModal} className="no-button">
-                {t('Cancel')}
-              </button>
-            </div>
-          </Modal>
-        )}
-        {/* NEW: Task Bypass Modal for Admins */}
-        {isTaskBypassModalOpen && selectedTutorship && (
-          <Modal
-            isOpen={isTaskBypassModalOpen}
-            onRequestClose={closeTaskBypassModal}
-            className="approval-modal"
-            overlayClassName="approval-modal-overlay"
-          >
-            <h2>{t('Incomplete Task')}</h2>
-            <p>
-              {t('There is an open task on this tutorship - approve anyway?')}
-            </p>
-            <div className="modal-actions">
-              <button 
-                onClick={() => confirmApproval(true)} 
-                className="yes-button"
-              >
-                {t('Yes')}
-              </button>
-              <button onClick={closeTaskBypassModal} className="no-button">
-                {t('No')}
-              </button>
-            </div>
-          </Modal>
         )}
         {isInfoModalOpen && selectedMatchForInfo && (
           <div className="modal show">

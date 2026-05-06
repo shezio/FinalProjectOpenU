@@ -183,7 +183,7 @@ def families_waiting_for_tutorship_report(request):
 
         children = Children.objects.filter(
             Q(tutoring_status__in=waiting_statuses) |  # Children with waiting/tutor status
-            Q(tutorships__tutorship_activation='pending_first_approval')  # OR children with pending tutorships
+            Q(tutorships__tutorship_activation='active')  # Children with active tutorships
         ).exclude(
             tutoring_status__in=excluded_tutoring_statuses  # Exclude non-tutoring statuses
         ).exclude(
@@ -644,38 +644,6 @@ def families_tutorships_stats(request):
 
 @conditional_csrf
 @api_view(["GET"])
-def pending_tutors_stats(request):
-    api_logger.info("pending_tutors_stats called")
-    """
-    Get statistics about pending tutors vs all tutors.
-    """
-    user_id = request.session.get("user_id")
-    if not user_id:
-        return JsonResponse(
-            {"detail": "Authentication credentials were not provided."}, status=403
-        )
-
-    # Check if the user has VIEW permission on the "tutors" resource
-    if not has_permission(request, "tutors", "VIEW") or not has_permission(
-        request, "pending_tutor", "VIEW"
-    ):
-        return JsonResponse(
-            {"error": "You do not have permission to view this report."}, status=401
-        )
-
-    total_tutors = Tutors.objects.count()
-    pending_tutors = Pending_Tutor.objects.count()
-
-    percent_pending = (pending_tutors / total_tutors * 100) if total_tutors > 0 else 0
-
-    return JsonResponse(
-        {
-            "total_tutors": total_tutors,
-            "pending_tutors": pending_tutors,
-            "percent_pending": round(percent_pending, 2),
-        }
-    )
-
 
 @conditional_csrf
 @api_view(["GET"])

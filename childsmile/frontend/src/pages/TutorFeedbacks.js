@@ -105,7 +105,7 @@ const TutorFeedbacks = () => {
         // Use tutorshipsRes.data.tutorships as the array
         const tutorshipArray = tutorshipsRes.data.tutorships || [];
         const approvedTutorships = tutorshipArray.filter(
-          t => t.approval_counter === 2
+          t => t.tutorship_activation === 'active'
         );
 
         // Build tutors and tutees arrays with full names
