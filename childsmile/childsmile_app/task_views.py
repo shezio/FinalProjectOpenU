@@ -220,6 +220,53 @@ def get_user_tasks(request):
                     task_dict["tutee_match_info"] = task_dict.get("tutee_match_info", {})
                     task_dict["tutee_match_info"]["child_name"] = f"{child.childfirstname} {child.childsurname}"
             
+            # Add extra info for "צירוף משפחה לקבוצה" tasks - same 9 fields as WhatsApp notification
+            if task.task_type and task.task_type.task_type == "צירוף משפחה לקבוצה":
+                if task.related_child:
+                    from datetime import date as date_class
+                    child = task.related_child
+                    
+                    # Calculate age display (e.g., "7 שנים" or "5 חודשים")
+                    age_display = "לא זמין"
+                    if child.date_of_birth:
+                        today = date_class.today()
+                        age_years = (
+                            today.year
+                            - child.date_of_birth.year
+                            - (
+                                (today.month, today.day)
+                                < (child.date_of_birth.month, child.date_of_birth.day)
+                            )
+                        )
+                        
+                        if age_years < 1:
+                            # Calculate months
+                            if today.month >= child.date_of_birth.month:
+                                age_number = today.month - child.date_of_birth.month
+                            else:
+                                age_number = 12 + today.month - child.date_of_birth.month
+                            age_display = f"{age_number} חודשים"
+                        else:
+                            age_display = f"{age_years} שנים"
+                    
+                    # Get parent phone
+                    parent_phone = "לא זמין"
+                    if child.mother_phone:
+                        parent_phone = str(child.mother_phone)
+                    elif child.father_phone:
+                        parent_phone = str(child.father_phone)
+                    
+                    task_dict["family_details"] = {
+                        "child_name": f"{child.childfirstname} {child.childsurname}",
+                        "age_display": age_display,
+                        "gender": child.gender,
+                        "city": child.city or "לא זמין",
+                        "parent_phone": parent_phone,
+                        "hospital": child.treating_hospital or "לא זמין",
+                        "tutoring_status": child.tutoring_status or "לא זמין",
+                        "registration_date": child.registrationdate.strftime("%d/%m/%Y") if child.registrationdate else "לא זמין",
+                    }
+            
             tasks_data.append(task_dict)
             
         api_logger.debug(f"Fetched tasks: {tasks_data}")

@@ -937,6 +937,32 @@ def create_family(request):
         
         notify_admins_of_new_family(family.child_id)
 
+        # Create task for Liam to add family to group
+        try:
+            task_type = Task_Types.objects.get(task_type="צירוף משפחה לקבוצה")
+            api_logger.info(f"✅ Found task_type: {task_type.task_type} (ID: {task_type.id})")
+            
+            liam = Staff.objects.filter(first_name="ליאם", last_name="אביבי").first()
+            api_logger.info(f"🔍 Searched for Liam - found: {liam}")
+            
+            if not liam:
+                api_logger.warning("❌ Liam (ליאם אביבי) not found in Staff table")
+            
+            if liam and task_type:
+                task_data = {
+                    "type": task_type.id,
+                    "description": "צירוף משפחה לקבוצה",
+                    "assigned_to": liam.staff_id,
+                    "child": family.child_id,
+                    "due_date": datetime.datetime.now().date()
+                }
+                task = create_task_internal(task_data)
+                api_logger.info(f"✅ Created צירוף משפחה לקבוצה task (ID: {task.task_id}) for Liam for family {family.child_id}")
+        except Task_Types.DoesNotExist:
+            api_logger.warning("❌ Task type 'צירוף משפחה לקבוצה' not found")
+        except Exception as e:
+            api_logger.error(f"❌ Error creating group task for Liam: {str(e)}")
+
         return JsonResponse(
             {"message": "Family created successfully", "ID": family.child_id},
             status=201,

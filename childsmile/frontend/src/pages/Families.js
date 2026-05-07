@@ -505,8 +505,8 @@ const Families = () => {
       status: 'טיפולים',
       responsible_coordinator: '', // Reset coordinator
       need_review: true, // Feature #2: Reset to true
-      is_in_group: true,
-      why_not_in_group: '',
+      is_in_group: false,
+      why_not_in_group: 'טרם הצטרף',
     });
     setAutoAssignedCoordinator(null); // Reset auto-assigned flag
     setErrors({});
@@ -545,8 +545,8 @@ const Families = () => {
       has_completed_treatments: false,
       status: 'טיפולים', // Reset to default status
       need_review: true, // Feature #2: Reset to true
-      is_in_group: true,
-      why_not_in_group: '',
+      is_in_group: false,
+      why_not_in_group: 'טרם הצטרף',
     });
     setErrors({}); // Clear errors when closing the modal
   };

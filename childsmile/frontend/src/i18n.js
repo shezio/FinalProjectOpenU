@@ -393,6 +393,7 @@ const resources = {
       "Is It Your Tutee?": "האם זה החניך שלך בחונכות?",
       "Meeting Description": "תיאור הפגישה - מה עשיתם ? איך היה ? איפה נפגשתם ?",
       "Anything Else?": "משהו נוסף שתרצו להגיד ? דברים שאפשר לשפר להבא ? צורך שעלה למשפחה ? או כל דבר שעולה לכם בראש :)",
+      "Family Details for Group Assignment": "פרטים לצירוף לקבוצה",
       "Loading data...": "הנתונים בטעינה...",
       "Login successful!": "ההתחברות הצליחה!",
       "Max Distance": "מרחק מקסימלי",
