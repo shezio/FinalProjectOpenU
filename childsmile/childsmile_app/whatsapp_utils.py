@@ -929,3 +929,62 @@ def send_meeting_event_notification_whatsapp(phones, event_type, meeting_title, 
             f"\nמערכת חיוך של ילד"
         )
         return send_whatsapp_to_multiple(phones, message_body=freeform)
+
+
+def send_admin_approval_task_notification_whatsapp(liam_phone, user_name, user_phone, created_at):
+    """
+    Send a WhatsApp notification to Liam (System Admin) about a new admin approval task.
+    Uses Twilio content template (NEW_REGISTER_FINAL_SID) with user information.
+    
+    Template variables:
+    1. User name
+    2. User phone
+    3. Registration date
+    
+    Args:
+        liam_phone (str): Liam's phone number (any format, auto-formatted)
+        user_name (str): Full name of the user who needs admin approval
+        user_email (str): Email of the user who needs admin approval (used for logging only)
+        user_phone (str): Phone of the user
+        created_at (str): Registration date/time
+    
+    Returns:
+        dict: Response from send_whatsapp_message with success/error status
+    """
+    # Get template SID from GitHub Secrets (NEW_REGISTER_FINAL_SID)
+    admin_template_sid = os.getenv('NEW_REGISTER_FINAL_SID')
+    
+    if admin_template_sid:
+        # Using Twilio content template with 3 variables
+        template_variables = {
+            "1": user_name,
+            "2": user_phone,
+            "3": created_at
+        }
+        return send_whatsapp_message(
+            liam_phone,
+            message_body=None,
+            use_template=True,
+            template_sid=admin_template_sid,
+            template_variables=template_variables
+        )
+    else:
+        # Fallback to plain text if template SID not configured
+        message = f"""משימה חדשה: אישור הרשמה סופי
+
+שלום ליאם,
+
+קיים משתמש חדש הממתין לאישורך הסופי:
+פרטי המשתמש:
+👤 שם מלא: {user_name}
+📱 טלפון: {user_phone}
+🕐 תאריך הרשמה: {created_at}
+
+אנא בדוק שהמתנדב הצטרף לקבוצת הווטספ הכללית
+ולאחר מכן אשר או דחה את ההרשמה כנדרש."""
+        
+        return send_whatsapp_message(
+            liam_phone,
+            message_body=message,
+            use_template=False
+        )
