@@ -104,7 +104,18 @@ def get_dashboard_data(request):
         # Active tutorships (families that have a tutorship with active tutors)
         active_tutorships = Tutorships.objects.filter(tutor__staff__is_active=True).count()
         
-        staff_count = Staff.objects.filter(registration_approved=True, is_active=True).count()
+        staff_count = Staff.objects.filter(
+            registration_approved=True, 
+            is_active=True
+        ).exclude(
+            first_name__contains='דריה'
+        ).exclude(
+            first_name__contains='דביר'
+        ).exclude(
+            last_name__contains='דריה'
+        ).exclude(
+            last_name__contains='דביר'
+        ).count()
         
         # Tutorship Status Distribution
         tutorship_with = active_tutorships
@@ -677,6 +688,14 @@ def get_coordinator_workload(request):
     coordinators = Staff.objects.filter(
         roles__role_name__icontains='coordinator',
         is_active=True
+    ).exclude(
+        first_name__contains='דריה'
+    ).exclude(
+        first_name__contains='דביר'
+    ).exclude(
+        last_name__contains='דריה'
+    ).exclude(
+        last_name__contains='דביר'
     ).distinct()
 
     result = []
