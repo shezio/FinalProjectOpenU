@@ -245,6 +245,7 @@ const Tasks = () => {
         ) &&
         taskType.name !== "ראיון מועמד לחונכות" && // Exclude interview task
         taskType.name !== "התאמת חניך" // Exclude tutee match task
+        // Note: "צירוף משפחה לקבוצה" and "הסרת משפחה מקבוצה" are INCLUDED in filters
       );
       setFilteredTaskTypes(filteredTypes);
 
@@ -665,6 +666,16 @@ const Tasks = () => {
   // Helper to check by type_name directly
   const isTuteeMatchTaskByName = (typeName) => {
     return typeName === "התאמת חניך";
+  };
+
+  // Helper to check if task is "צירוף משפחה לקבוצה" (Family Group Assignment)
+  const isFamilyGroupAssignmentTaskByName = (typeName) => {
+    return typeName === "צירוף משפחה לקבוצה";
+  };
+
+  // Helper to check if task is "הסרת משפחה מקבוצה" (Remove Family from Group)
+  const isRemoveFamilyFromGroupTaskByName = (typeName) => {
+    return typeName === "הסרת משפחה מקבוצה";
   };
 
   const isRegistrationApprovalTask = (typeId) => {
@@ -1108,7 +1119,7 @@ const Tasks = () => {
                     <p>סוג משימה: {getTaskTypeName(selectedTask.type)}</p>
                     <p>לביצוע על ידי: {selectedTask.assignee.replace(/_/g, ' ')}</p>
                     {/* Show Child and Tutor only if NOT special task types */}
-                    {!isInterviewTask(selectedTask.type) && !isFamilyAdditionTask(selectedTask.type) && !isRegistrationApprovalTaskByName(selectedTask.type_name) && !isTuteeMatchTaskByName(selectedTask.type_name) && (
+                    {!isInterviewTask(selectedTask.type) && !isFamilyAdditionTask(selectedTask.type) && !isRegistrationApprovalTaskByName(selectedTask.type_name) && !isTuteeMatchTaskByName(selectedTask.type_name) && !isFamilyGroupAssignmentTaskByName(selectedTask.type_name) && !isRemoveFamilyFromGroupTaskByName(selectedTask.type_name) && (
                       <>
                         <p>חניך: {getChildFullName(selectedTask.child, childrenOptions)}</p>
                         <p>חונך: {getTutorFullName(selectedTask.tutor, tutorsOptions)}</p>
@@ -1164,6 +1175,34 @@ const Tasks = () => {
                             </p>
                           );
                         })}
+                      </>
+                    )}
+                    {/* Show family details for "צירוף משפחה לקבוצה" task */}
+                    {selectedTask.type_name === "צירוף משפחה לקבוצה" && selectedTask.family_details && (
+                      <>
+                        <h3>{t("Family Details for Group Assignment")}</h3>
+                        <p><strong>שם הילד/ה:</strong> {selectedTask.family_details.child_name || "---"}</p>
+                        <p><strong>גיל:</strong> {selectedTask.family_details.age_display || "---"}</p>
+                        <p><strong>מין:</strong> {translateUserInfoField('gender', selectedTask.family_details.gender)?.value || "---"}</p>
+                        <p><strong>עיר:</strong> {selectedTask.family_details.city || "---"}</p>
+                        <p><strong>טלפון הורים:</strong> {selectedTask.family_details.parent_phone || "---"}</p>
+                        <p><strong>בית חולים:</strong> {selectedTask.family_details.hospital || "---"}</p>
+                        <p><strong>מצב חונכות:</strong> {selectedTask.family_details.tutoring_status || "---"}</p>
+                        <p><strong>תאריך הרשמה:</strong> {selectedTask.family_details.registration_date || "---"}</p>
+                      </>
+                    )}
+                    {/* Show family details for "הסרת משפחה מקבוצה" task */}
+                    {selectedTask.type_name === "הסרת משפחה מקבוצה" && selectedTask.family_details && (
+                      <>
+                        <h3>{t("Family Details for Group Removal")}</h3>
+                        <p><strong>שם הילד/ה:</strong> {selectedTask.family_details.child_name || "---"}</p>
+                        <p><strong>גיל:</strong> {selectedTask.family_details.age_display || "---"}</p>
+                        <p><strong>מין:</strong> {translateUserInfoField('gender', selectedTask.family_details.gender)?.value || "---"}</p>
+                        <p><strong>עיר:</strong> {selectedTask.family_details.city || "---"}</p>
+                        <p><strong>טלפון הורים:</strong> {selectedTask.family_details.parent_phone || "---"}</p>
+                        <p><strong>בית חולים:</strong> {selectedTask.family_details.hospital || "---"}</p>
+                        <p><strong>סטטוס משפחה:</strong> {selectedTask.family_details.status || "---"}</p>
+                        <p><strong>תאריך הרשמה:</strong> {selectedTask.family_details.registration_date || "---"}</p>
                       </>
                     )}
                     {/* Show explanation field */}
@@ -1228,7 +1267,7 @@ const Tasks = () => {
                   }}
                 />
                 {errors.assigned_to && <p className="error-text">{errors.assigned_to}</p>}
-                {!isInterviewTask(selectedTaskType?.value) && !isFamilyAdditionTask(selectedTaskType?.value) && (
+                {!isInterviewTask(selectedTaskType?.value) && !isFamilyAdditionTask(selectedTaskType?.value) && selectedTaskType?.label !== "הסרת משפחה מקבוצה" && (
                   <>
                     <label>{t('Child')}</label>
                     <Select
@@ -1339,7 +1378,7 @@ const Tasks = () => {
                   }}
                 />
                 {errors.assigned_to && <p className="error-text">{errors.assigned_to}</p>}
-                {!isInterviewTask(selectedTaskType?.value) && !isFamilyAdditionTask(selectedTaskType?.value) && (
+                {!isInterviewTask(selectedTaskType?.value) && !isFamilyAdditionTask(selectedTaskType?.value) && selectedTaskType?.label !== "הסרת משפחה מקבוצה" && (
                   <>
                     <label>ילד</label>
                     <Select
