@@ -1259,10 +1259,8 @@ def update_family(request, child_id):
         new_status = data.get("status", family.status)
         family.status = new_status
         
-        # Auto-set group status when status is "עזב" or "בריא"
-        if new_status in ["עזב", "בריא"]:
-            family.is_in_group = False
-            family.why_not_in_group = new_status
+        # NOTE: Removed auto-update of is_in_group and why_not_in_group
+        # Instead, automatic task creation for Liam to remove family from group (see below)
         
         # Auto-update responsible_coordinator if tutoring_status changed OR if status changed to/from בריא/ז״ל
         # Only auto-update if coordinator wasn't manually set in the request
@@ -1379,6 +1377,34 @@ def update_family(request, child_id):
         if old_need_review != family.need_review:
             field_changes.append(f"Need Review: {old_need_review} → {family.need_review}")
 
+        # Create automatic task for Liam to remove family from group when status changes to עזב or בריא
+        # MUST be BEFORE save() to keep family context
+        if old_status not in ["עזב", "בריא"] and new_status in ["עזב", "בריא"]:
+            try:
+                task_type = Task_Types.objects.get(task_type="הסרת משפחה מקבוצה")
+                api_logger.info(f"✅ Found task_type: {task_type.task_type} (ID: {task_type.id})")
+                
+                liam = Staff.objects.filter(first_name="ליאם", last_name="אביבי").first()
+                api_logger.info(f"🔍 Searched for Liam - found: {liam}")
+                
+                if not liam:
+                    api_logger.warning("❌ Liam (ליאם אביבי) not found in Staff table")
+                
+                if liam and task_type:
+                    task_data = {
+                        "type": task_type.id,
+                        "description": "הסרת משפחה מקבוצה",
+                        "assigned_to": liam.staff_id,
+                        "child": family.child_id,
+                        "due_date": datetime.datetime.now().date()
+                    }
+                    task = create_task_internal(task_data)
+                    api_logger.info(f"✅ Created הסרת משפחה מקבוצה task (ID: {task.task_id}) for Liam for family {family.child_id}")
+            except Task_Types.DoesNotExist:
+                api_logger.warning("❌ Task type 'הסרת משפחה מקבוצה' not found")
+            except Exception as e:
+                api_logger.error(f"❌ Error creating remove-from-group task for Liam: {str(e)}")
+
         
         # Save the updated family record
         try:
@@ -1396,8 +1422,8 @@ def update_family(request, child_id):
                 entity_ids=[child_id],
                 additional_data={
                     'family_name': f"{family.childfirstname} {family.childsurname}",
-                    'attempted_changes': field_changes,  # **ADD THIS**
-                    'changes_count': len(field_changes)  # **ADD THIS**
+                    'attempted_changes': field_changes,
+                    'changes_count': len(field_changes)
                 }
             )
             return JsonResponse(
