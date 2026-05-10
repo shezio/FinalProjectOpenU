@@ -16,7 +16,7 @@ import hospitals from "../../components/hospitals.json";
 
 const PAGE_SIZE = 5;
 
-const MISSING_FILTERS = ["all", "phone", "diagnosis_date", "diagnosis", "parent_name", "medical_state", "child_phone", "details_tutoring", "additional_info"];
+const MISSING_FILTERS = ["all", "phone", "diagnosis_date", "diagnosis", "parent_name", "medical_state", "child_phone", "details_tutoring"];
 
 const FamiliesMissingDataReport = () => {
   const { t } = useTranslation();
@@ -64,13 +64,13 @@ const FamiliesMissingDataReport = () => {
   const isMissingParentName = (f) => !f.father_name && !f.mother_name;
   const isMissingMedicalState = (f) => !f.current_medical_state;
   const isMissingChildPhone = (f) => !f.child_phone_number;
-  const isMissingDetailsTutoring = (f) => !f.details_for_tutoring;
-  const isMissingAdditionalInfo = (f) => !f.additional_info;
+  // details for tutoring: only flag if no details AND tutoring status requires tutoring details
+  const isMissingDetailsTutoring = (f) => !f.details_for_tutoring && !["לא_רלוונטי", "בוגר", "לא_רוצים"].includes(f.tutoring_status);
 
   const isAnyMissing = (f) =>
     isMissingPhone(f) || isMissingDiagnosis(f) || isMissingMedicalDiagnosis(f) ||
     isMissingParentName(f) || isMissingMedicalState(f) || isMissingChildPhone(f) ||
-    isMissingDetailsTutoring(f) || isMissingAdditionalInfo(f);
+    isMissingDetailsTutoring(f);
 
   const applyFilter = useCallback(
     (families, filter) => {
@@ -82,7 +82,6 @@ const FamiliesMissingDataReport = () => {
         case "medical_state":    return families.filter(isMissingMedicalState);
         case "child_phone":      return families.filter(isMissingChildPhone);
         case "details_tutoring": return families.filter(isMissingDetailsTutoring);
-        case "additional_info":  return families.filter(isMissingAdditionalInfo);
         default:                 return families.filter(isAnyMissing);
       }
     },
@@ -182,7 +181,6 @@ const FamiliesMissingDataReport = () => {
       tutoring_status:                    family.tutoring_status || '',
       medical_diagnosis:                  family.medical_diagnosis || '',
       diagnosis_date:                     formatDateForInput(family.diagnosis_date),
-      additional_info:                    family.additional_info || '',
       is_in_frame:                        family.is_in_frame || '',
       coordinator_comments:               family.coordinator_comments || '',
       current_medical_state:              family.current_medical_state || '',
@@ -256,8 +254,6 @@ const FamiliesMissingDataReport = () => {
       badges.push(<span key="cphone" className="missing-badge missing-child-phone">{t("No Child Phone")}</span>);
     if (isMissingDetailsTutoring(family))
       badges.push(<span key="details" className="missing-badge missing-details">{t("No Tutoring Details")}</span>);
-    if (isMissingAdditionalInfo(family))
-      badges.push(<span key="addinfo" className="missing-badge missing-additional">{t("No Additional Info")}</span>);
     return badges;
   };
 
@@ -304,7 +300,6 @@ const FamiliesMissingDataReport = () => {
                 {f === "medical_state"   && t("Missing Medical State")}
                 {f === "child_phone"     && t("Missing Child Phone")}
                 {f === "details_tutoring"&& t("Missing Tutoring Details")}
-                {f === "additional_info" && t("Missing Additional Info")}
                 {allFamilies.length > 0 && (
                   <span className="missing-chip-count">
                     {f === "all"              ? allFamilies.filter(isAnyMissing).length
@@ -314,8 +309,7 @@ const FamiliesMissingDataReport = () => {
                     : f === "parent_name"     ? allFamilies.filter(isMissingParentName).length
                     : f === "medical_state"   ? allFamilies.filter(isMissingMedicalState).length
                     : f === "child_phone"     ? allFamilies.filter(isMissingChildPhone).length
-                    : f === "details_tutoring"? allFamilies.filter(isMissingDetailsTutoring).length
-                    :                           allFamilies.filter(isMissingAdditionalInfo).length}
+                    :                           allFamilies.filter(isMissingDetailsTutoring).length}
                   </span>
                 )}
               </button>
@@ -347,8 +341,7 @@ const FamiliesMissingDataReport = () => {
                   activeFilter === "parent_name"      ? t("Missing Parent Name") :
                   activeFilter === "medical_state"    ? t("Missing Medical State") :
                   activeFilter === "child_phone"      ? t("Missing Child Phone") :
-                  activeFilter === "details_tutoring" ? t("Missing Tutoring Details") :
-                                                        t("Missing Additional Info")
+                                                        t("Missing Tutoring Details")
                 }</>
             }
           </div>
@@ -497,8 +490,6 @@ const FamiliesMissingDataReport = () => {
                 <textarea name="current_medical_state" value={newFamily.current_medical_state} onChange={handleAddFamilyChange} className="reviewers-scrollable-textarea" />
                 <label>{t('When Completed Treatments')}</label>
                 <input type="date" name="when_completed_treatments" value={newFamily.when_completed_treatments} onChange={handleAddFamilyChange} />
-                <label>{t('Additional Info')}</label>
-                <textarea name="additional_info" value={newFamily.additional_info} onChange={handleAddFamilyChange} className="reviewers-scrollable-textarea" />
                 <label>{t('Is In Frame')}</label>
                 <textarea name="is_in_frame" value={newFamily.is_in_frame} onChange={handleAddFamilyChange} className="reviewers-scrollable-textarea" />
                 <label>{t('Coordinator Comments')}</label>
