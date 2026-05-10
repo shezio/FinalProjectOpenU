@@ -92,10 +92,6 @@ const Dashboard = () => {
             { text: String(dashboardData.kpis.active_tutorships || 0), options: { fontSize: 24, bold: true, color: '4CAF50' } }
           ],
           [
-            { text: 'חונכים ממתינים', options: { fontSize: 20, color: '333333' } },
-            { text: String(dashboardData.kpis.pending_tutors || 0), options: { fontSize: 24, bold: true, color: 'FFA726' } }
-          ],
-          [
             { text: 'צוות', options: { fontSize: 20, color: '333333' } },
             { text: String(dashboardData.kpis.staff_count || 0), options: { fontSize: 24, bold: true, color: '0066CC' } }
           ]
@@ -254,16 +250,16 @@ const Dashboard = () => {
             <div className="kpi-value">{dashboardData?.kpis?.total_families || 0}</div>
           </div>
           <div className="kpi-card">
+            <div className="kpi-label">👥 משפחות פעילות</div>
+            <div className="kpi-value">{dashboardData?.kpis?.active_families || 0}</div>
+          </div>
+          <div className="kpi-card">
             <div className="kpi-label">{t('waiting_families')}</div>
             <div className="kpi-value">{dashboardData?.kpis?.waiting_families || 0}</div>
           </div>
           <div className="kpi-card">
             <div className="kpi-label">{t('active_tutorships')}</div>
             <div className="kpi-value">{dashboardData?.kpis?.active_tutorships || 0}</div>
-          </div>
-          <div className="kpi-card">
-            <div className="kpi-label">{t('pending_tutors')}</div>
-            <div className="kpi-value">{dashboardData?.kpis?.pending_tutors || 0}</div>
           </div>
           <div className="kpi-card">
             <div className="kpi-label">{t('staff_count')}</div>

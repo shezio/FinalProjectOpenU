@@ -86,32 +86,29 @@ def get_dashboard_data(request):
         # KPI Cards
         total_families = Children.objects.count()
         
-        # Families waiting for tutor (no tutorship record)
-        waiting_families = Children.objects.filter(
+        # Active families (status NOT in עזב, ז״ל, בריא)
+        active_families = Children.objects.exclude(status__in=['עזב', 'ז״ל', 'בריא']).count()
+        
+        # Families waiting for tutor:
+        # - Active (not in exit statuses)
+        # - Want tutoring (tutoring_status not in לא_רלוונטי, בוגר, לא_רוצים)
+        # - Have NO tutors (tutorships__isnull=True)
+        waiting_families = Children.objects.exclude(
+            status__in=['עזב', 'ז״ל', 'בריא']
+        ).exclude(
+            tutoring_status__in=['לא_רלוונטי', 'בוגר', 'לא_רוצים']
+        ).filter(
             tutorships__isnull=True
-        ).count()
+        ).distinct().count()
         
         # Active tutorships (families that have a tutorship with active tutors)
         active_tutorships = Tutorships.objects.filter(tutor__staff__is_active=True).count()
-        
-        # Pending tutors (active tutors without tutees)
-        pending_tutors = Tutors.objects.filter(
-            staff__is_active=True,
-            tutorship_status='אין_חניך'  # No Tutee
-        ).count()
         
         staff_count = Staff.objects.filter(registration_approved=True, is_active=True).count()
         
         # Tutorship Status Distribution
         tutorship_with = active_tutorships
         tutorship_waiting = waiting_families
-        
-        # Tutors Status
-        tutors_pending = pending_tutors
-        tutors_active = Tutors.objects.filter(
-            staff__is_active=True,
-            tutorship_status='יש_חניך'  # Has Tutee
-        ).count()
         
         # Feedback by Type
         feedback_query = Feedback.objects.all()
@@ -195,9 +192,9 @@ def get_dashboard_data(request):
         response_data = {
             'kpis': {
                 'total_families': total_families,
+                'active_families': active_families,
                 'waiting_families': waiting_families,
                 'active_tutorships': active_tutorships,
-                'pending_tutors': pending_tutors,
                 'staff_count': staff_count,
                 'new_families_month': new_families_month
             },
@@ -205,10 +202,6 @@ def get_dashboard_data(request):
                 'tutorship_status': {
                     'with_tutor': tutorship_with,
                     'waiting': tutorship_waiting
-                },
-                'tutors_status': {
-                    'pending': tutors_pending,
-                    'active': tutors_active
                 },
                 'feedback_by_type': feedback_data,
                 'cities': [{'city': item['city'], 'count': item['count']} for item in cities_data],
