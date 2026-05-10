@@ -10,6 +10,8 @@ const DashboardCharts = ({ data, timeframe, onTimeframeChange }) => {
   const [loading, setLoading] = useState(false);
   const [chartPage, setChartPage] = useState(1);
   const [workload, setWorkload] = useState(null);
+  const [tutorshipsPage, setTutorshipsPage] = useState(1);
+  const TUTORSHIPS_PER_PAGE = 4;
 
   // Fetch feedback data when timeframe changes
   useEffect(() => {
@@ -52,19 +54,6 @@ const DashboardCharts = ({ data, timeframe, onTimeframeChange }) => {
         data?.charts?.tutorship_status?.waiting || 0
       ],
       backgroundColor: ['#4caf50', '#f44336'],
-      borderWidth: 0
-    }]
-  };
-
-  // Tutors Status Chart Data
-  const tutorsStatusData = {
-    labels: ['ממתינים לראיון', 'פעילים'],
-    datasets: [{
-      data: [
-        data?.charts?.tutors_status?.pending || 0,
-        data?.charts?.tutors_status?.active || 0
-      ],
-      backgroundColor: ['#f44336', '#4caf50'],
       borderWidth: 0
     }]
   };
@@ -175,11 +164,6 @@ const DashboardCharts = ({ data, timeframe, onTimeframeChange }) => {
       render: () => <div className="chart-container"><Pie data={tutorshipStatusData} options={chartOptions} /></div>,
     },
     {
-      key: 'tutors_status',
-      title: 'חונכים: ממתינים מול פעילים',
-      render: () => <div className="chart-container"><Pie data={tutorsStatusData} options={chartOptions} /></div>,
-    },
-    {
       key: 'feedback',
       title: 'משוב לפי סוג',
       extra: (
@@ -222,32 +206,61 @@ const DashboardCharts = ({ data, timeframe, onTimeframeChange }) => {
     {
       key: 'tutorships_table',
       title: '📋 חונכויות פעילות אחרונות',
-      render: () => (
-        <div className="table-card">
-          <table className="dashboard-table">
-            <thead>
-              <tr>
-                <th>שם הילד</th>
-                <th>שם החונך</th>
-                <th>תאריך התחלה</th>
-                <th>משך חונכות</th>
-                <th>סטטוס</th>
-              </tr>
-            </thead>
-            <tbody>
-              {(data?.table || []).map((row, i) => (
-                <tr key={i}>
-                  <td>{row.child_name}</td>
-                  <td>{row.tutor_name}</td>
-                  <td>{row.start_date}</td>
-                  <td>{row.duration}</td>
-                  <td>{row.status}</td>
+      render: () => {
+        const totalRows = data?.table?.length || 0;
+        const totalPages = Math.ceil(totalRows / TUTORSHIPS_PER_PAGE);
+        const startIdx = (tutorshipsPage - 1) * TUTORSHIPS_PER_PAGE;
+        const endIdx = startIdx + TUTORSHIPS_PER_PAGE;
+        const pageData = (data?.table || []).slice(startIdx, endIdx);
+
+        return (
+          <div className="table-card">
+            <table className="dashboard-table">
+              <thead>
+                <tr>
+                  <th>שם הילד</th>
+                  <th>שם החונך</th>
+                  <th>תאריך התחלה</th>
+                  <th>משך חונכות</th>
+                  <th>סטטוס</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      ),
+              </thead>
+              <tbody>
+                {pageData.map((row, i) => (
+                  <tr key={i}>
+                    <td>{row.child_name}</td>
+                    <td>{row.tutor_name}</td>
+                    <td>{row.start_date}</td>
+                    <td>{row.duration}</td>
+                    <td>{row.status}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            {totalPages > 1 && (
+              <div className="table-pagination">
+                <button 
+                  className="pagination-btn" 
+                  onClick={() => setTutorshipsPage(Math.max(1, tutorshipsPage - 1))}
+                  disabled={tutorshipsPage === 1}
+                >
+                  → הקודם
+                </button>
+                <span className="pagination-info">
+                  עמוד {tutorshipsPage} מתוך {totalPages}
+                </span>
+                <button 
+                  className="pagination-btn" 
+                  onClick={() => setTutorshipsPage(Math.min(totalPages, tutorshipsPage + 1))}
+                  disabled={tutorshipsPage === totalPages}
+                >
+                  הבא ←
+                </button>
+              </div>
+            )}
+          </div>
+        );
+      },
     },
     {
       key: 'coordinator_workload',
