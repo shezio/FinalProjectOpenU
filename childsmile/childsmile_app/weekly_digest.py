@@ -327,6 +327,12 @@ def _git_changes_this_week():
     returns newest-first.  No low-level code details are ever shown.
     """
     try:
+        # Check if git is available before trying to use it
+        import shutil
+        if not shutil.which("git"):
+            api_logger.debug("git command not found in PATH — skipping git changes section")
+            return []
+        
         repo_root = os.path.dirname(
             os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         )
@@ -373,7 +379,7 @@ def _git_changes_this_week():
         return sorted(all_features)
 
     except Exception as e:
-        api_logger.warning(f"weekly_digest: could not analyse git changes: {e}")
+        api_logger.debug(f"weekly_digest: could not analyse git changes: {e}")
         return []
 
 

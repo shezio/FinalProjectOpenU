@@ -42,6 +42,7 @@ from .unused_views import (
     NewFamiliesLastMonthReportView,
     PotentialTutorshipMatchReportView,
 )
+from .whatsapp_utils import send_admin_approval_task_notification_whatsapp
 from django.db import DatabaseError
 from django.core.cache import cache
 from rest_framework import viewsets, status
@@ -1215,31 +1216,21 @@ def create_admin_approval_tasks_async(staff_user_id, user_email):
 
 def create_admin_approval_tasks(staff_user_id, user_email):
     """
-    Create registration approval tasks for all System Administrators (second/final approval level).
+    Create a registration approval task for Liam (System Administrator - final approval level).
     This is triggered AFTER a Volunteer Coordinator approves the user.
-    No email is sent at this level - email only sent after admin final approval.
+    Sends WhatsApp notification to Liam with user details.
     """
     try:
-        # Fetch System Administrator role ONLY (second/final approval level)
-        admin_role = Role.objects.filter(role_name="System Administrator").first()
-        
-        if not admin_role:
-            api_logger.debug("Role 'System Administrator' not found in the database.")
-            return
-        
-        # Fetch all System Administrators (excluding shlezi0@gmail.com)
-        admin_staff = Staff.objects.filter(roles=admin_role).exclude(email='shlezi0@gmail.com')
-        
-        if not admin_staff.exists():
-            api_logger.warning("No System Administrators found in the database for final approval.")
-            return
-
-        api_logger.debug(f"Found {admin_staff.count()} System Administrators for final approval task.")
-
         # Get the task type for registration approval
         task_type = Task_Types.objects.filter(task_type="אישור הרשמה").first()
         if not task_type:
             api_logger.error("Task type 'אישור הרשמה' not found in the database.")
+            return
+
+        # Get Liam (System Administrator)
+        liam = Staff.objects.filter(first_name="ליאם", last_name="אביבי").first()
+        if not liam:
+            api_logger.error("Liam (System Administrator) not found in the database.")
             return
 
         # Get the staff user and SignedUp record to extract their data
@@ -1270,24 +1261,39 @@ def create_admin_approval_tasks(staff_user_id, user_email):
         except SignedUp.DoesNotExist:
             api_logger.debug(f"SignedUp record not found for email {user_email}")
 
-        # Create tasks for each System Administrator (final approval level)
-        for staff_member in admin_staff:
-            task_data = {
-                "description": "אישור הרשמה סופי",
-                "due_date": (now().date() + datetime.timedelta(days=3)).strftime("%Y-%m-%d"),
-                "status": "לא הושלמה",
-                "assigned_to": staff_member.staff_id,
-                "type": task_type.id,
-                "user_info": user_info,  # Include user_info with approval_level flag
-            }
-            api_logger.debug(f"DEBUG: Creating final admin approval task for System Administrator {staff_member.staff_id}: {task_data}")
+        # Create ONE task for Liam
+        task_data = {
+            "description": "אישור הרשמה סופי",
+            "due_date": (now().date() + datetime.timedelta(days=3)).strftime("%Y-%m-%d"),
+            "status": "לא הושלמה",
+            "assigned_to": liam.staff_id,
+            "type": task_type.id,
+            "user_info": user_info,  # Include user_info with approval_level flag
+        }
+        
+        task = create_task_internal(task_data)
+        api_logger.info(f"Final admin approval task created for Liam, task ID: {task.task_id}")
+        
+        # Send WhatsApp notification to Liam
+        user_full_name = user_info.get("full_name", user_email)
+        user_phone = user_info.get("phone", "")
+        user_created_at = user_info.get("created_at", "")
+        
+        # Format the datetime nicely (same format as coordinator gets)
+        if user_created_at and user_created_at != "לא זמין":
             try:
-                task = create_task_internal(task_data)
-                api_logger.info(f"Final admin approval task created for {staff_member.staff_id}, task ID: {task.task_id}")
-            except Exception as e:
-                api_logger.error(f"ERROR: Error creating final admin approval task: {str(e)}")
+                dt_obj = datetime.datetime.fromisoformat(user_created_at.replace('Z', '+00:00'))
+                user_created_at = dt_obj.strftime("%d/%m/%Y בשעה %H:%M")
+            except:
+                pass
+        
+        if liam.staff_phone:
+            send_admin_approval_task_notification_whatsapp(liam.staff_phone, user_full_name, user_phone, user_created_at)
+        else:
+            api_logger.warning(f"Liam's phone number not found for WhatsApp notification")
+            
     except Exception as e:
-        api_logger.error(f"ERROR: An error occurred while creating final admin approval tasks: {str(e)}")
+        api_logger.error(f"ERROR: An error occurred while creating final admin approval task: {str(e)}")
 
 
 def delete_other_registration_approval_tasks_async(task):
