@@ -699,8 +699,11 @@ class WeeklyCoordinatorRequest(models.Model):
 
     class Meta:
         db_table = "childsmile_app_weeklycoordinatorrequest"
-        unique_together = ('coordinator', 'week_starting')
         ordering = ['-week_starting', 'coordinator']
+        indexes = [
+            models.Index(fields=['coordinator', 'request_sent_at']),
+            models.Index(fields=['request_sent_at']),
+        ]
 
     def __str__(self):
         return f"Request to {self.coordinator.username} for week {self.week_starting}"

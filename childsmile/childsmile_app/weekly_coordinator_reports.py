@@ -13,10 +13,16 @@ Scheduling:
 from django.utils import timezone
 from django.db.models import Q
 import datetime
+import os
+import fcntl
+import tempfile
 from datetime import datetime as dt
 from .logger import api_logger
 from .models import Staff, WeeklyCoordinatorRequest, CoordinatorProgressReport, CoordinatorChatMessage
 from .whatsapp_utils import send_whatsapp_message
+
+# File-based lock to prevent duplicate sends across processes (Django runserver spawns 2)
+_LOCK_FILE = os.path.join(tempfile.gettempdir(), 'childsmile_weekly_coordinator.lock')
 
 
 def get_iso_week_start(date_obj=None):
@@ -34,15 +40,18 @@ def get_iso_week_start(date_obj=None):
 def get_all_coordinators():
     """
     Return all active coordinators with staff_phone for WhatsApp messaging.
-    Uses same role names as get_available_coordinators:
+    Includes any user with a role that contains "Coordinator" in its name.
+    Examples:
     - Families Coordinator
     - Tutored Families Coordinator
+    - Volunteer Coordinator
+    - Any other role with "Coordinator" in the name
     """
     return Staff.objects.filter(
         is_active=True,
         registration_approved=True,
         staff_phone__isnull=False,  # Must have phone for WhatsApp
-        roles__role_name__in=['Families Coordinator', 'Tutored Families Coordinator']
+        roles__role_name__icontains='Coordinator'  # Any role containing "Coordinator"
     ).distinct()
 
 
@@ -59,79 +68,94 @@ def send_weekly_coordinator_request():
     
     Message: "נא לשלוח עדכון שבועי בקבוצת צוות
     ולציין האם יש פערים/בעיות או כל דבר שצריך לעלות על מנת שדברים יתקדמו"
+    
+    NOTE: Tracks by (coordinator, request_sent_at_date) not week_starting.
+    This allows testing by running multiple times per day without waiting for next week.
     """
     import os
     
-    week_start = get_iso_week_start()
-    coordinators = get_all_coordinators()
-    
-    if not coordinators.exists():
-        api_logger.warning("[WEEKLY_REPORTS] No coordinators found with phone numbers")
+    # Acquire file lock to prevent duplicate sends (Django runserver runs 2 processes)
+    lock_fd = open(_LOCK_FILE, 'w')
+    try:
+        fcntl.flock(lock_fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except (IOError, OSError):
+        api_logger.info("[WEEKLY_REPORTS] ⏭️ Another process is already sending, skipping")
+        lock_fd.close()
         return
     
-    message_text = (
-        "נא לשלוח עדכון שבועי בקבוצת צוות\n"
-        "ולציין האם יש פערים/בעיות או כל דבר שצריך לעלות על מנת שדברים יתקדמו"
-    )
-    
-    # Check if template SID is configured
-    template_sid = os.getenv('TWILIO_WEEKLY_COORDINATOR_REQUEST_SID', '').strip()
-    
-    sent_count = 0
-    failed_count = 0
-    
-    for coordinator in coordinators:
+    try:
+        today = timezone.now().date()
+        coordinators = list(get_all_coordinators())
+        
+        if not coordinators:
+            api_logger.warning("[WEEKLY_REPORTS] No coordinators found with phone numbers")
+            return
+        
+        message_text = (
+            "נא לשלוח עדכון שבועי בקבוצת צוות\n"
+            "ולציין האם יש פערים/בעיות או כל דבר שצריך לעלות על מנת שדברים יתקדמו"
+        )
+        
+        template_sid = os.getenv('TWILIO_WEEKLY_COORDINATOR_REQUEST_SID', '').strip()
+        coordinators_to_send = coordinators
+        
+        sent_count = 0
+        failed_count = 0
+        now = timezone.now()
+        
+        coordinator_names = [f"{c.username} ({c.staff_phone})" for c in coordinators_to_send]
+        api_logger.info(f"[WEEKLY_REPORTS] 📤 About to send requests to {len(coordinators_to_send)} coordinator(s): {', '.join(coordinator_names)}")
+        
+        # Create request records in DB for auditing
         try:
-            # Check if we already sent a request this week
-            existing = WeeklyCoordinatorRequest.objects.filter(
-                coordinator=coordinator,
-                week_starting=week_start
-            ).first()
-            
-            if existing:
-                api_logger.info(f"[WEEKLY_REPORTS] Request already sent to {coordinator.username} for week {week_start}")
-                continue
-            
-            # Send WhatsApp with template if available
-            if template_sid:
-                # Using Twilio content template with coordinator name
-                send_whatsapp_message(
-                    recipient_phone=coordinator.staff_phone,
-                    message_body="",
-                    use_template=True,
-                    template_sid=template_sid,
-                    template_variables={"1": message_text}
+            requests_to_create = [
+                WeeklyCoordinatorRequest(
+                    coordinator=coordinator,
+                    week_starting=get_iso_week_start(today),
+                    request_sent_at=now,
+                    response_received=False
                 )
-            else:
-                # Fallback to plain text if template SID not configured
-                send_whatsapp_message(
-                    recipient_phone=coordinator.staff_phone,
-                    message_body=message_text,
-                    use_template=False
-                )
-            
-            # Create request record
-            now = timezone.now()
-            WeeklyCoordinatorRequest.objects.create(
-                coordinator=coordinator,
-                week_starting=week_start,
-                request_sent_at=now,
-                response_received=False
-            )
-            
-            sent_count += 1
-            if template_sid:
-                api_logger.info(f"[WEEKLY_REPORTS] Sent request to {coordinator.username} ({coordinator.staff_phone}) using template {template_sid}")
-            else:
-                api_logger.warning(f"[WEEKLY_REPORTS] Sent request to {coordinator.username} ({coordinator.staff_phone}) as plain text (template SID not configured)")
-            
+                for coordinator in coordinators_to_send
+            ]
+            WeeklyCoordinatorRequest.objects.bulk_create(requests_to_create, ignore_conflicts=True)
+            api_logger.debug(f"[WEEKLY_REPORTS] Created {len(requests_to_create)} request records in DB")
         except Exception as e:
-            failed_count += 1
-            api_logger.error(f"[WEEKLY_REPORTS] Failed to send request to {coordinator.username}: {e}")
-    
-    api_logger.info(
-        f"[WEEKLY_REPORTS] Weekly requests sent: {sent_count} successful, {failed_count} failed | Template: {'✅ ' + template_sid if template_sid else '❌ NOT SET (using fallback)'}"
-    )
+            api_logger.error(f"[WEEKLY_REPORTS] Error creating request records: {e}")
+            return
+        
+        # Send WhatsApp messages one by one
+        for coordinator in coordinators_to_send:
+            try:
+                if template_sid:
+                    coordinator_name = coordinator.first_name if coordinator.first_name else coordinator.username
+                    send_whatsapp_message(
+                        recipient_phone=coordinator.staff_phone,
+                        message_body="",
+                        use_template=True,
+                        template_sid=template_sid,
+                        template_variables={"1": coordinator_name}
+                    )
+                    api_logger.info(f"[WEEKLY_REPORTS] Sent request to {coordinator.username} ({coordinator.staff_phone}) using template {template_sid}")
+                else:
+                    send_whatsapp_message(
+                        recipient_phone=coordinator.staff_phone,
+                        message_body=message_text,
+                        use_template=False
+                    )
+                    api_logger.warning(f"[WEEKLY_REPORTS] Sent request to {coordinator.username} ({coordinator.staff_phone}) as plain text (template SID not configured)")
+                
+                sent_count += 1
+                
+            except Exception as e:
+                failed_count += 1
+                api_logger.error(f"[WEEKLY_REPORTS] Failed to send WhatsApp to {coordinator.username}: {e}")
+        
+        api_logger.info(
+            f"[WEEKLY_REPORTS] ✅ Requests sent: {sent_count} successful, {failed_count} failed out of {len(coordinators_to_send)} | Template: {'✅ ' + template_sid if template_sid else '❌ NOT SET (using fallback)'}"
+        )
+    finally:
+        fcntl.flock(lock_fd, fcntl.LOCK_UN)
+        lock_fd.close()
 
 
 def handle_coordinator_response(phone, message_text, received_at):
