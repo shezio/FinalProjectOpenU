@@ -1,8 +1,13 @@
 """
 Weekly coordinator progress reports.
-Sends WhatsApp request to all coordinators every Monday morning (IL timezone).
+Sends WhatsApp request to all coordinators every week (configurable day/time).
 Receives replies via webhook and stores in DB.
 Only admins can view responses.
+
+Scheduling:
+  - Time: WEEKLY_COORDINATOR_REQUEST_TIME env var (default "08:00")
+  - Day: WEEKLY_COORDINATOR_REQUEST_DAY env var (0=Mon…6=Sun, default 0=Monday)
+  - Enabled: WEEKLY_COORDINATOR_REPORTS_ENABLED env var (default true)
 """
 
 from django.utils import timezone
@@ -44,11 +49,19 @@ def get_all_coordinators():
 def send_weekly_coordinator_request():
     """
     Send WhatsApp request to all coordinators asking for weekly progress update.
-    Runs every Monday morning at 8:00 AM (IL timezone).
+    Runs on the configured day and time (default Monday 08:00 IL timezone).
+    
+    Scheduling controlled by env vars:
+      - WEEKLY_COORDINATOR_REQUEST_TIME (default "08:00")
+      - WEEKLY_COORDINATOR_REQUEST_DAY (0=Mon…6=Sun, default 0=Monday)
+    
+    Uses TWILIO_WEEKLY_COORDINATOR_REQUEST_SID template if available, otherwise falls back to plain text.
     
     Message: "נא לשלוח עדכון שבועי בקבוצת צוות
     ולציין האם יש פערים/בעיות או כל דבר שצריך לעלות על מנת שדברים יתקדמו"
     """
+    import os
+    
     week_start = get_iso_week_start()
     coordinators = get_all_coordinators()
     
@@ -60,6 +73,9 @@ def send_weekly_coordinator_request():
         "נא לשלוח עדכון שבועי בקבוצת צוות\n"
         "ולציין האם יש פערים/בעיות או כל דבר שצריך לעלות על מנת שדברים יתקדמו"
     )
+    
+    # Check if template SID is configured
+    template_sid = os.getenv('TWILIO_WEEKLY_COORDINATOR_REQUEST_SID', '').strip()
     
     sent_count = 0
     failed_count = 0
@@ -76,12 +92,23 @@ def send_weekly_coordinator_request():
                 api_logger.info(f"[WEEKLY_REPORTS] Request already sent to {coordinator.username} for week {week_start}")
                 continue
             
-            # Send WhatsApp
-            send_whatsapp_message(
-                phone=coordinator.staff_phone,
-                message=message_text,
-                urgency="normal"
-            )
+            # Send WhatsApp with template if available
+            if template_sid:
+                # Using Twilio content template with coordinator name
+                send_whatsapp_message(
+                    recipient_phone=coordinator.staff_phone,
+                    message_body="",
+                    use_template=True,
+                    template_sid=template_sid,
+                    template_variables={"1": message_text}
+                )
+            else:
+                # Fallback to plain text if template SID not configured
+                send_whatsapp_message(
+                    recipient_phone=coordinator.staff_phone,
+                    message_body=message_text,
+                    use_template=False
+                )
             
             # Create request record
             now = timezone.now()
@@ -93,14 +120,17 @@ def send_weekly_coordinator_request():
             )
             
             sent_count += 1
-            api_logger.info(f"[WEEKLY_REPORTS] Sent request to {coordinator.username} ({coordinator.staff_phone})")
+            if template_sid:
+                api_logger.info(f"[WEEKLY_REPORTS] Sent request to {coordinator.username} ({coordinator.staff_phone}) using template {template_sid}")
+            else:
+                api_logger.warning(f"[WEEKLY_REPORTS] Sent request to {coordinator.username} ({coordinator.staff_phone}) as plain text (template SID not configured)")
             
         except Exception as e:
             failed_count += 1
             api_logger.error(f"[WEEKLY_REPORTS] Failed to send request to {coordinator.username}: {e}")
     
     api_logger.info(
-        f"[WEEKLY_REPORTS] Weekly requests sent: {sent_count} successful, {failed_count} failed"
+        f"[WEEKLY_REPORTS] Weekly requests sent: {sent_count} successful, {failed_count} failed | Template: {'✅ ' + template_sid if template_sid else '❌ NOT SET (using fallback)'}"
     )
 
 

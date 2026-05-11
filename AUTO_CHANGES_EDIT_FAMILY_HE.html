@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>עדכונים אוטומטיים בעריכת משפחה</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 40px 20px;
+            min-height: 100vh;
+            direction: rtl;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+        
+        header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        header p {
+            font-size: 1.1em;
+            opacity: 0.95;
+        }
+        
+        .content {
+            padding: 40px;
+        }
+        
+        .intro-box {
+            background: #f0f4ff;
+            border-right: 4px solid #667eea;
+            padding: 20px;
+            margin-bottom: 40px;
+            border-radius: 8px;
+        }
+        
+        .intro-box h2 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 1.3em;
+        }
+        
+        .intro-box p {
+            color: #444;
+            line-height: 1.7;
+        }
+        
+        .auto-changes-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+        
+        .change-card {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 25px;
+            transition: all 0.3s ease;
+        }
+        
+        .change-card:hover {
+            border-color: #667eea;
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.15);
+            transform: translateY(-4px);
+        }
+        
+        .change-card.critical {
+            border-left: 4px solid #ff6b6b;
+            background: #fff5f5;
+        }
+        
+        .change-card.important {
+            border-left: 4px solid #ffa940;
+            background: #fffbf0;
+        }
+        
+        .change-card.normal {
+            border-left: 4px solid #52c41a;
+            background: #f6ffed;
+        }
+        
+        .change-title {
+            font-size: 1.3em;
+            font-weight: bold;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .badge.critical {
+            background: #ff6b6b;
+            color: white;
+        }
+        
+        .badge.important {
+            background: #ffa940;
+            color: white;
+        }
+        
+        .badge.normal {
+            background: #52c41a;
+            color: white;
+        }
+        
+        .change-description {
+            color: #555;
+            line-height: 1.8;
+            margin-bottom: 15px;
+        }
+        
+        .trigger-box {
+            background: #f9f9f9;
+            padding: 12px;
+            border-radius: 6px;
+            margin: 10px 0;
+            border-right: 3px solid #667eea;
+        }
+        
+        .trigger-label {
+            font-weight: bold;
+            color: #667eea;
+            display: block;
+            margin-bottom: 5px;
+        }
+        
+        .trigger-text {
+            color: #555;
+            font-size: 0.95em;
+        }
+        
+        .example-box {
+            background: #f0f0f0;
+            padding: 12px;
+            border-radius: 6px;
+            margin: 10px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            color: #333;
+            direction: ltr;
+            text-align: left;
+        }
+        
+        .code-label {
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 5px;
+            display: block;
+        }
+        
+        .comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin: 10px 0;
+        }
+        
+        .comparison-item {
+            background: white;
+            border: 1px solid #e0e0e0;
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 0.9em;
+        }
+        
+        .comparison-item.before {
+            border-right: 3px solid #ff6b6b;
+        }
+        
+        .comparison-item.after {
+            border-right: 3px solid #52c41a;
+        }
+        
+        .comparison-label {
+            font-weight: bold;
+            margin-bottom: 5px;
+            font-size: 0.85em;
+            text-transform: uppercase;
+        }
+        
+        .comparison-value {
+            font-family: 'Courier New', monospace;
+            word-break: break-word;
+        }
+        
+        .impact-section {
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid #e0e0e0;
+        }
+        
+        .impact-title {
+            font-weight: bold;
+            color: #ff6b6b;
+            margin-bottom: 8px;
+        }
+        
+        .impact-text {
+            color: #666;
+            font-size: 0.95em;
+            line-height: 1.7;
+        }
+        
+        .summary-section {
+            background: #f0f4ff;
+            border-radius: 8px;
+            padding: 30px;
+            margin-top: 40px;
+        }
+        
+        .summary-section h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+        
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+        
+        .stat-box {
+            text-align: center;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+        }
+        
+        .stat-number {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .stat-label {
+            color: #666;
+            margin-top: 8px;
+            font-size: 0.95em;
+        }
+        
+        .warning-banner {
+            background: #fff7e6;
+            border-left: 4px solid #ffa940;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 20px 0;
+            color: #ad6800;
+        }
+        
+        .info-banner {
+            background: #e6f7ff;
+            border-left: 4px solid #1890ff;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 20px 0;
+            color: #0050b3;
+        }
+        
+        .note-list {
+            list-style: none;
+            padding-right: 20px;
+        }
+        
+        .note-list li {
+            padding: 8px 0;
+            color: #555;
+        }
+        
+        .note-list li:before {
+            content: "→ ";
+            color: #667eea;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+        
+        footer {
+            background: #f5f5f5;
+            padding: 20px;
+            text-align: center;
+            color: #666;
+            border-top: 1px solid #e0e0e0;
+        }
+        
+        .problem-note {
+            background: #ffe6e6;
+            border: 2px solid #ff6b6b;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            color: #cc0000;
+        }
+        
+        .solution-note {
+            background: #e6ffe6;
+            border: 2px solid #52c41a;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            color: #005500;
+        }
+        
+        @media (max-width: 768px) {
+            .auto-changes-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .comparison {
+                grid-template-columns: 1fr;
+            }
+            
+            header h1 {
+                font-size: 1.8em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📋 עדכונים אוטומטיים בעריכת משפחה</h1>
+            <p>תיעוד מלא של כל השינויים האוטומטיים שמתבצעים במהלך עריכת פרטי משפחה</p>
+        </header>
+        
+        <div class="content">
+            <div class="intro-box">
+                <h2>📝 הקדמה</h2>
+                <p>
+                    כשמשתמש עורך פרטי משפחה בממשק השיטה, קיימים מספר עדכונים אוטומטיים שהמערכת מבצעת בעצמה.
+                    עדכונים אלה נועדו ליעילות וקוהרנטיות של הנתונים, אך הם עלולים להגרום לבעיות בהצגת הערכים הנוכחים בטופס.
+                    המסמך זה מתעד את כל העדכונים האוטומטיים הללו ותיאור כל אחד מהם.
+                </p>
+            </div>
+            
+            <div class="auto-changes-grid">
+                <!-- Change 1: Status to Completion Date -->
+                <div class="change-card important">
+                    <div class="change-title">
+                        <span class="badge important">חשוב</span>
+                        עדכון אוטומטי של תאריך השלמת הטיפולים
+                    </div>
+                    <p class="change-description">
+                        כאשר משנים את סטטוס הילד ל<strong>מעקבים</strong>, <strong>אחזקה</strong>, או <strong>בריא</strong>,
+                        תאריך השלמת הטיפולים מתעדכן אוטומטית ליום הנוכחי.
+                    </p>
+                    
+                    <div class="trigger-box">
+                        <span class="trigger-label">🎯 תנאי הפעלה:</span>
+                        <span class="trigger-text">
+                            הסטטוס הישן היה "טיפולים" וחדש הוא אחד מהערכים:
+                            "מעקבים", "אחזקה", או "בריא"
+                        </span>
+                    </div>
+                    
+                    <div class="trigger-box">
+                        <span class="trigger-label">📊 קוד טכני:</span>
+                        <div class="example-box">
+                            <div class="code-label">Frontend (Families.js, line 263):</div>
+                            if (name === 'status' && TREATMENT_COMPLETION_STATUSES.includes(value) && prev.status === 'טיפולים') {<br/>
+&nbsp;&nbsp;updates.when_completed_treatments = todayStr;<br/>
+}
+                        </div>
+                    </div>
+                    
+                    <div class="comparison">
+                        <div class="comparison-item before">
+                            <div class="comparison-label">❌ לפני השינוי:</div>
+                            <div class="comparison-value">תאריך הטיפולים: ----</div>
+                        </div>
+                        <div class="comparison-item after">
+                            <div class="comparison-label">✅ אחרי השינוי:</div>
+                            <div class="comparison-value">תאריך הטיפולים: היום</div>
+                        </div>
+                    </div>
+                    
+                    <div class="impact-section">
+                        <div class="problem-note">
+                            🚨 <strong>בעיה:</strong> בעת עריכה של משפחה קיימת, בעל הסטטוס "טיפולים",
+                            אם הטופס מציג תאריך טיפולים קיים מראש, הוא עלול להיות מחוק או סגור בעדכון הבא
+                            בגלל לוגיקה זו שמתעדכנת לתאריך הנוכחי.
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Change 2: Coordinator Auto-Update -->
+                <div class="change-card critical">
+                    <div class="change-title">
+                        <span class="badge critical">קריטי</span>
+                        עדכון אוטומטי של הרכז האחראי
+                    </div>
+                    <p class="change-description">
+                        כאשר משתנה סטטוס הילד או סטטוס הטיפולים שלו, הרכז האחראי מתעדכן אוטומטית
+                        בהתאם לחוקיות הקצאת הרכזים.
+                    </p>
+                    
+                    <div class="trigger-box">
+                        <span class="trigger-label">🎯 תנאי הפעלה:</span>
+                        <span class="trigger-text">
+                            1) סטטוס הילד או סטטוס הטיפולים השתנה<br/>
+                            2) לא ש האדם לא ציין רכז אחראי חדש במפורש בבקשה
+                        </span>
+                    </div>
+                    
+                    <div class="trigger-box">
+                        <span class="trigger-label">📊 קוד טכני:</span>
+                        <div class="example-box">
+                            <div class="code-label">Backend (family_views.py, line 1266):</div>
+                            should_auto_update_coordinator = (<br/>
+&nbsp;&nbsp;(old_tutoring_status != new_tutoring_status) or<br/>
+&nbsp;&nbsp;(old_status != new_status)<br/>
+) and "responsible_coordinator" not in data
+                        </div>
+                    </div>
+                    
+                    <div class="comparison">
+                        <div class="comparison-item before">
+                            <div class="comparison-label">❌ לפני:</div>
+                            <div class="comparison-value">רכז: דליה</div>
+                        </div>
+                        <div class="comparison-item after">
+                            <div class="comparison-label">✅ אחרי:</div>
+                            <div class="comparison-value">רכז: מיכל</div>
+                        </div>
+                    </div>
+                    
+                    <div class="impact-section">
+                        <div class="problem-note">
+                            🚨 <strong>בעיה עיקרית:</strong> כאשר משתמש פותח את הטופס לעריכה, הטופס מציג את הרכז הנוכחי.
+                            אך עם שינוי הסטטוס/טיפולים, הרכז משתנה בעצמו, וזה עלול לגרום לבילבול המשתמש מי הרכז הנוכחי.
+                            בנוסף, אם הטופס לא רענן את הנתון, המשתמש עלול לכתוב רכז שגוי.
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Change 3: Need Review Auto-Update -->
+                <div class="change-card critical">
+                    <div class="change-title">
+                        <span class="badge critical">קריטי</span>
+                        עדכון אוטומטי של הצורך בביקורת (Need Review)
+                    </div>
+                    <p class="change-description">
+                        הערך "need_review" מתעדכן אוטומטית בהתאם למספר תנאים קבועים:
+                        <br/>
+                        • ילד בגיל 16+ → פוקד need_review=FALSE<br/>
+                        • סטטוס טיפולים "בוגר" → פוקד need_review=FALSE<br/>
+                        • סטטוס בריא / ז״ל / עזב → פוקד need_review=FALSE
+                    </p>
+                    
+                    <div class="trigger-box">
+                        <span class="trigger-label">🎯 תנאים קבועים (אין דרך לעקוף):</span>
+                        <span class="trigger-text">
+                            ✓ גיל >= 16 שנים<br/>
+                            ✓ סטטוס טיפולים = "בוגר"<br/>
+                            ✓ סטטוס חשבון = בריא / ז״ל / עזב
+                        </span>
+                    </div>
+                    
+                    <div class="trigger-box">
+                        <span class="trigger-label">📊 קוד טכני:</span>
+                        <div class="example-box">
+                            <div class="code-label">Backend (family_views.py, line 1338):</div>
+                            must_be_false = is_mature or is_mature_tutoring or new_status in exit_statuses<br/>
+if must_be_false:<br/>
+&nbsp;&nbsp;family.need_review = False
+                        </div>
+                    </div>
+                    
+                    <div class="impact-section">
+                        <div class="problem-note">
+                            🚨 <strong>בעיה קריטית:</strong> כאשר לא מתקיים אחד התנאים הקבועים,
+                            ניתן לשנות את הערך, אך הטופס לא תמיד מציג את הערך הנוכחי כראוי.
+                            בנוסף, כל הוספת משימות ביקורת תימחק אוטומטית ברגע ש-need_review יתחזור ל-FALSE.
+                        </div>
+                    </div>
+                    
+                    <div class="impact-section">
+                        <div class="solution-note">
+                            💡 <strong>השפעה על משימות ביקורת:</strong> אם נוצר שינוי ל-need_review=FALSE,
+                            כל משימות "שיחת ביקורת" קיימות של הילד נמחקות אוטומטית מהמערכת.
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Change 4: Street/Apartment Parsing -->
+                <div class="change-card normal">
+                    <div class="change-title">
+                        <span class="badge normal">שגרתי</span>
+                        פענוח כתובת כניסה (רחוב + בית)
+                    </div>
+                    <p class="change-description">
+                        בעת פתיחת הטופס לעריכה, הכתובת המשולבת "רחוב + בית" מחולקת לשני שדות נפרדים.
+                    </p>
+                    
+                    <div class="trigger-box">
+                        <span class="trigger-label">🎯 תנאי הפעלה:</span>
+                        <span class="trigger-text">
+                            בכל פעם שנפתח הטופס לעריכה משפחה קיימת
+                        </span>
+                    </div>
+                    
+                    <div class="trigger-box">
+                        <span class="trigger-label">📊 קוד טכני:</span>
+                        <div class="example-box">
+                            <div class="code-label">Frontend (Families.js, line 680):</div>
+                            const parts = family.street_and_apartment_number ? family.street_and_apartment_number.split(' ') : ['',''];<br/>
+const aptNumber = parts.pop();<br/>
+const street = parts.join(' ');
+                        </div>
+                    </div>
+                    
+                    <div class="comparison">
+                        <div class="comparison-item before">
+                            <div class="comparison-label">📥 קלט:</div>
+                            <div class="comparison-value">
+                                street_and_apartment_number:<br/>
+                                "הרחוב הראשי 15"
+                            </div>
+                        </div>
+                        <div class="comparison-item after">
+                            <div class="comparison-label">📤 פלט:</div>
+                            <div class="comparison-value">
+                                street: "הרחוב הראשי"<br/>
+                                apartment_number: "15"
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Change 5: City Change Modal -->
+                <div class="change-card important">
+                    <div class="change-title">
+                        <span class="badge important">חשוב</span>
+                        הצגת אזהרה כשמשתנה עיר וקיימים חונכים
+                    </div>
+                    <p class="change-description">
+                        אם משתנה העיר ויש לילד חונכים פעילים, מוצג חלון אזהרה
+                        המאפשר למשתמש להנוע לעמוד חונכויות לעדכון הדירוגים.
+                    </p>
+                    
+                    <div class="trigger-box">
+                        <span class="trigger-label">🎯 תנאי הפעלה:</span>
+                        <span class="trigger-text">
+                            1) העיר של הילד משתנה<br/>
+                            2) לילד קיימים חונכים פעילים
+                        </span>
+                    </div>
+                    
+                    <div class="trigger-box">
+                        <span class="trigger-label">📊 קוד טכני:</span>
+                        <div class="example-box">
+                            <div class="code-label">Frontend (Families.js, line 771):</div>
+                            if (cityChanged && editFamily.tutors && editFamily.tutors.length > 0) {<br/>
+&nbsp;&nbsp;setShowCityChangeModal(true);<br/>
+}
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Change 6: Auto-Assigned Coordinator Indicator -->
+                <div class="change-card normal">
+                    <div class="change-title">
+                        <span class="badge normal">שגרתי</span>
+                        הצגה של סמל ✨ לרכז שהוקצה אוטומטית
+                    </div>
+                    <p class="change-description">
+                        בעת עריכה של משפחה שקיבלה רכז בעצמה (לא ידני), מופיע סמל ✨ ליד שדה הרכז.
+                    </p>
+                    
+                    <div class="trigger-box">
+                        <span class="trigger-label">🎯 תנאי הפעלה:</span>
+                        <span class="trigger-text">
+                            כשהרכז עודכן בעצמו בגלל שינוי סטטוס או טיפולים
+                        </span>
+                    </div>
+                    
+                    <div class="trigger-box">
+                        <span class="trigger-label">📊 קוד טכני:</span>
+                        <div class="example-box">
+                            <div class="code-label">Frontend (Families.js, line 1799):</div>
+                            {autoAssignedCoordinator && (<br/>
+&nbsp;&nbsp;&lt;div className="families-auto-assigned-note"&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;✨ {t('Auto-assigned based on status')}<br/>
+&nbsp;&nbsp;&lt;/div&gt;<br/>
+)}
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Change 7: ID Update Separation -->
+                <div class="change-card important">
+                    <div class="change-title">
+                        <span class="badge important">חשוב</span>
+                        עדכון תעודת הזהות מתבצע בשלב נפרד
+                    </div>
+                    <p class="change-description">
+                        כל שינוי בתעודת הזהות של הילד מתעדכן בשיחת API נפרדת אחרי כל שאר הנתונים,
+                        כדי למנוע אובדן נתונים.
+                    </p>
+                    
+                    <div class="trigger-box">
+                        <span class="trigger-label">🎯 תנאי הפעלה:</span>
+                        <span class="trigger-text">
+                            רק אם תעודת הזהות בפועל שונה מהנוכחית
+                        </span>
+                    </div>
+                    
+                    <div class="trigger-box">
+                        <span class="trigger-label">📊 קוד טכני:</span>
+                        <div class="example-box">
+                            <div class="code-label">Frontend (Families.js, line 739-756):</div>
+                            // Step 1: Update all other fields<br/>
+const response = await axios.put(`/api/update_family/${editFamily.id}/`, familyData);<br/>
+<br/>
+// Step 2: Update ID LAST (after other fields)<br/>
+if (idChanged) {<br/>
+&nbsp;&nbsp;await axios.put(`/api/update_child_id/${editFamily.id}/`, {<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;new_id: parseInt(newFamily.child_id)<br/>
+&nbsp;&nbsp;});<br/>
+}
+                        </div>
+                    </div>
+                    
+                    <div class="impact-section">
+                        <div class="solution-note">
+                            💡 <strong>יתרון:</strong> בגלל הפרדה זו, אם עדכון התעודה נכשל, כל שאר הנתונים כבר נשמרו בהצלחה.
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Change 8: Streets Update -->
+                <div class="change-card normal">
+                    <div class="change-title">
+                        <span class="badge normal">שגרתי</span>
+                        עדכון רשימת הרחובות בעת שינוי עיר
+                    </div>
+                    <p class="change-description">
+                        כאשר משתנה שדה העיר בטופס, רשימת הרחובות הזמינים מתעדכנת אוטומטית.
+                    </p>
+                    
+                    <div class="trigger-box">
+                        <span class="trigger-label">🎯 תנאי הפעלה:</span>
+                        <span class="trigger-text">
+                            בכל שינוי בערך של שדה "עיר"
+                        </span>
+                    </div>
+                    
+                    <div class="trigger-box">
+                        <span class="trigger-label">📊 קוד טכני:</span>
+                        <div class="example-box">
+                            <div class="code-label">Frontend (Families.js, line 275):</div>
+                            if (name === "city") {<br/>
+&nbsp;&nbsp;const cityKey = value.trim();<br/>
+&nbsp;&nbsp;const cityStreets = processedSettlementsAndStreets[cityKey] || [];<br/>
+&nbsp;&nbsp;setStreets(cityStreets);<br/>
+}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="summary-section">
+                <h2>📊 סיכום חברך</h2>
+                
+                <div class="summary-grid">
+                    <div class="stat-box">
+                        <div class="stat-number">8</div>
+                        <div class="stat-label">עדכונים אוטומטיים</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-number">3</div>
+                        <div class="stat-label">קריטיים</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-number">3</div>
+                        <div class="stat-label">חשובים</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-number">2</div>
+                        <div class="stat-label">שגרתיים</div>
+                    </div>
+                </div>
+                
+                <h3 style="margin-top: 30px; color: #667eea; margin-bottom: 15px;">🔴 העדכונים הקריטיים:</h3>
+                <ul class="note-list">
+                    <li><strong>עדכון הרכז:</strong> הרכז האחראי משתנה אוטומטית בעת שינוי סטטוס</li>
+                    <li><strong>עדכון need_review:</strong> כמה תנאים קבועים מכריחים need_review=FALSE</li>
+                    <li><strong>משימות ביקורת:</strong> משימות קיימות נמחקות בעת הגדרת need_review=FALSE</li>
+                </ul>
+                
+                <h3 style="margin-top: 30px; color: #667eea; margin-bottom: 15px;">⚠️ בעיות ידועות:</h3>
+                
+                <div class="warning-banner">
+                    <strong>בעיה 1:</strong> הטופס לא מציג בזמן אמת את הערכים המתעדכנים בעצמם.
+                    לדוגמה, אם הרכז משתנה אוטומטית, הטופס עלול להציג את הרכז הישן.
+                </div>
+                
+                <div class="warning-banner">
+                    <strong>בעיה 2:</strong> תאריך השלמת הטיפולים מתעדכן לתאריך היום כאשר משתנה לסטטוס סיום,
+                    אך הטופס לא תמיד מציג זאת כראוי.
+                </div>
+                
+                <div class="warning-banner">
+                    <strong>בעיה 3:</strong> בעת עריכת משפחה קיימת, משתמש עלול לא להבחין כי הרכז או need_review
+                    הם ערכים שנשמרים בעצמם, וזה עלול לגרום לבלבול על מי הערכים הנוכחיים.
+                </div>
+                
+                <h3 style="margin-top: 30px; color: #667eea; margin-bottom: 15px;">💡 הצעות לפתרון:</h3>
+                
+                <div class="info-banner">
+                    <strong>הצעה 1:</strong> ממשק משתמש קריים למשתמש כל עדכון אוטומטי עם "ההודעה" או "icon"
+                </div>
+                
+                <div class="info-banner">
+                    <strong>הצעה 2:</strong> הפריד שדות בעריכה לקטגוריות: "עריכה ידנית" vs "שדות אוטומטיים"
+                </div>
+                
+                <div class="info-banner">
+                    <strong>הצעה 3:</strong> הצג בחלון התאימות של המערכת אילו שדות עדכנו ממה, ולמה
+                </div>
+                
+                <div class="info-banner">
+                    <strong>הצעה 4:</strong> אפשר למשתמש לשמור "טיוטה" של הטופס ולראות את השינויים המומלצים לפני שמירה
+                </div>
+            </div>
+        </div>
+        
+        <footer>
+            <p>📄 מסמך זה כולל תיעוד של כל העדכונים האוטומטיים במערכת ניהול משפחות - Childsmile v1.0</p>
+            <p style="margin-top: 10px; font-size: 0.9em; color: #999;">תאריך עדכון: מאי 2026</p>
+        </footer>
+    </div>
+</body>
+</html>
