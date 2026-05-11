@@ -1080,6 +1080,32 @@ def update_task_status(request, task_id):
             except Exception as e:
                 api_logger.error(f"Error updating last_review_talk_conducted for child {task.related_child_id}: {str(e)}")
 
+        # HANDLE GROUP TASK COMPLETION - "צירוף משפחה לקבוצה" (Add family to group)
+        if new_status == "הושלמה" and task.task_type and task.task_type.task_type == "צירוף משפחה לקבוצה" and task.related_child:
+            try:
+                api_logger.debug(f"📱 GROUP ADD TASK COMPLETED: task_id={task_id}, child_id={task.related_child.child_id}")
+                task.related_child.is_in_group = True
+                task.related_child.why_not_in_group = "---"
+                task.related_child.save()
+                api_logger.debug(f"✅ Family added to group: is_in_group=True, why_not_in_group='---' for child {task.related_child.child_id}")
+            except Exception as e:
+                api_logger.error(f"Error updating family group status after add task completion: {str(e)}")
+
+        # HANDLE GROUP TASK COMPLETION - "הסרת משפחה מקבוצה" (Remove family from group)
+        if new_status == "הושלמה" and task.task_type and task.task_type.task_type == "הסרת משפחה מקבוצה" and task.related_child:
+            try:
+                api_logger.debug(f"📱 GROUP REMOVE TASK COMPLETED: task_id={task_id}, child_id={task.related_child.child_id}")
+                task.related_child.is_in_group = False
+                # Extract reason from task description if available, otherwise use child's current status
+                reason = "הוסר"  # default reason
+                if task.related_child.status:
+                    reason = task.related_child.status
+                task.related_child.why_not_in_group = reason
+                task.related_child.save()
+                api_logger.debug(f"✅ Family removed from group: is_in_group=False, why_not_in_group='{reason}' for child {task.related_child.child_id}")
+            except Exception as e:
+                api_logger.error(f"Error updating family group status after remove task completion: {str(e)}")
+
         # If status changed to "בביצוע" and task has initial_family_data_id_fk
         if new_status == "בביצוע" and task.initial_family_data_id_fk:
             # Delete all other tasks with the same initial_family_data_id_fk
