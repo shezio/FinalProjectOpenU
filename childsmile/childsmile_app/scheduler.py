@@ -1,8 +1,27 @@
 """
-Background scheduler for monthly family review task creation.
+Background scheduler for family management tasks.
 
-Automatically runs the monthly review task check at 4:00 AM Israel time daily,
-but ONLY if MONTHLY_CREATOR_TIME environment variable is set.
+Scheduled Jobs:
+  1. Monthly review task creation (daily check at configured time)
+  2. Weekly digest email (to coordinators)
+  3. Weekly coordinator WhatsApp reminders (progress requests)
+  4. Meeting reminders (daily)
+  5. Cleanup old tasks (weekly)
+
+Environment Variables:
+  MONTHLY_CREATOR_TIME          - Daily check time for review task creation (default disabled)
+  WEEKLY_DIGEST_TIME            - Send email digest (default disabled)
+  WEEKLY_DIGEST_DAY             - Email digest day (0=Mon…6=Sun, default 6=Sunday)
+  WEEKLY_COORDINATOR_REQUEST_TIME  - Send WhatsApp reminders time (default "08:00")
+  WEEKLY_COORDINATOR_REQUEST_DAY   - Send WhatsApp reminders day (0=Mon…6=Sun, default 0=Monday)
+  WEEKLY_COORDINATOR_REPORTS_ENABLED - Enable WhatsApp reminders (default true)
+  TWILIO_WEEKLY_COORDINATOR_REQUEST_SID - Twilio template SID for WhatsApp (REQUIRED for production)
+  MEETING_REMINDER_TIME         - Daily meeting reminders (default "08:00")
+
+Timezone: All times in Asia/Jerusalem (Israel Time)
+
+⚠️ IMPORTANT: TWILIO_WEEKLY_COORDINATOR_REQUEST_SID must be set for production.
+   Without it, messages are sent as plain text (violates Twilio/Meta policies).
 """
 
 import os
@@ -110,13 +129,14 @@ def start_scheduler():
             except Exception as mr_err:
                 api_logger.error(f'❌ Could not schedule meeting reminders: {mr_err}')
 
-            # Add job: Send weekly coordinator progress request
-            # Uses same day as WEEKLY_DIGEST_DAY (0=Mon…6=Sun, default 6=Sunday)
+            # Add job: Send weekly coordinator progress request (WhatsApp reminders to staff)
             # Time controlled by WEEKLY_COORDINATOR_REQUEST_TIME env var (default 08:00)
+            # Day controlled by WEEKLY_COORDINATOR_REQUEST_DAY env var (0=Mon…6=Sun, default 0=Monday)
+            # NOTE: Separate day var allows independent debugging of staff WhatsApp reminders
             coordinator_request_time = os.environ.get('WEEKLY_COORDINATOR_REQUEST_TIME', '08:00').strip()
             try:
                 cr_hour, cr_minute = map(int, coordinator_request_time.split(':'))
-                cr_day = int(os.environ.get('WEEKLY_DIGEST_DAY', '6'))  # Same day as digest
+                cr_day = int(os.environ.get('WEEKLY_COORDINATOR_REQUEST_DAY', '6'))  # Separate from digest day
                 _scheduler.add_job(
                     func=_run_weekly_coordinator_request,
                     trigger=CronTrigger(day_of_week=cr_day, hour=cr_hour, minute=cr_minute, timezone=israel_tz),
@@ -126,7 +146,7 @@ def start_scheduler():
                     misfire_grace_time=300,
                 )
                 day_names = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
-                api_logger.info(f'📋 Weekly coordinator request scheduled {day_names[cr_day]} at {coordinator_request_time} Israel time')
+                api_logger.info(f'� Weekly WhatsApp staff reminders scheduled {day_names[cr_day]} at {coordinator_request_time} Israel time')
             except Exception as cr_err:
                 api_logger.error(f'❌ Could not schedule weekly coordinator request: {cr_err}')
 
@@ -230,9 +250,17 @@ def _run_meeting_reminders():
 
 def _run_weekly_coordinator_request():
     """
-    Send weekly progress request to all coordinators.
-    Called every Monday at the configured WEEKLY_COORDINATOR_REQUEST_TIME (default 08:00 Israel time).
-    Feature controlled by WEEKLY_COORDINATOR_REPORTS_ENABLED env var.
+    Send weekly progress request to all coordinators via WhatsApp.
+    Called at the configured day and time (default Monday 08:00 Israel time).
+    
+    Controlled by env vars:
+      - WEEKLY_COORDINATOR_REPORTS_ENABLED (true/false, default true)
+      - WEEKLY_COORDINATOR_REQUEST_TIME (HH:MM, default 08:00)
+      - WEEKLY_COORDINATOR_REQUEST_DAY (0=Mon…6=Sun, default 0=Monday)
+      - TWILIO_WEEKLY_COORDINATOR_REQUEST_SID (Twilio template SID, optional)
+    
+    NOTE: Using TWILIO_WEEKLY_COORDINATOR_REQUEST_SID template is REQUIRED for production.
+    Without it, messages are sent as plain text which may violate Twilio/Meta policies.
     """
     # Check if feature is enabled
     if not os.environ.get('WEEKLY_COORDINATOR_REPORTS_ENABLED', 'true').lower() in ('true', '1', 'yes'):
@@ -241,6 +269,12 @@ def _run_weekly_coordinator_request():
     
     try:
         from .weekly_coordinator_reports import send_weekly_coordinator_request
+        
+        # Check if template SID is configured
+        template_sid = os.environ.get('TWILIO_WEEKLY_COORDINATOR_REQUEST_SID', '').strip()
+        if not template_sid:
+            api_logger.warning('⚠️ TWILIO_WEEKLY_COORDINATOR_REQUEST_SID not configured — will use plain text fallback (not recommended for production)')
+        
         api_logger.info('📋 Weekly coordinator progress request triggered by scheduler')
         send_weekly_coordinator_request()
         api_logger.info('✅ Weekly coordinator request completed')
