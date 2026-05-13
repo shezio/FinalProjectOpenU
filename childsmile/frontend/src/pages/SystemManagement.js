@@ -771,6 +771,9 @@ const SystemManagement = () => {
       }
       if (staffData.staff_phone) {
         updatePayload.staff_phone = staffData.staff_phone;
+      } else {
+        // Explicitly send empty string so backend clears the phone (sets to null)
+        updatePayload.staff_phone = '';
       }
       if (staffData.staff_city) {
         updatePayload.staff_city = staffData.staff_city;
