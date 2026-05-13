@@ -498,14 +498,6 @@ def create_tutorship(request):
             tutorship_activation__in=['active', 'pending_first_approval']
         ).exists()
 
-        # Clean up any stale/incomplete PrevTutorshipStatuses records for this child
-        # This can happen if earlier tutorships were created in dev/test with NULL values
-        # We only want ONE PrevTutorshipStatuses per child (for the first tutorship)
-        if existing_child_tutorships:
-            # Child already has tutorships, so delete any PrevTutorshipStatuses records
-            # (they should have been cleaned up when the first tutorship was deleted)
-            PrevTutorshipStatuses.objects.filter(child_id=child_id).delete()
-
         # MANUAL MATCH OVERRIDE: If tutor has PENDING tutorships with OTHER children, delete them
         # This is the "snatching" behavior - reassigning a pending tutor to a new child via manual match
         # But only delete pending tutorships - NOT if we're just adding a second tutor to this child
