@@ -108,12 +108,12 @@ const Sidebar = () => {
   return (
     <div className={`sidebar ${isCollapsed ? 'collapsed' : ''}`}>
       {/* Collapse Toggle Button */}
-      <button className="sidebar-toggle" onClick={toggleSidebar}>
+      <button className="sidebar-toggle" onClick={toggleSidebar} title={isCollapsed ? 'הרחב סרגל' : 'צמצם סרגל'}>
         {isCollapsed ? '◀' : '▶'}
       </button>
 
       {/* User Info Section */}
-      <div className="sidebar-user-info">
+      <div className="sidebar-user-info" title={isCollapsed ? username.replace(/_/g, ' ') : ''}>
         <div className="sidebar-username">
           {isCollapsed ? username.charAt(0) : username.replace(/_/g, ' ')}
         </div>
@@ -127,13 +127,13 @@ const Sidebar = () => {
       </div>
 
       {/* Clock Section */}
-      <div className="sidebar-clock">
+      <div className="sidebar-clock" title={isCollapsed ? formatDate(currentTime) : ''}>
         <div className="sidebar-time">{isCollapsed ? formatTime(currentTime).split(':')[0] + ':' + formatTime(currentTime).split(':')[1] : formatTime(currentTime)}</div>
         {!isCollapsed && <div className="sidebar-date">{formatDate(currentTime)}</div>}
       </div>
 
       {/* Logout Button */}
-      <button className="sidebar-logout-button" onClick={handleLogout}>
+      <button className="sidebar-logout-button" onClick={handleLogout} title="יציאה מהמערכת">
         {isCollapsed ? '🚪' : 'יציאה מהמערכת'}
       </button>
 
@@ -146,7 +146,7 @@ const Sidebar = () => {
           data-path="/tasks"
           className={location.pathname.startsWith('/tasks') ? 'active' : ''}
           onClick={() => goTo('/tasks')}
-          title={t('Tasks')}
+          title="לוח משימות"
         >
           {isCollapsed ? '📋' : 'לוח משימות'}
         </button>
@@ -156,7 +156,7 @@ const Sidebar = () => {
           data-path="/families"
           className={location.pathname.startsWith('/families') ? 'active' : ''}
           onClick={() => goTo('/families')  }
-          title={t('Families')}
+          title="משפחות"
         >
           {isCollapsed ? '🏘️' : 'משפחות'}
         </button>
@@ -167,7 +167,7 @@ const Sidebar = () => {
           data-path="/tutor-volunteer-mgmt"
           className={location.pathname.startsWith('/tutor-volunteer-mgmt') ? 'active' : ''}
           onClick={() => goTo('/tutor-volunteer-mgmt')}
-          title={t('Tutor and Volunteer Management')}
+          title="ניהול חונכים ומתנדבים"
         >
           {isCollapsed ? '👥' : 'ניהול חונכים ומתנדבים'}
         </button>
@@ -177,7 +177,7 @@ const Sidebar = () => {
           data-path="/tutorships"
           className={location.pathname.startsWith('/tutorships') ? 'active' : ''}
           onClick={() => goTo('/tutorships')}
-          title={t('Tutorships')}
+          title="חונכות"
         >
           {isCollapsed ? '🤝' : 'חונכות'}
         </button>
@@ -188,7 +188,7 @@ const Sidebar = () => {
           data-path="/feedbacks"
           className={location.pathname.startsWith('/feedbacks') ? 'active' : ''}
           onClick={() => goTo('/feedbacks')}
-          title={t('Feedbacks')}
+          title="משובים"
         >
           {isCollapsed ? '💬' : 'משובים'}
         </button>
@@ -198,7 +198,7 @@ const Sidebar = () => {
           data-path="/reports"
           className={location.pathname.startsWith('/reports') ? 'active' : ''}
           onClick={() => goTo('/reports')}
-          title={t('Reports')}
+          title="דוחות"
         >
           {isCollapsed ? '📊' : 'דוחות'}
         </button>
@@ -208,7 +208,7 @@ const Sidebar = () => {
           data-path="/system-management"
           className={location.pathname.startsWith('/system-management') ? 'active' : ''}
           onClick={() => goTo('/system-management')}
-          title={t('System Management')}
+          title="ניהול מערכת"
         >
           {isCollapsed ? '⚙️' : 'ניהול מערכת'}
         </button>
@@ -218,7 +218,7 @@ const Sidebar = () => {
           data-path="/meeting-management"
           className={location.pathname.startsWith('/meeting-management') ? 'active' : ''}
           onClick={() => goTo('/meeting-management')}
-          title={t('Meeting Management')}
+          title="ניהול פגישות"
         >
           {isCollapsed ? '📅' : 'ניהול פגישות'}
         </button>
@@ -228,7 +228,7 @@ const Sidebar = () => {
           data-path="/coordinator-chat"
           className={location.pathname.startsWith('/coordinator-chat') ? 'active' : ''}
           onClick={() => goTo('/coordinator-chat')}
-          title={t('Team Updates')}
+          title="עדכוני צוות"
         >
           {isCollapsed ? '📨' : t('Team Updates')}
         </button>
@@ -238,7 +238,7 @@ const Sidebar = () => {
           data-path="/reviewer"
           className={location.pathname.startsWith('/reviewer') ? 'active' : ''}
           onClick={() => goTo('/reviewer')}
-          title={t('Review Calls')}
+          title="שיחות ביקורת"
         >
           {isCollapsed ? '🔍' : 'שיחות ביקורת'}
         </button>
