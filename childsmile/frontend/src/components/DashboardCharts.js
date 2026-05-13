@@ -10,6 +10,7 @@ const DashboardCharts = ({ data, timeframe, onTimeframeChange }) => {
   const [loading, setLoading] = useState(false);
   const [chartPage, setChartPage] = useState(1);
   const [workload, setWorkload] = useState(null);
+  const [overdueReviews, setOverdueReviews] = useState([]);
   const [tutorshipsPage, setTutorshipsPage] = useState(1);
   const TUTORSHIPS_PER_PAGE = 4;
 
@@ -20,8 +21,11 @@ const DashboardCharts = ({ data, timeframe, onTimeframeChange }) => {
 
   useEffect(() => {
     axios.get('/api/dashboard/coordinator-workload/')
-      .then(res => setWorkload(res.data.coordinators))
-      .catch(() => setWorkload([]));
+      .then(res => {
+        setWorkload(res.data.coordinators);
+        setOverdueReviews(res.data.overdue_reviews || []);
+      })
+      .catch(() => { setWorkload([]); setOverdueReviews([]); });
   }, []);
 
   const fetchFeedbackData = async () => {
@@ -280,9 +284,11 @@ const DashboardCharts = ({ data, timeframe, onTimeframeChange }) => {
           labels: names,
           datasets: [{ data: workload.map(c => c.open_tasks), backgroundColor: colors, borderWidth: 0 }]
         };
+        const overdueNames = overdueReviews.map(r => r.name);
+        const overdueColors = ['#667eea','#764ba2','#ff6b6b','#4caf50','#ffa726','#26c6da','#ab47bc'];
         const overduePie = {
-          labels: names,
-          datasets: [{ data: workload.map(c => c.overdue_reviews), backgroundColor: colors, borderWidth: 0 }]
+          labels: overdueNames,
+          datasets: [{ data: overdueReviews.map(r => r.count), backgroundColor: overdueColors, borderWidth: 0 }]
         };
 
         return (
@@ -299,7 +305,10 @@ const DashboardCharts = ({ data, timeframe, onTimeframeChange }) => {
             </div>
             <div className="chart-card workload-overdue-card">
               <h3>שיחות ביקורת באיחור</h3>
-              <div className="chart-container"><Pie data={overduePie} options={chartOptions} /></div>
+              {overdueReviews.length === 0
+                ? <p className="workload-loading">אין שיחות ביקורת באיחור</p>
+                : <div className="chart-container"><Pie data={overduePie} options={chartOptions} /></div>
+              }
             </div>
             <div className="table-card">
               <table className="dashboard-table">
@@ -308,21 +317,40 @@ const DashboardCharts = ({ data, timeframe, onTimeframeChange }) => {
                     <th>רכז/ת</th>
                     <th>משפחות</th>
                     <th>משימות פתוחות</th>
-                    <th>ביקורות באיחור</th>
                   </tr>
                 </thead>
                 <tbody>
                   {workload.map((coord, i) => (
-                    <tr key={i} className={coord.overdue_reviews > 0 ? 'workload-row-alert' : ''}>
+                    <tr key={i}>
                       <td>{coord.name}</td>
                       <td>{coord.families}</td>
                       <td>{coord.open_tasks}</td>
-                      <td className={coord.overdue_reviews > 0 ? 'workload-overdue' : ''}>{coord.overdue_reviews}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
+            {overdueReviews.length > 0 && (
+              <div className="table-card">
+                <h3>ביקורות באיחור לפי משויך</h3>
+                <table className="dashboard-table">
+                  <thead>
+                    <tr>
+                      <th>משויך/ת</th>
+                      <th>ביקורות באיחור</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {overdueReviews.map((row, i) => (
+                      <tr key={i} className="workload-row-alert">
+                        <td>{row.name}</td>
+                        <td className="workload-overdue">{row.count}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         );
       },

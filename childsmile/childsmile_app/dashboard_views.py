@@ -712,21 +712,32 @@ def get_coordinator_workload(request):
             assigned_to=coord,
         ).exclude(status='הושלמה').count()
 
-        # Overdue reviews: 'שיחת ביקורת' tasks past due_date and not completed
-        overdue_reviews = Tasks.objects.filter(
-            assigned_to=coord,
-            task_type__task_type='שיחת ביקורת',
-            due_date__lt=today,
-        ).exclude(status='הושלמה').count()
-
         result.append({
             'name': full_name,
             'families': families_count,
             'open_tasks': open_tasks,
-            'overdue_reviews': overdue_reviews,
         })
 
     # Sort by open_tasks descending so the busiest coordinator is first
     result.sort(key=lambda x: x['open_tasks'], reverse=True)
 
-    return JsonResponse({'coordinators': result})
+    # Overdue reviews: group by whoever the task is actually assigned_to (any staff)
+    overdue_tasks = Tasks.objects.filter(
+        task_type__task_type='שיחת ביקורת',
+        due_date__lt=today,
+    ).exclude(status='הושלמה').select_related('assigned_to')
+
+    overdue_by_assignee = {}
+    for task in overdue_tasks:
+        if task.assigned_to:
+            name = f"{task.assigned_to.first_name} {task.assigned_to.last_name}"
+        else:
+            name = 'לא משויך'
+        overdue_by_assignee[name] = overdue_by_assignee.get(name, 0) + 1
+
+    overdue_reviews = [
+        {'name': name, 'count': count}
+        for name, count in sorted(overdue_by_assignee.items(), key=lambda x: x[1], reverse=True)
+    ]
+
+    return JsonResponse({'coordinators': result, 'overdue_reviews': overdue_reviews})
