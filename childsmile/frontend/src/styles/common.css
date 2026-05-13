@@ -44,9 +44,100 @@ body {
     flex-direction: column;
     align-items: stretch;
     z-index: 1001;
-    padding-top: 30px;
+    padding-top: 60px; /* Space for toggle button */
     border-left: 2px solid rgba(255, 255, 255, 0.3);
     overflow-y: auto;
+    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sidebar.collapsed {
+    width: 80px;
+    padding: 15px 10px;
+    padding-top: 60px;
+    align-items: center;
+}
+
+.sidebar-toggle {
+    position: absolute;
+    top: 15px;
+    right: 25px;
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: white;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.3s ease;
+    z-index: 1002;
+    padding: 0 !important;
+    line-height: 1;
+}
+
+.sidebar.collapsed .sidebar-toggle {
+    right: 25px;
+}
+
+.sidebar-toggle:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: scale(1.1);
+}
+
+.sidebar-collapsed .main-content {
+    margin-right: 80px;
+}
+
+/* Hide elements when collapsed */
+.sidebar.collapsed .sidebar-clock,
+.sidebar.collapsed .sidebar-roles,
+.sidebar.collapsed .sidebar-date {
+    display: none;
+}
+
+.sidebar.collapsed .sidebar-user-info {
+    padding: 10px;
+    margin-bottom: 10px;
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.sidebar.collapsed .sidebar-username {
+    font-size: 20px;
+    margin-bottom: 0;
+}
+
+.sidebar.collapsed .sidebar-divider {
+    width: 40px;
+}
+
+.sidebar.collapsed button:not(.sidebar-toggle) {
+    width: 50px;
+    height: 50px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    border-radius: 12px;
+}
+
+.main-content {
+    flex-grow: 1;
+    padding: 230px 40px 40px 40px;
+    margin-right: 280px;
+    height: 100vh;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    background: transparent;
+    transition: margin-right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* User Info Section */
@@ -64,6 +155,7 @@ body {
       0 4px 20px rgba(0, 0, 0, 0.15),
       inset 0 1px 0 rgba(255, 255, 255, 0.4);
     text-align: center;
+    transition: all 0.3s ease;
 }
 
 .sidebar-username {
@@ -198,7 +290,7 @@ body {
 }
 
 /* Navigation Buttons */
-.sidebar button:not(.sidebar-logout-button) {
+.sidebar button:not(.sidebar-logout-button):not(.sidebar-toggle) {
     background: linear-gradient(135deg, 
       rgba(255, 255, 255, 0.2) 0%,
       rgba(255, 255, 255, 0.1) 100%);
