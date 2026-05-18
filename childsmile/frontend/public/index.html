@@ -3,11 +3,23 @@
 <head>
   <meta charset="UTF-8">
   <base href="/">
-  <!-- put initial zoom on 150% for mobile devices -->
-  <meta name="viewport" content="width=device-width, initial-scale=1.5">
+  <!-- initial-scale=1 for mobile; desktop CSS zoom handles scaling there -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>חיוך של ילד</title>
   <link rel="stylesheet" href="styles.css">
   <link rel="icon" type="image/x-icon" href="/favicon.ico">
+
+  <!-- PWA manifest -->
+  <link rel="manifest" href="/manifest.json">
+
+  <!-- iOS / Safari PWA meta tags -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="חיוך של ילד">
+  <link rel="apple-touch-icon" href="/big_favicon.png">
+
+  <!-- Theme color for browser chrome -->
+  <meta name="theme-color" content="#6366f1">
 </head>
 <body>
   <div id="root"></div>

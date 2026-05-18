@@ -101,6 +101,47 @@ const Sidebar = () => {
     localStorage.setItem('sidebarCollapsed', isCollapsed);
   }, [isCollapsed]);
 
+  // ── Mobile bottom nav ──────────────────────────────────────────
+  useEffect(() => {
+    const isMobile = window.innerWidth < 768;
+    if (!isMobile) return;
+
+    // Remove any existing nav first
+    const existing = document.getElementById('mobile-bottom-nav');
+    if (existing) existing.remove();
+
+    const nav = document.createElement('nav');
+    nav.id = 'mobile-bottom-nav';
+
+    const navItems = [
+      hasPermissionToTasks           && { path: '/tasks',               icon: '📋', label: 'משימות' },
+      hasPermissionToFamilies         && { path: '/families',            icon: '🏘️', label: 'משפחות' },
+      hasPermissionToTutorships       && { path: '/tutorships',          icon: '🤝', label: 'חונכות' },
+      hasPermissionToFeedbacks        && { path: '/feedbacks',           icon: '💬', label: 'משובים' },
+      hasPermissionToAnyReport        && { path: '/reports',             icon: '📊', label: 'דוחות' },
+      hasPermissionToSystemManagement && { path: '/system-management',   icon: '⚙️', label: 'ניהול' },
+    ].filter(Boolean).slice(0, 5); // max 5 tabs fits a phone
+
+    const currentPath = window.location.pathname || window.location.hash.replace('#', '');
+
+    navItems.forEach(({ path, icon, label }) => {
+      const btn = document.createElement('button');
+      btn.innerHTML = `<span class="nav-icon">${icon}</span><span class="nav-label">${label}</span>`;
+      if (currentPath.startsWith(path)) btn.classList.add('active');
+      btn.onclick = () => goTo(path);
+      nav.appendChild(btn);
+    });
+
+    document.body.appendChild(nav);
+
+    return () => {
+      const el = document.getElementById('mobile-bottom-nav');
+      if (el) el.remove();
+    };
+  // Re-run when permissions are resolved (they depend on localStorage which is sync, so once is enough)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const toggleSidebar = () => {
     setIsCollapsed(!isCollapsed);
   };

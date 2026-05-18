@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PWA Mobile Changes Review – חיוך של ילד</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: #0d1117;
+      color: #c9d1d9;
+      direction: ltr;
+    }
+
+    header {
+      background: linear-gradient(135deg, #6366f1, #a855f7);
+      color: white;
+      padding: 32px 40px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    header h1 { font-size: 28px; font-weight: 800; }
+    header p  { font-size: 15px; opacity: 0.85; }
+
+    .badges {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+    }
+    .badge {
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+    .badge-new      { background: #1a7f37; color: #56d364; border: 1px solid #56d364; }
+    .badge-modified { background: #9e6a03; color: #f0d161; border: 1px solid #f0d161; }
+    .badge-deleted  { background: #7a1c1c; color: #f85149; border: 1px solid #f85149; }
+
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      padding: 28px 40px;
+      background: #161b22;
+      border-bottom: 1px solid #21262d;
+    }
+    .stat-card {
+      background: #21262d;
+      border: 1px solid #30363d;
+      border-radius: 12px;
+      padding: 20px;
+      text-align: center;
+    }
+    .stat-card .num  { font-size: 36px; font-weight: 800; color: #58a6ff; }
+    .stat-card .lbl  { font-size: 13px; color: #8b949e; margin-top: 4px; }
+
+    .toc {
+      padding: 24px 40px;
+      background: #161b22;
+      border-bottom: 1px solid #21262d;
+    }
+    .toc h2 { color: #58a6ff; font-size: 16px; margin-bottom: 14px; }
+    .toc ul { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+    .toc a  { color: #c9d1d9; text-decoration: none; font-size: 14px; }
+    .toc a:hover { color: #58a6ff; text-decoration: underline; }
+    .toc .toc-badge { font-size: 10px; padding: 2px 8px; border-radius: 10px; margin-right: 8px; font-weight: 700; }
+
+    main { padding: 32px 40px; display: flex; flex-direction: column; gap: 48px; }
+
+    .file-block {
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .file-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 20px;
+      background: #21262d;
+      border-bottom: 1px solid #30363d;
+    }
+    .file-path {
+      font-family: 'Consolas', 'Courier New', monospace;
+      font-size: 14px;
+      font-weight: 700;
+      color: #79c0ff;
+    }
+    .file-desc {
+      font-size: 13px;
+      color: #8b949e;
+      margin-left: auto;
+    }
+
+    .diff-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-family: 'Consolas', 'Courier New', monospace;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+    .diff-table tr td { padding: 0; vertical-align: top; }
+    .ln {
+      width: 50px;
+      min-width: 50px;
+      text-align: right;
+      padding: 0 10px;
+      color: #484f58;
+      user-select: none;
+      border-right: 1px solid #21262d;
+      background: inherit;
+    }
+    .code { padding: 1px 16px; white-space: pre-wrap; word-break: break-all; }
+
+    .added   { background: #0d2119; }
+    .added   .ln   { background: #0d2119; color: #56d364; }
+    .added   .code { color: #aff5b4; }
+    .added   .code::before { content: '+'; color: #56d364; margin-right: 6px; }
+
+    .removed { background: #2d1215; }
+    .removed .ln   { background: #2d1215; color: #f85149; }
+    .removed .code { color: #ffa198; text-decoration: line-through; opacity: 0.7; }
+    .removed .code::before { content: '-'; color: #f85149; margin-right: 6px; }
+
+    .context { background: #161b22; }
+    .context .code { color: #8b949e; }
+    .context .code::before { content: ' '; margin-right: 6px; }
+
+    .hunk {
+      background: #1f2d3d;
+      color: #58a6ff;
+      font-size: 12px;
+      padding: 2px 16px;
+      border-top: 1px solid #30363d;
+      border-bottom: 1px solid #30363d;
+    }
+
+    .explanation {
+      padding: 16px 20px;
+      background: #0d1117;
+      border-top: 1px solid #21262d;
+      font-size: 13px;
+      color: #8b949e;
+      line-height: 1.6;
+    }
+    .explanation strong { color: #c9d1d9; }
+
+    .deleted-file {
+      padding: 32px 20px;
+      text-align: center;
+      color: #f85149;
+    }
+    .deleted-file .big-x { font-size: 48px; margin-bottom: 8px; }
+    .deleted-file p { font-size: 14px; color: #8b949e; margin-top: 8px; }
+
+    .new-file-content {
+      padding: 0;
+    }
+    .new-file-banner {
+      background: #0d2119;
+      color: #56d364;
+      padding: 6px 20px;
+      font-size: 12px;
+      font-weight: 700;
+      border-bottom: 1px solid #1a7f37;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>📱 PWA + Mobile Responsive — Code Review</h1>
+  <p>Project: <strong>חיוך של ילד</strong> &nbsp;·&nbsp; Branch: <code>desktop</code> &nbsp;·&nbsp; Date: May 18, 2026</p>
+  <div class="badges">
+    <span class="badge badge-new">● 2 New Files</span>
+    <span class="badge badge-modified">● 3 Modified Files</span>
+    <span class="badge badge-deleted">● 1 Deleted File</span>
+  </div>
+</header>
+
+<div class="summary">
+  <div class="stat-card"><div class="num">2</div><div class="lbl">New files added</div></div>
+  <div class="stat-card"><div class="num">3</div><div class="lbl">Files modified</div></div>
+  <div class="stat-card"><div class="num">1</div><div class="lbl">File deleted</div></div>
+  <div class="stat-card"><div class="num">0</div><div class="lbl">Desktop files touched</div></div>
+</div>
+
+<div class="toc">
+  <h2>📋 Files Changed</h2>
+  <ul>
+    <li><a href="#f1"><span class="toc-badge badge-new">NEW</span>public/manifest.json</a> — PWA installability manifest</li>
+    <li><a href="#f2"><span class="toc-badge badge-new">NEW</span>public/service-worker.js</a> — Offline caching service worker</li>
+    <li><a href="#f3"><span class="toc-badge badge-modified">MOD</span>public/index.html</a> — Added viewport fix + PWA meta tags</li>
+    <li><a href="#f4"><span class="toc-badge badge-modified">MOD</span>src/index.js</a> — SW registration + mobile.css import</li>
+    <li><a href="#f5"><span class="toc-badge badge-modified">MOD</span>src/components/Sidebar.js</a> — Injected mobile bottom nav bar</li>
+    <li><a href="#f6"><span class="toc-badge badge-new">NEW</span>src/styles/mobile.css</a> — All mobile responsive overrides</li>
+    <li><a href="#f7"><span class="toc-badge badge-deleted">DEL</span>src/MobileApp.js</a> — Removed (was wrong approach)</li>
+  </ul>
+</div>
+
+<main>
+
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <!-- FILE 1: manifest.json                                   -->
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <div class="file-block" id="f1">
+    <div class="file-header">
+      <span class="badge badge-new">NEW</span>
+      <span class="file-path">public/manifest.json</span>
+      <span class="file-desc">PWA Web App Manifest</span>
+    </div>
+    <div class="new-file-banner">New file — entire content shown</div>
+    <table class="diff-table"><tbody>
+      <tr class="added"><td class="ln">1</td><td class="code">{</td></tr>
+      <tr class="added"><td class="ln">2</td><td class="code">  "name": "חיוך של ילד",</td></tr>
+      <tr class="added"><td class="ln">3</td><td class="code">  "short_name": "חיוך של ילד",</td></tr>
+      <tr class="added"><td class="ln">4</td><td class="code">  "description": "מערכת ניהול חיוך של ילד",</td></tr>
+      <tr class="added"><td class="ln">5</td><td class="code">  "start_url": "/",</td></tr>
+      <tr class="added"><td class="ln">6</td><td class="code">  "display": "standalone",</td></tr>
+      <tr class="added"><td class="ln">7</td><td class="code">  "background_color": "#f0f0f0",</td></tr>
+      <tr class="added"><td class="ln">8</td><td class="code">  "theme_color": "#6366f1",</td></tr>
+      <tr class="added"><td class="ln">9</td><td class="code">  "orientation": "portrait",</td></tr>
+      <tr class="added"><td class="ln">10</td><td class="code">  "lang": "he",</td></tr>
+      <tr class="added"><td class="ln">11</td><td class="code">  "dir": "rtl",</td></tr>
+      <tr class="added"><td class="ln">12</td><td class="code">  "icons": [</td></tr>
+      <tr class="added"><td class="ln">13</td><td class="code">    { "src": "/big_favicon.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },</td></tr>
+      <tr class="added"><td class="ln">14</td><td class="code">    { "src": "/big_favicon.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }</td></tr>
+      <tr class="added"><td class="ln">15</td><td class="code">  ]</td></tr>
+      <tr class="added"><td class="ln">16</td><td class="code">}</td></tr>
+    </tbody></table>
+    <div class="explanation">
+      <strong>Why:</strong> Required for "Add to Home Screen" on iOS Safari and Android Chrome.
+      <code>display: standalone</code> makes it open fullscreen like a native app with no browser chrome.
+      Uses the existing <code>big_favicon.png</code> as the app icon — note: for best quality on iOS,
+      ideally export a proper 512×512 PNG from the logo.
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <!-- FILE 2: service-worker.js                               -->
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <div class="file-block" id="f2">
+    <div class="file-header">
+      <span class="badge badge-new">NEW</span>
+      <span class="file-path">public/service-worker.js</span>
+      <span class="file-desc">Offline caching (network-first strategy)</span>
+    </div>
+    <div class="new-file-banner">New file — entire content shown</div>
+    <table class="diff-table"><tbody>
+      <tr class="added"><td class="ln">1</td><td class="code">const CACHE_NAME = 'childsmile-v1';</td></tr>
+      <tr class="added"><td class="ln">2</td><td class="code"></td></tr>
+      <tr class="added"><td class="ln">3</td><td class="code">const PRECACHE_URLS = ['/', '/bundle.js', '/styles.css', '/manifest.json'];</td></tr>
+      <tr class="added"><td class="ln">4</td><td class="code"></td></tr>
+      <tr class="added"><td class="ln">5</td><td class="code">self.addEventListener('install', (event) => {</td></tr>
+      <tr class="added"><td class="ln">6</td><td class="code">  event.waitUntil(caches.open(CACHE_NAME).then(c => c.addAll(PRECACHE_URLS)));</td></tr>
+      <tr class="added"><td class="ln">7</td><td class="code">  self.skipWaiting();</td></tr>
+      <tr class="added"><td class="ln">8</td><td class="code">});</td></tr>
+      <tr class="added"><td class="ln">9</td><td class="code"></td></tr>
+      <tr class="added"><td class="ln">10</td><td class="code">self.addEventListener('activate', (event) => {</td></tr>
+      <tr class="added"><td class="ln">11</td><td class="code">  // Delete old caches on new SW version</td></tr>
+      <tr class="added"><td class="ln">12</td><td class="code">  event.waitUntil(caches.keys().then(keys =></td></tr>
+      <tr class="added"><td class="ln">13</td><td class="code">    Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))</td></tr>
+      <tr class="added"><td class="ln">14</td><td class="code">  ));</td></tr>
+      <tr class="added"><td class="ln">15</td><td class="code">  self.clients.claim();</td></tr>
+      <tr class="added"><td class="ln">16</td><td class="code">});</td></tr>
+      <tr class="added"><td class="ln">17</td><td class="code"></td></tr>
+      <tr class="added"><td class="ln">18</td><td class="code">self.addEventListener('fetch', (event) => {</td></tr>
+      <tr class="added"><td class="ln">19</td><td class="code">  if (event.request.method !== 'GET') return;  // only cache GETs</td></tr>
+      <tr class="added"><td class="ln">20</td><td class="code">  event.respondWith(</td></tr>
+      <tr class="added"><td class="ln">21</td><td class="code">    fetch(event.request)                        // try network first</td></tr>
+      <tr class="added"><td class="ln">22</td><td class="code">      .then(res => { caches.open(CACHE_NAME).then(c => c.put(event.request, res.clone())); return res; })</td></tr>
+      <tr class="added"><td class="ln">23</td><td class="code">      .catch(() => caches.match(event.request))  // fall back to cache</td></tr>
+      <tr class="added"><td class="ln">24</td><td class="code">  );</td></tr>
+      <tr class="added"><td class="ln">25</td><td class="code">});</td></tr>
+    </tbody></table>
+    <div class="explanation">
+      <strong>Why:</strong> Required for PWA installability on iOS. Uses <em>network-first</em> strategy — always tries
+      the live server, caches the result, falls back to cache if offline. The file lives in <code>public/</code> so
+      Webpack's <code>CopyWebpackPlugin</code> copies it to <code>dist/</code> automatically — no build config change needed.
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <!-- FILE 3: index.html                                      -->
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <div class="file-block" id="f3">
+    <div class="file-header">
+      <span class="badge badge-modified">MODIFIED</span>
+      <span class="file-path">public/index.html</span>
+      <span class="file-desc">Viewport fix + PWA meta tags</span>
+    </div>
+    <table class="diff-table"><tbody>
+      <tr class="context"><td class="ln">1</td><td class="code">&lt;!DOCTYPE html&gt;</td></tr>
+      <tr class="context"><td class="ln">2</td><td class="code">&lt;html lang="he" dir="rtl"&gt;</td></tr>
+      <tr class="context"><td class="ln">3</td><td class="code">&lt;head&gt;</td></tr>
+      <tr class="context"><td class="ln">4</td><td class="code">  &lt;meta charset="UTF-8"&gt;</td></tr>
+      <tr class="context"><td class="ln">5</td><td class="code">  &lt;base href="/"&gt;</td></tr>
+      <tr class="removed"><td class="ln">6</td><td class="code">  &lt;!-- put initial zoom on 150% for mobile devices --&gt;</td></tr>
+      <tr class="removed"><td class="ln">7</td><td class="code">  &lt;meta name="viewport" content="width=device-width, initial-scale=1.5"&gt;</td></tr>
+      <tr class="added"><td class="ln">6</td><td class="code">  &lt;!-- initial-scale=1 for mobile; desktop CSS zoom handles scaling there --&gt;</td></tr>
+      <tr class="added"><td class="ln">7</td><td class="code">  &lt;meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"&gt;</td></tr>
+      <tr class="context"><td class="ln">8</td><td class="code">  &lt;title&gt;חיוך של ילד&lt;/title&gt;</td></tr>
+      <tr class="context"><td class="ln">9</td><td class="code">  &lt;link rel="stylesheet" href="styles.css"&gt;</td></tr>
+      <tr class="context"><td class="ln">10</td><td class="code">  &lt;link rel="icon" type="image/x-icon" href="/favicon.ico"&gt;</td></tr>
+      <tr class="added"><td class="ln">11</td><td class="code"></td></tr>
+      <tr class="added"><td class="ln">12</td><td class="code">  &lt;!-- PWA manifest --&gt;</td></tr>
+      <tr class="added"><td class="ln">13</td><td class="code">  &lt;link rel="manifest" href="/manifest.json"&gt;</td></tr>
+      <tr class="added"><td class="ln">14</td><td class="code"></td></tr>
+      <tr class="added"><td class="ln">15</td><td class="code">  &lt;!-- iOS / Safari PWA meta tags --&gt;</td></tr>
+      <tr class="added"><td class="ln">16</td><td class="code">  &lt;meta name="apple-mobile-web-app-capable" content="yes"&gt;</td></tr>
+      <tr class="added"><td class="ln">17</td><td class="code">  &lt;meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"&gt;</td></tr>
+      <tr class="added"><td class="ln">18</td><td class="code">  &lt;meta name="apple-mobile-web-app-title" content="חיוך של ילד"&gt;</td></tr>
+      <tr class="added"><td class="ln">19</td><td class="code">  &lt;link rel="apple-touch-icon" href="/big_favicon.png"&gt;</td></tr>
+      <tr class="added"><td class="ln">20</td><td class="code"></td></tr>
+      <tr class="added"><td class="ln">21</td><td class="code">  &lt;!-- Theme color for browser chrome --&gt;</td></tr>
+      <tr class="added"><td class="ln">22</td><td class="code">  &lt;meta name="theme-color" content="#6366f1"&gt;</td></tr>
+      <tr class="context"><td class="ln">23</td><td class="code">&lt;/head&gt;</td></tr>
+      <tr class="context"><td class="ln">24</td><td class="code">&lt;body&gt;&lt;div id="root"&gt;&lt;/div&gt;&lt;/body&gt;</td></tr>
+    </tbody></table>
+    <div class="explanation">
+      <strong>Viewport fix:</strong> The old <code>initial-scale=1.5</code> made the whole page appear zoomed in on mobile — everything was 150% size and
+      content was cut off. Changed to <code>1.0</code>. Desktop still gets its visual scale via <code>zoom: 80%</code> in <code>common.css</code>.<br><br>
+      <strong>PWA tags:</strong> <code>apple-mobile-web-app-capable</code> enables standalone mode on iOS Safari.
+      <code>apple-touch-icon</code> is the icon shown on the iOS home screen after "Add to Home Screen".
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <!-- FILE 4: index.js                                        -->
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <div class="file-block" id="f4">
+    <div class="file-header">
+      <span class="badge badge-modified">MODIFIED</span>
+      <span class="file-path">src/index.js</span>
+      <span class="file-desc">SW registration + mobile.css import</span>
+    </div>
+    <table class="diff-table"><tbody>
+      <tr class="context"><td class="ln">1</td><td class="code">/* Index.js */</td></tr>
+      <tr class="context"><td class="ln">2</td><td class="code">import React, { useEffect } from 'react';</td></tr>
+      <tr class="context"><td class="ln">3</td><td class="code">import ReactDOM from 'react-dom';</td></tr>
+      <tr class="context"><td class="ln">4</td><td class="code">import App from './App';</td></tr>
+      <tr class="removed"><td class="ln">5</td><td class="code">import MobileApp from './MobileApp'; // ← REMOVED (was wrong approach)</td></tr>
+      <tr class="context"><td class="ln">5</td><td class="code">import './i18n';</td></tr>
+      <tr class="context"><td class="ln">6</td><td class="code">import './styles.css';</td></tr>
+      <tr class="context"><td class="ln">7</td><td class="code">import './styles/common.css';</td></tr>
+      <tr class="added"><td class="ln">8</td><td class="code">import './styles/mobile.css';  /* ✅ Mobile responsive overrides (media-query gated) */</td></tr>
+      <tr class="context"><td class="ln">9</td><td class="code">import { BrowserRouter, HashRouter } from 'react-router-dom';</td></tr>
+      <tr class="context"><td class="ln">10</td><td class="code">import { ToastContainer, toast } from 'react-toastify';</td></tr>
+      <tr class="context"><td class="ln">11</td><td class="code"></td></tr>
+      <tr class="added"><td class="ln">12</td><td class="code">// ── Service Worker registration (PWA) ────────────────────</td></tr>
+      <tr class="added"><td class="ln">13</td><td class="code">if ('serviceWorker' in navigator) {</td></tr>
+      <tr class="added"><td class="ln">14</td><td class="code">  window.addEventListener('load', () => {</td></tr>
+      <tr class="added"><td class="ln">15</td><td class="code">    navigator.serviceWorker</td></tr>
+      <tr class="added"><td class="ln">16</td><td class="code">      .register('/service-worker.js')</td></tr>
+      <tr class="added"><td class="ln">17</td><td class="code">      .catch((err) => console.warn('SW registration failed:', err));</td></tr>
+      <tr class="added"><td class="ln">18</td><td class="code">  });</td></tr>
+      <tr class="added"><td class="ln">19</td><td class="code">}</td></tr>
+      <tr class="context"><td class="ln">20</td><td class="code"></td></tr>
+      <tr class="context"><td class="ln">21</td><td class="code">const isProd = process.env.NODE_ENV === 'production';</td></tr>
+      <tr class="hunk" colspan="2">@@ ... AppWithSessionHandler — render section @@</tr>
+      <tr class="removed"><td class="ln">—</td><td class="code">      {isMobile ? &lt;MobileApp /&gt; : &lt;App /&gt;}   // ← fake split removed</td></tr>
+      <tr class="added"><td class="ln">—</td><td class="code">      &lt;App /&gt;   // always render real app; CSS handles mobile layout</td></tr>
+    </tbody></table>
+    <div class="explanation">
+      <strong>SW registration:</strong> Runs once on page load. Registers the service worker at <code>/service-worker.js</code>,
+      enabling PWA installability and offline caching. Silently catches errors so it never breaks the app.<br><br>
+      <strong>Mobile CSS import:</strong> <code>mobile.css</code> is imported here so Webpack bundles it. All its rules are
+      wrapped in <code>@media (max-width: 767px)</code> so they have zero effect on desktop.
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <!-- FILE 5: Sidebar.js                                      -->
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <div class="file-block" id="f5">
+    <div class="file-header">
+      <span class="badge badge-modified">MODIFIED</span>
+      <span class="file-path">src/components/Sidebar.js</span>
+      <span class="file-desc">Added mobile bottom nav injection</span>
+    </div>
+    <table class="diff-table"><tbody>
+      <tr class="context"><td class="ln">…</td><td class="code">  // (existing useEffect for isCollapsed body class — unchanged)</td></tr>
+      <tr class="context"><td class="ln">…</td><td class="code">  }, [isCollapsed]);</td></tr>
+      <tr class="context"><td class="ln">…</td><td class="code"></td></tr>
+      <tr class="added"><td class="ln">+</td><td class="code">  // ── Mobile bottom nav ──────────────────────────────────</td></tr>
+      <tr class="added"><td class="ln">+</td><td class="code">  useEffect(() => {</td></tr>
+      <tr class="added"><td class="ln">+</td><td class="code">    const isMobile = window.innerWidth &lt; 768;</td></tr>
+      <tr class="added"><td class="ln">+</td><td class="code">    if (!isMobile) return;                   // no-op on desktop</td></tr>
+      <tr class="added"><td class="ln">+</td><td class="code"></td></tr>
+      <tr class="added"><td class="ln">+</td><td class="code">    const existing = document.getElementById('mobile-bottom-nav');</td></tr>
+      <tr class="added"><td class="ln">+</td><td class="code">    if (existing) existing.remove();          // prevent duplicates</td></tr>
+      <tr class="added"><td class="ln">+</td><td class="code"></td></tr>
+      <tr class="added"><td class="ln">+</td><td class="code">    const nav = document.createElement('nav');</td></tr>
+      <tr class="added"><td class="ln">+</td><td class="code">    nav.id = 'mobile-bottom-nav';</td></tr>
+      <tr class="added"><td class="ln">+</td><td class="code"></td></tr>
+      <tr class="added"><td class="ln">+</td><td class="code">    // Same permission checks as the desktop sidebar</td></tr>
+      <tr class="added"><td class="ln">+</td><td class="code">    const navItems = [</td></tr>
+      <tr class="added"><td class="ln">+</td><td class="code">      hasPermissionToTasks           &amp;&amp; { path: '/tasks',             icon: '📋', label: 'משימות' },</td></tr>
+      <tr class="added"><td class="ln">+</td><td class="code">      hasPermissionToFamilies         &amp;&amp; { path: '/families',          icon: '🏘️', label: 'משפחות' },</td></tr>
+      <tr class="added"><td class="ln">+</td><td class="code">      hasPermissionToTutorships       &amp;&amp; { path: '/tutorships',        icon: '🤝', label: 'חונכות'  },</td></tr>
+      <tr class="added"><td class="ln">+</td><td class="code">      hasPermissionToFeedbacks        &amp;&amp; { path: '/feedbacks',         icon: '💬', label: 'משובים' },</td></tr>
+      <tr class="added"><td class="ln">+</td><td class="code">      hasPermissionToAnyReport        &amp;&amp; { path: '/reports',           icon: '📊', label: 'דוחות'  },</td></tr>
+      <tr class="added"><td class="ln">+</td><td class="code">      hasPermissionToSystemManagement &amp;&amp; { path: '/system-management', icon: '⚙️', label: 'ניהול'  },</td></tr>
+      <tr class="added"><td class="ln">+</td><td class="code">    ].filter(Boolean).slice(0, 5);            // max 5 tabs fit a phone</td></tr>
+      <tr class="added"><td class="ln">+</td><td class="code"></td></tr>
+      <tr class="added"><td class="ln">+</td><td class="code">    const currentPath = window.location.pathname || window.location.hash.replace('#', '');</td></tr>
+      <tr class="added"><td class="ln">+</td><td class="code"></td></tr>
+      <tr class="added"><td class="ln">+</td><td class="code">    navItems.forEach(({ path, icon, label }) => {</td></tr>
+      <tr class="added"><td class="ln">+</td><td class="code">      const btn = document.createElement('button');</td></tr>
+      <tr class="added"><td class="ln">+</td><td class="code">      btn.innerHTML = `&lt;span class="nav-icon"&gt;${icon}&lt;/span&gt;&lt;span class="nav-label"&gt;${label}&lt;/span&gt;`;</td></tr>
+      <tr class="added"><td class="ln">+</td><td class="code">      if (currentPath.startsWith(path)) btn.classList.add('active');</td></tr>
+      <tr class="added"><td class="ln">+</td><td class="code">      btn.onclick = () => goTo(path);</td></tr>
+      <tr class="added"><td class="ln">+</td><td class="code">      nav.appendChild(btn);</td></tr>
+      <tr class="added"><td class="ln">+</td><td class="code">    });</td></tr>
+      <tr class="added"><td class="ln">+</td><td class="code"></td></tr>
+      <tr class="added"><td class="ln">+</td><td class="code">    document.body.appendChild(nav);</td></tr>
+      <tr class="added"><td class="ln">+</td><td class="code"></td></tr>
+      <tr class="added"><td class="ln">+</td><td class="code">    return () => {</td></tr>
+      <tr class="added"><td class="ln">+</td><td class="code">      const el = document.getElementById('mobile-bottom-nav');</td></tr>
+      <tr class="added"><td class="ln">+</td><td class="code">      if (el) el.remove();     // cleanup on unmount</td></tr>
+      <tr class="added"><td class="ln">+</td><td class="code">    };</td></tr>
+      <tr class="added"><td class="ln">+</td><td class="code">  }, []);  // runs once on mount</td></tr>
+      <tr class="context"><td class="ln">…</td><td class="code"></td></tr>
+      <tr class="context"><td class="ln">…</td><td class="code">  // (rest of Sidebar JSX — completely unchanged)</td></tr>
+    </tbody></table>
+    <div class="explanation">
+      <strong>Why inject via DOM instead of JSX?</strong> The desktop <code>.sidebar</code> is hidden on mobile via
+      <code>display: none</code>. Rather than restructuring the Sidebar component (which would risk breaking desktop),
+      a vanilla DOM <code>nav</code> element is appended directly to <code>document.body</code> — outside React's tree —
+      so it sits on top of everything and is not affected by the hidden sidebar's CSS.<br><br>
+      <strong>Permission-aware:</strong> Uses the exact same <code>hasPermissionTo*</code> booleans already computed
+      in Sidebar, so each user only sees the tabs they're allowed to access — same as the desktop sidebar.
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <!-- FILE 6: mobile.css                                      -->
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <div class="file-block" id="f6">
+    <div class="file-header">
+      <span class="badge badge-new">NEW</span>
+      <span class="file-path">src/styles/mobile.css</span>
+      <span class="file-desc">All mobile responsive overrides — 100% @media gated</span>
+    </div>
+    <div class="new-file-banner">New file — all rules are inside @media (max-width: 767px) — zero effect on desktop</div>
+    <table class="diff-table"><tbody>
+      <tr class="added"><td class="ln">1–5</td><td class="code">@media (max-width: 767px) {</td></tr>
+      <tr class="added"><td class="ln"></td><td class="code">  /* 1. Kill desktop zoom: body { zoom: 1 !important; } */</td></tr>
+      <tr class="added"><td class="ln"></td><td class="code">  /* 2. Hide sidebar: .sidebar { display: none !important; } */</td></tr>
+      <tr class="added"><td class="ln"></td><td class="code">  /* 3. Fix all *-main-content containers:                  */</td></tr>
+      <tr class="added"><td class="ln"></td><td class="code">  /*    margin-right: 0, padding-top: 70px (for header),   */</td></tr>
+      <tr class="added"><td class="ln"></td><td class="code">  /*    padding-bottom: 80px (for bottom nav),              */</td></tr>
+      <tr class="added"><td class="ln"></td><td class="code">  /*    height: 100dvh, overflow-y: auto                    */</td></tr>
+      <tr class="added"><td class="ln"></td><td class="code">  /* 4. Fixed .header bar: 56px tall, full width, z-index 900 */</td></tr>
+      <tr class="added"><td class="ln"></td><td class="code">  /* 5. Login page: stacked, centered, full-width inputs,   */</td></tr>
+      <tr class="added"><td class="ln"></td><td class="code">  /*    font-size:16px on inputs (prevents iOS auto-zoom)   */</td></tr>
+      <tr class="added"><td class="ln"></td><td class="code">  /* 6. #mobile-bottom-nav: fixed bottom bar, 60px tall,   */</td></tr>
+      <tr class="added"><td class="ln"></td><td class="code">  /*    iOS safe-area-inset-bottom aware                    */</td></tr>
+      <tr class="added"><td class="ln"></td><td class="code">  /* 7. Tables: overflow-x: auto (horizontal scroll)        */</td></tr>
+      <tr class="added"><td class="ln"></td><td class="code">  /* 8. Modals: inset:0, full-screen, no border-radius      */</td></tr>
+      <tr class="added"><td class="ln"></td><td class="code">  /* 9. Toasts: full width                                  */</td></tr>
+      <tr class="added"><td class="ln"></td><td class="code">  /* 10. Task kanban: flex-direction column (stacked)       */</td></tr>
+      <tr class="added"><td class="ln"></td><td class="code">  /* 11. Filter/create row: flex-direction column           */</td></tr>
+      <tr class="added"><td class="ln">—</td><td class="code">}</td></tr>
+    </tbody></table>
+    <div class="explanation">
+      <strong>Key insight:</strong> Every single rule in this file is wrapped inside <code>@media (max-width: 767px)</code>.
+      This means on a 768px+ screen (desktop/tablet) the entire file is ignored by the browser — it's physically
+      impossible for these styles to affect the desktop layout.<br><br>
+      <strong>The two most impactful rules:</strong><br>
+      1. <code>.sidebar { display: none }</code> + <code>margin-right: 0</code> on content — removes the 280px sidebar and
+      fills the freed space with the page content.<br>
+      2. <code>body { zoom: 1 !important }</code> — overrides the <code>zoom: 80%</code> that <code>common.css</code> applies
+      at 1800px and below, which would make everything tiny on a 390px phone screen.
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <!-- FILE 7: MobileApp.js — DELETED                         -->
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <div class="file-block" id="f7">
+    <div class="file-header">
+      <span class="badge badge-deleted">DELETED</span>
+      <span class="file-path">src/MobileApp.js</span>
+      <span class="file-desc">Removed — was a completely wrong approach</span>
+    </div>
+    <div class="deleted-file">
+      <div class="big-x">🗑️</div>
+      <strong>File deleted</strong>
+      <p>This file contained fake placeholder screens ("מסך זה יפותח בקרוב") that had nothing to do with<br>
+      the real app. It hijacked the render path so mobile users never saw login, real pages, or real data.<br><br>
+      <strong>Correct approach:</strong> no separate component needed — the real <code>&lt;App /&gt;</code> with CSS
+      responsive overrides is all that's required.</p>
+    </div>
+  </div>
+
+</main>
+
+<footer style="padding: 32px 40px; color: #484f58; font-size: 13px; border-top: 1px solid #21262d; margin-top: 16px;">
+  Generated for code review · Branch: desktop · חיוך של ילד · May 2026
+</footer>
+
+</body>
+</html>

@@ -5,8 +5,19 @@ import App from './App'; // Import the App component
 import './i18n'; // Import i18n configuration
 import './styles.css';
 import './styles/common.css';  /* ✅ Import common.css directly */
+import './styles/mobile.css';  /* ✅ Mobile responsive overrides (media-query gated) */
 import { BrowserRouter, HashRouter } from 'react-router-dom';
 import { ToastContainer, toast } from 'react-toastify';
+
+// ── Service Worker registration (PWA) ────────────────────────────
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker
+      .register('/service-worker.js')
+      .catch((err) => console.warn('SW registration failed:', err));
+  });
+}
+
 const isProd = process.env.NODE_ENV === 'production';
 
 // If the URL doesn't already have a hash, redirect to one
@@ -50,6 +61,7 @@ const AppWithSessionHandler = () => {
         draggable
         pauseOnHover
       />
+      {/* Real app — same on desktop and mobile, layout adapts via CSS */}
       <App />
     </>
   );
