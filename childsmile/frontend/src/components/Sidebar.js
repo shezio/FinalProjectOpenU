@@ -135,6 +135,7 @@ const Sidebar = () => {
     allNavItems.forEach(({ path, icon, label }) => {
       const btn = document.createElement('button');
       btn.innerHTML = `<span class="nav-icon">${icon}</span><span class="nav-label">${label}</span>`;
+      btn.dataset.path = path;
       if (currentPath.startsWith(path)) btn.classList.add('active');
       btn.onclick = () => goTo(path);
       nav.appendChild(btn);
@@ -156,9 +157,21 @@ const Sidebar = () => {
 
     document.body.appendChild(nav);
 
+    // Update active button when route changes (hash router or history router)
+    const updateActive = () => {
+      const path = window.location.pathname || window.location.hash.replace('#', '');
+      nav.querySelectorAll('button[data-path]').forEach(btn => {
+        btn.classList.toggle('active', path.startsWith(btn.dataset.path));
+      });
+    };
+    window.addEventListener('popstate', updateActive);
+    window.addEventListener('hashchange', updateActive);
+
     return () => {
       const el = document.getElementById('mobile-bottom-nav');
       if (el) el.remove();
+      window.removeEventListener('popstate', updateActive);
+      window.removeEventListener('hashchange', updateActive);
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

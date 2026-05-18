@@ -658,4 +658,322 @@
     border-right: 1px solid rgba(0,0,0,0.08) !important;
   }
 
+  /* ── 13. Loading spinner – smaller on mobile ──────────────── */
+  .loader {
+    width: 60px !important;
+    height: 60px !important;
+    border-width: 5px !important;
+  }
+  .tasks-main-content .loader {
+    margin-top: 0 !important;
+  }
+
+  /* ── 14. Filter type button – match size of other buttons ──── */
+  .status-filter-button {
+    font-size: 12px !important;
+    padding: 7px 10px !important;
+    height: auto !important;
+    min-height: unset !important;
+    line-height: 1.4 !important;
+  }
+  .status-checkboxes-dropdown label,
+  .status-checkbox-label {
+    font-size: 13px !important;
+    padding: 6px 8px !important;
+  }
+
+  /* ── 15. All grid containers – reset desktop margin-right ──── */
+  .families-grid-container,
+  .families-location-grid-container,
+  .flip-wrapper,
+  .reviewers-grid-container,
+  .reviewers-content,
+  .staff-grid-container,
+  .staff-page-content,
+  .meeting-page-content,
+  .feedbacks-container,
+  .feedbacks-page-content,
+  .page-content .grid-container,
+  .reports-container {
+    margin-right: 0 !important;
+    margin-left: 0 !important;
+    margin-top: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Families grid specifically – was margin-top:300-400px */
+  .families-grid-container {
+    overflow-x: auto !important;
+    max-height: unset !important;
+    margin-bottom: 16px !important;
+  }
+
+  /* Tut-vol flip-wrapper was 1850px wide + 350px margin */
+  .flip-wrapper {
+    width: 100% !important;
+    height: auto !important;
+    min-height: 400px !important;
+    perspective: none !important;
+    overflow-x: auto !important;
+  }
+
+  /* ── 16. Search bars – compact on mobile ─────────────────── */
+  .tutorship-search-bar,
+  .matches-search-bar,
+  .families-search-bar,
+  .reviewers-search-input,
+  .staff-page-content .search-bar,
+  input[type="search"],
+  input[type="text"][class*="search"] {
+    width: 100% !important;
+    max-width: 100% !important;
+    font-size: 14px !important;
+    height: 40px !important;
+    padding: 6px 10px !important;
+    box-sizing: border-box !important;
+  }
+
+  /* ── 17. Tutorships grid – horizontal scroll ──────────────── */
+  .tutorships-main-content {
+    padding: calc(90px + env(safe-area-inset-top,0px) + 8px) 10px
+             calc(72px + env(safe-area-inset-bottom,8px) + 8px) !important;
+    margin-right: 0 !important;
+    overflow-x: hidden !important;
+  }
+  .tutorship-search-container {
+    padding: 0 !important;
+    width: 100% !important;
+  }
+  /* Wrap the tutorships table in a scrollable container */
+  .tutorships-main-content table,
+  .tutorships-data-grid,
+  .tutorships-grid {
+    display: block !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    width: 100% !important;
+    font-size: 12px !important;
+  }
+
+  /* ── 18. Feedback cards page – smaller cards ──────────────── */
+  .feedback-card {
+    width: calc(45vw - 10px) !important;
+    height: 140px !important;
+    border-radius: 16px !important;
+  }
+  .feedback-card h2 {
+    font-size: 20px !important;
+  }
+  .feedbacks-row {
+    gap: 12px !important;
+    flex-wrap: wrap !important;
+    justify-content: center !important;
+  }
+  .feedbacks-container {
+    width: 100% !important;
+    flex-wrap: wrap !important;
+    gap: 12px !important;
+    padding-right: 0 !important;
+    margin-top: 0 !important;
+    justify-content: center !important;
+  }
+  .feedbacks-page-content {
+    margin-top: 0 !important;
+    padding: 8px !important;
+    gap: 12px !important;
+    flex-wrap: wrap !important;
+  }
+
+  /* ── 19. Specific feedback detail page – make it visible ────── */
+  /* On mobile the feedback detail pages inherit the main-content rules  */
+  /* but the inner content may have fixed heights – reset them */
+  .feedbacks-main-content > *,
+  .tutor-feedbacks-main-content > *,
+  .general-feedbacks-main-content > * {
+    max-width: 100% !important;
+    overflow-x: auto !important;
+  }
+  /* The feedbacks-grid-container / feedback-grid-container */
+  .feedbacks-grid-container,
+  .feedback-grid-container {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: auto !important;
+    margin: 0 !important;
+    box-sizing: border-box !important;
+  }
+
+  /* ── 20. Reports page – bento grid → vertical stack ──────── */
+  .reports-page {
+    height: auto !important;
+    min-height: 100% !important;
+    padding: 10px 8px !important;
+    overflow-y: auto !important;
+    align-items: flex-start !important;
+  }
+  .reports-container {
+    grid-template-columns: 1fr 1fr !important;
+    grid-template-rows: unset !important;
+    gap: 10px !important;
+    height: auto !important;
+    max-width: 100% !important;
+  }
+  .reports-container .report,
+  .report-card {
+    padding: 16px 12px !important;
+    border-radius: 14px !important;
+  }
+  .reports-container .report h2,
+  .report-card h2 {
+    font-size: 1rem !important;
+  }
+
+  /* Individual report pages (active-tutors-report etc.) */
+  .page-content {
+    width: 100% !important;
+    margin-right: 0 !important;
+    margin-left: 0 !important;
+    padding: 8px !important;
+    box-sizing: border-box !important;
+  }
+  .page-content .grid-container {
+    width: 100% !important;
+    margin: 0 !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+  /* Report filter buttons – compact */
+  .page-content button,
+  .reports-main-content button,
+  [class*="-report-main-content"] button {
+    font-size: 12px !important;
+    padding: 6px 8px !important;
+    white-space: nowrap !important;
+  }
+  [class*="-report-main-content"] select {
+    font-size: 12px !important;
+    max-width: 150px !important;
+  }
+  /* Report filter nav row – wrap */
+  [class*="-report-main-content"] .actions,
+  [class*="-report-main-content"] .filter-row,
+  [class*="report"] .filter-create-container {
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+  }
+
+  /* ── 21. System management – compact rows & scrollable grid ─ */
+  .staff-data-grid th,
+  .staff-data-grid td {
+    font-size: 12px !important;
+    padding: 6px 8px !important;
+    white-space: normal !important;
+    max-width: 130px !important;
+    word-break: break-word !important;
+  }
+  .staff-data-grid {
+    display: block !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    width: 100% !important;
+    font-size: 12px !important;
+  }
+  .staff-page-content {
+    padding: 8px !important;
+    margin-top: 0 !important;
+  }
+  .staff-page-content .search-bar {
+    margin: 0 0 8px 0 !important;
+    width: 100% !important;
+  }
+  /* Buttons row above system grid */
+  .system-management-main-content .filter-create-container,
+  .system-management-main-content .actions-bar,
+  .staff-page-content > div:first-child {
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+  }
+  .system-management-main-content button {
+    font-size: 12px !important;
+    padding: 6px 8px !important;
+    white-space: nowrap !important;
+  }
+
+  /* ── 22. Meeting management – reset sidebar margin ──────── */
+  .meeting-page-content {
+    margin-right: 0 !important;
+    margin-left: 0 !important;
+    margin-top: 0 !important;
+    width: 100% !important;
+    padding: 8px !important;
+    box-sizing: border-box !important;
+  }
+  .meeting-controls {
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+    justify-content: flex-start !important;
+  }
+  /* Calendar grid – horizontal scroll */
+  .calendar-grid,
+  .calendar-card {
+    width: 100% !important;
+    box-sizing: border-box !important;
+    overflow-x: auto !important;
+  }
+
+  /* ── 23. Reviewer page – reset sidebar margin ───────────── */
+  .reviewers-content {
+    width: 100% !important;
+    padding: 8px !important;
+  }
+  .reviewers-filter-bar {
+    margin-top: 0 !important;
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+    padding: 10px !important;
+  }
+  .reviewers-search-input {
+    min-width: unset !important;
+    width: 100% !important;
+    flex: 1 1 100% !important;
+  }
+  .reviewers-select,
+  .reviewers-date-input {
+    min-width: unset !important;
+    width: auto !important;
+    flex: 1 !important;
+  }
+  .reviewers-search-input,
+  .reviewers-select,
+  .reviewers-date-input,
+  .reviewers-btn-refresh,
+  .reviewers-label {
+    font-size: 13px !important;
+    height: 36px !important;
+  }
+  .reviewers-data-grid {
+    font-size: 12px !important;
+  }
+  .reviewers-data-grid th,
+  .reviewers-data-grid td {
+    font-size: 12px !important;
+    padding: 6px 8px !important;
+    max-width: 120px !important;
+    word-break: break-word !important;
+    white-space: normal !important;
+  }
+
+  /* ── 24. Modal background – full-width overlay ──────────── */
+  .ReactModal__Overlay {
+    inset: 0 !important;
+    width: 100vw !important;
+    height: 100dvh !important;
+    left: 0 !important;
+    right: 0 !important;
+    top: 0 !important;
+    bottom: 0 !important;
+  }
+
 }
