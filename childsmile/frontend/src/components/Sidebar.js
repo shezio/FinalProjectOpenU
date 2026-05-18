@@ -101,30 +101,38 @@ const Sidebar = () => {
     localStorage.setItem('sidebarCollapsed', isCollapsed);
   }, [isCollapsed]);
 
-  // ── Mobile bottom nav ──────────────────────────────────────────
+  // ── Mobile bottom nav + More drawer ───────────────────────────
   useEffect(() => {
     const isMobile = window.innerWidth < 768;
     if (!isMobile) return;
 
-    // Remove any existing nav first
-    const existing = document.getElementById('mobile-bottom-nav');
-    if (existing) existing.remove();
-
-    const nav = document.createElement('nav');
-    nav.id = 'mobile-bottom-nav';
-
-    const navItems = [
-      hasPermissionToTasks           && { path: '/tasks',               icon: '📋', label: 'משימות' },
-      hasPermissionToFamilies         && { path: '/families',            icon: '🏘️', label: 'משפחות' },
-      hasPermissionToTutorships       && { path: '/tutorships',          icon: '🤝', label: 'חונכות' },
-      hasPermissionToFeedbacks        && { path: '/feedbacks',           icon: '💬', label: 'משובים' },
-      hasPermissionToAnyReport        && { path: '/reports',             icon: '📊', label: 'דוחות' },
-      hasPermissionToSystemManagement && { path: '/system-management',   icon: '⚙️', label: 'ניהול' },
-    ].filter(Boolean).slice(0, 5); // max 5 tabs fits a phone
+    // Clean up any previous render
+    ['mobile-bottom-nav', 'mobile-more-drawer', 'mobile-more-overlay'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.remove();
+    });
 
     const currentPath = window.location.pathname || window.location.hash.replace('#', '');
 
-    navItems.forEach(({ path, icon, label }) => {
+    // All nav items with permission checks — same as desktop sidebar
+    const allNavItems = [
+      hasPermissionToTasks            && { path: '/tasks',              icon: '📋', label: 'לוח משימות' },
+      hasPermissionToFamilies          && { path: '/families',           icon: '🏘️', label: 'משפחות' },
+      hasPermissionToTutorVolunteerMgmt && { path: '/tutor-volunteer-mgmt', icon: '👥', label: 'חונכים ומתנדבים' },
+      hasPermissionToTutorships        && { path: '/tutorships',         icon: '🤝', label: 'חונכות' },
+      hasPermissionToFeedbacks         && { path: '/feedbacks',          icon: '💬', label: 'משובים' },
+      hasPermissionToAnyReport         && { path: '/reports',            icon: '📊', label: 'דוחות' },
+      hasPermissionToSystemManagement  && { path: '/system-management',  icon: '⚙️', label: 'ניהול מערכת' },
+      hasPermissionToSystemManagement  && { path: '/meeting-management', icon: '📅', label: 'ניהול פגישות' },
+      hasPermissionToSystemManagement  && { path: '/coordinator-chat',   icon: '📨', label: 'עדכוני צוות' },
+      hasPermissionToReviewer          && { path: '/reviewer',           icon: '🔍', label: 'שיחות ביקורת' },
+    ].filter(Boolean);
+
+    // ── Bottom nav bar (scrollable, all items) ─────────────────
+    const nav = document.createElement('nav');
+    nav.id = 'mobile-bottom-nav';
+
+    allNavItems.forEach(({ path, icon, label }) => {
       const btn = document.createElement('button');
       btn.innerHTML = `<span class="nav-icon">${icon}</span><span class="nav-label">${label}</span>`;
       if (currentPath.startsWith(path)) btn.classList.add('active');
@@ -132,13 +140,26 @@ const Sidebar = () => {
       nav.appendChild(btn);
     });
 
+    // Logout button at the end
+    const logoutBtn = document.createElement('button');
+    logoutBtn.className = 'nav-logout-btn';
+    logoutBtn.innerHTML = `<span class="nav-icon">🚪</span><span class="nav-label">יציאה</span>`;
+    logoutBtn.onclick = async () => {
+      try {
+        await axios.post("/api/logout/");
+      } catch (e) { /* ignore */ } finally {
+        localStorage.clear();
+        window.location.href = "/";
+      }
+    };
+    nav.appendChild(logoutBtn);
+
     document.body.appendChild(nav);
 
     return () => {
       const el = document.getElementById('mobile-bottom-nav');
       if (el) el.remove();
     };
-  // Re-run when permissions are resolved (they depend on localStorage which is sync, so once is enough)
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
