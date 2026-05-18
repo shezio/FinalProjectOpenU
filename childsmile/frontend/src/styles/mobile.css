@@ -1,0 +1,263 @@
+/* ============================================================
+   mobile.css – RESPONSIVE OVERRIDES for screens ≤ 767px
+   All desktop styles in common.css / styles.css are untouched.
+   These rules ONLY activate on mobile via @media queries.
+   ============================================================ */
+
+@media (max-width: 767px) {
+
+  /* ── 1. Kill the desktop zoom ─────────────────────────────── */
+  body {
+    zoom: 1 !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+    height: 100dvh !important;
+  }
+
+  /* ── 2. Hide the desktop sidebar ─────────────────────────── */
+  .sidebar {
+    display: none !important;
+  }
+
+  /* ── 3. Fix main content – full width, scroll, bottom pad ── */
+  .main-content,
+  .tasks-main-content,
+  .families-main-content,
+  .tutorships-main-content,
+  .feedbacks-main-content,
+  .reports-main-content,
+  .system-management-main-content,
+  .meeting-management-main-content,
+  .coordinator-chat-main-content,
+  .reviewer-main-content,
+  .audit-log-main-content,
+  .tutor-volunteer-main-content,
+  [class$="-main-content"] {
+    margin-right: 0 !important;
+    padding: 16px 12px !important;
+    padding-top: 70px !important;       /* space for inner page header */
+    padding-bottom: 80px !important;    /* space for bottom nav */
+    width: 100% !important;
+    height: 100dvh !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
+    box-sizing: border-box !important;
+  }
+
+  /* Also cover sidebar-collapsed state */
+  .sidebar-collapsed .main-content,
+  .sidebar-collapsed [class$="-main-content"] {
+    margin-right: 0 !important;
+  }
+
+  /* ── 4. Shrink / reflow the inner page header ─────────────── */
+  .header {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    z-index: 900 !important;
+    padding: 8px 12px !important;
+    min-height: 56px !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    flex-wrap: nowrap !important;
+    background: linear-gradient(135deg,
+      rgba(99, 102, 241, 0.97) 0%,
+      rgba(168, 85, 247, 0.97) 100%) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+    box-shadow: 0 2px 16px rgba(99, 102, 241, 0.4) !important;
+    padding-top: env(safe-area-inset-top, 8px) !important;
+  }
+
+  .header .top-left,
+  .header .right-header {
+    flex-shrink: 0;
+  }
+
+  /* Scale down logos/images inside the header */
+  .header .amit-img,
+  .header .qr-code {
+    display: none !important;
+  }
+
+  .header .logo {
+    height: 36px !important;
+    width: auto !important;
+  }
+
+  .header .title,
+  .header h1 {
+    font-size: 16px !important;
+    margin: 0 8px !important;
+  }
+
+  /* ── 5. Login page – center & stack vertically ────────────── */
+  .login-main-content {
+    margin-right: 0 !important;
+    margin-top: 0 !important;
+    padding: 24px 20px !important;
+    height: 100dvh !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
+    align-items: center !important;
+    justify-content: center !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  /* Shrink the big decorative header on login */
+  .login-main-content .header,
+  .login-main-content .amit-title {
+    font-size: 20px !important;
+    margin-bottom: 12px !important;
+  }
+
+  .login-main-content input[type="text"],
+  .login-main-content input[type="password"] {
+    font-size: 16px !important;   /* prevents iOS auto-zoom on focus */
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .login-main-content button {
+    font-size: 16px !important;
+    padding: 14px 20px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .login-buttons {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 10px !important;
+    width: 100% !important;
+  }
+
+  /* TOTP boxes – make them finger-friendly */
+  .totp-input-container {
+    gap: 8px !important;
+    justify-content: center !important;
+  }
+
+  .totp-digit-input {
+    width: 44px !important;
+    height: 54px !important;
+    font-size: 24px !important;
+  }
+
+  /* ── 6. Bottom navigation bar ────────────────────────────── */
+  /* Injected via JS below – this styles it */
+  #mobile-bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: calc(60px + env(safe-area-inset-bottom, 0px));
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    display: flex;
+    align-items: stretch;
+    justify-content: space-around;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-top: 1px solid rgba(0, 0, 0, 0.12);
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.08);
+    z-index: 1100;
+  }
+
+  #mobile-bottom-nav a,
+  #mobile-bottom-nav button {
+    flex: 1;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 3px !important;
+    background: none !important;
+    border: none !important;
+    border-radius: 0 !important;
+    padding: 6px 2px 2px !important;
+    margin: 0 !important;
+    width: auto !important;
+    height: auto !important;
+    font-size: 10px !important;
+    font-weight: 500 !important;
+    color: #8e8e93 !important;
+    cursor: pointer;
+    text-decoration: none;
+    transition: color 0.2s ease !important;
+    box-shadow: none !important;
+    transform: none !important;
+  }
+
+  #mobile-bottom-nav a.active,
+  #mobile-bottom-nav button.active {
+    color: #6366f1 !important;
+  }
+
+  #mobile-bottom-nav .nav-icon {
+    font-size: 22px;
+    line-height: 1;
+    display: block;
+  }
+
+  #mobile-bottom-nav .nav-label {
+    font-size: 10px;
+    line-height: 1;
+    display: block;
+  }
+
+  /* ── 7. Responsive tables – horizontal scroll ─────────────── */
+  .table-wrapper,
+  .table-container,
+  [class*="table"] {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  table {
+    min-width: 500px;   /* let them scroll horizontally */
+    font-size: 13px !important;
+  }
+
+  table thead th,
+  table tbody td {
+    padding: 8px 10px !important;
+    font-size: 13px !important;
+  }
+
+  /* ── 8. Modals – full-screen on mobile ─────────────────────── */
+  .ReactModal__Content {
+    inset: 0 !important;
+    border-radius: 0 !important;
+    margin: 0 !important;
+    max-height: 100dvh !important;
+    overflow-y: auto !important;
+    padding: 20px 16px !important;
+  }
+
+  /* ── 9. Toasts – full width ──────────────────────────────── */
+  .Toastify__toast {
+    width: calc(100vw - 24px) !important;
+    font-size: 14px !important;
+    margin-top: 60px !important;
+  }
+
+  /* ── 10. Task columns – stack vertically ─────────────────── */
+  .tasks-page-content,
+  .kanban-board,
+  [class*="columns"] {
+    flex-direction: column !important;
+    overflow-x: unset !important;
+  }
+
+  /* ── 11. Filter / create row ─────────────────────────────── */
+  .filter-create-container {
+    flex-direction: column !important;
+    gap: 10px !important;
+  }
+
+}
