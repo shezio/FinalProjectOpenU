@@ -1490,18 +1490,21 @@ const SystemManagement = () => {
                           return null;
                         }
 
-                        // In Edit mode, show both if the user has either role
+                        // In Edit mode, show Tutor/GV if user has either role OR has a coordinator role
+                        // (allows reverting a coordinator back to volunteer/tutor)
                         if (
                           modalType === 'edit' &&
                           (role.role_name === "General Volunteer" || role.role_name === "Tutor")
                         ) {
                           const hasGV = staffData.roles.includes("General Volunteer");
                           const hasTutor = staffData.roles.includes("Tutor");
-                          // If the user has neither, hide both
-                          if (!hasGV && !hasTutor) {
+                          const hasCoordinatorRole = staffData.roles.some(
+                            (r) => r !== "General Volunteer" && r !== "Tutor" && r !== "Inactive" && r !== "System Administrator"
+                          );
+                          // Show if user already has GV/Tutor, OR if they have a coordinator role (revert case)
+                          if (!hasGV && !hasTutor && !hasCoordinatorRole) {
                             return null;
                           }
-                          // Show both, both enabled
                           return (
                             <div key={role.id} className="roles-dropdown-item">
                               <input
@@ -1514,12 +1517,23 @@ const SystemManagement = () => {
                                     (r) => r !== "General Volunteer" && r !== "Tutor"
                                   );
                                   if (e.target.checked) {
+                                    // Switching back to volunteer/tutor — clear coordinator roles too
+                                    updatedRoles = updatedRoles.filter(
+                                      (r) => r === "Inactive" || r === "System Administrator"
+                                    );
                                     updatedRoles.push(role.role_name);
                                   }
                                   updateStaffData('roles', updatedRoles);
                                 }}
                               />
-                              <label htmlFor={`role-${role.id}`}>{t(role.role_name)}</label>
+                              <label htmlFor={`role-${role.id}`}>
+                                {t(role.role_name)}
+                                {hasCoordinatorRole && !hasGV && !hasTutor && (
+                                  <span style={{ fontSize: '11px', color: '#9333ea', marginRight: '6px' }}>
+                                    {' '}{role.role_name === "Tutor" ? '(החזרה לתפקיד חונך)' : '(החזרה לתפקיד מתנדב)'}
+                                  </span>
+                                )}
+                              </label>
                             </div>
                           );
                         }
