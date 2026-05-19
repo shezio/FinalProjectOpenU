@@ -357,6 +357,87 @@ def send_coordinator_notification_whatsapp_family(coordinator_phone, coordinator
         )
 
 
+def send_family_left_tutorship_whatsapp(coordinator_phone, coordinator_name, child_name, child_age, child_gender, parent_phone, child_city, child_hospital, tutoring_status, registration_date):
+    """
+    Send a WhatsApp notification to a Tutored Families Coordinator when a family
+    has left the tutorship queue (status changed away from one requiring a tutor).
+    Uses Twilio content template (NEW_FAMILY_LEFT_TUT_SID) with 9 variables.
+
+    Template variables:
+    1. Coordinator name
+    2. Child full name
+    3. Age (years)
+    4. Gender
+    5. City
+    6. Parent phone
+    7. Hospital
+    8. New tutoring status
+    9. Registration date
+
+    Args:
+        coordinator_phone (str): Coordinator's phone number
+        coordinator_name (str): Coordinator's full name
+        child_name (str): Child's full name
+        child_age (int/str): Child's age
+        child_gender (str): Child's gender (Hebrew)
+        parent_phone (str): Parent contact phone
+        child_city (str): City where child lives
+        child_hospital (str): Treating hospital/institution
+        tutoring_status (str): New tutoring status (Hebrew display)
+        registration_date (str): Date family was registered
+
+    Returns:
+        dict: Response from send_whatsapp_message
+    """
+    left_template_sid = os.getenv('NEW_FAMILY_LEFT_TUT_SID')
+
+    if left_template_sid:
+        template_variables = {
+            "1": coordinator_name,
+            "2": child_name,
+            "3": str(child_age),
+            "4": child_gender,
+            "5": child_city,
+            "6": parent_phone,
+            "7": child_hospital,
+            "8": tutoring_status,
+            "9": registration_date
+        }
+        return send_whatsapp_message(
+            coordinator_phone,
+            message_body=None,
+            use_template=True,
+            template_sid=left_template_sid,
+            template_variables=template_variables
+        )
+    else:
+        # Fallback plain text
+        message = f"""משפחה עזבה את החונכות
+
+שלום {coordinator_name},
+
+משפחה עזבה את החונכות והם לא ממתינים יותר לחונך.
+
+👶 פרטי הילד:
+👤 שם מלא: {child_name}
+📅 גיל: {child_age} שנים
+👥 מין: {child_gender}
+📍 עיר: {child_city}
+📱 טלפון הורים: {parent_phone}
+🏢 בית חולים: {child_hospital}
+
+🎓 פרטי החונכות:
+📌 סטטוס: {tutoring_status}
+📆 תאריך הרשמה: {registration_date}
+
+לידיעתך"""
+        return send_whatsapp_message(
+            coordinator_phone,
+            message_body=message,
+            use_template=False
+        )
+
+
 def send_totp_login_code_whatsapp(staff_phone, totp_code):
     """
     Send TOTP login code to staff member via WhatsApp.

@@ -63,7 +63,7 @@ import threading, time
 from time import sleep
 from math import sin, cos, sqrt, atan2, radians, ceil
 import json
-from .coordinator_utils import notify_tutored_families_coordinators_async, notify_admins_of_new_family, notify_families_coordinator_of_new_family
+from .coordinator_utils import notify_tutored_families_coordinators_async, notify_admins_of_new_family, notify_families_coordinator_of_new_family, notify_tutored_coordinators_family_left_async
 import os
 import traceback
 import re
@@ -1288,6 +1288,17 @@ def update_family(request, child_id):
                 family.responsible_coordinator = new_coordinator
                 new_coordinator_name = get_staff_name_by_id(new_coordinator)
                 field_changes.append(f"Responsible Coordinator (manual): '{old_coordinator_name}' → '{new_coordinator_name}'")
+
+        # Notify Tutored Families Coordinators if a family LEFT the tutorship queue
+        # Trigger: old status was one requiring a tutor, new status is NOT
+        from .coordinator_utils import TUTORING_STATUSES_REQUIRING_TUTOR
+        if (old_tutoring_status in TUTORING_STATUSES_REQUIRING_TUTOR and
+                new_tutoring_status not in TUTORING_STATUSES_REQUIRING_TUTOR):
+            api_logger.info(
+                f"Family {child_id} tutoring status changed from '{old_tutoring_status}' "
+                f"to '{new_tutoring_status}' — notifying Tutored Families Coordinators"
+            )
+            notify_tutored_coordinators_family_left_async(child_id, new_tutoring_status)
         
         # DECEASED/HEALTHY HANDLING: When child status changes to deceased or healthy, 
         # DELETE all tutorships (not make inactive - that's for inactive staff flow only)
