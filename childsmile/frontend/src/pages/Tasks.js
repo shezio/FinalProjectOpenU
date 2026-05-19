@@ -1199,7 +1199,9 @@ const Tasks = () => {
                         <p><strong>גיל:</strong> {selectedTask.family_details.age_display || "---"}</p>
                         <p><strong>מין:</strong> {translateUserInfoField('gender', selectedTask.family_details.gender)?.value || "---"}</p>
                         <p><strong>עיר:</strong> {selectedTask.family_details.city || "---"}</p>
-                        <p><strong>טלפון הורים:</strong> {selectedTask.family_details.parent_phone || "---"}</p>
+                        <p><strong>טלפון הורים:</strong></p>
+                        <p><strong>טלפון האב:</strong> {selectedTask.family_details.father_phone || "---"}</p>
+                        <p><strong>טלפון האם:</strong> {selectedTask.family_details.mother_phone || "---"}</p>
                         <p><strong>בית חולים:</strong> {selectedTask.family_details.hospital || "---"}</p>
                         <p><strong>סטטוס משפחה:</strong> {selectedTask.family_details.status || "---"}</p>
                         <p><strong>תאריך הרשמה:</strong> {selectedTask.family_details.registration_date || "---"}</p>

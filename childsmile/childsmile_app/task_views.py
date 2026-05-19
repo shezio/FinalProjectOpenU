@@ -309,6 +309,8 @@ def get_user_tasks(request):
                         "gender": child.gender,
                         "city": child.city or "לא זמין",
                         "parent_phone": parent_phone,
+                        "father_phone": str(child.father_phone) if child.father_phone else None,
+                        "mother_phone": str(child.mother_phone) if child.mother_phone else None,
                         "hospital": child.treating_hospital or "לא זמין",
                         "status": child.status or "לא זמין",
                         "registration_date": child.registrationdate.strftime("%d/%m/%Y") if child.registrationdate else "לא זמין",
