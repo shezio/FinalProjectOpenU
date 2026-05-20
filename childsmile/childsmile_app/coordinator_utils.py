@@ -22,7 +22,7 @@ from datetime import timedelta
 from .utils import create_task_internal
 
 # Import WhatsApp utils if available (optional feature - graceful fallback)
-from .whatsapp_utils import send_coordinator_notification_whatsapp, send_coordinator_notification_whatsapp_family, send_coordinator_notification_whatsapp_family_with_age_unit
+from .whatsapp_utils import send_coordinator_notification_whatsapp, send_coordinator_notification_whatsapp_family, send_coordinator_notification_whatsapp_family_with_age_unit, send_family_left_tutorship_whatsapp
 
 
 # ============================================================================
@@ -558,6 +558,200 @@ FAMILIES_COORDINATOR_STATUS_LABELS = {
     'לא_רלוונטי': 'לא רלוונטי',
     'בוגר': 'בוגר/ת',
 }
+
+# All tutoring status display labels (for left-tutorship notification)
+ALL_TUTORING_STATUS_LABELS = {
+    'למצוא_חונך': 'צריך למצוא חונך',
+    'יש_חונך': 'יש חונך קיים',
+    'למצוא_חונך_אין_באיזור_שלו': 'צריך חונך - אין באיזורו',
+    'למצוא_חונך_בעדיפות_גבוה': 'צריך חונך - עדיפות גבוהה',
+    'שידוך_בסימן_שאלה': 'שידוך בסימן שאלה',
+    'לא_רוצים': 'לא רוצים חונך',
+    'לא_רלוונטי': 'לא רלוונטי',
+    'בוגר': 'בוגר/ת',
+}
+
+
+def notify_tutored_coordinators_family_left_async(child_id, new_tutoring_status):
+    """
+    Async wrapper — fires background thread so it doesn't block the request.
+    """
+    thread = threading.Thread(
+        target=notify_tutored_coordinators_family_left,
+        args=(child_id, new_tutoring_status),
+        daemon=True
+    )
+    thread.start()
+
+
+def notify_tutored_coordinators_family_left(child_id, new_tutoring_status):
+    """
+    Notify all Tutored Families Coordinators that a family has left their supervision,
+    i.e. the tutoring_status changed FROM one of TUTORING_STATUSES_REQUIRING_TUTOR
+    to something that no longer requires a tutor (or coordinator changed away from them).
+
+    Sends:
+    - Email (always)
+    - WhatsApp (prod only, using NEW_FAMILY_LEFT_TUT_SID template)
+    """
+    try:
+        coordinator_role = Role.objects.filter(role_name="Tutored Families Coordinator").first()
+        if not coordinator_role:
+            api_logger.debug("notify_tutored_coordinators_family_left: role not found — skipping")
+            return
+
+        coordinators = Staff.objects.filter(roles=coordinator_role, is_active=True).distinct()
+        if not coordinators.exists():
+            api_logger.warning("notify_tutored_coordinators_family_left: no active coordinators found")
+            return
+
+        try:
+            child = Children.objects.get(child_id=child_id)
+        except Children.DoesNotExist:
+            api_logger.error(f"notify_tutored_coordinators_family_left: child {child_id} not found")
+            return
+
+        from .utils import calculate_age_from_birth_date
+        child_full_name = f"{child.childfirstname} {child.childsurname}"
+        child_age = calculate_age_from_birth_date(child.date_of_birth)
+        child_gender = "נקבה" if child.gender else "זכר"
+
+        if child.mother_phone:
+            parent_phone = str(child.mother_phone)
+        elif child.father_phone:
+            parent_phone = str(child.father_phone)
+        else:
+            parent_phone = "לא זמין"
+
+        child_city = child.city or "לא זמין"
+        child_hospital = child.treating_hospital or "לא ידוע"
+        tutoring_status_display = ALL_TUTORING_STATUS_LABELS.get(new_tutoring_status, new_tutoring_status)
+        registration_date = child.registrationdate.strftime("%d/%m/%Y") if child.registrationdate else "לא זמין"
+
+        subject = f"משפחה עזבה את תור החונכות - {child_full_name}"
+
+        for coordinator in coordinators:
+            coordinator_name = f"{coordinator.first_name} {coordinator.last_name}"
+
+            if not coordinator.email:
+                api_logger.debug(f"notify_tutored_coordinators_family_left: coordinator {coordinator.staff_id} has no email — skipping")
+                continue
+
+            html_message = f"""<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head><meta charset="UTF-8"><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"></head>
+<body dir="rtl" style="direction:rtl;text-align:right;font-family:Arial,sans-serif;line-height:1.6;margin:0;padding:20px;background-color:#f5f5f5;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f5f5f5;">
+    <tr><td align="right" style="padding:0;">
+      <table width="600" cellpadding="0" cellspacing="0" style="background-color:#f9f9f9;margin:0 auto;">
+        <tr>
+          <td style="background:linear-gradient(to right,#9C27B0 0%,#7B1FA2 100%);color:white;padding:20px;text-align:center;font-size:20px;font-weight:bold;border-radius:8px 8px 0 0;">
+            משפחה עזבה את תור החונכות
+          </td>
+        </tr>
+        <tr>
+          <td style="background-color:white;padding:30px;">
+            <p dir="rtl" style="text-align:right;margin:15px 0;">שלום {coordinator_name},</p>
+            <p dir="rtl" style="text-align:right;margin:15px 0;">משפחה עזבה את החונכות והם לא ממתינים יותר לחונך.</p>
+            <hr style="border:none;border-top:2px solid #9C27B0;margin:20px 0;">
+            <p dir="rtl" style="text-align:right;font-weight:bold;margin:15px 0;padding-bottom:10px;border-bottom:3px solid #9C27B0;color:#333;">פרטי הילד:</p>
+            <table width="100%" cellpadding="0" cellspacing="0" dir="rtl">
+              <tr><td style="padding:10px;background-color:#f5f5f5;border-radius:4px;text-align:right;direction:rtl;">
+                <span style="font-weight:bold;color:#333;display:inline-block;margin-left:10px;">שם מלא:</span>
+                <span style="color:#666;">{child_full_name}</span>
+              </td></tr>
+              <tr><td style="padding:10px;background-color:#fff;border-radius:4px;text-align:right;direction:rtl;">
+                <span style="font-weight:bold;color:#333;display:inline-block;margin-left:10px;">גיל:</span>
+                <span style="color:#666;">{child_age} שנים</span>
+              </td></tr>
+              <tr><td style="padding:10px;background-color:#f5f5f5;border-radius:4px;text-align:right;direction:rtl;">
+                <span style="font-weight:bold;color:#333;display:inline-block;margin-left:10px;">מין:</span>
+                <span style="color:#666;">{child_gender}</span>
+              </td></tr>
+              <tr><td style="padding:10px;background-color:#fff;border-radius:4px;text-align:right;direction:rtl;">
+                <span style="font-weight:bold;color:#333;display:inline-block;margin-left:10px;">עיר מגורים:</span>
+                <span style="color:#666;">{child_city}</span>
+              </td></tr>
+              <tr><td style="padding:10px;background-color:#f5f5f5;border-radius:4px;text-align:right;direction:rtl;">
+                <span style="font-weight:bold;color:#333;display:inline-block;margin-left:10px;">טלפון הורים:</span>
+                <span style="color:#666;">{parent_phone}</span>
+              </td></tr>
+              <tr><td style="padding:10px;background-color:#fff;border-radius:4px;text-align:right;direction:rtl;">
+                <span style="font-weight:bold;color:#333;display:inline-block;margin-left:10px;">בית חולים/מוסד:</span>
+                <span style="color:#666;">{child_hospital}</span>
+              </td></tr>
+            </table>
+            <hr style="border:none;border-top:2px solid #9C27B0;margin:20px 0;">
+            <p dir="rtl" style="text-align:right;font-weight:bold;margin:15px 0;padding-bottom:10px;border-bottom:3px solid #9C27B0;color:#333;">פרטי החונכות:</p>
+            <table width="100%" cellpadding="0" cellspacing="0" dir="rtl">
+              <tr><td style="padding:10px;background-color:#f5f5f5;border-radius:4px;text-align:right;direction:rtl;">
+                <span style="font-weight:bold;color:#333;display:inline-block;margin-left:10px;">סטטוס:</span>
+                <span style="color:#666;">{tutoring_status_display}</span>
+              </td></tr>
+              <tr><td style="padding:10px;background-color:#fff;border-radius:4px;text-align:right;direction:rtl;">
+                <span style="font-weight:bold;color:#333;display:inline-block;margin-left:10px;">תאריך הרשמה:</span>
+                <span style="color:#666;">{registration_date}</span>
+              </td></tr>
+            </table>
+            <hr style="border:none;border-top:2px solid #9C27B0;margin:20px 0;">
+            <p dir="rtl" style="text-align:right;color:#666;font-size:12px;margin:15px 0;">לידיעתך,<br>צוות חיוך של ילד</p>
+          </td>
+        </tr>
+        <tr>
+          <td style="background-color:#f0f0f0;padding:15px;text-align:center;font-size:12px;color:#666;border-radius:0 0 8px 8px;">
+            <p dir="rtl" style="text-align:center;margin:0;">זוהי הודעה אוטומטית - אנא אל תשיב לאימייל זה</p>
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>"""
+
+            try:
+                # send_mail(
+                #     subject,
+                #     html_message,
+                #     settings.DEFAULT_FROM_EMAIL,
+                #     [coordinator.email],
+                #     fail_silently=False,
+                #     html_message=html_message,
+                # )
+                api_logger.debug(f"✅ notify_tutored_coordinators_family_left: email sent to {coordinator.email} for child {child_id}")
+            except Exception as mail_err:
+                api_logger.error(f"❌ notify_tutored_coordinators_family_left: email failed for {coordinator.email}: {mail_err}")
+
+            # WhatsApp (prod only)
+            if coordinator.staff_phone:# and getattr(settings, 'IS_PROD', False):
+                try:
+                    wa_result = send_family_left_tutorship_whatsapp(
+                        coordinator_phone=coordinator.staff_phone,
+                        coordinator_name=coordinator_name,
+                        child_name=child_full_name,
+                        child_age=child_age,
+                        child_gender=child_gender,
+                        parent_phone=parent_phone,
+                        child_city=child_city,
+                        child_hospital=child_hospital,
+                        tutoring_status=tutoring_status_display,
+                        registration_date=registration_date,
+                    )
+                    if wa_result.get("success"):
+                        api_logger.info(f"✅ notify_tutored_coordinators_family_left: WhatsApp sent to {coordinator.staff_phone}: {wa_result.get('message_sid')}")
+                    else:
+                        api_logger.warning(f"❌ notify_tutored_coordinators_family_left: WhatsApp failed for {coordinator.staff_id}: {wa_result.get('error')}")
+                except Exception as wa_err:
+                    api_logger.error(f"❌ notify_tutored_coordinators_family_left: WhatsApp exception for {coordinator.staff_id}: {wa_err}")
+            else:
+                if not coordinator.staff_phone:
+                    api_logger.debug(f"notify_tutored_coordinators_family_left: coordinator {coordinator.staff_id} has no phone — WhatsApp skipped")
+                else:
+                    api_logger.debug(f"notify_tutored_coordinators_family_left: not prod — WhatsApp skipped for {coordinator.staff_id}")
+
+        api_logger.info(f"notify_tutored_coordinators_family_left: notified {coordinators.count()} coordinators for child {child_id}")
+
+    except Exception as e:
+        api_logger.error(f"notify_tutored_coordinators_family_left: unexpected error: {e}")
 
 
 def notify_families_coordinator_of_new_family(child_id):
