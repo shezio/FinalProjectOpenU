@@ -623,6 +623,12 @@ def notify_tutored_coordinators_family_left(child_id, new_tutoring_status):
         else:
             parent_phone = "לא זמין"
 
+        # Strip BiDi/RTL control chars and add leading 0 for Israeli numbers (DB stores without it)
+        BIDI_CHARS = {8206, 8207, 8234, 8235, 8236, 8237, 8238, 8239, 8294, 8295, 8296, 8297}
+        parent_phone = "".join(c for c in parent_phone.strip() if ord(c) not in BIDI_CHARS).strip()
+        if len(parent_phone) == 9 and parent_phone[0] in "234578":
+            parent_phone = "0" + parent_phone
+
         child_city = child.city or "לא זמין"
         child_hospital = child.treating_hospital or "לא ידוע"
         tutoring_status_display = ALL_TUTORING_STATUS_LABELS.get(new_tutoring_status, new_tutoring_status)
