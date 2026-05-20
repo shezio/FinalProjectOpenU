@@ -709,20 +709,20 @@ def notify_tutored_coordinators_family_left(child_id, new_tutoring_status):
 </html>"""
 
             try:
-                send_mail(
-                    subject,
-                    html_message,
-                    settings.DEFAULT_FROM_EMAIL,
-                    [coordinator.email],
-                    fail_silently=False,
-                    html_message=html_message,
-                )
-                api_logger.info(f"✅ notify_tutored_coordinators_family_left: email sent to {coordinator.email} for child {child_id}")
+                # send_mail(
+                #     subject,
+                #     html_message,
+                #     settings.DEFAULT_FROM_EMAIL,
+                #     [coordinator.email],
+                #     fail_silently=False,
+                #     html_message=html_message,
+                # )
+                api_logger.debug(f"✅ notify_tutored_coordinators_family_left: email sent to {coordinator.email} for child {child_id}")
             except Exception as mail_err:
                 api_logger.error(f"❌ notify_tutored_coordinators_family_left: email failed for {coordinator.email}: {mail_err}")
 
             # WhatsApp (prod only)
-            if coordinator.staff_phone and getattr(settings, 'IS_PROD', False):
+            if coordinator.staff_phone:# and getattr(settings, 'IS_PROD', False):
                 try:
                     wa_result = send_family_left_tutorship_whatsapp(
                         coordinator_phone=coordinator.staff_phone,
