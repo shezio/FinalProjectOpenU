@@ -224,9 +224,17 @@ const Families = () => {
   useEffect(() => {
     if (showStatusDropdown && statusFilterRef.current) {
       const rect = statusFilterRef.current.getBoundingClientRect();
+      const dropdownWidth = 220; // approximate dropdown width
+      const viewportWidth = window.innerWidth;
+      // If the button is in the right half of the screen, align dropdown to right edge of button
+      let left = rect.left + window.scrollX;
+      if (left + dropdownWidth > viewportWidth - 8) {
+        left = Math.max(8, rect.right + window.scrollX - dropdownWidth);
+      }
       setDropdownStyle({
         top: `${rect.bottom + window.scrollY + 8}px`,
-        left: `${rect.left + window.scrollX}px`
+        left: `${left}px`,
+        maxWidth: `${viewportWidth - 16}px`
       });
     }
   }, [showStatusDropdown]);
