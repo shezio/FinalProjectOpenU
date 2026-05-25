@@ -179,10 +179,21 @@ const Login = () => {
             onKeyDown={(e) => handleTotpKeyDown(index, e)}
             onPaste={(e) => {
               e.preventDefault();
-              const pastedData = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6);
-              setTotpCode(pastedData);
-              const nextFocusIndex = Math.min(pastedData.length, 5);
-              inputRefs[nextFocusIndex].current?.focus();
+              // Try clipboardData first (desktop + some mobile)
+              const fromEvent = e.clipboardData?.getData('text')?.replace(/\D/g, '').slice(0, 6);
+              if (fromEvent) {
+                setTotpCode(fromEvent);
+                inputRefs[Math.min(fromEvent.length, 5)].current?.focus();
+              } else {
+                // Fallback: async clipboard API (mobile Chrome/Safari)
+                navigator.clipboard?.readText().then((text) => {
+                  const digits = text.replace(/\D/g, '').slice(0, 6);
+                  if (digits) {
+                    setTotpCode(digits);
+                    inputRefs[Math.min(digits.length, 5)].current?.focus();
+                  }
+                }).catch(() => {});
+              }
             }}
             disabled={loading}
             className="totp-digit-input"
