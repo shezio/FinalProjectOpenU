@@ -550,14 +550,22 @@
   }
 
   .totp-input-container {
-    gap: 8px !important;
+    gap: 6px !important;
     justify-content: center !important;
+    flex-wrap: nowrap !important;
+    width: 100% !important;
+    max-width: 100vw !important;
+    padding: 0 8px !important;
+    box-sizing: border-box !important;
   }
 
   .totp-digit-input {
-    width: 44px !important;
-    height: 54px !important;
-    font-size: 24px !important;
+    width: clamp(36px, 12vw, 48px) !important;
+    height: clamp(46px, 14vw, 58px) !important;
+    font-size: clamp(20px, 5vw, 26px) !important;
+    padding: 0 !important;
+    text-align: center !important;
+    box-sizing: border-box !important;
   }
 
   /* ── 11. Modals – full screen ───────────────────────────────── */
