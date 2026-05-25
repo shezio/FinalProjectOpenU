@@ -839,9 +839,16 @@ const Tasks = () => {
     const button = taskTypeFilterRef.current.querySelector('.status-filter-button');
     if (!button) return { top: 0, left: 0 };
     const rect = button.getBoundingClientRect();
+    const dropdownWidth = 220;
+    const viewportWidth = window.innerWidth;
+    let left = rect.left;
+    if (left + dropdownWidth > viewportWidth - 8) {
+      left = Math.max(8, rect.right - dropdownWidth);
+    }
     return {
       top: `${rect.bottom + 8}px`,
-      left: `${rect.left}px`
+      left: `${left}px`,
+      maxWidth: `${viewportWidth - 16}px`
     };
   };
 
