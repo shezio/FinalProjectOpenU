@@ -56,14 +56,23 @@ def check_and_create_monthly_review_tasks():
     # Prevent double execution: file-based lock
     lock_file = '/tmp/monthly_review_task.lock'
     if os.path.exists(lock_file):
-        api_logger.warning('Monthly review task creation skipped: lock file exists (job already running)')
-        return {
-            'status': 'skipped_due_to_lock',
-            'families_checked': 0,
-            'tasks_created': 0,
-            'tasks_skipped': 0,
-            'errors': 0
-        }
+        # Check if the lock file is stale (older than 30 minutes)
+        lock_age_seconds = datetime.now().timestamp() - os.path.getmtime(lock_file)
+        if lock_age_seconds > 1800:
+            api_logger.warning(f'Monthly review task lock file is stale ({lock_age_seconds:.0f}s old) - removing and continuing')
+            try:
+                os.remove(lock_file)
+            except Exception as rm_err:
+                api_logger.error(f'Failed to remove stale lock file: {rm_err}')
+        else:
+            api_logger.warning('Monthly review task creation skipped: lock file exists (job already running)')
+            return {
+                'status': 'skipped_due_to_lock',
+                'families_checked': 0,
+                'tasks_created': 0,
+                'tasks_skipped': 0,
+                'errors': 0
+            }
     try:
         with open(lock_file, 'w') as f:
             f.write(str(datetime.now()))

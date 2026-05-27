@@ -106,8 +106,8 @@ const Registration = () => {
     if (!formData.id || isNaN(formData.id) || formData.id.length !== 9) {
       newErrors.id = t('ID must be 9 digits long.');
     }
-    // Validate first_name and surname (Hebrew only, no spaces, no numbers)
-    const hebrewRegex = /^[\u0590-\u05FF]+$/;
+    // Validate first_name and surname (Hebrew only, spaces allowed between words, no numbers)
+    const hebrewRegex = /^[\u0590-\u05FF]+(?: [\u0590-\u05FF]+)*$/;
     if (!formData.first_name || !hebrewRegex.test(formData.first_name)) {
       newErrors.first_name = t("First name must be in Hebrew and cannot be empty.");
     }

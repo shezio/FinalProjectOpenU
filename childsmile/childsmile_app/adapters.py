@@ -7,6 +7,7 @@ from .models import Staff
 from django.contrib.auth.models import User
 from .audit_utils import log_api_action
 from django.conf import settings
+from .logger import api_logger
 
 class CustomSocialAccountAdapter(DefaultSocialAccountAdapter):
     
@@ -20,11 +21,11 @@ class CustomSocialAccountAdapter(DefaultSocialAccountAdapter):
         email = sociallogin.account.extra_data.get('email')
         google_name = sociallogin.account.extra_data.get('name', '')
             
-        print(f"DEBUG: Email from Google: {email}")
-        print(f"DEBUG: Extra data: {sociallogin.account.extra_data}")
+        api_logger.debug(f"Email from Google: {email}")
+        api_logger.debug(f"Extra data: {sociallogin.account.extra_data}")
         
         if not email:
-            print("DEBUG: No email from Google - redirecting to React app")
+            api_logger.debug("No email from Google - redirecting to React app")
             
             # Log failed Google login attempt - no email
             log_api_action(
@@ -42,7 +43,7 @@ class CustomSocialAccountAdapter(DefaultSocialAccountAdapter):
 
         # Check if this email exists in our Staff table (case-insensitive)
         if not Staff.objects.filter(email__iexact=email).exists():
-            print(f"DEBUG: Email {email} not found in Staff table - redirecting to React app")
+            api_logger.debug(f"Email {email} not found in Staff table - redirecting to React app")
             
             # Log failed Google login attempt - unauthorized email
             log_api_action(
@@ -67,7 +68,7 @@ class CustomSocialAccountAdapter(DefaultSocialAccountAdapter):
             # Try to get existing Django User
             existing_user = User.objects.get(email=email)
             sociallogin.user = existing_user
-            print(f"DEBUG: Found existing Django user: {existing_user.username}")
+            api_logger.debug(f"Found existing Django user: {existing_user.username}")
         except User.DoesNotExist:
             # Create Django User immediately
             staff_user = Staff.objects.get(email__iexact=email)
@@ -97,14 +98,14 @@ class CustomSocialAccountAdapter(DefaultSocialAccountAdapter):
             
             # Link this user to the social login
             sociallogin.user = django_user
-            print(f"DEBUG: Created new Django user: {django_user.username} for email: {email}")
+            api_logger.debug(f"Created new Django user: {django_user.username} for email: {email}")
     
     def save_user(self, request, sociallogin, form=None):
         """
         User should already be created in pre_social_login, just return it.
         Also log successful Google login.
         """
-        print(f"DEBUG: save_user called - returning existing user: {sociallogin.user}")
+        api_logger.debug(f"save_user called - returning existing user: {sociallogin.user}")
         
         # Log successful Google login
         try:
@@ -122,7 +123,7 @@ class CustomSocialAccountAdapter(DefaultSocialAccountAdapter):
                 }
             )
         except Staff.DoesNotExist:
-            print(f"ERROR: Staff not found for email {sociallogin.user.email} during Google login")
+            api_logger.error(f"Staff not found for email {sociallogin.user.email} during Google login")
         
         return sociallogin.user
     
@@ -136,7 +137,7 @@ class CustomSocialAccountAdapter(DefaultSocialAccountAdapter):
         """
         Handle authentication errors (including cancellation) by redirecting to React app
         """
-        print(f"DEBUG: Google authentication error - provider: {provider_id}, error: {error}")
+        api_logger.debug(f"Google authentication error - provider: {provider_id}, error: {error}")
         
         # Log failed Google login attempt - authentication error
         log_api_action(

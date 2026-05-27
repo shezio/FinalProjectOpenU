@@ -118,6 +118,7 @@ const AllFamiliesExportReport = () => {
             'תאריך הרשמה': f.registration_date || '',
             'רכז אחראי': f.responsible_coordinator || '',
             'צריך שיחת ביקורת?': f.need_review ? 'כן' : 'לא',
+            'תאריך שיחת ביקורת אחרונה': f.last_review_talk_conducted || '',
             'האם במסגרת': f.is_in_frame || '',
             'הערות רכז': f.coordinator_comments || '',
             'פרטים לחונכות': f.details_for_tutoring || '',
