@@ -168,6 +168,10 @@ def get_user_tasks(request):
                 "updated": task.updated_at.strftime("%d/%m/%Y"),
                 "assignee": task.assigned_to.username,
                 "child": task.related_child_id,
+                "child_name": (
+                    f"{task.related_child.childfirstname} {task.related_child.childsurname}"
+                    if task.related_child else None
+                ),
                 "child_last_review_talk_conducted": (
                     task.related_child.last_review_talk_conducted.strftime("%d/%m/%Y")
                     if task.related_child and task.related_child.last_review_talk_conducted

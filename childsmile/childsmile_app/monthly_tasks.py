@@ -204,7 +204,7 @@ def check_and_create_monthly_review_tasks():
                 # Create task
                 child_full_name = f"{child.childfirstname} {child.childsurname}".strip()
                 last_talk_date = child.last_review_talk_conducted.strftime('%d/%m/%Y') if child.last_review_talk_conducted else 'Never'
-                description = f'Timely family review talk for {child_full_name} - Last talk: {last_talk_date} - Conduct check-up call with family'
+                description = f'Monthly family review talk for {child_full_name} - Last talk: {last_talk_date} - Conduct check-up call with family'
                 due_date = today + timedelta(days=REVIEW_INTERVAL)
 
                 Tasks.objects.create(

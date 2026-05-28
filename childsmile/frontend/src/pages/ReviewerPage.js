@@ -178,39 +178,22 @@ const ReviewerPage = () => {
   const fetchTasks = useCallback(async () => {
     setLoading(true);
     try {
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
       const res = await axios.get('/api/tasks/', {
         params: {
           date_field: 'created_at',
           start_date: '2000-01-01',
-          end_date: new Date().toISOString().slice(0, 10),
+          end_date: tomorrow.toISOString().slice(0, 10),
         },
       });
       const allTasks = res.data?.tasks      || [];
       const allTypes = res.data?.task_types || [];
       const reviewTypeId = allTypes.find(ty => ty.name === REVIEW_TASK_TYPE_NAME)?.id;
 
-      // 3 months ago threshold
-      const threeMonthsAgo = new Date();
-      threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
-
-      const reviewTasks = (reviewTypeId
+      const reviewTasks = reviewTypeId
         ? allTasks.filter(tk => tk.type === reviewTypeId)
-        : allTasks.filter(tk => tk.type_name === REVIEW_TASK_TYPE_NAME)
-      ).filter(tk => {
-        // Include all completed tasks, or tasks where last conducted talk was 3+ months ago (or never)
-        if (tk.status === 'הושלמה') return true;
-        const dateStr = tk.child_last_review_talk_conducted;
-        if (!dateStr) return true;
-        // Parse DD/MM/YYYY or YYYY-MM-DD
-        let d;
-        if (/^\d{2}\/\d{2}\/\d{4}$/.test(dateStr)) {
-          const [day, month, year] = dateStr.split('/');
-          d = new Date(`${year}-${month}-${day}`);
-        } else {
-          d = new Date(dateStr);
-        }
-        return isNaN(d.getTime()) || d <= threeMonthsAgo;
-      });
+        : allTasks.filter(tk => tk.type_name === REVIEW_TASK_TYPE_NAME);
 
       setTasks(reviewTasks);
     } catch (err) {
@@ -453,11 +436,12 @@ const ReviewerPage = () => {
 
   // Helper: get child full name from familyData
   const getChildName = (task) => {
+    if (task.child_name) return task.child_name;
     if (task.child) {
       const fam = familyData.find(f => String(f.id) === String(task.child));
       if (fam) return `${fam.first_name || ''} ${fam.last_name || ''}`.trim();
     }
-    return task.child_name || task.related_child_name || '---';
+    return task.related_child_name || '---';
   };
 
   // Helper: get tutor name from task
