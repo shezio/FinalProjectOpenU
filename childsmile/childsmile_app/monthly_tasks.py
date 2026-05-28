@@ -135,7 +135,7 @@ def check_and_create_monthly_review_tasks():
             def _skip(reason_key, msg):
                 tasks_skipped_ref[0] += 1
                 skip_reasons[reason_key] = skip_reasons.get(reason_key, 0) + 1
-                api_logger.info(msg)
+                api_logger.debug(msg)
 
             tasks_skipped_ref = [0]  # mutable counter for inner helper
 
