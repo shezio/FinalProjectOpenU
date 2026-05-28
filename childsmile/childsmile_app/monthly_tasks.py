@@ -130,87 +130,103 @@ def check_and_create_monthly_review_tasks():
             
             tasks_created = 0
             tasks_skipped = 0
-            
+            skip_reasons = {}  # track skip reasons for summary log
+
+            def _skip(reason_key, msg):
+                tasks_skipped_ref[0] += 1
+                skip_reasons[reason_key] = skip_reasons.get(reason_key, 0) + 1
+                api_logger.info(msg)
+
+            tasks_skipped_ref = [0]  # mutable counter for inner helper
+
+            api_logger.info(f'🔍 Monthly review check | cutoff={review_cutoff_date} | total families={total_families}')
+
             # Check each family
             for child in all_children:
+                child_label = f"{child.childfirstname} {child.childsurname} (id={child.child_id})"
+
                 # Feature #3: Check if child is mature (age >= 16) - auto-set need_review=False
                 from .utils import check_and_handle_age_maturity
                 maturity_result = check_and_handle_age_maturity(child)
-                
+
                 # SKIP children marked as not needing review (Feature #2)
-                # This includes: בריא/ז״ל/עזב status, בוגר tutoring status, or age >= 16
                 if not child.need_review:
-                    tasks_skipped += 1
-                    reason = ""
-                    if maturity_result['mature']:
-                        reason = f"(age: {maturity_result['age']})"
-                    api_logger.debug(f"Skipping review task for {child.childfirstname} {child.childsurname} (need_review=False) {reason}")
+                    reason = f"age={maturity_result['age']}" if maturity_result['mature'] else f"status={child.status}/tutoring={child.tutoring_status}"
+                    tasks_skipped_ref[0] += 1
+                    skip_reasons['need_review_false'] = skip_reasons.get('need_review_false', 0) + 1
+                    api_logger.debug(f"  ⏭ SKIP {child_label} — need_review=False ({reason})")
+                    tasks_skipped = tasks_skipped_ref[0]
                     continue
-                
+
                 # Check if 90 days have passed since last talk (or never had one)
-                if child.last_review_talk_conducted is None or child.last_review_talk_conducted <= review_cutoff_date:
-                    
-                    # Assign to responsible coordinator only if they have the correct role
-                    responsible_coordinator_id = getattr(child, 'responsible_coordinator', None)
-                    if not responsible_coordinator_id:
-                        tasks_skipped += 1
-                        api_logger.warning(f"No responsible coordinator for child {child.childfirstname} {child.childsurname} (child_id: {child.child_id})")
-                        continue
-                    try:
-                        responsible_coordinator = Staff.objects.get(staff_id=responsible_coordinator_id)
-                    except Staff.DoesNotExist:
-                        tasks_skipped += 1
-                        api_logger.warning(f"Responsible coordinator with ID {responsible_coordinator_id} not found for child {child.childfirstname} {child.childsurname} (child_id: {child.child_id})")
-                        continue
-                    # Check if responsible coordinator has one of the required roles
-                    if not (responsible_coordinator.roles.filter(role_name='Families Coordinator').exists() or responsible_coordinator.roles.filter(role_name='Tutored Families Coordinator').exists()):
-                        tasks_skipped += 1
-                        api_logger.warning(f"Responsible coordinator for child {child.childfirstname} {child.childsurname} does not have required role.")
-                        continue
-                    
-                    # Due date: 90 days from now (gives time to conduct the call)
-                    due_date = today + timedelta(days=REVIEW_INTERVAL)
-                    
-                    # Prepare child name and last talk date for description
-                    child_full_name = f"{child.childfirstname} {child.childsurname}".strip()
-                    last_talk_date = child.last_review_talk_conducted.strftime('%d/%m/%Y') if child.last_review_talk_conducted else 'Never'
-                    # Task description includes child name and last talk date
-                    description = f'Timely family review talk for {child_full_name} - Last talk: {last_talk_date} - Conduct check-up call with family'
-                    
-                    # Check if task already exists for THIS child AND this coordinator (by task type name)
-                    existing_task = Tasks.objects.filter(
-                        related_child=child,
-                        task_type__task_type='שיחת ביקורת',
-                        assigned_to=responsible_coordinator,
-                        status__in=['לא הושלמה', 'בביצוע']  # Only incomplete tasks
-                    ).exists()
-                    
-                    if not existing_task:
-                        task = Tasks.objects.create(
-                            task_type=task_type,
-                            description=description,
-                            due_date=due_date,
-                            status='לא הושלמה',  # Hebrew: "Not Completed"
-                            assigned_to=responsible_coordinator,
-                            related_child=child
-                        )
-                        
-                        tasks_created += 1
-                        api_logger.debug(f"Created review task for family: {child_full_name} (child_id: {child.child_id}) assigned to {responsible_coordinator.username}")
-                    else:
-                        tasks_skipped += 1
-                else:
-                    tasks_skipped += 1
+                if child.last_review_talk_conducted is not None and child.last_review_talk_conducted > review_cutoff_date:
+                    days_since = (today - child.last_review_talk_conducted).days
+                    _skip('recent_talk', f"  ⏭ SKIP {child_label} — last talk {child.last_review_talk_conducted} ({days_since}d ago, within 90d)")
+                    tasks_skipped = tasks_skipped_ref[0]
+                    continue
+
+                api_logger.info(f"  ✅ QUALIFIES {child_label} — last_talk={child.last_review_talk_conducted or 'never'}")
+
+                # Assign to responsible coordinator only if they have the correct role
+                responsible_coordinator_id = getattr(child, 'responsible_coordinator', None)
+                if not responsible_coordinator_id:
+                    _skip('no_coordinator_id', f"  ⚠ SKIP {child_label} — no responsible_coordinator set")
+                    tasks_skipped = tasks_skipped_ref[0]
+                    continue
+                try:
+                    responsible_coordinator = Staff.objects.get(staff_id=responsible_coordinator_id)
+                except Staff.DoesNotExist:
+                    _skip('coordinator_not_found', f"  ⚠ SKIP {child_label} — coordinator id={responsible_coordinator_id} not found in Staff table")
+                    tasks_skipped = tasks_skipped_ref[0]
+                    continue
+
+                has_fc  = responsible_coordinator.roles.filter(role_name='Families Coordinator').exists()
+                has_tfc = responsible_coordinator.roles.filter(role_name='Tutored Families Coordinator').exists()
+                if not (has_fc or has_tfc):
+                    roles_list = list(responsible_coordinator.roles.values_list('role_name', flat=True))
+                    _skip('coordinator_wrong_role', f"  ⚠ SKIP {child_label} — coordinator {responsible_coordinator.first_name} {responsible_coordinator.last_name} has roles {roles_list} (needs FC or TFC)")
+                    tasks_skipped = tasks_skipped_ref[0]
+                    continue
+
+                # Check for existing incomplete task
+                existing_task = Tasks.objects.filter(
+                    related_child=child,
+                    task_type__task_type='שיחת ביקורת',
+                    assigned_to=responsible_coordinator,
+                    status__in=['לא הושלמה', 'בביצוע']
+                ).exists()
+
+                if existing_task:
+                    _skip('task_exists', f"  ⏭ SKIP {child_label} — incomplete task already exists for coordinator {responsible_coordinator.username}")
+                    tasks_skipped = tasks_skipped_ref[0]
+                    continue
+
+                # Create task
+                child_full_name = f"{child.childfirstname} {child.childsurname}".strip()
+                last_talk_date = child.last_review_talk_conducted.strftime('%d/%m/%Y') if child.last_review_talk_conducted else 'Never'
+                description = f'Timely family review talk for {child_full_name} - Last talk: {last_talk_date} - Conduct check-up call with family'
+                due_date = today + timedelta(days=REVIEW_INTERVAL)
+
+                Tasks.objects.create(
+                    task_type=task_type,
+                    description=description,
+                    due_date=due_date,
+                    status='לא הושלמה',
+                    assigned_to=responsible_coordinator,
+                    related_child=child
+                )
+                tasks_created += 1
+                api_logger.info(f"  🆕 CREATED task for {child_label} → assigned to {responsible_coordinator.first_name} {responsible_coordinator.last_name}")
             
             # Log summary
-            log_message = f'✅ Timely review task check completed | Families checked: {total_families} | Created: {tasks_created} | Skipped: {tasks_skipped}'
-            api_logger.info(log_message)
-            
+            api_logger.info(f'✅ Monthly review check done | checked={total_families} | created={tasks_created} | skipped={tasks_skipped_ref[0]} | reasons={skip_reasons}')
+
             return {
                 'status': 'completed',
                 'families_checked': total_families,
                 'tasks_created': tasks_created,
-                'tasks_skipped': tasks_skipped,
+                'tasks_skipped': tasks_skipped_ref[0],
+                'skip_reasons': skip_reasons,
                 'errors': 0
             }
             

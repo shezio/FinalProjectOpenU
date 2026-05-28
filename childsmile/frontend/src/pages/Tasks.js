@@ -925,6 +925,35 @@ const Tasks = () => {
               <div className="refresh">
                 <button onClick={() => fetchData(true)}>{t("Refresh Task List")}</button>
               </div>
+              {/* Manual trigger for monthly review task creation — dev/admin only */}
+              {process.env.REACT_APP_TRIGGER_MONTHLY_CREATOR === 'true' && isUserAdmin() && (
+                <div className="refresh">
+                  <button
+                    title="הפעל יצירת משימות ביקורת חודשיות ידנית"
+                    style={{ background: '#7c3aed', color: 'white' }}
+                    onClick={async () => {
+                      try {
+                        toast.info('⏳ מפעיל יצירת משימות ביקורת...', { autoClose: 3000 });
+                        const res = await axios.post('/api/tasks/check-monthly-review/');
+                        const d = res.data;
+                        const skipStr = d.skip_reasons
+                          ? Object.entries(d.skip_reasons).map(([k,v]) => `${k}:${v}`).join(', ')
+                          : '';
+                        toast.success(
+                          `✅ נבדקו: ${d.families_checked} | נוצרו: ${d.tasks_created} | דולגו: ${d.tasks_skipped}${skipStr ? ` (${skipStr})` : ''}`,
+                          { autoClose: 10000 }
+                        );
+                        if (d.tasks_created > 0) fetchData(true);
+                      } catch (err) {
+                        const msg = err.response?.data?.error || err.response?.data?.status || err.message;
+                        showErrorToast(t, `שגיאה: ${msg}`, '');
+                      }
+                    }}
+                  >
+                    🔄 הפעל משימות ביקורת
+                  </button>
+                </div>
+              )}
               <div className="actions">
                 <label htmlFor="date-field">{t("Filter by field")}</label>
                 <div className="filter">
