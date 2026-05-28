@@ -1,7 +1,7 @@
 import React from 'react';
 import logo from '../public/assets/logo.png';
 import AmitPic from '../public/assets/amit.jpg';
-import QRCode from '../public/assets/qr-code.png';
+import QRCode from '../public/assets/qr-code.jpg';
 
 const Header = () => (
   <div>
