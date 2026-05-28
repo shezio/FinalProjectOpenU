@@ -2035,6 +2035,7 @@ def check_monthly_review_tasks(request):
             "families_checked": result.get('families_checked'),
             "tasks_created": result.get('tasks_created'),
             "tasks_skipped": result.get('tasks_skipped'),
+            "skip_reasons": result.get('skip_reasons', {}),
             "errors": result.get('errors'),
             "message": f"Families checked: {result.get('families_checked')}, Tasks created: {result.get('tasks_created')}"
         }, status=200)
