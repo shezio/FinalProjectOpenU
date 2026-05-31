@@ -1390,7 +1390,7 @@ def update_family(request, child_id):
 
         # Create automatic task for Liam to remove family from group when status changes to עזב or בריא
         # MUST be BEFORE save() to keep family context
-        if old_status not in ["עזב", "בריא"] and new_status in ["עזב", "בריא"]:
+        if old_status not in ["עזב", "בריא", 'ז"ל'] and new_status in ["עזב", "בריא", 'ז"ל']:
             try:
                 task_type = Task_Types.objects.get(task_type="הסרת משפחה מקבוצה")
                 api_logger.info(f"✅ Found task_type: {task_type.task_type} (ID: {task_type.id})")

@@ -153,6 +153,16 @@ body {
   /* Maintain aspect ratio */
 }
 
+/*big screens*/
+@media (min-width: 2000px) {
+  .top-left img.qr-code {
+    width: 175px;
+    /* Adjust the width as needed */
+    height: auto;
+    /* Maintain aspect ratio */
+  }
+}
+
 .login-main-content input[type="text"],
 .login-main-content input[type="password"],
 .login-main-content submit,
