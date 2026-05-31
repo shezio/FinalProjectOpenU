@@ -147,7 +147,7 @@ body {
 }
 
 .top-left img.qr-code {
-  width: 90px;
+  width: 120px;
   /* Adjust the width as needed */
   height: auto;
   /* Maintain aspect ratio */

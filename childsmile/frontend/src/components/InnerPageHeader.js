@@ -2,7 +2,7 @@ import React from "react";
 import "../styles/innerpageheader.css";
 import logo from "../assets/logo.png";
 import amitImg from "../assets/amit.jpg";
-import qrCode from "../assets/qr-code.png";
+import qrCode from "../assets/qr-code.jpg";
 
 // use title prop to set the title of the page
 const InnerPageHeader = ({ title }) => {
