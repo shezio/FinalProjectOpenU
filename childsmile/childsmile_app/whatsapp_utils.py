@@ -1069,3 +1069,107 @@ def send_admin_approval_task_notification_whatsapp(liam_phone, user_name, user_p
             message_body=message,
             use_template=False
         )
+
+
+# ============================================================================
+# EXPENSE REFUND WHATSAPP NOTIFICATIONS
+# ============================================================================
+
+def send_refund_new_request_to_admin_whatsapp(admin_phone, volunteer_full_name, requested_amount):
+    """
+    Notify admin (Liam) about a new expense refund request.
+
+    Called from refund_views.py → create_refund() after the record is saved.
+
+    Template: refund_new_request_admin (REFUND_NEW_REQUEST_SID)
+    Variables:
+    1. Volunteer full name
+    2. Requested amount (₪)
+
+    Args:
+        admin_phone (str): Admin's (Liam's) phone number
+        volunteer_full_name (str): Full name of the volunteer who submitted
+        requested_amount (str|Decimal): Requested reimbursement amount in ₪
+
+    Returns:
+        dict: send_whatsapp_message result
+    """
+    template_sid = os.getenv('REFUND_NEW_REQUEST_SID')
+
+    if not template_sid:
+        api_logger.warning("REFUND_NEW_REQUEST_SID not configured — skipping WhatsApp notify for new refund")
+        return {"success": False, "error": "REFUND_NEW_REQUEST_SID not configured"}
+
+    template_variables = {
+        "1": str(volunteer_full_name),
+        "2": str(requested_amount),
+    }
+    api_logger.info(f"Sending new refund request WhatsApp to admin: {admin_phone}")
+    return send_whatsapp_message(
+        admin_phone,
+        message_body=None,
+        use_template=True,
+        template_sid=template_sid,
+        template_variables=template_variables
+    )
+
+
+def send_refund_status_update_to_volunteer_whatsapp(volunteer_phone, volunteer_full_name, new_status,
+                                                     approved_amount=None, admin_comment=None):
+    """
+    Notify a volunteer that the status of their refund request was updated.
+
+    Called from refund_views.py → update_refund() whenever `status` changes.
+    Single util handles ALL status transitions (approved / partially_approved / paid / cancelled).
+
+    Template: refund_status_update_volunteer (REFUND_STATUS_UPDATE_SID)
+    Variables:
+    1. Volunteer full name
+    2. Status (female conjugation, e.g. "אושרה ✅")
+    3. Details block (approved amount + admin comment, or "—")
+
+    Args:
+        volunteer_phone (str): Volunteer's phone number
+        volunteer_full_name (str): Volunteer's full name
+        new_status (str): New Hebrew status string (e.g. 'אושר', 'שולם', 'בוטל/נדחה')
+        approved_amount (str|Decimal|None): Approved amount if partially approved or paid
+        admin_comment (str|None): Admin's comment / rejection reason
+
+    Returns:
+        dict: send_whatsapp_message result
+    """
+    template_sid = os.getenv('REFUND_STATUS_UPDATE_SID')
+
+    if not template_sid:
+        api_logger.warning("REFUND_STATUS_UPDATE_SID not configured — skipping WhatsApp notify for refund status update")
+        return {"success": False, "error": "REFUND_STATUS_UPDATE_SID not configured"}
+
+    status_female_map = {
+        'ממתין':       'ממתינה לטיפול',
+        'אושר':        'אושרה ✅',
+        'אושר חלקית': 'אושרה חלקית ✅',
+        'שולם':        'שולמה 💸',
+        'בוטל/נדחה':  'נדחתה ❌',
+    }
+    status_female = status_female_map.get(new_status, new_status)
+
+    details_parts = []
+    if approved_amount is not None:
+        details_parts.append(f"סכום מאושר: {approved_amount} ₪")
+    if admin_comment:
+        details_parts.append(f"הערת המנהל: {admin_comment}")
+    details = " | ".join(details_parts) if details_parts else "—"
+
+    template_variables = {
+        "1": str(volunteer_full_name),
+        "2": str(status_female),
+        "3": details,
+    }
+    api_logger.info(f"Sending refund status update WhatsApp to volunteer: {volunteer_phone}")
+    return send_whatsapp_message(
+        volunteer_phone,
+        message_body=None,
+        use_template=True,
+        template_sid=template_sid,
+        template_variables=template_variables
+    )

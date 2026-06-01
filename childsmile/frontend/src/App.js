@@ -32,6 +32,8 @@ import Dashboard from './pages/Dashboard'; // Import the Dashboard component
 import ReviewerPage from './pages/ReviewerPage'; // Import the Reviewer page
 import CoordinatorChat from './pages/CoordinatorChat'; // Import the Coordinator Chat component
 import NotFound from './pages/NotFound'; // Import the 404 Not Found page
+import Refunds from './pages/Refunds'; // Import the Expense Refunds component
+import RefundsReport from './pages/RefundsReport'; // Import the Expense Refunds Report component
 
 // Add this route to your router:
 
@@ -83,6 +85,8 @@ const App = () => {
       <Route path="/reviewer" element={<ReviewerPage />} /> {/* Add Reviewer page route */}
       <Route path="/meeting-management" element={<MeetingManagement />} /> {/* Staff meeting management */}
       <Route path="/coordinator-chat" element={<CoordinatorChat />} /> {/* Coordinator messaging interface */}
+      <Route path="/refunds" element={<Refunds />} /> {/* Expense Refunds (החזרי הוצאות) */}
+      <Route path="/refunds/report" element={<RefundsReport />} /> {/* Expense Refunds Report */}
       <Route path="*" element={<NotFound />} /> {/* 404 catch-all */}
     </Routes>
   );

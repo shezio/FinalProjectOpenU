@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>פורמט ייבוא החזרי הוצאות — Excel</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: #f4f6fa;
+      color: #222;
+      padding: 32px 24px;
+      direction: rtl;
+    }
+    h1 { font-size: 1.8rem; color: #1a3a5c; margin-bottom: 6px; }
+    .subtitle { color: #555; margin-bottom: 32px; font-size: 0.97rem; }
+    h2 { font-size: 1.15rem; color: #1a3a5c; margin: 28px 0 10px; }
+
+    /* Column table */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #fff;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 1px 6px rgba(0,0,0,.08);
+      margin-bottom: 28px;
+    }
+    th {
+      background: #1a3a5c;
+      color: #fff;
+      padding: 11px 14px;
+      text-align: right;
+      font-size: 0.92rem;
+      font-weight: 600;
+    }
+    td {
+      padding: 10px 14px;
+      border-bottom: 1px solid #eef0f4;
+      font-size: 0.91rem;
+      vertical-align: top;
+    }
+    tr:last-child td { border-bottom: none; }
+    tr:nth-child(even) td { background: #f9fafb; }
+
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 0.78rem;
+      font-weight: 600;
+    }
+    .required  { background: #ffe4e4; color: #c0392b; }
+    .optional  { background: #e4f0ff; color: #1a5fa8; }
+
+    /* Example row */
+    .example-wrap {
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 1px 6px rgba(0,0,0,.08);
+      overflow-x: auto;
+      margin-bottom: 28px;
+    }
+    .example-wrap table { box-shadow: none; margin: 0; }
+    .example-wrap th { background: #2e7d32; font-size: 0.82rem; white-space: nowrap; }
+    .example-wrap td { font-size: 0.82rem; white-space: nowrap; }
+
+    /* Allowed values */
+    .values-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+    .values-card {
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 1px 6px rgba(0,0,0,.08);
+      padding: 14px 16px;
+    }
+    .values-card h3 { font-size: 0.9rem; color: #1a3a5c; margin-bottom: 8px; }
+    .values-card ul { list-style: none; padding: 0; }
+    .values-card li { font-size: 0.85rem; padding: 3px 0; color: #333; }
+    .values-card li::before { content: "• "; color: #1a5fa8; }
+
+    /* Notes */
+    .notes {
+      background: #fffbe6;
+      border-right: 4px solid #f0b429;
+      border-radius: 6px;
+      padding: 14px 16px;
+      font-size: 0.88rem;
+      line-height: 1.7;
+    }
+    .notes strong { color: #7d5a00; }
+
+    code {
+      background: #eef0f4;
+      padding: 1px 5px;
+      border-radius: 3px;
+      font-family: monospace;
+      font-size: 0.87em;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>📊 פורמט ייבוא החזרי הוצאות</h1>
+  <p class="subtitle">
+    מדריך ליצירת קובץ Excel לייבוא נתוני החזרי הוצאות היסטוריים למערכת ChildSmile.
+    <br />הקובץ חייב להיות בפורמט <strong>.xlsx</strong>.
+  </p>
+
+  <!-- Column Reference -->
+  <h2>עמודות הקובץ</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>שם עמודה באנגלית (לקובץ)</th>
+        <th>משמעות</th>
+        <th>חובה?</th>
+        <th>הגבלות / ערכים מותרים</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>Email</code></td>
+        <td>כתובת אימייל של איש הצוות</td>
+        <td><span class="badge required">חובה</span></td>
+        <td>חייב להיות אימייל קיים במערכת</td>
+      </tr>
+      <tr>
+        <td><code>Expense Date</code></td>
+        <td>תאריך ההוצאה</td>
+        <td><span class="badge required">חובה</span></td>
+        <td>פורמטים: <code>DD/MM/YYYY</code> &nbsp;|&nbsp; <code>YYYY-MM-DD</code> &nbsp;|&nbsp; <code>DD.MM.YYYY</code></td>
+      </tr>
+      <tr>
+        <td><code>Requested Amount</code></td>
+        <td>סכום מבוקש (₪)</td>
+        <td><span class="badge required">חובה</span></td>
+        <td>מספר חיובי, לדוגמה <code>150.50</code></td>
+      </tr>
+      <tr>
+        <td><code>Description</code></td>
+        <td>תיאור ההוצאה</td>
+        <td><span class="badge required">חובה</span></td>
+        <td>טקסט חופשי</td>
+      </tr>
+      <tr>
+        <td><code>Full Name</code></td>
+        <td>שם מלא של איש הצוות</td>
+        <td><span class="badge optional">אופציונלי</span></td>
+        <td>אם ריק — ממולא אוטומטית מהמערכת</td>
+      </tr>
+      <tr>
+        <td><code>Approved Amount</code></td>
+        <td>סכום שאושר (₪)</td>
+        <td><span class="badge optional">אופציונלי</span></td>
+        <td>מספר; ריק אם טרם אושר</td>
+      </tr>
+      <tr>
+        <td><code>Status</code></td>
+        <td>סטטוס הבקשה</td>
+        <td><span class="badge optional">אופציונלי</span></td>
+        <td>ראו ערכים מותרים למטה; ברירת מחדל: <code>ממתין</code></td>
+      </tr>
+      <tr>
+        <td><code>Approved By</code></td>
+        <td>שם הרכז/ת שאישר/ה</td>
+        <td><span class="badge optional">אופציונלי</span></td>
+        <td>ראו ערכים מותרים למטה</td>
+      </tr>
+      <tr>
+        <td><code>Payment Method</code></td>
+        <td>אמצעי תשלום</td>
+        <td><span class="badge optional">אופציונלי</span></td>
+        <td>ראו ערכים מותרים למטה</td>
+      </tr>
+      <tr>
+        <td><code>Phone</code></td>
+        <td>מספר טלפון לתשלום</td>
+        <td><span class="badge optional">אופציונלי</span></td>
+        <td>פורמט ישראלי, לדוגמה <code>0541234567</code></td>
+      </tr>
+      <tr>
+        <td><code>Volunteer Comment</code></td>
+        <td>הערת המתנדב</td>
+        <td><span class="badge optional">אופציונלי</span></td>
+        <td>טקסט חופשי</td>
+      </tr>
+      <tr>
+        <td><code>Admin Comment</code></td>
+        <td>הערת המנהל</td>
+        <td><span class="badge optional">אופציונלי</span></td>
+        <td>טקסט חופשי</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Allowed values -->
+  <h2>ערכים מותרים</h2>
+  <div class="values-grid">
+    <div class="values-card">
+      <h3>Status (סטטוס)</h3>
+      <ul>
+        <li>ממתין <em style="color:#888">(ברירת מחדל)</em></li>
+        <li>אושר</li>
+        <li>אושר חלקית</li>
+        <li>שולם</li>
+        <li>בוטל/נדחה</li>
+      </ul>
+    </div>
+    <div class="values-card">
+      <h3>Approved By (אושר על ידי)</h3>
+      <ul>
+        <li>נעם</li>
+        <li>טל</li>
+        <li>נבו</li>
+        <li>אורי</li>
+        <li>ליאם</li>
+      </ul>
+    </div>
+    <div class="values-card">
+      <h3>Payment Method (אמצעי תשלום)</h3>
+      <ul>
+        <li>ביט</li>
+        <li>פייבוקס</li>
+        <li>העברה בנקאית</li>
+        <li>אשראי</li>
+        <li>מזומן</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Example row -->
+  <h2>דוגמה לשורת נתונים</h2>
+  <div class="example-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Email</th>
+          <th>Expense Date</th>
+          <th>Requested Amount</th>
+          <th>Description</th>
+          <th>Full Name</th>
+          <th>Approved Amount</th>
+          <th>Status</th>
+          <th>Approved By</th>
+          <th>Payment Method</th>
+          <th>Phone</th>
+          <th>Volunteer Comment</th>
+          <th>Admin Comment</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>yossi@example.com</td>
+          <td>15/03/2026</td>
+          <td>250.00</td>
+          <td>נסיעות לפגישה</td>
+          <td>יוסי כהן</td>
+          <td>200.00</td>
+          <td>אושר חלקית</td>
+          <td>נעם</td>
+          <td>ביט</td>
+          <td>0541234567</td>
+          <td>קבלה מצורפת</td>
+          <td>אושר חלקית בלבד</td>
+        </tr>
+        <tr>
+          <td>dana@example.com</td>
+          <td>01/04/2026</td>
+          <td>85.00</td>
+          <td>ציוד משרדי</td>
+          <td></td>
+          <td></td>
+          <td>ממתין</td>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Notes -->
+  <h2>הערות חשובות</h2>
+  <div class="notes">
+    <strong>📌 שורה 1</strong> — חייבת להכיל את כותרות העמודות באנגלית בדיוק כפי שמופיע בטבלה למעלה (תלוי רישיות).<br />
+    <strong>📌 כפילויות</strong> — שורות עם אותו אימייל + תאריך + סכום מבוקש שכבר קיימות במערכת מדולגות אוטומטית ללא שגיאה.<br />
+    <strong>📌 שורות ריקות</strong> — שורות בהן כל שדות החובה ריקים מדולגות בשקט.<br />
+    <strong>📌 אימייל לא קיים</strong> — שורה עם אימייל שאינו מזוהה במערכת מדולגת ומדווחת בחלון השגיאות.<br />
+    <strong>📌 קבלות</strong> — עמודת קובץ קבלה אינה נתמכת בייבוא; יש לצרף קבלות ידנית דרך ממשק העריכה לאחר הייבוא.<br />
+    <strong>📌 סטטוס לא חוקי</strong> — אם ערך ה-Status אינו מהרשימה המותרת, ייקבע אוטומטית לערך <code>ממתין</code>.
+  </div>
+
+</body>
+</html>
