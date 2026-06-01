@@ -1,0 +1,495 @@
+/* refunds.css */
+
+* {
+  font-family: Rubik, sans-serif;
+}
+
+/* ── Main layout ─────────────────────────────────────────────────────────── */
+.refunds-main-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  flex-grow: 1;
+  padding: 230px 40px 40px 40px;
+  margin-right: 280px;
+  width: calc(100% - 280px);
+  background: transparent;
+}
+
+.refunds-main-content.sidebar-collapsed {
+  margin-right: 80px;
+  width: calc(100% - 80px);
+}
+
+/* ── Page header controls ───────────────────────────────────────────────── */
+.refunds-controls {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  width: 100%;
+}
+
+.refunds-controls button:not(.export-button) {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.9), rgba(168, 85, 247, 0.9));
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 10px 20px;
+  font-size: 24px;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+  font-family: Rubik, sans-serif;
+}
+
+.refunds-controls button:not(.export-button):hover {
+  opacity: 0.85;
+}
+
+.refunds-controls button.danger {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.9), rgba(220, 38, 38, 0.9));
+}
+
+.refunds-controls .export-button {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  line-height: 0;
+}
+
+/* ── Table ──────────────────────────────────────────────────────────────── */
+.refunds-table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  border-radius: 16px;
+  box-shadow: 0 4px 24px rgba(99, 102, 241, 0.15);
+}
+
+.refunds-table {
+  width: 90%;
+  table-layout: auto;
+  border-collapse: collapse;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+}
+
+.refunds-table thead tr {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.9), rgba(168, 85, 247, 0.9));
+  color: white;
+}
+
+.refunds-table th,
+.refunds-table td {
+  padding: 12px 20px;
+  text-align: right;
+  font-size: 24px;
+  white-space: nowrap;
+  border-bottom: 1px solid rgba(99, 102, 241, 0.08);
+}
+
+.refunds-table tbody tr:hover {
+  background: rgba(99, 102, 241, 0.05);
+  cursor: pointer;
+}
+
+/* ── Status badge ───────────────────────────────────────────────────────── */
+.refund-status-badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 24px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.refund-status-badge.ממתין     { background: #fef3c7; color: #92400e; }
+.refund-status-badge.אושר      { background: #d1fae5; color: #065f46; }
+.refund-status-badge.אושר-חלקית { background: #dbeafe; color: #1e40af; }
+.refund-status-badge.שולם      { background: #ede9fe; color: #5b21b6; }
+.refund-status-badge.בוטל-נדחה { background: #fee2e2; color: #991b1b; }
+
+/* ── Modal overlay ──────────────────────────────────────────────────────── */
+.refund-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+
+.refund-modal {
+  background: white;
+  border-radius: 20px;
+  padding: 40px 48px;
+  width: 90vw;
+  max-width: 1200px;
+  max-height: 95vh;
+  overflow-y: auto;
+  direction: rtl;
+  box-shadow: 0 20px 60px rgba(99, 102, 241, 0.25);
+  position: relative;
+}
+
+.refund-modal h2 {
+  margin: 0 0 24px 0;
+  font-size: 28px;
+  color: #4f46e5;
+}
+
+.refund-modal-close {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  background: none;
+  border: none;
+  font-size: 28px;
+  cursor: pointer;
+  color: #6b7280;
+  line-height: 1;
+}
+
+/* ── Form fields ─────────────────────────────────────────────────────────── */
+.refund-form-group {
+  margin-bottom: 18px;
+}
+
+.refund-form-group label {
+  display: block;
+  font-size: 24px;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 5px;
+}
+
+.refund-form-group input,
+.refund-form-group select,
+.refund-form-group textarea {
+  width: auto;
+  min-width: 0;
+  max-width: 100%;
+  padding: 9px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  font-size: 24px;
+  font-family: Rubik, sans-serif;
+  direction: rtl;
+  box-sizing: border-box;
+  transition: border-color 0.2s ease;
+}
+
+.refund-form-group input:focus,
+.refund-form-group select:focus,
+.refund-form-group textarea:focus {
+  outline: none;
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+}
+
+.refund-form-group textarea {
+  resize: vertical;
+  min-height: 80px;
+  width: 100%;
+}
+
+.refund-form-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+}
+
+/* Wide modal — lay all groups in a 4-col grid by default */
+.refund-modal > form,
+.refund-modal-body {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+  align-items: start;
+}
+
+/* Full-width items (phone, upload) */
+.refund-form-group.full-width {
+  grid-column: 1 / -1;
+}
+
+/* Half-width items (comments side by side — 2 cols each in a 4-col grid) */
+.refund-form-group.half-width {
+  grid-column: span 2;
+}
+
+.refund-field-error {
+  color: #ef4444;
+  font-size: 24px;
+  margin-top: 3px;
+}
+
+/* ── Phone section ──────────────────────────────────────────────────────── */
+.refund-phone-hint {
+  background: rgba(99, 102, 241, 0.06);
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  border-radius: 10px;
+  padding: 10px 16px;
+  margin-top: 6px;
+  font-size: inherit;
+  color: #4f46e5;
+}
+
+.refund-phone-hint strong {
+  font-weight: 700;
+}
+
+/* ── Receipt upload ─────────────────────────────────────────────────────── */
+.refund-upload-zone {
+  border: 2px dashed #c4b5fd;
+  border-radius: 12px;
+  padding: 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  font-size: 24px;
+  color: #6b7280;
+}
+
+.refund-upload-zone:hover {
+  background: rgba(99, 102, 241, 0.04);
+}
+
+.refund-upload-zone.has-file {
+  border-color: #10b981;
+  color: #065f46;
+}
+
+/* Receipt preview link */
+.refund-receipt-preview {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #4f46e5;
+  font-size: 24px;
+  text-decoration: underline;
+  cursor: pointer;
+  margin-top: 6px;
+}
+
+/* ── Modal action buttons ───────────────────────────────────────────────── */
+.refund-modal-actions {
+  display: flex;
+  justify-content: flex-start;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.refund-modal-actions button {
+  padding: 10px 24px;
+  border: none;
+  border-radius: 12px;
+  font-size: 24px;
+  font-family: Rubik, sans-serif;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.refund-modal-actions .btn-primary {
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  color: white;
+}
+
+.refund-modal-actions .btn-secondary {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.refund-modal-actions button:hover {
+  opacity: 0.85;
+}
+
+/* ── Loading / empty state ──────────────────────────────────────────────── */
+.refunds-loading {
+  text-align: center;
+  padding: 60px;
+  color: #6b7280;
+  font-size: 24px;
+}
+
+.refunds-empty {
+  text-align: center;
+  padding: 60px;
+  color: #9ca3af;
+  font-size: 24px;
+}
+
+/* ── Totals bar ─────────────────────────────────────────────────────────── */
+.refunds-totals-bar {
+  display: flex;
+  gap: 24px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.refunds-total-chip {
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  border-radius: 12px;
+  padding: 8px 18px;
+  font-size: 24px;
+  color: #374151;
+}
+
+.refunds-total-chip strong {
+  color: #4f46e5;
+  font-size: 24px;
+}
+
+/* ── Report page specific ────────────────────────────────────────────────── */
+.refunds-controls.back-controls {
+  margin-bottom: 8px;
+}
+
+.refunds-controls.filter-controls {
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.report-filter-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  font-size: 24px;
+}
+
+.report-filter-select {
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+  font-size: 24px;
+  font-family: Rubik, sans-serif;
+  direction: rtl;
+}
+
+.report-section {
+  margin-top: 24px;
+}
+
+.report-section--mid {
+  margin-top: 32px;
+}
+
+.report-section--last {
+  margin-top: 32px;
+  margin-bottom: 48px;
+}
+
+.report-section-title {
+  color: #6366f1;
+  margin-bottom: 12px;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.report-section-title-year {
+  font-weight: 400;
+  font-size: 20px;
+  margin-right: 8px;
+}
+
+.refunds-table tr.empty-period {
+  opacity: 0.4;
+}
+
+.refunds-table tfoot tr {
+  font-weight: bold;
+  border-top: 2px solid #6366f1;
+  background: rgba(99, 102, 241, 0.07);
+}
+
+/* ── Table action buttons ──────────────────────────────────────────────── */
+.refund-row-actions {
+  display: inline-flex;
+  gap: 6px;
+  background: none;
+  box-shadow: none;
+  padding: 0;
+  border: none;
+}
+
+.refund-action-btn {
+  cursor: pointer;
+  font-size: 24px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 5px;
+  border: none;
+  font-family: Rubik, sans-serif;
+  color: #fff;
+  background: #3b82f6;
+  transition: background 0.15s;
+}
+
+.refund-action-btn:hover {
+  background: #2563eb;
+}
+
+.refund-action-btn[title="מחק"] {
+  background: #ef4444;
+}
+
+.refund-action-btn[title="מחק"]:hover {
+  background: #dc2626;
+}
+
+/* ── Phone hint inline label ─────────────────────────────────────────────── */
+.refund-phone-hint-label {
+  display: inline-flex !important;
+  align-items: center;
+  gap: 5px;
+  font-weight: 600;
+  font-size: 24px;
+  cursor: pointer;
+  margin-bottom: 6px;
+}
+
+.refund-phone-hint-checkbox {
+  margin: 0;
+}
+
+.refund-save-phone-label {
+  cursor: pointer;
+  margin-top: 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 24px;
+}
+
+/* ── Hidden file input ───────────────────────────────────────────────────── */
+.refund-file-input-hidden,
+.refund-import-input-hidden {
+  display: none;
+}
+
+/* ── Report period button (accent) ──────────────────────────────────────── */
+.refunds-controls button.btn-report {
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  color: #fff;
+  font-weight: 700;
+}
+
+/* ── Delete confirm modal ────────────────────────────────────────────────── */
+.refund-modal.refund-modal--narrow {
+  width: 420px;
+}
+
+.refund-delete-hint {
+  color: #9ca3af;
+  font-size: 24px;
+}
+
+/* ── Delete confirm button ───────────────────────────────────────────────── */
+.refund-modal-actions .btn-primary.danger {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+}

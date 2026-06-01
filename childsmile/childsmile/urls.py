@@ -17,7 +17,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from django.views.decorators.csrf import csrf_exempt
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.db import connection
 
 def health(request):
@@ -39,6 +39,7 @@ def deep_health(request):
     })
 
 urlpatterns = [
+    path('favicon.ico', lambda request: HttpResponse(status=204)),
     path('health/', health),
     path('health/deep/', deep_health),
     path('admin/', admin.site.urls),

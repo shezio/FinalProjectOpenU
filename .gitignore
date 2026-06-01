@@ -183,3 +183,4 @@ client_secret_*.json
 volunteer_registration_insert_yuval_wolloch.sql
 cleanup_roles.sql
 .github/workflows/backup.yaml
+childsmile/media/refunds/*

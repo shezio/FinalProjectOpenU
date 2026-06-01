@@ -1736,3 +1736,377 @@ export const exportAllVolunteersIRSToExcel = async (volunteers, t) => {
 };
 
 export { auditExportFailure, auditExportSuccess};
+
+// ── Refunds Report Export ─────────────────────────────────────────────────────
+// These functions export the aggregated report (period summary + volunteer breakdown + status breakdown)
+// They accept the raw refunds array and compute everything internally — no row selection needed.
+
+const MONTHS_HE_EXPORT = [
+  '', 'ינואר', 'פברואר', 'מרץ', 'אפריל', 'מאי', 'יוני',
+  'יולי', 'אוגוסט', 'ספטמבר', 'אוקטובר', 'נובמבר', 'דצמבר',
+];
+const QUARTER_LABELS_EXPORT = ['', 'Q1 (ינואר–מרץ)', 'Q2 (אפריל–יוני)', 'Q3 (יולי–ספטמבר)', 'Q4 (אוקטובר–דצמבר)'];
+
+const parseRefundDate = (s) => {
+  if (!s) return null;
+  const [y, m] = s.split('-').map(Number);
+  return { year: y, month: m };
+};
+
+const computeRefundReportRows = (refunds, period, selectedYear) => {
+  const filtered = refunds.filter(r => {
+    const d = parseRefundDate(r.expense_date);
+    return d && d.year === selectedYear;
+  });
+  if (period === 'monthly') {
+    const map = {};
+    for (let m = 1; m <= 12; m++) map[m] = { label: MONTHS_HE_EXPORT[m], requested: 0, approved: 0, count: 0 };
+    filtered.forEach(r => {
+      const d = parseRefundDate(r.expense_date);
+      if (!d) return;
+      map[d.month].requested += parseFloat(r.requested_amount || 0);
+      map[d.month].approved += parseFloat(r.approved_amount || 0);
+      map[d.month].count += 1;
+    });
+    return Object.values(map);
+  }
+  if (period === 'quarterly') {
+    const map = {
+      1: { label: QUARTER_LABELS_EXPORT[1], requested: 0, approved: 0, count: 0 },
+      2: { label: QUARTER_LABELS_EXPORT[2], requested: 0, approved: 0, count: 0 },
+      3: { label: QUARTER_LABELS_EXPORT[3], requested: 0, approved: 0, count: 0 },
+      4: { label: QUARTER_LABELS_EXPORT[4], requested: 0, approved: 0, count: 0 },
+    };
+    filtered.forEach(r => {
+      const d = parseRefundDate(r.expense_date);
+      if (!d) return;
+      const q = Math.ceil(d.month / 3);
+      map[q].requested += parseFloat(r.requested_amount || 0);
+      map[q].approved += parseFloat(r.approved_amount || 0);
+      map[q].count += 1;
+    });
+    return Object.values(map);
+  }
+  // annual
+  const allYears = {};
+  refunds.forEach(r => {
+    const d = parseRefundDate(r.expense_date);
+    if (!d) return;
+    const y = d.year;
+    if (!allYears[y]) allYears[y] = { label: String(y), requested: 0, approved: 0, count: 0 };
+    allYears[y].requested += parseFloat(r.requested_amount || 0);
+    allYears[y].approved += parseFloat(r.approved_amount || 0);
+    allYears[y].count += 1;
+  });
+  return Object.entries(allYears).sort(([a], [b]) => b - a).map(([, v]) => v);
+};
+
+const computeVolunteerBreakdown = (refunds, period, selectedYear) => {
+  const src = period === 'annual' ? refunds : refunds.filter(r => {
+    const d = parseRefundDate(r.expense_date);
+    return d && d.year === selectedYear;
+  });
+  const map = {};
+  src.forEach(r => {
+    const name = r.staff_full_name || '—';
+    if (!map[name]) map[name] = { requested: 0, approved: 0, count: 0 };
+    map[name].requested += parseFloat(r.requested_amount || 0);
+    map[name].approved += parseFloat(r.approved_amount || 0);
+    map[name].count += 1;
+  });
+  return Object.entries(map).sort(([, a], [, b]) => b.requested - a.requested).map(([name, vals]) => ({ name, ...vals }));
+};
+
+const computeStatusBreakdown = (refunds, period, selectedYear) => {
+  const src = period === 'annual' ? refunds : refunds.filter(r => {
+    const d = parseRefundDate(r.expense_date);
+    return d && d.year === selectedYear;
+  });
+  const map = {};
+  src.forEach(r => {
+    const s = r.status || 'לא ידוע';
+    if (!map[s]) map[s] = { count: 0, requested: 0 };
+    map[s].count += 1;
+    map[s].requested += parseFloat(r.requested_amount || 0);
+  });
+  return Object.entries(map).sort(([, a], [, b]) => b.count - a.count);
+};
+
+// Draw a pie chart showing requested amount distribution by period
+const drawPeriodPieChart = (periodRows) => {
+  const SIZE = 300;
+  const LEGEND_W = 200;
+  const canvas = document.createElement('canvas');
+  canvas.width = SIZE + LEGEND_W;
+  canvas.height = SIZE;
+  const ctx = canvas.getContext('2d');
+
+  ctx.fillStyle = '#f9fafb';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  const activeRows = periodRows.filter(r => r.requested > 0);
+  const total = activeRows.reduce((s, r) => s + r.requested, 0);
+  if (total === 0) {
+    ctx.fillStyle = '#9ca3af';
+    ctx.font = '14px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText('אין נתונים', (SIZE + LEGEND_W) / 2, SIZE / 2);
+    return canvas.toDataURL('image/png');
+  }
+
+  const COLORS = ['#6366f1','#10b981','#f59e0b','#3b82f6','#ef4444','#8b5cf6','#14b8a6','#f97316','#ec4899','#06b6d4','#84cc16','#a78bfa'];
+  const cx = SIZE / 2, cy = SIZE / 2, r = SIZE / 2 - 16;
+
+  let startAngle = -Math.PI / 2;
+  activeRows.forEach((row, i) => {
+    const slice = (row.requested / total) * 2 * Math.PI;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.arc(cx, cy, r, startAngle, startAngle + slice);
+    ctx.closePath();
+    ctx.fillStyle = COLORS[i % COLORS.length];
+    ctx.fill();
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    startAngle += slice;
+  });
+
+  // Legend
+  let legendY = 20;
+  activeRows.forEach((row, i) => {
+    const pct = ((row.requested / total) * 100).toFixed(0);
+    const label = row.label.split(' ')[0]; // short label
+    ctx.fillStyle = COLORS[i % COLORS.length];
+    ctx.fillRect(SIZE + 8, legendY, 14, 14);
+    ctx.fillStyle = '#374151';
+    ctx.font = '12px Arial';
+    ctx.textAlign = 'left';
+    ctx.fillText(`${label} (${pct}%)`, SIZE + 28, legendY + 12);
+    legendY += 22;
+    if (legendY > SIZE - 10) return; // overflow guard
+  });
+
+  return canvas.toDataURL('image/png');
+};
+
+// Draw a vertical period bar chart (requested vs approved), RTL column order (ינואר on right)
+const drawPeriodBarChart = (periodRows, period) => {
+  // Reverse so rightmost column = first period (RTL)
+  const rows = [...periodRows].reverse();
+  const n = rows.length;
+
+  const PAD_LEFT = 55;
+  const PAD_RIGHT = 15;
+  const PAD_TOP = 45;
+  const PAD_BOTTOM = 55;
+  const BAR_GROUP = period === 'monthly' ? 46 : period === 'quarterly' ? 100 : 80;
+  const WIDTH = PAD_LEFT + n * BAR_GROUP + PAD_RIGHT;
+  const HEIGHT = 300;
+  const CHART_H = HEIGHT - PAD_TOP - PAD_BOTTOM;
+
+  const canvas = document.createElement('canvas');
+  canvas.width = WIDTH;
+  canvas.height = HEIGHT;
+  const ctx = canvas.getContext('2d');
+
+  ctx.fillStyle = '#f9fafb';
+  ctx.fillRect(0, 0, WIDTH, HEIGHT);
+
+  const maxVal = Math.max(...rows.map(r => r.requested), 1);
+
+  // Y-axis gridlines + labels
+  const steps = 4;
+  ctx.strokeStyle = '#e5e7eb';
+  ctx.lineWidth = 1;
+  ctx.fillStyle = '#6b7280';
+  ctx.font = '11px Arial';
+  ctx.textAlign = 'right';
+  for (let i = 0; i <= steps; i++) {
+    const val = (maxVal / steps) * i;
+    const y = PAD_TOP + CHART_H - (val / maxVal) * CHART_H;
+    ctx.beginPath();
+    ctx.moveTo(PAD_LEFT, y);
+    ctx.lineTo(WIDTH - PAD_RIGHT, y);
+    ctx.stroke();
+    ctx.fillText(val >= 1000 ? `${(val / 1000).toFixed(1)}k` : val.toFixed(0), PAD_LEFT - 4, y + 4);
+  }
+
+  // Legend top-right
+  ctx.fillStyle = '#6366f1';
+  ctx.fillRect(WIDTH - PAD_RIGHT - 120, 8, 14, 14);
+  ctx.fillStyle = '#374151';
+  ctx.font = '12px Arial';
+  ctx.textAlign = 'left';
+  ctx.fillText('מבוקש', WIDTH - PAD_RIGHT - 102, 20);
+  ctx.fillStyle = '#10b981';
+  ctx.fillRect(WIDTH - PAD_RIGHT - 55, 8, 14, 14);
+  ctx.fillStyle = '#374151';
+  ctx.fillText('אושר', WIDTH - PAD_RIGHT - 37, 20);
+
+  // Bars
+  const barW = Math.max(Math.floor(BAR_GROUP * 0.38), 8);
+  const gap = Math.max(Math.floor(BAR_GROUP * 0.08), 2);
+
+  rows.forEach((row, i) => {
+    // RTL: first row (index 0) goes on the RIGHT side
+    const groupX = PAD_LEFT + (n - 1 - i) * BAR_GROUP + Math.floor((BAR_GROUP - 2 * barW - gap) / 2);
+
+    const reqH = Math.max((row.requested / maxVal) * CHART_H, row.requested > 0 ? 2 : 0);
+    const appH = Math.max((row.approved / maxVal) * CHART_H, row.approved > 0 ? 2 : 0);
+
+    // Requested bar (right of pair)
+    ctx.fillStyle = '#6366f1';
+    ctx.fillRect(groupX + barW + gap, PAD_TOP + CHART_H - reqH, barW, reqH);
+
+    // Approved bar (left of pair)
+    ctx.fillStyle = '#10b981';
+    ctx.fillRect(groupX, PAD_TOP + CHART_H - appH, barW, appH);
+
+    // X-axis label — short label
+    const label = row.label.split(' ')[0]; // e.g. "ינואר" from "ינואר" or "Q1" from "Q1 (ינואר–מרץ)"
+    ctx.fillStyle = '#374151';
+    ctx.font = `${period === 'monthly' ? 11 : 12}px Arial`;
+    ctx.textAlign = 'center';
+    const labelX = groupX + barW + gap / 2;
+    ctx.fillText(label, labelX, PAD_TOP + CHART_H + 16);
+  });
+
+  // X axis line
+  ctx.strokeStyle = '#9ca3af';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(PAD_LEFT, PAD_TOP + CHART_H);
+  ctx.lineTo(WIDTH - PAD_RIGHT, PAD_TOP + CHART_H);
+  ctx.stroke();
+
+  return canvas.toDataURL('image/png');
+};
+
+export const exportRefundsReportToExcel = async (refunds, period, selectedYear) => {
+  const reportName = 'refunds_period_report';
+  const format = 'EXCEL';
+  try {
+    const periodRows = computeRefundReportRows(refunds || [], period, selectedYear);
+    const periodLabel = period === 'monthly' ? `חודשי — ${selectedYear}` : period === 'quarterly' ? `רבעוני — ${selectedYear}` : 'שנתי';
+
+    const sheetData = [
+      ['תקופה', "מס' בקשות", 'סה"כ מבוקש (₪)', 'סה"כ אושר (₪)', '% אושר'],
+      ...periodRows.map(r => [
+        r.label, r.count,
+        Number(r.requested).toFixed(2),
+        Number(r.approved).toFixed(2),
+        r.requested > 0 ? `${((r.approved / r.requested) * 100).toFixed(0)}%` : '—',
+      ]),
+    ];
+    const ws = XLSX.utils.aoa_to_sheet(sheetData);
+    ws['!dir'] = 'rtl';
+    ws['!cols'] = sheetData[0].map((_, i) => ({ wch: Math.max(...sheetData.map(r => (r[i] || '').toString().length)) + 2 }));
+
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, ws, `סיכום ${periodLabel}`);
+    XLSX.writeFile(workbook, `דוח_החזרים_${periodLabel}.xlsx`);
+    toast.success('הדוח יוצא בהצלחה');
+    await auditExportSuccess(format, refunds.length, reportName, ['refund_report_data']);
+  } catch (error) {
+    console.error('Export failed:', error);
+    await auditExportFailure(format, reportName, error.message, 'TECHNICAL');
+    toast.error('שגיאה בייצוא הדוח');
+  }
+};
+
+export const exportRefundsReportToPDF = async (refunds, period, selectedYear) => {
+  const reportName = 'refunds_period_report';
+  const format = 'PDF';
+  try {
+    const safeRefunds = refunds || [];
+    const periodRows = computeRefundReportRows(safeRefunds, period, selectedYear);
+    const periodLabel = period === 'monthly' ? `חודשי — ${selectedYear}` : period === 'quarterly' ? `רבעוני — ${selectedYear}` : 'שנתי';
+
+    const doc = new jsPDF('landscape', 'mm', 'a4');
+    doc.addFileToVFS('Alef-Bold.ttf', AlefBold);
+    doc.addFont('Alef-Bold.ttf', 'Alef', 'bold');
+    doc.setFont('Alef', 'bold');
+
+    const pageW = doc.internal.pageSize.getWidth();
+
+    // Logo + title — use reverseText for Hebrew (jsPDF requires it for RTL)
+    doc.addImage(logo, 'PNG', 10, 6, 18, 18);
+    doc.setFontSize(16);
+    doc.text(reverseText(`דוח החזרי הוצאות — ${periodLabel}`), pageW / 2, 16, { align: 'center' });
+    doc.setFontSize(12);
+    const periodTypeLabel = period === 'monthly' ? 'חודש' : period === 'quarterly' ? 'רבעון' : 'שנה';
+    doc.text(reverseText(`סיכום לפי ${periodTypeLabel}`), pageW - 14, 28, { align: 'right' });
+
+    // Period summary table — reverse column array so PDF (LTR) matches UI (RTL) visual order
+    // Note: don't pass (₪) through reverseText — parens would flip to )₪(
+    doc.autoTable({
+      head: [[
+        reverseText('תקופה'),
+        reverseText("מס' בקשות"),
+        reverseText('סה"כ מבוקש') + ' (₪)',
+        reverseText('סה"כ אושר') + ' (₪)',
+        reverseText('% אושר'),
+      ].reverse()],
+      body: periodRows.map(r => [
+        reverseText(r.label),
+        r.count,
+        Number(r.requested).toFixed(2),
+        Number(r.approved).toFixed(2),
+        r.requested > 0 ? `${((r.approved / r.requested) * 100).toFixed(0)}%` : '—',
+      ].reverse()),
+      startY: 32,
+      styles: { font: 'Alef', fontSize: 9, halign: 'right' },
+      headStyles: { fillColor: [99, 102, 241], textColor: 255, halign: 'right' },
+    });
+
+    // Charts — pie (right) + vertical bar (left), side by side
+    if (safeRefunds.length > 0 && periodRows.length > 0) {
+      const pageH = doc.internal.pageSize.getHeight();
+      const afterTable = doc.lastAutoTable.finalY + 10;
+      const chartsNeedH = 90;
+
+      let chartY;
+      if (afterTable + chartsNeedH > pageH) {
+        doc.addPage();
+        chartY = 20;
+      } else {
+        chartY = afterTable;
+      }
+
+      const chartH = 72;
+      const pieW = 100;
+      const barW = pageW - 28 - pieW - 6;
+
+      doc.setFontSize(9);
+
+      // Pie chart — right side
+      const pieImg = drawPeriodPieChart(periodRows);
+      const pieTitleLabel = period === 'monthly'
+        ? reverseText(`התפלגות מבוקש לפי חודש`)
+        : period === 'quarterly'
+          ? reverseText(`התפלגות מבוקש לפי רבעון`)
+          : reverseText('התפלגות מבוקש לפי שנה');
+      doc.text(pieTitleLabel, pageW - 14, chartY, { align: 'right' });
+      doc.addImage(pieImg, 'PNG', pageW - 14 - pieW, chartY + 5, pieW, chartH);
+
+      // Vertical bar chart — left side
+      const barImg = drawPeriodBarChart(periodRows, period);
+      const barTitleLabel = period === 'monthly'
+        ? reverseText(`סכומים לפי חודש — ${selectedYear}`)
+        : period === 'quarterly'
+          ? reverseText(`סכומים לפי רבעון — ${selectedYear}`)
+          : reverseText('סכומים לפי שנה');
+      doc.text(barTitleLabel, 14 + barW, chartY, { align: 'right' });
+      doc.addImage(barImg, 'PNG', 14, chartY + 5, barW, chartH);
+    }
+
+    doc.save(`דוח_החזרים_${periodLabel}.pdf`);
+    toast.success('הדוח יוצא בהצלחה');
+    await auditExportSuccess(format, safeRefunds.length, reportName, ['refund_report_data']);
+  } catch (error) {
+    console.error('Export failed:', error);
+    await auditExportFailure(format, reportName, error.message, 'TECHNICAL');
+    toast.error('שגיאה בייצוא הדוח');
+  }
+};

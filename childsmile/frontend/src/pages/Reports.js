@@ -109,6 +109,10 @@ const Reports = () => {
   ];
   const hasPermissionToFamiliesDuplicateReport = hasSomePermissions(families_duplicate_report_permissions);
 
+  // Refunds Report — requires VIEW on expenserefund
+  const refunds_report_permissions = [{ resource: 'childsmile_app_expenserefund', action: 'UPDATE' }];
+  const hasPermissionToRefundsReport = hasSomePermissions(refunds_report_permissions);
+
   const reportDetails = {
     get_families_per_location_report:         { name: 'דוח משפחות לפי מיקום',                       path: '/reports/families_per_location_report',              category: 'families' },
     new_families_report:                      { name: 'דוח משפחות חדשות מהחודש האחרון',              path: '/reports/new-families-report',                       category: 'families' },
@@ -123,6 +127,7 @@ const Reports = () => {
     tutor_feedback_report:                    { name: 'דוח משוב חונכים',                             path: '/reports/tutor-feedback',                            category: 'volunteers' },
     all_volunteers_irs_report:                { name: 'דוח מתנדבים כללי',                            path: '/reports/all_volunteers_irs_report',                 category: 'volunteers' },
     roles_spread_stats_report:                { name: 'דוח התפלגות הרשאות',                          path: '/reports/roles_spread_stats_report',                 category: 'volunteers' },
+    refunds_per_timeperiod:                   { name: 'דוח החזרי הוצאות לפי תקופה',                  path: '/refunds/report',                                    category: 'finances' },
   };
 
   const reportPermissions = {
@@ -139,9 +144,10 @@ const Reports = () => {
     all_families_export_report: hasPermissionToAllFamiliesExportReport,
     families_missing_data_report: hasPermissionToFamiliesMissingDataReport,
     families_duplicate_report: hasPermissionToFamiliesDuplicateReport,
+    refunds_per_timeperiod: hasPermissionToRefundsReport,
   };
 
-  const categoryLabels = { all: 'הכל', families: 'משפחות', volunteers: 'מתנדבים' };
+  const categoryLabels = { all: 'הכל', families: 'משפחות', volunteers: 'מתנדבים', finances: 'כספים' };
 
   const allReports = Object.entries(reportDetails)
     .filter(([key]) => reportPermissions[key])
@@ -179,7 +185,7 @@ const Reports = () => {
               dir="rtl"
             />
             <div className="reports-filter-btns">
-              {['all', 'families', 'volunteers'].map((cat) => (
+              {['all', 'families', 'volunteers', 'finances'].map((cat) => (
                 <button
                   key={cat}
                   className={`reports-filter-btn${categoryFilter === cat ? ' reports-filter-btn--active' : ''}`}

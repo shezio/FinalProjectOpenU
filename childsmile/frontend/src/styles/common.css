@@ -48,6 +48,153 @@ body {
     border-left: 2px solid rgba(255, 255, 255, 0.3);
     overflow-y: auto;
     transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255,255,255,0.3) transparent;
+}
+
+.sidebar::-webkit-scrollbar {
+    width: 4px;
+}
+.sidebar::-webkit-scrollbar-thumb {
+    background: rgba(255,255,255,0.35);
+    border-radius: 4px;
+}
+.sidebar::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+/* Top-level nav btn (Tasks) — same size as section header */
+.sidebar-nav-btn.top-level {
+    font-size: 32px;
+    font-weight: 600;
+    color: rgba(255,255,255,0.85);
+}
+.sidebar-nav-btn.top-level:hover,
+.sidebar-nav-btn.top-level.active {
+    color: white;
+}
+
+/* ── Section header — plain text, no button look ── */
+.sidebar-section-header {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    width: 100%;
+    background: none;
+    border: none;
+    border-bottom: 1px solid rgba(255,255,255,0.12);
+    border-radius: 0;
+    color: rgba(255,255,255,0.85);
+    font-size: 32px;
+    font-weight: 600;
+    padding: 8px 2px 6px;
+    cursor: pointer;
+    margin-top: 10px;
+    text-align: right;
+    transition: color 0.15s;
+    outline: none;
+    box-shadow: none;
+}
+.sidebar-section-header:hover {
+    color: white;
+}
+.sidebar-section-icon {
+    font-size: 16px;
+    flex-shrink: 0;
+}
+.sidebar-section-label {
+    flex: 1;
+    text-align: right;
+}
+.sidebar-section-arrow {
+    font-size: 20px;
+    font-weight: 300;
+    transition: transform 0.2s;
+    transform: rotate(0deg);
+    line-height: 1;
+    color: rgba(255,255,255,0.55);
+    flex-shrink: 0;
+    margin-right: 2px;
+}
+.sidebar-section-arrow.open {
+    transform: rotate(90deg);
+}
+
+/* ── Nav items — plain text links, no button look ── */
+.sidebar-section-items {
+    display: flex;
+    flex-direction: column;
+    padding-right: 12px;
+    border-right: 1px solid rgba(255,255,255,0.15);
+    margin-right: 6px;
+    margin-top: 2px;
+}
+
+.sidebar-nav-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    background: none;
+    border: none;
+    border-radius: 0;
+    color: rgba(255,255,255,0.82);
+    font-size: 32px;
+    padding: 6px 2px;
+    cursor: pointer;
+    text-align: right;
+    transition: color 0.15s;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    outline: none;
+    box-shadow: none;
+}
+.sidebar-nav-btn:hover {
+    color: white;
+    background: none;
+}
+.sidebar-nav-btn.active {
+    color: white;
+    font-weight: 700;
+}
+
+/* Items inside sections are slightly smaller */
+.sidebar-section-items .sidebar-nav-btn {
+    font-size: 24px;
+    color: rgba(255,255,255,0.7);
+    padding: 5px 2px;
+}
+.sidebar-section-items .sidebar-nav-btn:hover,
+.sidebar-section-items .sidebar-nav-btn.active {
+    color: white;
+}
+
+.sidebar-nav-icon {
+    font-size: 15px;
+    flex-shrink: 0;
+}
+.sidebar-nav-label {
+    flex: 1;
+    text-align: right;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Collapsed sidebar — center icons */
+.sidebar.collapsed .sidebar-section-header {
+    justify-content: center;
+    border-bottom: none;
+    padding: 8px 0;
+}
+.sidebar.collapsed .sidebar-nav-btn {
+    justify-content: center;
+    padding: 8px 0;
+}
+.sidebar.collapsed .sidebar-section-items {
+    padding-right: 0;
+    border-right: none;
+    margin-right: 0;
 }
 
 .sidebar.collapsed {
@@ -117,7 +264,7 @@ body {
     width: 40px;
 }
 
-.sidebar.collapsed button:not(.sidebar-toggle) {
+.sidebar.collapsed button:not(.sidebar-toggle):not(.sidebar-nav-btn):not(.sidebar-section-header) {
     width: 50px;
     height: 50px;
     padding: 0;
@@ -290,7 +437,7 @@ body {
 }
 
 /* Navigation Buttons */
-.sidebar button:not(.sidebar-logout-button):not(.sidebar-toggle) {
+.sidebar button:not(.sidebar-logout-button):not(.sidebar-toggle):not(.sidebar-nav-btn):not(.sidebar-section-header) {
     background: linear-gradient(135deg, 
       rgba(255, 255, 255, 0.2) 0%,
       rgba(255, 255, 255, 0.1) 100%);
@@ -314,7 +461,7 @@ body {
     letter-spacing: 0.3px;
 }
 
-.sidebar button:not(.sidebar-logout-button).active {
+.sidebar button:not(.sidebar-logout-button):not(.sidebar-nav-btn):not(.sidebar-section-header).active {
     background: linear-gradient(135deg, 
       rgba(16, 185, 129, 0.95) 0%,
       rgba(5, 150, 105, 0.95) 100%);
@@ -326,7 +473,7 @@ body {
     transform: translateX(-5px);
 }
 
-.sidebar button:not(.sidebar-logout-button):hover {
+.sidebar button:not(.sidebar-logout-button):not(.sidebar-nav-btn):not(.sidebar-section-header):hover {
     background: linear-gradient(135deg, 
       rgba(255, 255, 255, 0.3) 0%,
       rgba(255, 255, 255, 0.2) 100%);

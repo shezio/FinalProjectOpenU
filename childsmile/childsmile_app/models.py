@@ -761,3 +761,93 @@ class CoordinatorChatMessage(models.Model):
     def __str__(self):
         return f"Message from {self.sender_type} to {self.coordinator.username}"
 
+class ExpenseRefund(models.Model):
+    """
+    Tracks volunteer expense reimbursement requests (החזרי הוצאות).
+    Volunteers submit requests; admins (Liam) approve, partially approve, or reject.
+    """
+
+    class RefundStatus(models.TextChoices):
+        PENDING = 'ממתין', 'Pending'
+        APPROVED = 'אושר', 'Approved'
+        PARTIALLY_APPROVED = 'אושר חלקית', 'Partially Approved'
+        PAID = 'שולם', 'Paid'
+        CANCELLED = 'בוטל/נדחה', 'Cancelled / Rejected'
+
+    class PaymentMethod(models.TextChoices):
+        BIT = 'ביט', 'Bit'
+        PAYBOX = 'פייבוקס', 'Paybox'
+        BANK_TRANSFER = 'העברה בנקאית', 'Bank Transfer'
+        CREDIT = 'אשראי', 'Credit'
+        CASH = 'מזומן', 'Cash'
+
+    COORDINATOR_APPROVAL_CHOICES = [
+        ('נעם', 'נעם'),
+        ('טל', 'טל'),
+        ('נבו', 'נבו'),
+        ('אורי', 'אורי'),
+        ('ליאם', 'ליאם'),
+    ]
+
+    refund_id = models.AutoField(primary_key=True)
+
+    # Who submitted the request (auto-assigned from logged-in session)
+    staff = models.ForeignKey(Staff, on_delete=models.CASCADE, related_name='expense_refunds')
+    staff_full_name = models.CharField(max_length=255)  # Snapshot at submission time
+
+    # Timestamps — Django manages these automatically, matching all other models
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    # Expense details
+    expense_date = models.DateField()
+    requested_amount = models.DecimalField(max_digits=10, decimal_places=2)
+    approved_amount = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    description = models.TextField()
+
+    # Comments
+    volunteer_comment = models.TextField(null=True, blank=True)
+    admin_comment = models.TextField(null=True, blank=True)
+
+    # Coordinator who verbally approved offline (hardcoded choices)
+    approved_by = models.CharField(max_length=20, choices=COORDINATOR_APPROVAL_CHOICES, null=True, blank=True)
+
+    # Receipt file — Azure Blob Storage URL. Nullable to support historical Excel imports.
+    file_url = models.URLField(max_length=2048, null=True, blank=True)
+
+    # Status & payment
+    status = models.CharField(
+        max_length=30,
+        choices=RefundStatus.choices,
+        default=RefundStatus.PENDING,
+    )
+    refund_method = models.CharField(
+        max_length=30,
+        choices=PaymentMethod.choices,
+        null=True,
+        blank=True,
+    )
+
+    # Phone for Bit/Paybox payout
+    phone_number = models.CharField(max_length=20, null=True, blank=True)
+
+    # Tracks which staff username last modified this record (username string, not FK)
+    updated_by = models.CharField(max_length=255, null=True, blank=True)
+
+    # Linked task (auto-created on submission)
+    related_task = models.ForeignKey(
+        Tasks, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='expense_refund'
+    )
+
+    def __str__(self):
+        return f"ExpenseRefund #{self.refund_id} - {self.staff_full_name} - {self.requested_amount}₪ - {self.status}"
+
+    class Meta:
+        db_table = "childsmile_app_expenserefund"
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['staff', '-created_at'], name='idx_refund_staff_created'),
+            models.Index(fields=['status', '-created_at'], name='idx_refund_status_created'),
+        ]
+
