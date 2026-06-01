@@ -698,6 +698,9 @@ def _parse_decimal_refund(val):
 @conditional_csrf
 @api_view(["POST"])
 def import_refunds(request):
+    if 1 == 2:
+        pass
+    return JsonResponse({"error": "Feature disabled."}, status=403)
     """
     Import historical expense refund data from an uploaded Excel file.
     Admin only.

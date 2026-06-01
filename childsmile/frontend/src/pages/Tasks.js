@@ -678,6 +678,11 @@ const Tasks = () => {
     return typeName === "הסרת משפחה מקבוצה";
   };
 
+  // Helper to check if task is an expense refund task
+  const isRefundTaskByName = (typeName) => {
+    return typeName.includes("החזר");
+  };
+
   const isRegistrationApprovalTask = (typeId) => {
     const type = taskTypes.find(t => t.id === typeId);
     return type && type.name === "אישור הרשמה";
@@ -1155,7 +1160,7 @@ const Tasks = () => {
                     <p>סוג משימה: {getTaskTypeName(selectedTask.type)}</p>
                     <p>לביצוע על ידי: {selectedTask.assignee.replace(/_/g, ' ')}</p>
                     {/* Show Child and Tutor only if NOT special task types */}
-                    {!isInterviewTask(selectedTask.type) && !isFamilyAdditionTask(selectedTask.type) && !isRegistrationApprovalTaskByName(selectedTask.type_name) && !isTuteeMatchTaskByName(selectedTask.type_name) && !isFamilyGroupAssignmentTaskByName(selectedTask.type_name) && !isRemoveFamilyFromGroupTaskByName(selectedTask.type_name) && (
+                    {!isInterviewTask(selectedTask.type) && !isFamilyAdditionTask(selectedTask.type) && !isRegistrationApprovalTaskByName(selectedTask.type_name) && !isTuteeMatchTaskByName(selectedTask.type_name) && !isFamilyGroupAssignmentTaskByName(selectedTask.type_name) && !isRemoveFamilyFromGroupTaskByName(selectedTask.type_name) && !isRefundTaskByName(selectedTask.type_name) && (
                       <>
                         <p>חניך: {getChildFullName(selectedTask.child, childrenOptions)}</p>
                         <p>חונך: {getTutorFullName(selectedTask.tutor, tutorsOptions)}</p>
@@ -1243,9 +1248,32 @@ const Tasks = () => {
                         <p><strong>תאריך הרשמה:</strong> {selectedTask.family_details.registration_date || "---"}</p>
                       </>
                     )}
-                    {/* Show explanation field */}
-                    {selectedTask.explanation && (
+                    {/* Show explanation field — but not for refund tasks (explanation is the /refunds?highlight URL) */}
+                    {selectedTask.explanation && !isRefundTaskByName(selectedTask.type_name) && (
                       <p><strong>הסבר:</strong> {selectedTask.explanation}</p>
+                    )}
+                    {/* Refund task: show description + navigate button */}
+                    {isRefundTaskByName(selectedTask.type_name) && (
+                      <>
+                        {selectedTask.explanation && (() => {
+                          // Description format: "בקשת החזר הוצאות - {staff_full_name} - {amount}₪"
+                          // Extract the requester name (middle segment between first and second " - ")
+                          const descParts = (selectedTask.description || '').split(' - ');
+                          const requesterName = descParts.length >= 2 ? descParts[1].trim() : '';
+                          return (
+                            <button
+                              className="review-page-link-btn"
+                              onClick={e => {
+                                e.stopPropagation();
+                                navigate('/refunds', { state: { search: requesterName } });
+                              }}
+                              style={{ marginTop: '8px', fontSize: '0.82rem', background: '#1a3a5c', color: '#fff', border: 'none', borderRadius: '4px', padding: '5px 12px', cursor: 'pointer', fontWeight: '600' }}
+                            >
+                              ← עבור לדף החזרי הוצאות
+                            </button>
+                          );
+                        })()}
+                      </>
                     )}
                   </div>
                 </div>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 import InnerPageHeader from '../components/InnerPageHeader';
 import axios from '../axiosConfig';
@@ -29,16 +29,31 @@ const STATUS_BADGE_CLASS = {
 
 const PAGE_SIZE = 5;
 
+// Format any date string to dd/mm/yyyy
+const fmtDate = (dateStr) => {
+  if (!dateStr) return '—';
+  // Already dd/mm/yyyy
+  if (/^\d{2}\/\d{2}\/\d{4}$/.test(dateStr)) return dateStr;
+  // YYYY-MM-DD
+  const m = dateStr.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (m) return `${m[3]}/${m[2]}/${m[1]}`;
+  return dateStr;
+};
+
 // ── Component ──────────────────────────────────────────────────────────────────
 const Refunds = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const location = useLocation();
 
   // ── Data state ────────────────────────────────────────────────────────────
   const [refunds, setRefunds] = useState([]);
   const [loading, setLoading] = useState(true);
   const [permissions, setPermissions] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
+
+  // ── Search ────────────────────────────────────────────────────────────────
+  const [searchQuery, setSearchQuery] = useState('');
 
   // ── Role flags ────────────────────────────────────────────────────────────
   const [isAdminUser, setIsAdminUser] = useState(false);
@@ -88,6 +103,13 @@ const Refunds = () => {
     detectAdminRole();
   }, []);
 
+  // Pre-fill search if navigated from Tasks with a volunteer name
+  useEffect(() => {
+    if (location.state?.search) {
+      setSearchQuery(location.state.search);
+    }
+  }, [location.state]);
+
   const detectAdminRole = () => {
     const staff = JSON.parse(localStorage.getItem('staff') || '[]');
     const origUsername = localStorage.getItem('origUsername') || '';
@@ -118,8 +140,15 @@ const Refunds = () => {
   };
 
   // ── Totals ────────────────────────────────────────────────────────────────
-  const totalRequested = refunds.reduce((s, r) => s + parseFloat(r.requested_amount || 0), 0);
-  const totalApproved = refunds.reduce((s, r) => s + parseFloat(r.approved_amount || 0), 0);
+  const filteredRefunds = searchQuery
+    ? refunds.filter(r =>
+        (r.staff_full_name || '').includes(searchQuery) ||
+        (r.description || '').includes(searchQuery) ||
+        (r.status || '').includes(searchQuery)
+      )
+    : refunds;
+  const totalRequested = filteredRefunds.reduce((s, r) => s + parseFloat(r.requested_amount || 0), 0);
+  const totalApproved = filteredRefunds.reduce((s, r) => s + parseFloat(r.approved_amount || 0), 0);
 
   // ── Import from Excel ─────────────────────────────────────────────────────
   const handleImportFile = async (e) => {
@@ -480,6 +509,7 @@ const Refunds = () => {
             <button
               onClick={() => importFileRef.current?.click()}
               disabled={importing}
+              style={{ display: 'none' }}
             >
               {importing ? 'מייבא...' : 'ייבוא מ-Excel'}
             </button>
@@ -489,10 +519,26 @@ const Refunds = () => {
               accept=".xlsx"
               className="refund-import-input-hidden"
               onChange={handleImportFile}
+              style={{ display: 'none' }}
             />
           </>
         )}
+        <input
+          type="text"
+          className="tutorship-search-bar"
+          placeholder={isAdminUser ? 'חיפוש לפי שם, תיאור, סטטוס...' : 'חיפוש לפי תיאור, סטטוס...'}
+          value={searchQuery}
+          onChange={e => { setSearchQuery(e.target.value); setCurrentPage(1); }}
+        />
       </div>
+      {searchQuery && (
+        <div className="filter-chip-container">
+          <span className="filter-chip">
+            מסנן לפי: <strong>{searchQuery}</strong>
+            <button className="filter-chip-close" onClick={() => { setSearchQuery(''); setCurrentPage(1); }}>✕</button>
+          </span>
+        </div>
+      )}
 
       {/* Totals bar */}
       {refunds.length > 0 && (
@@ -504,7 +550,7 @@ const Refunds = () => {
             סה"כ אושר: <strong>{totalApproved.toFixed(2)} ₪</strong>
           </div>
           <div className="refunds-total-chip">
-            רשומות: <strong>{refunds.length}</strong>
+            רשומות: <strong>{filteredRefunds.length}</strong>
           </div>
         </div>
       )}
@@ -516,12 +562,14 @@ const Refunds = () => {
         <div className="refunds-loading">טוען נתונים...</div>
       ) : refunds.length === 0 ? (
         <div className="refunds-empty">אין בקשות החזר להציג</div>
+      ) : filteredRefunds.length === 0 ? (
+        <div className="refunds-empty">לא נמצאו תוצאות לחיפוש</div>
       ) : (
         <div className="refunds-table-wrapper">
           {(() => {
-            const totalPages = Math.max(1, Math.ceil(refunds.length / PAGE_SIZE));
+            const totalPages = Math.max(1, Math.ceil(filteredRefunds.length / PAGE_SIZE));
             const safePage = Math.min(currentPage, totalPages);
-            const paginated = refunds.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
+            const paginated = filteredRefunds.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
             return (
               <>
                 <table className="refunds-table">
@@ -544,7 +592,7 @@ const Refunds = () => {
                       <tr key={r.id} onClick={() => openViewModal(r)}>
                         <td>{r.id}</td>
                         {isAdminUser && <td>{r.staff_full_name}</td>}
-                        <td>{r.expense_date}</td>
+                        <td>{fmtDate(r.expense_date)}</td>
                         <td>{parseFloat(r.requested_amount).toFixed(2)} ₪</td>
                         <td>{r.approved_amount ? `${parseFloat(r.approved_amount).toFixed(2)} ₪` : '—'}</td>
                         <td>
@@ -554,7 +602,7 @@ const Refunds = () => {
                         </td>
                         <td>{r.refund_method || '—'}</td>
                         <td>{r.approved_by || '—'}</td>
-                        <td>{r.created_at}</td>
+                        <td>{fmtDate(r.created_at)}</td>
                         <td onClick={e => e.stopPropagation()}>
                           <button className="refund-row-actions">
                             <span title="ערוך" className="refund-action-btn" onClick={() => openEditModal(r)}>ערוך</span>
