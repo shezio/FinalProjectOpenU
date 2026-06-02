@@ -482,6 +482,25 @@ def delete_refund(request, refund_id):
     except ExpenseRefund.DoesNotExist:
         return JsonResponse({"error": "בקשת ההחזר לא נמצאה."}, status=404)
 
+    # ── Delete blob from Azure before removing the DB row ─────────────────────
+    if refund.file_url and settings.IS_PROD:
+        try:
+            from azure.storage.blob import BlobServiceClient
+            conn_str = os.getenv('AZURE_STORAGE_CONNECTION_STRING')
+            container = os.getenv('AZURE_REFUNDS_CONTAINER', 'refund-receipts')
+            if conn_str:
+                # Extract blob name from URL: everything after the container segment
+                # URL format: https://<account>.blob.core.windows.net/<container>/<blob_name>
+                url_path = refund.file_url.split(f"/{container}/", 1)
+                if len(url_path) == 2:
+                    blob_name = url_path[1].split("?")[0]  # strip any SAS query string
+                    service = BlobServiceClient.from_connection_string(conn_str)
+                    service.get_blob_client(container=container, blob=blob_name).delete_blob()
+                    api_logger.info(f"delete_refund: blob deleted — {blob_name}")
+        except Exception as blob_err:
+            # Log but don't block DB deletion — blob has 7-day lifecycle anyway
+            api_logger.warning(f"delete_refund: blob deletion failed for refund {refund_id}: {blob_err}")
+
     refund.delete()
 
     log_api_action(request=request, action='DELETE_REFUND', success=True,
