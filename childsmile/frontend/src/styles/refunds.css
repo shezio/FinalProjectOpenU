@@ -128,7 +128,7 @@
   padding: 40px 48px;
   width: 90vw;
   max-width: 1200px;
-  max-height: 95vh;
+  max-height: 120vh;
   overflow-y: auto;
   direction: rtl;
   box-shadow: 0 20px 60px rgba(99, 102, 241, 0.25);
@@ -399,6 +399,65 @@
 
 .refunds-table tr.empty-period {
   opacity: 0.4;
+}
+
+.drill-open-btn {
+  margin-right: 8px;
+  font-size: 0.75rem;
+  padding: 2px 8px;
+  border-radius: 4px;
+  border: 1px solid #6366f1;
+  background: rgba(99, 102, 241, 0.08);
+  color: #6366f1;
+  cursor: pointer;
+  font-weight: 600;
+  vertical-align: middle;
+  transition: background 0.15s;
+}
+.drill-open-btn:hover {
+  background: rgba(99, 102, 241, 0.2);
+}
+
+/* Sortable column headers */
+.sortable-th {
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+}
+.sortable-th:hover {
+  background: rgba(99, 102, 241, 0.1);
+}
+
+/* Description cell — wrap long text */
+.refund-desc-cell {
+  max-width: 220px;
+  white-space: normal;
+  word-break: break-word;
+  line-height: 1.4;
+}
+
+/* Description block shown at top of view modal */
+.refund-view-description {
+  background: rgba(99, 102, 241, 0.06);
+  border-right: 3px solid #6366f1;
+  border-radius: 6px;
+  padding: 10px 14px;
+  margin-bottom: 14px;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.refund-view-description strong {
+  display: block;
+  margin-bottom: 4px;
+  color: #1a3a5c;
+}
+
+.drill-modal {
+  width: 75% !important;
+  max-width: 100% !important;
+  max-height: 100% !important;
 }
 
 .refunds-table tfoot tr {

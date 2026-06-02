@@ -55,6 +55,16 @@ const Refunds = () => {
   // ── Search ────────────────────────────────────────────────────────────────
   const [searchQuery, setSearchQuery] = useState('');
 
+  // ── Sort ──────────────────────────────────────────────────────────────────
+  const [sortField, setSortField] = useState('expense_date');
+  const [sortDir, setSortDir]     = useState('desc'); // 'asc' | 'desc'
+
+  const toggleSort = (field) => {
+    if (sortField === field) setSortDir(d => d === 'asc' ? 'desc' : 'asc');
+    else { setSortField(field); setSortDir('desc'); }
+  };
+  const sortArrow = (field) => sortField === field ? (sortDir === 'asc' ? ' ▲' : ' ▼') : ' ⇅';
+
   // ── Role flags ────────────────────────────────────────────────────────────
   const [isAdminUser, setIsAdminUser] = useState(false);
 
@@ -140,13 +150,19 @@ const Refunds = () => {
   };
 
   // ── Totals ────────────────────────────────────────────────────────────────
-  const filteredRefunds = searchQuery
+  const filteredRefunds = (searchQuery
     ? refunds.filter(r =>
         (r.staff_full_name || '').includes(searchQuery) ||
         (r.description || '').includes(searchQuery) ||
         (r.status || '').includes(searchQuery)
       )
-    : refunds;
+    : refunds
+  ).slice().sort((a, b) => {
+    const va = a[sortField] || '';
+    const vb = b[sortField] || '';
+    const cmp = va < vb ? -1 : va > vb ? 1 : 0;
+    return sortDir === 'asc' ? cmp : -cmp;
+  });
   const totalRequested = filteredRefunds.reduce((s, r) => s + parseFloat(r.requested_amount || 0), 0);
   const totalApproved = filteredRefunds.reduce((s, r) => s + parseFloat(r.approved_amount || 0), 0);
 
@@ -409,12 +425,14 @@ const Refunds = () => {
         </select>
       </div>
 
-      {/* Description — sits in next available grid cell (col 3 in edit, col 3 in create) */}
-      <div className="refund-form-group">
-        <label>תיאור *</label>
-        <textarea name="description" value={formData.description} onChange={handleFormChange} disabled={readOnly} />
-        {formErrors.description && <div className="refund-field-error">{formErrors.description}</div>}
-      </div>
+      {/* Description — hidden in read-only/view mode (shown in header block above); wider+taller in edit */}
+      {!readOnly && (
+        <div className="refund-form-group full-width">
+          <label>תיאור *</label>
+          <textarea name="description" value={formData.description} onChange={handleFormChange} style={{ minHeight: '90px', resize: 'vertical' }} />
+          {formErrors.description && <div className="refund-field-error">{formErrors.description}</div>}
+        </div>
+      )}
 
       {/* Full-width: phone */}
       <div className="refund-form-group full-width">
@@ -577,13 +595,13 @@ const Refunds = () => {
                     <tr>
                       <th>#</th>
                       {isAdminUser && <th>שם מלא</th>}
-                      <th>תאריך הוצאה</th>
+                      <th className="sortable-th" onClick={() => toggleSort('expense_date')}>תאריך הוצאה{sortArrow('expense_date')}</th>
                       <th>סכום מבוקש</th>
                       <th>סכום שאושר</th>
                       <th>סטטוס</th>
                       <th>אמצעי תשלום</th>
                       <th>אושר ע"י</th>
-                      <th>תאריך יצירה</th>
+                      <th className="sortable-th" onClick={() => toggleSort('created_at')}>תאריך יצירה{sortArrow('created_at')}</th>
                       <th>פעולות</th>
                     </tr>
                   </thead>
@@ -681,6 +699,12 @@ const Refunds = () => {
           <div className="refund-modal" onClick={e => e.stopPropagation()}>
             <button className="refund-modal-close" onClick={() => setIsViewModalOpen(false)}>✕</button>
             <h2>פרטי בקשה #{selectedRefund.id} — {selectedRefund.staff_full_name}</h2>
+            {selectedRefund.description && (
+              <div className="refund-view-description">
+                <strong>תיאור:</strong>
+                <p>{selectedRefund.description}</p>
+              </div>
+            )}
             {/* Pre-fill form read-only */}
             {renderFormFields(true)}
             <div className="refund-modal-actions">
