@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 import InnerPageHeader from '../components/InnerPageHeader';
@@ -30,6 +30,19 @@ const parseDate = (dateStr) => {
 const fmt = (num) => Number(num || 0).toFixed(2);
 const pct = (approved, requested) =>
   requested > 0 ? `${((approved / requested) * 100).toFixed(0)}%` : '—';
+
+const fmtDate = (dateStr) => {
+  if (!dateStr) return '—';
+  if (/^\d{2}\/\d{2}\/\d{4}$/.test(dateStr)) return dateStr;
+  const m = dateStr.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (m) return `${m[3]}/${m[2]}/${m[1]}`;
+  return dateStr;
+};
+
+const STATUS_BADGE_CLASS = {
+  'ממתין': 'ממתין', 'אושר': 'אושר', 'אושר חלקית': 'אושר-חלקית',
+  'שולם': 'שולם', 'בוטל/נדחה': 'בוטל-נדחה',
+};
 
 // ── Component ──────────────────────────────────────────────────────────────────
 const RefundsReport = () => {
@@ -68,6 +81,38 @@ const RefundsReport = () => {
   // ── Filter controls ──────────────────────────────────────────────────────
   const [period, setPeriod] = useState('monthly'); // monthly | quarterly | annual
   const [selectedYear, setSelectedYear] = useState(currentYear);
+
+  // ── Drill-down state ─────────────────────────────────────────────────────
+  const [drillLabel, setDrillLabel] = useState(null);
+  const [drillRows, setDrillRows]   = useState([]);
+  const [drillPage, setDrillPage]   = useState(1);
+  const [drillSortField, setDrillSortField] = useState('expense_date');
+  const [drillSortDir,   setDrillSortDir]   = useState('asc');
+  const DRILL_PAGE_SIZE = 4;
+
+  const toggleDrillSort = (field) => {
+    if (drillSortField === field) setDrillSortDir(d => d === 'asc' ? 'desc' : 'asc');
+    else { setDrillSortField(field); setDrillSortDir('asc'); }
+    setDrillPage(1);
+  };
+  const drillSortArrow = (field) => drillSortField === field ? (drillSortDir === 'asc' ? ' ▲' : ' ▼') : ' ⇅';
+
+  const openDrill = (rowLabel, rowIndex) => {
+    const filtered = refunds.filter(r => {
+      const d = parseDate(r.expense_date);
+      if (!d) return false;
+      if (period === 'annual') return String(d.year) === rowLabel;
+      if (d.year !== selectedYear) return false;
+      if (period === 'monthly') return d.month === rowIndex + 1;
+      if (period === 'quarterly') return Math.ceil(d.month / 3) === rowIndex + 1;
+      return false;
+    });
+    setDrillLabel(rowLabel);
+    setDrillRows(filtered);
+    setDrillPage(1);
+  };
+
+  const closeDrill = () => { setDrillLabel(null); setDrillRows([]); setDrillPage(1); };
 
   // ── Computed report data ─────────────────────────────────────────────────
   const computeRows = () => {
@@ -126,6 +171,7 @@ const RefundsReport = () => {
     (acc, r) => ({ requested: acc.requested + r.requested, approved: acc.approved + r.approved, count: acc.count + r.count }),
     { requested: 0, approved: 0, count: 0 }
   );
+  const pendingCount = refunds.filter(r => r.status === 'ממתין').length;
 
   if (!isAdminUser) return null;
 
@@ -141,7 +187,7 @@ const RefundsReport = () => {
 
         <label className="report-filter-label">
           תצוגה:
-          <select value={period} onChange={e => setPeriod(e.target.value)} className="report-filter-select">
+          <select value={period} onChange={e => { setPeriod(e.target.value); setDrillLabel(null); setDrillRows([]); }} className="report-filter-select">
             <option value="monthly">חודשי</option>
             <option value="quarterly">רבעוני</option>
             <option value="annual">שנתי</option>
@@ -151,7 +197,7 @@ const RefundsReport = () => {
         {period !== 'annual' && (
           <label className="report-filter-label">
             שנה:
-            <select value={selectedYear} onChange={e => setSelectedYear(Number(e.target.value))} className="report-filter-select">
+            <select value={selectedYear} onChange={e => { setSelectedYear(Number(e.target.value)); setDrillLabel(null); setDrillRows([]); }} className="report-filter-select">
               {YEAR_OPTIONS.map(y => <option key={y} value={y}>{y}</option>)}
             </select>
           </label>
@@ -175,6 +221,22 @@ const RefundsReport = () => {
         <div className="refunds-loading">טוען נתונים...</div>
       ) : (
         <>
+          {/* ── Totals chips ──────────────────────────────────────────────── */}
+          <div className="refunds-totals-bar">
+            <div className="refunds-total-chip">
+              סה"כ מבוקש: <strong>{fmt(totals.requested)} ₪</strong>
+            </div>
+            <div className="refunds-total-chip">
+              סה"כ אושר: <strong>{fmt(totals.approved)} ₪</strong>
+            </div>
+            <div className="refunds-total-chip">
+              רשומות: <strong>{totals.count}</strong>
+            </div>
+            <div className="refunds-total-chip" style={{ background: pendingCount > 0 ? '#fff3cd' : undefined, borderColor: pendingCount > 0 ? '#f0ad4e' : undefined }}>
+              ממתינות לטיפול: <strong style={{ color: pendingCount > 0 ? '#856404' : undefined }}>{pendingCount}</strong>
+            </div>
+          </div>
+
           {/* ── Period summary table ───────────────────────────────────────── */}
           <div className="refunds-table-wrapper report-section">
             <h3 className="report-section-title">
@@ -192,8 +254,22 @@ const RefundsReport = () => {
               </thead>
               <tbody>
                 {rows.map((row, i) => (
-                  <tr key={i} className={row.count === 0 ? 'empty-period' : ''}>
-                    <td>{row.label}</td>
+                  <tr
+                    key={i}
+                    className={`${row.count === 0 ? 'empty-period' : ''}`}
+                  >
+                    <td>
+                      {row.label}
+                      {row.count > 0 && (
+                        <button
+                          className="drill-open-btn"
+                          onClick={() => openDrill(row.label, i)}
+                          title="פירוט בקשות"
+                        >
+                          פירוט
+                        </button>
+                      )}
+                    </td>
                     <td>{row.count}</td>
                     <td>{fmt(row.requested)}</td>
                     <td>{fmt(row.approved)}</td>
@@ -212,6 +288,111 @@ const RefundsReport = () => {
               </tfoot>
             </table>
           </div>
+
+          {/* ── Drill-down modal ──────────────────────────────────────────── */}
+          {drillLabel && (
+            <div className="refund-modal-overlay" onClick={closeDrill}>
+              <div className="refund-modal drill-modal" onClick={e => e.stopPropagation()}>
+                <button className="refund-modal-close" onClick={closeDrill}>✕</button>
+                <h2>🔍 פירוט בקשות — {drillLabel}</h2>
+                {drillRows.length === 0 ? (
+                  <div className="refunds-empty">אין בקשות לתקופה זו</div>
+                ) : (
+                  <>
+                    {/* mini totals */}
+                    <div className="refunds-totals-bar" style={{ marginBottom: '12px' }}>
+                      <div className="refunds-total-chip">
+                        בקשות: <strong>{drillRows.length}</strong>
+                      </div>
+                      <div className="refunds-total-chip">
+                        סה"כ מבוקש: <strong>{fmt(drillRows.reduce((s, r) => s + parseFloat(r.requested_amount || 0), 0))} ₪</strong>
+                      </div>
+                      <div className="refunds-total-chip">
+                        סה"כ אושר: <strong>{fmt(drillRows.reduce((s, r) => s + parseFloat(r.approved_amount || 0), 0))} ₪</strong>
+                      </div>
+                      {(() => {
+                        const pending = drillRows.filter(r => r.status === 'ממתין').length;
+                        return (
+                          <div className="refunds-total-chip" style={{ background: pending > 0 ? '#fff3cd' : undefined, borderColor: pending > 0 ? '#f0ad4e' : undefined }}>
+                            ממתינות לטיפול: <strong style={{ color: pending > 0 ? '#856404' : undefined }}>{pending}</strong>
+                          </div>
+                        );
+                      })()}
+                    </div>
+
+                    {/* table */}
+                    {(() => {
+                      const sorted = drillRows.slice().sort((a, b) => {
+                        const va = a[drillSortField] || '';
+                        const vb = b[drillSortField] || '';
+                        const cmp = va < vb ? -1 : va > vb ? 1 : 0;
+                        return drillSortDir === 'asc' ? cmp : -cmp;
+                      });
+                      const totalPages = Math.max(1, Math.ceil(sorted.length / DRILL_PAGE_SIZE));
+                      const safePage   = Math.min(drillPage, totalPages);
+                      const paginated  = sorted.slice((safePage - 1) * DRILL_PAGE_SIZE, safePage * DRILL_PAGE_SIZE);
+                      return (
+                        <>
+                          <div className="refunds-table-wrapper" style={{ maxHeight: '340px', overflowY: 'auto' }}>
+                            <table className="refunds-table">
+                              <thead>
+                                <tr>
+                                  <th>#</th>
+                                  <th>שם מלא</th>
+                                  <th className="sortable-th" onClick={() => toggleDrillSort('expense_date')}>תאריך הוצאה{drillSortArrow('expense_date')}</th>
+                                  <th>סכום מבוקש</th>
+                                  <th>סכום אושר</th>
+                                  <th>סטטוס</th>
+                                  <th>אמצעי תשלום</th>
+                                  <th>אושר ע"י</th>
+                                  <th className="sortable-th" onClick={() => toggleDrillSort('created_at')}>תאריך יצירה{drillSortArrow('created_at')}</th>
+                                  <th>תיאור</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {paginated.map(r => (
+                                  <tr key={r.id}>
+                                    <td>{r.id}</td>
+                                    <td>{r.staff_full_name}</td>
+                                    <td>{fmtDate(r.expense_date)}</td>
+                                    <td>{parseFloat(r.requested_amount).toFixed(2)} ₪</td>
+                                    <td>{r.approved_amount ? `${parseFloat(r.approved_amount).toFixed(2)} ₪` : '—'}</td>
+                                    <td>
+                                      <span className={`refund-status-badge ${STATUS_BADGE_CLASS[r.status] || ''}`}>
+                                        {r.status}
+                                      </span>
+                                    </td>
+                                    <td>{r.refund_method || '—'}</td>
+                                    <td>{r.approved_by || '—'}</td>
+                                    <td>{fmtDate(r.created_at)}</td>
+                                    <td className="refund-desc-cell">{r.description}</td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                          <div className="pagination" style={{ marginTop: '10px' }}>
+                              <button onClick={() => setDrillPage(1)} disabled={safePage === 1} className="pagination-arrow">&laquo;</button>
+                              <button onClick={() => setDrillPage(safePage - 1)} disabled={safePage === 1} className="pagination-arrow">&lsaquo;</button>
+                              {Array.from({ length: totalPages }, (_, idx) => {
+                                const p = idx + 1;
+                                const start = Math.max(1, safePage - 2);
+                                const end   = Math.min(totalPages, start + 4);
+                                return p >= start && p <= end ? (
+                                  <button key={p} className={safePage === p ? 'active' : ''} onClick={() => setDrillPage(p)}>{p}</button>
+                                ) : null;
+                              })}
+                              <button onClick={() => setDrillPage(safePage + 1)} disabled={safePage === totalPages} className="pagination-arrow">&rsaquo;</button>
+                              <button onClick={() => setDrillPage(totalPages)} disabled={safePage === totalPages} className="pagination-arrow">&raquo;</button>
+                            </div>
+                        </>
+                      );
+                    })()}
+                  </>
+                )}
+              </div>
+            </div>
+          )}
         </>
       )}
     </div>
