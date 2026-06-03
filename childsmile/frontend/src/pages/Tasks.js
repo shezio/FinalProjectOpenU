@@ -293,6 +293,16 @@ const Tasks = () => {
     }
   }, [filteredTaskTypes]);
 
+  // Auto-assign שלמה בונצל when dev task type is selected
+  useEffect(() => {
+    if (selectedTaskType?.label === 'משימת פיתוח') {
+      const shlomo = staffOptions.find(s =>
+        s.label && s.label.includes('שלמה') && s.label.includes('בונצל')
+      );
+      if (shlomo) setSelectedStaff(shlomo);
+    }
+  }, [selectedTaskType, staffOptions]);
+
   // Combine pending tutors and general volunteers for the dropdown
   const groupedPendingTutorOptions = [
     {
@@ -588,6 +598,7 @@ const Tasks = () => {
     setSelectedPendingTutor(pendingTutorOption);
 
     setDueDate('');
+    setExplanation(task.explanation || '');
     setIsEditModalOpen(true);
   };
 
@@ -681,6 +692,69 @@ const Tasks = () => {
   // Helper to check if task is an expense refund task
   const isRefundTaskByName = (typeName) => {
     return typeName.includes("החזר");
+  };
+
+  // Helper to check if task is a dev task
+  const isDevTaskByName = (typeName) => {
+    return typeName === 'משימת פיתוח';
+  };
+
+  // Renders a plain-text explanation as rich text (bullets, numbered lists, checkboxes)
+  // onToggleCheckbox: optional callback(lineIndex, newText) to allow toggling checkboxes
+  const renderRichExplanation = (text, onToggleCheckbox) => {
+    if (!text) return null;
+    return text.split('\n').map((line, i) => {
+      const trimmed = line.trimStart();
+      // Checkbox unchecked: "[ ] ..."
+      if (/^\[ \]/.test(trimmed)) {
+        return (
+          <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '6px', marginBottom: '3px' }}>
+            <input
+              type="checkbox"
+              style={{ marginTop: '3px', flexShrink: 0, cursor: onToggleCheckbox ? 'pointer' : 'default' }}
+              onChange={() => onToggleCheckbox && onToggleCheckbox(i, line.replace('[ ]', '[x]'))}
+            />
+            <span>{trimmed.replace(/^\[ \]\s*/, '')}</span>
+          </div>
+        );
+      }
+      // Checkbox checked: "[x] ..."
+      if (/^\[x\]/i.test(trimmed)) {
+        return (
+          <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '6px', marginBottom: '3px' }}>
+            <input
+              type="checkbox"
+              defaultChecked
+              style={{ marginTop: '3px', flexShrink: 0, cursor: onToggleCheckbox ? 'pointer' : 'default' }}
+              onChange={() => onToggleCheckbox && onToggleCheckbox(i, line.replace(/\[x\]/i, '[ ]'))}
+            />
+            <span style={{ textDecoration: 'line-through', color: '#888' }}>{trimmed.replace(/^\[x\]\s*/i, '')}</span>
+          </div>
+        );
+      }
+      // Unordered bullet: "- ..." or "* ..."
+      if (/^[-*]\s+/.test(trimmed)) {
+        return (
+          <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '6px', marginBottom: '3px', paddingRight: '4px' }}>
+            <span style={{ flexShrink: 0, fontWeight: 'bold' }}>•</span>
+            <span>{trimmed.replace(/^[-*]\s+/, '')}</span>
+          </div>
+        );
+      }
+      // Numbered list: "1. ..." or "12. ..."
+      if (/^\d+\.\s+/.test(trimmed)) {
+        const num = trimmed.match(/^(\d+)\./)[1];
+        return (
+          <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '6px', marginBottom: '3px', paddingRight: '4px' }}>
+            <span style={{ flexShrink: 0, minWidth: '18px', fontWeight: 'bold' }}>{num}.</span>
+            <span>{trimmed.replace(/^\d+\.\s+/, '')}</span>
+          </div>
+        );
+      }
+      // Plain text (empty line → spacer)
+      if (trimmed === '') return <div key={i} style={{ height: '6px' }} />;
+      return <div key={i} style={{ marginBottom: '3px' }}>{trimmed}</div>;
+    });
   };
 
   const isRegistrationApprovalTask = (typeId) => {
@@ -1160,7 +1234,7 @@ const Tasks = () => {
                     <p>סוג משימה: {getTaskTypeName(selectedTask.type)}</p>
                     <p>לביצוע על ידי: {selectedTask.assignee.replace(/_/g, ' ')}</p>
                     {/* Show Child and Tutor only if NOT special task types */}
-                    {!isInterviewTask(selectedTask.type) && !isFamilyAdditionTask(selectedTask.type) && !isRegistrationApprovalTaskByName(selectedTask.type_name) && !isTuteeMatchTaskByName(selectedTask.type_name) && !isFamilyGroupAssignmentTaskByName(selectedTask.type_name) && !isRemoveFamilyFromGroupTaskByName(selectedTask.type_name) && !isRefundTaskByName(selectedTask.type_name) && (
+                    {!isInterviewTask(selectedTask.type) && !isFamilyAdditionTask(selectedTask.type) && !isRegistrationApprovalTaskByName(selectedTask.type_name) && !isTuteeMatchTaskByName(selectedTask.type_name) && !isFamilyGroupAssignmentTaskByName(selectedTask.type_name) && !isRemoveFamilyFromGroupTaskByName(selectedTask.type_name) && !isRefundTaskByName(selectedTask.type_name) && !isDevTaskByName(selectedTask.type_name) && (
                       <>
                         <p>חניך: {getChildFullName(selectedTask.child, childrenOptions)}</p>
                         <p>חונך: {getTutorFullName(selectedTask.tutor, tutorsOptions)}</p>
@@ -1249,8 +1323,31 @@ const Tasks = () => {
                       </>
                     )}
                     {/* Show explanation field — but not for refund tasks (explanation is the /refunds?highlight URL) */}
-                    {selectedTask.explanation && !isRefundTaskByName(selectedTask.type_name) && (
+                    {selectedTask.explanation && !isRefundTaskByName(selectedTask.type_name) && !isDevTaskByName(selectedTask.type_name) && (
                       <p><strong>הסבר:</strong> {selectedTask.explanation}</p>
+                    )}
+                    {/* Dev task: rich-text explanation (bullets, numbered, checkboxes) */}
+                    {isDevTaskByName(selectedTask.type_name) && selectedTask.explanation && (
+                      <div style={{ marginTop: '10px' }}>
+                        <strong>פירוט משימה:</strong>
+                        <div style={{
+                          marginTop: '6px',
+                          padding: '10px 14px',
+                          background: '#f4f7fb',
+                          borderRadius: '6px',
+                          border: '1px solid #d0daea',
+                          fontSize: '0.92rem',
+                          lineHeight: '1.6',
+                          direction: 'rtl',
+                          textAlign: 'right',
+                        }}>
+                          {renderRichExplanation(selectedTask.explanation, (lineIdx, newLine) => {
+                            const lines = (selectedTask.explanation || '').split('\n');
+                            lines[lineIdx] = newLine;
+                            setSelectedTask(prev => ({ ...prev, explanation: lines.join('\n') }));
+                          })}
+                        </div>
+                      </div>
                     )}
                     {/* Refund task: show description + navigate button */}
                     {isRefundTaskByName(selectedTask.type_name) && (
@@ -1380,11 +1477,39 @@ const Tasks = () => {
                   </>
                 )}
                 {/* Explanation field */}
-                <label>הסבר:</label>
+                <label>{selectedTaskType?.label === 'משימת פיתוח' ? 'פירוט המשימה:' : 'הסבר:'}</label>
+                {selectedTaskType?.label === 'משימת פיתוח' && (
+                  <div style={{ display: 'flex', gap: '6px', marginBottom: '6px', flexWrap: 'wrap' }}>
+                    {[
+                      { label: '• רשימה', insert: '- ' },
+                      { label: '1. ממוספר', insert: '1. ' },
+                      { label: '☐ משימה', insert: '[ ] ' },
+                      { label: '☑ בוצע', insert: '[x] ' },
+                    ].map(({ label, insert }) => (
+                      <button
+                        key={insert}
+                        type="button"
+                        onClick={() => {
+                          const ta = document.getElementById('edit-dev-task-explanation');
+                          if (!ta) return;
+                          const lineStart = explanation.slice(0, ta.selectionStart).lastIndexOf('\n') + 1;
+                          const newVal = explanation.slice(0, lineStart) + insert + explanation.slice(lineStart);
+                          setExplanation(newVal);
+                          setTimeout(() => { ta.focus(); ta.selectionStart = ta.selectionEnd = lineStart + insert.length; }, 0);
+                        }}
+                        style={{ fontSize: '0.78rem', padding: '3px 9px', borderRadius: '4px', border: '1px solid #c5d0e6', background: '#f0f4ff', cursor: 'pointer', color: '#1a3a5c' }}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                )}
                 <textarea
+                  id="edit-dev-task-explanation"
                   className="scrollable-textarea"
                   value={explanation}
                   onChange={e => setExplanation(e.target.value)}
+                  style={selectedTaskType?.label === 'משימת פיתוח' ? { minHeight: '120px', resize: 'vertical' } : {}}
                 />
                 <button onClick={handleUpdateTask}>{t('Update Task')}</button>
               </div>
@@ -1425,6 +1550,11 @@ const Tasks = () => {
                   "staffOptions for assigned_to",
                   staffOptions.map(staff => ({ label: staff.label, role: staff.role }))
                 )}
+                {selectedTaskType?.label === 'משימת פיתוח' ? (
+                  <div style={{ padding: '8px 12px', background: '#f0f4ff', borderRadius: '6px', border: '1px solid #c5d0e6', color: '#1a3a5c', fontWeight: '600', marginBottom: '4px' }}>
+                    שלמה בונצל
+                  </div>
+                ) : (
                 <Select
                   id="assigned_to"
                   options={
@@ -1443,8 +1573,9 @@ const Tasks = () => {
                     }),
                   }}
                 />
+                )}
                 {errors.assigned_to && <p className="error-text">{errors.assigned_to}</p>}
-                {!isInterviewTask(selectedTaskType?.value) && !isFamilyAdditionTask(selectedTaskType?.value) && selectedTaskType?.label !== "הסרת משפחה מקבוצה" && (
+                {!isInterviewTask(selectedTaskType?.value) && !isFamilyAdditionTask(selectedTaskType?.value) && selectedTaskType?.label !== "הסרת משפחה מקבוצה" && selectedTaskType?.label !== 'משימת פיתוח' && (
                   <>
                     <label>ילד</label>
                     <Select
@@ -1490,11 +1621,44 @@ const Tasks = () => {
                   </>
                 )}
                 {/* Explanation field */}
-                <label>הסבר:</label>
+                <label>{selectedTaskType?.label === 'משימת פיתוח' ? 'פירוט המשימה:' : 'הסבר:'}</label>
+                {selectedTaskType?.label === 'משימת פיתוח' && (
+                  <div style={{ display: 'flex', gap: '6px', marginBottom: '6px', flexWrap: 'wrap' }}>
+                    {[
+                      { label: '• רשימה', insert: '- ' },
+                      { label: '1. ממוספר', insert: '1. ' },
+                      { label: '☐ משימה', insert: '[ ] ' },
+                      { label: '☑ בוצע', insert: '[x] ' },
+                    ].map(({ label, insert }) => (
+                      <button
+                        key={insert}
+                        type="button"
+                        onClick={() => {
+                          const ta = document.getElementById('dev-task-explanation');
+                          if (!ta) return;
+                          const start = ta.selectionStart;
+                          const end = ta.selectionEnd;
+                          const before = explanation.slice(0, start);
+                          const after = explanation.slice(end);
+                          // Insert at start of current line
+                          const lineStart = before.lastIndexOf('\n') + 1;
+                          const newVal = explanation.slice(0, lineStart) + insert + explanation.slice(lineStart);
+                          setExplanation(newVal);
+                          setTimeout(() => { ta.focus(); ta.selectionStart = ta.selectionEnd = lineStart + insert.length; }, 0);
+                        }}
+                        style={{ fontSize: '0.78rem', padding: '3px 9px', borderRadius: '4px', border: '1px solid #c5d0e6', background: '#f0f4ff', cursor: 'pointer', color: '#1a3a5c' }}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                )}
                 <textarea
+                  id="dev-task-explanation"
                   className="scrollable-textarea"
                   value={explanation}
                   onChange={e => setExplanation(e.target.value)}
+                  style={selectedTaskType?.label === 'משימת פיתוח' ? { minHeight: '120px', resize: 'vertical' } : {}}
                 />
                 <button onClick={handleSubmitTask} disabled={isGuestUser()}>צור</button>
               </div>

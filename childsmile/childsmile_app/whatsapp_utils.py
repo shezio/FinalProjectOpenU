@@ -1173,3 +1173,69 @@ def send_refund_status_update_to_volunteer_whatsapp(volunteer_phone, volunteer_f
         template_sid=template_sid,
         template_variables=template_variables
     )
+
+
+# ============================================================================
+# DEV TASK WHATSAPP NOTIFICATIONS
+# ============================================================================
+
+def _flatten_task_description(text):
+    """
+    Convert rich-text explanation to a plain comma-separated string for WhatsApp templates.
+    Strips all markdown prefixes ([ ], [x], -, *, 1.) and joins non-empty lines with ", ".
+    """
+    import re
+    lines = []
+    for line in str(text).splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        # Strip any checkbox/bullet/numbered list prefix
+        line = re.sub(r'^\[x\]\s*', '', line, flags=re.IGNORECASE)
+        line = re.sub(r'^\[ \]\s*', '', line)
+        line = re.sub(r'^[-*]\s+', '', line)
+        line = re.sub(r'^\d+\.\s+', '', line)
+        line = line.strip()
+        if line:
+            lines.append(line)
+    return ', '.join(lines)
+
+
+def send_dev_task_assigned_whatsapp(assignee_phone, task_description):
+    """
+    Notify Shlomo that a new dev task has been assigned by Liam.
+    Template: DEV_TASK_ASSIGNED_SID — variable {{1}} must be a single-line string.
+    """
+    template_sid = os.getenv('DEV_TASK_ASSIGNED_SID')
+
+    if not template_sid:
+        api_logger.warning("DEV_TASK_ASSIGNED_SID not configured — skipping WhatsApp notify for dev task assignment")
+        return {"success": False, "error": "DEV_TASK_ASSIGNED_SID not configured"}
+
+    return send_whatsapp_message(
+        assignee_phone,
+        message_body=None,
+        use_template=True,
+        template_sid=template_sid,
+        template_variables={"1": _flatten_task_description(task_description)}
+    )
+
+
+def send_dev_task_completed_whatsapp(liam_phone, task_description):
+    """
+    Notify Liam that Shlomo completed a dev task.
+    Template: DEV_TASK_COMPLETED_SID — variable {{1}} must be a single-line string.
+    """
+    template_sid = os.getenv('DEV_TASK_COMPLETED_SID')
+
+    if not template_sid:
+        api_logger.warning("DEV_TASK_COMPLETED_SID not configured — skipping WhatsApp notify for dev task completion")
+        return {"success": False, "error": "DEV_TASK_COMPLETED_SID not configured"}
+
+    return send_whatsapp_message(
+        liam_phone,
+        message_body=None,
+        use_template=True,
+        template_sid=template_sid,
+        template_variables={"1": _flatten_task_description(task_description)}
+    )

@@ -54,6 +54,7 @@ const Refunds = () => {
 
   // ── Search ────────────────────────────────────────────────────────────────
   const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
 
   // ── Sort ──────────────────────────────────────────────────────────────────
   const [sortField, setSortField] = useState('expense_date');
@@ -150,14 +151,15 @@ const Refunds = () => {
   };
 
   // ── Totals ────────────────────────────────────────────────────────────────
-  const filteredRefunds = (searchQuery
-    ? refunds.filter(r =>
-        (r.staff_full_name || '').includes(searchQuery) ||
-        (r.description || '').includes(searchQuery) ||
-        (r.status || '').includes(searchQuery)
-      )
-    : refunds
-  ).slice().sort((a, b) => {
+  const filteredRefunds = (refunds.filter(r => {
+    const matchesSearch = !searchQuery || (
+      (r.staff_full_name || '').includes(searchQuery) ||
+      (r.description || '').includes(searchQuery) ||
+      (r.status || '').includes(searchQuery)
+    );
+    const matchesStatus = !statusFilter || r.status === statusFilter;
+    return matchesSearch && matchesStatus;
+  })).slice().sort((a, b) => {
     const va = a[sortField] || '';
     const vb = b[sortField] || '';
     const cmp = va < vb ? -1 : va > vb ? 1 : 0;
@@ -520,7 +522,7 @@ const Refunds = () => {
           <>
             <button
               className="btn-report"
-              onClick={() => navigate('/refunds/report')}
+              onClick={() => navigate('/reports/refunds-report')}
             >
               דוח לפי תקופה
             </button>
@@ -541,22 +543,30 @@ const Refunds = () => {
             />
           </>
         )}
+        <select
+          className="refunds-status-filter"
+          value={statusFilter}
+          onChange={e => { setStatusFilter(e.target.value); setCurrentPage(1); }}
+        >
+          <option value="" style={{ background: '#fff', color: '#333' }}>כל הסטטוסים</option>
+          {REFUND_STATUS_OPTIONS.map(s => (
+            <option key={s} value={s} style={{ background: '#fff', color: '#333' }}>{s}</option>
+          ))}
+        </select>
         <input
           type="text"
           className="tutorship-search-bar"
-          placeholder={isAdminUser ? 'חיפוש לפי שם, תיאור, סטטוס...' : 'חיפוש לפי תיאור, סטטוס...'}
+          placeholder={isAdminUser ? 'חיפוש לפי שם, תיאור...' : 'חיפוש לפי תיאור...'}
           value={searchQuery}
           onChange={e => { setSearchQuery(e.target.value); setCurrentPage(1); }}
         />
-      </div>
-      {searchQuery && (
-        <div className="filter-chip-container">
-          <span className="filter-chip">
+        {searchQuery && (
+          <span className="filter-chip filter-chip--inline">
             מסנן לפי: <strong>{searchQuery}</strong>
             <button className="filter-chip-close" onClick={() => { setSearchQuery(''); setCurrentPage(1); }}>✕</button>
           </span>
-        </div>
-      )}
+        )}
+      </div>
 
       {/* Totals bar */}
       {refunds.length > 0 && (
@@ -570,6 +580,14 @@ const Refunds = () => {
           <div className="refunds-total-chip">
             רשומות: <strong>{filteredRefunds.length}</strong>
           </div>
+          {(() => {
+            const pendingCount = refunds.filter(r => r.status === 'ממתין').length;
+            return (
+              <div className={`refunds-total-chip${pendingCount > 0 ? ' refunds-total-chip--pending' : ''}`}>
+                ממתינות לטיפול: <strong className={pendingCount > 0 ? 'pending-count' : ''}>{pendingCount}</strong>
+              </div>
+            );
+          })()}
         </div>
       )}
 

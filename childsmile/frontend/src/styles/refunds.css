@@ -48,6 +48,49 @@
   opacity: 0.85;
 }
 
+.refunds-status-filter {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.9), rgba(168, 85, 247, 0.9));
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 10px 20px;
+  font-size: 24px;
+  cursor: pointer;
+  font-family: Rubik, sans-serif;
+  min-width: 180px;
+  transition: opacity 0.2s ease;
+}
+
+.refunds-status-filter:hover {
+  opacity: 0.85;
+}
+
+.filter-chip--inline {
+  align-self: center;
+}
+
+.refunds-total-chip--pending {
+  background: #fff3cd;
+  border-color: #f0ad4e;
+}
+
+.refunds-total-chip--pending .pending-count {
+  color: #856404;
+}
+
+.drill-totals-bar {
+  margin-bottom: 12px;
+}
+
+.drill-table-wrapper {
+  max-height: 340px;
+  overflow-y: auto;
+}
+
+.drill-pagination {
+  margin-top: 10px;
+}
+
 .refunds-controls button.danger {
   background: linear-gradient(135deg, rgba(239, 68, 68, 0.9), rgba(220, 38, 38, 0.9));
 }
@@ -434,6 +477,16 @@
   white-space: normal;
   word-break: break-word;
   line-height: 1.4;
+}
+
+/* Drill modal description cell — boost specificity to override td white-space: nowrap */
+.refunds-table td.refund-desc-cell {
+  white-space: normal;
+  word-break: break-word;
+  max-width: 300px;
+  min-width: 160px;
+  line-height: 1.5;
+  vertical-align: top;
 }
 
 /* Description block shown at top of view modal */

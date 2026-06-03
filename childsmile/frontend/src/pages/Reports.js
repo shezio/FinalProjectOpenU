@@ -127,7 +127,7 @@ const Reports = () => {
     tutor_feedback_report:                    { name: 'דוח משוב חונכים',                             path: '/reports/tutor-feedback',                            category: 'volunteers' },
     all_volunteers_irs_report:                { name: 'דוח מתנדבים כללי',                            path: '/reports/all_volunteers_irs_report',                 category: 'volunteers' },
     roles_spread_stats_report:                { name: 'דוח התפלגות הרשאות',                          path: '/reports/roles_spread_stats_report',                 category: 'volunteers' },
-    refunds_per_timeperiod:                   { name: 'דוח החזרי הוצאות לפי תקופה',                  path: '/refunds/report',                                    category: 'finances' },
+    refunds_per_timeperiod:                   { name: 'דוח החזרי הוצאות לפי תקופה',                  path: '/reports/refunds-report',                                    category: 'finances' },
   };
 
   const reportPermissions = {
