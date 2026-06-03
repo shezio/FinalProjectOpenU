@@ -1176,6 +1176,94 @@ def send_refund_status_update_to_volunteer_whatsapp(volunteer_phone, volunteer_f
 
 
 # ============================================================================
+# REFUND PAYMENT NOTIFICATION — notify אורי פלזנר to process payment
+# ============================================================================
+
+def send_refund_payment_required_whatsapp(uri_phone, volunteer_full_name, approved_amount,
+                                           payment_phone, refund_method, approved_by, status):
+    """
+    Notify אורי פלזנר that a refund was approved and payment needs to be processed.
+
+    Triggered when a refund status changes to 'אושר' or 'אושר חלקית'.
+    Called from refund_views.py → update_refund() alongside the volunteer notification.
+
+    Template: refund_payment_required (REFUND_PAYMENT_REQUIRED_SID)
+    Variables:
+        1. volunteer_full_name  — name of the person to pay
+        2. approved_amount      — amount to pay (₪)
+        3. payment_details      — phone number (for ביט/פייבוקס) or "העברה בנקאית" with note
+        4. refund_method        — payment method (ביט / פייבוקס / העברה בנקאית / etc.)
+        5. approved_by          — coordinator who approved
+        6. status_display       — 'אושרה' or 'אושרה חלקית' (mapped from raw status)
+
+    Args:
+        uri_phone (str): אורי פלזנר's phone number
+        volunteer_full_name (str): Full name of the volunteer to be paid
+        approved_amount (str|Decimal): Approved payment amount in ₪
+        payment_phone (str|None): Volunteer's payment phone (ביט/פייבוקס), or None
+        refund_method (str|None): Payment method chosen (e.g. 'ביט', 'פייבוקס', 'העברה בנקאית')
+        approved_by (str|None): Name of the coordinator who approved the request
+        status (str): New status — 'אושר' or 'אושר חלקית'
+
+    Returns:
+        dict: send_whatsapp_message result
+    """
+    template_sid = os.getenv('REFUND_PAYMENT_REQUIRED_SID')
+
+    if not template_sid:
+        api_logger.warning("REFUND_PAYMENT_REQUIRED_SID not configured — skipping WhatsApp notify for payment")
+        return {"success": False, "error": "REFUND_PAYMENT_REQUIRED_SID not configured"}
+
+    # In non-prod environments, redirect to שלמה בונצל instead of אורי פלזנר
+    from django.conf import settings
+    api_logger.info(f"send_refund_payment_required_whatsapp: IS_PROD={settings.IS_PROD}")
+    if not settings.IS_PROD:
+        try:
+            from .models import Staff
+            shlomo = Staff.objects.filter(email='shlezi0@gmail.com').first()
+            if shlomo and shlomo.staff_phone:
+                api_logger.info(f"Non-prod: redirecting Uri payment WhatsApp to שלמה בונצל ({shlomo.staff_phone})")
+                uri_phone = shlomo.staff_phone
+            else:
+                api_logger.warning("Non-prod: שלמה בונצל (shlezi0@gmail.com) not found or has no phone — using original uri_phone")
+        except Exception as e:
+            api_logger.warning(f"Non-prod redirect lookup failed: {e} — using original uri_phone")
+
+    # Build payment_details: phone for digital wallets, note for bank transfer
+    if refund_method in ('ביט', 'פייבוקס') and payment_phone:
+        payment_details = f"{payment_phone}"
+    elif refund_method == 'העברה בנקאית':
+        payment_details = f"העברה בנקאית — פנה ל-{volunteer_full_name} לפרטי חשבון"
+    elif payment_phone:
+        payment_details = f"{payment_phone}"
+    else:
+        payment_details = "פרטי תשלום לא זמינים — פנה למבקש"
+
+    status_display_map = {
+        'אושר':        'אושרה',
+        'אושר חלקית': 'אושרה חלקית',
+    }
+    status_display = status_display_map.get(status, status)
+
+    template_variables = {
+        "1": str(volunteer_full_name),
+        "2": str(approved_amount),
+        "3": payment_details,
+        "4": str(refund_method or "לא צוין"),
+        "5": str(approved_by or "לא צוין"),
+        "6": status_display,
+    }
+    api_logger.info(f"Sending refund payment required WhatsApp to Uri: {uri_phone}")
+    return send_whatsapp_message(
+        uri_phone,
+        message_body=None,
+        use_template=True,
+        template_sid=template_sid,
+        template_variables=template_variables
+    )
+
+
+# ============================================================================
 # DEV TASK WHATSAPP NOTIFICATIONS
 # ============================================================================
 

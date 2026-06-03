@@ -50,6 +50,7 @@ from .logger import api_logger
 from .whatsapp_utils import (
     send_refund_new_request_to_admin_whatsapp,
     send_refund_status_update_to_volunteer_whatsapp,
+    send_refund_payment_required_whatsapp,
 )
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -438,6 +439,32 @@ def update_refund(request, refund_id):
                         )
                     except Exception as wa_err:
                         api_logger.error(f"WhatsApp volunteer notify failed for refund #{refund_id}: {wa_err}")
+
+            # ── WhatsApp: notify אורי פלזנר to process payment ───────────────
+            if status_changed and user_is_admin and new_status in ('אושר', 'אושר חלקית'):
+                try:
+                    from .models import SignedUp
+                    uri_staff = Staff.objects.filter(email='oriplezner1@gmail.com').first()
+                    uri_phone = uri_staff.staff_phone if uri_staff else None
+                    # Fallback: look up phone in SignedUp table if Staff phone is empty
+                    if not uri_phone:
+                        uri_signedup = SignedUp.objects.filter(email='oriplezner1@gmail.com').first()
+                        uri_phone = uri_signedup.phone if uri_signedup and uri_signedup.phone else None
+                    if uri_phone:
+                        payment_phone = refund.phone_number or refund.staff.staff_phone
+                        send_refund_payment_required_whatsapp(
+                            uri_phone=uri_phone,
+                            volunteer_full_name=refund.staff_full_name,
+                            approved_amount=refund.approved_amount,
+                            payment_phone=payment_phone,
+                            refund_method=refund.refund_method,
+                            approved_by=refund.approved_by,
+                            status=new_status,
+                        )
+                    else:
+                        api_logger.warning("אורי פלזנר (oriplezner1@gmail.com) not found in Staff or SignedUp, or has no phone — skipping payment WhatsApp")
+                except Exception as wa_err:
+                    api_logger.error(f"WhatsApp Uri payment notify failed for refund #{refund_id}: {wa_err}")
 
         log_api_action(request=request, action='UPDATE_REFUND', success=True,
                        status_code=200, entity_type='ExpenseRefund',

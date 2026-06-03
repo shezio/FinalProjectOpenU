@@ -212,8 +212,9 @@ const Refunds = () => {
     if (!data.file_url && !pendingFile) errs.file = 'יש לצרף קבלה / אסמכתה';
     if (['אושר', 'אושר חלקית'].includes(data.status) && !data.approved_amount)
       errs.approved_amount = 'סכום שאושר נדרש בעת אישור (מלא או חלקי)';
+    if (['אושר', 'אושר חלקית', 'שולם'].includes(data.status) && !data.refund_method)
+      errs.refund_method = 'אמצעי תשלום נדרש בעת אישור';
     if (data.status === 'שולם') {
-      if (!data.refund_method) errs.refund_method = 'אמצעי תשלום נדרש כאשר הסטטוס הוא שולם';
       if (!data.approved_amount) errs.approved_amount = 'סכום שאושר נדרש כאשר הסטטוס הוא שולם';
     }
 
