@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Sidebar from '../components/Sidebar';
-import InnerPageHeader from '../components/InnerPageHeader';
-import axios from '../axiosConfig';
-import { showErrorToast } from '../components/toastUtils';
-import { exportRefundsReportToExcel, exportRefundsReportToPDF } from '../components/export_utils';
-import '../styles/common.css';
-import '../styles/refunds.css';
+import Sidebar from '../../components/Sidebar';
+import InnerPageHeader from '../../components/InnerPageHeader';
+import axios from '../../axiosConfig';
+import { showErrorToast } from '../../components/toastUtils';
+import { exportRefundsReportToExcel, exportRefundsReportToPDF } from '../../components/export_utils';
+import '../../styles/common.css';
+import '../../styles/refunds.css';
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -88,7 +88,7 @@ const RefundsReport = () => {
   const [drillPage, setDrillPage]   = useState(1);
   const [drillSortField, setDrillSortField] = useState('expense_date');
   const [drillSortDir,   setDrillSortDir]   = useState('asc');
-  const DRILL_PAGE_SIZE = 4;
+  const DRILL_PAGE_SIZE = 3;
 
   const toggleDrillSort = (field) => {
     if (drillSortField === field) setDrillSortDir(d => d === 'asc' ? 'desc' : 'asc');
@@ -232,8 +232,8 @@ const RefundsReport = () => {
             <div className="refunds-total-chip">
               רשומות: <strong>{totals.count}</strong>
             </div>
-            <div className="refunds-total-chip" style={{ background: pendingCount > 0 ? '#fff3cd' : undefined, borderColor: pendingCount > 0 ? '#f0ad4e' : undefined }}>
-              ממתינות לטיפול: <strong style={{ color: pendingCount > 0 ? '#856404' : undefined }}>{pendingCount}</strong>
+            <div className={`refunds-total-chip${pendingCount > 0 ? ' refunds-total-chip--pending' : ''}`}>
+              ממתינות לטיפול: <strong className={pendingCount > 0 ? 'pending-count' : ''}>{pendingCount}</strong>
             </div>
           </div>
 
@@ -300,7 +300,7 @@ const RefundsReport = () => {
                 ) : (
                   <>
                     {/* mini totals */}
-                    <div className="refunds-totals-bar" style={{ marginBottom: '12px' }}>
+                    <div className="refunds-totals-bar drill-totals-bar">
                       <div className="refunds-total-chip">
                         בקשות: <strong>{drillRows.length}</strong>
                       </div>
@@ -313,8 +313,8 @@ const RefundsReport = () => {
                       {(() => {
                         const pending = drillRows.filter(r => r.status === 'ממתין').length;
                         return (
-                          <div className="refunds-total-chip" style={{ background: pending > 0 ? '#fff3cd' : undefined, borderColor: pending > 0 ? '#f0ad4e' : undefined }}>
-                            ממתינות לטיפול: <strong style={{ color: pending > 0 ? '#856404' : undefined }}>{pending}</strong>
+                          <div className={`refunds-total-chip${pending > 0 ? ' refunds-total-chip--pending' : ''}`}>
+                            ממתינות לטיפול: <strong className={pending > 0 ? 'pending-count' : ''}>{pending}</strong>
                           </div>
                         );
                       })()}
@@ -333,7 +333,7 @@ const RefundsReport = () => {
                       const paginated  = sorted.slice((safePage - 1) * DRILL_PAGE_SIZE, safePage * DRILL_PAGE_SIZE);
                       return (
                         <>
-                          <div className="refunds-table-wrapper" style={{ maxHeight: '340px', overflowY: 'auto' }}>
+                          <div className="refunds-table-wrapper drill-table-wrapper">
                             <table className="refunds-table">
                               <thead>
                                 <tr>
@@ -371,7 +371,7 @@ const RefundsReport = () => {
                               </tbody>
                             </table>
                           </div>
-                          <div className="pagination" style={{ marginTop: '10px' }}>
+                          <div className="pagination drill-pagination">
                               <button onClick={() => setDrillPage(1)} disabled={safePage === 1} className="pagination-arrow">&laquo;</button>
                               <button onClick={() => setDrillPage(safePage - 1)} disabled={safePage === 1} className="pagination-arrow">&lsaquo;</button>
                               {Array.from({ length: totalPages }, (_, idx) => {

@@ -59,6 +59,7 @@ from django.db import connection
 from django.views.decorators.csrf import csrf_exempt
 from django.db import transaction
 from .coordinator_utils import create_tasks_for_admins_async
+from .whatsapp_utils import send_dev_task_assigned_whatsapp, send_dev_task_completed_whatsapp
 from django.utils import timezone
 import datetime
 from datetime import datetime, date, timedelta
@@ -526,6 +527,25 @@ def create_task(request):
                 'assigned_to_email': assignee_email
             }
         )
+
+        # --- DEV TASK: notify assigned developer via WhatsApp ---
+        if 'task_type_obj' in locals() and task_type_obj.task_type == 'משימת פיתוח':
+            try:
+                if assignee_email and assignee_email.lower() == 'shlezi0@gmail.com':
+                    assignee_obj = Staff.objects.get(staff_id=assigned_to_id)
+                    assignee_phone = assignee_obj.staff_phone
+                    if assignee_phone:
+                        explanation = task_data.get('explanation', '') or ''
+                        threading.Thread(
+                            target=send_dev_task_assigned_whatsapp,
+                            args=(assignee_phone, explanation),
+                            daemon=True
+                        ).start()
+                        api_logger.info(f"Dev task assigned WhatsApp queued for {assignee_phone}")
+                    else:
+                        api_logger.warning("Dev task created but assignee has no staff_phone in DB")
+            except Exception as e:
+                api_logger.error(f"Dev task assigned WhatsApp error: {str(e)}")
 
         return JsonResponse({"task_id": task.task_id}, status=201)
     except Task_Types.DoesNotExist:
@@ -1522,6 +1542,23 @@ def update_task_status(request, task_id):
                                 'completed_task_id': task.task_id
                             }
                         )
+
+        # --- DEV TASK: notify Liam when a dev task is completed ---
+        if new_status == "הושלמה" and task.task_type and task.task_type.task_type == 'משימת פיתוח':
+            try:
+                liam = Staff.objects.filter(first_name="ליאם", last_name="אביבי").first()
+                liam_phone = liam.staff_phone if liam and liam.staff_phone else None
+                if liam_phone:
+                    threading.Thread(
+                        target=send_dev_task_completed_whatsapp,
+                        args=(liam_phone, task.explanation or task.description or ''),
+                        daemon=True
+                    ).start()
+                    api_logger.info(f"Dev task completed WhatsApp queued to Liam at {liam_phone}")
+                else:
+                    api_logger.warning("Dev task completed but Liam's phone not found in DB")
+            except Exception as e:
+                api_logger.error(f"Dev task completed WhatsApp error: {str(e)}")
 
         log_api_action(
             request=request,
