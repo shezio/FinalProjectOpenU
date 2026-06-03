@@ -228,13 +228,22 @@ def create_refund(request):
     if phone_number and not _validate_israeli_phone(phone_number):
         return JsonResponse({"error": "phone_number must be a valid Israeli phone number (e.g. 0541234567)."}, status=400)
 
+    # ── Resolve target staff (allow submitting on behalf of another user) ────────
+    on_behalf_id = data.get('on_behalf_of_staff_id')
+    target_staff = staff
+    if on_behalf_id:
+        try:
+            target_staff = Staff.objects.get(staff_id=int(on_behalf_id))
+        except (Staff.DoesNotExist, ValueError, TypeError):
+            return JsonResponse({"error": f"Staff with id {on_behalf_id} not found."}, status=400)
+
     # ── Build staff full name ──────────────────────────────────────────────────
-    staff_full_name = f"{staff.first_name} {staff.last_name}".strip()
+    staff_full_name = f"{target_staff.first_name} {target_staff.last_name}".strip()
 
     try:
         with transaction.atomic():
             refund = ExpenseRefund.objects.create(
-                staff=staff,
+                staff=target_staff,
                 staff_full_name=staff_full_name,
                 expense_date=data['expense_date'],
                 requested_amount=requested_amount,

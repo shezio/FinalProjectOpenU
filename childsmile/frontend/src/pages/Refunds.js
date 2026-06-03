@@ -32,12 +32,28 @@ const PAGE_SIZE = 5;
 // Format any date string to dd/mm/yyyy
 const fmtDate = (dateStr) => {
   if (!dateStr) return '—';
-  // Already dd/mm/yyyy
+  // Already dd/mm/yyyy (no time) — just return
   if (/^\d{2}\/\d{2}\/\d{4}$/.test(dateStr)) return dateStr;
   // YYYY-MM-DD
   const m = dateStr.match(/^(\d{4})-(\d{2})-(\d{2})/);
   if (m) return `${m[3]}/${m[2]}/${m[1]}`;
   return dateStr;
+};
+
+// Format UTC datetime string (dd/mm/yyyy HH:MM from server) → local time
+const fmtDateTime = (dateStr) => {
+  if (!dateStr) return '—';
+  // dd/mm/yyyy HH:MM — treat as UTC, convert to local
+  const m = dateStr.match(/^(\d{2})\/(\d{2})\/(\d{4}) (\d{2}):(\d{2})/);
+  if (m) {
+    const utc = new Date(Date.UTC(Number(m[3]), Number(m[2])-1, Number(m[1]), Number(m[4]), Number(m[5])));
+    const dd = String(utc.getDate()).padStart(2, '0');
+    const mo = String(utc.getMonth()+1).padStart(2, '0');
+    const hh = String(utc.getHours()).padStart(2, '0');
+    const mi = String(utc.getMinutes()).padStart(2, '0');
+    return `${dd}/${mo}/${utc.getFullYear()} ${hh}:${mi}`;
+  }
+  return fmtDate(dateStr);
 };
 
 // ── Component ──────────────────────────────────────────────────────────────────
@@ -55,6 +71,12 @@ const Refunds = () => {
   // ── Search ────────────────────────────────────────────────────────────────
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+
+  // ── Staff list (for "submit as another user" — fetched from /api/staff/) ──
+  const [staffList, setStaffList] = useState([]);
+  const [staffSearch, setStaffSearch] = useState('');
+  const [staffDropOpen, setStaffDropOpen] = useState(false);
+  const [selectedStaffId, setSelectedStaffId] = useState(''); // dedicated — never inside formData
 
   // ── Sort ──────────────────────────────────────────────────────────────────
   const [sortField, setSortField] = useState('expense_date');
@@ -112,6 +134,14 @@ const Refunds = () => {
     fetchRefunds();
     fetchPhoneHint();
     detectAdminRole();
+    axios.get('/api/staff/')
+      .then(res => {
+        const sorted = (res.data.staff || []).sort((a, b) =>
+          `${a.first_name} ${a.last_name}`.localeCompare(`${b.first_name} ${b.last_name}`, 'he')
+        );
+        setStaffList(sorted);
+      })
+      .catch(() => {});
   }, []);
 
   // Pre-fill search if navigated from Tasks with a volunteer name
@@ -160,8 +190,18 @@ const Refunds = () => {
     const matchesStatus = !statusFilter || r.status === statusFilter;
     return matchesSearch && matchesStatus;
   })).slice().sort((a, b) => {
-    const va = a[sortField] || '';
-    const vb = b[sortField] || '';
+    let va = a[sortField] || '';
+    let vb = b[sortField] || '';
+    // Parse dd/mm/yyyy HH:MM or dd/mm/yyyy → sortable value
+    const parseDateVal = (v) => {
+      const m = String(v).match(/^(\d{2})\/(\d{2})\/(\d{4})(?: (\d{2}):(\d{2}))?/);
+      if (m) return new Date(m[3], m[2]-1, m[1], m[4]||0, m[5]||0).getTime();
+      return new Date(v).getTime() || v;
+    };
+    if (sortField === 'expense_date' || sortField === 'created_at' || sortField === 'updated_at') {
+      va = parseDateVal(va);
+      vb = parseDateVal(vb);
+    }
     const cmp = va < vb ? -1 : va > vb ? 1 : 0;
     return sortDir === 'asc' ? cmp : -cmp;
   });
@@ -278,6 +318,8 @@ const Refunds = () => {
     });
     setFormErrors({});
     setPendingFile(null);
+    setStaffSearch('');
+    setSelectedStaffId('');
     setIsCreateModalOpen(true);
   };
 
@@ -293,6 +335,7 @@ const Refunds = () => {
 
     const payload = {
       ...formData,
+      on_behalf_of_staff_id: selectedStaffId || '',
       file_url: fileUrl,
       phone_number: normalizePhone(formData.use_hint_phone ? phoneHint : formData.phone_number),
     };
@@ -325,9 +368,12 @@ const Refunds = () => {
       phone_number: refund.phone_number || '',
       use_hint_phone: !!refund.phone_number,
       save_phone_for_future: false,
+      on_behalf_of_staff_id: refund.staff_id ? Number(refund.staff_id) : '',
     });
     setFormErrors({});
     setPendingFile(null);
+    setStaffSearch('');
+    setSelectedStaffId(refund.staff_id ? Number(refund.staff_id) : '');
     setIsEditModalOpen(true);
   };
 
@@ -343,6 +389,7 @@ const Refunds = () => {
 
     const payload = {
       ...formData,
+      on_behalf_of_staff_id: selectedStaffId || '',
       file_url: fileUrl,
       phone_number: normalizePhone(formData.use_hint_phone ? (selectedRefund.phone_number || phoneHint) : formData.phone_number),
     };
@@ -382,7 +429,76 @@ const Refunds = () => {
   // ── Shared form fields JSX ─────────────────────────────────────────────────
   const renderFormFields = (readOnly = false, isCreate = false) => (
     <div className="refund-modal-body">
-      {/* Row 1: date + requested amount + status (hidden on create — always ממתין) */}
+      {/* Row 1: staff selector + date + requested amount */}
+      <div className="refund-form-group">
+        <label>עבור מתנדב</label>
+        {readOnly ? (
+          <div className="refund-readonly-value">
+            {selectedRefund?.staff_full_name || '—'}
+          </div>
+        ) : (
+          <div className="refund-staff-combobox" style={{ position: 'relative' }}>
+            <input
+              type="text"
+              autoComplete="off"
+              placeholder=""
+              value={staffSearch}
+              onFocus={() => { setStaffDropOpen(true); setStaffSearch(''); }}
+              onBlur={() => setTimeout(() => {
+                setStaffDropOpen(false);
+                if (!selectedStaffId) setStaffSearch('');
+              }, 150)}
+              onChange={e => {
+                setStaffSearch(e.target.value);
+                setStaffDropOpen(true);
+                if (!e.target.value) setSelectedStaffId('');
+              }}
+            />
+            {!staffSearch && !staffDropOpen && (
+              <span className="refund-staff-placeholder">
+                {(() => {
+                  const sid = Number(selectedStaffId);
+                  if (!sid) return 'אני';
+                  const found = staffList.find(s => Number(s.id) === sid);
+                  if (found) return `${found.first_name} ${found.last_name}`;
+                  return selectedRefund?.staff_full_name || 'אני';
+                })()}
+              </span>
+            )}
+            {staffDropOpen && (
+              <div className="refund-staff-dropdown">
+                <div
+                  className={`refund-staff-option refund-staff-option--self${!selectedStaffId ? ' selected' : ''}`}
+                  onMouseDown={() => {
+                    setSelectedStaffId('');
+                    setStaffSearch('');
+                    setStaffDropOpen(false);
+                  }}
+                >
+                  אני
+                </div>
+                {staffList
+                  .filter(s => !staffSearch || `${s.first_name} ${s.last_name}`.includes(staffSearch))
+                  .map(s => (
+                    <div
+                      key={s.id}
+                      className={`refund-staff-option${Number(selectedStaffId) === Number(s.id) ? ' selected' : ''}`}
+                      onMouseDown={() => {
+                        setSelectedStaffId(Number(s.id));
+                        setStaffSearch('');
+                        setStaffDropOpen(false);
+                      }}
+                    >
+                      {s.first_name} {s.last_name}
+                    </div>
+                  ))}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Row 1 cont: date + requested amount + status (hidden on create — always ממתין) */}
       <div className="refund-form-group">
         <label>תאריך הוצאה *</label>
         <input type="date" name="expense_date" value={formData.expense_date} onChange={handleFormChange} disabled={readOnly} />
@@ -639,7 +755,7 @@ const Refunds = () => {
                         </td>
                         <td>{r.refund_method || '—'}</td>
                         <td>{r.approved_by || '—'}</td>
-                        <td>{fmtDate(r.created_at)}</td>
+                        <td>{fmtDateTime(r.created_at)}</td>
                         <td onClick={e => e.stopPropagation()}>
                           <button className="refund-row-actions">
                             <span title="ערוך" className="refund-action-btn" onClick={() => openEditModal(r)}>ערוך</span>
