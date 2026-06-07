@@ -91,6 +91,7 @@ const Tasks = () => {
   const [endDate, setEndDate] = useState(getLastDayOfMonth());
   const [filtering, setFiltering] = useState(false);
   const [isTaskTypeFilterOpen, setIsTaskTypeFilterOpen] = useState(false);
+  const [taskTypeSearch, setTaskTypeSearch] = useState('');
   const menuRef = useRef();
   const taskTypeFilterRef = useRef();
   const location = useLocation();
@@ -107,6 +108,7 @@ const Tasks = () => {
                              event.target.closest('.status-filter-button');
       if (taskTypeFilterRef.current && !taskTypeFilterRef.current.contains(event.target) && !isDropdownClick) {
         setIsTaskTypeFilterOpen(false);
+        setTaskTypeSearch('');
       }
     };
     if (menuOpen || isTaskTypeFilterOpen) {
@@ -282,16 +284,18 @@ const Tasks = () => {
 
   // Initialize task type filters for admins - review task unchecked, others checked by default
   useEffect(() => {
-    if (isUserAdmin() && filteredTaskTypes.length > 0) {
+    if (isUserAdmin() && taskTypes.length > 0) {
       const newFilters = {};
-      filteredTaskTypes.forEach(type => {
-        // Check if this is a review task (סקירה חודשית or similar)
-        const isReviewTask = type.name && type.name.includes('שיחת ביקורת');
-        newFilters[type.id] = !isReviewTask; // Review task = false, others = true
-      });
+      taskTypes
+        .filter(type => type.name !== "ראיון מועמד לחונכות" && type.name !== "התאמת חניך")
+        .forEach(type => {
+          // Check if this is a review task (סקירה חודשית or similar)
+          const isReviewTask = type.name && type.name.includes('שיחת ביקורת');
+          newFilters[type.id] = !isReviewTask; // Review task = false, others = true
+        });
       setSelectedTaskTypeFilters(newFilters);
     }
-  }, [filteredTaskTypes]);
+  }, [taskTypes]);
 
   // Auto-assign שלמה בונצל when dev task type is selected
   useEffect(() => {
@@ -979,23 +983,84 @@ const Tasks = () => {
                 <div className="status-filter" ref={taskTypeFilterRef}>
                   <button 
                     className="status-filter-button"
-                    onClick={() => setIsTaskTypeFilterOpen(!isTaskTypeFilterOpen)}
+                    onClick={() => {
+                      setIsTaskTypeFilterOpen(!isTaskTypeFilterOpen);
+                      setTaskTypeSearch('');
+                    }}
                   >
                     סנן לפי סוג
                     <span className={`status-filter-chevron ${isTaskTypeFilterOpen ? 'open' : ''}`}>▼</span>
                   </button>
                   {isTaskTypeFilterOpen && ReactDOM.createPortal(
                     <div className="status-checkboxes-dropdown" style={getDropdownPosition()}>
-                      {filteredTaskTypes.map((type) => (
-                        <label key={type.id} className="status-checkbox-label">
-                          <input
-                            type="checkbox"
-                            checked={selectedTaskTypeFilters[type.id] !== false}
-                            onChange={() => handleTaskTypeFilterChange(type.id)}
-                          />
-                          <span>{type.name}</span>
-                        </label>
-                      ))}
+                      {/* Search + select-all + uncheck-all row */}
+                      {(() => {
+                        const adminTaskTypes = taskTypes.filter(t => t.name !== "ראיון מועמד לחונכות" && t.name !== "התאמת חניך");
+                        const allChecked = adminTaskTypes.length > 0 && adminTaskTypes.every(type => selectedTaskTypeFilters[type.id] !== false);
+                        const someChecked = adminTaskTypes.some(type => selectedTaskTypeFilters[type.id] !== false);
+                        return (
+                          <div className="task-type-filter-header">
+                            <label
+                              className="task-type-filter-select-all"
+                              onClick={e => e.stopPropagation()}
+                            >
+                              <input
+                                type="checkbox"
+                                checked={allChecked}
+                                ref={el => { if (el) el.indeterminate = someChecked && !allChecked; }}
+                                onChange={e => {
+                                  e.stopPropagation();
+                                  const newFilters = {};
+                                  adminTaskTypes.forEach(type => { newFilters[type.id] = e.target.checked; });
+                                  setSelectedTaskTypeFilters(newFilters);
+                                }}
+                              />
+                            </label>
+                            <input
+                              type="text"
+                              placeholder="חיפוש..."
+                              value={taskTypeSearch}
+                              onChange={e => setTaskTypeSearch(e.target.value)}
+                              onClick={e => e.stopPropagation()}
+                              className="task-type-filter-search"
+                              autoFocus
+                            />
+                            <button
+                              className="task-type-filter-clear-btn"
+                              onClick={e => {
+                                e.stopPropagation();
+                                const cleared = {};
+                                adminTaskTypes.forEach(type => { cleared[type.id] = false; });
+                                setSelectedTaskTypeFilters(cleared);
+                              }}
+                              title="בטל סימון לכל"
+                            >
+                              נקה הכל
+                            </button>
+                          </div>
+                        );
+                      })()}
+                      {/* Scrollable list */}
+                      <div className="task-type-filter-list">
+                        {taskTypes
+                          .filter(type => type.name !== "ראיון מועמד לחונכות" && type.name !== "התאמת חניך")
+                          .filter(type => !taskTypeSearch || type.name.includes(taskTypeSearch))
+                          .map((type) => (
+                            <label key={type.id} className="status-checkbox-label">
+                              <input
+                                type="checkbox"
+                                checked={selectedTaskTypeFilters[type.id] !== false}
+                                onChange={() => handleTaskTypeFilterChange(type.id)}
+                              />
+                              <span>{type.name}</span>
+                            </label>
+                          ))}
+                        {taskTypes
+                          .filter(type => type.name !== "ראיון מועמד לחונכות" && type.name !== "התאמת חניך")
+                          .filter(type => !taskTypeSearch || type.name.includes(taskTypeSearch)).length === 0 && (
+                          <div className="task-type-filter-empty">לא נמצאו תוצאות</div>
+                        )}
+                      </div>
                     </div>,
                     document.body
                   )}

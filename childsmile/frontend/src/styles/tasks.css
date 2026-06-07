@@ -1022,3 +1022,99 @@ textarea.scrollable-textarea {
   color: #333;
   font-weight: 500;
 }
+
+/* Portal-rendered dropdown: status-checkbox-label without parent scope */
+.status-checkboxes-dropdown .status-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  padding: 8px 12px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  user-select: none;
+  font-size: 18px;
+}
+
+.status-checkboxes-dropdown .status-checkbox-label:hover {
+  background-color: rgba(147, 51, 234, 0.1);
+}
+
+.status-checkboxes-dropdown .status-checkbox-label input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  accent-color: #9333ea;
+}
+
+.status-checkboxes-dropdown .status-checkbox-label span {
+  color: #333;
+  font-weight: 500;
+}
+
+/* Task type filter dropdown header row */
+.task-type-filter-header {
+  display: flex;
+  gap: 6px;
+  padding: 6px 8px 4px;
+  border-bottom: 1px solid #e0e7ef;
+  align-items: center;
+}
+
+/* Select-all checkbox (no label text) */
+.task-type-filter-select-all {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.task-type-filter-select-all input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  accent-color: #9333ea;
+}
+
+/* Search input */
+.task-type-filter-search {
+  flex: 1;
+  font-size: 24px;
+  padding: 3px 7px;
+  border-radius: 4px;
+  border: 1px solid #c5d0e6;
+  outline: none;
+  font-family: Rubik, sans-serif;
+}
+
+/* "נקה הכל" clear button */
+.task-type-filter-clear-btn {
+  font-size: 18px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  border: 1px solid #c5d0e6;
+  background: #f0f4ff;
+  color: #1a3a5c;
+  cursor: pointer;
+  white-space: nowrap;
+  font-weight: 600;
+  font-family: Rubik, sans-serif;
+}
+
+.task-type-filter-clear-btn:hover {
+  background: #e0e7ff;
+}
+
+/* Scrollable list */
+.task-type-filter-list {
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+/* Empty state */
+.task-type-filter-empty {
+  padding: 8px;
+  color: #888;
+  font-size: 18px;
+  text-align: center;
+  font-family: Rubik, sans-serif;
+}

@@ -537,6 +537,22 @@ def delete_refund(request, refund_id):
             # Log but don't block DB deletion — blob has 7-day lifecycle anyway
             api_logger.warning(f"delete_refund: blob deletion failed for refund {refund_id}: {blob_err}")
 
+    # ── Delete any open "החזר הוצאות" tasks linked to this refund ────────────
+    try:
+        linked_tasks = Tasks.objects.filter(
+            task_type__task_type='החזר הוצאות',
+            status__in=['לא הושלמה', 'בביצוע'],
+        )
+        deleted_tasks = 0
+        for t in linked_tasks:
+            if isinstance(t.user_info, dict) and str(t.user_info.get('refund_id')) == str(refund_id):
+                t.delete()
+                deleted_tasks += 1
+        if deleted_tasks:
+            api_logger.info(f"delete_refund: deleted {deleted_tasks} linked task(s) for refund #{refund_id}")
+    except Exception as task_err:
+        api_logger.warning(f"delete_refund: failed to delete linked tasks for refund {refund_id}: {task_err}")
+
     refund.delete()
 
     log_api_action(request=request, action='DELETE_REFUND', success=True,
