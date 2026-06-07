@@ -74,6 +74,7 @@ const Refunds = () => {
 
   // ── Staff list (for "submit as another user" — fetched from /api/staff/) ──
   const [staffList, setStaffList] = useState([]);
+  const [staffPhoneMap, setStaffPhoneMap] = useState({}); // "FirstName LastName" → phone
   const [staffSearch, setStaffSearch] = useState('');
   const [staffDropOpen, setStaffDropOpen] = useState(false);
   const [selectedStaffId, setSelectedStaffId] = useState(''); // dedicated — never inside formData
@@ -134,12 +135,26 @@ const Refunds = () => {
     fetchRefunds();
     fetchPhoneHint();
     detectAdminRole();
+    // Staff list for "submit on behalf of" dropdown (admin only)
     axios.get('/api/staff/')
       .then(res => {
         const sorted = (res.data.staff || []).sort((a, b) =>
           `${a.first_name} ${a.last_name}`.localeCompare(`${b.first_name} ${b.last_name}`, 'he')
         );
         setStaffList(sorted);
+      })
+      .catch(() => {});
+    // SignedUp table has guaranteed phone for every volunteer — build a name→phone map
+    axios.get('/api/get_signedup/')
+      .then(res => {
+        const map = {};
+        (res.data.signedup_users || []).forEach(u => {
+          const key = `${u.first_name} ${u.surname}`;
+          if (u.phone) map[key] = u.phone;
+          // also key by email for fallback lookup
+          if (u.email && u.phone) map[u.email] = u.phone;
+        });
+        setStaffPhoneMap(map);
       })
       .catch(() => {});
   }, []);
@@ -423,13 +438,29 @@ const Refunds = () => {
   // ── VIEW (detail) ──────────────────────────────────────────────────────────
   const openViewModal = (refund) => {
     setSelectedRefund(refund);
+    setFormData({
+      expense_date: refund.expense_date,
+      requested_amount: refund.requested_amount,
+      approved_amount: refund.approved_amount || '',
+      description: refund.description,
+      volunteer_comment: refund.volunteer_comment || '',
+      admin_comment: refund.admin_comment || '',
+      approved_by: refund.approved_by || '',
+      file_url: refund.file_url || '',
+      status: refund.status,
+      refund_method: refund.refund_method || '',
+      phone_number: refund.phone_number || '',
+      use_hint_phone: false,
+      save_phone_for_future: false,
+    });
     setIsViewModalOpen(true);
   };
 
   // ── Shared form fields JSX ─────────────────────────────────────────────────
   const renderFormFields = (readOnly = false, isCreate = false) => (
     <div className="refund-modal-body">
-      {/* Row 1: staff selector + date + requested amount */}
+      {/* Row 1: staff selector (admin only) + date + requested amount */}
+      {isAdminUser && (
       <div className="refund-form-group">
         <label>עבור מתנדב</label>
         {readOnly ? (
@@ -473,6 +504,8 @@ const Refunds = () => {
                     setSelectedStaffId('');
                     setStaffSearch('');
                     setStaffDropOpen(false);
+                    // Reset phone to current user's hint
+                    setFormData(prev => ({ ...prev, phone_number: '', use_hint_phone: !!phoneHint }));
                   }}
                 >
                   אני
@@ -487,6 +520,14 @@ const Refunds = () => {
                         setSelectedStaffId(Number(s.id));
                         setStaffSearch('');
                         setStaffDropOpen(false);
+                        // Look up phone: 1) SignedUp by name, 2) SignedUp by email, 3) staff_phone from Staff table
+                        const fullName = `${s.first_name} ${s.last_name}`;
+                        const phone = staffPhoneMap[fullName] || staffPhoneMap[s.email] || s.staff_phone || '';
+                        setFormData(prev => ({
+                          ...prev,
+                          phone_number: phone,
+                          use_hint_phone: false,
+                        }));
                       }}
                     >
                       {s.first_name} {s.last_name}
@@ -497,6 +538,7 @@ const Refunds = () => {
           </div>
         )}
       </div>
+      )}
 
       {/* Row 1 cont: date + requested amount + status (hidden on create — always ממתין) */}
       <div className="refund-form-group">
