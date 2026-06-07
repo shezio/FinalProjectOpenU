@@ -262,8 +262,8 @@ def create_refund(request):
             # ── Save phone preference if volunteer requested it ───────────────
             save_phone = data.get('save_phone_for_future', False)
             if save_phone and phone_number:
-                staff.staff_phone = phone_number
-                staff.save(update_fields=['staff_phone'])
+                target_staff.staff_phone = phone_number
+                target_staff.save(update_fields=['staff_phone'])
 
             # ── Auto-create task for Liam (System Administrator) ─────────────
             try:
