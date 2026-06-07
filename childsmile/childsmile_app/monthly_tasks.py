@@ -30,8 +30,10 @@ def check_and_create_monthly_review_tasks():
     - For each child:
       - Check if last_review_talk_conducted is more than REVIEW_INTERVAL days ago (or null)
       - If yes, create ONE task per Technical Coordinator
-      - Prevent duplicates by checking if INCOMPLETE task already exists FOR THAT COORDINATOR
-      - If a task was completed (הושלמה), a new one will be created after REVIEW_INTERVAL days
+      - Prevent duplicates by checking if ANY incomplete task exists for the child (any reviewer)
+      - If even ONE incomplete task exists for the child → skip the entire child
+      - Only if ZERO incomplete tasks exist → create tasks for all reviewers
+      - If all tasks were completed (הושלמה), a new set will be created after REVIEW_INTERVAL days
     - Update last_review_talk_conducted when task is completed (in task_views.py)
     
     Returns:
@@ -155,26 +157,27 @@ def check_and_create_monthly_review_tasks():
 
                 api_logger.info(f"  ✅ QUALIFIES {child_label} — last_talk={child.last_review_talk_conducted or 'never'}")
 
-                # Create one task per Reviewer
+                # CRITICAL: If ANY incomplete review task exists for this child (by any reviewer),
+                # skip the entire child — do NOT create tasks for any reviewer.
+                # This prevents duplicates when only some reviewers have tasks.
+                any_existing_task = Tasks.objects.filter(
+                    related_child=child,
+                    task_type__task_type='שיחת ביקורת',
+                    status__in=['לא הושלמה', 'בביצוע']
+                ).exists()
+
+                if any_existing_task:
+                    _skip('task_exists', f"  ⏭ SKIP {child_label} — incomplete review task already exists (skipping all reviewers)")
+                    tasks_skipped = tasks_skipped_ref[0]
+                    continue
+
+                # No incomplete tasks exist for this child — create one per Reviewer
                 child_full_name = f"{child.childfirstname} {child.childsurname}".strip()
                 last_talk_date = child.last_review_talk_conducted.strftime('%d/%m/%Y') if child.last_review_talk_conducted else 'Never'
                 description = f'Monthly family review talk for {child_full_name} - Last talk: {last_talk_date} - Conduct check-up call with family'
                 due_date = today + timedelta(days=REVIEW_INTERVAL)
 
                 for reviewer in reviewers:
-                    # Check for existing incomplete task for this reviewer
-                    existing_task = Tasks.objects.filter(
-                        related_child=child,
-                        task_type__task_type='שיחת ביקורת',
-                        assigned_to=reviewer,
-                        status__in=['לא הושלמה', 'בביצוע']
-                    ).exists()
-
-                    if existing_task:
-                        _skip('task_exists', f"  ⏭ SKIP {child_label} — incomplete task already exists for reviewer {reviewer.username}")
-                        tasks_skipped = tasks_skipped_ref[0]
-                        continue
-
                     Tasks.objects.create(
                         task_type=task_type,
                         description=description,
