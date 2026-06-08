@@ -12,7 +12,7 @@ import { hasAllPermissions, hasViewPermissionForTable, navigateTo } from '../com
 import { feedbackShowErrorToast } from "../components/toastUtils";
 import hospitals from "../components/hospitals.json";
 
-const PAGE_SIZE = 2;
+const PAGE_SIZE = 5;
 
 const hospitalsList = hospitals.map((hospital) => hospital.trim()).filter((hospital) => hospital !== "");
 
@@ -240,7 +240,16 @@ const TutorFeedbacks = () => {
     const errors = {};
     if (!modalData.tutor_id) errors.tutor_name = t("Tutor Name is required");
     if (!modalData.tutee_id && modalData.feedback_type !== "general_volunteer_hospital_visit") errors.tutee_name = t("Tutee Name is required");
-    if (!modalData.event_date) errors.event_date = t("Event Date is required");
+    if (!modalData.event_date) {
+      errors.event_date = t("Event Date is required");
+    } else {
+      const today = new Date().toISOString().split('T')[0];
+      if (modalData.event_date > today) {
+        errors.event_date = t("תאריך האירוע לא יכול להיות בעתיד");
+      } else if (modalData.event_date < '2024-01-01') {
+        errors.event_date = t("תאריך האירוע לא יכול להיות לפני שנת 2024 (הארגון טרם היה קיים)");
+      }
+    }
     if (!modalData.description) errors.description = t("Description is required");
     if (modalData.feedback_type === "general_volunteer_hospital_visit") {
       if (!modalData.hospital_name) errors.hospital_name = t("Hospital Name is required");
@@ -439,15 +448,18 @@ const TutorFeedbacks = () => {
         {loading && <div className="loader">{t("Loading data...")}</div>}
 
         <div className="feedbacks-filter-create-container">
-          <div className="feedbacks-actions">
-            <div className="create-feedback">
-              <button
-                onClick={() => openModal({})}
-              >
-                {t("Create Feedback")}
-              </button>
-            </div>
-            <div className="feedbacks-filter-row">
+          {/* Row 1: action buttons */}
+          <div className="feedbacks-toolbar-actions">
+            <button className="feedbacks-create-btn" onClick={() => openModal({})}>
+              {t("Create Feedback")}
+            </button>
+            <button className="feedbacks-refund-link-btn" onClick={() => navigateTo('/refunds')}>
+              {t("הגש בקשת החזר הוצאות")}
+            </button>
+          </div>
+          {/* Row 2: filters */}
+          <div className="feedbacks-toolbar-filters">
+            <div className="feedbacks-filter-item">
               <label>{t("Feedback Type")}:</label>
               <select
                 value={modalData.feedback_type || ""}
@@ -462,7 +474,6 @@ const TutorFeedbacks = () => {
                     setCurrentPage(1);
                   }
                 }}
-                className="feedbacks-type-filter"
               >
                 <option value="">{t("All Feedbacks Types")}</option>
                 <option value="tutor_fun_day">{t("tutor_fun_day")}</option>
@@ -471,27 +482,21 @@ const TutorFeedbacks = () => {
                 <option value="tutorship">{t("tutorship")}</option>
               </select>
             </div>
-            <div className="feedbacks-filter-pairs">
-              <div className="feedbacks-filter-pair">
-                <div className="feedbacks-filter-row">
-                  <label>{t("Event Date From")}:</label>
-                  <input type="date" value={eventFrom} onChange={e => setEventFrom(e.target.value)} className="feedbacks-date-input" />
-                </div>
-                <div className="feedbacks-filter-row">
-                  <label>{t("Event Date To")}:</label>
-                  <input type="date" value={eventTo} onChange={e => setEventTo(e.target.value)} className="feedbacks-date-input" />
-                </div>
-              </div>
-              <div className="feedbacks-filter-pair">
-                <div className="feedbacks-filter-row">
-                  <label>{t("Feedback Fill Date From")}:</label>
-                  <input type="date" value={feedbackFrom} onChange={e => setFeedbackFrom(e.target.value)} className="feedbacks-date-input" />
-                </div>
-                <div className="feedbacks-filter-row">
-                  <label>{t("Feedback Fill Date To")}:</label>
-                  <input type="date" value={feedbackTo} onChange={e => setFeedbackTo(e.target.value)} className="feedbacks-date-input" />
-                </div>
-              </div>
+            <div className="feedbacks-filter-item">
+              <label>{t("Event Date From")}:</label>
+              <input type="date" value={eventFrom} onChange={e => setEventFrom(e.target.value)} className="feedbacks-date-input" />
+            </div>
+            <div className="feedbacks-filter-item">
+              <label>{t("Event Date To")}:</label>
+              <input type="date" value={eventTo} onChange={e => setEventTo(e.target.value)} className="feedbacks-date-input" />
+            </div>
+            <div className="feedbacks-filter-item">
+              <label>{t("Feedback Fill Date From")}:</label>
+              <input type="date" value={feedbackFrom} onChange={e => setFeedbackFrom(e.target.value)} className="feedbacks-date-input" />
+            </div>
+            <div className="feedbacks-filter-item">
+              <label>{t("Feedback Fill Date To")}:</label>
+              <input type="date" value={feedbackTo} onChange={e => setFeedbackTo(e.target.value)} className="feedbacks-date-input" />
             </div>
             <button className="feedbacks-filter-button" onClick={applyFilters}>
               {t("Filter")}
@@ -501,6 +506,7 @@ const TutorFeedbacks = () => {
             </button>
           </div>
         </div>
+
         {!loading && (
           <div className="feedback-grid-container">
             <div className="back-to-feedbacks">
@@ -710,6 +716,7 @@ const TutorFeedbacks = () => {
               <span className="feedbacks-close" onClick={closeModal}>&times;</span>
               <h2>{modalData.id ? t("Edit Feedback") : t("Create Feedback")}</h2>
               <form
+                noValidate
                 onSubmit={(e) => {
                   e.preventDefault();
                   if (!validateModal()) return;
@@ -900,6 +907,8 @@ const TutorFeedbacks = () => {
                       type="date"
                       className="feedbacks-date-input"
                       value={modalData.event_date || ""}
+                      min="2024-01-01"
+                      max={new Date().toISOString().split('T')[0]}
                       onChange={e => setModalData({ ...modalData, event_date: e.target.value })}
                     />
                   </div>
