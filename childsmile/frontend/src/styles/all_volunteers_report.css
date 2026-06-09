@@ -51,7 +51,7 @@
 
 /* ===== GRID CONTAINER WITH SPECIFIC MARGINS ===== */
 .all-volunteers-report-main-content .page-content .grid-container {
-    margin-top: 150px;
+    margin-top: 20px;
     margin-right: 180px;
     overflow: visible;
     position: relative;
@@ -96,6 +96,14 @@
 .all-volunteers-report-main-content .data-grid th:nth-child(7),
 .all-volunteers-report-main-content .data-grid td:nth-child(7) {
     width: 100px !important;
+}
+
+/* ===== BACK BUTTON - below controls, above grid ===== */
+.all-families-back-to-reports {
+    display: flex;
+    justify-content: flex-start;
+    margin-top: 10px;
+    margin-right: 50px;
 }
 
 /* ===== MATURE FILTER BUTTON - restore families.css styling ===== */

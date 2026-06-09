@@ -209,7 +209,7 @@ const AllFamiliesExportReport = () => {
                     </div>
                 </div>
                 {!loading && (
-                    <div className="back-to-reports">
+                    <div className="all-families-back-to-reports">
                         <button
                             className="back-button"
                             onClick={() => navigateTo('/reports')}

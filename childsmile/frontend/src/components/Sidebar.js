@@ -148,6 +148,7 @@ const Sidebar = () => {
       hasPermissionToSystemManagement  && { path: '/meeting-management', icon: '📅', label: 'ניהול פגישות' },
       hasPermissionToSystemManagement  && { path: '/coordinator-chat',   icon: '📨', label: 'עדכוני צוות' },
       hasPermissionToReviewer          && { path: '/reviewer',           icon: '🔍', label: 'שיחות ביקורת' },
+      isAdmin                          && { path: '/notification-messages', icon: '🔔', label: 'מרכז העדכונים' },
     ].filter(Boolean);
     const nav = document.createElement('nav');
     nav.id = 'mobile-bottom-nav';
@@ -302,6 +303,9 @@ const Sidebar = () => {
                 {hasPermissionToAuditLog && (
                   <NavBtn path="/audit-log" icon="📜" label="יומן ביקורת" {...navProps} />
                 )}
+                {isAdmin && (
+                  <NavBtn path="/notification-messages" icon="🔔" label="מרכז העדכונים" {...navProps} />
+                )}
                 {hasPermissionToReviewer && (
                   <NavBtn path="/reviewer" icon="🔍" label="שיחות ביקורת" {...navProps} />
                 )}
@@ -315,6 +319,7 @@ const Sidebar = () => {
                 {hasPermissionToSystemManagement && <NavBtn path="/meeting-management" icon="📅" label="ניהול פגישות" {...navProps} />}
                 {hasPermissionToSystemManagement && <NavBtn path="/coordinator-chat" icon="📨" label={t('Team Updates')} {...navProps} />}
                 {hasPermissionToAuditLog && <NavBtn path="/audit-log" icon="📜" label="יומן ביקורת" {...navProps} />}
+                {isAdmin && <NavBtn path="/notification-messages" icon="🔔" label="מרכז העדכונים" {...navProps} />}
                 {hasPermissionToReviewer && <NavBtn path="/reviewer" icon="🔍" label="שיחות ביקורת" {...navProps} />}
               </>
             )}

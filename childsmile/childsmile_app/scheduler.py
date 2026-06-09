@@ -30,6 +30,7 @@ import pytz
 from datetime import datetime
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
+from apscheduler.triggers.interval import IntervalTrigger
 from .logger import api_logger
 
 # Global scheduler instance
@@ -149,6 +150,21 @@ def start_scheduler():
                 api_logger.info(f'� Weekly WhatsApp staff reminders scheduled {day_names[cr_day]} at {coordinator_request_time} Israel time')
             except Exception as cr_err:
                 api_logger.error(f'❌ Could not schedule weekly coordinator request: {cr_err}')
+
+            # Add job: Log birthday notifications on a configurable interval.
+            # BDAYS_REFRESH_RATE — interval in seconds (default 3600 = 1 hour).
+            # Set to a smaller value (e.g. 60) to test quickly.
+            # No DB writes — just reads Children and logs counts.
+            bdays_interval = int(os.environ.get('BDAYS_REFRESH_RATE', '3600'))
+            _scheduler.add_job(
+                func=_run_birthday_notification_refresh,
+                trigger=IntervalTrigger(seconds=bdays_interval, timezone=israel_tz),
+                id='birthday_notification_refresh',
+                name='Birthday Notification Refresh',
+                replace_existing=True,
+                misfire_grace_time=300,
+            )
+            api_logger.info(f'🔔 Birthday notification refresh scheduled every {bdays_interval}s (BDAYS_REFRESH_RATE)')
 
             _scheduler.start()
             api_logger.info(f'✅ Scheduler started | Monthly review: {scheduled_time} Israel time | Cleanup: Friday 11 PM Israel time')
@@ -280,3 +296,24 @@ def _run_weekly_coordinator_request():
         api_logger.info('✅ Weekly coordinator request completed')
     except Exception as e:
         api_logger.error(f'❌ Error in scheduled weekly coordinator request: {str(e)}')
+
+
+def _run_birthday_notification_refresh():
+    """
+    Called on the BDAYS_REFRESH_RATE interval (default 3600 s = 1 hour).
+    Reads Children table and logs which kids have birthdays today / next week.
+    No DB writes.  The bell API computes the same thing live on each GET —
+    this job just gives visibility in the logs so you can confirm the schedule
+    is running and see birthday counts without opening the browser.
+    """
+    try:
+        from .notification_utils import get_birthday_virtual_messages
+        api_logger.info('🔔 Birthday notification check triggered by scheduler')
+        results = get_birthday_virtual_messages()
+        today_count = sum(1 for r in results if r['message_type'] == 'birthday_today')
+        week_count  = sum(1 for r in results if r['message_type'] == 'birthday_next_week')
+        api_logger.info(
+            f'✅ Birthday check done | today={today_count} | next_week={week_count}'
+        )
+    except Exception as e:
+        api_logger.error(f'❌ Error in scheduled birthday notification check: {str(e)}')

@@ -851,3 +851,59 @@ class ExpenseRefund(models.Model):
             models.Index(fields=['status', '-created_at'], name='idx_refund_status_created'),
         ]
 
+
+class NotificationMessage(models.Model):
+    """
+    Notification messages displayed in the notification center bell panel.
+
+    Types:
+      - birthday_today      : auto-generated; child's birthday is today
+      - birthday_next_week  : auto-generated; child's birthday falls in the coming Israeli week (Sun-Sat)
+      - custom_auto         : admin-defined auto message (recurs according to admin config)
+      - manual              : one-off admin message; stays until explicitly deleted by admin
+    """
+
+    class MessageType(models.TextChoices):
+        BIRTHDAY_TODAY     = 'birthday_today',     'יום הולדת היום'
+        BIRTHDAY_THIS_WEEK = 'birthday_this_week', 'יום הולדת השבוע'
+        BIRTHDAY_NEXT_WEEK = 'birthday_next_week', 'יום הולדת השבוע הבא'
+        CUSTOM_AUTO        = 'custom_auto',        'הודעה אוטומטית מותאמת'
+        MANUAL             = 'manual',             'הודעה ידנית'
+
+    id = models.AutoField(primary_key=True)
+    message_type = models.CharField(
+        max_length=30,
+        choices=MessageType.choices,
+        default=MessageType.MANUAL,
+    )
+    title = models.CharField(max_length=255)
+    text  = models.TextField()
+    # For birthday messages — FK to the child; NULL for manual/custom messages
+    child = models.ForeignKey(
+        Children,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name='notification_messages',
+    )
+    # True = system-generated (auto), False = manually composed by admin
+    is_auto = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    # Staff member who created this (NULL for system-generated messages)
+    created_by = models.ForeignKey(
+        Staff,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='created_notifications',
+    )
+
+    def __str__(self):
+        return f"[{self.message_type}] {self.title}"
+
+    class Meta:
+        db_table = "childsmile_app_notification_message"
+        ordering = ['-created_at']
+
