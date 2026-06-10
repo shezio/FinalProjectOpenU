@@ -110,9 +110,10 @@ const RefundsReport = () => {
     setDrillLabel(rowLabel);
     setDrillRows(filtered);
     setDrillPage(1);
+    setDrillStatusFilter('');
   };
 
-  const closeDrill = () => { setDrillLabel(null); setDrillRows([]); setDrillPage(1); };
+  const closeDrill = () => { setDrillLabel(null); setDrillRows([]); setDrillPage(1); setDrillStatusFilter(''); };
 
   // ── Computed report data ─────────────────────────────────────────────────
   const computeRows = () => {
@@ -172,6 +173,10 @@ const RefundsReport = () => {
     { requested: 0, approved: 0, count: 0 }
   );
   const pendingCount = refunds.filter(r => r.status === 'ממתין').length;
+  const pendingPaymentCount = refunds.filter(r => ['אושר', 'אושר חלקית'].includes(r.status)).length;
+
+  // ── Drill filter ─────────────────────────────────────────────────────────
+  const [drillStatusFilter, setDrillStatusFilter] = useState('');
 
   if (!isAdminUser) return null;
 
@@ -234,6 +239,9 @@ const RefundsReport = () => {
             </div>
             <div className={`refunds-total-chip${pendingCount > 0 ? ' refunds-total-chip--pending' : ''}`}>
               ממתינות לטיפול: <strong className={pendingCount > 0 ? 'pending-count' : ''}>{pendingCount}</strong>
+            </div>
+            <div className="refunds-total-chip refunds-total-chip--pending-payment">
+              ממתינות לתשלום: <strong>{pendingPaymentCount}</strong>
             </div>
           </div>
 
@@ -318,11 +326,26 @@ const RefundsReport = () => {
                           </div>
                         );
                       })()}
+                      {(() => {
+                        const pp = drillRows.filter(r => ['אושר', 'אושר חלקית'].includes(r.status)).length;
+                        return (
+                          <div
+                            className={`refunds-total-chip refunds-total-chip--pending-payment${drillStatusFilter === 'ממתינות לתשלום' ? ' active-filter' : ''}`}
+                            onClick={() => { setDrillStatusFilter(f => f === 'ממתינות לתשלום' ? '' : 'ממתינות לתשלום'); setDrillPage(1); }}
+                            title="לחץ לסינון ממתינות לתשלום"
+                          >
+                            ממתינות לתשלום: <strong>{pp}</strong>
+                          </div>
+                        );
+                      })()}
                     </div>
 
                     {/* table */}
                     {(() => {
-                      const sorted = drillRows.slice().sort((a, b) => {
+                      const filtered = drillStatusFilter === 'ממתינות לתשלום'
+                        ? drillRows.filter(r => ['אושר', 'אושר חלקית'].includes(r.status))
+                        : drillRows;
+                      const sorted = filtered.slice().sort((a, b) => {
                         const va = a[drillSortField] || '';
                         const vb = b[drillSortField] || '';
                         const cmp = va < vb ? -1 : va > vb ? 1 : 0;

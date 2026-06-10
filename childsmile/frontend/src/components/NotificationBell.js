@@ -33,7 +33,7 @@ const NotificationBell = () => {
 
   useEffect(() => {
     fetchMessages();
-    const interval = setInterval(fetchMessages, 15 * 1000); // poll every 15s — new messages appear without page refresh
+    const interval = setInterval(fetchMessages, Number(process.env.REACT_APP_BELL_POLL_MS) || 300000);
     return () => clearInterval(interval);
   }, [fetchMessages]);
 
