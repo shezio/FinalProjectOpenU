@@ -469,4 +469,6 @@ urlpatterns = [
     path("api/refunds/", include("childsmile_app.urls_refunds")),
     # Twilio WhatsApp webhooks
     path("api/webhooks/whatsapp-incoming/", whatsapp_incoming, name="whatsapp_incoming"),
+    # Notification Center
+    path("api/notifications/", include("childsmile_app.urls_notifications")),
 ]

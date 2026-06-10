@@ -1,5 +1,6 @@
 import React from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, useLocation } from 'react-router-dom';
+import NotificationBell from './components/NotificationBell';
 import Login from './Login';
 import Tasks from './pages/Tasks'; // Import the Tasks component
 import Families from './pages/Families'; // Import the Families component
@@ -34,6 +35,7 @@ import CoordinatorChat from './pages/CoordinatorChat'; // Import the Coordinator
 import NotFound from './pages/NotFound'; // Import the 404 Not Found page
 import Refunds from './pages/Refunds'; // Import the Expense Refunds component
 import RefundsReport from './pages/report_pages/RefundsReport'; // Import the Expense Refunds Report component
+import NotificationMessages from './pages/NotificationMessages'; // Import the Notification Messages management page
 
 // Add this route to your router:
 
@@ -52,8 +54,15 @@ import RefundsReport from './pages/report_pages/RefundsReport'; // Import the Ex
 
 */
 const App = () => {
+  const location = useLocation();
+  // Don't show the bell on login / registration / google-success (unauthenticated pages)
+  const NO_BELL_PATHS = ['/', '/register', '/google-success'];
+  const showBell = !NO_BELL_PATHS.includes(location.pathname);
+
   return (
-    <Routes>
+    <>
+      {showBell && <NotificationBell />}
+      <Routes>
       <Route path="/" element={<Login />} />
       <Route path="/dashboard" element={<Dashboard />} />
       <Route path="/tasks" element={<Tasks />} />
@@ -87,8 +96,10 @@ const App = () => {
       <Route path="/coordinator-chat" element={<CoordinatorChat />} /> {/* Coordinator messaging interface */}
       <Route path="/refunds" element={<Refunds />} /> {/* Expense Refunds (החזרי הוצאות) */}
       <Route path="/reports/refunds-report" element={<RefundsReport />} /> {/* Expense Refunds Report */}
+      <Route path="/notification-messages" element={<NotificationMessages />} /> {/* Notification Center management */}
       <Route path="*" element={<NotFound />} /> {/* 404 catch-all */}
     </Routes>
+    </>
   );
 };
 

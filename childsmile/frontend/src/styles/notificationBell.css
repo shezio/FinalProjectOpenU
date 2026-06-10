@@ -1,0 +1,173 @@
+/* notificationBell.css */
+
+/* ── Wrapper — sits in the header area ───────────────────────────────────── */
+.notif-bell-wrap {
+  position: fixed;
+  top: 50%;
+  left: 12px;
+  transform: translateY(-50%);
+  z-index: 1100;
+  direction: rtl;
+}
+
+/* ── Bell button ─────────────────────────────────────────────────────────── */
+.notif-bell-btn {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  border: 3px solid rgba(255,255,255,0.5);
+  background: linear-gradient(135deg,
+    rgba(99,102,241,0.92) 0%,
+    rgba(139,92,246,0.92) 100%);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  box-shadow: 0 6px 28px rgba(99,102,241,0.55);
+  cursor: pointer;
+  font-size: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.notif-bell-btn:hover {
+  transform: scale(1.1);
+  box-shadow: 0 10px 34px rgba(99,102,241,0.7);
+}
+
+/* Badge count */
+.notif-bell-count {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background: #ef4444;
+  color: #fff;
+  font-size: 15px;
+  font-weight: 700;
+  font-family: Rubik, sans-serif;
+  min-width: 26px;
+  height: 26px;
+  border-radius: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 5px;
+  border: 2.5px solid #fff;
+}
+
+/* ── Panel ───────────────────────────────────────────────────────────────── */
+.notif-bell-panel {
+  position: fixed;
+  left: 100px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 600px;
+  max-height: 520px;
+  background: rgba(219,234,254,0.22);
+  backdrop-filter: blur(32px) saturate(180%);
+  -webkit-backdrop-filter: blur(32px) saturate(180%);
+  border: 1.5px solid rgba(255,255,255,0.35);
+  border-radius: 20px;
+  box-shadow:
+    0 20px 60px rgba(30,58,95,0.28),
+    inset 0 1px 0 rgba(255,255,255,0.4);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  z-index: 1099;
+  direction: rtl;
+}
+
+/* Panel header */
+.notif-bell-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px 10px;
+  border-bottom: 1px solid rgba(30,64,175,0.15);
+  flex-shrink: 0;
+}
+
+.notif-bell-panel-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: #1e3a5f;
+  font-family: Rubik, sans-serif;
+}
+
+.notif-bell-close {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 18px;
+  color: #64748b;
+  line-height: 1;
+  padding: 2px 6px;
+  border-radius: 6px;
+  transition: background 0.15s;
+}
+.notif-bell-close:hover { background: rgba(100,116,139,0.12); }
+
+/* Empty state */
+.notif-bell-empty {
+  padding: 32px;
+  text-align: center;
+  font-size: 18px;
+  color: #64748b;
+  font-family: Rubik, sans-serif;
+}
+
+/* ── Ferris-wheel scroll ─────────────────────────────────────────────────── */
+.notif-bell-scroll-wrap {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+}
+
+.notif-bell-scroll-track {
+  display: flex;
+  flex-direction: column;
+  will-change: transform;
+}
+
+/* no CSS animation — scroll driven by requestAnimationFrame in JS */
+
+/* ── Single message item ─────────────────────────────────────────────────── */
+.notif-bell-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 18px;
+  border-bottom: 1px solid rgba(30,64,175,0.08);
+}
+.notif-bell-item:last-child { border-bottom: none; }
+
+.notif-bell-item-icon {
+  font-size: 30px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.notif-bell-item-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.notif-bell-item-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: #1e3a5f;
+  font-family: Rubik, sans-serif;
+  margin-bottom: 4px;
+  white-space: pre-wrap;
+}
+
+.notif-bell-item-text {
+  font-size: 24px;
+  font-weight: 400;
+  color: #1e40af;
+  font-family: Rubik, sans-serif;
+  line-height: 1.5;
+  word-break: break-word;
+  white-space: pre-wrap;
+}
