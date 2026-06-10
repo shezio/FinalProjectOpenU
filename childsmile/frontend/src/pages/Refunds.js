@@ -197,12 +197,16 @@ const Refunds = () => {
 
   // ── Totals ────────────────────────────────────────────────────────────────
   const filteredRefunds = (refunds.filter(r => {
-    const matchesSearch = !searchQuery || (
+  const matchesSearch = !searchQuery || (
       (r.staff_full_name || '').includes(searchQuery) ||
       (r.description || '').includes(searchQuery) ||
       (r.status || '').includes(searchQuery)
     );
-    const matchesStatus = !statusFilter || r.status === statusFilter;
+    const matchesStatus = !statusFilter
+      ? true
+      : statusFilter === 'ממתינות לתשלום'
+        ? ['אושר', 'אושר חלקית'].includes(r.status)
+        : r.status === statusFilter;
     return matchesSearch && matchesStatus;
   })).slice().sort((a, b) => {
     let va = a[sortField] || '';
@@ -711,6 +715,7 @@ const Refunds = () => {
           {REFUND_STATUS_OPTIONS.map(s => (
             <option key={s} value={s} style={{ background: '#fff', color: '#333' }}>{s}</option>
           ))}
+          <option value="ממתינות לתשלום" style={{ background: '#fff', color: '#c2410c' }}>ממתינות לתשלום</option>
         </select>
         <input
           type="text"
@@ -744,6 +749,18 @@ const Refunds = () => {
             return (
               <div className={`refunds-total-chip${pendingCount > 0 ? ' refunds-total-chip--pending' : ''}`}>
                 ממתינות לטיפול: <strong className={pendingCount > 0 ? 'pending-count' : ''}>{pendingCount}</strong>
+              </div>
+            );
+          })()}
+          {(() => {
+            const pendingPaymentCount = refunds.filter(r => ['אושר', 'אושר חלקית'].includes(r.status)).length;
+            return (
+              <div
+                className={`refunds-total-chip refunds-total-chip--pending-payment${statusFilter === 'ממתינות לתשלום' ? ' active-filter' : ''}`}
+                onClick={() => { setStatusFilter(f => f === 'ממתינות לתשלום' ? '' : 'ממתינות לתשלום'); setCurrentPage(1); }}
+                title="לחץ לסינון ממתינות לתשלום"
+              >
+                ממתינות לתשלום: <strong>{pendingPaymentCount}</strong>
               </div>
             );
           })()}

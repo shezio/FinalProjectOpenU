@@ -179,7 +179,7 @@ def get_birthday_virtual_messages() -> list:
                 "virtual":      True,
             })
 
-    api_logger.info(
+    api_logger.debug(
         f"🔔 Birthday virtual messages computed: "
         f"today={sum(1 for r in results if r['message_type']=='birthday_today')} "
         f"this_week={sum(1 for r in results if r['message_type']=='birthday_this_week')} "
