@@ -151,6 +151,8 @@ def get_staff(request):
     api_logger.info("get_staff called")
     user_id = request.session.get("user_id")
     if not user_id:
+        log_api_action(request=request, action='UNAUTHORIZED_ACCESS_ATTEMPT',
+                       success=False, error_message="Unauthenticated request to /api/staff/", status_code=403)
         return JsonResponse({"detail": "Authentication credentials were not provided."}, status=403)
     api_logger.debug(f"get_staff run by user_id: {user_id}")
     """
@@ -185,6 +187,7 @@ def get_staff(request):
         )
     api_logger.info(f"get_staff completed successfully for user_id: {user_id}")
     api_logger.debug(f"get_staff response: {staff_data}")
+    log_api_action(request=request, action='VIEW_STAFF_LIST', success=True, status_code=200)
     return JsonResponse({"staff": staff_data})
 
 
@@ -194,6 +197,8 @@ def get_children(request):
     api_logger.info("get_children called")
     user_id = request.session.get("user_id")
     if not user_id:
+        log_api_action(request=request, action='UNAUTHORIZED_ACCESS_ATTEMPT',
+                       success=False, error_message="Unauthenticated request to /api/children/", status_code=403)
         return JsonResponse({"detail": "Authentication credentials were not provided."}, status=403)
     """
     Retrieve all children along with their tutoring status.
@@ -208,9 +213,9 @@ def get_children(request):
         }
         for c in children
     ]
-    user_id = request.session.get("user_id")
     api_logger.info(f"get_children completed successfully for user_id: {user_id}")
     api_logger.debug(f"get_children response: {children_data}")
+    log_api_action(request=request, action='VIEW_CHILDREN_LIST', success=True, status_code=200)
     return JsonResponse({"children": children_data})
 
 
@@ -220,6 +225,8 @@ def get_tutors(request):
     api_logger.info("get_tutors called")
     user_id = request.session.get("user_id")
     if not user_id:
+        log_api_action(request=request, action='UNAUTHORIZED_ACCESS_ATTEMPT',
+                       success=False, error_message="Unauthenticated request to /api/tutors/", status_code=403)
         return JsonResponse({"detail": "Authentication credentials were not provided."}, status=403)
     """
     Retrieve all tutors along with their tutorship status.
@@ -274,6 +281,7 @@ def get_tutors(request):
     user_id = request.session.get("user_id")
     api_logger.info(f"get_tutors completed successfully for user_id: {user_id}")
     api_logger.debug(f"get_tutors response: {len(tutors_data)} tutors returned")
+    log_api_action(request=request, action='VIEW_TUTORS_LIST', success=True, status_code=200)
     return JsonResponse({
         "tutors": tutors_data,
         "tutorship_status_options": status_options,
@@ -287,6 +295,8 @@ def get_pending_tutors(request):
     api_logger.info("get_pending_tutors called")
     user_id = request.session.get("user_id")
     if not user_id:
+        log_api_action(request=request, action='UNAUTHORIZED_ACCESS_ATTEMPT',
+                       success=False, error_message="Unauthenticated request to /api/get_pending_tutors/", status_code=403)
         return JsonResponse({"detail": "Authentication credentials were not provided."}, status=403)
     """
     Retrieve all pending tutors with their full details.
