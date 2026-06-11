@@ -175,7 +175,11 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = [FRONTEND_URL] if IS_PROD else [LOCAL_URL]
-SESSION_COOKIE_SAMESITE = "None"
+# SameSite=Lax in prod kills cross-site form-POST CSRF vector (PT Finding #5).
+# In dev the SPA runs on a different port (cross-origin), so None is kept there.
+# In prod both hosts share the same eTLD+1 (achildssmile.org.il) so Lax still
+# sends the cookie on all legitimate same-site fetch/XHR from the SPA.
+SESSION_COOKIE_SAMESITE = "Lax" if IS_PROD else "None"
 SESSION_COOKIE_SECURE = True #False if not IS_PROD else True
 
 AUTHENTICATION_BACKENDS = (

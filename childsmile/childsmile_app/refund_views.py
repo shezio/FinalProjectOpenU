@@ -4,7 +4,7 @@ Expense Refund Views (החזרי הוצאות)
 Endpoints:
   GET    /api/refunds/                        – list (admin: all | volunteer: own only)
   POST   /api/refunds/create/                 – create new request (any authenticated user)
-  PUT    /api/refunds/update/<refund_id>/     – update (admin: all fields | volunteer: own pending only)
+  PUT    /api/refunds/update/<refund_id>/     – update (admin only)
   DELETE /api/refunds/delete/<refund_id>/     – hard delete from DB (admin only — use sparingly, history is preserved via status)
   GET    /api/refunds/upload-url/             – get Azure Blob SAS pre-signed upload URL
   POST   /api/refunds/import/                 – bulk import from Excel (admin only)
@@ -12,9 +12,9 @@ Endpoints:
 
 Security rules:
   - All endpoints require an authenticated session (user_id in session).
-  - Volunteers can only VIEW / EDIT their own records.
-  - Any attempt to access another user's record returns 403 immediately.
-  - Admins (System Administrator) bypass ownership checks.
+  - Volunteers can VIEW their own records only.
+  - UPDATE is admin-only — any non-admin gets 403 immediately.
+  - Admins can read and modify all records.
   - Rejection is done via status update (בוטל/נדחה), NOT via delete — keeping history.
   - Hard delete is available to admins for genuine garbage/test data removal only.
 """
@@ -336,96 +336,71 @@ def update_refund(request, refund_id):
                        success=False, error_message="Not authenticated", status_code=403)
         return err
 
+    # PT Finding #6: only admins may update refunds
+    user_is_admin = is_admin(staff)
+    if not user_is_admin:
+        log_api_action(request=request, action='UPDATE_REFUND_FAILED',
+                       success=False, error_message="Forbidden – admins only",
+                       status_code=403, entity_ids=[refund_id])
+        return JsonResponse({"detail": "Forbidden."}, status=403)
+
     try:
         refund = ExpenseRefund.objects.get(refund_id=refund_id)
     except ExpenseRefund.DoesNotExist:
         return JsonResponse({"error": "בקשת ההחזר לא נמצאה."}, status=404)
-
-    user_is_admin = is_admin(staff)
-
-    # SECURITY: ownership guard
-    guard_err = _ownership_guard(refund, staff, user_is_admin)
-    if guard_err:
-        log_api_action(request=request, action='UPDATE_REFUND_FORBIDDEN',
-                       success=False, error_message="Forbidden – not owner", status_code=403,
-                       entity_ids=[refund_id])
-        return guard_err
 
     data = request.data
     old_status = refund.status
 
     try:
         with transaction.atomic():
-            # Fields volunteers can edit (only while status is ממתין)
-            if not user_is_admin:
-                if refund.status != 'ממתין':
+            # Admin-only: update any field
+            if 'expense_date' in data:
+                refund.expense_date = data['expense_date']
+            if 'requested_amount' in data:
+                try:
+                    refund.requested_amount = Decimal(str(data['requested_amount']))
+                except (InvalidOperation, ValueError):
+                    return JsonResponse({"error": "requested_amount לא תקין."}, status=400)
+            if 'approved_amount' in data:
+                try:
+                    refund.approved_amount = Decimal(str(data['approved_amount'])) if data['approved_amount'] else None
+                except (InvalidOperation, ValueError):
+                    return JsonResponse({"error": "approved_amount לא תקין."}, status=400)
+            if 'description' in data:
+                refund.description = data['description']
+            if 'volunteer_comment' in data:
+                refund.volunteer_comment = data['volunteer_comment'] or None
+            if 'admin_comment' in data:
+                refund.admin_comment = data['admin_comment'] or None
+            if 'approved_by' in data:
+                approved_by = data['approved_by']
+                if approved_by and approved_by not in COORDINATOR_CHOICES:
+                    return JsonResponse({"error": f"approved_by לא תקין: {approved_by}"}, status=400)
+                refund.approved_by = approved_by or None
+            if 'file_url' in data:
+                refund.file_url = data['file_url'] or None
+            if 'phone_number' in data:
+                refund.phone_number = data['phone_number'] or None
+            if 'refund_method' in data:
+                rm = data['refund_method']
+                if rm and rm not in PAYMENT_METHOD_CHOICES:
+                    return JsonResponse({"error": f"refund_method לא תקין: {rm}"}, status=400)
+                refund.refund_method = rm or None
+
+            if 'status' in data:
+                new_status = data['status']
+                if new_status not in REFUND_STATUS_CHOICES:
+                    return JsonResponse({"error": f"סטטוס לא תקין: {new_status}"}, status=400)
+                if new_status == 'שולם' and not refund.refund_method:
                     return JsonResponse(
-                        {"error": "ניתן לערוך בקשה רק כאשר הסטטוס הוא 'ממתין'."}, status=400
+                        {"error": "refund_method נדרש כאשר הסטטוס הוא 'שולם'."}, status=400
                     )
-                allowed_fields = ['expense_date', 'requested_amount', 'description',
-                                  'volunteer_comment', 'file_url', 'phone_number',
-                                  'approved_by']
-                for field in allowed_fields:
-                    if field in data:
-                        setattr(refund, field, data[field] or None)
-
-                # Phone save preference
-                if data.get('save_phone_for_future') and data.get('phone_number'):
-                    phone = data['phone_number']
-                    if not _validate_israeli_phone(phone):
-                        return JsonResponse({"error": "מספר טלפון ישראלי לא תקין."}, status=400)
-                    staff.staff_phone = phone
-                    staff.save(update_fields=['staff_phone'])
-
-            else:
-                # Admin can update everything
-                if 'expense_date' in data:
-                    refund.expense_date = data['expense_date']
-                if 'requested_amount' in data:
-                    try:
-                        refund.requested_amount = Decimal(str(data['requested_amount']))
-                    except (InvalidOperation, ValueError):
-                        return JsonResponse({"error": "requested_amount לא תקין."}, status=400)
-                if 'approved_amount' in data:
-                    try:
-                        refund.approved_amount = Decimal(str(data['approved_amount'])) if data['approved_amount'] else None
-                    except (InvalidOperation, ValueError):
-                        return JsonResponse({"error": "approved_amount לא תקין."}, status=400)
-                if 'description' in data:
-                    refund.description = data['description']
-                if 'volunteer_comment' in data:
-                    refund.volunteer_comment = data['volunteer_comment'] or None
-                if 'admin_comment' in data:
-                    refund.admin_comment = data['admin_comment'] or None
-                if 'approved_by' in data:
-                    approved_by = data['approved_by']
-                    if approved_by and approved_by not in COORDINATOR_CHOICES:
-                        return JsonResponse({"error": f"approved_by לא תקין: {approved_by}"}, status=400)
-                    refund.approved_by = approved_by or None
-                if 'file_url' in data:
-                    refund.file_url = data['file_url'] or None
-                if 'phone_number' in data:
-                    refund.phone_number = data['phone_number'] or None
-                if 'refund_method' in data:
-                    rm = data['refund_method']
-                    if rm and rm not in PAYMENT_METHOD_CHOICES:
-                        return JsonResponse({"error": f"refund_method לא תקין: {rm}"}, status=400)
-                    refund.refund_method = rm or None
-
-                # Status change with validations
-                if 'status' in data:
-                    new_status = data['status']
-                    if new_status not in REFUND_STATUS_CHOICES:
-                        return JsonResponse({"error": f"סטטוס לא תקין: {new_status}"}, status=400)
-                    if new_status == 'שולם' and not refund.refund_method:
-                        return JsonResponse(
-                            {"error": "refund_method נדרש כאשר הסטטוס הוא 'שולם'."}, status=400
-                        )
-                    if new_status in ('אושר', 'אושר חלקית') and refund.approved_amount is None:
-                        return JsonResponse(
-                            {"error": "approved_amount נדרש כאשר הסטטוס הוא 'אושר' או 'אושר חלקית'."}, status=400
-                        )
-                    refund.status = new_status
+                if new_status in ('אושר', 'אושר חלקית') and refund.approved_amount is None:
+                    return JsonResponse(
+                        {"error": "approved_amount נדרש כאשר הסטטוס הוא 'אושר' או 'אושר חלקית'."}, status=400
+                    )
+                refund.status = new_status
 
             # auto_now=True on updated_at means Django sets it on every .save()
             refund.updated_by = staff.username
@@ -435,7 +410,7 @@ def update_refund(request, refund_id):
             status_changed = old_status != new_status
 
             # ── WhatsApp: notify volunteer of status change ───────────────────
-            if status_changed and user_is_admin:
+            if status_changed:
                 volunteer_phone = refund.phone_number or refund.staff.staff_phone
                 if volunteer_phone:
                     try:
@@ -450,7 +425,7 @@ def update_refund(request, refund_id):
                         api_logger.error(f"WhatsApp volunteer notify failed for refund #{refund_id}: {wa_err}")
 
             # ── WhatsApp: notify אורי פלזנר to process payment ───────────────
-            if status_changed and user_is_admin and new_status in ('אושר', 'אושר חלקית'):
+            if status_changed and new_status in ('אושר', 'אושר חלקית'):
                 try:
                     from .models import SignedUp
                     uri_staff = Staff.objects.filter(email='oriplezner1@gmail.com').first()
