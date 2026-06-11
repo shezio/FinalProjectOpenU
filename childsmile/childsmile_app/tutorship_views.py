@@ -890,8 +890,25 @@ def delete_tutorship(request, tutorship_id):
             {"detail": "Authentication credentials were not provided."}, status=403
         )
 
+    # PT Finding #6: permission check BEFORE fetching the target record —
+    # a non-authorized user must not be able to probe tutorship IDs via 404 vs 403.
+    if not has_permission(request, "tutorships", "DELETE"):
+        log_api_action(
+            request=request,
+            action='DELETE_TUTORSHIP_FAILED',
+            success=False,
+            error_message="You do not have permission to delete this tutorship",
+            status_code=403,
+            entity_type='Tutorship',
+            entity_ids=[tutorship_id],
+        )
+        return JsonResponse(
+            {"error": "You do not have permission to delete this tutorship."},
+            status=403,
+        )
+
     try:
-        # FETCH TUTORSHIP FIRST - so we have data for audit logs
+        # FETCH TUTORSHIP AFTER permission check
         try:
             tutorship = Tutorships.objects.get(id=tutorship_id)
         except Tutorships.DoesNotExist:
@@ -912,7 +929,7 @@ def delete_tutorship(request, tutorship_id):
             )
             return JsonResponse({"error": "Tutorship not found"}, status=404)
 
-        # Get child and tutor names BEFORE permission check - for audit logs
+        # Get child and tutor names for audit logs
         tutor = tutorship.tutor
         child = tutorship.child
         child_id = tutorship.child_id
@@ -920,29 +937,6 @@ def delete_tutorship(request, tutorship_id):
         tutor_id = tutorship.tutor_id
         tutor_name = f"{tutor.staff.first_name} {tutor.staff.last_name}" if tutor and tutor.staff else "Unknown"
         tutor_email = tutor.staff.email if tutor and tutor.staff else "Unknown"
-
-        # NOW CHECK PERMISSION - we have data for audit logs if it fails
-        if not has_permission(request, "tutorships", "DELETE"):
-            log_api_action(
-                request=request,
-                action='DELETE_TUTORSHIP_FAILED',
-                success=False,
-                error_message="You do not have permission to delete this tutorship",
-                status_code=401,
-                entity_type='Tutorship',
-                entity_ids=[tutorship_id],
-                additional_data={
-                    'child_id': child_id,
-                    'child_name': child_name,
-                    'tutor_id': tutor_id,
-                    'tutor_name': tutor_name,
-                    'tutor_email': tutor_email
-                }
-            )
-            return JsonResponse(
-                {"error": "You do not have permission to delete this tutorship."},
-                status=401,
-            )
 
         # Find the PrevTutorshipStatuses record for this tutorship
         # NOTE: prev_status only exists for the FIRST tutorship (multi-tutor support)

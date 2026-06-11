@@ -1463,7 +1463,22 @@ def delete_staff_member(request, staff_id):
         return JsonResponse({"detail": "Authentication credentials were not provided."}, status=403)
 
     user = Staff.objects.get(staff_id=user_id)
-    
+
+    # PT Finding #6: permission check BEFORE fetching the target record —
+    # prevents a non-admin from learning whether a staff_id exists via 404 vs 403.
+    if not is_admin(user):
+        log_api_action(
+            request=request,
+            action='DELETE_STAFF_FAILED',
+            success=False,
+            error_message="You do not have permission to delete staff",
+            status_code=403,
+            entity_type='Staff',
+            entity_ids=[staff_id],
+        )
+        api_logger.critical(f"Unauthorized deletion attempt by {user.email} on staff member {staff_id}.")
+        return JsonResponse({"error": "You do not have permission to delete staff."}, status=403)
+
     # Fetch the staff member FIRST so we have their data for audit
     try:
         staff_member = Staff.objects.get(staff_id=staff_id)
@@ -1485,30 +1500,6 @@ def delete_staff_member(request, staff_id):
         )
         api_logger.warning(f"Staff member {staff_id} not found.")
         return JsonResponse({"error": "Staff member not found."}, status=404)
-
-    # NOW check permission - with staff data available
-    if not is_admin(user):
-        deleted_email = staff_member.email
-        deleted_full_name = f"{staff_member.first_name} {staff_member.last_name}"
-        deleted_roles = [role.role_name for role in staff_member.roles.all()]
-        
-        log_api_action(
-            request=request,
-            action='DELETE_STAFF_FAILED',
-            success=False,
-            error_message="You do not have permission to delete staff",
-            status_code=401,
-            entity_type='Staff',
-            entity_ids=[staff_id],
-            additional_data={
-                'deleted_staff_email': deleted_email,
-                'deleted_staff_full_name': deleted_full_name,
-                'deleted_staff_id': staff_id,
-                'deleted_staff_roles': deleted_roles
-            }
-        )
-        api_logger.critical(f"Unauthorized deletion attempt by {user.email} on staff member {staff_id}.")
-        return JsonResponse({"error": "You do not have permission to delete staff."}, status=401)
 
     try:
         # Store info before deletion - MUST get roles before delete
