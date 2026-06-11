@@ -6,6 +6,25 @@ import json
 
 # Load environment variables from .env file
 load_dotenv()  # Add this line
+
+
+# ── CSP middleware — defined here so no extra file is needed ─────────────────
+# Referenced in MIDDLEWARE as "settings.CspMiddleware".
+# Django's import_string imports this module then reads the class off it.
+class CspMiddleware:
+    """Adds Content-Security-Policy to every API response (PT Finding #4)."""
+    _CSP = "default-src 'none'; frame-ancestors 'none';"
+
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        response = self.get_response(request)
+        if "Content-Security-Policy" not in response:
+            response["Content-Security-Policy"] = self._CSP
+        return response
+
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -61,6 +80,7 @@ REST_FRAMEWORK = {
 
 MIDDLEWARE = [
    "django.middleware.security.SecurityMiddleware",
+    "settings.CspMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -166,6 +186,13 @@ ACCOUNT_DEFAULT_HTTP_PROTOCOL = "https" if IS_PROD else "http"
 CSRF_TRUSTED_ORIGINS = [LOCAL_URL] if not IS_PROD else [FRONTEND_URL]
 USE_X_FORWARDED_HOST = True
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+# ── HSTS ─────────────────────────────────────────────────────────────────────
+SECURE_HSTS_SECONDS = 31536000 if IS_PROD else 0
+SECURE_HSTS_INCLUDE_SUBDOMAINS = IS_PROD
+SECURE_HSTS_PRELOAD = IS_PROD
+# X-Content-Type-Options: nosniff — handled by SecurityMiddleware
+SECURE_CONTENT_TYPE_NOSNIFF = True
 
 
 #LOGIN_REDIRECT_URL = '/tasks'  # Redirect to your app's home page

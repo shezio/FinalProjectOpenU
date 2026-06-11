@@ -16,11 +16,20 @@ import json
 @api_view(['GET'])
 def get_audit_logs(request):
     """
-    Get all audit logs with translations
-    UI will handle filtering, sorting, and pagination
+    Get all audit logs with translations — admin only.
     """
     api_logger.info("get_audit_logs called")
-    
+
+    user_id = request.session.get("user_id")
+    if not user_id:
+        return JsonResponse({"error": "Authentication required"}, status=401)
+    try:
+        staff = Staff.objects.get(staff_id=user_id)
+    except Staff.DoesNotExist:
+        return JsonResponse({"error": "User not found"}, status=403)
+    if not is_admin(staff):
+        return JsonResponse({"error": "Admin permission required"}, status=403)
+
     try:
         # Get all audit logs, ordered by newest first
         logs = AuditLog.objects.all().order_by('-timestamp')

@@ -98,17 +98,18 @@ def login_email(request):
             return JsonResponse({"error": "Invalid email format"}, status=400)
         
         # Check if email exists in Staff table (case-insensitive)
+        # Use a generic response to prevent account enumeration (Finding #3)
         if not Staff.objects.filter(email__iexact=email).exists():
             log_api_action(
                 request=request,
                 action='USER_LOGIN_FAILED',
                 success=False,
                 error_message="Email not found in system",
-                status_code=404,
+                status_code=200,
                 additional_data={'attempted_email': email}
             )
-            return JsonResponse({"error": "Email not found in system"}, status=404)
-        
+            return JsonResponse({"message": "if email exists, a verification code will be sent."}, status=200)
+
         # Get staff user (case-insensitive)
         staff_user = Staff.objects.get(email__iexact=email)
         
@@ -254,7 +255,7 @@ def login_email(request):
 
 @conditional_csrf
 @api_view(["POST"])
-@ratelimit(key='ip', rate='10/m', method='POST', block=True)
+@ratelimit(key='ip', rate='5/m', method='POST', block=True)
 def verify_totp(request):
     """
     Verify TOTP code from email
