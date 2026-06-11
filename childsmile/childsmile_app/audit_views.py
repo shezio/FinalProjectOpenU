@@ -22,12 +22,18 @@ def get_audit_logs(request):
 
     user_id = request.session.get("user_id")
     if not user_id:
+        log_api_action(request=request, action='UNAUTHORIZED_ACCESS_ATTEMPT',
+                       success=False, error_message="Unauthenticated request to /api/audit-logs/", status_code=401)
         return JsonResponse({"error": "Authentication required"}, status=401)
     try:
         staff = Staff.objects.get(staff_id=user_id)
     except Staff.DoesNotExist:
+        log_api_action(request=request, action='UNAUTHORIZED_ACCESS_ATTEMPT',
+                       success=False, error_message="Unknown user_id in session for /api/audit-logs/", status_code=403)
         return JsonResponse({"error": "User not found"}, status=403)
     if not is_admin(staff):
+        log_api_action(request=request, action='UNAUTHORIZED_ACCESS_ATTEMPT',
+                       success=False, error_message="Non-admin attempted to access /api/audit-logs/", status_code=403)
         return JsonResponse({"error": "Admin permission required"}, status=403)
 
     try:
@@ -68,7 +74,7 @@ def get_audit_logs(request):
             })
         
         api_logger.info(f"get_audit_logs returned {len(logs_data)} logs with {len(translations)} action translations")
-        
+        log_api_action(request=request, action='VIEW_AUDIT_LOGS', success=True, status_code=200)
         return JsonResponse({
             'audit_logs': logs_data,
             'total_count': len(logs_data),
