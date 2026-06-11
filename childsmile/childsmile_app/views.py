@@ -150,6 +150,8 @@ def logout_view(request):
 def get_staff(request):
     api_logger.info("get_staff called")
     user_id = request.session.get("user_id")
+    if not user_id:
+        return JsonResponse({"detail": "Authentication credentials were not provided."}, status=403)
     api_logger.debug(f"get_staff run by user_id: {user_id}")
     """
     Retrieve all staff along with their roles.
@@ -190,6 +192,9 @@ def get_staff(request):
 @api_view(["GET"])
 def get_children(request):
     api_logger.info("get_children called")
+    user_id = request.session.get("user_id")
+    if not user_id:
+        return JsonResponse({"detail": "Authentication credentials were not provided."}, status=403)
     """
     Retrieve all children along with their tutoring status.
     """
@@ -213,6 +218,9 @@ def get_children(request):
 @api_view(["GET"])
 def get_tutors(request):
     api_logger.info("get_tutors called")
+    user_id = request.session.get("user_id")
+    if not user_id:
+        return JsonResponse({"detail": "Authentication credentials were not provided."}, status=403)
     """
     Retrieve all tutors along with their tutorship status.
     """
@@ -277,6 +285,9 @@ def get_tutors(request):
 @api_view(["GET"])
 def get_pending_tutors(request):
     api_logger.info("get_pending_tutors called")
+    user_id = request.session.get("user_id")
+    if not user_id:
+        return JsonResponse({"detail": "Authentication credentials were not provided."}, status=403)
     """
     Retrieve all pending tutors with their full details.
     """
