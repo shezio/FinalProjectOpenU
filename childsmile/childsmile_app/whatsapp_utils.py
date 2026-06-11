@@ -1327,3 +1327,98 @@ def send_dev_task_completed_whatsapp(liam_phone, task_description):
         template_sid=template_sid,
         template_variables={"1": _flatten_task_description(task_description)}
     )
+
+
+# ============================================================================
+# SECURITY BREACH ALERT WHATSAPP NOTIFICATIONS
+# ============================================================================
+
+_BREACH_ALERT_COOLDOWN_SECONDS = 300  # 5 minutes — one alert per (IP, endpoint) window
+
+
+def send_security_breach_alert_whatsapp(endpoint, ip_address, timestamp=None):
+    """
+    Send a security breach alert WhatsApp to ALL System Administrators.
+
+    Called whenever an UNAUTHORIZED_ACCESS_ATTEMPT is logged on a sensitive
+    endpoint (/api/children/, /api/audit-logs/, /api/staff/, etc.).
+
+    Rate-limited: one alert per (IP + endpoint) per 5 minutes so a hammering
+    attacker cannot flood admins or exhaust server resources.
+
+    Args:
+        endpoint (str): The API endpoint that was accessed without auth.
+        ip_address (str): The IP address of the requester.
+        timestamp (str): Human-readable timestamp (defaults to now if None).
+
+    Returns:
+        dict: Bulk send summary {"total": N, "successful": N, "failed": N, ...}
+              or None if suppressed by cooldown.
+    """
+    from django.core.cache import cache
+    from django.utils import timezone
+    from .models import Staff
+    from .twilio_whatsapp_security_templates import (
+        SECURITY_BREACH_ALERT_FALLBACK,
+    )
+
+    # --- cooldown check ---
+    cache_key = f"breach_alert:{ip_address}:{endpoint}"
+    if cache.get(cache_key):
+        api_logger.debug(
+            f"Security breach alert suppressed (cooldown active) "
+            f"— ip={ip_address} endpoint={endpoint}"
+        )
+        return None
+    cache.set(cache_key, True, timeout=_BREACH_ALERT_COOLDOWN_SECONDS)
+
+    if timestamp is None:
+        timestamp = timezone.now().strftime('%d/%m/%Y %H:%M:%S')
+
+    # Fetch all active System Administrator phone numbers from the DB
+    try:
+        admins = Staff.objects.filter(
+            roles__role_name='System Administrator',
+            is_active=True
+        ).exclude(staff_phone__isnull=True).exclude(staff_phone='').distinct()
+        admin_phones = [a.staff_phone for a in admins]
+    except Exception as e:
+        api_logger.error(f"Security alert: failed to fetch admin phones: {e}")
+        admin_phones = []
+
+    if not admin_phones:
+        api_logger.error(
+            f"Security alert: no admin phones found — "
+            f"breach attempt on {endpoint} from {ip_address} at {timestamp}"
+        )
+        return {"total": 0, "successful": 0, "failed": 0, "results": []}
+
+    template_sid = os.getenv('SECURITY_BREACH_ALERT_SID')
+
+    if template_sid:
+        api_logger.warning(
+            f"🚨 Sending security breach alert to {len(admin_phones)} admin(s) "
+            f"— endpoint={endpoint} ip={ip_address}"
+        )
+        return send_whatsapp_to_multiple(
+            admin_phones,
+            use_template=True,
+            template_sid=template_sid,
+            template_variables={
+                "1": endpoint,
+                "2": timestamp,
+                "3": ip_address,
+            }
+        )
+    else:
+        # Fallback plain-text
+        message = SECURITY_BREACH_ALERT_FALLBACK.format(
+            endpoint=endpoint,
+            timestamp=timestamp,
+            ip_address=ip_address,
+        )
+        api_logger.warning(
+            f"🚨 SECURITY_BREACH_ALERT_SID not set — sending plain-text alert "
+            f"to {len(admin_phones)} admin(s)"
+        )
+        return send_whatsapp_to_multiple(admin_phones, message_body=message)
