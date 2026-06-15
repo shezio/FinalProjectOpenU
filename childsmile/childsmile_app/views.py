@@ -211,6 +211,8 @@ def get_children(request):
             api_logger.error(f"Failed to send security breach alert: {e}")
         return JsonResponse({"detail": "Authentication credentials were not provided."}, status=403)
     """
+    Retrieve all children along with their tutoring status.
+    """
     children = Children.objects.all()
     children_data = [
         {
