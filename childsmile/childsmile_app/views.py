@@ -77,7 +77,7 @@ import string
 from django.utils import timezone
 from datetime import timedelta
 from .audit_utils import log_api_action
-from .whatsapp_utils import send_security_breach_alert_whatsapp, _is_expired_session
+from .whatsapp_utils import send_security_breach_alert_whatsapp, _is_expired_session, get_client_ip
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -156,7 +156,7 @@ def get_staff(request):
                        success=False, error_message="Unauthenticated request to /api/staff/", status_code=403)
         try:
             if not _is_expired_session(request):
-                send_security_breach_alert_whatsapp(request.path, request.META.get('REMOTE_ADDR', 'unknown'))
+                send_security_breach_alert_whatsapp(request.path, get_client_ip(request))
         except Exception as e:
             api_logger.error(f"Failed to send security breach alert: {e}")
         return JsonResponse({"detail": "Authentication credentials were not provided."}, status=403)
@@ -206,7 +206,7 @@ def get_children(request):
                        success=False, error_message="Unauthenticated request to /api/children/", status_code=403)
         try:
             if not _is_expired_session(request):
-                send_security_breach_alert_whatsapp(request.path, request.META.get('REMOTE_ADDR', 'unknown'))
+                send_security_breach_alert_whatsapp(request.path, get_client_ip(request))
         except Exception as e:
             api_logger.error(f"Failed to send security breach alert: {e}")
         return JsonResponse({"detail": "Authentication credentials were not provided."}, status=403)
@@ -239,7 +239,7 @@ def get_tutors(request):
                        success=False, error_message="Unauthenticated request to /api/tutors/", status_code=403)
         try:
             if not _is_expired_session(request):
-                send_security_breach_alert_whatsapp(request.path, request.META.get('REMOTE_ADDR', 'unknown'))
+                send_security_breach_alert_whatsapp(request.path, get_client_ip(request))
         except Exception as e:
             api_logger.error(f"Failed to send security breach alert: {e}")
         return JsonResponse({"detail": "Authentication credentials were not provided."}, status=403)
@@ -314,7 +314,7 @@ def get_pending_tutors(request):
                        success=False, error_message="Unauthenticated request to /api/get_pending_tutors/", status_code=403)
         try:
             if not _is_expired_session(request):
-                send_security_breach_alert_whatsapp(request.path, request.META.get('REMOTE_ADDR', 'unknown'))
+                send_security_breach_alert_whatsapp(request.path, get_client_ip(request))
         except Exception as e:
             api_logger.error(f"Failed to send security breach alert: {e}")
         return JsonResponse({"detail": "Authentication credentials were not provided."}, status=403)
