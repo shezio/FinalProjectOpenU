@@ -1336,6 +1336,19 @@ def send_dev_task_completed_whatsapp(liam_phone, task_description):
 _BREACH_ALERT_COOLDOWN_SECONDS = 300  # 5 minutes — one alert per (IP, endpoint) window
 
 
+def _is_expired_session(request):
+    """
+    Return True if the request carries a sessionid cookie but no valid session.
+    This means a real (authenticated) user whose session just expired —
+    NOT an outsider with no cookie at all.
+    We don't alert on expired sessions — only on requests with no cookie
+    (bots / scanners / actual unauthorised clients).
+    """
+    from django.conf import settings
+    cookie_name = getattr(settings, 'SESSION_COOKIE_NAME', 'sessionid')
+    return cookie_name in request.COOKIES
+
+
 def send_security_breach_alert_whatsapp(endpoint, ip_address, timestamp=None):
     """
     Send a security breach alert WhatsApp to ALL System Administrators.
@@ -1358,9 +1371,6 @@ def send_security_breach_alert_whatsapp(endpoint, ip_address, timestamp=None):
     from django.core.cache import cache
     from django.utils import timezone
     from .models import Staff
-    from .twilio_whatsapp_security_templates import (
-        SECURITY_BREACH_ALERT_FALLBACK,
-    )
 
     # --- cooldown check ---
     cache_key = f"breach_alert:{ip_address}:{endpoint}"
@@ -1374,6 +1384,15 @@ def send_security_breach_alert_whatsapp(endpoint, ip_address, timestamp=None):
 
     if timestamp is None:
         timestamp = timezone.now().strftime('%d/%m/%Y %H:%M:%S')
+
+    # Check SID before hitting the DB — no point querying if we can't send
+    template_sid = os.getenv('SECURITY_BREACH_ALERT_SID')
+    if not template_sid:
+        api_logger.error(
+            f"SECURITY_BREACH_ALERT_SID not configured — breach alert NOT sent "
+            f"(endpoint={endpoint} ip={ip_address})"
+        )
+        return None
 
     # Fetch all active System Administrator phone numbers from the DB
     try:
@@ -1393,32 +1412,20 @@ def send_security_breach_alert_whatsapp(endpoint, ip_address, timestamp=None):
         )
         return {"total": 0, "successful": 0, "failed": 0, "results": []}
 
-    template_sid = os.getenv('SECURITY_BREACH_ALERT_SID')
-
-    if template_sid:
-        api_logger.warning(
-            f"🚨 Sending security breach alert to {len(admin_phones)} admin(s) "
-            f"— endpoint={endpoint} ip={ip_address}"
-        )
-        return send_whatsapp_to_multiple(
-            admin_phones,
-            use_template=True,
-            template_sid=template_sid,
-            template_variables={
-                "1": endpoint,
-                "2": timestamp,
-                "3": ip_address,
-            }
-        )
-    else:
-        # Fallback plain-text
-        message = SECURITY_BREACH_ALERT_FALLBACK.format(
-            endpoint=endpoint,
-            timestamp=timestamp,
-            ip_address=ip_address,
-        )
-        api_logger.warning(
-            f"🚨 SECURITY_BREACH_ALERT_SID not set — sending plain-text alert "
-            f"to {len(admin_phones)} admin(s)"
-        )
-        return send_whatsapp_to_multiple(admin_phones, message_body=message)
+    api_logger.warning(
+        f"🚨 Sending security breach alert to {len(admin_phones)} admin(s) "
+        f"— endpoint={endpoint} ip={ip_address}"
+    )
+    # Template uses {{1}}, {{2}}, {{3}} — ContentVariables keys must be "1", "2", "3"
+    return send_whatsapp_to_multiple(
+        admin_phones,
+        use_template=True,
+        template_sid=template_sid,
+        template_variables={
+            "1": endpoint,
+            "2": timestamp,
+            # \u202a…\u202c = LTR embedding — prevents BiDi reordering of
+            # the IP address digits/dots inside a Hebrew (RTL) WhatsApp bubble
+            "3": f"\u202a{ip_address}\u202c",
+        }
+    )

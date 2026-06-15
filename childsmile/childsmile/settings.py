@@ -175,6 +175,12 @@ CORS_ALLOWED_ORIGINS = [FRONTEND_URL] if IS_PROD else [LOCAL_URL]
 # sends the cookie on all legitimate same-site fetch/XHR from the SPA.
 SESSION_COOKIE_SAMESITE = "Lax" if IS_PROD else "None"
 SESSION_COOKIE_SECURE = True #False if not IS_PROD else True
+# Scope cookie to all subdomains of achildssmile.org.il so that the
+# session set by app.achildssmile.org.il is also visible cross-origin
+# same-site from login.achildssmile.org.il — without this Django leaves
+# the Domain attribute out entirely (host-only) and some browsers won't
+# associate the cookie across subdomains for credentialed XHR requests.
+SESSION_COOKIE_DOMAIN = ".achildssmile.org.il" if IS_PROD else None
 
 AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',  # legacy login

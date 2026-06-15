@@ -77,7 +77,7 @@ import string
 from django.utils import timezone
 from datetime import timedelta
 from .audit_utils import log_api_action
-from .whatsapp_utils import send_security_breach_alert_whatsapp
+from .whatsapp_utils import send_security_breach_alert_whatsapp, _is_expired_session
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -155,11 +155,11 @@ def get_staff(request):
         log_api_action(request=request, action='UNAUTHORIZED_ACCESS_ATTEMPT',
                        success=False, error_message="Unauthenticated request to /api/staff/", status_code=403)
         try:
-            send_security_breach_alert_whatsapp(request.path, request.META.get('REMOTE_ADDR', 'unknown'))
+            if not _is_expired_session(request):
+                send_security_breach_alert_whatsapp(request.path, request.META.get('REMOTE_ADDR', 'unknown'))
         except Exception as e:
             api_logger.error(f"Failed to send security breach alert: {e}")
         return JsonResponse({"detail": "Authentication credentials were not provided."}, status=403)
-    api_logger.debug(f"get_staff run by user_id: {user_id}")
     """
     Retrieve all staff along with their roles.
     """
@@ -205,12 +205,11 @@ def get_children(request):
         log_api_action(request=request, action='UNAUTHORIZED_ACCESS_ATTEMPT',
                        success=False, error_message="Unauthenticated request to /api/children/", status_code=403)
         try:
-            send_security_breach_alert_whatsapp(request.path, request.META.get('REMOTE_ADDR', 'unknown'))
+            if not _is_expired_session(request):
+                send_security_breach_alert_whatsapp(request.path, request.META.get('REMOTE_ADDR', 'unknown'))
         except Exception as e:
             api_logger.error(f"Failed to send security breach alert: {e}")
         return JsonResponse({"detail": "Authentication credentials were not provided."}, status=403)
-    """
-    Retrieve all children along with their tutoring status.
     """
     children = Children.objects.all()
     children_data = [
@@ -237,7 +236,8 @@ def get_tutors(request):
         log_api_action(request=request, action='UNAUTHORIZED_ACCESS_ATTEMPT',
                        success=False, error_message="Unauthenticated request to /api/tutors/", status_code=403)
         try:
-            send_security_breach_alert_whatsapp(request.path, request.META.get('REMOTE_ADDR', 'unknown'))
+            if not _is_expired_session(request):
+                send_security_breach_alert_whatsapp(request.path, request.META.get('REMOTE_ADDR', 'unknown'))
         except Exception as e:
             api_logger.error(f"Failed to send security breach alert: {e}")
         return JsonResponse({"detail": "Authentication credentials were not provided."}, status=403)
@@ -311,7 +311,8 @@ def get_pending_tutors(request):
         log_api_action(request=request, action='UNAUTHORIZED_ACCESS_ATTEMPT',
                        success=False, error_message="Unauthenticated request to /api/get_pending_tutors/", status_code=403)
         try:
-            send_security_breach_alert_whatsapp(request.path, request.META.get('REMOTE_ADDR', 'unknown'))
+            if not _is_expired_session(request):
+                send_security_breach_alert_whatsapp(request.path, request.META.get('REMOTE_ADDR', 'unknown'))
         except Exception as e:
             api_logger.error(f"Failed to send security breach alert: {e}")
         return JsonResponse({"detail": "Authentication credentials were not provided."}, status=403)

@@ -181,7 +181,7 @@ CORS_ALLOWED_ORIGINS = [FRONTEND_URL] if IS_PROD else [LOCAL_URL]
 # sends the cookie on all legitimate same-site fetch/XHR from the SPA.
 SESSION_COOKIE_SAMESITE = "Lax" if IS_PROD else "None"
 SESSION_COOKIE_SECURE = True #False if not IS_PROD else True
-
+SESSION_COOKIE_DOMAIN = ".achildssmile.org.il" if IS_PROD else None
 AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',  # legacy login
     'allauth.account.auth_backends.AuthenticationBackend',  # allauth
