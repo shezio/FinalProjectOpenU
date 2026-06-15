@@ -1349,6 +1349,23 @@ def _is_expired_session(request):
     return cookie_name in request.COOKIES
 
 
+def get_client_ip(request):
+    """
+    Extract the real client IP address from the request.
+
+    Azure Web Apps sit behind a reverse proxy / load balancer that forwards
+    the original client IP in the X-Forwarded-For header.
+    X-Forwarded-For format: "client, proxy1, proxy2" — we want the first value.
+    Falls back to REMOTE_ADDR (which would be the Azure infra IP) if the header
+    is absent (e.g. direct local connections in dev).
+    """
+    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR', '')
+    if x_forwarded_for:
+        # Take the leftmost (original client) IP, strip whitespace
+        return x_forwarded_for.split(',')[0].strip()
+    return request.META.get('REMOTE_ADDR', 'unknown')
+
+
 def send_security_breach_alert_whatsapp(endpoint, ip_address, timestamp=None):
     """
     Send a security breach alert WhatsApp to ALL System Administrators.
@@ -1383,7 +1400,9 @@ def send_security_breach_alert_whatsapp(endpoint, ip_address, timestamp=None):
     cache.set(cache_key, True, timeout=_BREACH_ALERT_COOLDOWN_SECONDS)
 
     if timestamp is None:
-        timestamp = timezone.now().strftime('%d/%m/%Y %H:%M:%S')
+        import zoneinfo
+        il_tz = zoneinfo.ZoneInfo('Asia/Jerusalem')
+        timestamp = timezone.now().astimezone(il_tz).strftime('%d/%m/%Y %H:%M:%S')
 
     # Check SID before hitting the DB — no point querying if we can't send
     template_sid = os.getenv('SECURITY_BREACH_ALERT_SID')
