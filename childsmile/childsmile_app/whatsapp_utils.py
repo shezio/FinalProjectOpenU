@@ -1416,16 +1416,17 @@ def send_security_breach_alert_whatsapp(endpoint, ip_address, timestamp=None):
         f"🚨 Sending security breach alert to {len(admin_phones)} admin(s) "
         f"— endpoint={endpoint} ip={ip_address}"
     )
-    # Template uses {{1}}, {{2}}, {{3}} — ContentVariables keys must be "1", "2", "3"
+    # Template uses named variables {{endpoint}}, {{timestamp}}, {{ip_address}}
+    # ContentVariables keys must match the variable names exactly
     return send_whatsapp_to_multiple(
         admin_phones,
         use_template=True,
         template_sid=template_sid,
         template_variables={
-            "1": endpoint,
-            "2": timestamp,
+            "endpoint": endpoint,
+            "timestamp": timestamp,
             # \u202a…\u202c = LTR embedding — prevents BiDi reordering of
             # the IP address digits/dots inside a Hebrew (RTL) WhatsApp bubble
-            "3": f"\u202a{ip_address}\u202c",
+            "ip_address": f"\u202a{ip_address}\u202c",
         }
     )
