@@ -9,7 +9,7 @@ from datetime import timedelta, datetime
 from .models import AuditLog, Staff, AuditTranslation
 from .utils import *
 from .audit_utils import is_admin, log_api_action
-from .whatsapp_utils import send_security_breach_alert_whatsapp
+from .whatsapp_utils import send_security_breach_alert_whatsapp, _is_expired_session
 from .logger import api_logger
 import csv
 import json
@@ -26,7 +26,8 @@ def get_audit_logs(request):
         log_api_action(request=request, action='UNAUTHORIZED_ACCESS_ATTEMPT',
                        success=False, error_message="Unauthenticated request to /api/audit-logs/", status_code=401)
         try:
-            send_security_breach_alert_whatsapp(request.path, request.META.get('REMOTE_ADDR', 'unknown'))
+            if not _is_expired_session(request):
+                send_security_breach_alert_whatsapp(request.path, request.META.get('REMOTE_ADDR', 'unknown'))
         except Exception as e:
             api_logger.error(f"Failed to send security breach alert: {e}")
         return JsonResponse({"error": "Authentication required"}, status=401)
