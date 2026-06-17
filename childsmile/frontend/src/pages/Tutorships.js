@@ -1276,15 +1276,22 @@ const Tutorships = () => {
                 {displayTotalCount <= pageSize ? (
                   <button className="active">1</button> // Display only "1" if there's only one page
                 ) : (
-                  Array.from({ length: Math.ceil(displayTotalCount / pageSize) }, (_, i) => (
-                    <button
-                      key={i + 1}
-                      onClick={() => setPage(i + 1)}
-                      className={page === i + 1 ? 'active' : ''}
-                    >
-                      {i + 1}
-                    </button>
-                  ))
+                  (() => {
+                    const totalPages = Math.ceil(displayTotalCount / pageSize);
+                    const maxButtons = 3;
+                    let start = Math.max(1, page - Math.floor(maxButtons / 2));
+                    let end = Math.min(totalPages, start + maxButtons - 1);
+                    if (end - start + 1 < maxButtons) start = Math.max(1, end - maxButtons + 1);
+                    return Array.from({ length: end - start + 1 }, (_, i) => start + i).map(num => (
+                      <button
+                        key={num}
+                        onClick={() => setPage(num)}
+                        className={page === num ? 'active' : ''}
+                      >
+                        {num}
+                      </button>
+                    ));
+                  })()
                 )}
 
                 {/* Right Arrows */}

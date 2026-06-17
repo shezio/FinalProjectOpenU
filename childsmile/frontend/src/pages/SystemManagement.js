@@ -1342,7 +1342,7 @@ const SystemManagement = () => {
                   return <button className="active">1</button>;
                 }
                 
-                const maxButtons = 5;
+                const maxButtons = 3;
                 let startPage = Math.max(1, page - Math.floor(maxButtons / 2));
                 let endPage = Math.min(totalPages, startPage + maxButtons - 1);
                 
