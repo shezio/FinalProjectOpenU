@@ -137,38 +137,40 @@ const NotificationMessages = () => {
     const isEditing = editingId === msg.id;
     return (
       <tr key={msg.id} className={`notif-row${msg.is_active ? '' : ' notif-row-inactive'}`}>
-        <td><span className={`notif-badge ${TYPE_BADGE_CLASS[msg.message_type] || ''}`}>{TYPE_LABELS[msg.message_type] || msg.message_type}</span></td>
-        <td>
-          {isEditing
-            ? <input className="notif-edit-input" value={editForm.title} onChange={e => setEditForm(f => ({ ...f, title: e.target.value }))} />
-            : <span style={{ whiteSpace: 'pre-wrap' }}>{msg.title}</span>}
-        </td>
-        <td className="notif-col-text">
-          {isEditing
-            ? <textarea className="notif-edit-textarea" value={editForm.text} onChange={e => setEditForm(f => ({ ...f, text: e.target.value }))} />
-            : <span className="notif-text-full">{msg.text}</span>}
-        </td>
-        <td>
-          {isEditing
-            ? <select value={editForm.is_active ? 'true' : 'false'} onChange={e => setEditForm(f => ({ ...f, is_active: e.target.value === 'true' }))}>
-                <option value="true">פעיל</option><option value="false">לא פעיל</option>
-              </select>
-            : <span className={`notif-status ${msg.is_active ? 'notif-status-active' : 'notif-status-inactive'}`}>{msg.is_active ? 'פעיל' : 'לא פעיל'}</span>}
-        </td>
-        <td className="notif-date-col">
-          {msg.created_at ? new Date(msg.created_at).toLocaleString('he-IL') : '—'}
-        </td>
-        {isAdmin && (
-          <td className="notif-actions-col">
-            {isEditing ? (
-              <><button className="notif-btn notif-btn-save" onClick={() => handleSave(msg.id)} disabled={saving}>שמור</button>
-                <button className="notif-btn notif-btn-cancel" onClick={cancelEdit}>ביטול</button></>
-            ) : (
-              <>{!msg.is_auto && <button className="notif-btn notif-btn-edit" onClick={() => startEdit(msg)}>עריכה</button>}
-                <button className="notif-btn notif-btn-delete" onClick={() => handleDelete(msg.id)}>מחיקה</button></>
-            )}
-          </td>
+      <td><span className={`notif-badge ${TYPE_BADGE_CLASS[msg.message_type] || ''}`}>{TYPE_LABELS[msg.message_type] || msg.message_type}</span></td>
+      <td>
+        {isEditing
+        ? <input className="notif-edit-input" value={editForm.title} onChange={e => setEditForm(f => ({ ...f, title: e.target.value }))} />
+        : <span style={{ whiteSpace: 'pre-wrap' }}>{msg.title}</span>}
+      </td>
+      <td className="notif-col-text">
+        {isEditing
+        ? <textarea className="notif-edit-textarea" value={editForm.text} onChange={e => setEditForm(f => ({ ...f, text: e.target.value }))} />
+        : <span className="notif-text-full">{msg.text}</span>}
+      </td>
+      <td>
+        {isEditing
+        ? <select value={editForm.is_active ? 'true' : 'false'} onChange={e => setEditForm(f => ({ ...f, is_active: e.target.value === 'true' }))}>
+          <option value="true">פעיל</option><option value="false">לא פעיל</option>
+          </select>
+        : <span className={`notif-status ${msg.is_active ? 'notif-status-active' : 'notif-status-inactive'}`}>{msg.is_active ? 'פעיל' : 'לא פעיל'}</span>}
+      </td>
+      <td className="notif-date-col">
+        {msg.created_at ? new Date(msg.created_at).toLocaleString('he-IL') : '—'}
+      </td>
+      {isAdmin && (
+        <td className="notif-actions-col">
+        {isEditing ? (
+          <><button className="notif-btn notif-btn-save" onClick={() => handleSave(msg.id)} disabled={saving}>שמור</button>
+          <button className="notif-btn notif-btn-cancel" onClick={cancelEdit}>ביטול</button></>
+        ) : (
+          <>{!msg.is_auto && <button className="notif-btn notif-btn-edit" onClick={() => startEdit(msg)}>עריכה</button>}
+          {!msg.message_type.includes('birthday') && <button className="notif-btn notif-btn-delete" onClick={() => handleDelete(msg.id)}>מחיקה</button>}
+          {msg.message_type.includes('birthday') && <span className="notif-badge notif-badge-info">לא ניתן למחוק או לערוך <br></br> הודעות יום הולדת</span>}
+          </>
         )}
+        </td>
+      )}
       </tr>
     );
   };
