@@ -834,7 +834,7 @@ const Refunds = () => {
                   <button onClick={() => setCurrentPage(safePage - 1)} disabled={safePage === 1} className="pagination-arrow">&lsaquo;</button>
                   {Array.from({ length: totalPages }, (_, i) => {
                     const pageNum = i + 1;
-                    const maxButtons = 5;
+                    const maxButtons = 3;
                     const halfRange = Math.floor(maxButtons / 2);
                     let start = Math.max(1, safePage - halfRange);
                     let end = Math.min(totalPages, start + maxButtons - 1);

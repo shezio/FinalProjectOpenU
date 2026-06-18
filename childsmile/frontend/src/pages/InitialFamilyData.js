@@ -489,15 +489,21 @@ const InitialFamilyData = () => {
           <div className="pagination">
             <button onClick={() => setPage(1)} disabled={page === 1} className="pagination-arrow">&laquo;</button>
             <button onClick={() => setPage(page - 1)} disabled={page === 1} className="pagination-arrow">&lsaquo;</button>
-            {Array.from({ length: totalPages }, (_, i) => (
-              <button
-                key={i + 1}
-                onClick={() => setPage(i + 1)}
-                className={page === i + 1 ? 'active' : ''}
-              >
-                {i + 1}
-              </button>
-            ))}
+            {(() => {
+              const maxButtons = 3;
+              let start = Math.max(1, page - Math.floor(maxButtons / 2));
+              let end = Math.min(totalPages, start + maxButtons - 1);
+              if (end - start + 1 < maxButtons) start = Math.max(1, end - maxButtons + 1);
+              return Array.from({ length: end - start + 1 }, (_, i) => start + i).map(num => (
+                <button
+                  key={num}
+                  onClick={() => setPage(num)}
+                  className={page === num ? 'active' : ''}
+                >
+                  {num}
+                </button>
+              ));
+            })()}
             <button
               onClick={() => setPage(page + 1)}
               disabled={page === totalPages || totalPages === 1}

@@ -579,9 +579,9 @@ const TutorVolunteerMgmt = () => {
     : sortEntitiesByUpdated(filteredVolunteers).slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
   const totalPages = Math.max(1, Math.ceil((showTutors ? filteredTutors.length : filteredVolunteers.length) / PAGE_SIZE));
 
-  // Helper function to get visible page numbers (5-6 buttons centered around current page)
+  // Helper function to get visible page numbers (max 3 on mobile, 5 on desktop)
   const getVisiblePageNumbers = () => {
-    const maxVisible = 6;
+    const maxVisible = 3;
     const halfVisible = Math.floor(maxVisible / 2);
     
     let startPage = Math.max(1, currentPage - halfVisible);

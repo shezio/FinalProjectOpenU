@@ -619,7 +619,7 @@ const ReviewerPage = () => {
             {(() => {
               const totalPages = Math.ceil(totalCount / pageSize);
               if (totalPages <= 1) return <button className="active">1</button>;
-              const maxButtons = 5;
+              const maxButtons = 3;
               let startPage = Math.max(1, page - Math.floor(maxButtons / 2));
               let endPage   = Math.min(totalPages, startPage + maxButtons - 1);
               if (endPage - startPage + 1 < maxButtons) startPage = Math.max(1, endPage - maxButtons + 1);

@@ -228,7 +228,7 @@ const PossibleTutorshipMatchesReport = () => {
                   {Array.from({ length: Math.ceil(filteredMatches.length / PAGE_SIZE) }, (_, i) => {
                     const pageNum = i + 1;
                     const totalPages = Math.ceil(filteredMatches.length / PAGE_SIZE);
-                    const maxButtons = 5;
+                    const maxButtons = 3;
                     const halfRange = Math.floor(maxButtons / 2);
                     let start = Math.max(1, currentPage - halfRange);
                     let end = Math.min(totalPages, start + maxButtons - 1);
