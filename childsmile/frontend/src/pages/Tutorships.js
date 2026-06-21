@@ -93,7 +93,7 @@ const Tutorships = () => {
   const [pageSize] = useState(5); // Number of tutorships per page
   const [totalCount, setTotalCount] = useState(0); // Total number of tutorships
   const [matchesPage, setMatchesPage] = useState(1); // Current page for matches
-  const [matchesPageSize] = useState(6); // Number of matches per page
+  const [matchesPageSize] = useState(() => window.innerWidth <= 767 ? 4 : 6); // 4 on mobile, 6 on desktop
   const [isMagnifyActive, setIsMagnifyActive] = useState(false);
   const [matchSearchQuery, setMatchSearchQuery] = useState('');
   const [tutorshipSearchQuery, setTutorshipSearchQuery] = useState('');
@@ -1578,7 +1578,7 @@ const Tutorships = () => {
           >
             <div className="grid-container">
               {gridLoading ? (
-                <div className="grid-loader">{t("Loading data...")}</div>
+                <div className="loader">{t("Loading data...")}</div>
               ) : (
                 <table className="data-grid">
                   <thead>
@@ -1705,7 +1705,7 @@ const Tutorships = () => {
               {mapError ? (
                 <div className="map-error">{t('Failed to load the map.')}</div>
               ) : mapLoading ? (
-                <div className="map-match-loader">{t('Loading map...')}</div>
+                <div className="loader">{t('Loading map...')}</div>
               ) : (
                 <MapContainer
                   center={[31.5, 35.0]}

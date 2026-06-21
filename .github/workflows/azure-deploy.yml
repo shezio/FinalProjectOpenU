@@ -5,6 +5,8 @@ on:
     branches: [ main ]  # Deploy from desktop branch for testing
     paths:
       - 'childsmile/**'
+      #  not md files
+      - '!childsmile/**/*.md' 
       - '!childsmile/frontend/**'
       - '!childsmile/postgres remote'
       - '.github/workflows/azure-deploy.yml'
