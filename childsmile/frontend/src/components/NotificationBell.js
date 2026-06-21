@@ -22,6 +22,9 @@ const NotificationBell = () => {
   const lastTsRef   = useRef(null);
   const speedRef    = useRef(1);        // current speed multiplier
   const lastWheelRef = useRef(0);       // timestamp of last wheel event
+  const scrollWrapRef = useRef(null);   // mobile touch target (the clipping wrap)
+  const touchActiveRef = useRef(false); // true while a finger is dragging
+  const lastTouchYRef = useRef(0);      // last touch Y for delta calc
 
   const fetchMessages = useCallback(async () => {
     try {
@@ -82,6 +85,48 @@ const NotificationBell = () => {
     };
   }, [open, activeMessages.length]);
 
+  // ── Touch drag (mobile) ───────────────────────────────────────────────
+  // Auto-scroll stays on by default (the rAF tick above); a finger drag moves
+  // the list manually up/down, then auto-scroll resumes on release — the touch
+  // analogue of the desktop wheel handler. Listeners are non-passive so we can
+  // preventDefault and stop the page behind the fixed panel from scrolling.
+  useEffect(() => {
+    if (!open || activeMessages.length === 0) return;
+    const el = scrollWrapRef.current;
+    if (!el) return;
+
+    const onTouchStart = (e) => {
+      touchActiveRef.current = true;
+      lastTouchYRef.current = e.touches[0].clientY;
+      lastWheelRef.current = performance.now();
+      speedRef.current = 0;                      // pause auto-scroll while dragging
+    };
+    const onTouchMove = (e) => {
+      if (!touchActiveRef.current) return;
+      e.preventDefault();                        // stop page scroll behind the panel
+      const y = e.touches[0].clientY;
+      offsetRef.current += lastTouchYRef.current - y;  // drag up → scroll forward
+      lastTouchYRef.current = y;
+      lastWheelRef.current = performance.now();
+    };
+    const onTouchEnd = () => {
+      touchActiveRef.current = false;
+      lastWheelRef.current = performance.now();
+      speedRef.current = 1;                      // resume auto-scroll
+    };
+
+    el.addEventListener('touchstart', onTouchStart, { passive: false });
+    el.addEventListener('touchmove',  onTouchMove,  { passive: false });
+    el.addEventListener('touchend',   onTouchEnd,   { passive: false });
+    el.addEventListener('touchcancel', onTouchEnd,  { passive: false });
+    return () => {
+      el.removeEventListener('touchstart', onTouchStart);
+      el.removeEventListener('touchmove',  onTouchMove);
+      el.removeEventListener('touchend',   onTouchEnd);
+      el.removeEventListener('touchcancel', onTouchEnd);
+    };
+  }, [open, activeMessages.length]);
+
   // Wheel: scroll DOWN = faster forward, scroll UP = slow / reverse
   // Speed range: -6 (fast backward) … 1 (normal) … 10 (fast forward)
   const handleWheel = (e) => {
@@ -127,7 +172,7 @@ const NotificationBell = () => {
           {activeMessages.length === 0 ? (
             <div className="notif-bell-empty">אין עדכונים כרגע</div>
           ) : (
-            <div className="notif-bell-scroll-wrap">
+            <div className="notif-bell-scroll-wrap" ref={scrollWrapRef}>
               <div className="notif-bell-scroll-track" ref={trackRef}>
                 {scrollItems.map((msg, idx) => (
                   <div key={`${msg.id}-${idx}`} className="notif-bell-item">

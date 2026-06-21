@@ -477,6 +477,24 @@ const Tutorships = () => {
     }
   };
 
+  // ── Privacy: a plain Tutor may only see matches that involve them ──────────
+  // Coordinators / admins / reviewers still see everyone. If we cannot resolve
+  // the tutor's own name we show none rather than other people's matches.
+  const _origUsername = localStorage.getItem('origUsername') || '';
+  const _staffList = JSON.parse(localStorage.getItem('staff') || '[]');
+  const _currentStaff = _staffList.find((s) => s.username === _origUsername);
+  const _currentRoles = _currentStaff?.roles || [];
+  const isRestrictedTutor =
+    _currentRoles.includes('Tutor') &&
+    !_currentRoles.includes('System Administrator') &&
+    !_currentRoles.includes('Reviewer') &&
+    !_currentRoles.some((r) => typeof r === 'string' && r.includes('Coordinator'));
+  const currentTutorFullName = _currentStaff
+    ? `${_currentStaff.first_name || ''} ${_currentStaff.last_name || ''}`.trim()
+    : '';
+  const _normalizeName = (s) =>
+    (s || '').toString().trim().toLowerCase().replace(/\s+/g, ' ');
+
   const sortedAndFilteredMatches = matches
     .filter((match) => {
       // Exclude matches that have existing tutorships
@@ -506,6 +524,12 @@ const Tutorships = () => {
       );
     })
     .filter((match) => !statusFilter || match.tutoring_status === statusFilter) // <-- Add this line
+    .filter((match) => {
+      // Privacy: a plain tutor may only see matches involving themselves
+      if (!isRestrictedTutor) return true;
+      if (!currentTutorFullName) return false; // can't resolve identity -> show none
+      return _normalizeName(match.tutor_full_name) === _normalizeName(currentTutorFullName);
+    })
     .sort((a, b) => {
       if (sortOrder === 'asc') {
         return a.grade - b.grade;
@@ -1482,9 +1506,10 @@ const Tutorships = () => {
             <input
               type="text"
               className="matches-search-bar"
-              placeholder={t('Search by tutor or tutee name')}
-              value={matchSearchQuery}
+              placeholder={isRestrictedTutor && currentTutorFullName ? currentTutorFullName : t('Search by tutor or tutee name')}
+              value={isRestrictedTutor ? '' : matchSearchQuery}
               onChange={e => setMatchSearchQuery(e.target.value)}
+              disabled={isRestrictedTutor}
               style={{ marginLeft: 16, minWidth: 220 }}
             />
             <label htmlFor="filter-slider">{t('Filter by Minimum Grade')}:</label>

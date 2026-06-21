@@ -381,6 +381,67 @@
     margin: 0 !important;
   }
 
+  /* ── 6b. Create / Edit Task modals – fit mobile ─────────────────────────────
+   * Both #create-task-modal and #edit-task-modal are plain
+   * .modal.show > .modal-content divs (NOT react-modal) and share .modal-content,
+   * so one selector covers both. The generic .modal-content child rules
+   * (h2 / .close / label / input / select / textarea / button) already shrink
+   * from the families modal section; here we (a) lift the overlay above the
+   * bottom nav (desktop z-index is only 1000) and (b) pin the box to the viewport.
+   * Mirrors the proven families pattern, scoped to .tasks-main-content.
+   */
+
+  /* iOS bug: a position:fixed child inside a -webkit-overflow-scrolling:touch +
+     overflow:auto container is positioned relative to that scroll container, not
+     the viewport. Drop the scroll context on the page while a modal is open. */
+  .tasks-main-content:has(.modal.show) {
+    overflow: visible !important;
+    -webkit-overflow-scrolling: auto !important;
+    transform: none !important;
+    contain: none !important;
+    filter: none !important;
+    height: auto !important;
+    min-height: 100dvh !important;
+  }
+
+  /* Full-screen dimmed overlay above the bottom nav (1100) and header (900). */
+  .tasks-main-content .modal.show {
+    position: fixed !important;
+    inset: 0 !important;
+    width: 100vw !important;
+    height: 100dvh !important;
+    max-height: 100dvh !important;
+    margin: 0 !important;
+    display: flex !important;
+    align-items: flex-start !important;
+    justify-content: center !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    padding: calc(90px + env(safe-area-inset-top, 0px) + 8px) 8px
+             calc(72px + env(safe-area-inset-bottom, 8px) + 8px) !important;
+    box-sizing: border-box !important;
+    z-index: 10200 !important;
+  }
+
+  /* Pin the box just under the header, full-width minus 24px, scrollable, capped
+     above the 72px bottom nav (iOS won't reliably flex-centre it). */
+  .tasks-main-content .modal-content {
+    position: fixed !important;
+    top: calc(90px + env(safe-area-inset-top, 0px) + 8px) !important;
+    left: 12px !important;
+    right: 12px !important;
+    bottom: auto !important;
+    width: auto !important;
+    max-width: none !important;
+    margin: 0 !important;
+    transform: none !important;
+    max-height: calc(100dvh - 90px - 72px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 16px) !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    padding: 18px 14px !important;
+    box-sizing: border-box !important;
+  }
+
   /* ── 7. Tasks page – swipeable horizontal kanban columns ──── */
   /*
    * We keep all 3 status columns side-by-side but make them
@@ -1901,22 +1962,18 @@
     max-height: 50dvh !important;
     border-radius: 14px !important;
     z-index: 1199 !important;
-    /* On mobile the JS ferris-wheel doesn't respond to touch.
-       Make the scroll-wrap itself natively scrollable via touch. */
+    /* Keep the panel clipped; the track is auto-scrolled by JS (transform). */
     overflow: hidden !important;
   }
 
-  /* Make the scroll-wrap touchable – native scroll instead of JS animation */
+  /* Mobile: keep the desktop JS auto-scroll (transform-driven). Touch dragging is
+     handled in JS via non-passive listeners (see NotificationBell.js), so the
+     track must stay clipped here and NOT switch to native overflow scrolling
+     (that earlier change killed the auto-scroll). touch-action:none lets our
+     handlers preventDefault so the page behind the fixed panel doesn't scroll. */
   .notif-bell-panel .notif-bell-scroll-wrap {
-    overflow-y: auto !important;
-    -webkit-overflow-scrolling: touch !important;
-    touch-action: pan-y !important;
-    overscroll-behavior: contain !important;
-  }
-  /* Pause the JS transform when user is touching (transform conflicts with scroll) */
-  .notif-bell-panel .notif-bell-scroll-track {
-    transform: none !important;    /* override JS inline style on mobile */
-    will-change: unset !important;
+    overflow: hidden !important;
+    touch-action: none !important;
   }
 
   .notif-bell-panel-title {
@@ -2293,30 +2350,116 @@
     border-radius: 5px !important;
   }
 
-  /* Refund modal */
+  /* ── Refund create/edit/view modal – fit mobile, single column ──────────
+     Desktop .refund-modal-body is a 4-column grid (repeat(4,1fr)) with 24px
+     fonts → unreadable and overflowing on a phone. Collapse it to one column,
+     make every field full width, shrink the oversized fonts, and keep the
+     action buttons reachable. CSS-only, mobile-only. */
+  .refund-modal-overlay {
+    align-items: flex-start !important;
+    padding: calc(90px + env(safe-area-inset-top,0px) + 6px) 8px
+             calc(72px + env(safe-area-inset-bottom,0px) + 6px) !important;
+    overflow-y: auto !important;
+  }
   .refund-modal {
     width: calc(100vw - 16px) !important;
     max-width: calc(100vw - 16px) !important;
     padding: 16px 12px !important;
     border-radius: 14px !important;
-    max-height: 90dvh !important;
+    max-height: calc(100dvh - 90px - env(safe-area-inset-top,0px) - 72px - env(safe-area-inset-bottom,0px) - 12px) !important;
     overflow-y: auto !important;
+    overflow-x: hidden !important;
+    margin: 0 auto !important;
+    box-sizing: border-box !important;
   }
-
   .refund-modal h2 {
     font-size: 16px !important;
-    margin-bottom: 12px !important;
+    margin: 0 0 12px 36px !important;   /* clear the close button (top-left in RTL) */
   }
 
-  /* Form fields inside modal */
+  /* Collapse the 4-column grid body into a single vertical column. */
+  .refund-modal > form,
+  .refund-modal-body {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 10px !important;
+    align-items: stretch !important;
+    width: 100% !important;
+  }
+  .refund-form-group,
+  .refund-form-group.full-width,
+  .refund-form-group.half-width {
+    grid-column: auto !important;
+    margin-bottom: 0 !important;
+    width: 100% !important;
+  }
   .refund-form-group label {
     font-size: 13px !important;
+    margin-bottom: 4px !important;
   }
-  .refund-form-group input,
+  .refund-form-group input:not([type="checkbox"]),
   .refund-form-group select,
-  .refund-form-group textarea {
+  .refund-form-group textarea,
+  .refund-staff-combobox,
+  .refund-staff-combobox input {
     font-size: 14px !important;
     padding: 8px 10px !important;
+    width: 90% !important;
+    max-width: 90% !important;
+    box-sizing: border-box !important;
+  }
+  .refund-form-group textarea { min-height: 64px !important; }
+
+  /* Keep checkboxes their natural size so the label text stays inline
+     (otherwise width:100% squeezes the text to one word per line). */
+  .refund-form-group input[type="checkbox"] {
+    width: auto !important;
+    max-width: none !important;
+    flex: 0 0 auto !important;
+    padding: 0 !important;
+  }
+
+  /* Admin staff combobox dropdown – constrain width, readable rows. */
+  .refund-staff-dropdown {
+    width: 100% !important;
+    max-height: 180px !important;
+    font-size: 14px !important;
+  }
+  .refund-staff-option { font-size: 14px !important; padding: 8px 10px !important; }
+  .refund-staff-placeholder { font-size: 14px !important; }
+
+  /* Shrink the oversized (24px) helper texts. */
+  .refund-field-error { font-size: 12px !important; }
+  .refund-upload-zone { font-size: 13px !important; padding: 14px !important; }
+  .refund-receipt-preview { font-size: 14px !important; }
+  .refund-readonly-value { font-size: 14px !important; }
+  .refund-phone-hint,
+  .refund-phone-hint-label,
+  .refund-save-phone-label { font-size: 13px !important; }
+  .refund-modal-close {
+    font-size: 1.5rem !important;
+    top: 10px !important;
+    left: 12px !important;
+  }
+
+  /* Action buttons – sticky at the bottom, full-width row. */
+  .refund-modal-actions {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+    margin-top: 12px !important;
+    padding-top: 10px !important;
+    border-top: 1px solid #e5e7eb !important;
+    position: sticky !important;
+    bottom: 0 !important;
+    background: white !important;
+  }
+  .refund-modal-actions button {
+    font-size: 13px !important;
+    padding: 8px 14px !important;
+    flex: 1 1 auto !important;
+    transform: none !important;
+    box-shadow: none !important;
   }
 
   /* ══════════════════════════════════════════════════════════
@@ -2393,6 +2536,19 @@
   }
   .feedbacks-filter-item label { font-size: 12px !important; }
   .feedbacks-filter-item select, .feedbacks-date-input { font-size: 13px !important; }
+  /* Toolbar date filters – THIS page only – narrow so they don't span the row.
+     .volunteer-feedbacks-main-content scopes to the General Volunteer Feedbacks
+     page; .feedbacks-toolbar-filters keeps it clear of the modal's date field. */
+  .volunteer-feedbacks-main-content .feedbacks-toolbar-filters .feedbacks-date-input {
+    width: 132px !important;
+    max-width: 132px !important;
+    min-width: 0 !important;
+    padding: 6px 8px !important;
+    box-sizing: border-box !important;
+  }
+  .volunteer-feedbacks-main-content .feedbacks-toolbar-filters .feedbacks-filter-item {
+    min-width: 0 !important;
+  }
   .feedbacks-container {
     width: 100% !important;
     margin-top: 0 !important;
@@ -2411,6 +2567,25 @@
     height: auto !important;
     max-height: 55dvh !important;
     margin: 0 !important;
+  }
+  /* Empty state – the two feedbacks pages only (volunteer + tutor). Desktop
+     .feedbacks-page-content .no-data is 48px nowrap (enormous on a phone);
+     shrink it and collapse the empty grid so it doesn't reserve a huge blank
+     area. */
+  .volunteer-feedbacks-main-content .feedbacks-page-content .no-data,
+  .tutor-feedbacks-main-content .feedbacks-page-content .no-data {
+    font-size: 15px !important;
+    font-weight: 600 !important;
+    white-space: normal !important;
+    padding: 16px 10px !important;
+  }
+  .volunteer-feedbacks-main-content .feedbacks-page-content .feedback-grid-container:has(.no-data),
+  .volunteer-feedbacks-main-content .feedbacks-page-content .feedbacks-grid-container:has(.no-data),
+  .tutor-feedbacks-main-content .feedbacks-page-content .feedback-grid-container:has(.no-data),
+  .tutor-feedbacks-main-content .feedbacks-page-content .feedbacks-grid-container:has(.no-data) {
+    height: auto !important;
+    max-height: none !important;
+    min-height: 0 !important;
   }
 
   /* ── Feedbacks modals (info / create / edit) – fit mobile screen ── */
@@ -2464,6 +2639,82 @@
   .feedbacks-select__option,
   .feedbacks-select__single-value,
   .feedbacks-select__input input { font-size: 13px !important; }
+
+  /* ── Feedback create/edit form – force ONE readable column ──────────
+     Desktop lays the form out in several grid columns which makes it an
+     unreadable mess on a phone:
+       .feedbacks-form-grid-3col { grid-template-columns: 900px }  → overflows
+       .feedbacks-form-col-main  { grid-template-columns: 1fr 1fr } → 2 columns
+       .feedbacks-form-row       { grid-template-columns: 1fr 2fr } → label|field
+     Collapse all of it to a single vertical column with the label stacked
+     above a full-width field. Mobile-only, CSS-only (no JSX changes).
+     All desktop rules here carry no !important, so a single !important wins. */
+  .feedbacks-form-grid-2col,
+  .feedbacks-form-grid-3col {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 12px !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    direction: rtl !important;
+  }
+  .feedbacks-form-col-initial-family,
+  .feedbacks-form-col-main {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 12px !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    grid-column: auto !important;
+  }
+  /* The hospital-visit "Initial Family Data" block reads as a titled section
+     above the main fields, separated by a subtle divider. */
+  .feedbacks-form-col-initial-family {
+    border-bottom: 1px solid #e5e7eb !important;
+    padding-bottom: 10px !important;
+    margin-bottom: 2px !important;
+  }
+  .feedbacks-form-col-initial-family h3 {
+    font-size: 15px !important;
+    margin: 0 0 2px 0 !important;
+    text-align: right !important;
+  }
+  /* Stack each row: label on its own line, field full width underneath. */
+  .feedbacks-form-row {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 4px !important;
+    width: 100% !important;
+  }
+  .feedbacks-form-row > label {
+    font-weight: 600 !important;
+    margin: 0 !important;
+    text-align: right !important;
+  }
+  .feedbacks-form-row input,
+  .feedbacks-form-row select,
+  .feedbacks-form-row textarea,
+  .feedbacks-textarea,
+  .feedbacks-readonly-input,
+  .feedbacks-form-row .feedbacks-select__control,
+  .additional-volunteers-dropdown-container,
+  .additional-volunteers-dropdown-button {
+    width: 90% !important;
+    max-width: 90% !important;
+    box-sizing: border-box !important;
+  }
+  .feedbacks-textarea { min-height: 64px !important; }
+  .additional-volunteers-dropdown-button {
+    font-size: 13px !important;
+    text-align: right !important;
+    padding: 8px 10px !important;
+  }
+  .additional-volunteers-dropdown-item input[type="checkbox"] {
+    width: 20px !important;
+    height: 20px !important;
+  }
+
   .feedbacks-form-actions {
     position: sticky !important;
     bottom: 0 !important;
@@ -2520,8 +2771,10 @@
     margin-right: 0 !important;
     width: 100vw !important;
     max-width: 100vw !important;
-    height: calc(100dvh - 90px - env(safe-area-inset-top,0px) - 72px - env(safe-area-inset-bottom,0px)) !important;
-    max-height: calc(100dvh - 90px - env(safe-area-inset-top,0px) - 72px - env(safe-area-inset-bottom,0px)) !important;
+    /* Wizard sits at top:0 over the header (z-index 10000); subtract the bottom
+       nav so it stays visible and the modal isn't excessively tall. */
+    height: calc(100dvh - 72px - env(safe-area-inset-bottom,0px)) !important;
+    max-height: calc(100dvh - 72px - env(safe-area-inset-bottom,0px)) !important;
     overflow-y: auto !important;
     transform: none !important;
     border-radius: 0 !important;
@@ -2578,15 +2831,22 @@
     min-width: 0 !important;
   }
 
-  /* ── Map – show on mobile but compact ── */
+  /* ── Map – visible on mobile, balanced so the grid above stays visible too ── */
   .map-match-container {
     display: flex !important;       /* was display:none – now visible */
-    height: 180px !important;       /* compact, was 400px on desktop */
-    min-height: 180px !important;
+    height: 260px !important;       /* balance: bigger than original 180, not dominating */
+    min-height: 260px !important;
     width: 100% !important;
     border-radius: 10px !important;
     overflow: hidden !important;
     margin-top: 8px !important;
+  }
+  /* Safety net: force the Leaflet root to fill the container even inside the
+     centering flexbox (inline height:100% can collapse otherwise). */
+  .map-match-container .leaflet-container {
+    height: 100% !important;
+    min-height: 260px !important;
+    width: 100% !important;
   }
 
   .matches-modal .pagination { justify-content: center !important; flex-wrap: wrap !important; }
