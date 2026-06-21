@@ -1385,6 +1385,9 @@ def send_security_breach_alert_whatsapp(endpoint, ip_address, timestamp=None):
         dict: Bulk send summary {"total": N, "successful": N, "failed": N, ...}
               or None if suppressed by cooldown.
     """
+    # --- TEMPORARILY DISABLED ---
+    return None
+
     from django.core.cache import cache
     from django.utils import timezone
     from .models import Staff
