@@ -1232,7 +1232,7 @@ const resources = {
       "Please select a tutor": "אנא בחר חונך",
       "Manual Match": "התאמה ידנית",
       "Confirm Manual Match": "אישור התאמה ידנית",
-      "Creating this tutorship will remove any pending tutorship this tutor has with another child. Do you want to proceed?": "יצירת חונכות זו תסיר כל חונכות בהמתנה של החונך הזה עם ילד אחר. האם אתה רוצה להמשיך?",
+      "Creating this tutorship will remove any pending tutorship this tutor has with another child. Do you want to proceed?": "יצירת חונכות זו תסיר כל חונכות של החונך הזה עם ילד אחר. האם אתה רוצה להמשיך?",
       "Yes, Create Tutorship": "כן, צור חונכות",
       "Back": "חזור", 
       "Distance": "מרחק",
