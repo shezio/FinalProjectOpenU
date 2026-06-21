@@ -15,6 +15,118 @@
     padding-top: 0 !important;   /* innerpageheader.css adds padding-top:100px */
   }
 
+  /* Registration page – the rendered top element is <form class="registration-form">,
+     NOT .registration-page (that class is never rendered).
+     Release the body overflow:hidden (section 1) so the tall form can scroll. */
+  body:has(.registration-form) {
+    overflow-y: auto !important;
+    height: auto !important;
+    min-height: 100dvh !important;
+  }
+
+  .registration-form {
+    width: 90% !important;
+    margin: 20px auto 40px !important;
+    padding: 24px 16px !important;
+    border-radius: 16px !important;
+    box-sizing: border-box !important;
+  }
+
+  .registration-form h2 {
+    font-size: 30px !important;
+    margin-bottom: 20px !important;
+  }
+
+  /* Stack the two-column layout into one column so inputs don't overflow.
+     Desktop: .column has min-width:300px and .form-columns gap:60px. */
+  .registration-form .form-columns {
+    flex-direction: column !important;
+    gap: 0 !important;
+  }
+
+  .registration-form .column {
+    min-width: 0 !important;
+    width: 100% !important;
+    flex: 1 1 100% !important;
+  }
+
+  .registration-form input,
+  .registration-form select,
+  .registration-form textarea {
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Native date inputs on iOS Safari keep an intrinsic min-width that ignores
+     width:100% and overflow the column. Force them to shrink. */
+  .registration-form input[type="date"] {
+    -webkit-appearance: none !important;
+    appearance: none !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Dashboard – top wrapper is .page-container; the sized/scrolling element is
+     .dashboard-container (desktop: margin-top:220px; margin-right:420px; zoom:.9;
+     max-height:calc(100vh-20px)). Reset those so it fits the mobile viewport. */
+  .dashboard-container {
+    margin-top: 0 !important;
+    margin-right: 0 !important;
+    margin-left: 0 !important;
+    padding-top: calc(90px + env(safe-area-inset-top, 0px) + 8px) !important;
+    padding-bottom: calc(72px + env(safe-area-inset-bottom, 8px) + 8px) !important;
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    height: 100dvh !important;
+    max-height: 100dvh !important;
+    width: 100vw !important;
+    box-sizing: border-box !important;
+    zoom: 1 !important;
+  }
+
+  /* Dashboard – reduce oversized desktop fonts for mobile */
+  .dashboard-header h1 { font-size: 22px !important; }
+  .kpi-section h2 { font-size: 16px !important; }
+  .kpi-label { font-size: 12px !important; }
+  .kpi-value { font-size: 26px !important; }
+  .kpi-card { padding: 12px !important; }
+  .btn-refresh,
+  .btn-export,
+  .dashboard-container .btn { font-size: 13px !important; padding: 8px 12px !important; }
+  .charts-header h2 { font-size: 16px !important; }
+  .charts-page-indicator { font-size: 13px !important; }
+  .full-width-chart h3,
+  .chart-card h3 { font-size: 15px !important; }
+  .full-width-chart { padding: 12px !important; }
+  .timeframe-btn { font-size: 12px !important; padding: 6px 10px !important; }
+  .subtitle { font-size: 15px !important; }
+  .growth { font-size: 12px !important; }
+  .big-number { font-size: 40px !important; }
+  .dashboard-table th,
+  .dashboard-table td { font-size: 12px !important; padding: 6px 8px !important; }
+
+  /* Dashboard 7th display (tutorships table) – let it scroll horizontally
+     so the last columns are reachable. The table is wider than the viewport;
+     make its wrapper an independent horizontal scroller. */
+  .table-card {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+  .table-card .dashboard-table {
+    width: max-content !important;
+    min-width: 100% !important;
+  }
+  .table-card .dashboard-table th,
+  .table-card .dashboard-table td {
+    white-space: nowrap !important;
+  }
+
   /* Allow portaled dropdowns (fixed position) to show above overflow:hidden body */
   .status-checkboxes-dropdown {
     z-index: 999999 !important;
@@ -633,6 +745,55 @@
     flex-shrink: 0 !important;
   }
 
+  /* Registration/SystemManagement TOTP screen uses .totp-verification-section
+     + .totp-input-box (70px boxes × 6 overflow). Release body scroll and shrink. */
+  body:has(.totp-verification-section) {
+    overflow-y: auto !important;
+    height: auto !important;
+    min-height: 100dvh !important;
+  }
+
+  .totp-verification-section {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 20px auto 40px !important;
+    padding: 24px 16px !important;
+    border-radius: 16px !important;
+    box-sizing: border-box !important;
+  }
+
+  .totp-input-box {
+    /* Exact fit: (viewport - 32px section padding - 5 gaps of 6px - 12px border) / 6 */
+    width: calc((100vw - 32px - 30px - 12px) / 6) !important;
+    max-width: 52px !important;
+    min-width: 32px !important;
+    height: calc((100vw - 32px - 30px - 12px) / 6 * 1.2) !important;
+    max-height: 62px !important;
+    min-height: 40px !important;
+    font-size: clamp(18px, 4.5vw, 26px) !important;
+    padding: 0 !important;
+    box-sizing: border-box !important;
+    flex-shrink: 0 !important;
+  }
+
+  .totp-verification-section .totp-input-container {
+    gap: 6px !important;
+    flex-wrap: nowrap !important;
+    padding: 0 8px !important;
+    box-sizing: border-box !important;
+  }
+
+  .totp-buttons {
+    flex-direction: column !important;
+    gap: 10px !important;
+    width: 100% !important;
+  }
+
+  .totp-buttons button {
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
   /* ── 11. Modals – full screen ───────────────────────────────── */
   .ReactModal__Content {
     inset: 0 !important;
@@ -641,6 +802,140 @@
     max-height: 100dvh !important;
     overflow-y: auto !important;
     padding: 20px 14px !important;
+  }
+
+  /* Manual Match modal ONLY – a centred card (not full-screen), compact fonts.
+     No JS class is added (changing the JSX breaks desktop), so we identify this
+     modal purely in CSS via :has() – it is the only .modal-content react-modal
+     that contains .manual-match-info (step 1) or .match-preview (step 2).
+     The element carries .ReactModal__Content + .modal-content. The desktop
+     .modal-content centres via position:fixed; top/left:50%; translate(-50%,-50%),
+     but the generic .ReactModal__Content rule above forces inset:0 (full-screen).
+     Re-assert centring here, scoped via :has() so no other modal is affected.
+     .ReactModal__Content.modal-content:has(...) (0,3,0) beats the generic
+     .ReactModal__Content (0,1,0). */
+  .ReactModal__Content.modal-content:has(.manual-match-info, .match-preview) {
+    inset: auto !important;
+    top: 50% !important;
+    left: 50% !important;
+    right: auto !important;
+    bottom: auto !important;
+    transform: translate(-50%, -50%) !important;
+    width: calc(100vw - 24px) !important;
+    max-width: calc(100vw - 24px) !important;
+    max-height: calc(100dvh - 90px - env(safe-area-inset-top, 0px) - 72px - env(safe-area-inset-bottom, 0px) - 3px) !important;
+    border-radius: 16px !important;
+    margin: 0 !important;
+    padding: 16px 14px !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    box-sizing: border-box !important;
+  }
+  .ReactModal__Content.modal-content:has(.manual-match-info, .match-preview) .modal-header {
+    display: flex !important;
+    align-items: flex-end !important;
+    justify-content: space-between !important;
+    gap: 8px !important;
+    margin-bottom: 12px !important;
+    padding-bottom: 8px !important;
+  }
+  /* The desktop rule .ReactModal__Content.--after-open.modal-content .modal-header h2
+     (0,4,1 !important) forces margin-right:150px + font-size:32px → the Hebrew
+     title wraps one word per line. Match its specificity + the :has() (0,5,1) to
+     win, and right-align it RTL with a small margin to clear the X. */
+  .ReactModal__Content.ReactModal__Content--after-open.modal-content:has(.manual-match-info, .match-preview) .modal-header h2 {
+    font-size: 15px !important;
+    direction: rtl !important;
+    text-align: right !important;
+    flex: 1 !important;
+    margin: 0 40px 0 0 !important;
+    line-height: 1.3 !important;
+  }
+  .ReactModal__Content.modal-content:has(.manual-match-info, .match-preview) .modal-body,
+  .ReactModal__Content.modal-content:has(.manual-match-info, .match-preview) .modal-body p,
+  .ReactModal__Content.modal-content:has(.manual-match-info, .match-preview) label,
+  .ReactModal__Content.modal-content:has(.manual-match-info, .match-preview) input,
+  .ReactModal__Content.modal-content:has(.manual-match-info, .match-preview) .tutor-dropdown-item,
+  .ReactModal__Content.modal-content:has(.manual-match-info, .match-preview) .match-details-table td,
+  .ReactModal__Content.modal-content:has(.manual-match-info, .match-preview) h4 {
+    font-size: 13px !important;
+  }
+  /* Tighten the excessive desktop spacing. The high-specificity desktop rule
+     forces .modal-body { min-height:60vh } which pushes the buttons far down —
+     override it (0,5,1) and shrink the header/actions/info gaps. */
+  .ReactModal__Content.ReactModal__Content--after-open.modal-content:has(.manual-match-info, .match-preview) .modal-body {
+    min-height: 0 !important;
+    overflow-y: visible !important;
+  }
+  .ReactModal__Content.modal-content:has(.manual-match-info, .match-preview) .modal-body > * {
+    margin-top: 0 !important;
+    margin-bottom: 10px !important;
+  }
+  .ReactModal__Content.modal-content:has(.manual-match-info, .match-preview) .manual-match-info,
+  .ReactModal__Content.modal-content:has(.manual-match-info, .match-preview) .tutor-selection,
+  .ReactModal__Content.modal-content:has(.manual-match-info, .match-preview) .selected-tutor-info,
+  .ReactModal__Content.modal-content:has(.manual-match-info, .match-preview) .match-preview {
+    margin: 0 0 10px 0 !important;
+    padding: 8px 10px !important;
+  }
+  .ReactModal__Content.modal-content:has(.manual-match-info, .match-preview) .modal-actions {
+    margin-top: 12px !important;
+    padding-top: 10px !important;
+    gap: 10px !important;
+    position: sticky !important;
+    bottom: 0 !important;
+    background: rgba(255, 255, 255, 0.98) !important;
+    z-index: 5 !important;
+  }
+  .ReactModal__Content.modal-content:has(.manual-match-info, .match-preview) .modal-actions button {
+    font-size: 13px !important;
+    padding: 8px 12px !important;
+  }
+
+  /* Manual Match CONFIRMATION modal ("…remove any pending tutorship…") ONLY.
+     Same problem as above: .ReactModal__Content forces inset:0 (full-screen) and
+     the desktop .modal-content transform pins it top-left. No JS class is added,
+     so identify it in CSS via :has(> .modal-body > p) – it is the only
+     .modal-content react-modal whose body is a single direct <p> message (the
+     manual-match modal's body holds .manual-match-info / .match-preview instead).
+     (0,2,0)+:has beats the generic .ReactModal__Content (0,1,0); !important also
+     beats the inline width/margin style react-modal injects. */
+  .ReactModal__Content.modal-content:has(> .modal-body > p) {
+    inset: auto !important;
+    top: 50% !important;
+    left: 50% !important;
+    right: auto !important;
+    bottom: auto !important;
+    transform: translate(-50%, -50%) !important;
+    width: calc(100vw - 24px) !important;
+    max-width: calc(100vw - 24px) !important;
+    max-height: calc(100dvh - 90px - env(safe-area-inset-top, 0px) - 72px - env(safe-area-inset-bottom, 0px) - 3px) !important;
+    border-radius: 16px !important;
+    margin: 0 !important;
+    padding: 16px 14px !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    box-sizing: border-box !important;
+  }
+  .ReactModal__Content.ReactModal__Content--after-open.modal-content:has(> .modal-body > p) .modal-header h2 {
+    font-size: 15px !important;
+    direction: rtl !important;
+    text-align: right !important;
+    flex: 1 !important;
+    margin: 0 40px 0 0 !important;
+    line-height: 1.3 !important;
+  }
+  .ReactModal__Content.modal-content:has(> .modal-body > p) .modal-body {
+    padding: 8px 4px !important;
+  }
+  .ReactModal__Content.modal-content:has(> .modal-body > p) .modal-body p {
+    font-size: 14px !important;
+    line-height: 1.5 !important;
+    margin-bottom: 16px !important;
+  }
+  .ReactModal__Content.modal-content:has(> .modal-body > p) .modal-actions button {
+    font-size: 13px !important;
+    padding: 8px 12px !important;
   }
 
   /* ── 12. Toasts – full width ────────────────────────────────── */
@@ -733,9 +1028,9 @@
 
   /* ── 13. Loading spinner – smaller on mobile ──────────────── */
   .loader {
-    width: 60px !important;
-    height: 60px !important;
-    border-width: 5px !important;
+    width: 26px !important;
+    height: 26px !important;
+    border-width: 3px !important;
   }
   .tasks-main-content .loader {
     margin-top: 0 !important;
@@ -777,7 +1072,28 @@
     overflow: hidden !important;
     position: relative !important;
   }
-  /* The emoji is injected as ::before — must be a separate font-size */
+  /* The emoji is injected as ::before — must be a separate font-size.
+     Reset the desktop shine-sweep (.family-actions button::before sets
+     position:absolute; left:-100%; gradient background; transition) so the
+     emoji stays centred and visible instead of sliding across on tap. */
+  .family-actions .info-button::before,
+  .family-actions .edit-button::before,
+  .family-actions .delete-button::before {
+    position: static !important;
+    left: auto !important;
+    top: auto !important;
+    width: auto !important;
+    height: auto !important;
+    background: none !important;
+    transition: none !important;
+    animation: none !important;
+    transform: none !important;
+  }
+  .family-actions .info-button:hover::before,
+  .family-actions .edit-button:hover::before,
+  .family-actions .delete-button:hover::before {
+    left: auto !important;
+  }
   .family-actions .info-button::before {
     content: 'ℹ️' !important;
     font-size: 18px !important;
@@ -811,6 +1127,165 @@
     display: flex !important;
     gap: 10px !important;
     border-top: 1px solid #e5e7eb !important;
+  }
+
+  /* iOS bug: a position:fixed element inside a container with
+     -webkit-overflow-scrolling:touch + overflow:auto gets positioned relative
+     to that scroll container (appears offset to a corner), not the viewport.
+     While a modal is open, drop the scroll context so the overlay is
+     viewport-relative again. Background scroll isn't needed (overlay covers all). */
+  .families-main-content:has(.modal.show),
+  .families-main-content:has(.modal.show) .content {
+    overflow: visible !important;
+    -webkit-overflow-scrolling: auto !important;
+    transform: none !important;
+    contain: none !important;
+    filter: none !important;
+  }
+  .families-main-content:has(.modal.show) {
+    height: auto !important;
+    min-height: 100dvh !important;
+  }
+
+  /* Family info / edit / add modal – full-screen overlay, top-centered.
+     Scoped to families ONLY (do not touch other pages' modals).
+     inset:0 is ESSENTIAL: without it a position:fixed element falls back to its
+     in-flow (static) position at the bottom of the long page → bottom-right. */
+  .families-main-content .modal.show {
+    position: fixed !important;
+    inset: 0 !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 100vw !important;
+    height: 100dvh !important;
+    max-height: 100dvh !important;
+    margin: 0 !important;
+    display: flex !important;
+    align-items: flex-start !important;
+    justify-content: center !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    padding: calc(90px + env(safe-area-inset-top, 0px) + 8px) 8px
+             calc(72px + env(safe-area-inset-bottom, 8px) + 8px) !important;
+    box-sizing: border-box !important;
+    font-size: 14px !important;
+    z-index: 10200 !important;
+  }
+
+  /* Shrink + recentre the modal box on mobile.
+     Desktop generic .modal-content has width:70%, padding:50px, margin-right:30px
+     which (combined with the overlay) pushed it toward a corner. Constrain its
+     width to the viewport and centre it with auto side margins. */
+  /* Pin the modal box directly to the viewport with position:fixed.
+     The debug screenshot proved position:fixed is honoured here (the overlay
+     drew a full-screen green frame), so fixing the box itself reliably centres
+     it without depending on the overlay's flex layout (which wasn't centring
+     the box on iOS). 12px each side → full-width minus 24px, just under the
+     90px header, scrollable, capped above the 72px bottom nav. */
+  .families-main-content .modal-content {
+    position: fixed !important;
+    top: calc(90px + env(safe-area-inset-top, 0px) + 8px) !important;
+    left: 12px !important;
+    right: 12px !important;
+    bottom: auto !important;
+    width: auto !important;
+    max-width: none !important;
+    margin: 0 !important;
+    transform: none !important;          /* cancel any desktop scale */
+    max-height: calc(100dvh - 90px - 72px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 16px) !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    padding: 20px 16px !important;
+    box-sizing: border-box !important;
+  }
+  .modal-content h2 {
+    font-size: 16px !important;
+    margin-bottom: 10px !important;
+    letter-spacing: 0 !important;
+  }
+  /* Close X button inside modal – smaller circle so it doesn't cover the h2 */
+  .modal-content .close {
+    font-size: 1.1rem !important;
+    width: 32px !important;
+    height: 32px !important;
+    top: 8px !important;
+    right: 10px !important;
+  }
+  /* Info (family details) modal – shrink fonts so it fits without scrolling.
+     .family-details-grid exists ONLY in the info modal, not the edit modal. */
+  .families-main-content .family-details-grid {
+    gap: 4px 12px !important;
+    margin-top: 10px !important;
+  }
+  .families-main-content .family-details-grid p {
+    font-size: 11px !important;
+    line-height: 1.3 !important;
+  }
+  /* Form fields inside family modals */
+  .modal-content label { font-size: 12px !important; }
+  .modal-content input,
+  .modal-content select,
+  .modal-content textarea {
+    font-size: 14px !important;
+    padding: 7px 10px !important;
+  }
+  /* Button row inside family modal */
+  .modal-content button {
+    font-size: 13px !important;
+    padding: 7px 12px !important;
+    transform: none !important;
+    box-shadow: none !important;
+  }
+
+  /* ── Family edit/add form – single column, free scroll ──────
+     Desktop: 6 side-by-side form-columns (untouched).
+     Mobile: collapse all columns into one vertical list so the
+     user can just scroll down naturally without any layout tricks.
+  ─────────────────────────────────────────────────────────── */
+  .modal-content .form-grid {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 6px !important;
+    width: 100% !important;
+  }
+  .modal-content .form-column {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 4px !important;
+    width: 100% !important;
+    border-bottom: 1px solid #f0f0f0 !important;
+    padding-bottom: 8px !important;
+    margin-bottom: 4px !important;
+  }
+  .modal-content .form-column label {
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    margin: 0 !important;
+    margin-top: 6px !important;
+  }
+  .modal-content .form-column input,
+  .modal-content .form-column select,
+  .modal-content .form-column textarea {
+    font-size: 14px !important;
+    padding: 7px 10px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+  /* Form actions – normal flow at bottom, no sticky (let user scroll to it) */
+  .modal-content .form-actions {
+    display: flex !important;
+    gap: 8px !important;
+    flex-wrap: wrap !important;
+    margin-top: 12px !important;
+    padding-top: 10px !important;
+    border-top: 1px solid #e5e7eb !important;
+  }
+  .modal-content .form-actions button {
+    flex: 1 1 auto !important;
+    font-size: 13px !important;
+    padding: 8px 12px !important;
   }
 
   /* ── 15. All grid containers – reset desktop margin-right ──── */
@@ -969,6 +1444,13 @@
     padding: 8px !important;
     box-sizing: border-box !important;
   }
+  /* Tutorships page only – the desktop .page-content sets margin-top:160px
+     (families.css) which is NOT reset above and leaks on mobile, pushing the
+     toolbar/content down below the fixed header. Scope a reset to this page so
+     no other page is affected. (0,2,0) beats the desktop .page-content (0,1,0). */
+  .tutorships-main-content .page-content {
+    margin-top: 0 !important;
+  }
   .page-content .grid-container {
     width: 100% !important;
     margin: 0 !important;
@@ -1000,9 +1482,10 @@
   .staff-data-grid td {
     font-size: 12px !important;
     padding: 6px 8px !important;
-    white-space: normal !important;
-    max-width: 130px !important;
-    word-break: break-word !important;
+    white-space: nowrap !important;   /* let table-layout:auto size to content */
+    max-width: none !important;       /* don't cap — let it size to text */
+    word-break: normal !important;
+    overflow: visible !important;
   }
   .staff-data-grid {
     display: block !important;
@@ -1010,6 +1493,7 @@
     -webkit-overflow-scrolling: touch !important;
     width: 100% !important;
     font-size: 12px !important;
+    table-layout: auto !important;    /* columns size to their content */
   }
   .staff-page-content {
     padding: 8px !important;
@@ -1030,6 +1514,76 @@
     font-size: 12px !important;
     padding: 6px 8px !important;
     white-space: nowrap !important;
+  }
+  /* Action buttons inside table cells – override 24px td font-size */
+  .staff-data-grid td button,
+  .staff-data-grid td .edit-button,
+  .staff-data-grid td .delete-button,
+  .staff-data-grid td .info-button,
+  .staff-data-grid td a {
+    font-size: 12px !important;
+    padding: 4px 8px !important;
+    transform: none !important;
+    box-shadow: none !important;
+    white-space: nowrap !important;
+  }
+  /* Also shrink the td font-size that was 24px */
+  .staff-data-grid td {
+    font-size: 12px !important;
+  }
+
+  /* System management modals (staff add/edit/delete, mail) – full mobile width */
+  .staff-modal-content {
+    width: calc(100vw - 16px) !important;
+    max-width: calc(100vw - 16px) !important;
+    max-height: calc(100dvh - 90px - env(safe-area-inset-top,0px) - 72px - env(safe-area-inset-bottom,0px) - 16px) !important;
+    overflow-y: auto !important;
+    padding: 16px 12px 12px !important;
+    box-sizing: border-box !important;
+  }
+  .staff-modal-content h2 {
+    font-size: 16px !important;
+    margin-bottom: 10px !important;
+  }
+  .staff-modal-content p { font-size: 13px !important; }
+  .staff-close {
+    font-size: 1.4rem !important;
+    top: 10px !important;
+    right: 12px !important;
+  }
+  /* Mail modal – shrink all fonts and make send button visible */
+  .mail-modal-content {
+    width: calc(100vw - 16px) !important;
+    max-width: calc(100vw - 16px) !important;
+  }
+  .mail-modal-content h2 {
+    font-size: 16px !important;
+    margin-bottom: 10px !important;
+  }
+  .mail-form-row label { font-size: 13px !important; }
+  .mail-form-row input[type="text"],
+  .mail-form-row textarea {
+    font-size: 14px !important;
+    padding: 8px 10px !important;
+  }
+  .mail-drop-zone { padding: 12px !important; }
+  .mail-drop-label { font-size: 12px !important; }
+  .mail-form-actions {
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+    justify-content: stretch !important;
+    position: sticky !important;
+    bottom: 0 !important;
+    background: white !important;
+    padding: 10px 0 4px !important;
+    border-top: 1px solid #e5e7eb !important;
+  }
+  .mail-form-actions button {
+    font-size: 13px !important;
+    padding: 8px 14px !important;
+    flex: 1 1 auto !important;
+    transform: none !important;
+    box-shadow: none !important;
   }
 
   /* ── 22. Meeting management – reset sidebar margin ──────── */
@@ -1061,13 +1615,18 @@
     width: 100% !important;
     box-sizing: border-box !important;
     border-radius: 14px !important;
-    overflow: hidden !important;
+    overflow: visible !important;   /* was hidden – clips the sticky header */
   }
+  /* Calendar header must scroll WITH content, not disappear under fixed app header */
   .calendar-header {
-    padding: 10px 12px !important;
+    padding: 8px 10px !important;
+    position: sticky !important;
+    top: 0 !important;
+    margin-top: 100px !important;  /* leave space for app header */
+    z-index: 10 !important;
   }
   .calendar-header-title {
-    font-size: 15px !important;
+    font-size: 13px !important;
   }
   .cal-nav-btn {
     font-size: 13px !important;
@@ -1199,11 +1758,11 @@
   .reviewers-date-input,
   .reviewers-btn-refresh,
   .reviewers-label {
-    font-size: 12px !important;
+    font-size: 10px !important;
     height: 34px !important;
   }
   .reviewers-data-grid {
-    font-size: 12px !important;
+    font-size: 10px !important;
     display: block !important;
     overflow-x: auto !important;
     -webkit-overflow-scrolling: touch !important;
@@ -1217,6 +1776,18 @@
     white-space: nowrap !important;
   }
 
+  .reviewer-btn-action.reviewer-btn-status,
+  .reviewer-btn-action.reviewer-btn-edit,
+  .reviewer-btn-action.reviewer-btn-assign,
+  .reviewer-btn-action.reviewer-btn-info,
+  .reviewer-status-badge,
+  .reviewer-task-details {
+    font-size: 10px !important;
+    padding: 5px 10px !important;
+    border-radius: 8px !important;
+    transform: none !important;
+  }
+
   /* ── 24. Modal background – full-width overlay ──────────── */
   .ReactModal__Overlay {
     inset: 0 !important;
@@ -1226,6 +1797,9 @@
     right: 0 !important;
     top: 0 !important;
     bottom: 0 !important;
+    /* Keep overlay BELOW the .modal.show info overlay (z-index:10200)
+       so info modal appears on top of the matching wizard */
+    z-index: 9000 !important;
   }
 
   /* ══════════════════════════════════════════════════════════
@@ -1292,6 +1866,7 @@
   .notif-bell-wrap {
     top: calc(env(safe-area-inset-top, 0px) + 30px) !important;
     left: 8px !important;
+    margin-top: 42px !important;
     transform: none !important;       /* cancel translateY(-50%) */
     z-index: 1200 !important;
   }
@@ -1326,6 +1901,22 @@
     max-height: 50dvh !important;
     border-radius: 14px !important;
     z-index: 1199 !important;
+    /* On mobile the JS ferris-wheel doesn't respond to touch.
+       Make the scroll-wrap itself natively scrollable via touch. */
+    overflow: hidden !important;
+  }
+
+  /* Make the scroll-wrap touchable – native scroll instead of JS animation */
+  .notif-bell-panel .notif-bell-scroll-wrap {
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    touch-action: pan-y !important;
+    overscroll-behavior: contain !important;
+  }
+  /* Pause the JS transform when user is touching (transform conflicts with scroll) */
+  .notif-bell-panel .notif-bell-scroll-track {
+    transform: none !important;    /* override JS inline style on mobile */
+    will-change: unset !important;
   }
 
   .notif-bell-panel-title {
@@ -1691,8 +2282,15 @@
   }
 
   .refund-status-badge {
-    font-size: 13px !important;
-    padding: 2px 7px !important;
+    font-size: 11px !important;
+    padding: 2px 6px !important;
+  }
+
+  /* Refund action buttons (edit/delete per row) */
+  .refund-action-btn {
+    font-size: 12px !important;
+    padding: 3px 7px !important;
+    border-radius: 5px !important;
   }
 
   /* Refund modal */
@@ -1815,6 +2413,101 @@
     margin: 0 !important;
   }
 
+  /* ── Feedbacks modals (info / create / edit) – fit mobile screen ── */
+  .feedbacks-modal-overlay {
+    align-items: flex-start !important;
+    padding-top: calc(90px + env(safe-area-inset-top,0px) + 4px) !important;
+    padding-bottom: calc(72px + env(safe-area-inset-bottom,0px) + 4px) !important;
+    overflow-y: auto !important;
+  }
+  .feedbacks-modal,
+  .feedbacks-modal-content,
+  .feedbacks-modal-content-tall,
+  .feedbacks-modal-content-wide {
+    width: calc(100vw - 16px) !important;
+    max-width: calc(100vw - 16px) !important;
+    min-width: 0 !important;
+    margin: 8px auto !important;
+    margin-top: 0 !important;
+    padding: 14px 12px !important;
+    border-radius: 14px !important;
+    height: auto !important;
+    max-height: calc(100dvh - 90px - env(safe-area-inset-top,0px) - 72px - env(safe-area-inset-bottom,0px) - 24px) !important;
+    overflow-y: auto !important;
+    box-sizing: border-box !important;
+    transform: none !important;
+  }
+  .feedbacks-modal-content h2,
+  .feedbacks-modal-content-tall h2 {
+    font-size: 16px !important;
+    margin-bottom: 8px !important;
+  }
+  .feedbacks-modal-content p,
+  .feedbacks-info-grid p { font-size: 13px !important; margin-bottom: 6px !important; }
+  .feedbacks-info-grid h3 { font-size: 14px !important; }
+  .feedbacks-info-grid {
+    grid-template-columns: 1fr !important;   /* single column on mobile */
+    gap: 6px !important;
+    margin-top: 8px !important;
+  }
+  .feedbacks-close {
+    font-size: 1.4rem !important;
+    top: 10px !important;
+    right: 12px !important;
+  }
+  .feedbacks-textarea { font-size: 14px !important; }
+  .feedbacks-form-row label,
+  .feedbacks-form-row input,
+  .feedbacks-form-row select { font-size: 13px !important; }
+  .feedbacks-select__control,
+  .feedbacks-select__menu,
+  .feedbacks-select__option,
+  .feedbacks-select__single-value,
+  .feedbacks-select__input input { font-size: 13px !important; }
+  .feedbacks-form-actions {
+    position: sticky !important;
+    bottom: 0 !important;
+    background: white !important;
+    padding: 8px 0 4px !important;
+    margin-top: 8px !important;
+    border-top: 1px solid #e5e7eb !important;
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+  }
+  .feedbacks-form-actions button {
+    font-size: 13px !important;
+    padding: 8px 14px !important;
+    flex: 1 1 auto !important;
+    transform: none !important;
+    box-shadow: none !important;
+  }
+
+  /* ── Feedbacks delete confirmation modal (reuse delete-modal style) ── */
+  .feedbacks-delete-modal-overlay {
+    position: fixed !important;
+    inset: 0 !important;
+    background: rgba(0,0,0,0.5) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    z-index: 10500 !important;
+    padding: 20px !important;
+    box-sizing: border-box !important;
+  }
+  .feedbacks-delete-modal {
+    width: calc(100vw - 40px) !important;
+    max-width: 360px !important;
+    padding: 20px 16px !important;
+    border-radius: 14px !important;
+    background: white !important;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.25) !important;
+    text-align: center !important;
+  }
+  .feedbacks-delete-modal h2 { font-size: 16px !important; margin-bottom: 8px !important; }
+  .feedbacks-delete-modal p  { font-size: 13px !important; margin-bottom: 14px !important; }
+  .feedbacks-delete-modal .modal-actions { justify-content: center !important; gap: 10px !important; }
+
   /* ══════════════════════════════════════════════════════════
      33. TUTORSHIPS – matching modal full-screen, info modal above it
      ══════════════════════════════════════════════════════════ */
@@ -1837,6 +2530,26 @@
     z-index: 10000 !important;
   }
   .matches-modal h2 { font-size: 16px !important; margin-bottom: 6px !important; }
+
+  /* ── X close button – compact, left side (RTL: physical left = start) ── */
+  .matches-modal-header .matches-close {
+    position: absolute !important;
+    top: 10px !important;
+    left: 10px !important;          /* RTL: "right" for user = left in CSS */
+    right: unset !important;
+    font-size: 1.2rem !important;   /* was 3em — WAY too big */
+    padding: 4px 10px !important;   /* was 8px 20px */
+    border-radius: 8px !important;
+    line-height: 1 !important;
+    min-width: 32px !important;
+    height: 32px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    transform: none !important;
+    box-shadow: none !important;
+  }
+
   .matches-modal .filter-controls {
     flex-wrap: wrap !important;
     gap: 6px !important;
@@ -1864,7 +2577,18 @@
     overflow-y: auto !important;
     min-width: 0 !important;
   }
-  .map-match-container { display: none !important; }
+
+  /* ── Map – show on mobile but compact ── */
+  .map-match-container {
+    display: flex !important;       /* was display:none – now visible */
+    height: 180px !important;       /* compact, was 400px on desktop */
+    min-height: 180px !important;
+    width: 100% !important;
+    border-radius: 10px !important;
+    overflow: hidden !important;
+    margin-top: 8px !important;
+  }
+
   .matches-modal .pagination { justify-content: center !important; flex-wrap: wrap !important; }
   .modal-actions .calc-match-button,
   .modal-actions .create-tutorship-button,
@@ -1876,6 +2600,29 @@
     box-shadow: none !important;
   }
   .modal-actions { flex-wrap: wrap !important; gap: 6px !important; margin-top: 8px !important; }
+
+  /* ── iOS overflow-trap fix ─────────────────────────────────────
+     iOS Safari treats position:fixed inside overflow:auto as if it
+     were position:absolute (trapped in the scroll container).
+     When the info modal (.modal.show) is open we make the parent
+     overflow:visible so the fixed element escapes to viewport level.
+     :has() is supported in iOS Safari 16+. The matches-modal covers
+     the whole screen so making the container non-scrollable while the
+     info modal is open has zero visible effect.
+  ──────────────────────────────────────────────────────────────── */
+  .tutorships-main-content:has(.modal.show) {
+    overflow: visible !important;
+    overflow-x: visible !important;
+    overflow-y: visible !important;
+    isolation: auto !important;
+    transform: none !important;
+    will-change: unset !important;
+    -webkit-overflow-scrolling: auto !important;
+    /* Raise the entire tutorships container above the ReactModal overlay (z:9000).
+       This drags .modal.show (z:10200 within this context) above the wizard. */
+    position: relative !important;
+    z-index: 10300 !important;
+  }
 
   /* Info modal (from within matching wizard) — MUST appear above wizard */
   .modal.show {
@@ -1900,6 +2647,9 @@
     max-height: calc(100dvh - 90px - 72px - 32px) !important;
     overflow-y: auto !important;
     box-sizing: border-box !important;
+    transform: none !important;       /* cancel desktop scale(0.95) */
+    height: auto !important;
+    font-size: 13px !important;       /* base font for the whole modal */
   }
   .info-columns {
     flex-direction: column !important;
@@ -1912,8 +2662,37 @@
     padding-right: 0 !important;
     padding-bottom: 10px !important;
   }
-  .info-column h2 { font-size: 14px !important; margin-bottom: 4px !important; }
+  /* Column headers – same compact size for BOTH child and tutor columns */
+  .info-column h2 {
+    font-size: 15px !important;      /* was 52px desktop — huge on mobile */
+    margin-bottom: 6px !important;
+  }
+  /* Table cells – uniform 12px, no 1.5em scaling */
+  .info-column .info-table td,
   .info-table td { font-size: 12px !important; padding: 4px 6px !important; }
   .info-table-scroll { max-height: 35dvh !important; }
+
+  /* modal-actions sticky at bottom of tutor column */
+  .info-column .modal-actions {
+    position: sticky !important;
+    bottom: 0 !important;
+    background: white !important;
+    padding: 8px 0 4px !important;
+    margin-top: 8px !important;
+    border-top: 1px solid #e5e7eb !important;
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+    z-index: 5 !important;
+  }
+  /* Each button sized to its content — don't stretch close button full-width */
+  .info-column .modal-actions button {
+    font-size: 13px !important;
+    padding: 7px 16px !important;
+    flex: 0 1 auto !important;     /* shrink to content, don't grow */
+    min-width: 80px !important;
+    transform: none !important;
+    box-shadow: none !important;
+  }
 
 }

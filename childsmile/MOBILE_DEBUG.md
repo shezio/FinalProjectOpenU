@@ -8,11 +8,11 @@
 
 ## What you need each session
 
-1. Know your Mac's LAN IP: `ipconfig getifaddr en0`  → e.g. `10.0.0.4`
+1. Know your Mac's LAN IP: `ipconfig getifaddr en0`  → e.g. `10.0.0.7`
 2. Apply the 5 file changes below (or keep them permanently — they don't break prod)
 3. Start Django: `python manage.py runserver 0.0.0.0:8000`
 4. Start webpack: `npm start -- --host 0.0.0.0`  (from `frontend/` dir)
-5. iPhone Safari: `http://10.0.0.4:9000`
+5. iPhone Safari: `http://10.0.0.7:9000`
 6. **First time only:** Settings → Safari → Clear History and Website Data (evicts old Service Worker)
 
 ---
