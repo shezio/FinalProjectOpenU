@@ -233,6 +233,20 @@
   box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
 }
 
+/* Disabled / read-only (view mode) — clean greyed-out look. iOS Safari fades
+   disabled text heavily, so pin the text colour + opacity for readability. */
+.refund-form-group input:disabled,
+.refund-form-group select:disabled,
+.refund-form-group textarea:disabled,
+.refund-staff-combobox input:disabled {
+  background: #f3f4f6;
+  color: #6b7280;
+  -webkit-text-fill-color: #6b7280;
+  border-color: #e5e7eb;
+  opacity: 1;
+  cursor: not-allowed;
+}
+
 .refund-form-group textarea {
   resize: vertical;
   min-height: 80px;

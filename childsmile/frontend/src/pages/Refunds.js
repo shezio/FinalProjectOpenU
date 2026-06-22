@@ -91,6 +91,8 @@ const Refunds = () => {
 
   // ── Role flags ────────────────────────────────────────────────────────────
   const [isAdminUser, setIsAdminUser] = useState(false);
+  // Volunteers / tutors (non-staff) may only VIEW refund requests, never edit.
+  const [isNonStaffUser, setIsNonStaffUser] = useState(false);
 
   // ── Phone hint (pre-fill) ─────────────────────────────────────────────────
   const [phoneHint, setPhoneHint] = useState('');
@@ -172,6 +174,14 @@ const Refunds = () => {
     const currentStaff = staff.find(s => s.username === origUsername);
     const roles = currentStaff?.roles || [];
     setIsAdminUser(roles.includes('System Administrator'));
+    // Non-staff = a volunteer or tutor with no elevated (staff) role. These
+    // users may only VIEW refund requests, never edit them.
+    const hasVolunteerOrTutor = roles.includes('Tutor') || roles.includes('General Volunteer');
+    const hasStaffRole =
+      roles.includes('System Administrator') ||
+      roles.includes('Reviewer') ||
+      roles.some(r => typeof r === 'string' && r.includes('Coordinator'));
+    setIsNonStaffUser(hasVolunteerOrTutor && !hasStaffRole);
   };
 
   const fetchRefunds = () => {
@@ -372,6 +382,9 @@ const Refunds = () => {
 
   // ── EDIT ───────────────────────────────────────────────────────────────────
   const openEditModal = (refund) => {
+    // Safety net: non-staff users (volunteers / tutors) can never reach the
+    // edit form — fall back to the read-only view modal instead.
+    if (isNonStaffUser) { openViewModal(refund); return; }
     setSelectedRefund(refund);
     setFormData({
       expense_date: refund.expense_date,
@@ -817,7 +830,11 @@ const Refunds = () => {
                         <td>{fmtDateTime(r.created_at)}</td>
                         <td onClick={e => e.stopPropagation()}>
                           <button className="refund-row-actions">
-                            <span title="ערוך" className="refund-action-btn" onClick={() => openEditModal(r)}>ערוך</span>
+                            {isNonStaffUser ? (
+                              <span title="צפה בפרטי הבקשה" className="refund-action-btn" onClick={() => openViewModal(r)}>צפה בפרטי הבקשה</span>
+                            ) : (
+                              <span title="ערוך" className="refund-action-btn" onClick={() => openEditModal(r)}>ערוך</span>
+                            )}
                             {isAdminUser && (
                               <span title="מחק" className="refund-action-btn" onClick={() => openDeleteModal(r)}>מחק</span>
                             )}
@@ -903,7 +920,9 @@ const Refunds = () => {
             {renderFormFields(true)}
             <div className="refund-modal-actions">
               <button className="btn-secondary" onClick={() => setIsViewModalOpen(false)}>סגור</button>
-              <button className="btn-primary" onClick={() => { setIsViewModalOpen(false); openEditModal(selectedRefund); }}>ערוך</button>
+              {!isNonStaffUser && (
+                <button className="btn-primary" onClick={() => { setIsViewModalOpen(false); openEditModal(selectedRefund); }}>ערוך</button>
+              )}
             </div>
           </div>
         </div>
