@@ -329,56 +329,81 @@
     min-width: 0 !important;
   }
 
-  /* Buttons – compact */
+  /* Buttons – compact, content-width so they don't balloon on a small screen */
   .filter-create-container button,
   .create-task button,
   .refresh button,
   .status-filter-button {
     font-size: 12px !important;
-    padding: 7px 10px !important;
+    padding: 7px 12px !important;
     white-space: nowrap !important;
     width: auto !important;
     min-width: unset !important;
     margin: 0 !important;
+    box-sizing: border-box !important;
   }
 
-  /* Selects */
-  .filter-create-container select,
-  .filter select {
+  /* Top controls (create / task-type filter / refresh) size to their content
+     and wrap neatly — no stretching, so they stay narrow on small screens. */
+  .filter-create-container > .create-task,
+  .filter-create-container > .refresh,
+  .filter-create-container > .status-filter,
+  .filter-create-container > .filter {
+    flex: 0 0 auto !important;
+    min-width: 0 !important;
+  }
+  .filter-create-container > .filter select {
+    width: auto !important;
+    max-width: 150px !important;
+  }
+
+  /* Selects – base font only (widths are set per context below) */
+  .filter-create-container select {
     font-size: 12px !important;
     padding: 6px 8px !important;
     min-width: 0 !important;
-    max-width: 140px !important;
   }
 
-  /* Date inputs */
+  /* Date inputs – base font/padding (width handled inside the .actions grid) */
   .filter-create-container input[type="date"],
   .tasks-main-content .filter-create-container .date-input {
     font-size: 12px !important;
     padding: 6px 6px !important;
-    width: auto !important;
-    min-width: 110px !important;
-    max-width: 140px !important;
-    flex: 1 !important;
+    box-sizing: border-box !important;
   }
 
-  /* Actions sub-row – wrap on its own line */
+  /* Date-filter sub-row – its own full-width line laid out as a 2-column grid
+     so each label sits on the SAME row as its control (field, From, To).
+     Columns size to content and pack to the start (RTL: right) so the date
+     fields keep their natural width instead of stretching across the row. */
   .filter-create-container .actions {
-    display: flex !important;
-    flex-direction: row !important;
-    flex-wrap: wrap !important;
+    display: grid !important;
+    grid-template-columns: auto auto !important;
+    justify-content: start !important;
     align-items: center !important;
-    gap: 6px !important;
+    gap: 6px 10px !important;
     flex: 1 1 100% !important;
     width: 100% !important;
-    margin-top: 0 !important;
+    margin-top: 4px !important;
+    padding-top: 6px !important;
+    border-top: 1px solid #eef0f2 !important;
+  }
+  /* Keep the controls compact (natural width, not the full row). */
+  .filter-create-container .actions > .filter,
+  .filter-create-container .actions .filter select,
+  .filter-create-container .actions .date-input {
+    width: auto !important;
+    max-width: 160px !important;
+    min-width: 0 !important;
   }
 
   .filter-create-container .actions label,
   .tasks-main-content .filter-create-container label {
     font-size: 11px !important;
+    font-weight: 600 !important;
     white-space: nowrap !important;
     margin: 0 !important;
+    text-align: right !important;
   }
 
   /* ── 6b. Create / Edit Task modals – fit mobile ─────────────────────────────
