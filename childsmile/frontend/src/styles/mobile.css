@@ -2410,6 +2410,20 @@
   }
   .refund-form-group textarea { min-height: 64px !important; }
 
+  /* Disabled (view mode) fields – consistent greyed look; iOS Safari otherwise
+     renders disabled text faded/illegible, so pin colour + opacity. */
+  .refund-form-group input:disabled,
+  .refund-form-group select:disabled,
+  .refund-form-group textarea:disabled,
+  .refund-staff-combobox input:disabled {
+    background: #f3f4f6 !important;
+    color: #6b7280 !important;
+    -webkit-text-fill-color: #6b7280 !important;
+    border-color: #e5e7eb !important;
+    opacity: 1 !important;
+    cursor: not-allowed !important;
+  }
+
   /* Keep checkboxes their natural size so the label text stays inline
      (otherwise width:100% squeezes the text to one word per line). */
   .refund-form-group input[type="checkbox"] {

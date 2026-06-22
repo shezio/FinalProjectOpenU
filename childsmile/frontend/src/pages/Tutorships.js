@@ -592,17 +592,27 @@ const Tutorships = () => {
   };
 
   // Filter and sort the tutorships by created_date
-  const filteredTutorships = enrichedTutorships.filter(tutorship => {
-    // Filter by search query
-    if (tutorshipSearchQuery.trim()) {
-      const query = tutorshipSearchQuery.toLowerCase();
-      return (
-        (tutorship.child_full_name && tutorship.child_full_name.toLowerCase().includes(query)) ||
-        (tutorship.tutor_full_name && tutorship.tutor_full_name.toLowerCase().includes(query))
-      );
-    }
-    return true;
-  });
+  const filteredTutorships = enrichedTutorships
+    .filter(tutorship => {
+      // Privacy: a plain tutor may only see tutorships involving themselves.
+      // Coordinators / admins / reviewers still see everyone. If we cannot
+      // resolve the tutor's own name we show none rather than other people's.
+      if (!isRestrictedTutor) return true;
+      if (!currentTutorFullName) return false; // can't resolve identity -> show none
+      return _normalizeName(tutorship.tutor_full_name) === _normalizeName(currentTutorFullName);
+    })
+    .filter(tutorship => {
+      // Filter by search query (restricted tutors have search locked -> ignore)
+      if (isRestrictedTutor) return true;
+      if (tutorshipSearchQuery.trim()) {
+        const query = tutorshipSearchQuery.toLowerCase();
+        return (
+          (tutorship.child_full_name && tutorship.child_full_name.toLowerCase().includes(query)) ||
+          (tutorship.tutor_full_name && tutorship.tutor_full_name.toLowerCase().includes(query))
+        );
+      }
+      return true;
+    });
 
   const sortedTutorships = [...filteredTutorships].sort((a, b) => {
     const dateA = parseDate(a.created_date); // Parse the date
@@ -1177,13 +1187,14 @@ const Tutorships = () => {
             <input
               type="text"
               className="tutorship-search-bar"
-              placeholder={t('Search by tutor or tutee name')}
-              value={tutorshipSearchQuery}
+              placeholder={isRestrictedTutor && currentTutorFullName ? currentTutorFullName : t('Search by tutor or tutee name')}
+              value={isRestrictedTutor ? '' : tutorshipSearchQuery}
               onChange={e => setTutorshipSearchQuery(e.target.value)}
+              disabled={isRestrictedTutor}
             />
           </div>
           
-          {tutorshipSearchQuery && (
+          {!isRestrictedTutor && tutorshipSearchQuery && (
             <div className="filter-chip-container">
               <span className="filter-chip">
                 {t('Filtering by')}: <strong>{tutorshipSearchQuery}</strong>
