@@ -19,7 +19,15 @@ const InnerPageHeader = ({ title }) => {
             <br />
             שצריך כדי להצליח
           </div>
-          <img src={qrCode} alt="QR Code" className="qr-code" />
+          <a
+            className="qr-code-link"
+            href="https://www.instagram.com/remember.amit.bunzel?igsh=YjFxNDBtaWNxMDdt"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="עמוד ההנצחה של עמית בונצל באינסטגרם"
+          >
+            <img src={qrCode} alt="QR Code" className="qr-code" />
+          </a>
         </div>
 
         {/* צד ימין – הלוגו והכותרת יחד */}

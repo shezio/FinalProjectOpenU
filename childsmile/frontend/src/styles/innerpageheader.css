@@ -161,6 +161,15 @@ body {
       inset 0 1px 0 rgba(255, 255, 255, 0.4);
 }
 
+/* Make the QR a clickable link to the Instagram memorial page. The anchor is a
+   layout-neutral wrapper so the QR sizing/position is unchanged on every page. */
+.qr-code-link {
+    display: inline-flex;
+    line-height: 0;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
 .qr-code {
     width: 140px;
     height: 140px;
