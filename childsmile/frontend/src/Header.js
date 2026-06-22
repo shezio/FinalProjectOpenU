@@ -12,7 +12,15 @@ const Header = () => (
         <br />
         אבל לא כולם מוכנים לשלם את המחיר שצריך כדי להצליח
       </div>
-      <img src={QRCode} alt="QR Code" className="qr-code" />
+      <a
+        className="qr-code-link"
+        href="https://www.instagram.com/remember.amit.bunzel?igsh=YjFxNDBtaWNxMDdt"
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="עמוד ההנצחה של עמית בונצל באינסטגרם"
+      >
+        <img src={QRCode} alt="QR Code" className="qr-code" />
+      </a>
     </div>
     <div className="header">
       <img src={logo} alt="חיוך של ילד" />
