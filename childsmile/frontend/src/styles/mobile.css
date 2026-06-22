@@ -341,24 +341,30 @@
   }
 
   /* Top controls (create / task-type filter / refresh) size to their content
-     and wrap neatly — no stretching, so they stay narrow on small screens. */
-  .filter-create-container > .create-task,
-  .filter-create-container > .refresh,
-  .filter-create-container > .status-filter,
-  .filter-create-container > .filter {
+     and wrap neatly — no stretching, so they stay narrow on small screens.
+     SCOPED to the Tasks page: other pages (e.g. Families) put ALL their buttons
+     inside one .create-task wrapper, where flex:0 0 auto would force them onto a
+     single overflowing line. Those keep the default `.filter-create-container > *`
+     (flex:0 1 auto) so they wrap normally. */
+  .tasks-main-content .filter-create-container > .create-task,
+  .tasks-main-content .filter-create-container > .refresh,
+  .tasks-main-content .filter-create-container > .status-filter,
+  .tasks-main-content .filter-create-container > .filter {
     flex: 0 0 auto !important;
     min-width: 0 !important;
   }
-  .filter-create-container > .filter select {
+  .tasks-main-content .filter-create-container > .filter select {
     width: auto !important;
     max-width: 150px !important;
   }
 
-  /* Selects – base font only (widths are set per context below) */
+  /* Selects – base font + a sane width cap so they don't balloon (Tasks' own
+     date-field/select rules below are more specific and override this). */
   .filter-create-container select {
     font-size: 12px !important;
     padding: 6px 8px !important;
     min-width: 0 !important;
+    max-width: 150px !important;
   }
 
   /* Date inputs – base font/padding (width handled inside the .actions grid) */
@@ -369,11 +375,240 @@
     box-sizing: border-box !important;
   }
 
-  /* Date-filter sub-row – its own full-width line laid out as a 2-column grid
-     so each label sits on the SAME row as its control (field, From, To).
-     Columns size to content and pack to the start (RTL: right) so the date
-     fields keep their natural width instead of stretching across the row. */
-  .filter-create-container .actions {
+  /* ── Families top toolbar – COMPACT, fit-to-content buttons. Each action
+        button (Initial details, Import, Add family, Show matures, Status filter)
+        sizes to its TEXT and wraps naturally; the status select sits alongside
+        (capped). The age range is ONE short full-width row that fits the
+        viewport (border-box so its padding/border don't overflow). Search is
+        full width. Scoped to Families. ── */
+  .families-main-content .filter-create-container .create-task.init-family-data-button {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+    align-items: center !important;
+    gap: 5px !important;
+    flex: 1 1 100% !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+  /* Action buttons → fit to their text, wrap, no stretch. */
+  .families-main-content .create-task.init-family-data-button > button {
+    flex: 0 0 auto !important;
+    width: auto !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    white-space: nowrap !important;
+    padding: 7px 10px !important;
+  }
+  .families-main-content .create-task.init-family-data-button > .refresh-icon-button {
+    flex: 0 0 auto !important;
+    padding: 7px 9px !important;
+  }
+  /* Status-filter wrapper has NO padding of its own (the button carries it),
+     and the button is made smaller so it sits beside Show-Matures + the select. */
+  .families-main-content .create-task.init-family-data-button > .status-filter {
+    flex: 0 0 auto !important;
+    width: auto !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  .families-main-content .create-task.init-family-data-button > .status-filter > .status-filter-button {
+    width: auto !important;
+    font-size: 11px !important;
+    padding: 6px 9px !important;
+    gap: 4px !important;
+    white-space: nowrap !important;
+    box-sizing: border-box !important;
+  }
+  /* The dropdown chevron is 24px on desktop — that (plus the 8px gap) is what
+     made the button bulky; shrink it so the button hugs its text. */
+  .families-main-content .create-task.init-family-data-button > .status-filter .status-filter-chevron {
+    font-size: 10px !important;
+  }
+  /* Status select – fit to content & compact so Show-Matures + Status-Filter +
+     this select all sit on ONE row together. */
+  .families-main-content .create-task.init-family-data-button > .tutorship-status-filter {
+    flex: 0 0 auto !important;
+    width: auto !important;
+    min-width: 0 !important;
+    max-width: 45% !important;
+    margin: 0 !important;
+    font-size: 11px !important;
+    padding: 5px 7px !important;
+  }
+  /* Age range – ONE short full-width row that fits the viewport. */
+  .families-main-content .create-task.init-family-data-button > .age-range-filter {
+    flex: 1 1 100% !important;
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 8px !important;
+    width: 70% !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    margin-left: 30px !important;
+    padding: 5px 1px !important;
+    box-sizing: border-box !important;
+  }
+  .families-main-content .create-task.init-family-data-button > .age-range-filter > label {
+    flex: 0 0 auto !important;
+    font-size: 11px !important;
+    margin: 0 !important;
+    white-space: nowrap !important;
+  }
+  .families-main-content .create-task.init-family-data-button .age-range-filter .age-sliders {
+    display: flex !important;
+    flex-direction: row !important;
+    gap: 8px !important;
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    width: auto !important;
+  }
+  .families-main-content .create-task.init-family-data-button .age-slider-input {
+    flex: 1 1 0 !important;
+    min-width: 0 !important;
+    width: auto !important;
+  }
+  /* Search – full-width row. */
+  .families-main-content .create-task.init-family-data-button > .families-search-bar {
+    flex: 1 1 100% !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    box-sizing: border-box !important;
+  }
+
+  /* ── Initial Family Data page – tidy the toolbar. Desktop controls are huge
+        (search 350×60px/24px, added-filter 300px/20px, date inputs 200×50px) and
+        the "Created At" labels are flat siblings of their date inputs, so they
+        drift apart when wrapping. Lay the toolbar out as a clean 2-column grid:
+        each label sits BESIDE its date input; refresh / family-added / search
+        span the full width. Wrapper + table use the global rules. Scoped. ── */
+  .initial-family-main-content .filter-create-container {
+    display: grid !important;
+    grid-template-columns: auto minmax(0, 1fr) !important;
+    gap: 6px 8px !important;
+    align-items: center !important;
+    padding: 8px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+  /* Every grid item may shrink and must not exceed the container – this is what
+     keeps the toolbar inside the viewport (grid items default to min-width:auto
+     = min-content, which was forcing a track wider than the screen). */
+  .initial-family-main-content .filter-create-container > * {
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+  /* Refresh / family-added / search each take their own full-width row. */
+  .initial-family-main-content .filter-create-container > .refresh-button,
+  .initial-family-main-content .filter-create-container > .families-added-filter,
+  .initial-family-main-content .filter-create-container > .families-search-bar {
+    grid-column: 1 / -1 !important;
+  }
+  /* Date labels (left column) – small, beside their input. */
+  .initial-family-main-content .filter-create-container > label {
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    margin: 0 !important;
+    white-space: nowrap !important;
+    text-align: right !important;
+    justify-self: start !important;
+  }
+  /* Date inputs (right column) – fill the cell, not 200×50px. */
+  .initial-family-main-content .filter-create-container > .init-family-date-input {
+    width: 90% !important;
+    max-width: none !important;
+    height: auto !important;
+    font-size: 12px !important;
+    padding: 7px 8px !important;
+    border-width: 2px !important;
+    border-radius: 10px !important;
+    box-sizing: border-box !important;
+  }
+  /* Refresh – compact, left-aligned (not a full-width slab). */
+  .initial-family-main-content .filter-create-container > .refresh-button {
+    justify-self: start !important;
+    width: auto !important;
+    font-size: 12px !important;
+    padding: 7px 12px !important;
+    white-space: nowrap !important;
+  }
+  /* "Family added?" filter – inline label + select, compact. */
+  .initial-family-main-content .families-added-filter {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    width: 100% !important;
+    font-size: 12px !important;
+    padding: 6px 10px !important;
+    box-sizing: border-box !important;
+  }
+  .initial-family-main-content .families-added-filter label {
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    margin: 0 !important;
+    white-space: nowrap !important;
+  }
+  .initial-family-main-content .families-added-filter select {
+    flex: 1 1 auto !important;
+    width: auto !important;
+    font-size: 12px !important;
+    padding: 5px 8px !important;
+    margin: 0 !important;
+  }
+  /* Search bar – full-width row, not 350×60px/24px. */
+  .initial-family-main-content .filter-create-container > .families-search-bar {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    height: auto !important;
+    font-size: 14px !important;
+    padding: 8px 12px !important;
+    border-width: 2px !important;
+    border-radius: 10px !important;
+    box-sizing: border-box !important;
+  }
+  /* Back-to-families button – compact, centered (was 24px font). */
+  .initial-family-main-content .back-to-families {
+    margin: 6px 0 10px 0 !important;
+    width: 100% !important;
+    justify-content: center !important;
+  }
+  .initial-family-main-content .back-button {
+    font-size: 13px !important;
+    padding: 8px 16px !important;
+    width: 100% !important;
+    max-width: 320px !important;
+    border-width: 2px !important;
+  }
+  /* Table columns – the scrollable cell wrappers blow the columns out / nest a
+     second horizontal scrollbar (Other-info is max-width:250px + overflow-x).
+     Bound them to a sane width, let text WRAP instead of scrolling sideways,
+     and cap their height. Keeps the columns reasonable while the whole table
+     still scrolls horizontally via the global [class$="-data-grid"] rule. */
+  .initial-family-main-content .families-data-grid .td-scrollable,
+  .initial-family-main-content .families-data-grid .td-x-scrollable {
+    display: block !important;
+    width: auto !important;
+    min-width: 80px !important;
+    max-width: 42vw !important;
+    height: auto !important;
+    max-height: 4.4em !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    white-space: normal !important;
+    word-break: break-word !important;
+  }
+
+  /* Date-filter sub-row (TASKS ONLY) – its own full-width line laid out as a
+     2-column grid so each label sits on the SAME row as its control (field,
+     From, To). SCOPED to .tasks-main-content so report toolbars — which also use
+     .filter-create-container .actions for export buttons / date pickers — are
+     NOT turned into this grid (that was dislocating the report toolbars). */
+  .tasks-main-content .filter-create-container .actions {
     display: grid !important;
     grid-template-columns: auto auto !important;
     justify-content: start !important;
@@ -386,15 +621,15 @@
     border-top: 1px solid #eef0f2 !important;
   }
   /* Keep the controls compact (natural width, not the full row). */
-  .filter-create-container .actions > .filter,
-  .filter-create-container .actions .filter select,
-  .filter-create-container .actions .date-input {
+  .tasks-main-content .filter-create-container .actions > .filter,
+  .tasks-main-content .filter-create-container .actions .filter select,
+  .tasks-main-content .filter-create-container .actions .date-input {
     width: auto !important;
     max-width: 160px !important;
     min-width: 0 !important;
   }
 
-  .filter-create-container .actions label,
+  .tasks-main-content .filter-create-container .actions label,
   .tasks-main-content .filter-create-container label {
     font-size: 11px !important;
     font-weight: 600 !important;
@@ -2232,6 +2467,281 @@
     white-space: nowrap !important;
   }
 
+  /* ══════════════════════════════════════════════════════════
+     31. REPORTS – listing page + every report page
+         The *-main-content wrappers and *-data-grid tables are already
+         handled above. Here we fix what isn't: the reports listing table,
+         report toolbars (.actions used for export/date controls), the
+         literal .data-grid tables, the .missing-* tables/filters, the
+         pie-chart containers and their huge back-to-reports buttons, and
+         the location map. Layout-only — no behaviour change.
+     ══════════════════════════════════════════════════════════ */
+
+  /* Generic inner wrapper used by report pages */
+  .page-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    box-sizing: border-box !important;
+  }
+
+  /* ── Reports listing page (Reports.js) ── */
+  .reports-grid-page {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    box-sizing: border-box !important;
+  }
+  .reports-toolbar {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 8px !important;
+    width: 100% !important;
+    padding: 0 !important;
+    margin: 0 0 10px 0 !important;
+  }
+  .reports-search-input {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    font-size: 14px !important;
+    padding: 8px 10px !important;
+  }
+  .reports-filter-btns {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+    width: 100% !important;
+  }
+  .reports-filter-btn {
+    font-size: 12px !important;
+    padding: 6px 10px !important;
+    flex: 0 0 auto !important;
+  }
+  .reports-table-wrapper {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    box-sizing: border-box !important;
+  }
+  .reports-grid-table th,
+  .reports-grid-table td {
+    font-size: 13px !important;
+    padding: 8px !important;
+  }
+  /* Hide the last (category) column on mobile – not needed on a narrow screen */
+  .reports-grid-table .reports-th-cat,
+  .reports-grid-table .reports-td-cat {
+    display: none !important;
+  }
+
+  /* Bento dashboard fallback (if rendered) – single column, free height */
+  .reports-page {
+    height: auto !important;
+    padding: 8px !important;
+    display: block !important;
+    overflow: visible !important;
+  }
+  .reports-container {
+    grid-template-columns: 1fr !important;
+    grid-template-rows: none !important;
+    height: auto !important;
+    gap: 10px !important;
+  }
+  .reports-container .report,
+  .report-card {
+    padding: 16px !important;
+  }
+
+  /* ── Report toolbars (.actions) — wrap & compact.
+        Tasks' .actions is scoped to .tasks-main-content above and overrides. ── */
+  .filter-create-container .actions {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+    align-items: center !important;
+    gap: 6px !important;
+    width: 100% !important;
+    flex: 1 1 100% !important;
+    font-size: 12px !important;
+  }
+  .filter-create-container .actions button,
+  .filter-create-container .actions .export-button,
+  .filter-create-container .actions .filter-button {
+    font-size: 12px !important;
+    padding: 7px 10px !important;
+    white-space: nowrap !important;
+    width: auto !important;
+  }
+  .filter-create-container .actions .date-input,
+  .filter-create-container .actions input[type="date"] {
+    font-size: 12px !important;
+    padding: 6px 8px !important;
+    max-width: 150px !important;
+    box-sizing: border-box !important;
+  }
+  .filter-create-container .actions input[type="range"] {
+    width: 130px !important;
+    max-width: 45vw !important;
+  }
+
+  /* Search inputs/bars on report pages – were fixed width:400px */
+  .search-input,
+  .search-bar {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    font-size: 14px !important;
+    padding: 8px 10px !important;
+  }
+
+  /* tutorship-pending grid container – was width:1500px; height:calc(100vh-400px) + margins */
+  .tutorship-pending-grid-container {
+    width: 100% !important;
+    max-width: 100% !important;
+    height: auto !important;
+    max-height: none !important;
+    margin: 0 !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Literal .data-grid (all-volunteers / all-families reports) – NOT matched by
+     [class$="-data-grid"]. Shrink fonts, drop fixed column widths, scroll. */
+  .data-grid {
+    font-size: 12px !important;
+    display: block !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    box-sizing: border-box !important;
+  }
+  .data-grid th,
+  .data-grid td {
+    font-size: 12px !important;
+    padding: 6px 8px !important;
+    white-space: nowrap !important;
+    width: auto !important;
+    min-width: 0 !important;
+  }
+
+  /* ── Missing-data / duplicate-family reports ── */
+  .missing-filter-card {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 12px !important;
+    box-sizing: border-box !important;
+  }
+  .missing-filter-row {
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+  }
+  .missing-filter-label { font-size: 13px !important; }
+  .missing-filter-chip { font-size: 12px !important; padding: 6px 10px !important; }
+  .missing-table-container {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    box-sizing: border-box !important;
+  }
+  .missing-compact-table {
+    font-size: 12px !important;
+    width: max-content !important;
+    min-width: 100% !important;
+  }
+  .missing-compact-table th,
+  .missing-compact-table td {
+    font-size: 12px !important;
+    padding: 6px 8px !important;
+    white-space: nowrap !important;
+  }
+  .missing-badge { font-size: 11px !important; }
+  .missing-edit-btn { font-size: 12px !important; padding: 5px 8px !important; }
+
+  /* ── Pie-chart stats reports (families-tutorship / pending-tutors / roles-spread) ── */
+  .families-tutorship-stats-page-content,
+  .pending-tutors-stats-page-content,
+  .roles-spread-report-page-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-sizing: border-box !important;
+  }
+  /* Chart containers – were max-width:600px + transform:scale() + big padding */
+  [class$="-graph-container"] {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 auto !important;
+    padding: 8px !important;
+    transform: none !important;
+    box-sizing: border-box !important;
+    overflow-x: auto !important;
+  }
+  /* Back-to-reports button (the 3 stats/chart reports). Desktop pushes it
+     ~500px to the side — off-screen on mobile. Make it a prominent, centered,
+     near-full-width button right under the toolbar. Both generic AND explicit
+     (higher-specificity) selectors so it wins regardless of CSS load order. */
+  [class$="-back-to-reports"],
+  .families-tutorship-stats-page-content .families-tutorship-stats-back-to-reports,
+  .pending-tutors-stats-page-content .pending-tutors-stats-back-to-reports,
+  .roles-spread-report-page-content .roles-spread-back-to-reports {
+    display: flex !important;
+    justify-content: center !important;
+    width: 100% !important;
+    margin: 4px 0 12px 0 !important;
+    padding: 0 !important;
+  }
+  [class$="-back-button"],
+  .families-tutorship-stats-back-button,
+  .pending-tutors-stats-back-button,
+  .roles-spread-back-button {
+    font-size: 13px !important;
+    padding: 9px 18px !important;
+    width: 100% !important;
+    max-width: 320px !important;
+    margin: 0 !important;
+    border-radius: 8px !important;
+    white-space: normal !important;
+    line-height: 1.3 !important;
+  }
+
+  /* Stats-report toolbar buttons (PDF export icon + refresh) – tidy & compact */
+  .filter-create-container .actions .pdf-button img,
+  .filter-create-container .actions .export-button img {
+    width: 22px !important;
+    height: 22px !important;
+    display: block !important;
+  }
+  .filter-create-container .actions .pdf-button,
+  .filter-create-container .actions .export-button,
+  .filter-create-container .actions .refresh-button {
+    font-size: 12px !important;
+    padding: 7px 12px !important;
+  }
+
+  /* Location report – Leaflet map full width with a usable height */
+  .families-location-map {
+    width: 100% !important;
+    max-width: 100% !important;
+    height: 300px !important;
+    min-height: 300px !important;
+    margin: 8px 0 !important;
+    box-sizing: border-box !important;
+  }
+  .families-location-map .leaflet-container {
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 300px !important;
+  }
+
   /* Flip card face wrappers – flatten 3D for mobile */
   .flip-wrapper {
     width: 100% !important;
@@ -2541,7 +3051,8 @@
 
   /* ── Age range filter in families toolbar ── */
   .age-range-filter {
-    max-width: 200px !important;
+    max-width: 140px !important;
+    margin-right: 1px !important;
     font-size: 12px !important;
   }
   .age-range-filter label { font-size: 12px !important; white-space: nowrap !important; }
