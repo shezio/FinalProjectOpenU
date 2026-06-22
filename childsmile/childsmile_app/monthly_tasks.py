@@ -2,6 +2,7 @@ from django.utils import timezone
 from datetime import datetime, timedelta
 from calendar import monthrange
 import os
+import random
 import pytz
 from .models import Tasks, Task_Types, Staff, Role, Children, AuditLog
 from .logger import api_logger
@@ -19,9 +20,10 @@ def check_and_create_monthly_review_tasks():
     - In Azure: Add MONTHLY_CREATOR_TIME='04:00' to Application Settings
     - Locally: Set in .env file
     
-    TASK CREATION: Creates ONE task per family per Technical Coordinator.
-    - All active Technical Coordinators get assigned the task for the family
-    - Each coordinator sees the same family's review task
+    TASK CREATION: Creates exactly ONE task per family (child), assigned to ONE
+    randomly-chosen active Reviewer (a user who can be assigned this task type).
+    - This replaces the old behaviour of creating one task per reviewer, which
+      produced duplicate review tasks for the same child.
     - Task includes child name and last review date
     
     Logic:
@@ -29,11 +31,11 @@ def check_and_create_monthly_review_tasks():
     - Query all active children
     - For each child:
       - Check if last_review_talk_conducted is more than REVIEW_INTERVAL days ago (or null)
-      - If yes, create ONE task per Technical Coordinator
-      - Prevent duplicates by checking if ANY incomplete task exists for the child (any reviewer)
-      - If even ONE incomplete task exists for the child → skip the entire child
-      - Only if ZERO incomplete tasks exist → create tasks for all reviewers
-      - If all tasks were completed (הושלמה), a new set will be created after REVIEW_INTERVAL days
+      - Prevent duplicates: skip the child if it already has an OPEN review task
+        (any status other than 'הושלמה' / completed)
+      - Only if NO open review task exists AND the interval has passed →
+        create exactly ONE task assigned to a single random active Reviewer
+      - Once that task is completed (הושלמה), a new one becomes eligible after REVIEW_INTERVAL days
     - Update last_review_talk_conducted when task is completed (in task_views.py)
     
     Returns:
@@ -106,10 +108,11 @@ def check_and_create_monthly_review_tasks():
                 }
             )
             
-            # Get all active Reviewers to assign tasks to
-            reviewers = list(Staff.objects.filter(roles__role_name='Reviewer').distinct())
+            # Get all ACTIVE Reviewers — these are the users who can be assigned a
+            # review task. ONE of them is picked at random per child below.
+            reviewers = list(Staff.objects.filter(roles__role_name='Reviewer', is_active=True).distinct())
             if not reviewers:
-                api_logger.error('❌ No staff with role "Reviewer" found — cannot create review tasks')
+                api_logger.error('❌ No active staff with role "Reviewer" found — cannot create review tasks')
                 return {
                     'status': 'error',
                     'families_checked': total_families,
@@ -157,37 +160,38 @@ def check_and_create_monthly_review_tasks():
 
                 api_logger.info(f"  ✅ QUALIFIES {child_label} — last_talk={child.last_review_talk_conducted or 'never'}")
 
-                # CRITICAL: If ANY incomplete review task exists for this child (by any reviewer),
-                # skip the entire child — do NOT create tasks for any reviewer.
-                # This prevents duplicates when only some reviewers have tasks.
-                any_existing_task = Tasks.objects.filter(
+                # CRITICAL DUP PREVENTION: if the child already has an OPEN review
+                # task — i.e. ANY review task whose status is not 'הושלמה' (completed) —
+                # skip this child entirely. We only ever want ONE open review task
+                # per child at a time.
+                has_open_review_task = Tasks.objects.filter(
                     related_child=child,
                     task_type__task_type='שיחת ביקורת',
-                    status__in=['לא הושלמה', 'בביצוע']
-                ).exists()
+                ).exclude(status='הושלמה').exists()
 
-                if any_existing_task:
-                    _skip('task_exists', f"  ⏭ SKIP {child_label} — incomplete review task already exists (skipping all reviewers)")
+                if has_open_review_task:
+                    _skip('task_exists', f"  ⏭ SKIP {child_label} — an open (not 'הושלמה') review task already exists")
                     tasks_skipped = tasks_skipped_ref[0]
                     continue
 
-                # No incomplete tasks exist for this child — create one per Reviewer
+                # No open review task exists — create EXACTLY ONE task, assigned to
+                # a single randomly-chosen active Reviewer.
                 child_full_name = f"{child.childfirstname} {child.childsurname}".strip()
                 last_talk_date = child.last_review_talk_conducted.strftime('%d/%m/%Y') if child.last_review_talk_conducted else 'Never'
                 description = f'Monthly family review talk for {child_full_name} - Last talk: {last_talk_date} - Conduct check-up call with family'
                 due_date = today + timedelta(days=REVIEW_INTERVAL)
 
-                for reviewer in reviewers:
-                    Tasks.objects.create(
-                        task_type=task_type,
-                        description=description,
-                        due_date=due_date,
-                        status='לא הושלמה',
-                        assigned_to=reviewer,
-                        related_child=child
-                    )
-                    tasks_created += 1
-                    api_logger.info(f"  🆕 CREATED task for {child_label} → assigned to reviewer {reviewer.first_name} {reviewer.last_name}")
+                chosen_reviewer = random.choice(reviewers)
+                Tasks.objects.create(
+                    task_type=task_type,
+                    description=description,
+                    due_date=due_date,
+                    status='לא הושלמה',
+                    assigned_to=chosen_reviewer,
+                    related_child=child
+                )
+                tasks_created += 1
+                api_logger.info(f"  🆕 CREATED 1 review task for {child_label} → assigned to reviewer {chosen_reviewer.first_name} {chosen_reviewer.last_name}")
             
             # Log summary
             api_logger.info(f'✅ Monthly review check done | checked={total_families} | created={tasks_created} | skipped={tasks_skipped_ref[0]} | reasons={skip_reasons}')
