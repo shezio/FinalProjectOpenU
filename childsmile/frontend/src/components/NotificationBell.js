@@ -10,10 +10,21 @@ const TYPE_ICONS = {
   manual:             '📢',
 };
 
+// IDs of notifications the user has already opened/seen. Persisted so the red
+// badge doesn't come back on reload — only a NEW message re-shows it.
+const SEEN_KEY = 'notif_seen_ids';
+const loadSeenIds = () => {
+  try {
+    const arr = JSON.parse(localStorage.getItem(SEEN_KEY));
+    return Array.isArray(arr) ? arr : [];
+  } catch { return []; }
+};
+
 const NotificationBell = () => {
   const [messages,   setMessages]   = useState([]);
   const [open,       setOpen]       = useState(false);
   const [loaded,     setLoaded]     = useState(false);
+  const [seenIds,    setSeenIds]    = useState(loadSeenIds);
   const hideTimer   = useRef(null);
   const panelRef    = useRef(null);
   const trackRef    = useRef(null);
@@ -40,8 +51,17 @@ const NotificationBell = () => {
     return () => clearInterval(interval);
   }, [fetchMessages]);
 
-  const activeMessages = messages.filter(m => m.is_active);
+  const activeMessages = messages.filter(m => m.is_active);  const unseenCount = activeMessages.reduce((n, m) => n + (seenIds.includes(m.id) ? 0 : 1), 0);
 
+  // Mark all currently-active notifications as "seen" while the panel is open, and
+  // persist it so the red badge stays gone after closing — it only returns when a
+  // NEW (unseen) message arrives. (Reset on logout via localStorage.clear().)
+  useEffect(() => {
+    if (!open || !loaded) return;
+    const activeIds = messages.filter(m => m.is_active).map(m => m.id);
+    setSeenIds(activeIds);
+    try { localStorage.setItem(SEEN_KEY, JSON.stringify(activeIds)); } catch (_) {}
+  }, [open, loaded, messages]);
   // ── JS-driven scroll ──────────────────────────────────────────────────
   useEffect(() => {
     if (!open || activeMessages.length === 0) return;
@@ -150,8 +170,8 @@ const NotificationBell = () => {
       {/* ── Bell button ── */}
       <button className="notif-bell-btn" onClick={() => open ? closeNow() : openPanel()} title="מרכז העדכונים">
         🔔
-        {loaded && activeMessages.length > 0 && (
-          <span className="notif-bell-count">{activeMessages.length}</span>
+        {loaded && !open && unseenCount > 0 && (
+          <span className="notif-bell-count">{unseenCount}</span>
         )}
       </button>
 
