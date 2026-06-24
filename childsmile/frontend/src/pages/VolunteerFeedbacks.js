@@ -16,12 +16,14 @@ const PAGE_SIZE = 5;
 
 const hospitalsList = hospitals.map((hospital) => hospital.trim()).filter((hospital) => hospital !== "");
 
-const hasGeneralVolunteerFeedbacksViewPermission = hasViewPermissionForTable("general_v_feedback");
-
 const ENABLE_BULK_DELETE = process.env.REACT_APP_ENABLE_BULK_DELETE === 'true';
 
 const VolunteerFeedbacks = () => {
   const { t } = useTranslation();
+  // Read permission at render time (not module load). Module-level evaluation runs
+  // once at app startup — before login — and would stay a stale "no permission"
+  // until a manual browser refresh re-imported the module.
+  const hasGeneralVolunteerFeedbacksViewPermission = hasViewPermissionForTable("general_v_feedback");
   const [loading, setLoading] = useState(true);
   const [feedbacks, setFeedbacks] = useState([]);
   const [filteredFeedbacks, setFilteredFeedbacks] = useState([]);
