@@ -1789,20 +1789,39 @@
     margin-top: 0 !important;
   }
   .staff-page-content .search-bar {
-    margin: 0 0 8px 0 !important;
+    margin: 0 0 2px 0 !important;
     width: 100% !important;
+    /* make the search bar shorter but not using max width nor min width as width changes doesnt work well */
+    
   }
   /* Buttons row above system grid */
-  .system-management-main-content .filter-create-container,
-  .system-management-main-content .actions-bar,
+  .staff-page-content .filter-create-container,
+  .staff-page-content .actions-bar,
   .staff-page-content > div:first-child {
     flex-wrap: wrap !important;
     gap: 6px !important;
   }
-  .system-management-main-content button {
+  /* Toolbar order: move the full-width search to its own TOP line so the Refresh
+     button isn't stranded alone above it. All buttons then wrap together in a row
+     below the search, instead of Refresh taking a line and pushing the grid down. */
+  .staff-page-content .controls { margin-bottom: 8px !important; }
+  .staff-page-content .controls .search-bar {
+    order: -1 !important;
+    flex: 1 1 100% !important;
+  }
+  .staff-page-content button {
     font-size: 12px !important;
     padding: 6px 8px !important;
     white-space: nowrap !important;
+  }
+  /* Role filter <select> ("All Roles") – it's a <select>, not a <button>, so the
+     rule above doesn't catch it; shrink it to match the other compact controls */
+  .staff-page-content .role-filter-select {
+    font-size: 14px !important;
+    padding: 8px 10px !important;
+    border-radius: 8px !important;
+    transform: none !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08) !important;
   }
   /* Action buttons inside table cells – override 24px td font-size */
   .staff-data-grid td button,
@@ -1931,6 +1950,40 @@
     flex: 1 1 auto !important;
     font-size: 13px !important;
     padding: 9px 12px !important;
+    transform: none !important;
+    box-shadow: none !important;
+  }
+
+  /* Staff INFO modal – shrink the desktop 24–32px fonts so it fits mobile
+     (same treatment as the edit/add modal; reuses the .staff-modal-content box). */
+  .staff-modal-content .staff-info-modal-title {
+    font-size: 18px !important;
+    margin-bottom: 12px !important;
+  }
+  .staff-modal-content .staff-info-modal-container { padding: 6px 0 !important; }
+  .staff-modal-content .staff-info-section {
+    margin-bottom: 10px !important;
+    padding-bottom: 10px !important;
+  }
+  .staff-modal-content .staff-info-section-title {
+    font-size: 14px !important;
+    margin-bottom: 6px !important;
+  }
+  .staff-modal-content .staff-info-content { margin-top: 6px !important; }
+  .staff-modal-content .staff-info-item {
+    font-size: 13px !important;
+    margin-bottom: 6px !important;
+  }
+  .staff-modal-content .staff-info-roles-container { margin-bottom: 10px !important; }
+  .staff-modal-content .staff-info-role-item {
+    font-size: 12px !important;
+    padding: 3px 10px !important;
+    margin-right: 6px !important;
+  }
+  .staff-modal-content .staff-info-modal-close-container { margin-top: 12px !important; }
+  .staff-modal-content .staff-info-modal-close-button {
+    font-size: 13px !important;
+    padding: 8px 16px !important;
     transform: none !important;
     box-shadow: none !important;
   }
@@ -2238,6 +2291,7 @@
   .flip-back .pagination {
     justify-content: flex-start !important;   /* RTL: flex-start = right side of screen */
     direction: rtl !important;
+    margin-right: 32px !important;            /* breathing room from the screen's right edge */
   }
 
   /* ══════════════════════════════════════════════════════════
