@@ -1735,32 +1735,10 @@
     box-sizing: border-box !important;
   }
 
-  /* ── 20. Reports page – bento grid → vertical stack ──────── */
-  .reports-page {
-    height: auto !important;
-    min-height: 100% !important;
-    padding: 10px 8px !important;
-    overflow-y: auto !important;
-    align-items: flex-start !important;
-  }
-  .reports-container {
-    grid-template-columns: 1fr 1fr !important;
-    grid-template-rows: unset !important;
-    gap: 10px !important;
-    height: auto !important;
-    max-width: 100% !important;
-  }
-  .reports-container .report,
-  .report-card {
-    padding: 16px 12px !important;
-    border-radius: 14px !important;
-  }
-  .reports-container .report h2,
-  .report-card h2 {
-    font-size: 1rem !important;
-  }
-
-  /* Individual report pages (active-tutors-report etc.) */
+  /* ── 20. Generic .page-content layout (Tutorships / Families / sub-pages) ──
+     NOTE: the Reports landing bento-grid styles (.reports-page / .reports-container /
+     .report-card) were removed — Reports is not shown in the mobile nav, and the
+     current Reports.js renders a table (the bento grid was dead CSS here). */
   .page-content {
     width: 100% !important;
     margin-right: 0 !important;
@@ -1781,24 +1759,11 @@
     overflow-x: auto !important;
     -webkit-overflow-scrolling: touch !important;
   }
-  /* Report filter buttons – compact */
-  .page-content button,
-  .reports-main-content button,
-  [class*="-report-main-content"] button {
+  /* .page-content filter buttons – compact (shared with Tutorships/Families) */
+  .page-content button {
     font-size: 12px !important;
     padding: 6px 8px !important;
     white-space: nowrap !important;
-  }
-  [class*="-report-main-content"] select {
-    font-size: 12px !important;
-    max-width: 150px !important;
-  }
-  /* Report filter nav row – wrap */
-  [class*="-report-main-content"] .actions,
-  [class*="-report-main-content"] .filter-row,
-  [class*="report"] .filter-create-container {
-    flex-wrap: wrap !important;
-    gap: 6px !important;
   }
 
   /* ── 21. System management – compact rows & scrollable grid ─ */
@@ -1824,20 +1789,39 @@
     margin-top: 0 !important;
   }
   .staff-page-content .search-bar {
-    margin: 0 0 8px 0 !important;
+    margin: 0 0 2px 0 !important;
     width: 100% !important;
+    /* make the search bar shorter but not using max width nor min width as width changes doesnt work well */
+    
   }
   /* Buttons row above system grid */
-  .system-management-main-content .filter-create-container,
-  .system-management-main-content .actions-bar,
+  .staff-page-content .filter-create-container,
+  .staff-page-content .actions-bar,
   .staff-page-content > div:first-child {
     flex-wrap: wrap !important;
     gap: 6px !important;
   }
-  .system-management-main-content button {
+  /* Toolbar order: move the full-width search to its own TOP line so the Refresh
+     button isn't stranded alone above it. All buttons then wrap together in a row
+     below the search, instead of Refresh taking a line and pushing the grid down. */
+  .staff-page-content .controls { margin-bottom: 8px !important; }
+  .staff-page-content .controls .search-bar {
+    order: -1 !important;
+    flex: 1 1 100% !important;
+  }
+  .staff-page-content button {
     font-size: 12px !important;
     padding: 6px 8px !important;
     white-space: nowrap !important;
+  }
+  /* Role filter <select> ("All Roles") – it's a <select>, not a <button>, so the
+     rule above doesn't catch it; shrink it to match the other compact controls */
+  .staff-page-content .role-filter-select {
+    font-size: 14px !important;
+    padding: 8px 10px !important;
+    border-radius: 8px !important;
+    transform: none !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08) !important;
   }
   /* Action buttons inside table cells – override 24px td font-size */
   .staff-data-grid td button,
@@ -1862,6 +1846,7 @@
     max-width: calc(100vw - 16px) !important;
     max-height: calc(100dvh - 90px - env(safe-area-inset-top,0px) - 72px - env(safe-area-inset-bottom,0px) - 16px) !important;
     overflow-y: auto !important;
+    overflow-x: hidden !important;   /* kill horizontal wiggle from intrinsic-width inputs (e.g. date) */
     padding: 16px 12px 12px !important;
     box-sizing: border-box !important;
   }
@@ -1875,6 +1860,134 @@
     top: 10px !important;
     right: 12px !important;
   }
+
+  /* Staff add/edit form – single column, stacked label+input (match family modal).
+     Desktop .staff-form-row is a 1fr 2fr grid with 24px fonts → cramped on mobile.
+     Collapse each row to a vertical label-over-input block, full width. */
+  .staff-modal-content .staff-form-grid {
+    gap: 10px !important;
+  }
+  .staff-modal-content .sys-mgmt-mandatory-span { font-size: 12px !important; }
+  .staff-modal-content .staff-form-row {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 4px !important;
+    width: 100% !important;
+    min-width: 0 !important;          /* allow row to shrink below child intrinsic width */
+  }
+  .staff-modal-content .staff-form-row label {
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    margin: 0 !important;
+  }
+  .staff-modal-content .staff-form-row input,
+  .staff-modal-content .staff-form-row select {
+    font-size: 14px !important;
+    padding: 8px 10px !important;
+    width: 100% !important;
+    min-width: 0 !important;          /* flex item: shrink below intrinsic content width */
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+  /* iOS date inputs carry a fixed intrinsic width that ignores width:100% and
+     overflows the modal (the horizontal "wiggle"). Strip the native sizing so the
+     field respects the box model and fills the row without overflowing. */
+  .staff-modal-content .staff-form-row input[type="date"] {
+    -webkit-appearance: none !important;
+    appearance: none !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+  /* The Email field wraps its input in an inner <form> – let it stretch full width */
+  .staff-modal-content .staff-form-row > form {
+    width: 100% !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+  }
+  .staff-modal-content .staff-error-message { font-size: 11px !important; }
+
+  /* Roles multiselect – full-width button + in-flow scrollable list */
+  .staff-modal-content .roles-dropdown-container { width: 100% !important; }
+  .staff-modal-content .roles-dropdown-button {
+    width: 100% !important;
+    font-size: 14px !important;
+    padding: 8px 10px !important;
+    white-space: normal !important;
+  }
+  .staff-modal-content .roles-dropdown {
+    position: static !important;
+    width: 100% !important;
+    max-height: 180px !important;
+    font-size: 14px !important;
+    box-sizing: border-box !important;
+  }
+  .staff-modal-content .roles-dropdown-item {
+    font-size: 13px !important;
+    padding: 8px 10px !important;
+  }
+  .staff-modal-content .roles-dropdown-item label { font-size: 13px !important; }
+  .staff-modal-content .roles-dropdown-item input[type="checkbox"] {
+    width: 18px !important;
+    height: 18px !important;
+  }
+
+  /* Form actions – sticky full-width buttons so submit is always reachable */
+  .staff-modal-content .staff-form-actions {
+    display: flex !important;
+    gap: 8px !important;
+    flex-wrap: wrap !important;
+    margin-top: 12px !important;
+    padding: 10px 0 4px !important;
+    border-top: 1px solid #e5e7eb !important;
+    position: sticky !important;
+    bottom: 0 !important;
+    background: white !important;
+  }
+  .staff-modal-content .staff-form-actions button {
+    flex: 1 1 auto !important;
+    font-size: 13px !important;
+    padding: 9px 12px !important;
+    transform: none !important;
+    box-shadow: none !important;
+  }
+
+  /* Staff INFO modal – shrink the desktop 24–32px fonts so it fits mobile
+     (same treatment as the edit/add modal; reuses the .staff-modal-content box). */
+  .staff-modal-content .staff-info-modal-title {
+    font-size: 18px !important;
+    margin-bottom: 12px !important;
+  }
+  .staff-modal-content .staff-info-modal-container { padding: 6px 0 !important; }
+  .staff-modal-content .staff-info-section {
+    margin-bottom: 10px !important;
+    padding-bottom: 10px !important;
+  }
+  .staff-modal-content .staff-info-section-title {
+    font-size: 14px !important;
+    margin-bottom: 6px !important;
+  }
+  .staff-modal-content .staff-info-content { margin-top: 6px !important; }
+  .staff-modal-content .staff-info-item {
+    font-size: 13px !important;
+    margin-bottom: 6px !important;
+  }
+  .staff-modal-content .staff-info-roles-container { margin-bottom: 10px !important; }
+  .staff-modal-content .staff-info-role-item {
+    font-size: 12px !important;
+    padding: 3px 10px !important;
+    margin-right: 6px !important;
+  }
+  .staff-modal-content .staff-info-modal-close-container { margin-top: 12px !important; }
+  .staff-modal-content .staff-info-modal-close-button {
+    font-size: 13px !important;
+    padding: 8px 16px !important;
+    transform: none !important;
+    box-shadow: none !important;
+  }
+
   /* Mail modal – shrink all fonts and make send button visible */
   .mail-modal-content {
     width: calc(100vw - 16px) !important;
@@ -2178,6 +2291,7 @@
   .flip-back .pagination {
     justify-content: flex-start !important;   /* RTL: flex-start = right side of screen */
     direction: rtl !important;
+    margin-right: 32px !important;            /* breathing room from the screen's right edge */
   }
 
   /* ══════════════════════════════════════════════════════════
@@ -2485,76 +2599,12 @@
     box-sizing: border-box !important;
   }
 
-  /* ── Reports listing page (Reports.js) ── */
-  .reports-grid-page {
-    width: 100% !important;
-    max-width: 100% !important;
-    padding: 0 !important;
-    margin: 0 !important;
-    box-sizing: border-box !important;
-  }
-  .reports-toolbar {
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: stretch !important;
-    gap: 8px !important;
-    width: 100% !important;
-    padding: 0 !important;
-    margin: 0 0 10px 0 !important;
-  }
-  .reports-search-input {
-    width: 100% !important;
-    max-width: 100% !important;
-    box-sizing: border-box !important;
-    font-size: 14px !important;
-    padding: 8px 10px !important;
-  }
-  .reports-filter-btns {
-    display: flex !important;
-    flex-wrap: wrap !important;
-    gap: 6px !important;
-    width: 100% !important;
-  }
-  .reports-filter-btn {
-    font-size: 12px !important;
-    padding: 6px 10px !important;
-    flex: 0 0 auto !important;
-  }
-  .reports-table-wrapper {
-    width: 100% !important;
-    max-width: 100% !important;
-    overflow-x: auto !important;
-    -webkit-overflow-scrolling: touch !important;
-    box-sizing: border-box !important;
-  }
-  .reports-grid-table th,
-  .reports-grid-table td {
-    font-size: 13px !important;
-    padding: 8px !important;
-  }
-  /* Hide the last (category) column on mobile – not needed on a narrow screen */
-  .reports-grid-table .reports-th-cat,
-  .reports-grid-table .reports-td-cat {
-    display: none !important;
-  }
-
-  /* Bento dashboard fallback (if rendered) – single column, free height */
-  .reports-page {
-    height: auto !important;
-    padding: 8px !important;
-    display: block !important;
-    overflow: visible !important;
-  }
-  .reports-container {
-    grid-template-columns: 1fr !important;
-    grid-template-rows: none !important;
-    height: auto !important;
-    gap: 10px !important;
-  }
-  .reports-container .report,
-  .report-card {
-    padding: 16px !important;
-  }
+  /* NOTE: Reports listing/table styles (.reports-grid-page / .reports-toolbar /
+     .reports-table-wrapper / .reports-grid-table / .reports-filter-* …) and the
+     dead bento-grid fallback were removed here — Reports is not shown in the
+     mobile nav. The generic selectors below (.filter-create-container .actions,
+     .search-bar, .data-grid, .tutorship-pending-grid-container) are SHARED with
+     other mobile pages and are kept. */
 
   /* ── Report toolbars (.actions) — wrap & compact.
         Tasks' .actions is scoped to .tasks-main-content above and overrides. ── */

@@ -32,11 +32,6 @@ L.Icon.Default.mergeOptions({
 });
 
 
-const hasDeletePermission = hasDeletePermissionForTable('tutorships');
-const hasCreatePermission = hasCreatePermissionForTable('tutorships');
-const hasUpdatePermission = hasUpdatePermissionForTable('tutorships');
-const hasViewPermission = hasViewPermissionForTable('tutorships');
-
 const ENABLE_BULK_DELETE = process.env.REACT_APP_ENABLE_BULK_DELETE === 'true';
 
 const HourglassSpinner = () => {
@@ -65,6 +60,13 @@ const HourglassSpinner = () => {
 };
 
 const Tutorships = () => {
+  // Read permissions at render time (not module load). Module-level evaluation runs
+  // once at app startup — before login — leaving these stale (e.g. delete buttons
+  // hidden) until a manual browser refresh re-imported the module.
+  const hasDeletePermission = hasDeletePermissionForTable('tutorships');
+  const hasCreatePermission = hasCreatePermissionForTable('tutorships');
+  const hasUpdatePermission = hasUpdatePermissionForTable('tutorships');
+  const hasViewPermission = hasViewPermissionForTable('tutorships');
   const [tutorships, setTutorships] = useState([]);
   const [families, setFamilies] = useState([]);
   const [tutors, setTutors] = useState([]);

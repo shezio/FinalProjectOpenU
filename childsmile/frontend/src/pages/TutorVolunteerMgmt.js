@@ -11,7 +11,8 @@ import { useTranslation } from "react-i18next";
 import axios from "../axiosConfig";
 import { showErrorToast } from "../components/toastUtils";
 
-const PAGE_SIZE = 7;
+// 5 rows per page on mobile, 7 on desktop (matches the <=767 breakpoint used elsewhere)
+const PAGE_SIZE = window.innerWidth <= 767 ? 5 : 7;
 
 const TutorVolunteerMgmt = () => {
   const { t } = useTranslation();
