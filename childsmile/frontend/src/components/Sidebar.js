@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import axios from '../axiosConfig';
 import '../styles/common.css';
 
-const isProd = !window.location.hostname.includes('localhost');
+const isProd = process.env.NODE_ENV === 'production';
 
 const goTo = (path) => {
   window.location.href = isProd ? `/#${path}` : path;
@@ -143,7 +143,7 @@ const Sidebar = () => {
       hasPermissionToTutorships        && { path: '/tutorships',         icon: '🤝', label: 'חונכות' },
       hasPermissionToFeedbacks         && { path: '/feedbacks',          icon: '💬', label: 'משובים' },
       hasPermissionToRefunds           && { path: '/refunds',            icon: '💰', label: 'החזרי הוצאות' },
-      hasPermissionToAnyReport         && { path: '/reports',            icon: '📊', label: 'דוחות' },
+      // Reports page intentionally omitted from the MOBILE bottom nav (kept in desktop sidebar).
       hasPermissionToSystemManagement  && { path: '/system-management',  icon: '⚙️', label: 'ניהול מערכת' },
       hasPermissionToSystemManagement  && { path: '/meeting-management', icon: '📅', label: 'ניהול פגישות' },
       hasPermissionToSystemManagement  && { path: '/coordinator-chat',   icon: '📨', label: 'עדכוני צוות' },
@@ -170,11 +170,23 @@ const Sidebar = () => {
     };
     nav.appendChild(logoutBtn);
     document.body.appendChild(nav);
+    // Scroll active button into view on initial load
+    const initialActive = nav.querySelector('button.active');
+    if (initialActive) {
+      requestAnimationFrame(() => {
+        initialActive.scrollIntoView({ inline: 'nearest', block: 'nearest', behavior: 'instant' });
+      });
+    }
     const updateActive = () => {
       const path = window.location.pathname || window.location.hash.replace('#', '');
       nav.querySelectorAll('button[data-path]').forEach(btn => {
         btn.classList.toggle('active', path.startsWith(btn.dataset.path));
       });
+      // Keep the active button visible without snapping back to start
+      const activeBtn = nav.querySelector('button.active');
+      if (activeBtn) {
+        activeBtn.scrollIntoView({ inline: 'nearest', block: 'nearest', behavior: 'instant' });
+      }
     };
     window.addEventListener('popstate', updateActive);
     window.addEventListener('hashchange', updateActive);
