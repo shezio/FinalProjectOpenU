@@ -94,7 +94,7 @@ const Sidebar = () => {
   };
 
   const isGuest = isGuestUser();
-  const isAdmin = roles.includes('System Administrator');
+  const isAdmin = roles.includes('System Administrator') || roles.includes('Viewer');
   const isTutor = roles.includes('Tutor');
   const isGeneralVolunteer = roles.includes('General Volunteer');
   const isReviewer = roles.includes('Reviewer');

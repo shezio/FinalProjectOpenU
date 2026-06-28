@@ -55,7 +55,7 @@ const RefundsReport = () => {
     const origUsername = localStorage.getItem('origUsername') || '';
     const currentStaff = staff.find(s => s.username === origUsername);
     const roles = currentStaff?.roles || [];
-    if (!roles.includes('System Administrator')) {
+    if (!roles.includes('System Administrator') && !roles.includes('Viewer')) {
       navigate('/refunds');
     } else {
       setIsAdminUser(true);

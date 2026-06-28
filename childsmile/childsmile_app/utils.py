@@ -70,6 +70,7 @@ import os
 from django.db.models import Count, F, Q
 import tempfile
 import shutil
+from functools import wraps
 from filelock import FileLock
 from .logger import api_logger
 from django.views.decorators.csrf import csrf_exempt, csrf_protect
@@ -975,6 +976,11 @@ def create_tasks_for_technical_coordinators(initial_family_data, task_type_id):
 def is_admin(user):
     """
     Check if the given user is an admin.
+
+    The read-only 'Viewer' role is intentionally treated as an admin here so a
+    Viewer can SEE every admin-gated screen and all data. Viewers still cannot
+    change anything: every write endpoint is guarded by block_viewer_writes /
+    viewer_readonly_response, which returns HTTP 200 before any write is run.
     """
     with connection.cursor() as cursor:
         role_ids = list(user.roles.values_list("id", flat=True))  # Convert to a list
@@ -987,7 +993,7 @@ def is_admin(user):
             """
             SELECT 1
             FROM childsmile_app_role r
-            WHERE r.id = ANY(%s) AND r.role_name = 'System Administrator';
+            WHERE r.id = ANY(%s) AND r.role_name IN ('System Administrator', 'Viewer');
             """,
             [role_ids],  # Pass the list directly
         )
@@ -1012,6 +1018,126 @@ def has_permission(request, resource, action):
         permission["resource"] == prefixed_resource and permission["action"] == action
         for permission in permissions
     )
+
+
+# ============================================================================
+# READ-ONLY "VIEWER" ROLE ENFORCEMENT
+# ============================================================================
+# A user whose roles include "Viewer" is granted every permission in the DB so
+# the frontend shows the entire UI exactly like an admin (nothing disabled, no
+# "no permission" screens), and is_admin() also treats Viewer as an admin so
+# every admin-gated GET works. The actual read-only behavior is enforced here:
+# every POST/PUT/PATCH/DELETE business endpoint is guarded so that, for a Viewer,
+# the write is logged and an HTTP 200 success is returned WITHOUT performing it.
+# GET requests are never guarded, so a Viewer sees everything but changes nothing.
+
+VIEWER_ROLE_NAME = "Viewer"
+
+# HTTP methods that modify data and must be blocked for Viewers.
+_VIEWER_WRITE_METHODS = ("POST", "PUT", "PATCH", "DELETE")
+
+
+def is_viewer_user(request):
+    """
+    Return True if the currently logged-in user has the read-only 'Viewer' role.
+
+    The user is resolved from the session (set at login). Returns False for
+    anonymous users / missing sessions and never raises, so it is safe to call on
+    every request without changing behavior for non-Viewers.
+    """
+    try:
+        user_id = request.session.get("user_id")
+        if not user_id:
+            return False
+        return Staff.objects.filter(
+            staff_id=user_id, roles__role_name=VIEWER_ROLE_NAME
+        ).exists()
+    except Exception:
+        # Fail "open" to normal (non-viewer) behavior so this check can never
+        # break a legitimate request.
+        return False
+
+
+def viewer_readonly_response(request, action_name=None):
+    """
+    Shared read-only guard for write endpoints.
+
+    If the request is a write (POST/PUT/PATCH/DELETE) made by a user with the
+    'Viewer' role, log the blocked attempt and return an HTTP 200 JsonResponse
+    WITHOUT performing the operation. In every other case (non-viewers, or
+    non-write methods such as GET on a mixed-method view) it returns None, so the
+    caller proceeds exactly as before.
+
+    Use the @block_viewer_writes decorator below for normal endpoints; call this
+    directly only when you need the check inside a method-dispatched view.
+    """
+    method = (getattr(request, "method", "") or "").upper()
+    # Only ever interfere with data-changing methods - GET/HEAD/OPTIONS pass through.
+    if method not in _VIEWER_WRITE_METHODS:
+        return None
+    if not is_viewer_user(request):
+        return None
+
+    path = getattr(request, "path", "?")
+    user_id = request.session.get("user_id")
+
+    # Mimic the status code the real endpoint would have returned so the frontend's
+    # existing success handlers fire IDENTICALLY (same toaster, modal closing,
+    # refetch). By REST convention here, a successful create (POST) returns 201 and
+    # every other write (PUT/PATCH/DELETE) returns 200 - the frontend checks for
+    # exactly these (e.g. `response.status === 201` on create).
+    success_status = 201 if method == "POST" else 200
+
+    # Audit the blocked write (best-effort - logging must never break the response).
+    try:
+        log_api_action(
+            request=request,
+            action=action_name or f"VIEWER_READONLY_BLOCKED_{method}",
+            success=True,
+            status_code=success_status,
+            additional_data={
+                "viewer_readonly": True,
+                "blocked_method": method,
+                "blocked_path": path,
+            },
+        )
+    except Exception:
+        pass
+
+    api_logger.info(
+        f"VIEWER read-only: user {user_id} attempted {method} {path} "
+        f"({action_name or 'write'}) - logged and returned {success_status} without any change."
+    )
+
+    return JsonResponse(
+        {"message": "Operation completed successfully.", "viewer_readonly": True},
+        status=success_status,
+    )
+
+
+def block_viewer_writes(view_func):
+    """
+    Decorator for write endpoints (POST/PUT/PATCH/DELETE).
+
+    Place it as the INNERMOST decorator - directly above the `def` line and below
+    @api_view(...) / @csrf_exempt / @conditional_csrf / @transaction.atomic etc.:
+
+        @api_view(["POST"])
+        @block_viewer_writes
+        def create_family(request): ...
+
+    For a user with the 'Viewer' role it logs the attempt and returns HTTP 200
+    without running the view (no data is changed). For everyone else - and for
+    non-write methods on mixed GET/PUT style views - the view runs normally.
+    """
+    @wraps(view_func)
+    def _wrapped(request, *args, **kwargs):
+        blocked = viewer_readonly_response(request, action_name=view_func.__name__.upper())
+        if blocked is not None:
+            return blocked
+        return view_func(request, *args, **kwargs)
+
+    return _wrapped
 
 
 def has_initial_family_data_permission(request, action):

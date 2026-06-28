@@ -62,8 +62,13 @@ def get_user_info(request):
         return None, None, [], []
 
 def is_admin(staff):
-    """Check if staff member is admin"""
-    admin_roles = ['Admin', 'System Administrator', 'SuperAdmin']
+    """Check if staff member is admin.
+
+    The read-only 'Viewer' role is treated as admin so a Viewer can SEE every
+    admin-gated screen. Viewers still cannot change anything - all write
+    endpoints are guarded by block_viewer_writes and return 200 before any write.
+    """
+    admin_roles = ['Admin', 'System Administrator', 'SuperAdmin', 'Viewer']
     user_roles = [role.role_name for role in staff.roles.all()]
     return any(role in admin_roles for role in user_roles)
 

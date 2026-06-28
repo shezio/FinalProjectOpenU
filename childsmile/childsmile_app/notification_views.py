@@ -17,7 +17,7 @@ Endpoints (all under /api/notifications/):
 from django.http import JsonResponse
 from rest_framework.decorators import api_view
 from .models import NotificationMessage, Staff
-from .utils import conditional_csrf, is_admin
+from .utils import conditional_csrf, is_admin, block_viewer_writes
 from .audit_utils import log_api_action
 from .logger import api_logger
 
@@ -102,6 +102,7 @@ def get_notification_templates(request):
 
 @conditional_csrf
 @api_view(["POST"])
+@block_viewer_writes
 def create_notification(request):
     """Create a manual or custom_auto notification message. Admin only."""
     user = _get_user(request)
@@ -138,6 +139,7 @@ def create_notification(request):
 
 @conditional_csrf
 @api_view(["PUT", "PATCH"])
+@block_viewer_writes
 def update_notification(request, notification_id):
     """Update a DB notification row. Admin only."""
     user = _get_user(request)
@@ -165,6 +167,7 @@ def update_notification(request, notification_id):
 
 @conditional_csrf
 @api_view(["DELETE"])
+@block_viewer_writes
 def delete_notification(request, notification_id):
     """Delete a DB notification row. Admin only."""
     user = _get_user(request)
@@ -187,6 +190,7 @@ def delete_notification(request, notification_id):
 
 @conditional_csrf
 @api_view(["POST"])
+@block_viewer_writes
 def refresh_birthday_notifications(request):
     """
     Force-run the birthday scheduler job now.

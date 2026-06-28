@@ -647,6 +647,7 @@ def get_complete_family_details(request):
 
 @conditional_csrf
 @api_view(["POST"])
+@block_viewer_writes
 def create_family(request):
     api_logger.info("create_family called")
     """
@@ -983,6 +984,7 @@ def create_family(request):
 @conditional_csrf
 @api_view(["PUT"])
 @transaction.atomic
+@block_viewer_writes
 def update_family(request, child_id):
     """
     Update an existing family in the children table and propagate changes to related tables.
@@ -1513,6 +1515,7 @@ def update_family(request, child_id):
 
 @conditional_csrf
 @api_view(["DELETE"])
+@block_viewer_writes
 def delete_family(request, child_id):
     api_logger.info(f"delete_family called for child_id: {child_id}")
     """
@@ -1693,6 +1696,7 @@ def get_initial_family_data(request):
 
 @conditional_csrf
 @api_view(["POST"])
+@block_viewer_writes
 def create_initial_family_data(request):
     api_logger.info("create_initial_family_data called")
     """
@@ -1806,6 +1810,7 @@ def create_initial_family_data(request):
 
 @conditional_csrf
 @api_view(["PUT"])
+@block_viewer_writes
 def update_initial_family_data(request, initial_family_data_id):
     api_logger.info(f"update_initial_family_data called for initial_family_data_id: {initial_family_data_id}")
     """
@@ -1929,6 +1934,7 @@ def update_initial_family_data(request, initial_family_data_id):
 
 @conditional_csrf
 @api_view(["PUT"])
+@block_viewer_writes
 def mark_initial_family_complete(request, initial_family_data_id):
     api_logger.info(f"mark_initial_family_complete called for initial_family_data_id: {initial_family_data_id}")
     """
@@ -2086,6 +2092,7 @@ def mark_initial_family_complete(request, initial_family_data_id):
 
 @conditional_csrf
 @api_view(["DELETE"])
+@block_viewer_writes
 def delete_initial_family_data(request, initial_family_data_id):
     api_logger.info(f"delete_initial_family_data called for initial_family_data_id: {initial_family_data_id}")
     """
@@ -2213,6 +2220,7 @@ def delete_initial_family_data(request, initial_family_data_id):
 
 @conditional_csrf
 @api_view(["PUT"])
+@block_viewer_writes
 def update_child_id(request, old_id):
     """
     Update a child's ID (Israeli ID) across all related tables.
@@ -2394,6 +2402,7 @@ def update_child_id(request, old_id):
 
 @conditional_csrf
 @api_view(['POST'])
+@block_viewer_writes
 def import_families_endpoint(request):
     
     try:

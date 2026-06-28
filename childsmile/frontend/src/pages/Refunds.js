@@ -173,13 +173,14 @@ const Refunds = () => {
     const origUsername = localStorage.getItem('origUsername') || '';
     const currentStaff = staff.find(s => s.username === origUsername);
     const roles = currentStaff?.roles || [];
-    setIsAdminUser(roles.includes('System Administrator'));
+    setIsAdminUser(roles.includes('System Administrator') || roles.includes('Viewer'));
     // Non-staff = a volunteer or tutor with no elevated (staff) role. These
     // users may only VIEW refund requests, never edit them.
     const hasVolunteerOrTutor = roles.includes('Tutor') || roles.includes('General Volunteer');
     const hasStaffRole =
       roles.includes('System Administrator') ||
       roles.includes('Reviewer') ||
+      roles.includes('Viewer') ||
       roles.some(r => typeof r === 'string' && r.includes('Coordinator'));
     setIsNonStaffUser(hasVolunteerOrTutor && !hasStaffRole);
   };

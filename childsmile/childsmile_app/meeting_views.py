@@ -15,6 +15,7 @@ from django.utils import timezone
 
 from .models import Staff, StaffMeeting
 from .audit_utils import is_admin
+from .utils import block_viewer_writes
 from .meeting_notifications import (
     send_meeting_reminder,
     notify_meeting_created,
@@ -105,6 +106,7 @@ def _get_other_staff():
 
 
 @csrf_exempt
+@block_viewer_writes
 def meetings_list(request):
     """GET: list all meetings | POST: create meeting"""
     staff = _get_staff(request)
@@ -176,6 +178,7 @@ def meeting_recipients(request):
 
 
 @csrf_exempt
+@block_viewer_writes
 def meeting_detail(request, meeting_id):
     """PUT: update meeting | DELETE: cancel (soft-delete)"""
     staff = _get_staff(request)
@@ -241,6 +244,7 @@ def meeting_detail(request, meeting_id):
 
 
 @csrf_exempt
+@block_viewer_writes
 def meeting_hard_delete(request, meeting_id):
     """DELETE: permanently delete a cancelled meeting"""
     if request.method != "DELETE":
@@ -266,6 +270,7 @@ def meeting_hard_delete(request, meeting_id):
 
 
 @csrf_exempt
+@block_viewer_writes
 def send_reminders_now(request, meeting_id):
     """POST: manually send all due reminders for a meeting"""
     if request.method != "POST":

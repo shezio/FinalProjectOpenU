@@ -188,6 +188,7 @@ def audit_action(request):
 
 @conditional_csrf
 @api_view(["POST"])
+@block_viewer_writes
 def purge_old_audit_logs(request):
     """
     Delete audit logs older than 90 days (AFTER user exports them)

@@ -8,7 +8,7 @@ from django.core.mail import EmailMessage
 from django.conf import settings
 from django.db import DatabaseError, transaction
 from .models import Staff
-from .utils import conditional_csrf, is_admin
+from .utils import conditional_csrf, is_admin, block_viewer_writes
 from .audit_utils import log_api_action
 from .logger import api_logger
 import json
@@ -126,6 +126,7 @@ def validate_attachments(files):
 
 @conditional_csrf
 @api_view(["POST"])
+@block_viewer_writes
 def send_mail_via_ui(request):
     """
     Send email via UI with attachments
