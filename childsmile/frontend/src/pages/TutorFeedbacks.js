@@ -101,7 +101,7 @@ const TutorFeedbacks = () => {
         if (currentStaff) {
           setCurrentStaffid(currentStaff.id);
           setCurrentUserRoles(currentStaff.roles || []);
-          setIsAdmin((currentStaff.roles || []).includes("System Administrator"));
+          setIsAdmin((currentStaff.roles || []).includes("System Administrator") || (currentStaff.roles || []).includes("Viewer"));
         }
 
         // Use tutorshipsRes.data.tutorships as the array
