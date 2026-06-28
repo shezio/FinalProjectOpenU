@@ -362,6 +362,7 @@ def register_verify_totp(request):
 
 @conditional_csrf
 @api_view(["POST"])
+@block_viewer_writes
 def create_volunteer_or_tutor(request):
     api_logger.info("create_volunteer_or_tutor called")
     """
@@ -723,6 +724,7 @@ def create_volunteer_or_tutor_internal(data, request=None):
 
 @conditional_csrf
 @api_view(["POST"])
+@block_viewer_writes
 def create_pending_tutor(request):
     api_logger.info("create_pending_tutor called")
     """
@@ -844,6 +846,7 @@ def create_pending_tutor(request):
 
 @conditional_csrf
 @api_view(["PUT"])
+@block_viewer_writes
 def update_general_volunteer(request, volunteer_id):
     api_logger.info(f"update_general_volunteer called for volunteer_id: {volunteer_id}")
     """
@@ -950,6 +953,7 @@ def update_general_volunteer(request, volunteer_id):
 
 @conditional_csrf
 @api_view(["PUT"])
+@block_viewer_writes
 def update_volunteer_id(request, old_id):
     """
     Update a volunteer/tutor Israeli ID (ת.ז) across all related tables.
@@ -1132,6 +1136,7 @@ def update_volunteer_id(request, old_id):
 
 @conditional_csrf
 @api_view(["PUT"])
+@block_viewer_writes
 def update_volunteer_phone(request, volunteer_id):
     """
     Update a volunteer/tutor phone number in the SignedUp table.
@@ -1244,6 +1249,7 @@ def update_volunteer_phone(request, volunteer_id):
 
 @conditional_csrf
 @api_view(["PUT"])
+@block_viewer_writes
 def update_tutor(request, tutor_id):
     api_logger.info(f"update_tutor called for tutor_id: {tutor_id}")
     """
@@ -1530,6 +1536,7 @@ def update_tutor(request, tutor_id):
 
 @conditional_csrf
 @api_view(['POST'])
+@block_viewer_writes
 def import_volunteers_endpoint(request):
     
     try:

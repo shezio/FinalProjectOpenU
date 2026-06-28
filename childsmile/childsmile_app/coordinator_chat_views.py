@@ -21,7 +21,7 @@ from django.db.models import Q
 from .models import Staff, CoordinatorChatMessage, Role
 from .audit_utils import is_admin
 from .logger import api_logger
-from .utils import conditional_csrf
+from .utils import conditional_csrf, block_viewer_writes
 from .whatsapp_utils import send_whatsapp_message
 
 
@@ -205,6 +205,7 @@ def coordinator_chat_history(request, coordinator_id):
 
 @conditional_csrf
 @api_view(["POST"])
+@block_viewer_writes
 def send_message_to_coordinator(request, coordinator_id):
     """
     POST: Send message to single coordinator via WhatsApp
@@ -306,6 +307,7 @@ def send_message_to_coordinator(request, coordinator_id):
 
 @conditional_csrf
 @api_view(["POST"])
+@block_viewer_writes
 def send_message_to_many(request):
     """
     POST: Send same message to multiple coordinators
@@ -427,6 +429,7 @@ def send_message_to_many(request):
 
 @conditional_csrf
 @api_view(["DELETE"])
+@block_viewer_writes
 def delete_message(request, message_id):
     """
     DELETE: Delete a message from chat history
@@ -469,6 +472,7 @@ def delete_message(request, message_id):
 
 @conditional_csrf
 @api_view(["POST"])
+@block_viewer_writes
 def send_message_to_all(request):
     """
     POST: Send message to all coordinators

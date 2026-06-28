@@ -362,6 +362,7 @@ def get_user_tasks(request):
 
 @conditional_csrf
 @api_view(["POST"])
+@block_viewer_writes
 def create_task(request):
     api_logger.info("create_task called")
     """
@@ -564,6 +565,7 @@ def create_task(request):
 
 @conditional_csrf
 @api_view(["DELETE"])
+@block_viewer_writes
 def delete_task(request, task_id):
     api_logger.info(f"delete_task called for task_id: {task_id}")
     """
@@ -968,6 +970,7 @@ def delete_task(request, task_id):
 
 @conditional_csrf
 @api_view(["PUT"])
+@block_viewer_writes
 def update_task_status(request, task_id):
     api_logger.info(f"update_task_status called for task_id: {task_id}")
     """
@@ -1602,6 +1605,7 @@ def update_task_status(request, task_id):
 
 @conditional_csrf
 @api_view(["POST"])
+@block_viewer_writes
 def revert_task_status(request, task_id):
     """
     Revert task to its previous status and state.
@@ -1764,6 +1768,7 @@ def revert_task_status(request, task_id):
 
 @conditional_csrf
 @api_view(["PUT"])
+@block_viewer_writes
 def update_task(request, task_id):
     api_logger.info(f"update_task called for task_id: {task_id}")
     """
@@ -2046,6 +2051,7 @@ def update_task(request, task_id):
 
 
 @api_view(["POST"])
+@block_viewer_writes
 def check_monthly_review_tasks(request):
     """
     Check and create monthly family review tasks.

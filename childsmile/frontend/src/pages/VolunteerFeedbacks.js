@@ -102,7 +102,7 @@ const VolunteerFeedbacks = () => {
         if (currentStaff) {
           setCurrentStaffid(currentStaff.id);
           setCurrentUserRoles(currentStaff.roles || []);
-          setIsAdmin((currentStaff.roles || []).includes("System Administrator"));
+          setIsAdmin((currentStaff.roles || []).includes("System Administrator") || (currentStaff.roles || []).includes("Viewer"));
         }
 
         // Build volunteers array with staff that has at least 1 role of General Volunteer

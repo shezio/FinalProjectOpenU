@@ -1499,7 +1499,7 @@ const SystemManagement = () => {
                           const hasGV = staffData.roles.includes("General Volunteer");
                           const hasTutor = staffData.roles.includes("Tutor");
                           const hasCoordinatorRole = staffData.roles.some(
-                            (r) => r !== "General Volunteer" && r !== "Tutor" && r !== "Inactive" && r !== "System Administrator"
+                            (r) => r !== "General Volunteer" && r !== "Tutor" && r !== "Inactive" && r !== "System Administrator" && r !== "Viewer"
                           );
                           // Show if user already has GV/Tutor, OR if they have a coordinator role (revert case)
                           if (!hasGV && !hasTutor && !hasCoordinatorRole) {
@@ -1519,7 +1519,7 @@ const SystemManagement = () => {
                                   if (e.target.checked) {
                                     // Switching back to volunteer/tutor — clear coordinator roles too
                                     updatedRoles = updatedRoles.filter(
-                                      (r) => r === "Inactive" || r === "System Administrator"
+                                      (r) => r === "Inactive" || r === "System Administrator" || r === "Viewer"
                                     );
                                     updatedRoles.push(role.role_name);
                                   }

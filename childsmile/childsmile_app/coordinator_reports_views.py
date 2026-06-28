@@ -12,7 +12,7 @@ from .weekly_coordinator_reports import (
     send_weekly_coordinator_request,
     get_iso_week_start,
 )
-from .utils import conditional_csrf
+from .utils import conditional_csrf, block_viewer_writes
 
 
 def _get_staff(request):
@@ -94,6 +94,7 @@ def coordinator_reports_list(request):
 
 @conditional_csrf
 @api_view(["GET", "PUT"])
+@block_viewer_writes
 def coordinator_report_detail(request, report_id):
     """
     GET: Get single report
@@ -138,6 +139,7 @@ def coordinator_report_detail(request, report_id):
 
 @conditional_csrf
 @api_view(["POST"])
+@block_viewer_writes
 def send_weekly_request_now(request):
     """POST: Manually trigger weekly coordinator request (for testing/manual trigger)"""
     # Check if feature is enabled

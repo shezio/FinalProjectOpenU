@@ -325,7 +325,7 @@ const Tasks = () => {
   const isUserAdmin = () => {
     const username = localStorage.getItem('username');
     const staffUser = staffUserNamesAndRoles.find(user => user.username === username);
-    return staffUser && staffUser.roles.includes('System Administrator');
+    return staffUser && (staffUser.roles.includes('System Administrator') || staffUser.roles.includes('Viewer'));
   };
 
   const isUserVolunteerCoordinator = () => {

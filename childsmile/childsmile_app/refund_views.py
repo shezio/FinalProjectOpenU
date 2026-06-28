@@ -44,6 +44,7 @@ from .utils import (
     is_admin,
     conditional_csrf,
     create_task_internal,
+    block_viewer_writes,
 )
 from .audit_utils import log_api_action
 from .logger import api_logger
@@ -171,6 +172,7 @@ def get_refunds(request):
 
 @conditional_csrf
 @api_view(["POST"])
+@block_viewer_writes
 def create_refund(request):
     api_logger.info("create_refund called")
 
@@ -327,6 +329,7 @@ def create_refund(request):
 
 @conditional_csrf
 @api_view(["PUT"])
+@block_viewer_writes
 def update_refund(request, refund_id):
     api_logger.info(f"update_refund called for refund_id={refund_id}")
 
@@ -472,6 +475,7 @@ def update_refund(request, refund_id):
 
 @conditional_csrf
 @api_view(["DELETE"])
+@block_viewer_writes
 def delete_refund(request, refund_id):
     api_logger.info(f"delete_refund called for refund_id={refund_id}")
 
@@ -644,6 +648,7 @@ def get_receipt_upload_url(request):
 
 @conditional_csrf
 @api_view(["PUT"])
+@block_viewer_writes
 def local_upload_receipt(request):
     """
     LOCAL DEV ONLY — receives the raw file body PUT by the frontend and saves it
@@ -743,6 +748,7 @@ def _parse_decimal_refund(val):
 
 @conditional_csrf
 @api_view(["POST"])
+@block_viewer_writes
 def import_refunds(request):
     if 1 == 2:
         pass

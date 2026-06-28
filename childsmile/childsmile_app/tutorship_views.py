@@ -359,6 +359,7 @@ def get_tutorships(request):
 
 @conditional_csrf
 @api_view(["POST"])
+@block_viewer_writes
 def create_tutorship(request):
     api_logger.info("create_tutorship called")
     """
@@ -678,6 +679,7 @@ def create_tutorship(request):
 
 @conditional_csrf
 @api_view(["POST"])
+@block_viewer_writes
 def update_tutorship(request, tutorship_id):
     api_logger.info(f"update_tutorship called for tutorship_id: {tutorship_id}")
     """
@@ -872,6 +874,7 @@ def update_tutorship(request, tutorship_id):
 
 @conditional_csrf
 @api_view(["DELETE"])
+@block_viewer_writes
 def delete_tutorship(request, tutorship_id):
     api_logger.info(f"delete_tutorship called for tutorship_id: {tutorship_id}")
     """
@@ -1333,6 +1336,7 @@ def calculate_manual_match(request):
 
 @conditional_csrf
 @api_view(["PATCH"])
+@block_viewer_writes
 def update_tutorship_created_date(request, tutorship_id):
     """
     Update the created_date of a tutorship record.

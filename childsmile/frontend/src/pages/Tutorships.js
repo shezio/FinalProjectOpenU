@@ -311,7 +311,8 @@ const Tutorships = () => {
         (role) =>
           role.role_name === 'Tutors Coordinator' ||
           role.role_name === 'Families Coordinator' ||
-          role.role_name === 'System Administrator'
+          role.role_name === 'System Administrator' ||
+          role.role_name === 'Viewer'
       );
       console.log('DEBUG: Is Coordinator or Admin:', isCoordinatorOrAdmin); // Add debug log
       setCoordinatorOrAdmin(isCoordinatorOrAdmin);
@@ -490,6 +491,7 @@ const Tutorships = () => {
     _currentRoles.includes('Tutor') &&
     !_currentRoles.includes('System Administrator') &&
     !_currentRoles.includes('Reviewer') &&
+    !_currentRoles.includes('Viewer') &&
     !_currentRoles.some((r) => typeof r === 'string' && r.includes('Coordinator'));
   const currentTutorFullName = _currentStaff
     ? `${_currentStaff.first_name || ''} ${_currentStaff.last_name || ''}`.trim()

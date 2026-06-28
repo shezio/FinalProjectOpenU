@@ -306,7 +306,7 @@ const InitialFamilyData = () => {
   const getRowClass = (family) =>
     family.family_added ? "families-row-added" : "";
 
-  const canManage = currentUserRoles.includes('System Administrator') || currentUserRoles.includes('Technical Coordinator');
+  const canManage = currentUserRoles.includes('System Administrator') || currentUserRoles.includes('Technical Coordinator') || currentUserRoles.includes('Viewer');
 
   return (
     <div className="initial-family-main-content">

@@ -32,7 +32,7 @@ const NotificationMessages = () => {
   const origUser = localStorage.getItem('origUsername') || '';
   const current  = staff.find(s => s.username === origUser);
   const roles    = current?.roles || [];
-  const isAdmin  = roles.includes('System Administrator');
+  const isAdmin  = roles.includes('System Administrator') || roles.includes('Viewer');
 
   const [messages,     setMessages]     = useState([]);
   const [loading,      setLoading]      = useState(true);
