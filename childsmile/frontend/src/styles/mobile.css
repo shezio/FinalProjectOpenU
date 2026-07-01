@@ -257,7 +257,6 @@
   .meeting-management-main-content,
   .coordinator-chat-main-content,
   .reviewer-main-content,
-  .audit-log-main-content,
   .tutor-volunteer-main-content,
   .main-content,
   [class$="-main-content"] {
@@ -2555,7 +2554,6 @@
   .staff-data-grid,
   .tutor-vol-data-grid,
   .reviewers-data-grid,
-  .audit-log-data-grid,
   .notif-table,
   [class$="-data-grid"] {
     font-size: 12px !important;
