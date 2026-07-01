@@ -31,6 +31,7 @@ const SystemManagement = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [page, setPage] = useState(1);
   const [pageSize] = useState(() => window.innerWidth <= 767 ? 4 : 6); // 4 on mobile, 6 on desktop
+  const isMobile = window.innerWidth <= 767; // Audit Log is desktop-only (NPO decision)
   const [totalCount, setTotalCount] = useState(0);
   const [modalType, setModalType] = useState(''); // "add" or "edit"
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -1175,12 +1176,14 @@ const SystemManagement = () => {
                 </svg>
                 {t('dashboard')}
               </button>
-              <button 
-                onClick={() => navigate('/audit-log')}
-                className="audit-log-data-button"
-              >
-                {t('Audit Log')}
-              </button>
+              {!isMobile && (
+                <button
+                  onClick={() => navigate('/audit-log')}
+                  className="audit-log-data-button"
+                >
+                  {t('Audit Log')}
+                </button>
+              )}
             </div>
 
             <div className="staff-grid-container">
