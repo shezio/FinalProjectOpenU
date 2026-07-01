@@ -14,28 +14,13 @@
   margin-top: 200px;
 }
 
-.audit-log-container {
-  flex: unset !important;
-  margin-top: 150px !important;
-  border: 1px solid #ddd;
-  background-color: white;
-  padding: 0;
-  box-sizing: border-box;
-  margin-bottom: 400px;
-  width: 95%;
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  width: 2000px;
-  margin-right: 200px;
-}
+/* .audit-log-container was removed: .filter-create-container (position:absolute)
+   and .audit-log-grid-container now sit directly under .audit-log-main-content. */
 
 @media (max-width: 1000px) {
-  .audit-log-container {
+  .audit-log-grid-container {
     margin-top: 300px;
     margin-bottom: 200px;
-    margin-right: 200px;
   }
 }
 
@@ -117,6 +102,11 @@
   font-weight: 600;
   color: #333;
   font-size: 24px;
+}
+
+.audit-log-filters .filter-select{
+  width: 100% !important;
+  max-width: 1800px !important;
 }
 
 .audit-log-filters .filter-select,
@@ -272,26 +262,30 @@
   border: 1px solid #ddd;
   border-radius: 4px;
   overflow: hidden;
-  flex: 1;
+  flex: unset;
   display: flex;
   flex-direction: column;
-  width: 100%;
+  width: auto;
+  max-width: 100%;
+  align-self: flex-start; /* RTL flex column → flex-start is the right edge; fit content */
+  margin-top: 570px;
+  margin-right: 200px;    /* pull the data section off the far-right edge */
 }
 
 .audit-log-data-grid {
   width: 100%;
+  max-width: 100%;
   border-collapse: collapse;
   table-layout: auto !important;
-  margin-right: 100px;
+  align-self: flex-start; /* RTL flex column → flex-start is the right edge; don't stretch */
 }
 
 .audit-log-data-grid th,
 .audit-log-data-grid td {
   border: 1px solid #ddd;
-  padding: 12px;
+  padding: 6px 10px;
   text-align: right;
   font-size: 24px;
-  width: fit-content;
 }
 
 .audit-log-data-grid th {
@@ -320,12 +314,12 @@
 }
 
 .description-column {
-  flex: 1;
   word-break: break-word;
   white-space: pre-wrap;
   word-wrap: break-word;
-  width: 70%;
-  text-align: center !important;
+  max-width: 800px;   /* keep pre-wrap but cap width so it wraps instead of stretching the page */
+  text-align: right;
+  width: 100%;
 }
 
 .ip-column {
@@ -335,6 +329,96 @@
   color: #555;
   white-space: nowrap;
   text-align: center;
+}
+
+/* ============================================================
+   Field-change table rendered inside a description cell.
+   Only used for audit logs whose description contains "→" changes.
+   ============================================================ */
+.audit-desc {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  direction: rtl;
+  align-items: flex-start; /* fit-to-content; with rtl this hugs the right edge */
+  text-align: right;
+}
+
+.audit-desc-text {
+  white-space: pre-wrap;
+  word-break: break-word;
+  text-align: right;
+  line-height: 1.5;
+}
+
+.audit-log-data-grid .audit-changes-table {
+  width: auto;          /* shrink-to-fit: columns are only as wide as their text */
+  max-width: 100%;
+  border-collapse: collapse;
+  table-layout: auto;
+  margin: 0;
+  direction: rtl;
+  background: #fff;
+  border-radius: 6px;
+  overflow: hidden;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+}
+
+/* Cap only very long values so one cell can't blow the table wide; it wraps instead. */
+.audit-log-data-grid .audit-changes-table .audit-old-value,
+.audit-log-data-grid .audit-changes-table .audit-new-value {
+  max-width: 320px;
+}
+
+.audit-log-data-grid .audit-changes-table th,
+.audit-log-data-grid .audit-changes-table td {
+  border: 1px solid #e0e0e0;
+  padding: 3px 6px;
+  text-align: right;
+  font-size: 20px;
+  width: 1%;
+  white-space: nowrap;
+  vertical-align: top;
+}
+
+/* Only the value cells may wrap when very long; the field label never wraps. */
+.audit-log-data-grid .audit-changes-table .audit-old-value,
+.audit-log-data-grid .audit-changes-table .audit-new-value {
+  white-space: normal;
+  word-break: break-word;
+}
+
+/* Override the sticky green header of the outer grid for the nested header. */
+.audit-log-data-grid .audit-changes-table th {
+  background-color: #eaf1fb;
+  color: #1f3a5f;
+  font-weight: 700;
+  font-size: 20px;
+  position: static !important;
+  top: auto;
+  z-index: auto;
+}
+
+.audit-log-data-grid .audit-changes-table .audit-change-field {
+  font-weight: 600;
+  color: #333;
+  background-color: #f7f9fc;
+  white-space: nowrap;
+}
+
+/* Subtle red = previous value */
+.audit-log-data-grid .audit-changes-table .audit-old-value {
+  background-color: #fdecea;
+  color: #8a1c1c;
+  text-decoration: line-through;
+  text-decoration-color: rgba(138, 28, 28, 0.5);
+}
+
+/* Subtle green = new value */
+.audit-log-data-grid .audit-changes-table .audit-new-value {
+  background-color: #e7f6ec;
+  color: #1b5e20;
+  font-weight: 600;
 }
 
 /* Pagination */
@@ -419,10 +503,9 @@
 
 /* Responsive Design */
 @media (max-width: 1800px) {
-  .audit-log-container {
-    margin-top: 100px;
-    margin-bottom: 200px;
-    margin-right: 200px;
+  .audit-log-grid-container {
+    margin-top: 200px;
+    margin-right: 600px;
   }
 }
 

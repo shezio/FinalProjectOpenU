@@ -1464,7 +1464,8 @@ export const exportAuditToCSV = async (auditLogs, t, customFilename = null, skip
       return false; // Return false on validation error
     }
 
-    // CSV headers
+    // CSV headers (English keys used to read each row; the printed header row is
+    // translated to Hebrew below).
     const headers = ['Timestamp', 'Description', 'User Email', 'User Roles', 'Action', 'Source IP', 'Status'];
     
     // Helper to escape CSV fields (handles commas, quotes, newlines)
@@ -1482,8 +1483,8 @@ export const exportAuditToCSV = async (auditLogs, t, customFilename = null, skip
     const BOM = '\uFEFF';
     let csvContent = BOM;
     
-    // Add header row
-    csvContent += headers.map(escapeCSV).join(',') + '\r\n';
+    // Add header row (translated to Hebrew)
+    csvContent += headers.map(h => escapeCSV(t(h))).join(',') + '\r\n';
     
     // Add data rows
     auditLogs.forEach(log => {
@@ -1544,15 +1545,14 @@ export const exportAuditToCSV = async (auditLogs, t, customFilename = null, skip
   }
 };
 
-export const exportAuditToPDF = async (auditLogs, t) => {
+export const exportAuditToPDF = async (auditLogs, t, changes = []) => {
   const reportName = 'audit_log_report';
   const format = 'PDF';
-  
+
   try {
     // Validate that data is provided
     if (!auditLogs || auditLogs.length === 0) {
       const errorMsg = 'אנא בחר לפחות רשומה אחת ליצירת דוח';
-      console.log('🔴 PDF VALIDATION ERROR - showing error toast');
       await auditExportFailure(format, reportName, errorMsg, 'VALIDATION');
       toast.dismiss('audit-export-error');
       toast.dismiss('audit-export-success');
@@ -1576,6 +1576,7 @@ export const exportAuditToPDF = async (auditLogs, t) => {
 
     // Prepare table data
     const headers = [[
+      '#',
       reverseText(t('Timestamp')),
       reverseText(t('Description')),
       reverseText(t('User Roles')),
@@ -1583,12 +1584,13 @@ export const exportAuditToPDF = async (auditLogs, t) => {
     ].reverse()];
 
     // Reorder timestamp: split and swap date/time order
-    const rows = auditLogs.map(log => {
+    const rows = auditLogs.map((log, idx) => {
       const timestamp = log[t('Timestamp')] || '';
       const [time, date] = timestamp.split(',').map(s => s.trim());
       const reorderedTimestamp = date && time ? `${date} ${time}` : timestamp;
-      
+
       return [
+        String(idx + 1),
         reorderedTimestamp,
         log[t('Description')] || '',
         reverseText(log[t('User Roles')] || ''),
@@ -1604,22 +1606,55 @@ export const exportAuditToPDF = async (auditLogs, t) => {
       styles: { font: 'Alef', fontSize: 10, cellPadding: 3, halign: 'center' },
       headStyles: { fillColor: [76, 175, 80], textColor: 255, halign: 'center' },
       columnStyles: {
-        0: { halign: 'center' },
-        1: { halign: 'center' },
-        2: { halign: 'center' , cellWidth: 80 },
-        3: { halign: 'center' },
+        0: { halign: 'center' },                 // Source IP
+        1: { halign: 'center' },                 // User Roles
+        2: { halign: 'center', cellWidth: 80 },  // Description
+        3: { halign: 'center' },                 // Timestamp
+        4: { halign: 'center', cellWidth: 12 },  // # (row number)
       },
     });
 
+    // Field-changes table. jsPDF can't nest a table inside a cell, so the "→"
+    // changes are shown as their own clean Field / Old / New table right below the
+    // main table, keyed by the same row number (#) as the main table so each
+    // change maps to its row. Hebrew values are reversed for the no-bidi renderer;
+    // English field names stay as-is.
+    if (changes && changes.length) {
+      const maybeRev = (v) => {
+        const s = String(v == null ? '' : v);
+        return /[\u0590-\u05FF]/.test(s) ? reverseText(s) : s;
+      };
+      const titleY = (doc.lastAutoTable ? doc.lastAutoTable.finalY : 50) + 14;
+      doc.setFontSize(13);
+      doc.text(reverseText(t('Field Changes')), doc.internal.pageSize.getWidth() / 2, titleY, { align: 'center' });
+
+      doc.autoTable({
+        head: [[
+          '#',
+          reverseText(t('Field')),
+          reverseText(t('Old Value')),
+          reverseText(t('New Value')),
+        ].reverse()],
+        body: changes.map(c => [
+          String(c.rowNum),
+          maybeRev(c.field),
+          maybeRev(c.oldValue),
+          maybeRev(c.newValue),
+        ].reverse()),
+        startY: titleY + 4,
+        styles: { font: 'Alef', fontSize: 9, cellPadding: 3, halign: 'center', valign: 'top' },
+        headStyles: { fillColor: [59, 130, 246], textColor: 255, halign: 'center' },
+        columnStyles: { 3: { cellWidth: 12 } }, // # column (narrow)
+      });
+    }
+
     doc.save(`${t('audit_log_report')}.pdf`);
-    console.log('🟢 PDF SUCCESS - showing success toast');
     toast.success(t('Audit log exported successfully'), { toastId: 'audit-export-success', autoClose: 10000 });
 
     await auditExportSuccess(format, auditLogs.length, reportName, ['timestamp', 'description', 'user_roles', 'ip_address']);
-    
+
   } catch (error) {
     console.error('Export failed:', error);
-    console.log('🔴 PDF CATCH ERROR - showing error toast');
     await auditExportFailure(format, reportName, error.message, 'TECHNICAL');
     toast.dismiss('audit-export-error');
     toast.dismiss('audit-export-success');

@@ -17,6 +17,230 @@ const requiredPermissions = [
   { resource: 'childsmile_app_staff', action: 'DELETE' },
 ];
 
+// Arrow the backend uses to denote "old value → new value" in descriptions.
+const CHANGE_ARROW = '\u2192'; // →
+
+// Hebrew translations for the English LABELS the backend writes in audit
+// descriptions (the text before the first ":" on each line). Used to translate
+// the whole description in the UI and in exports.
+const AUDIT_LABEL_HE = {
+  'Timestamp': 'חותמת זמן',
+  'User': 'משתמש',
+  'Email': 'אימייל',
+  'Action': 'פעולה',
+  'Method': 'שיטה',
+  'Attempts used': 'ניסיונות שבוצעו',
+  'Roles': 'תפקידים',
+  'Type': 'סוג',
+  'Session duration': 'משך התחברות',
+  'Status': 'סטטוס',
+  'Error': 'שגיאה',
+  'Admin': 'מנהל',
+  'Target email': 'אימייל יעד',
+  'Target': 'יעד',
+  'Assigned roles': 'תפקידים שהוקצו',
+  'Admin roles': 'תפקידי מנהל',
+  'Username': 'שם משתמש',
+  'Created on': 'נוצר בתאריך',
+  'ID': 'מזהה',
+  'Report': 'דוח',
+  'Format': 'פורמט',
+  'Records': 'רשומות',
+  'Contains PII': 'מכיל מידע אישי',
+  'Entity': 'ישות',
+  'Record ID': 'מזהה רשומה',
+  'Deleted record ID': 'מזהה רשומה שנמחקה',
+  'Child ID': 'מזהה ילד',
+  'Family': 'משפחה',
+  'Family name': 'שם משפחה',
+  'Family names': 'שמות משפחה',
+  'Family phones': 'טלפוני משפחה',
+  'Location': 'מיקום',
+  'Phone': 'טלפון',
+  'Hospital': 'בית חולים',
+  'Diagnosis': 'אבחנה',
+  'Medical state': 'מצב רפואי',
+  'Changes': 'שינויים',
+  'Attempted changes': 'שינויים שנוסו',
+  'Task type': 'סוג משימה',
+  'Assigned to': 'משוייך ל',
+  'Volunteer': 'מתנדב',
+  'Volunteer email': 'אימייל מתנדב',
+  'Volunteer Email': 'אימייל מתנדב',
+  'Tutor': 'חונך',
+  'Tutor email': 'אימייל חונך',
+  'Tutor Email': 'אימייל חונך',
+  'Child': 'ילד',
+  'Comments': 'הערות',
+  'Changed': 'שונה',
+  'Field': 'שדה',
+  'Approval counter': 'מונה אישורים',
+  'Number of Approvers': 'מספר מאשרים',
+  'Existing ID': 'מזהה קיים',
+  'Counter': 'מונה',
+  'Tutor status': 'סטטוס חונך',
+  'Child status': 'סטטוס ילד',
+  'Reason': 'סיבה',
+  'Task ID': 'מזהה משימה',
+  'Staff name': 'שם איש צוות',
+  'Staff email': 'אימייל איש צוות',
+  'Staff ID': 'מזהה איש צוות',
+  'Previous roles': 'תפקידים קודמים',
+  'New role': 'תפקיד חדש',
+  'Removed role': 'תפקיד שהוסר',
+  'Restored roles': 'תפקידים ששוחזרו',
+  'Staff roles': 'תפקידי איש צוות',
+  'Deactivation reason': 'סיבת כיבוי',
+  'Tutorships affected': 'חונכויות מושפעות',
+  'Attempted': 'נוסו',
+  'Attempted assign': 'ניסיון שיוך',
+  'Attempted status': 'סטטוס שניסו',
+  'Date': 'תאריך',
+  'Source IP': 'כתובת IP',
+  'Old Value': 'ערך קודם',
+  'New Value': 'ערך חדש',
+  'Staff name of attempted deletion': 'שם איש צוות שניסו למחוק',
+  'Staff email of attempted deletion': 'אימייל איש צוות שניסו למחוק',
+  'Staff ID of attempted deletion': 'מזהה איש צוות שניסו למחוק',
+  'Timestamp of attempted deletion': 'זמן ניסיון המחיקה',
+  'Staff Roles of attempted Deletion': 'תפקידי איש צוות שניסו למחוק',
+
+  // Field-change labels emitted by the backend (family / task / staff / tutor
+  // updates). Both the friendly Title-Case labels and the raw DB column names.
+  'First Name': 'שם פרטי',
+  'Last Name': 'שם משפחה',
+  'Gender': 'מין',
+  'City': 'עיר',
+  'Medical Diagnosis': 'אבחנה רפואית',
+  'Marital Status': 'מצב משפחתי',
+  'Siblings': 'מספר אחים',
+  'Responsible Coordinator (manual)': 'רכז אחראי (שינוי ידני)',
+  'Tutoring Details': 'פרטי חונכות',
+  'Additional Info': 'מידע נוסף',
+  'Tutoring Status': 'סטטוס חונכות',
+  'Medical State': 'מצב רפואי',
+  'Father Name': 'שם האב',
+  'Father Phone': 'טלפון האב',
+  'Mother Name': 'שם האם',
+  'Mother Phone': 'טלפון האם',
+  'Address': 'כתובת',
+  'Completed Treatments': 'טיפולים הושלמו',
+  'In Frame': 'במסגרת',
+  'Coordinator Comments': 'הערות רכז',
+  'Last Review Call Conducted': 'שיחת ביקורת אחרונה בוצעה',
+  'Birth Date': 'תאריך לידה',
+  'Registration Date': 'תאריך רישום',
+  'Diagnosis Date': 'תאריך אבחון',
+  'Treatment End': 'סיום טיפול',
+  'Expected End': 'סיום צפוי לפי פרוטוקול',
+  'Responsible Coordinator (auto-updated)': 'רכז אחראי (עודכן אוטומטית)',
+  'Due date': 'תאריך יעד',
+  // Raw DB column names (tutor / volunteer updates)
+  'first_name': 'שם פרטי',
+  'surname': 'שם משפחה',
+  'birth_date': 'תאריך לידה',
+  'age': 'גיל',
+  'gender': 'מין',
+  'phone': 'טלפון',
+  'city': 'עיר',
+  'comment': 'הערה',
+  'comments': 'הערות',
+  'email': 'אימייל',
+  'want_tutor': 'מעוניין בחונך',
+};
+
+// Hebrew translations for the static English VALUE phrases (or whole lines
+// without a ":") the backend writes. Dynamic data (names, emails, dates) is not
+// listed here and is therefore left untouched.
+const AUDIT_PHRASE_HE = {
+  'Verified identity': 'זהות אומתה',
+  'Successfully logged in': 'התחברות הצליחה',
+  'Login attempt failed': 'ניסיון התחברות נכשל',
+  'Anonymous login attempt': 'ניסיון התחברות אנונימי',
+  'Successfully registered': 'נרשם בהצלחה',
+  'Registration failed': 'ההרשמה נכשלה',
+  'Anonymous registration': 'הרשמה אנונימית',
+  'Created staff account': 'נוצר חשבון איש צוות',
+  'Verification code sent': 'קוד אימות נשלח',
+  'Create staff failed': 'יצירת איש צוות נכשלה',
+  'Exported report': 'דוח יוצא',
+  'Created family': 'משפחה נוצרה',
+  'Updated family': 'משפחה עודכנה',
+  'Deleted family': 'משפחה נמחקה',
+  'Failed create family': 'יצירת משפחה נכשלה',
+  'Failed update family': 'עדכון משפחה נכשל',
+  'Failed delete family': 'מחיקת משפחה נכשלה',
+  'Deleted initial family': 'פרטי משפחה ראשוניים נמחקו',
+  'Failed delete initial': 'מחיקת פרטים ראשוניים נכשלה',
+  'Marked family added': 'משפחה סומנה כהתווספה',
+  'Failed mark family': 'סימון משפחה נכשל',
+  'Created new task': 'נוצרה משימה חדשה',
+  'Failed create task': 'יצירת משימה נכשלה',
+  'Currently unassigned': 'כרגע לא משויך',
+  'Updated task': 'משימה עודכנה',
+  'Failed update task': 'עדכון משימה נכשל',
+  'Deleted task': 'משימה נמחקה',
+  'Task unassigned': 'המשימה בוטלה מהקצאה',
+  'Failed delete task': 'מחיקת משימה נכשלה',
+  'Updated general volunteer': 'מתנדב כללי עודכן',
+  'Failed update volunteer': 'עדכון מתנדב נכשל',
+  'Updated tutor': 'חונך עודכן',
+  'Updated volunteer': 'מתנדב עודכן',
+  'Failed update tutor': 'עדכון חונך נכשל',
+  'Created tutorship': 'נוצרה חונכות',
+  'Failed create tutorship': 'יצירת חונכות נכשלה',
+  'Updated tutorship': 'חונכות עודכנה',
+  'Failed update tutorship': 'עדכון חונכות נכשל',
+  'Deleted tutorship': 'חונכות נמחקה',
+  'Failed delete tutorship': 'מחיקת חונכות נכשלה',
+  'Deleted pending tutor': 'מועמד לחונכות נמחק',
+  'Successfully promoted': 'קודם בהצלחה',
+  'Updated staff member': 'איש צוות עודכן',
+  'Failed update staff': 'עדכון איש צוות נכשל',
+  'Deactivated staff member': 'איש צוות כובה',
+  'Reactivated staff member': 'איש צוות הופעל מחדש',
+  'Deleted staff member': 'איש צוות נמחק',
+  'Failed delete staff': 'מחיקת איש צוות נכשלה',
+  'Duplicate exists': 'קיימת כפילות',
+  'Role added': 'תפקיד נוסף',
+  'Fully approved': 'אושר במלואו',
+  'Already approved': 'כבר אושר',
+  'Default statuses': 'סטטוסים ברירת מחדל',
+  'GDPR deletion complete': 'מחיקת GDPR הושלמה',
+  'Security verification': 'אימות אבטחה',
+  'Account created': 'חשבון נוצר',
+  'Account setup completed': 'הגדרת החשבון הושלמה',
+  'OAuth verified': 'OAuth אומת',
+  'Inactive': 'לא פעיל',
+  'None': 'ללא',
+  'No roles': 'ללא תפקידים',
+  'Not provided': 'לא סופק',
+  'Unknown': 'לא ידוע',
+  'Unknown error': 'שגיאה לא ידועה',
+  'Yes': 'כן',
+  'No': 'לא',
+  'New Volunteer': 'מתנדב חדש',
+  'New Pending Tutor': 'מועמד לחונכות חדש',
+  'Failed to create': 'נכשל ביצירה',
+  'Volunteer account for': 'חשבון מתנדב עבור',
+  'Pending Tutor account for': 'חשבון מועמד לחונכות עבור',
+  'General Volunteer': 'מתנדב כללי',
+  'Pending Tutor': 'מועמד לחונכות',
+  // Whole-line change phrases (no arrow) and common English values
+  'Description changed': 'התיאור שונה',
+  'Task type changed': 'סוג המשימה שונה',
+  'True': 'כן',
+  'False': 'לא',
+  'Male': 'זכר',
+  'Female': 'נקבה',
+};
+
+// Labels whose value is a comma-separated list of ROLE names to translate one by one.
+const AUDIT_ROLE_LABELS = new Set([
+  'Roles', 'Admin roles', 'Assigned roles', 'Staff roles',
+  'Previous roles', 'Restored roles', 'Staff Roles of attempted Deletion',
+]);
+
 const AuditLog = () => {
   const { t } = useTranslation(); // Initialize translation
   const hasPermissionOnAuditLog = hasAllPermissions(requiredPermissions);
@@ -81,16 +305,202 @@ const AuditLog = () => {
   // Helper function to translate description keys
   const translateDescription = (description) => {
     if (!description) return description;
-    
+
+    // 1) Replace [BRACKET_KEY] placeholders via i18n (existing behaviour).
     let translated = description;
     const keys = description.match(/\[([^\]]+)\]/g) || [];
-    
     keys.forEach(key => {
-      const translatedValue = t(key);
-      translated = translated.replace(key, translatedValue);
+      translated = translated.replace(key, t(key));
     });
-    console.log("tests1");
+
+    // Translate a single free value: static phrase → "N field(s)" → "N hours".
+    const translateValue = (value) => {
+      const v = value.trim();
+      if (v === '') return value;
+      if (v === 'None' || v === 'null' || v === 'N/A') return '—';
+      if (AUDIT_PHRASE_HE[v]) return AUDIT_PHRASE_HE[v];
+      const fieldsMatch = v.match(/^(\d+)\s*field\(s\)$/i);
+      if (fieldsMatch) return `${fieldsMatch[1]} שדות`;
+      const hoursMatch = v.match(/^(\d+)\s*hours?$/i);
+      if (hoursMatch) return `${hoursMatch[1]} שעות`;
+      return value;
+    };
+
+    // 2) Translate each line: the label (before first ":") and known values.
+    translated = translated.split('\n').map((line) => {
+      // Preserve leading whitespace + optional "• " bullet so change lines and
+      // indentation still render/parse correctly.
+      const pm = line.match(/^(\s*(?:\u2022\s*)?)([\s\S]*)$/);
+      const prefix = pm ? pm[1] : '';
+      const rest = pm ? pm[2] : line;
+      if (rest === '') return line;
+
+      const colonIdx = rest.indexOf(':');
+      if (colonIdx === -1) {
+        // Whole-line phrase (e.g. "Account setup completed", "New Volunteer").
+        return prefix + (AUDIT_PHRASE_HE[rest.trim()] || rest);
+      }
+
+      const label = rest.slice(0, colonIdx).trim();
+      const value = rest.slice(colonIdx + 1).replace(/^\s/, ''); // drop the single space after ':'
+      // Audit map first, then fall back to the app's i18n so any labelled field
+      // (First Name, City, …) that already has an app translation is covered too.
+      const heLabel = AUDIT_LABEL_HE[label] || t(label, { nsSeparator: false, keySeparator: false });
+
+      let heValue;
+      if (value.indexOf(CHANGE_ARROW) !== -1) {
+        // Field-change line ("old → new"): keep the value; the table renderer
+        // and export handle old/new. Only the label is translated.
+        heValue = value;
+      } else if (AUDIT_ROLE_LABELS.has(label)) {
+        heValue = value
+          .split(',')
+          .map(r => {
+            const role = r.trim();
+            if (role === '') return role;
+            return AUDIT_PHRASE_HE[role] || t(role, { nsSeparator: false, keySeparator: false });
+          })
+          .join(', ');
+      } else {
+        heValue = translateValue(value);
+      }
+
+      return `${prefix}${heLabel}: ${heValue}`;
+    }).join('\n');
+
     return translated;
+  };
+
+  // Parse a single "label: 'old' → 'new'" token into structured parts.
+  const parseChangeToken = (token) => {
+    if (!token || token.indexOf(CHANGE_ARROW) === -1) return null;
+
+    // Strip leading bullets / dashes / whitespace ("  • ", "- ", "* ").
+    const clean = token.replace(/^[\s\u2022\-*]+/, '').trim();
+    const arrowIdx = clean.indexOf(CHANGE_ARROW);
+    const left = clean.slice(0, arrowIdx).trim();
+    let newValue = clean.slice(arrowIdx + CHANGE_ARROW.length).trim();
+
+    // Separate the field label (before the first colon) from the old value.
+    let field = '';
+    let oldValue = left;
+    const colonIdx = left.indexOf(':');
+    if (colonIdx !== -1) {
+      field = left.slice(0, colonIdx).trim();
+      oldValue = left.slice(colonIdx + 1).trim();
+    }
+
+    const stripQuotes = (s) => s.replace(/^['"]+|['"]+$/g, '').trim();
+    oldValue = stripQuotes(oldValue);
+    newValue = stripQuotes(newValue);
+
+    // Translate a change value: empty / "None" / "null" / "N/A" → em dash; a known
+    // English phrase (Yes/No/True/False/Male/…) → Hebrew; otherwise leave the data
+    // (names, dates, Hebrew enums) as-is.
+    const translateChangeValue = (val) => {
+      const v = String(val).trim();
+      if (v === '' || v === 'None' || v === 'null' || v === 'N/A') return '—';
+      return AUDIT_PHRASE_HE[v] || val;
+    };
+
+    // Translate the field label (it may already be Hebrew if translateDescription
+    // ran first). Disable i18next separators so labels with ':' or '.' are safe.
+    const translatedField = field
+      ? (AUDIT_LABEL_HE[field] || t(field, { nsSeparator: false, keySeparator: false }))
+      : '';
+
+    return {
+      field: translatedField,
+      oldValue: translateChangeValue(oldValue),
+      newValue: translateChangeValue(newValue),
+    };
+  };
+
+  // Split a translated description into ordered segments: plain-text blocks and
+  // groups of field changes (lines containing the "→" arrow).
+  const parseDescriptionSegments = (translatedText) => {
+    const lines = String(translatedText).split('\n');
+    const segments = [];
+    let textBuffer = [];
+    let changeBuffer = [];
+
+    const flushText = () => {
+      if (textBuffer.length) {
+        segments.push({ type: 'text', content: textBuffer.join('\n') });
+        textBuffer = [];
+      }
+    };
+    const flushChanges = () => {
+      if (changeBuffer.length) {
+        segments.push({ type: 'changes', items: changeBuffer });
+        changeBuffer = [];
+      }
+    };
+
+    lines.forEach((line) => {
+      const arrowCount = (line.match(/\u2192/g) || []).length;
+      if (arrowCount > 0) {
+        flushText();
+        // The backend joins multiple changes with "; ". Only split when there
+        // is more than one arrow, so a semicolon inside a single value (e.g. a
+        // free-text comment) does not corrupt the parse.
+        const tokens = arrowCount > 1 ? line.split(';') : [line];
+        tokens.forEach((token) => {
+          const parsed = parseChangeToken(token);
+          if (parsed) changeBuffer.push(parsed);
+        });
+      } else {
+        flushChanges();
+        textBuffer.push(line);
+      }
+    });
+    flushText();
+    flushChanges();
+    return segments;
+  };
+
+  // Render the description cell. Logs WITHOUT a "→" change keep the original
+  // plain-text rendering; logs WITH changes show them as an old/new value table.
+  const renderDescriptionCell = (log) => {
+    const translated = translateDescription(log.description);
+    if (!translated || translated.indexOf(CHANGE_ARROW) === -1) {
+      return translated;
+    }
+
+    const segments = parseDescriptionSegments(translated);
+    return (
+      <div className="audit-desc">
+        {segments.map((seg, i) => {
+          if (seg.type === 'text') {
+            const text = seg.content.trim();
+            if (text === '') return null;
+            return (
+              <div className="audit-desc-text" key={i}>{text}</div>
+            );
+          }
+          return (
+            <table className="audit-changes-table" key={i}>
+              <thead>
+                <tr>
+                  <th>{t('Field')}</th>
+                  <th>{t('Old Value')}</th>
+                  <th>{t('New Value')}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {seg.items.map((item, j) => (
+                  <tr key={j}>
+                    <td className="audit-change-field">{item.field || '—'}</td>
+                    <td className="audit-old-value">{item.oldValue}</td>
+                    <td className="audit-new-value">{item.newValue}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          );
+        })}
+      </div>
+    );
   };
 
   // Apply filters and sorting
@@ -156,10 +566,17 @@ const AuditLog = () => {
     setSelectedLogs(newSelected);
   };
 
-  // Handle select all checkbox
+  // Handle select all checkbox (header). pageSize is 1, so a per-page "select
+  // all" would be a single row — select every filtered row across all pages so
+  // this also arms the monthly regulatory export + purge dialog.
   const handleSelectAll = (isChecked) => {
     if (isChecked) {
-      const allLogIds = new Set(paginatedLogs.map((log, index) => `${page}-${index}`));
+      const allLogIds = new Set();
+      filteredLogs.forEach((log, globalIndex) => {
+        const pageNum = Math.floor(globalIndex / pageSize) + 1;
+        const indexInPage = globalIndex % pageSize;
+        allLogIds.add(`${pageNum}-${indexInPage}`);
+      });
       setSelectedLogs(allLogIds);
     } else {
       setSelectedLogs(new Set());
@@ -178,22 +595,46 @@ const AuditLog = () => {
     fetchAuditLogs();
   };
 
+  // Map the cross-page selection (a Set of `${page}-${index}` keys) back to the
+  // actual logs in filtered order, so a selection made across several pages is
+  // exported in full — not just the rows on the current page.
+  const getSelectedLogsInOrder = () =>
+    filteredLogs.filter((log, globalIndex) => {
+      const pageNum = Math.floor(globalIndex / pageSize) + 1;
+      const indexInPage = globalIndex % pageSize;
+      return selectedLogs.has(`${pageNum}-${indexInPage}`);
+    });
+
+  // Build the CSV description: the general (translated) text, plus the field
+  // changes as a pipe-delimited mini-table inside the cell. A CSV/Excel cell
+  // cannot hold a real table, so this aligned text is the closest readable
+  // equivalent — instead of the "field: 'old' → 'new'" arrow lines.
+  const formatDescriptionForCsv = (log) => {
+    const translated = translateDescription(log.description);
+    if (!translated || translated.indexOf(CHANGE_ARROW) === -1) return translated;
+    const parts = [];
+    parseDescriptionSegments(translated).forEach((seg) => {
+      if (seg.type === 'text') {
+        const txt = seg.content.trim();
+        if (txt) parts.push(txt);
+      } else {
+        const header = `${t('Field')} | ${t('Old Value')} | ${t('New Value')}`;
+        const rowsTxt = seg.items.map(it => `${it.field} | ${it.oldValue} | ${it.newValue}`);
+        parts.push([`${t('Field Changes')}:`, header, ...rowsTxt].join('\n'));
+      }
+    });
+    return parts.join('\n');
+  };
+
   // Handle export to CSV
   const handleExportCSV = async () => {
     try {
-      // Check if this is a Select All click (selected logs match all filtered logs across all pages)
+      // "Select all rows" was used when EVERY filtered row is selected → this is
+      // the monthly regulatory backup, so the export is followed by the purge dialog.
       const isSelectAllClickExport = selectedLogs.size > 0 && selectedLogs.size === filteredLogs.length;
-      
-      // Get logs to export (can be empty - util will validate and show error toast)
-      let logsToExport = [];
-      if (selectedLogs.size > 0) {
-        if (isSelectAllClickExport) {
-          logsToExport = filteredLogs;
-        } else {
-          logsToExport = paginatedLogs.filter((log, index) => selectedLogs.has(`${page}-${index}`));
-        }
-      }
-      // If no logs selected, logsToExport stays empty and util will validate
+
+      // Logs to export = the full cross-page selection (persists between pages).
+      let logsToExport = selectedLogs.size > 0 ? getSelectedLogsInOrder() : [];
 
       // Generate filename only if we have logs
       let filename = `audit_log_${new Date().getTime()}`;
@@ -218,12 +659,14 @@ const AuditLog = () => {
       // Format logs for export
       const formattedLogs = logsToExport.map(log => ({
         Timestamp: new Date(log.timestamp).toLocaleString('he-IL'),
-        Description: translateDescription(log.description),
+        Description: formatDescriptionForCsv(log),
         'User Email': log.user_email,
-        'User Roles': Array.isArray(log.user_roles) ? log.user_roles.join(', ') : log.user_roles,
-        Action: log.action,
+        'User Roles': Array.isArray(log.user_roles)
+          ? log.user_roles.map(role => t(role)).join(', ')
+          : t(log.user_roles || ''),
+        Action: actionTranslations[log.action] || t(log.action) || log.action,
         'Source IP': log.ip_address,
-        Status: log.success ? 'Success' : 'Failed',
+        Status: log.success ? t('Success') : t('Failed'),
       }));
 
       // Call export utility - ALWAYS show success toast from util (never skip)
@@ -265,38 +708,60 @@ const AuditLog = () => {
     }
   };
 
+  // Split a raw (English) description into its non-change text and the parsed
+  // field changes, so the PDF can render the changes as a real table instead of
+  // the "field: 'old' → 'new'" text lines.
+  const splitDescriptionForPdf = (description) => {
+    const lines = String(description || '').split('\n');
+    const textLines = [];
+    const changes = [];
+    const strip = (s) => s.replace(/^['"]+|['"]+$/g, '').trim();
+    lines.forEach((line) => {
+      if (line.indexOf(CHANGE_ARROW) === -1) { textLines.push(line); return; }
+      const arrowCount = (line.match(/\u2192/g) || []).length;
+      const tokens = arrowCount > 1 ? line.split(';') : [line];
+      tokens.forEach((tok) => {
+        if (tok.indexOf(CHANGE_ARROW) === -1) return;
+        const clean = tok.replace(/^[\s\u2022\-*]+/, '').trim();
+        const ai = clean.indexOf(CHANGE_ARROW);
+        const left = clean.slice(0, ai).trim();
+        const newV = clean.slice(ai + CHANGE_ARROW.length).trim();
+        let field = '';
+        let oldV = left;
+        const ci = left.indexOf(':');
+        if (ci !== -1) { field = left.slice(0, ci).trim(); oldV = left.slice(ci + 1).trim(); }
+        changes.push({ field, oldValue: strip(oldV), newValue: strip(newV) });
+      });
+    });
+    return { text: textLines.join('\n'), changes };
+  };
+
   // Handle export to PDF
   const handleExportPDF = () => {
     try {
-      // Check if "Select All Rows" was clicked (all filtered logs selected)
-      const isSelectingAll = selectedLogs.size === filteredLogs.length;
-      
-      let selectedData;
-      if (isSelectingAll) {
-        // Export ALL filtered logs across all pages
-        selectedData = filteredLogs.map(log => ({
-          [t('Timestamp')]: new Date(log.timestamp).toLocaleString(navigator.language || 'he-IL'),
-          [t('Description')]: translateDescription(log.description),
-          [t('Action')]: t(log.action),
+      // Export the full cross-page selection (persists between pages).
+      const logsToExport = selectedLogs.size > 0 ? getSelectedLogsInOrder() : [];
+
+      // Collect all field changes (keyed by row number) for the appended table.
+      const changesForPdf = [];
+      const selectedData = logsToExport.map((log, index) => {
+        const ts = new Date(log.timestamp).toLocaleString(navigator.language || 'he-IL');
+        const { text, changes } = splitDescriptionForPdf(log.description);
+        changes.forEach(c => changesForPdf.push({ rowNum: index + 1, ...c }));
+        return {
+          // Raw (English-labelled) description without the change lines: jsPDF has no
+          // RTL/bidi support, so English renders cleanly (how it worked originally);
+          // the changes are shown as their own Field/Old/New table below, keyed by row #.
+          [t('Timestamp')]: ts,
+          [t('Description')]: text,
+          [t('Action')]: actionTranslations[log.action] || t(log.action) || log.action,
           [t('User Roles')]: Array.isArray(log.user_roles) ? log.user_roles.map(role => t(role)).join(', ') : t(log.user_roles),
           [t('User Email')]: log.user_email,
           [t('IP Address')]: log.ip_address,
-        }));
-      } else {
-        // Export only selected logs from current page
-        selectedData = paginatedLogs
-          .filter((log, index) => selectedLogs.has(`${page}-${index}`))
-          .map(log => ({
-            [t('Timestamp')]: new Date(log.timestamp).toLocaleString(navigator.language || 'he-IL'),
-            [t('Description')]: translateDescription(log.description),
-            [t('Action')]: t(log.action),
-            [t('User Roles')]: Array.isArray(log.user_roles) ? log.user_roles.map(role => t(role)).join(', ') : t(log.user_roles),
-            [t('User Email')]: log.user_email,
-            [t('IP Address')]: log.ip_address,
-          }));
-      }
+        };
+      });
 
-      exportAuditToPDF(selectedData, t);
+      exportAuditToPDF(selectedData, t, changesForPdf);
     } catch (error) {
       console.error('Error exporting to PDF:', error);
       showErrorToast(t, t('Failed to export to PDF'), error);
@@ -332,12 +797,14 @@ const AuditLog = () => {
       if (purgeData && purgeData.logsToExport && purgeData.logsToExport.length > 0) {
         const formattedLogs = purgeData.logsToExport.map(log => ({
           Timestamp: new Date(log.timestamp).toLocaleString('he-IL'),
-          Description: translateDescription(log.description),
+          Description: formatDescriptionForCsv(log),
           'User Email': log.user_email,
-          'User Roles': Array.isArray(log.user_roles) ? log.user_roles.join(', ') : log.user_roles,
-          Action: log.action,
+          'User Roles': Array.isArray(log.user_roles)
+            ? log.user_roles.map(role => t(role)).join(', ')
+            : t(log.user_roles || ''),
+          Action: actionTranslations[log.action] || t(log.action) || log.action,
           'Source IP': log.ip_address,
-          Status: log.success ? 'Success' : 'Failed',
+          Status: log.success ? t('Success') : t('Failed'),
         }));
         
         // Use export utility with custom filename - skip success toast for purge
@@ -430,11 +897,9 @@ const AuditLog = () => {
       <InnerPageHeader title={t('Audit Log')} />
 
       {loading ? (
-        <div className="audit-log-container">
-          <div className="loader">{t('Loading audit logs...')}</div>
-        </div>
+        <div className="loader">{t('Loading audit logs...')}</div>
       ) : (
-        <div className="audit-log-container">
+        <>
           {/* Controls Section - Search and Filters */}
           <div className="filter-create-container">
             <div className="audit-log-actions">
@@ -519,7 +984,7 @@ const AuditLog = () => {
                         <input
                           type="checkbox" className='audit-checkbox'
                           onChange={(e) => handleSelectAll(e.target.checked)}
-                          checked={selectedLogs.size > 0 && selectedLogs.size === paginatedLogs.length}
+                          checked={selectedLogs.size > 0 && selectedLogs.size === filteredLogs.length}
                         />
                       </th>
                       <th>
@@ -549,7 +1014,7 @@ const AuditLog = () => {
                         <td className="timestamp-column">
                           {new Date(log.timestamp).toLocaleString(navigator.language || 'he-IL')}
                         </td>
-                        <td className="description-column">{translateDescription(log.description)}</td>
+                        <td className="description-column">{renderDescriptionCell(log)}</td>
                         <td className="description-column">
                           {Array.isArray(log.user_roles) 
                             ? log.user_roles.map(role => t(role)).join(', ')
@@ -607,7 +1072,7 @@ const AuditLog = () => {
               </>
             )}
           </div>
-        </div>
+        </>
       )}
 
       {/* Purge Modal */}
