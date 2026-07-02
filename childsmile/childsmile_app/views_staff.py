@@ -2480,18 +2480,40 @@ def get_staff_profile_data(request, email):
         is_management = not (len(roles) == 1 and roles[0] in ["Tutor", "General Volunteer"])
         
         if is_management:
-            # For management staff, use Staff model
+            # Management staff use the Staff model. BUT a tutor/volunteer who was
+            # promoted to a coordinator may have blank Staff profile fields (they
+            # were never copied from their earlier role). For any field still
+            # missing, fall back to their SignedUp registration data (by email).
+            # The SignedUp query is skipped entirely once every Staff field is
+            # populated (e.g. after the coordinator is edited & saved) — so this
+            # extra read only happens while data is actually missing (perf).
+            needs_fallback = (
+                not staff.staff_israel_id
+                or staff.staff_birth_date is None
+                or staff.staff_age is None
+                or staff.staff_gender is None
+                or not staff.staff_phone
+                or not staff.staff_city
+            )
+            signup = (
+                SignedUp.objects.filter(email__iexact=email).first()
+                if needs_fallback else None
+            )
+
             birth_date = staff.staff_birth_date
+            if birth_date is None and signup is not None:
+                birth_date = getattr(signup, 'birth_date', None)
+
             profile_data = {
-                "staff_israel_id": staff.staff_israel_id,
+                "staff_israel_id": staff.staff_israel_id or (getattr(signup, 'id', None) if signup else None),
                 "staff_birth_date": birth_date.strftime("%d/%m/%Y") if birth_date else None,
-                "staff_age": staff.staff_age,
-                "staff_gender": staff.staff_gender,
-                "staff_phone": staff.staff_phone,
-                "staff_city": staff.staff_city,
+                "staff_age": staff.staff_age if staff.staff_age is not None else (getattr(signup, 'age', None) if signup else None),
+                "staff_gender": staff.staff_gender if staff.staff_gender is not None else (getattr(signup, 'gender', None) if signup else None),
+                "staff_phone": staff.staff_phone or (getattr(signup, 'phone', None) if signup else None),
+                "staff_city": staff.staff_city or (getattr(signup, 'city', None) if signup else None),
             }
-            api_logger.info(f"Management staff: fetched profile data from Staff model for {email}")
-            
+            api_logger.info(f"Management staff: profile data for {email} (SignedUp fallback used: {signup is not None})")
+
             return JsonResponse({
                 "message": "Profile data retrieved successfully",
                 "profile_data": profile_data,
