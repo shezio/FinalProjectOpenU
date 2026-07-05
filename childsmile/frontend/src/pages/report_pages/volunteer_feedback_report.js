@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from "react";
 import Sidebar from "../../components/Sidebar";
 import InnerPageHeader from "../../components/InnerPageHeader";
 import "../../styles/common.css";
+import "../../styles/feedbacks.css";
 import "../../styles/reports.css";
 import { exportVolunteerFeedbackToExcel, exportVolunteerFeedbackToPDF } from "../../components/export_utils";
 import { toast } from "react-toastify";
@@ -23,7 +24,7 @@ const VolunteerFeedbackReport = () => {
   const { t } = useTranslation();
   const tbodyRef = useRef(null);
   // Adaptive rows-per-page so the report table fits the viewport (no vertical scroll).
-  const PAGE_SIZE = useAutoPageSize(tbodyRef, { recomputeKey: filteredFeedbacks });
+  const PAGE_SIZE = 5;
   useEffect(() => {
     const tp = Math.max(1, Math.ceil(filteredFeedbacks.length / PAGE_SIZE));
     if (currentPage > tp) setCurrentPage(tp);
@@ -123,20 +124,11 @@ const VolunteerFeedbackReport = () => {
     fetchData();
   }, []);
 
-  // Set the zoom level of the page based on screen width
+  // Set zoom level when component mounts (match the feedbacks list pages)
   useEffect(() => {
-    const setZoom = () => {
-      if (window.innerWidth <= 1800) {
-        document.body.style.zoom = "67%";
-      } else {
-        document.body.style.zoom = "75%";
-      }
-    };
-    setZoom();
-    window.addEventListener("resize", setZoom);
+    document.body.style.zoom = "80%";
     return () => {
-      document.body.style.zoom = "100%"; // Reset zoom on unmount
-      window.removeEventListener("resize", setZoom);
+      document.body.style.zoom = "";
     };
   }, []);
 
@@ -196,12 +188,12 @@ const VolunteerFeedbackReport = () => {
                 </button>
               </div>
             )}
-            <div className="volunteer-feedback-report-grid-container">
+            <div className="volunteer-feedback-report-grid-container feedback-grid-container">
               {filteredFeedbacks.length === 0 ? (
                 <div className="no-data">{t("No data to display")}</div>
               ) : (
                 <>
-                  <table className="volunteer-feedback-report-data-grid">
+                  <table className="feedbacks-data-grid">
                     <thead>
                       <tr>
                         <th>
@@ -212,7 +204,7 @@ const VolunteerFeedbackReport = () => {
                         </th>
                         <th>{t("Volunteer Name")}</th>
                         <th>{t("Child Name")}</th>
-                        <th className="wide-column">
+                        <th className="feedbacks-wide-column">
                           {t("Event Date")}
                           <button
                             className="sort-button"
@@ -221,7 +213,7 @@ const VolunteerFeedbackReport = () => {
                             {sortOrderEventDate === 'asc' ? '▲' : '▼'}
                           </button>
                         </th>
-                        <th className="wide-column">
+                        <th className="feedbacks-wide-column">
                           {t("Feedback Filled At")}
                           <button
                             className="sort-button"
@@ -254,9 +246,9 @@ const VolunteerFeedbackReport = () => {
                           <td>{feedback.feedback_filled_at}</td>
                           <td><div className="td-scrollable">{feedback.description}</div></td>
                           <td>{t(feedback.feedback_type)}</td>
-                          <td>{feedback.exceptional_events}</td>
-                          <td>{feedback.anything_else}</td>
-                          <td>{feedback.comments}</td>
+                          <td><div className="td-scroll">{feedback.exceptional_events}</div></td>
+                          <td><div className="td-scroll">{feedback.anything_else}</div></td>
+                          <td><div className="td-scroll">{feedback.comments}</div></td>
                           <td>
                             <div className="td-scrollable">
                               {[

@@ -1,4 +1,4 @@
-import Select from "react-select";
+import Select, { components } from "react-select";
 import React, { useEffect, useState, useRef } from "react";
 import Sidebar from "../components/Sidebar";
 import InnerPageHeader from "../components/InnerPageHeader";
@@ -12,6 +12,36 @@ import { hasAllPermissions, hasViewPermissionForTable, navigateTo } from '../com
 import { feedbackShowErrorToast } from "../components/toastUtils";
 import hospitals from "../components/hospitals.json";
 import useAutoPageSize from "../components/useAutoPageSize";
+
+// Custom react-select option with a checkbox, used for multi-select fields
+const CheckboxOption = (props) => (
+  <components.Option {...props}>
+    <input
+      type="checkbox"
+      checked={props.isSelected}
+      onChange={() => null}
+      className="feedbacks-multiselect-option-checkbox"
+    />
+    <span>{props.label}</span>
+  </components.Option>
+);
+
+// Parse a DD/MM/YYYY date string into a Date for sorting.
+const parseFeedbackDate = (dateString) => {
+  if (!dateString) return new Date(0);
+  const [day, month, year] = dateString.split("/");
+  return new Date(`${year}-${month}-${day}`);
+};
+
+// Default feedback-list ordering: newest first by creation timestamp
+// (feedback_id breaks same-day ties so a just-created row appears on top).
+const sortByTimestampDesc = (list) =>
+  [...list].sort((a, b) => {
+    const diff =
+      parseFeedbackDate(b.feedback_filled_at) - parseFeedbackDate(a.feedback_filled_at);
+    if (diff !== 0) return diff;
+    return (b.feedback_id || 0) - (a.feedback_id || 0);
+  });
 
 const hospitalsList = hospitals.map((hospital) => hospital.trim()).filter((hospital) => hospital !== "");
 
@@ -31,7 +61,7 @@ const VolunteerFeedbacks = () => {
   const [validationPopup, setValidationPopup] = useState(null);
   const tbodyRef = useRef(null);
   // Adaptive rows-per-page so the table fits the viewport (no vertical scroll), desktop + mobile.
-  const PAGE_SIZE = useAutoPageSize(tbodyRef, { recomputeKey: filteredFeedbacks });
+  const PAGE_SIZE = 3;
   useEffect(() => {
     const tp = Math.max(1, Math.ceil(filteredFeedbacks.length / PAGE_SIZE));
     if (currentPage > tp) setCurrentPage(tp);
@@ -65,6 +95,9 @@ const VolunteerFeedbacks = () => {
   const [currentStaffid, setCurrentStaffid] = useState(null);
   const [currentUserRoles, setCurrentUserRoles] = useState([]);
   const [isAdmin, setIsAdmin] = useState(false);
+  // Name filter + "only tutor/volunteer sees own" restriction (UI-only, like Tutorships)
+  const [nameFilter, setNameFilter] = useState("");
+  const [restrictToOwn, setRestrictToOwn] = useState(false);
 
   // For bulk delete
   const [selectedFeedbacks, setSelectedFeedbacks] = useState([]);
@@ -81,7 +114,7 @@ const VolunteerFeedbacks = () => {
       axios.get("/api/children/"),
     ])
       .then(([feedbackRes, staffRes, childrenRes]) => {
-        const allFeedbacks = feedbackRes.data.volunteer_feedback || [];
+        const allFeedbacks = sortByTimestampDesc(feedbackRes.data.volunteer_feedback || []);
         setFeedbacks(allFeedbacks);
         setFilteredFeedbacks(allFeedbacks);
         setCurrentPage(1);
@@ -109,6 +142,16 @@ const VolunteerFeedbacks = () => {
           setCurrentStaffid(currentStaff.id);
           setCurrentUserRoles(currentStaff.roles || []);
           setIsAdmin((currentStaff.roles || []).includes("System Administrator") || (currentStaff.roles || []).includes("Viewer"));
+          // If the user's only roles are Tutor/General Volunteer (no coordinator/admin), show only their own feedbacks
+          const roles = currentStaff.roles || [];
+          const onlyTutorOrVolunteer = roles.length > 0 && roles.every(r => r === "Tutor" || r === "General Volunteer");
+          setRestrictToOwn(onlyTutorOrVolunteer);
+          if (onlyTutorOrVolunteer) {
+            const ownName = `${currentStaff.first_name} ${currentStaff.last_name}`;
+            const own = allFeedbacks.filter(fb => fb.volunteer_name === ownName);
+            setFeedbacks(own);
+            setFilteredFeedbacks(own);
+          }
         }
 
         // Build volunteers array with staff that has at least 1 role of General Volunteer
@@ -219,6 +262,7 @@ const VolunteerFeedbacks = () => {
       modalInit.feedback_type = "general_volunteer_fun_day"; // Default type for new feedback
       modalInit.hospital_name = feedback.hospital_name || "";
       modalInit.additional_volunteers = [];
+      modalInit.child_ids = [];
     }
     if (feedback.event_date && feedback.event_date.includes("/")) {
       // Convert from DD/MM/YYYY to YYYY-MM-DD
@@ -239,7 +283,8 @@ const VolunteerFeedbacks = () => {
   const validateModal = () => {
     const errors = {};
     if (!modalData.volunteer_id) errors.volunteer_name = t("Volunteer Name is required");
-    if (!modalData.child_id && modalData.feedback_type !== "general_volunteer_hospital_visit") errors.child_name = t("Child Name is required");
+    const hasChild = (modalData.child_ids && modalData.child_ids.length > 0) || !!modalData.child_name;
+    if (!hasChild && modalData.feedback_type !== "general_volunteer_hospital_visit") errors.child_name = t("Child Name is required");
     if (!modalData.event_date) {
       errors.event_date = t("Event Date is required");
     } else {
@@ -296,6 +341,7 @@ const VolunteerFeedbacks = () => {
     setEventTo("");
     setFeedbackFrom("");
     setFeedbackTo("");
+    setNameFilter("");
     fetchData();
   };
 
@@ -306,10 +352,13 @@ const VolunteerFeedbacks = () => {
     console.log("Feedback type:", modalData.feedback_type);
     const data = {
       volunteer_id: modalData.volunteer_id,
-      child_id: modalData.child_id,
+      child_id: (modalData.child_ids && modalData.child_ids[0]) || "",
       staff_id: currentStaffid,
       volunteer_name: volunteers.find(t => t.id === modalData.volunteer_id)?.name,
-      child_name: children.find(t => t.id === modalData.child_id)?.name,
+      child_name: (modalData.child_ids || [])
+        .map(id => children.find(t => t.id === id)?.name)
+        .filter(Boolean)
+        .join(", "),
       event_date: modalData.event_date,
       description: modalData.description,
       exceptional_events: modalData.exceptional_events || "",
@@ -355,7 +404,7 @@ const VolunteerFeedbacks = () => {
       child_id: modalData.child_id,
       staff_id: currentStaffid,
       volunteer_name: volunteers.find(t => t.id === modalData.volunteer_id)?.name,
-      child_name: children.find(t => t.id === modalData.child_id)?.name,
+      child_name: modalData.child_name || children.find(t => t.id === modalData.child_id)?.name || "",
       event_date: modalData.event_date,
       description: modalData.description,
       exceptional_events: modalData.exceptional_events || "",
@@ -462,6 +511,25 @@ const VolunteerFeedbacks = () => {
                 <option value="general_house_visit">{t("general_house_visit")}</option>
               </select>
             </div>
+            {!restrictToOwn && (
+              <div className="feedbacks-filter-item">
+                <label>{t("Volunteer Name")}:</label>
+                <select
+                  value={nameFilter}
+                  onChange={e => {
+                    const name = e.target.value;
+                    setNameFilter(name);
+                    setFilteredFeedbacks(name ? feedbacks.filter(fb => fb.volunteer_name === name) : feedbacks);
+                    setCurrentPage(1);
+                  }}
+                >
+                  <option value="">{t("All")}</option>
+                  {[...new Set(feedbacks.map(fb => fb.volunteer_name).filter(Boolean))].sort().map(name => (
+                    <option key={name} value={name}>{name}</option>
+                  ))}
+                </select>
+              </div>
+            )}
             <div className="feedbacks-filter-item">
               <label>{t("Event Date From")}:</label>
               <input type="date" value={eventFrom} onChange={e => setEventFrom(e.target.value)} className="feedbacks-date-input" />
@@ -837,8 +905,12 @@ const VolunteerFeedbacks = () => {
                         />
                       ) : (
                         <Select
-                          value={children.find(t => t.id === modalData.child_id) || null}
-                          onChange={option => setModalData({ ...modalData, child_id: option ? option.id : "" })}
+                          isMulti
+                          closeMenuOnSelect={false}
+                          hideSelectedOptions={false}
+                          components={{ Option: CheckboxOption }}
+                          value={children.filter(t => (modalData.child_ids || []).includes(t.id))}
+                          onChange={options => setModalData({ ...modalData, child_ids: options ? options.map(o => o.id) : [] })}
                           options={children}
                           getOptionLabel={option => option.name}
                           getOptionValue={option => option.id}
@@ -894,43 +966,41 @@ const VolunteerFeedbacks = () => {
                       onChange={e => setModalData({ ...modalData, comments: e.target.value })}
                     />
                   </div>
-                  {/* Additional Volunteers only for hospital visit */}
-                  {modalData.feedback_type === "general_volunteer_hospital_visit" && (
-                    <div className="feedbacks-form-row">
-                      <label>{t("Additional Volunteers")}</label>
-                      <div className="additional-volunteers-dropdown-container">
-                        <button
-                          type="button"
-                          className={`additional-volunteers-dropdown-button`}
-                          onClick={() => setShowAdditionalVolunteersDropdown(prev => !prev)}
-                        >
-                          {modalData.additional_volunteers && modalData.additional_volunteers.length > 0
-                            ? modalData.additional_volunteers.join(', ')
-                            : t('Select Additional Volunteers')}
-                        </button>
-                        {showAdditionalVolunteersDropdown && (
-                          <div className="additional-volunteers-dropdown">
-                            {additionalVolunteers.map((vol, idx) => (
-                              <div key={idx} className="additional-volunteers-dropdown-item">
-                                <input
-                                  type="checkbox"
-                                  id={`vol-${idx}`}
-                                  checked={modalData.additional_volunteers.includes(vol)}
-                                  onChange={e => {
-                                    const updated = e.target.checked
-                                      ? [...modalData.additional_volunteers, vol]
-                                      : modalData.additional_volunteers.filter(v => v !== vol);
-                                    setModalData({ ...modalData, additional_volunteers: updated });
-                                  }}
-                                />
-                                <label htmlFor={`vol-${idx}`}>{vol}</label>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
+                  {/* Additional Volunteers (available for all feedback types) */}
+                  <div className="feedbacks-form-row">
+                    <label>{t("Additional Volunteers")}</label>
+                    <div className="additional-volunteers-dropdown-container">
+                      <button
+                        type="button"
+                        className={`additional-volunteers-dropdown-button`}
+                        onClick={() => setShowAdditionalVolunteersDropdown(prev => !prev)}
+                      >
+                        {modalData.additional_volunteers && modalData.additional_volunteers.length > 0
+                          ? modalData.additional_volunteers.join(', ')
+                          : t('Select Additional Volunteers')}
+                      </button>
+                      {showAdditionalVolunteersDropdown && (
+                        <div className="additional-volunteers-dropdown">
+                          {additionalVolunteers.map((vol, idx) => (
+                            <div key={idx} className="additional-volunteers-dropdown-item">
+                              <input
+                                type="checkbox"
+                                id={`vol-${idx}`}
+                                checked={modalData.additional_volunteers.includes(vol)}
+                                onChange={e => {
+                                  const updated = e.target.checked
+                                    ? [...modalData.additional_volunteers, vol]
+                                    : modalData.additional_volunteers.filter(v => v !== vol);
+                                  setModalData({ ...modalData, additional_volunteers: updated });
+                                }}
+                              />
+                              <label htmlFor={`vol-${idx}`}>{vol}</label>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
-                  )}
+                  </div>
                   {/* Form actions */}
                   <div className="feedbacks-form-actions">
                     <button type="submit">{t("Save Feedback")}</button>
