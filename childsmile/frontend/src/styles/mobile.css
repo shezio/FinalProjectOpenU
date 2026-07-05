@@ -3250,6 +3250,21 @@
     margin-bottom: 4px !important;
   }
 
+  /* Multi-select (tutee/child) react-select options: match the
+     additional-volunteers dropdown on mobile — checkbox on the RIGHT of the
+     label (RTL) with the same size + green accent. Desktop is unchanged. */
+  .feedbacks-select__option {
+    direction: rtl !important;
+    text-align: right !important;
+  }
+  .feedbacks-multiselect-option-checkbox {
+    width: 28px !important;
+    height: 28px !important;
+    accent-color: #4caf50 !important;
+    margin-left: 10px !important;
+    vertical-align: middle !important;
+  }
+
   /* ── Feedback create/edit form – force ONE readable column ──────────
      Desktop lays the form out in several grid columns which makes it an
      unreadable mess on a phone:
