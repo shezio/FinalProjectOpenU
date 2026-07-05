@@ -210,7 +210,6 @@ def create_tutor_feedback(request):
                     tutor_name=data.get("tutor_name"),
                     tutor_id=tutor_id_id,
                     is_it_your_tutee=data.get("is_it_your_tutee"),
-                    is_first_visit=data.get("is_first_visit"),
                 )
 
                 api_logger.info(
@@ -494,7 +493,6 @@ def update_tutor_feedback(request, feedback_id):
                 tutor_feedback.tutor_name = data.get("tutor_name")
                 tutor_feedback.tutor_id = tutor_id_id
                 tutor_feedback.is_it_your_tutee = data.get("is_it_your_tutee")
-                tutor_feedback.is_first_visit = data.get("is_first_visit")
                 tutor_feedback.save()
 
                 api_logger.info(

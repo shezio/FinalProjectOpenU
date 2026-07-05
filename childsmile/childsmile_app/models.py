@@ -352,7 +352,6 @@ class Tutor_Feedback(models.Model):
     tutor_name = models.CharField(max_length=255)
     tutor = models.ForeignKey(Tutors, on_delete=models.CASCADE)
     is_it_your_tutee = models.BooleanField()
-    is_first_visit = models.BooleanField()
 
     def __str__(self):
         return f"Tutor Feedback {self.feedback.feedback_id} by {self.tutor_name}"
