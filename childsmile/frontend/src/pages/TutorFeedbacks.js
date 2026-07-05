@@ -1066,7 +1066,7 @@ const TutorFeedbacks = () => {
                           : t('Select Additional Volunteers')}
                       </button>
                       {showAdditionalVolunteersDropdown && (
-                        <div className="additional-volunteers-dropdown">
+                        <div className="additional-volunteers-dropdown feedbacks-dropdown-open-up">
                           {additionalVolunteers.map((vol, idx) => (
                             <div key={idx} className="additional-volunteers-dropdown-item">
                               <input

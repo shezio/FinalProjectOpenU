@@ -3243,8 +3243,10 @@
 
   /* Additional-volunteers custom dropdown: open UPWARD on mobile so the
      checkbox list doesn't run off the bottom of the viewport (this field
-     sits near the end of a long modal). Desktop still opens it downward. */
-  .additional-volunteers-dropdown {
+     sits near the end of a long modal). Desktop still opens it downward.
+     Scoped to .feedbacks-dropdown-open-up so the tutee/child dropdowns
+     (near the TOP of the modal, same base class) keep opening downward. */
+  .additional-volunteers-dropdown.feedbacks-dropdown-open-up {
     top: auto !important;
     bottom: 100% !important;
     margin-bottom: 4px !important;
