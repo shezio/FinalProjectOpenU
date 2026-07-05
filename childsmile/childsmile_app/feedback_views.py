@@ -179,9 +179,18 @@ def create_tutor_feedback(request):
             error_type = "feedback_creation_error"
             api_logger.error(f"Error creating feedback: {error}")
 
-        # Get the tutor's id_id from Tutors using the user_id
+        # Get the tutor for this feedback.
+        # If the filler is a tutor, use them (a tutor writing their own feedback).
+        # Otherwise (e.g. an admin/coordinator filling on behalf), fall back to the
+        # tutor selected in the form so non-tutor staff can create feedback too.
         api_logger.debug(f"User ID: {user_id}")
         tutor = Tutors.objects.filter(staff_id=staff_filling_id).first()
+        if not tutor:
+            selected_tutor_staff_id = data.get("tutor_staff_id")
+            if selected_tutor_staff_id:
+                tutor = Tutors.objects.filter(
+                    staff_id=selected_tutor_staff_id
+                ).first()
         api_logger.debug(f"Tutor found: {tutor}")
         if not tutor:
             api_logger.debug(f"No tutor found for staff ID {staff_filling_id}")
@@ -408,8 +417,16 @@ def update_tutor_feedback(request, feedback_id):
                 status=404,
             )
         staff_filling_id = data.get("staff_id")
-        # Get the tutor's id_id from Tutors using the user_id (which is staff_id in Tutors)
+        # Get the tutor for this feedback.
+        # If the filler is a tutor, use them; otherwise (admin/coordinator editing on
+        # behalf) fall back to the tutor selected in the form.
         tutor = Tutors.objects.filter(staff_id=staff_filling_id).first()
+        if not tutor:
+            selected_tutor_staff_id = data.get("tutor_staff_id")
+            if selected_tutor_staff_id:
+                tutor = Tutors.objects.filter(
+                    staff_id=selected_tutor_staff_id
+                ).first()
         api_logger.debug(f"Tutor found: {tutor}")  # Log the tutor found
         if not tutor:
             api_logger.debug(f"No tutor found for staff ID {staff_filling_id}")
@@ -781,11 +798,20 @@ def create_volunteer_feedback(request):
             error_type = "feedback_creation_error"
             api_logger.error(f"Error creating feedback: {error}")
 
-        # Get the volunteer's id_id from General_Volunteer
+        # Get the volunteer for this feedback.
+        # If the filler is a general volunteer, use them (writing their own feedback).
+        # Otherwise (e.g. an admin/coordinator filling on behalf), fall back to the
+        # volunteer selected in the form so non-volunteer staff can create feedback too.
         api_logger.debug(f"User ID: {user_id}")
         volunteer = General_Volunteer.objects.filter(
             staff_id=staff_filling_id
         ).first()
+        if not volunteer:
+            selected_volunteer_staff_id = data.get("volunteer_id")
+            if selected_volunteer_staff_id:
+                volunteer = General_Volunteer.objects.filter(
+                    staff_id=selected_volunteer_staff_id
+                ).first()
         api_logger.debug(f"Volunteer found: {volunteer}")
         if not volunteer:
             api_logger.debug(f"No volunteer found for staff ID {staff_filling_id}")
@@ -1006,10 +1032,18 @@ def update_volunteer_feedback(request, feedback_id):
             )
         staff_filling_id = data.get("staff_id")
 
-        # Get the volunteer's id_id from General_Volunteer using the user_id (which is staff_id in General_Volunteer)
+        # Get the volunteer for this feedback.
+        # If the filler is a general volunteer, use them; otherwise (admin/coordinator
+        # editing on behalf) fall back to the volunteer selected in the form.
         volunteer = General_Volunteer.objects.filter(
             staff_id=staff_filling_id
-        ).first()  # Fallback to Tutors if not found in General_Volunteer
+        ).first()
+        if not volunteer:
+            selected_volunteer_staff_id = data.get("volunteer_id")
+            if selected_volunteer_staff_id:
+                volunteer = General_Volunteer.objects.filter(
+                    staff_id=selected_volunteer_staff_id
+                ).first()
         api_logger.debug(f"Volunteer found: {volunteer}")  # Log the volunteer found
         if not volunteer:
             api_logger.debug(f"No volunteer found for staff ID {staff_filling_id}")

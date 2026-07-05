@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from "react";
 import Sidebar from "../../components/Sidebar";
 import InnerPageHeader from "../../components/InnerPageHeader";
 import "../../styles/common.css";
+import "../../styles/feedbacks.css";
 import "../../styles/reports.css";
 import { exportTutorFeedbackToExcel, exportTutorFeedbackToPDF } from "../../components/export_utils";
 import { toast } from "react-toastify";
@@ -22,7 +23,7 @@ const TutorFeedbackReport = () => {
   const { t } = useTranslation();
   const tbodyRef = useRef(null);
   // Adaptive rows-per-page so the report table fits the viewport (no vertical scroll).
-  const PAGE_SIZE = useAutoPageSize(tbodyRef, { recomputeKey: filteredFeedbacks });
+  const PAGE_SIZE = 5;
   useEffect(() => {
     const tp = Math.max(1, Math.ceil(filteredFeedbacks.length / PAGE_SIZE));
     if (currentPage > tp) setCurrentPage(tp);
@@ -123,23 +124,15 @@ const TutorFeedbackReport = () => {
   useEffect(() => {
     fetchData();
   }, []);
-  // Set the zoom level of the page based on screen width
+
+  // Set zoom level when component mounts (match the feedbacks list pages)
   useEffect(() => {
-    const setZoom = () => {
-      if (window.innerWidth <= 1800) {
-        document.body.style.zoom = "67%";
-      } else {
-        document.body.style.zoom = "75%";
-      }
-    };
-    setZoom();
-    window.addEventListener("resize", setZoom);
+    document.body.style.zoom = "80%";
     return () => {
-      document.body.style.zoom = "100%"; // Reset zoom on unmount
-      window.removeEventListener("resize", setZoom);
+      document.body.style.zoom = "";
     };
   }, []);
-  
+
   return (
     <div className="tutor-feedback-report-main-content">
       <Sidebar />
@@ -196,12 +189,12 @@ const TutorFeedbackReport = () => {
                 </button>
               </div>
             )}
-            <div className="tutor-feedback-report-grid-container">
+            <div className="tutor-feedback-report-grid-container feedback-grid-container">
               {filteredFeedbacks.length === 0 ? (
                 <div className="no-data">{t("No data to display")}</div>
               ) : (
                 <>
-                  <table className="tutor-feedback-report-data-grid">
+                  <table className="feedbacks-data-grid">
                     <thead>
                       <tr>
                         <th>
@@ -213,7 +206,7 @@ const TutorFeedbackReport = () => {
                         <th>{t("Tutor Name")}</th>
                         <th>{t("Tutee Name")}</th>
                         <th>{t("Is It Your Tutee?")}</th>
-                        <th className="wide-column">
+                        <th className="feedbacks-wide-column">
                           {t("Event Date")}
                           <button
                             className="sort-button"
@@ -222,7 +215,7 @@ const TutorFeedbackReport = () => {
                             {sortOrderEventDate === 'asc' ? '▲' : '▼'}
                           </button>
                         </th>
-                        <th className="wide-column">
+                        <th className="feedbacks-wide-column">
                           {t("Feedback Filled At")}
                           <button
                             className="sort-button"
@@ -254,36 +247,13 @@ const TutorFeedbackReport = () => {
                           <td>{feedback.is_it_your_tutee ? t("Yes") : t("No")}</td>
                           <td>{feedback.event_date}</td>
                           <td>{feedback["feedback_filled_at"]}</td>
-                          <td>
-                            {(feedback.description || "").split(" ").map((word, i) => (
-                              <React.Fragment key={i}>
-                                {word} {(i + 1) % 3 === 0 && <br />}
-                              </React.Fragment>
-                            ))}
-                          </td>
+                          <td><div className="td-scroll">{feedback.description}</div></td>
                           <td>{t(feedback.feedback_type)}</td>
+                          <td><div className="td-scroll">{feedback.exceptional_events}</div></td>
+                          <td><div className="td-scroll">{feedback.anything_else}</div></td>
+                          <td><div className="td-scroll">{feedback.comments}</div></td>
                           <td>
-                            {(feedback.exceptional_events || "").split(" ").map((word, i) => (
-                              <React.Fragment key={i}>
-                                {word} {(i + 1) % 5 === 0 && <br />}
-                              </React.Fragment>
-                            ))}
-                          </td>
-                          <td>
-                            {(feedback.anything_else || "").split(" ").map((word, i) => (
-                              <React.Fragment key={i}>
-                                {word} {(i + 1) % 5 === 0 && <br />}
-                              </React.Fragment>
-                            ))}
-                          </td>
-                          <td>
-                            {(feedback.comments || "").split(" ").map((word, i) => (
-                              <React.Fragment key={i}>
-                                {word} {(i + 1) % 5 === 0 && <br />}
-                              </React.Fragment>
-                            ))}
-                          </td>
-                          <td>
+                            <div className="td-scroll">
                             {[
                               feedback.names,
                               feedback.phones,
@@ -298,6 +268,7 @@ const TutorFeedbackReport = () => {
                               )
                               : "---"
                             }
+                            </div>
                           </td>
                         </tr>
                       ))}

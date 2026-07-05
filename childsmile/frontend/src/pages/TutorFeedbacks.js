@@ -1,4 +1,4 @@
-import Select from "react-select";
+import Select, { components } from "react-select";
 import React, { useEffect, useState, useRef } from "react";
 import Sidebar from "../components/Sidebar";
 import InnerPageHeader from "../components/InnerPageHeader";
@@ -12,6 +12,36 @@ import { hasAllPermissions, hasViewPermissionForTable, navigateTo } from '../com
 import { feedbackShowErrorToast } from "../components/toastUtils";
 import hospitals from "../components/hospitals.json";
 import useAutoPageSize from "../components/useAutoPageSize";
+
+// Custom react-select option with a checkbox, used for multi-select fields
+const CheckboxOption = (props) => (
+  <components.Option {...props}>
+    <input
+      type="checkbox"
+      checked={props.isSelected}
+      onChange={() => null}
+      className="feedbacks-multiselect-option-checkbox"
+    />
+    <span>{props.label}</span>
+  </components.Option>
+);
+
+// Parse a DD/MM/YYYY date string into a Date for sorting.
+const parseFeedbackDate = (dateString) => {
+  if (!dateString) return new Date(0);
+  const [day, month, year] = dateString.split("/");
+  return new Date(`${year}-${month}-${day}`);
+};
+
+// Default feedback-list ordering: newest first by creation timestamp
+// (feedback_id breaks same-day ties so a just-created row appears on top).
+const sortByTimestampDesc = (list) =>
+  [...list].sort((a, b) => {
+    const diff =
+      parseFeedbackDate(b.feedback_filled_at) - parseFeedbackDate(a.feedback_filled_at);
+    if (diff !== 0) return diff;
+    return (b.feedback_id || 0) - (a.feedback_id || 0);
+  });
 
 const hospitalsList = hospitals.map((hospital) => hospital.trim()).filter((hospital) => hospital !== "");
 
@@ -31,7 +61,7 @@ const TutorFeedbacks = () => {
   const [selectedFeedbacks, setSelectedFeedbacks] = useState([]);
   const tbodyRef = useRef(null);
   // Adaptive rows-per-page so the table fits the viewport (no vertical scroll), desktop + mobile.
-  const PAGE_SIZE = useAutoPageSize(tbodyRef, { recomputeKey: filteredFeedbacks });
+  const PAGE_SIZE = 3;
   useEffect(() => {
     const tp = Math.max(1, Math.ceil(filteredFeedbacks.length / PAGE_SIZE));
     if (currentPage > tp) setCurrentPage(tp);
@@ -67,6 +97,9 @@ const TutorFeedbacks = () => {
   const [isCurrentUserTutor, setIsCurrentUserTutor] = useState(true);
   const [currentUserRoles, setCurrentUserRoles] = useState([]);
   const [isAdmin, setIsAdmin] = useState(false);
+  // Name filter + "only tutor/volunteer sees own" restriction (UI-only, like Tutorships)
+  const [nameFilter, setNameFilter] = useState("");
+  const [restrictToOwn, setRestrictToOwn] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -80,7 +113,7 @@ const TutorFeedbacks = () => {
       axios.get("/api/staff/"),
     ])
       .then(([feedbackRes, tutorshipsRes, staffRes]) => {
-        const allFeedbacks = feedbackRes.data.tutor_feedback || [];
+        const allFeedbacks = sortByTimestampDesc(feedbackRes.data.tutor_feedback || []);
         setFeedbacks(allFeedbacks);
         setFilteredFeedbacks(allFeedbacks);
         setCurrentPage(1);
@@ -108,6 +141,16 @@ const TutorFeedbacks = () => {
           setCurrentStaffid(currentStaff.id);
           setCurrentUserRoles(currentStaff.roles || []);
           setIsAdmin((currentStaff.roles || []).includes("System Administrator") || (currentStaff.roles || []).includes("Viewer"));
+          // If the user's only roles are Tutor/General Volunteer (no coordinator/admin), show only their own feedbacks
+          const roles = currentStaff.roles || [];
+          const onlyTutorOrVolunteer = roles.length > 0 && roles.every(r => r === "Tutor" || r === "General Volunteer");
+          setRestrictToOwn(onlyTutorOrVolunteer);
+          if (onlyTutorOrVolunteer) {
+            const ownName = `${currentStaff.first_name} ${currentStaff.last_name}`;
+            const own = allFeedbacks.filter(fb => fb.tutor_name === ownName);
+            setFeedbacks(own);
+            setFilteredFeedbacks(own);
+          }
         }
 
         // Use tutorshipsRes.data.tutorships as the array
@@ -224,6 +267,7 @@ const TutorFeedbacks = () => {
       modalInit.feedback_type = "tutor_fun_day";
       modalInit.hospital_name = feedback.hospital_name || "";
       modalInit.additional_volunteers = [];
+      modalInit.tutee_ids = [];
     }
     if (feedback.event_date && feedback.event_date.includes("/")) {
       // Convert from DD/MM/YYYY to YYYY-MM-DD
@@ -247,7 +291,8 @@ const TutorFeedbacks = () => {
   const validateModal = () => {
     const errors = {};
     if (!modalData.tutor_id) errors.tutor_name = t("Tutor Name is required");
-    if (!modalData.tutee_id && modalData.feedback_type !== "general_volunteer_hospital_visit") errors.tutee_name = t("Tutee Name is required");
+    const hasTutee = (modalData.tutee_ids && modalData.tutee_ids.length > 0) || !!modalData.tutee_name;
+    if (!hasTutee && modalData.feedback_type !== "general_volunteer_hospital_visit") errors.tutee_name = t("Tutee Name is required");
     if (!modalData.event_date) {
       errors.event_date = t("Event Date is required");
     } else {
@@ -306,10 +351,14 @@ const TutorFeedbacks = () => {
     console.log("Feedback type:", modalData.feedback_type);
     const data = {
       tutor_id: modalData.tutor_id,
-      tutee_id: modalData.tutee_id,
+      tutor_staff_id: tutors.find(t => t.id === modalData.tutor_id)?.staff_id,
+      tutee_id: (modalData.tutee_ids && modalData.tutee_ids[0]) || "",
       staff_id: currentStaffid,
       tutor_name: tutors.find(t => t.id === modalData.tutor_id)?.name,
-      tutee_name: tutees.find(t => t.id === modalData.tutee_id)?.name,
+      tutee_name: (modalData.tutee_ids || [])
+        .map(id => tutees.find(t => t.id === id)?.name)
+        .filter(Boolean)
+        .join(", "),
       event_date: modalData.event_date,
       description: modalData.description,
       exceptional_events: modalData.exceptional_events || "",
@@ -353,10 +402,11 @@ const TutorFeedbacks = () => {
     const data = {
       id: modalData.id,
       tutor_id: modalData.tutor_id,
+      tutor_staff_id: tutors.find(t => t.id === modalData.tutor_id)?.staff_id,
       tutee_id: modalData.tutee_id,
       staff_id: currentStaffid,
       tutor_name: tutors.find(t => t.id === modalData.tutor_id)?.name,
-      tutee_name: tutees.find(t => t.id === modalData.tutee_id)?.name,
+      tutee_name: modalData.tutee_name || tutees.find(t => t.id === modalData.tutee_id)?.name || "",
       event_date: modalData.event_date,
       description: modalData.description,
       exceptional_events: modalData.exceptional_events || "",
@@ -388,6 +438,7 @@ const TutorFeedbacks = () => {
     setEventTo("");
     setFeedbackFrom("");
     setFeedbackTo("");
+    setNameFilter("");
     fetchData();
   };
 
@@ -488,6 +539,25 @@ const TutorFeedbacks = () => {
                 <option value="tutorship">{t("tutorship")}</option>
               </select>
             </div>
+            {!restrictToOwn && (
+              <div className="feedbacks-filter-item">
+                <label>{t("Tutor Name")}:</label>
+                <select
+                  value={nameFilter}
+                  onChange={e => {
+                    const name = e.target.value;
+                    setNameFilter(name);
+                    setFilteredFeedbacks(name ? feedbacks.filter(fb => fb.tutor_name === name) : feedbacks);
+                    setCurrentPage(1);
+                  }}
+                >
+                  <option value="">{t("All")}</option>
+                  {[...new Set(feedbacks.map(fb => fb.tutor_name).filter(Boolean))].sort().map(name => (
+                    <option key={name} value={name}>{name}</option>
+                  ))}
+                </select>
+              </div>
+            )}
             <div className="feedbacks-filter-item">
               <label>{t("Event Date From")}:</label>
               <input type="date" value={eventFrom} onChange={e => setEventFrom(e.target.value)} className="feedbacks-date-input" />
@@ -869,8 +939,12 @@ const TutorFeedbacks = () => {
                           />
                         ) : (
                           <Select
-                            value={tutees.find(t => t.id === modalData.tutee_id) || null}
-                            onChange={option => setModalData({ ...modalData, tutee_id: option ? option.id : "" })}
+                            isMulti
+                            closeMenuOnSelect={false}
+                            hideSelectedOptions={false}
+                            components={{ Option: CheckboxOption }}
+                            value={tutees.filter(t => (modalData.tutee_ids || []).includes(t.id))}
+                            onChange={options => setModalData({ ...modalData, tutee_ids: options ? options.map(o => o.id) : [] })}
                             options={tutees}
                             getOptionLabel={option => option.name}
                             getOptionValue={option => option.id}
@@ -941,43 +1015,41 @@ const TutorFeedbacks = () => {
                       onChange={e => setModalData({ ...modalData, comments: e.target.value })}
                     />
                   </div>
-                  {/* Additional Volunteers only for hospital visit */}
-                  {modalData.feedback_type === "general_volunteer_hospital_visit" && (
-                    <div className="feedbacks-form-row">
-                      <label>{t("Additional Volunteers")}</label>
-                      <div className="additional-volunteers-dropdown-container">
-                        <button
-                          type="button"
-                          className={`additional-volunteers-dropdown-button`}
-                          onClick={() => setShowAdditionalVolunteersDropdown(prev => !prev)}
-                        >
-                          {modalData.additional_volunteers && modalData.additional_volunteers.length > 0
-                            ? modalData.additional_volunteers.join(', ')
-                            : t('Select Additional Volunteers')}
-                        </button>
-                        {showAdditionalVolunteersDropdown && (
-                          <div className="additional-volunteers-dropdown">
-                            {additionalVolunteers.map((vol, idx) => (
-                              <div key={idx} className="additional-volunteers-dropdown-item">
-                                <input
-                                  type="checkbox"
-                                  id={`vol-${idx}`}
-                                  checked={modalData.additional_volunteers.includes(vol)}
-                                  onChange={e => {
-                                    const updated = e.target.checked
-                                      ? [...modalData.additional_volunteers, vol]
-                                      : modalData.additional_volunteers.filter(v => v !== vol);
-                                    setModalData({ ...modalData, additional_volunteers: updated });
-                                  }}
-                                />
-                                <label htmlFor={`vol-${idx}`}>{vol}</label>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
+                  {/* Additional Volunteers (available for all feedback types) */}
+                  <div className="feedbacks-form-row">
+                    <label>{t("Additional Volunteers")}</label>
+                    <div className="additional-volunteers-dropdown-container">
+                      <button
+                        type="button"
+                        className={`additional-volunteers-dropdown-button`}
+                        onClick={() => setShowAdditionalVolunteersDropdown(prev => !prev)}
+                      >
+                        {modalData.additional_volunteers && modalData.additional_volunteers.length > 0
+                          ? modalData.additional_volunteers.join(', ')
+                          : t('Select Additional Volunteers')}
+                      </button>
+                      {showAdditionalVolunteersDropdown && (
+                        <div className="additional-volunteers-dropdown">
+                          {additionalVolunteers.map((vol, idx) => (
+                            <div key={idx} className="additional-volunteers-dropdown-item">
+                              <input
+                                type="checkbox"
+                                id={`vol-${idx}`}
+                                checked={modalData.additional_volunteers.includes(vol)}
+                                onChange={e => {
+                                  const updated = e.target.checked
+                                    ? [...modalData.additional_volunteers, vol]
+                                    : modalData.additional_volunteers.filter(v => v !== vol);
+                                  setModalData({ ...modalData, additional_volunteers: updated });
+                                }}
+                              />
+                              <label htmlFor={`vol-${idx}`}>{vol}</label>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
-                  )}
+                  </div>
                   {/* Form actions */}
                   <div className="feedbacks-form-actions">
                     <button type="submit">{t("Save Feedback")}</button>

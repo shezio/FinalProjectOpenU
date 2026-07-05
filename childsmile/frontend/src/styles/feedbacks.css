@@ -1318,3 +1318,8 @@
     cursor: pointer;
     font-size: 24px;
 }
+
+/* Checkbox inside react-select multi-select options (tutee/child multi-select) */
+.feedbacks-multiselect-option-checkbox {
+    margin-left: 8px;
+}
