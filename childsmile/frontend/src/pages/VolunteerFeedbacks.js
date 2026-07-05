@@ -84,6 +84,7 @@ const VolunteerFeedbacks = () => {
   // Add at the top with other useState hooks
   const [infoModalData, setInfoModalData] = useState(null);
   const [showAdditionalVolunteersDropdown, setShowAdditionalVolunteersDropdown] = useState(false);
+  const [showChildDropdown, setShowChildDropdown] = useState(false);
 
   // data fetching
   const [volunteers, setVolunteers] = useState([]);
@@ -235,6 +236,10 @@ const VolunteerFeedbacks = () => {
     });
     setFilteredFeedbacks(sorted);
   };
+
+  // Mobile detection – on phones the child multi-select renders as the same
+  // custom dropdown component used for Additional Volunteers.
+  const isMobile = window.innerWidth <= 767;
 
   // Pagination
   const totalPages = Math.ceil(filteredFeedbacks.length / PAGE_SIZE);
@@ -903,6 +908,38 @@ const VolunteerFeedbacks = () => {
                           disabled
                           className="feedbacks-readonly-input"
                         />
+                      ) : isMobile ? (
+                        <div className="additional-volunteers-dropdown-container">
+                          <button
+                            type="button"
+                            className={`additional-volunteers-dropdown-button`}
+                            onClick={() => setShowChildDropdown(prev => !prev)}
+                          >
+                            {modalData.child_ids && modalData.child_ids.length > 0
+                              ? children.filter(t => modalData.child_ids.includes(t.id)).map(t => t.name).join(', ')
+                              : t('Select Child')}
+                          </button>
+                          {showChildDropdown && (
+                            <div className="additional-volunteers-dropdown">
+                              {children.map((child) => (
+                                <div key={child.id} className="additional-volunteers-dropdown-item">
+                                  <input
+                                    type="checkbox"
+                                    id={`child-${child.id}`}
+                                    checked={(modalData.child_ids || []).includes(child.id)}
+                                    onChange={e => {
+                                      const updated = e.target.checked
+                                        ? [...(modalData.child_ids || []), child.id]
+                                        : (modalData.child_ids || []).filter(id => id !== child.id);
+                                      setModalData({ ...modalData, child_ids: updated });
+                                    }}
+                                  />
+                                  <label htmlFor={`child-${child.id}`}>{child.name}</label>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
                       ) : (
                         <Select
                           isMulti
