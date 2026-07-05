@@ -85,6 +85,7 @@ const TutorFeedbacks = () => {
   // Add at the top with other useState hooks
   const [infoModalData, setInfoModalData] = useState(null);
   const [showAdditionalVolunteersDropdown, setShowAdditionalVolunteersDropdown] = useState(false);
+  const [showTuteeDropdown, setShowTuteeDropdown] = useState(false);
 
   // data fetching
   const [tutors, setTutors] = useState([]);
@@ -240,6 +241,10 @@ const TutorFeedbacks = () => {
     });
     setFilteredFeedbacks(sorted);
   };
+
+  // Mobile detection – on phones the tutee multi-select renders as the same
+  // custom dropdown component used for Additional Volunteers.
+  const isMobile = window.innerWidth <= 767;
 
   // Pagination
   const totalPages = Math.ceil(filteredFeedbacks.length / PAGE_SIZE);
@@ -937,6 +942,38 @@ const TutorFeedbacks = () => {
                             disabled
                             className="feedbacks-readonly-input"
                           />
+                        ) : isMobile ? (
+                          <div className="additional-volunteers-dropdown-container">
+                            <button
+                              type="button"
+                              className={`additional-volunteers-dropdown-button`}
+                              onClick={() => setShowTuteeDropdown(prev => !prev)}
+                            >
+                              {modalData.tutee_ids && modalData.tutee_ids.length > 0
+                                ? tutees.filter(t => modalData.tutee_ids.includes(t.id)).map(t => t.name).join(', ')
+                                : t('Select Tutee')}
+                            </button>
+                            {showTuteeDropdown && (
+                              <div className="additional-volunteers-dropdown">
+                                {tutees.map((tutee) => (
+                                  <div key={tutee.id} className="additional-volunteers-dropdown-item">
+                                    <input
+                                      type="checkbox"
+                                      id={`tutee-${tutee.id}`}
+                                      checked={(modalData.tutee_ids || []).includes(tutee.id)}
+                                      onChange={e => {
+                                        const updated = e.target.checked
+                                          ? [...(modalData.tutee_ids || []), tutee.id]
+                                          : (modalData.tutee_ids || []).filter(id => id !== tutee.id);
+                                        setModalData({ ...modalData, tutee_ids: updated });
+                                      }}
+                                    />
+                                    <label htmlFor={`tutee-${tutee.id}`}>{tutee.name}</label>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
                         ) : (
                           <Select
                             isMulti
