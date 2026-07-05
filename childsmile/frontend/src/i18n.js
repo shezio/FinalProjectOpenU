@@ -395,8 +395,6 @@ const resources = {
       "Birth date updated successfully": "תאריך הלידה עודכן בהצלחה",
       "Error updating birth date": "שגיאה בעדכון תאריך הלידה",
       "Tutorship": "חונכות",
-      "Is First Visit?": "האם זו הפגישה הראשונה?",
-      "Is It Your First Visit?": "האם זו הפגישה הראשונה שלכם?",
       "Is It Your Tutee?": "האם זה החניך שלך בחונכות?",
       "Meeting Description": "תיאור הפגישה - מה עשיתם ? איך היה ? איפה נפגשתם ?",
       "Anything Else?": "משהו נוסף שתרצו להגיד ? דברים שאפשר לשפר להבא ? צורך שעלה למשפחה ? או כל דבר שעולה לכם בראש :)",

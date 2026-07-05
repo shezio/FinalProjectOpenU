@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import Sidebar from "../../components/Sidebar";
 import InnerPageHeader from "../../components/InnerPageHeader";
 import "../../styles/common.css";
@@ -9,9 +9,9 @@ import { useTranslation } from "react-i18next";
 import axios from "../../axiosConfig";
 import { navigateTo } from "../../components/utils";
 import { showErrorToast } from "../../components/toastUtils";
+import useAutoPageSize from "../../components/useAutoPageSize";
 
 const VolunteerFeedbackReport = () => {
-  const PAGE_SIZE = 5;
   const [loading, setLoading] = useState(true);
   const [feedbacks, setFeedbacks] = useState([]);
   const [filteredFeedbacks, setFilteredFeedbacks] = useState([]);
@@ -21,6 +21,13 @@ const VolunteerFeedbackReport = () => {
   const [toDate, setToDate] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const { t } = useTranslation();
+  const tbodyRef = useRef(null);
+  // Adaptive rows-per-page so the report table fits the viewport (no vertical scroll).
+  const PAGE_SIZE = useAutoPageSize(tbodyRef, { recomputeKey: filteredFeedbacks });
+  useEffect(() => {
+    const tp = Math.max(1, Math.ceil(filteredFeedbacks.length / PAGE_SIZE));
+    if (currentPage > tp) setCurrentPage(tp);
+  }, [PAGE_SIZE, filteredFeedbacks.length, currentPage]);
 
   const parseDate = (dateString) => {
     if (!dateString) return new Date(0); // Handle missing dates
@@ -231,7 +238,7 @@ const VolunteerFeedbackReport = () => {
                         <th>{t("Initial Family Data")}</th>
                       </tr>
                     </thead>
-                    <tbody>
+                    <tbody ref={tbodyRef}>
                       {filteredFeedbacks.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE).map((feedback, index) => (
                         <tr key={index}>
                           <td>
@@ -275,15 +282,24 @@ const VolunteerFeedbackReport = () => {
                   <div className="pagination">
                     <button onClick={() => setCurrentPage(1)} disabled={currentPage === 1} className="pagination-arrow">&laquo;</button>
                     <button onClick={() => setCurrentPage(currentPage - 1)} disabled={currentPage === 1} className="pagination-arrow">&lsaquo;</button>
-                    {Array.from({ length: Math.ceil(filteredFeedbacks.length / PAGE_SIZE) }, (_, i) => (
-                      <button
-                        key={i + 1}
-                        className={currentPage === i + 1 ? "active" : ""}
-                        onClick={() => setCurrentPage(i + 1)}
-                      >
-                        {i + 1}
-                      </button>
-                    ))}
+                    {Array.from({ length: Math.ceil(filteredFeedbacks.length / PAGE_SIZE) }, (_, i) => {
+                      const pageNum = i + 1;
+                      const totalPages = Math.ceil(filteredFeedbacks.length / PAGE_SIZE);
+                      const maxButtons = 3;
+                      const halfRange = Math.floor(maxButtons / 2);
+                      let start = Math.max(1, currentPage - halfRange);
+                      let end = Math.min(totalPages, start + maxButtons - 1);
+                      if (end - start < maxButtons - 1) start = Math.max(1, end - maxButtons + 1);
+                      return pageNum >= start && pageNum <= end ? (
+                        <button
+                          key={pageNum}
+                          className={currentPage === pageNum ? "active" : ""}
+                          onClick={() => setCurrentPage(pageNum)}
+                        >
+                          {pageNum}
+                        </button>
+                      ) : null;
+                    })}
                     <button onClick={() => setCurrentPage(currentPage + 1)} disabled={currentPage === Math.ceil(filteredFeedbacks.length / PAGE_SIZE)} className="pagination-arrow">&rsaquo;</button>
                     <button onClick={() => setCurrentPage(Math.ceil(filteredFeedbacks.length / PAGE_SIZE))} disabled={currentPage === Math.ceil(filteredFeedbacks.length / PAGE_SIZE)} className="pagination-arrow">&raquo;</button>
                   </div>

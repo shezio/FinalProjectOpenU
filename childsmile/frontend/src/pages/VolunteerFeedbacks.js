@@ -1,5 +1,5 @@
 import Select from "react-select";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import Sidebar from "../components/Sidebar";
 import InnerPageHeader from "../components/InnerPageHeader";
 import "../styles/common.css";
@@ -11,8 +11,7 @@ import axios from "../axiosConfig";
 import { hasAllPermissions, hasViewPermissionForTable, navigateTo } from '../components/utils';
 import { feedbackShowErrorToast } from "../components/toastUtils";
 import hospitals from "../components/hospitals.json";
-
-const PAGE_SIZE = 5;
+import useAutoPageSize from "../components/useAutoPageSize";
 
 const hospitalsList = hospitals.map((hospital) => hospital.trim()).filter((hospital) => hospital !== "");
 
@@ -30,6 +29,13 @@ const VolunteerFeedbacks = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [canDelete, setCanDelete] = useState(false);
   const [validationPopup, setValidationPopup] = useState(null);
+  const tbodyRef = useRef(null);
+  // Adaptive rows-per-page so the table fits the viewport (no vertical scroll), desktop + mobile.
+  const PAGE_SIZE = useAutoPageSize(tbodyRef, { recomputeKey: filteredFeedbacks });
+  useEffect(() => {
+    const tp = Math.max(1, Math.ceil(filteredFeedbacks.length / PAGE_SIZE));
+    if (currentPage > tp) setCurrentPage(tp);
+  }, [PAGE_SIZE, filteredFeedbacks.length, currentPage]);
 
   // Filters
   const [eventFrom, setEventFrom] = useState("");
@@ -534,7 +540,7 @@ const VolunteerFeedbacks = () => {
                     <th>{t("Actions")}</th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody ref={tbodyRef}>
                   {paginatedFeedbacks.map((feedback, index) => (
                     <tr key={index}>
                       {ENABLE_BULK_DELETE && <td className="feedbacks-checkbox-column">
@@ -606,15 +612,23 @@ const VolunteerFeedbacks = () => {
           {totalPages <= 1 ? (
             <button className="active">1</button>
           ) : (
-            Array.from({ length: totalPages }, (_, i) => (
-              <button
-                key={i + 1}
-                onClick={() => setCurrentPage(i + 1)}
-                className={currentPage === i + 1 ? "active" : ""}
-              >
-                {i + 1}
-              </button>
-            ))
+            Array.from({ length: totalPages }, (_, i) => {
+              const pageNum = i + 1;
+              const maxButtons = 3;
+              const halfRange = Math.floor(maxButtons / 2);
+              let start = Math.max(1, currentPage - halfRange);
+              let end = Math.min(totalPages, start + maxButtons - 1);
+              if (end - start < maxButtons - 1) start = Math.max(1, end - maxButtons + 1);
+              return pageNum >= start && pageNum <= end ? (
+                <button
+                  key={pageNum}
+                  onClick={() => setCurrentPage(pageNum)}
+                  className={currentPage === pageNum ? "active" : ""}
+                >
+                  {pageNum}
+                </button>
+              ) : null;
+            })
           )}
           {/* Next Page */}
           <button

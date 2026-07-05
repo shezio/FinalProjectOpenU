@@ -576,7 +576,6 @@ def tutor_feedback_report(request):
                         "tutor_name": feedback.tutor_name,
                         "tutee_name": feedback.tutee_name,
                         "is_it_your_tutee": feedback.is_it_your_tutee,
-                        "is_first_visit": feedback.is_first_visit,
                         "feedback_id": feedback.feedback.feedback_id,
                         "event_date": feedback.feedback.event_date.strftime("%d/%m/%Y"),
                         "feedback_filled_at": feedback.feedback.timestamp.strftime(

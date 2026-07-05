@@ -1,5 +1,5 @@
 import Select from "react-select";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import Sidebar from "../components/Sidebar";
 import InnerPageHeader from "../components/InnerPageHeader";
 import "../styles/common.css";
@@ -11,8 +11,7 @@ import axios from "../axiosConfig";
 import { hasAllPermissions, hasViewPermissionForTable, navigateTo } from '../components/utils';
 import { feedbackShowErrorToast } from "../components/toastUtils";
 import hospitals from "../components/hospitals.json";
-
-const PAGE_SIZE = 5;
+import useAutoPageSize from "../components/useAutoPageSize";
 
 const hospitalsList = hospitals.map((hospital) => hospital.trim()).filter((hospital) => hospital !== "");
 
@@ -30,6 +29,13 @@ const TutorFeedbacks = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [canDelete, setCanDelete] = useState(false);
   const [selectedFeedbacks, setSelectedFeedbacks] = useState([]);
+  const tbodyRef = useRef(null);
+  // Adaptive rows-per-page so the table fits the viewport (no vertical scroll), desktop + mobile.
+  const PAGE_SIZE = useAutoPageSize(tbodyRef, { recomputeKey: filteredFeedbacks });
+  useEffect(() => {
+    const tp = Math.max(1, Math.ceil(filteredFeedbacks.length / PAGE_SIZE));
+    if (currentPage > tp) setCurrentPage(tp);
+  }, [PAGE_SIZE, filteredFeedbacks.length, currentPage]);
 
 
   // Filters
@@ -310,7 +316,6 @@ const TutorFeedbacks = () => {
       anything_else: modalData.anything_else || "",
       comments: modalData.comments || "",
       is_it_your_tutee: modalData.is_it_your_tutee || false,
-      is_first_visit: modalData.is_first_visit || false,
       feedback_filled_at: feedback_filled_date,
       feedback_type: modalData.feedback_type,
       hospital_name: modalData.hospital_name,
@@ -358,7 +363,6 @@ const TutorFeedbacks = () => {
       anything_else: modalData.anything_else || "",
       comments: modalData.comments || "",
       is_it_your_tutee: modalData.is_it_your_tutee || false,
-      is_first_visit: modalData.is_first_visit || false,
       feedback_filled_at: feedback_filled_date,
       feedback_type: modalData.feedback_type,
       hospital_name: modalData.hospital_name,
@@ -536,7 +540,6 @@ const TutorFeedbacks = () => {
                     <th>{t("Tutor Name")}</th>
                     <th>{t("Tutee Name / Hospital Name")}</th>
                     <th>{t("Is It Your Tutee?")}</th>
-                    <th>{t("Is First Visit?")}</th>
                     <th className="feedbacks-wide-column">
                       {t("Event Date")}
                       <button className="sort-button" onClick={toggleSortOrderEventDate}>
@@ -554,7 +557,7 @@ const TutorFeedbacks = () => {
                     <th>{t("Actions")}</th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody ref={tbodyRef}>
                   {paginatedFeedbacks.map((feedback, index) => (
                     <tr key={index}>
                       {ENABLE_BULK_DELETE && <td className="feedbacks-checkbox-column">
@@ -573,7 +576,6 @@ const TutorFeedbacks = () => {
                       <td>{feedback.tutor_name}</td>
                       <td>{feedback.tutee_name}</td>
                       <td>{feedback.is_it_your_tutee ? t("Yes") : t("No")}</td>
-                      <td>{feedback.is_first_visit ? t("Yes") : t("No")}</td>
                       <td>{feedback.event_date}</td>
                       <td>{feedback.feedback_filled_at}</td>
                       <td><div className="td-scroll">{feedback.description}</div>
@@ -638,15 +640,23 @@ const TutorFeedbacks = () => {
           {totalPages <= 1 ? (
             <button className="active">1</button>
           ) : (
-            Array.from({ length: totalPages }, (_, i) => (
-              <button
-                key={i + 1}
-                onClick={() => setCurrentPage(i + 1)}
-                className={currentPage === i + 1 ? "active" : ""}
-              >
-                {i + 1}
-              </button>
-            ))
+            Array.from({ length: totalPages }, (_, i) => {
+              const pageNum = i + 1;
+              const maxButtons = 3;
+              const halfRange = Math.floor(maxButtons / 2);
+              let start = Math.max(1, currentPage - halfRange);
+              let end = Math.min(totalPages, start + maxButtons - 1);
+              if (end - start < maxButtons - 1) start = Math.max(1, end - maxButtons + 1);
+              return pageNum >= start && pageNum <= end ? (
+                <button
+                  key={pageNum}
+                  onClick={() => setCurrentPage(pageNum)}
+                  className={currentPage === pageNum ? "active" : ""}
+                >
+                  {pageNum}
+                </button>
+              ) : null;
+            })
           )}
           {/* Next Page */}
           <button
@@ -675,7 +685,6 @@ const TutorFeedbacks = () => {
                 <p>{t("Tutor Name")}: {infoModalData.tutor_name}</p>
                 <p>{t("Tutee Name / Hospital Name")}:{infoModalData.tutee_name || infoModalData.hospital_name}</p>
                 <p>{t("Is It Your Tutee?")}:{infoModalData.is_it_your_tutee ? t("Yes") : t("No")}</p>
-                <p>{t("Is First Visit?")}:{infoModalData.is_first_visit ? t("Yes") : t("No")}</p>
                 <p>{t("Event Date")}:{infoModalData.event_date}</p>
                 <p>{t("Feedback Filled At")}:{infoModalData.feedback_filled_at}</p>
                 <p>{t("Description")}:{infoModalData.description}</p>
@@ -846,7 +855,7 @@ const TutorFeedbacks = () => {
                     )}
                   </div>
 
-                  {/* Tutee Name, Is It Your Tutee, Is It Your First Visit - only for non-hospital visit */}
+                  {/* Tutee Name, Is It Your Tutee - only for non-hospital visit */}
                   {modalData.feedback_type !== "general_volunteer_hospital_visit" && (
                     <>
                       <div className="feedbacks-form-row">
@@ -876,20 +885,6 @@ const TutorFeedbacks = () => {
                         <Select
                           value={modalData.is_it_your_tutee ? { value: true, label: t("Yes") } : { value: false, label: t("No"), default: true }}
                           onChange={option => setModalData({ ...modalData, is_it_your_tutee: option.value })}
-                          options={[
-                            { value: true, label: t("Yes") },
-                            { value: false, label: t("No") }
-                          ]}
-                          placeholder={t("Select")}
-                          isClearable
-                          classNamePrefix={"feedbacks-select"}
-                        />
-                      </div>
-                      <div className="feedbacks-form-row">
-                        <label>{t("Is It Your First Visit?")}</label>
-                        <Select
-                          value={modalData.is_first_visit ? { value: true, label: t("Yes") } : { value: false, label: t("No") }}
-                          onChange={option => setModalData({ ...modalData, is_first_visit: option.value })}
                           options={[
                             { value: true, label: t("Yes") },
                             { value: false, label: t("No") }
