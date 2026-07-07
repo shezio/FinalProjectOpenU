@@ -97,6 +97,21 @@ const Tasks = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
+  // Only-Tutor / Only-General-Volunteer users must not access the Tasks page.
+  // The nav entry is hidden in Sidebar, but login redirects to /tasks
+  // unconditionally (and the URL is reachable directly), so guard here too.
+  // Definition mirrors Sidebar's isOnlyTutorOrVolunteer.
+  useEffect(() => {
+    const origUsername = localStorage.getItem('origUsername') || '';
+    const staffList = JSON.parse(localStorage.getItem('staff') || '[]');
+    const roles = staffList.find((s) => s.username === origUsername)?.roles || [];
+    // "only tutor/volunteer" = has EXACTLY ONE role and it is Tutor or General Volunteer
+    const isOnlyTutorOrVolunteer = roles.length === 1 && (roles[0] === 'Tutor' || roles[0] === 'General Volunteer');
+    if (isOnlyTutorOrVolunteer) {
+      navigate('/feedbacks', { replace: true });
+    }
+  }, [navigate]);
+
   // Close menu when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
