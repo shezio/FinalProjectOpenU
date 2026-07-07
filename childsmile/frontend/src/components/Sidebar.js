@@ -95,17 +95,15 @@ const Sidebar = () => {
 
   const isGuest = isGuestUser();
   const isAdmin = roles.includes('System Administrator') || roles.includes('Viewer');
-  const isTutor = roles.includes('Tutor');
-  const isGeneralVolunteer = roles.includes('General Volunteer');
   const isReviewer = roles.includes('Reviewer');
   const isCoordinator = roles.some(r => typeof r === 'string' && r.includes('Coordinator'));
-  // "only tutor/volunteer" = has tutor or volunteer role but NO coordinator/admin/reviewer
-  const isOnlyTutorOrVolunteer = (isTutor || isGeneralVolunteer) && !isAdmin && !isCoordinator && !isReviewer;
+  // "only tutor/volunteer" = has EXACTLY ONE role and it is Tutor or General Volunteer
+  const isOnlyTutorOrVolunteer = roles.length === 1 && (roles[0] === 'Tutor' || roles[0] === 'General Volunteer');
   // "only reviewer" = has reviewer role but NO coordinator/admin
   const isOnlyReviewer = isReviewer && !isAdmin && !isCoordinator;
 
   // ── Permissions ───────────────────────────────────────────────
-  const hasPermissionToTasks           = !isOnlyReviewer && (isGuest || hasViewPermissionForTable('tasks'));
+  const hasPermissionToTasks           = !isOnlyReviewer && !isOnlyTutorOrVolunteer && (isGuest || hasViewPermissionForTable('tasks'));
   const hasPermissionToFamilies        = !isOnlyReviewer && !isOnlyTutorOrVolunteer && (isGuest || hasViewPermissionForTable('children'));
   const hasPermissionToTutorships      = !isOnlyReviewer && (isGuest || hasViewPermissionForTable('tutorships'));
   const hasPermissionToTutorVolunteerMgmt = !isOnlyReviewer && !isOnlyTutorOrVolunteer && (isGuest || hasViewPermissionForTable('tutors') || hasViewPermissionForTable('volunteers'));
