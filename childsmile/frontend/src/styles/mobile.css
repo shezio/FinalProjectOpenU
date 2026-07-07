@@ -68,6 +68,23 @@
     box-sizing: border-box !important;
   }
 
+  /* Phone row (.phone-container is display:flex). The generic
+     `.registration-form input/select { width:100% }` rule above collapses the
+     flex layout: the prefix <select> (desktop width:120px) takes an auto
+     flex-basis of 100% and eats the whole row, while the 7-digit <input>
+     (desktop flex:1 → flex-basis:0) shrinks to ~0 and becomes unusable.
+     Restore a usable split: fixed-width prefix + flex-grow suffix. */
+  .registration-form .phone-container select {
+    width: 90px !important;
+    flex: 0 0 90px !important;
+  }
+
+  .registration-form .phone-container input {
+    width: auto !important;
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+  }
+
   /* Dashboard – top wrapper is .page-container; the sized/scrolling element is
      .dashboard-container (desktop: margin-top:220px; margin-right:420px; zoom:.9;
      max-height:calc(100vh-20px)). Reset those so it fits the mobile viewport. */
