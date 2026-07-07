@@ -388,6 +388,15 @@ const Tasks = () => {
       return;
     }
 
+    // Prevent skipping a status (e.g. "לא הושלמה" straight to "הושלמה") - must pass through "בביצוע"
+    if (destColIdx - sourceColIdx > 1) {
+      setIsDragging(false); // <-- Ensure this runs before return
+      setTimeout(() => {
+        showWarningToast(t, 'Cannot skip a status', "");
+      }, 0);
+      return;
+    }
+
     if (
       source.droppableId === destination.droppableId &&
       source.index === destination.index

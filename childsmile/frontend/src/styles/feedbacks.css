@@ -1209,6 +1209,32 @@
     vertical-align: middle;
 }
 
+/* Search box + empty state inside the Additional Volunteers dropdown.
+   The extra .additional-volunteers-dropdown ancestor raises specificity above
+   the generic .feedbacks-form-row input rule so the styling isn't overridden. */
+.additional-volunteers-dropdown .additional-volunteers-search {
+    position: sticky;
+    top: 0;
+    width: 100%;
+    box-sizing: border-box;
+    padding: 8px 10px;
+    border: none;
+    border-bottom: 1px solid #ccc;
+    background: #fff;
+    font-size: 20px;
+    text-align: right;
+    outline: none;
+    z-index: 1;
+}
+
+.additional-volunteers-dropdown .additional-volunteers-no-results {
+    padding: 10px 8px;
+    color: #888;
+    font-size: 18px;
+    text-align: center;
+    cursor: default;
+}
+
 .feedbacks-form-grid-2col {
     display: grid;
     grid-template-columns: 400;
