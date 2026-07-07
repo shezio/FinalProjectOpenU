@@ -112,8 +112,9 @@ const TutorFeedbacks = () => {
       axios.get("/api/reports/tutor-feedback-report/"),
       axios.get("/api/get_tutorships/"),
       axios.get("/api/staff/"),
+      axios.get("/api/tutors/"),
     ])
-      .then(([feedbackRes, tutorshipsRes, staffRes]) => {
+      .then(([feedbackRes, tutorshipsRes, staffRes, tutorsRes]) => {
         const allFeedbacks = sortByTimestampDesc(feedbackRes.data.tutor_feedback || []);
         setFeedbacks(allFeedbacks);
         setFilteredFeedbacks(allFeedbacks);
@@ -154,17 +155,22 @@ const TutorFeedbacks = () => {
           }
         }
 
-        // Use tutorshipsRes.data.tutorships as the array
+        // Use tutorshipsRes.data.tutorships as the array (still the source for the tutee list)
         const tutorshipArray = tutorshipsRes.data.tutorships || [];
         const approvedTutorships = tutorshipArray.filter(
           t => t.tutorship_activation === 'active'
         );
 
-        // Build tutors and tutees arrays with full names
-        const allTutors = approvedTutorships.map(t => ({
+        // Build the tutor list from the Tutors table (same source as the
+        // Tutor/Volunteer Management page) so EVERY tutor is selectable here,
+        // including tutors with no active tutorship yet (e.g. status "ממתין לראיון").
+        // Previously this was built from active tutorships only, so such tutors
+        // were missing from the "שם החונך" dropdown even though they appear in
+        // Tutor/Volunteer Management.
+        const allTutors = (tutorsRes.data.tutors || []).map(t => ({
           id: t.id,
-          staff_id: t.tutor_staff_id,
-          name: `${t.tutor_firstname} ${t.tutor_lastname}`
+          staff_id: t.staff_id,
+          name: `${t.first_name} ${t.last_name}`
         }));
 
         const allTutees = approvedTutorships.map(t => ({

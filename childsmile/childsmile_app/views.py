@@ -256,6 +256,7 @@ def get_tutors(request):
     tutors_data = [
         {
             "id": t.id_id,  # ה-ID של המדריך בטבלת Tutors
+            "staff_id": t.staff.staff_id,  # Staff PK - needed to attribute tutor feedbacks to this tutor
             "first_name": t.staff.first_name,  # נתונים מטבלת Staff
             "last_name": t.staff.last_name,
             "birth_date": t.id.birth_date.strftime('%d/%m/%Y') if t.id and t.id.birth_date else None,  # Birth date from SignedUp
