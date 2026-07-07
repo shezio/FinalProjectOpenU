@@ -84,6 +84,7 @@ const VolunteerFeedbacks = () => {
   // Add at the top with other useState hooks
   const [infoModalData, setInfoModalData] = useState(null);
   const [showAdditionalVolunteersDropdown, setShowAdditionalVolunteersDropdown] = useState(false);
+  const [additionalVolunteersSearch, setAdditionalVolunteersSearch] = useState("");
   const [showChildDropdown, setShowChildDropdown] = useState(false);
 
   // data fetching
@@ -133,7 +134,8 @@ const VolunteerFeedbacks = () => {
         const additionalStaffInHospitalVisit = staffs.filter(s => {
           const hasRole = s.roles.some(role => role === "General Volunteer" || role === "Tutor");
           return hasRole;
-        }).map(s => `${s.first_name} ${s.last_name}`);
+        }).map(s => `${s.first_name} ${s.last_name}`)
+          .sort((a, b) => a.localeCompare(b, "he"));
 
         setAdditionalVolunteers(additionalStaffInHospitalVisit);
 
@@ -283,6 +285,8 @@ const VolunteerFeedbacks = () => {
     setShowModal(false);
     setModalData({});
     setModalErrors({});
+    setShowAdditionalVolunteersDropdown(false);
+    setAdditionalVolunteersSearch("");
   };
 
   const validateModal = () => {
@@ -1010,7 +1014,10 @@ const VolunteerFeedbacks = () => {
                       <button
                         type="button"
                         className={`additional-volunteers-dropdown-button`}
-                        onClick={() => setShowAdditionalVolunteersDropdown(prev => !prev)}
+                        onClick={() => {
+                          setShowAdditionalVolunteersDropdown(prev => !prev);
+                          setAdditionalVolunteersSearch("");
+                        }}
                       >
                         {modalData.additional_volunteers && modalData.additional_volunteers.length > 0
                           ? modalData.additional_volunteers.join(', ')
@@ -1018,22 +1025,35 @@ const VolunteerFeedbacks = () => {
                       </button>
                       {showAdditionalVolunteersDropdown && (
                         <div className="additional-volunteers-dropdown feedbacks-dropdown-open-up">
-                          {additionalVolunteers.map((vol, idx) => (
-                            <div key={idx} className="additional-volunteers-dropdown-item">
-                              <input
-                                type="checkbox"
-                                id={`vol-${idx}`}
-                                checked={modalData.additional_volunteers.includes(vol)}
-                                onChange={e => {
-                                  const updated = e.target.checked
-                                    ? [...modalData.additional_volunteers, vol]
-                                    : modalData.additional_volunteers.filter(v => v !== vol);
-                                  setModalData({ ...modalData, additional_volunteers: updated });
-                                }}
-                              />
-                              <label htmlFor={`vol-${idx}`}>{vol}</label>
-                            </div>
-                          ))}
+                          <input
+                            type="text"
+                            className="additional-volunteers-search"
+                            placeholder={t('Search Volunteer')}
+                            value={additionalVolunteersSearch}
+                            onChange={e => setAdditionalVolunteersSearch(e.target.value)}
+                            autoFocus
+                          />
+                          {additionalVolunteers
+                            .filter(vol => vol.toLowerCase().includes(additionalVolunteersSearch.trim().toLowerCase()))
+                            .map((vol, idx) => (
+                              <div key={idx} className="additional-volunteers-dropdown-item">
+                                <input
+                                  type="checkbox"
+                                  id={`vol-${idx}`}
+                                  checked={modalData.additional_volunteers.includes(vol)}
+                                  onChange={e => {
+                                    const updated = e.target.checked
+                                      ? [...modalData.additional_volunteers, vol]
+                                      : modalData.additional_volunteers.filter(v => v !== vol);
+                                    setModalData({ ...modalData, additional_volunteers: updated });
+                                  }}
+                                />
+                                <label htmlFor={`vol-${idx}`}>{vol}</label>
+                              </div>
+                            ))}
+                          {additionalVolunteers.filter(vol => vol.toLowerCase().includes(additionalVolunteersSearch.trim().toLowerCase())).length === 0 && (
+                            <div className="additional-volunteers-no-results">{t('No data to display')}</div>
+                          )}
                         </div>
                       )}
                     </div>
