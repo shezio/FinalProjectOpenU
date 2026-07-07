@@ -745,7 +745,7 @@ const resources = {
       'Pending approval of': "ממתין לאישור",
       "Active": "פעיל",
       "Pending Approval": "ממתין לאישור",
-      "Amit's Smile": "החיוך של עמית",
+      "Amit's Smile": "חיוך של ילד",
       'Press to see full info': 'לחץ כדי לראות פרטים נוספים',
       'Disable Magnify': 'השבת הגדלה',
       'Enable Magnify': 'הפעל הגדלה',
