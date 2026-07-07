@@ -67,8 +67,12 @@ const TutorVolunteerMgmt = () => {
   };
 
   const validatePhone = (phone) => {
-    // Remove dashes and spaces from phone number before validation
-    const phoneStr = String(phone).trim().replace(/[-\s]/g, '');
+    // Strip everything that is not a digit before validating. Besides dashes and
+    // spaces this also removes invisible characters that get pasted from WhatsApp
+    // and other apps (LTR/RTL marks U+200E/U+200F, directional isolates
+    // U+2066-U+2069, zero-width spaces, non-breaking spaces, etc.) which would
+    // otherwise make a perfectly valid number fail the 0XXXXXXXXX check.
+    const phoneStr = String(phone).replace(/\D/g, '');
     if (!/^0\d{9}$/.test(phoneStr)) {
       return false;
     }
@@ -129,16 +133,19 @@ const TutorVolunteerMgmt = () => {
     return { valid: true, date: formattedDate };
   };
 
-  // Normalize phone number - remove dashes and spaces
+  // Normalize phone number - keep digits only. This strips dashes and spaces as
+  // well as any invisible characters pasted from WhatsApp/other apps (LTR/RTL
+  // marks, directional isolates, zero-width/non-breaking spaces, etc.) so we
+  // always save a clean 10-digit number.
   const normalizePhone = (phone) => {
     if (!phone) return '';
-    return String(phone).replace(/[-\s]/g, '');
+    return String(phone).replace(/\D/g, '');
   };
 
   // Format phone for display: XXX-XXXXXXX
   const formatPhoneDisplay = (phone) => {
     if (!phone) return null;
-    const normalized = String(phone).replace(/[-\s]/g, '');
+    const normalized = String(phone).replace(/\D/g, '');
     if (normalized.length === 10) {
       return `${normalized.slice(0, 3)}-${normalized.slice(3)}`;
     }
