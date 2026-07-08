@@ -58,8 +58,7 @@ from .report_views import (
     families_waiting_for_tutorship_report,
     active_tutors_report,
     possible_tutorship_matches_report,
-    volunteer_feedback_report,
-    tutor_feedback_report,
+    feedback_report,
     families_tutorships_stats,
     roles_spread_stats,
     get_all_volunteers_irs_report,
@@ -79,12 +78,9 @@ from .family_views import (
     get_settlements_data,
 )
 from .feedback_views import (
-    create_tutor_feedback,
-    update_tutor_feedback,
-    delete_tutor_feedback,
-    create_volunteer_feedback,
-    update_volunteer_feedback,
-    delete_volunteer_feedback,
+    create_feedback,
+    update_feedback,
+    delete_feedback,
 )
 from .tutorship_views import (
     calculate_possible_matches,
@@ -195,14 +191,9 @@ urlpatterns = [
         name="possible_tutorship_matches_report",
     ),
     path(
-        "api/reports/volunteer-feedback-report/",
-        volunteer_feedback_report,
-        name="volunteer_feedback_report",
-    ),
-    path(
-        "api/reports/tutor-feedback-report/",
-        tutor_feedback_report,
-        name="tutor_feedback_report",
+        "api/reports/feedback-report/",
+        feedback_report,
+        name="feedback_report",
     ),
     path(
         "api/create_volunteer_or_tutor/",
@@ -345,34 +336,19 @@ urlpatterns = [
         name="all_volunteers_irs_report",
     ),
     path(
-        "api/create_tutor_feedback/",
-        create_tutor_feedback,
-        name="create_tutor_feedback",
+        "api/create_feedback/",
+        create_feedback,
+        name="create_feedback",
     ),
     path(
-        "api/update_tutor_feedback/<int:feedback_id>/",
-        update_tutor_feedback,
-        name="update_tutor_feedback",
+        "api/update_feedback/<int:feedback_id>/",
+        update_feedback,
+        name="update_feedback",
     ),
     path(
-        "api/delete_tutor_feedback/<int:feedback_id>/",
-        delete_tutor_feedback,
-        name="delete_tutor_feedback",
-    ),
-    path(
-        "api/create_volunteer_feedback/",
-        create_volunteer_feedback,
-        name="create_volunteer_feedback",
-    ),
-    path(
-        "api/update_volunteer_feedback/<int:feedback_id>/",
-        update_volunteer_feedback,
-        name="update_volunteer_feedback",
-    ),
-    path(
-        "api/delete_volunteer_feedback/<int:feedback_id>/",
-        delete_volunteer_feedback,
-        name="delete_volunteer_feedback",
+        "api/delete_feedback/<int:feedback_id>/",
+        delete_feedback,
+        name="delete_feedback",
     ),
     path(
         "api/get_initial_family_data/",

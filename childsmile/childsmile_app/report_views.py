@@ -12,6 +12,7 @@ from .models import (
     Feedback,
     Tutor_Feedback,
     General_V_Feedback,
+    Feedbacks,
     Tasks,
     Task_Types,
     PossibleMatches,  # Add this line
@@ -456,86 +457,13 @@ def possible_tutorship_matches_report(request):
         return JsonResponse({"error": str(e)}, status=500)
 
 
-# next report is volunteer feedback report@conditional_csrf
-@api_view(["GET"])
-def volunteer_feedback_report(request):
-    api_logger.info("volunteer_feedback_report called")
-    """
-    Retrieve a report of all volunteer feedback and all the corresponding feedbacks from the feedback table.
-    """
-    user_id = request.session.get("user_id")
-    if not user_id:
-        return JsonResponse(
-            {"detail": "Authentication credentials were not provided."}, status=403
-        )
-
-    # Check if the user has VIEW permission on the "general_v_feedback" resource
-    if not has_permission(request, "general_v_feedback", "VIEW"):
-        return JsonResponse(
-            {"error": "You do not have permission to view this report."}, status=401
-        )
-
-    try:
-        from_date = request.GET.get("from_date")
-        to_date = request.GET.get("to_date")
-
-        if from_date:
-            from_date = make_aware(datetime.strptime(from_date, "%Y-%m-%d"))
-        if to_date:
-            to_date = make_aware(datetime.strptime(to_date, "%Y-%m-%d"))
-
-        # Fetch all feedbacks with related feedback data
-        feedbacks = General_V_Feedback.objects.select_related("feedback").all()
-
-        # Apply date filters if provided
-        if from_date:
-            feedbacks = feedbacks.filter(feedback__timestamp__gte=from_date)
-        if to_date:
-            feedbacks = feedbacks.filter(feedback__timestamp__lte=to_date)
-
-        # Convert the data to a list of dictionaries
-        feedbacks_data = []
-        for feedback in feedbacks:
-            try:
-                feedbacks_data.append(
-                    {
-                        "volunteer_name": feedback.volunteer_name,
-                        "volunteer_id": feedback.volunteer_id,
-                        "child_name": feedback.child_name,
-                        "feedback_id": feedback.feedback.feedback_id,  # Access the related Feedback table
-                        "event_date": feedback.feedback.event_date.strftime("%d/%m/%Y"),
-                        "feedback_filled_at": feedback.feedback.timestamp.strftime(
-                            "%d/%m/%Y"
-                        ),
-                        "description": feedback.feedback.description,
-                        "exceptional_events": feedback.feedback.exceptional_events,
-                        "anything_else": feedback.feedback.anything_else,
-                        "comments": feedback.feedback.comments,
-                        "feedback_type": feedback.feedback.feedback_type,
-                        "hospital_name": feedback.feedback.hospital_name,
-                        "additional_volunteers": feedback.feedback.additional_volunteers,
-                        "names": feedback.feedback.names,
-                        "phones": feedback.feedback.phones,
-                        "other_information": feedback.feedback.other_information,
-                    }
-                )
-            except Exception as e:
-                api_logger.error(f"Error processing feedback: {feedback}, Error: {str(e)}")
-
-        # Return the data as JSON
-        return JsonResponse({"volunteer_feedback": feedbacks_data}, status=200)
-    except Exception as e:
-        api_logger.error(f"An error occurred: {str(e)}")
-        return JsonResponse({"error": str(e)}, status=500)
-
-
-# next report is tutor feedback report
+# unified feedback report (tutor + volunteer feedback merged into childsmile_app_feedbacks)
 @conditional_csrf
 @api_view(["GET"])
-def tutor_feedback_report(request):
-    api_logger.info("tutor_feedback_report called")
+def feedback_report(request):
+    api_logger.info("feedback_report called")
     """
-    Retrieve a report of all tutor feedback.
+    Retrieve a report of all feedback from the unified feedbacks table.
     """
     user_id = request.session.get("user_id")
     if not user_id:
@@ -543,8 +471,12 @@ def tutor_feedback_report(request):
             {"detail": "Authentication credentials were not provided."}, status=403
         )
 
-    # Check if the user has VIEW permission on the "tutor_feedback" resource
-    if not has_permission(request, "tutor_feedback", "VIEW"):
+    # A user may view feedback with VIEW permission on EITHER legacy resource
+    # (tutor_feedback OR general_v_feedback) – both were granted to the same roles.
+    if not (
+        has_permission(request, "tutor_feedback", "VIEW")
+        or has_permission(request, "general_v_feedback", "VIEW")
+    ):
         return JsonResponse(
             {"error": "You do not have permission to view this report."}, status=401
         )
@@ -558,14 +490,14 @@ def tutor_feedback_report(request):
         if to_date:
             to_date = make_aware(datetime.strptime(to_date, "%Y-%m-%d"))
 
-        # Fetch all feedbacks with related feedback data
-        feedbacks = Tutor_Feedback.objects.select_related("feedback").all()
+        # Fetch all feedbacks from the unified table
+        feedbacks = Feedbacks.objects.all()
 
         # Apply date filters if provided
         if from_date:
-            feedbacks = feedbacks.filter(feedback__timestamp__gte=from_date)
+            feedbacks = feedbacks.filter(timestamp__gte=from_date)
         if to_date:
-            feedbacks = feedbacks.filter(feedback__timestamp__lte=to_date)
+            feedbacks = feedbacks.filter(timestamp__lte=to_date)
 
         # Convert the data to a list of dictionaries
         feedbacks_data = []
@@ -573,31 +505,30 @@ def tutor_feedback_report(request):
             try:
                 feedbacks_data.append(
                     {
-                        "tutor_name": feedback.tutor_name,
-                        "tutee_name": feedback.tutee_name,
+                        "feedback_id": feedback.feedback_id,
+                        "filler_name": feedback.filler_name,
+                        "filler_staff_id": feedback.filler_id,
+                        "subject_name": feedback.subject_name,
                         "is_it_your_tutee": feedback.is_it_your_tutee,
-                        "feedback_id": feedback.feedback.feedback_id,
-                        "event_date": feedback.feedback.event_date.strftime("%d/%m/%Y"),
-                        "feedback_filled_at": feedback.feedback.timestamp.strftime(
-                            "%d/%m/%Y"
-                        ),
-                        "description": feedback.feedback.description,
-                        "exceptional_events": feedback.feedback.exceptional_events,
-                        "anything_else": feedback.feedback.anything_else,
-                        "comments": feedback.feedback.comments,
-                        "feedback_type": feedback.feedback.feedback_type,
-                        "hospital_name": feedback.feedback.hospital_name,
-                        "additional_volunteers": feedback.feedback.additional_volunteers,
-                        "names": feedback.feedback.names,
-                        "phones": feedback.feedback.phones,
-                        "other_information": feedback.feedback.other_information,
+                        "event_date": feedback.event_date.strftime("%d/%m/%Y"),
+                        "feedback_filled_at": feedback.timestamp.strftime("%d/%m/%Y"),
+                        "description": feedback.description,
+                        "exceptional_events": feedback.exceptional_events,
+                        "anything_else": feedback.anything_else,
+                        "comments": feedback.comments,
+                        "feedback_type": feedback.feedback_type,
+                        "hospital_name": feedback.hospital_name,
+                        "additional_volunteers": feedback.additional_volunteers,
+                        "names": feedback.names,
+                        "phones": feedback.phones,
+                        "other_information": feedback.other_information,
                     }
                 )
             except Exception as e:
                 api_logger.error(f"Error processing feedback: {feedback}, Error: {str(e)}")
 
         # Return the data as JSON
-        return JsonResponse({"tutor_feedback": feedbacks_data}, status=200)
+        return JsonResponse({"feedback": feedbacks_data}, status=200)
     except Exception as e:
         api_logger.error(f"An error occurred: {str(e)}")
         return JsonResponse({"error": str(e)}, status=500)

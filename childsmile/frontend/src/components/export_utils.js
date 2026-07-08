@@ -1099,8 +1099,8 @@ export const exportPossibleMatchesToPDF = async (matches, t) => {
   }
 };
 
-export const exportVolunteerFeedbackToExcel = async (feedbacks, t) => {
-  const reportName = 'volunteer_feedback_report';
+export const exportFeedbackToExcel = async (feedbacks, t) => {
+  const reportName = 'feedback_report';
   const format = 'EXCEL';
   
   try {
@@ -1113,179 +1113,8 @@ export const exportVolunteerFeedbackToExcel = async (feedbacks, t) => {
     }
 
     const headers = [
-      t("Volunteer Name"),
-      t("Child Name"),
-      t("Event Date"),
-      t("Feedback Filled At"),
-      t("Description"),
-      t("Feedback Type"),
-      t("Exceptional Events"),
-      t("Anything Else"),
-      t("Comments"),
-      t("Initial Family Data"),
-    ];
-    const rows = selectedFeedbacks.map(feedback => [
-      feedback.volunteer_name,
-      feedback.child_name,
-      feedback.event_date,
-      feedback.feedback_filled_at,
-      feedback.description,
-      t(feedback.feedback_type),
-      feedback.exceptional_events,
-      feedback.anything_else,
-      feedback.comments,
-      [
-        (feedback.names ? t("Names") + ": " + feedback.names + "\n" : "") +
-        (feedback.phones ? t("Phones") + ": " + feedback.phones + "\n" : "") +
-        (feedback.other_information ? t("Other Information") + ": " + feedback.other_information : "")
-      ].join("")
-    ]);
-
-    const worksheetData = [headers, ...rows];
-    const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
-
-    const columnWidths = worksheetData[0].map((_, colIndex) => ({
-      wch: Math.max(
-        ...worksheetData.map(row => (row[colIndex] ? row[colIndex].toString().length : 0))
-      ),
-    }));
-    worksheet["!cols"] = columnWidths;
-
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, t("Volunteer Feedback Report"));
-    XLSX.writeFile(workbook, `${t("volunteer_feedback_report")}.xlsx`);
-    toast.success(t("Report generated successfully"));
-
-    // **ADD AUDIT SUCCESS**
-    await auditExportSuccess(format, selectedFeedbacks.length, reportName, ['volunteer_names', 'child_names', 'medical_events', 'personal_feedback', 'family_circumstances', 'health_information']);
-    
-  } catch (error) {
-    console.error('Export failed:', error);
-    await auditExportFailure(format, reportName, error.message, 'TECHNICAL');
-    showErrorToast(t, '', { message: 'Export failed' });
-  }
-};
-
-export const exportVolunteerFeedbackToPDF = async (feedbacks, t) => {
-  const reportName = 'volunteer_feedback_report';
-  const format = 'PDF';
-  
-  try {
-    const selectedFeedbacks = feedbacks.filter(feedback => feedback.selected);
-    if (selectedFeedbacks.length === 0) {
-      const errorMsg = 'אנא בחר לפחות רשומה אחת ליצירת דוח';
-      await auditExportFailure(format, reportName, errorMsg, 'VALIDATION');
-      showErrorToast(t, '', { message: errorMsg });
-      return;
-    }
-
-    const doc = new jsPDF("landscape", "mm", "a3");
-
-    doc.addFileToVFS("Alef-Bold.ttf", AlefBold);
-    doc.addFont("Alef-Bold.ttf", "Alef", "bold");
-    doc.setFont("Alef", "bold");
-
-    doc.addImage(logo, "PNG", 10, 10, 30, 30);
-
-    doc.setFontSize(18);
-    doc.text(reverseText(t("Volunteer Feedback Report")), doc.internal.pageSize.getWidth() / 2, 20, { align: "center" });
-
-    const headers = [
-      reverseText(t("Volunteer Name")),
-      reverseText(t("Child Name")),
-      reverseText(t("Event Date")),
-      reverseText(t("Feedback Filled At")),
-      reverseText(t("Description")),
-      reverseText(t("Feedback Type")),
-      reverseText(t("Exceptional Events")),
-      reverseText(t("Anything Else")),
-      reverseText(t("Comments")),
-      reverseText(t("Initial Family Data")),
-    ].reverse(); // <-- הנה השימוש ב-reverse
-
-
-    // Prepare table rows
-    const rows = selectedFeedbacks.map(feedback => [
-      feedback.volunteer_name,
-      feedback.child_name,
-      feedback.event_date,
-      feedback.feedback_filled_at,
-      feedback.description || "", // Handle null or undefined values
-      t(feedback.feedback_type) || "", // Handle null or undefined values
-      feedback.exceptional_events || "",
-      feedback.anything_else || "",
-      feedback.comments || "",
-      [
-        (feedback.names ? t("Names") + ": " + feedback.names + "\n" : "") +
-        (feedback.phones ? t("Phones") + ": " + feedback.phones + "\n" : "") +
-        (feedback.other_information ? t("Other Information") + ": " + feedback.other_information : "")
-      ].join("")
-    ]).map(row => row.reverse()); // <-- הפיכת כל שורה
-
-    doc.autoTable({
-      head: [headers],
-      body: rows.map(row => row.map((cell, colIndex) => {
-        const header = headers[colIndex]; // נשתמש בזה כדי לדעת מה השדה
-
-        // שמות השדות ש*לא* נעבד (כלומר, נשאיר רגיל)
-        const nonHebrewFields = [
-          reverseText(t("Event Date")),
-          reverseText(t("Feedback Filled At"))
-        ];
-
-        if (typeof cell === 'string' && !nonHebrewFields.includes(header)) {
-          return formatHebrewTextForPDF(cell, 5);
-        }
-
-        return cell;
-      })),
-
-      startY: 50,
-      styles: { font: "Alef", fontSize: 10, cellPadding: 3, halign: "right" },
-      headStyles: { fillColor: [76, 175, 80], textColor: 255, halign: "right" },
-      columnStyles: {
-        0: { halign: 'right', cellwidth: 40 }, // volunteer name
-        1: { halign: 'right', cellwidth: 40 }, // child name
-        2: { halign: 'right', cellwidth: 30 }, // event date
-        3: { halign: 'right', cellwidth: 30 }, // feedback filled at
-        4: { halign: 'right', cellwidth: 50 }, // description
-        5: { halign: 'right', cellwidth: 30 }, // feedback type
-        6: { halign: 'right', cellwidth: 30 }, // exceptional events
-        7: { halign: 'right', cellwidth: 30 }, // anything else
-        8: { halign: 'right', cellwidth: 30 }, // comments
-        9: { halign: 'right', cellwidth: 50 }, // initial family data
-      },
-    });
-
-    doc.save(`${t("volunteer_feedback_report")}.pdf`);
-    toast.success(t("Report generated successfully"));
-
-    // **ADD AUDIT SUCCESS**
-    await auditExportSuccess(format, selectedFeedbacks.length, reportName, ['volunteer_names', 'child_names', 'medical_events', 'personal_feedback', 'family_circumstances', 'health_information']);
-    
-  } catch (error) {
-    console.error('Export failed:', error);
-    await auditExportFailure(format, reportName, error.message, 'TECHNICAL');
-    showErrorToast(t, '', { message: 'Export failed' });
-  }
-};
-
-export const exportTutorFeedbackToExcel = async (feedbacks, t) => {
-  const reportName = 'tutor_feedback_report';
-  const format = 'EXCEL';
-  
-  try {
-    const selectedFeedbacks = feedbacks.filter(feedback => feedback.selected);
-    if (selectedFeedbacks.length === 0) {
-      const errorMsg = 'אנא בחר לפחות רשומה אחת ליצירת דוח';
-      await auditExportFailure(format, reportName, errorMsg, 'VALIDATION');
-      showErrorToast(t, '', { message: errorMsg });
-      return;
-    }
-
-    const headers = [
-      t("Tutor Name"),
-      t("Tutee Name"),
+      t("Volunteer/Tutor Name"),
+      t("Tutee Name / Hospital Name"),
       t("Is It Your Tutee?"),
       t("Event Date"),
       t("Feedback Filled At"),
@@ -1297,8 +1126,8 @@ export const exportTutorFeedbackToExcel = async (feedbacks, t) => {
       t("Initial Family Data"),
     ];
     const rows = selectedFeedbacks.map(feedback => [
-      feedback.tutor_name,
-      feedback.tutee_name,
+      feedback.filler_name,
+      feedback.subject_name || feedback.hospital_name,
       feedback.is_it_your_tutee ? t("Yes") : t("No"),
       feedback.event_date,
       feedback.feedback_filled_at,
@@ -1325,8 +1154,8 @@ export const exportTutorFeedbackToExcel = async (feedbacks, t) => {
     worksheet["!cols"] = columnWidths;
 
     const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, t("Tutor Feedback Report"));
-    XLSX.writeFile(workbook, `${t("tutor_feedback_report")}.xlsx`);
+    XLSX.utils.book_append_sheet(workbook, worksheet, t("Feedback Report"));
+    XLSX.writeFile(workbook, `${t("feedback_report")}.xlsx`);
     toast.success(t("Report generated successfully"));
 
     // **ADD AUDIT SUCCESS**
@@ -1340,8 +1169,8 @@ export const exportTutorFeedbackToExcel = async (feedbacks, t) => {
 };
 
 
-export const exportTutorFeedbackToPDF = async (feedbacks, t) => {
-  const reportName = 'tutor_feedback_report';
+export const exportFeedbackToPDF = async (feedbacks, t) => {
+  const reportName = 'feedback_report';
   const format = 'PDF';
   
   try {
@@ -1365,7 +1194,7 @@ export const exportTutorFeedbackToPDF = async (feedbacks, t) => {
     doc.addImage(logo, "PNG", 10, 10, 30, 30);
 
     doc.setFontSize(22);
-    doc.text(t("Tutor Feedback Report"), doc.internal.pageSize.getWidth() / 2, 20, { align: "center" });
+    doc.text(t("Feedback Report"), doc.internal.pageSize.getWidth() / 2, 20, { align: "center" });
 
     const headers = [
       t("Initial Family Data"),
@@ -1377,8 +1206,8 @@ export const exportTutorFeedbackToPDF = async (feedbacks, t) => {
       t("Feedback Filled At"),
       t("Event Date"),
       t("Is It Your Tutee?"),
-      t("Tutee Name"),
-      t("Tutor Name"),
+      t("Tutee Name / Hospital Name"),
+      t("Volunteer/Tutor Name"),
     ];
 
     const rows = selectedFeedbacks.map(feedback => [
@@ -1395,8 +1224,8 @@ export const exportTutorFeedbackToPDF = async (feedbacks, t) => {
       reverseText(feedback.feedback_filled_at),
       reverseText(feedback.event_date),
       feedback.is_it_your_tutee ? t("Yes") : t("No"),
-      feedback.tutee_name,
-      feedback.tutor_name,
+      feedback.subject_name || feedback.hospital_name,
+      feedback.filler_name,
     ]);
 
     doc.autoTable({
@@ -1432,7 +1261,7 @@ export const exportTutorFeedbackToPDF = async (feedbacks, t) => {
       },
     });
 
-    doc.save(`${t("tutor_feedback_report")}.pdf`);
+    doc.save(`${t("feedback_report")}.pdf`);
     toast.success(t("Report generated successfully"));
 
     // **ADD AUDIT SUCCESS**

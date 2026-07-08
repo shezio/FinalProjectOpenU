@@ -14,8 +14,7 @@ import FamiliesPerLocationReport from './pages/report_pages/families_per_locatio
 import NewFamiliesReport from './pages/report_pages/new_families_report'; // Import the New Families Report component
 import FamiliesWaitingForTutorshipReport from './pages/report_pages/families_waiting_for_tutorship_report'; // Import the Families Waiting For Tutorship Report component
 import PossibleTutorshipMatchesReport from './pages/report_pages/possible_tutorship_matches_report'; // Import the Possible Tutorship Matches Report component
-import VolunteerFeedbackReport from './pages/report_pages/volunteer_feedback_report'; // Import the Volunteer Feedback Report component
-import TutorFeedbackReport from './pages/report_pages/tutor_feedback_report'; // Import the Tutor Feedback Report component
+import FeedbackReport from './pages/report_pages/feedback_report'; // Import the unified Feedback Report component
 import FamiliesTutorshipStatsReport from './pages/report_pages/families_tutorship_stats_report'; // Import the Families Tutorship Stats Report component
 import RolesSpreadStatsReport from './pages/report_pages/roles_spread_stats_report'; // Import the Roles Spread Stats Report component
 import AllVolunteersIRSReport from './pages/report_pages/all_volunteers_irs_report'; // Import the IRS Volunteers Report component
@@ -23,8 +22,6 @@ import AllFamiliesExportReport from './pages/report_pages/all_families_export_re
 import FamiliesMissingDataReport from './pages/report_pages/families_missing_data_report'; // Import the Families Missing Data Report component
 import FamiliesDuplicateReport from './pages/report_pages/families_duplicate_report'; // Import the Families Duplicate Report component
 import Registration from './pages/Registration'; // Import the Registration component
-import VolunteerFeedbacks from './pages/VolunteerFeedbacks'; // Import the Volunteer Feedbacks component
-import TutorFeedbacks from './pages/TutorFeedbacks'; // Import the Tutor Feedbacks component
 import InitialFamilyData from './pages/InitialFamilyData'; // Import the Initial Family Data component
 import TutorVolunteerMgmt from './pages/TutorVolunteerMgmt'; // Import the Tutor and Volunteer Management component
 import GoogleSuccess from './pages/GoogleSuccess';
@@ -45,8 +42,7 @@ import NotificationMessages from './pages/NotificationMessages'; // Import the N
     families_waiting_for_tutorship_report: { name: 'דוח משפחות הממתינות לחונכות', path: '/reports/families_waiting_for_tutorship_report' },
     active_tutors_report: { name: 'דוח חונכים פעילים', path: '/reports/active_tutors_report' },
     possible_tutorship_matches_report: { name: 'דוח התאמות חניך חונך אפשריות', path: '/reports/possible_tutorship_matches_report' },
-    volunteer_feedback_report: { name: 'דוח משוב מתנדבים', path: '/reports/volunteer-feedback' },
-    tutor_feedback_report: { name: 'דוח משוב חונכים', path: '/reports/tutor-feedback' },
+    volunteer_feedback_report: { name: 'דוח משובים', path: '/reports/feedback' },
 */
 
 /*
@@ -76,16 +72,13 @@ const App = () => {
       <Route path="/reports/families_waiting_for_tutorship_report" element={<FamiliesWaitingForTutorshipReport />} /> {/* Add Families Waiting For Tutorship Report route */}
       <Route path="/reports/active_tutors_report" element={<ActiveTutorsReport />} /> {/* Add Active Tutors Report route */}
       <Route path="/reports/possible_tutorship_matches_report" element={<PossibleTutorshipMatchesReport />} /> {/* Add Possible Tutorship Matches Report route */}
-      <Route path="/reports/volunteer-feedback" element={<VolunteerFeedbackReport />} /> {/* Add Volunteer Feedback Report route */}
-      <Route path="/reports/tutor-feedback" element={<TutorFeedbackReport />} /> {/* Add Tutor Feedback Report route */}
+      <Route path="/reports/feedback" element={<FeedbackReport />} /> {/* Add unified Feedback Report route */}
       <Route path="/reports/families_tutorship_stats_report" element={<FamiliesTutorshipStatsReport />} /> {/* Add Families Tutorship Stats Report route */}
       <Route path="/reports/roles_spread_stats_report" element={<RolesSpreadStatsReport />} /> {/* Add Roles Spread Stats Report route */}
       <Route path="/reports/all_volunteers_irs_report" element={<AllVolunteersIRSReport />} /> {/* Add IRS Volunteers Report route */}
       <Route path="/reports/all_families_export_report" element={<AllFamiliesExportReport />} /> {/* Add All Families Export Report route */}
       <Route path="/reports/families_missing_data_report" element={<FamiliesMissingDataReport />} /> {/* Add Families Missing Data Report route */}
       <Route path="/reports/families_duplicate_report" element={<FamiliesDuplicateReport />} /> {/* Add Families Duplicate Report route */}
-      <Route path="/feedbacks/VolunteerFeedbacks" element={<VolunteerFeedbacks />} /> {/* Add Volunteer Feedbacks route */}
-      <Route path="/feedbacks/TutorFeedbacks" element={<TutorFeedbacks />} /> {/* Add Tutor Feedbacks route */}
       <Route path="/initial-family-data" element={<InitialFamilyData />} /> {/* Add Initial Family Data route */}
       <Route path="/tutor-volunteer-mgmt" element={<TutorVolunteerMgmt />} /> {/* Add Tutor and Volunteer Management route */}
       <Route path="/register" element={<Registration />} />
