@@ -4,26 +4,23 @@ import InnerPageHeader from "../../components/InnerPageHeader";
 import "../../styles/common.css";
 import "../../styles/feedbacks.css";
 import "../../styles/reports.css";
-import { exportVolunteerFeedbackToExcel, exportVolunteerFeedbackToPDF } from "../../components/export_utils";
+import { exportFeedbackToExcel, exportFeedbackToPDF } from "../../components/export_utils";
 import { toast } from "react-toastify";
 import { useTranslation } from "react-i18next";
 import axios from "../../axiosConfig";
 import { navigateTo } from "../../components/utils";
-import { showErrorToast } from "../../components/toastUtils";
-import useAutoPageSize from "../../components/useAutoPageSize";
 
-const VolunteerFeedbackReport = () => {
+const FeedbackReport = () => {
   const [loading, setLoading] = useState(true);
   const [feedbacks, setFeedbacks] = useState([]);
   const [filteredFeedbacks, setFilteredFeedbacks] = useState([]);
-  const [sortOrderEventDate, setSortOrderEventDate] = useState('desc');
-  const [sortOrderFeedbackDate, setSortOrderFeedbackDate] = useState('desc');
+  const [sortOrderEventDate, setSortOrderEventDate] = useState('asc');
+  const [sortOrderFeedbackDate, setSortOrderFeedbackDate] = useState('asc');
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const { t } = useTranslation();
   const tbodyRef = useRef(null);
-  // Adaptive rows-per-page so the report table fits the viewport (no vertical scroll).
   const PAGE_SIZE = 5;
   useEffect(() => {
     const tp = Math.max(1, Math.ceil(filteredFeedbacks.length / PAGE_SIZE));
@@ -31,18 +28,17 @@ const VolunteerFeedbackReport = () => {
   }, [PAGE_SIZE, filteredFeedbacks.length, currentPage]);
 
   const parseDate = (dateString) => {
-    if (!dateString) return new Date(0); // Handle missing dates
+    if (!dateString) return new Date(0);
     const [day, month, year] = dateString.split('/');
     return new Date(`${year}-${month}-${day}`);
   };
 
-  // Add toggle functions
   const toggleSortOrderEventDate = () => {
     setSortOrderEventDate((prevOrder) => (prevOrder === 'asc' ? 'desc' : 'asc'));
     const sorted = [...filteredFeedbacks].sort((a, b) => {
       const dateA = parseDate(a.event_date);
       const dateB = parseDate(b.event_date);
-      return sortOrderEventDate === 'asc' ? dateB - dateA : dateA - dateB; // Reverse the logic
+      return sortOrderEventDate === 'asc' ? dateB - dateA : dateA - dateB;
     });
     setFilteredFeedbacks(sorted);
   };
@@ -52,11 +48,12 @@ const VolunteerFeedbackReport = () => {
     const sorted = [...filteredFeedbacks].sort((a, b) => {
       const dateA = parseDate(a.feedback_filled_at);
       const dateB = parseDate(b.feedback_filled_at);
-      return sortOrderFeedbackDate === 'asc' ? dateB - dateA : dateA - dateB; // Reverse the logic
+      return sortOrderFeedbackDate === 'asc' ? dateB - dateA : dateA - dateB;
     });
     setFilteredFeedbacks(sorted);
   };
 
+  // Checkbox logic
   const handleCheckboxChange = (index) => {
     const actualIndex = (currentPage - 1) * PAGE_SIZE + index;
     const updatedFeedbacks = filteredFeedbacks.map((feedback, i) => {
@@ -77,19 +74,19 @@ const VolunteerFeedbackReport = () => {
   };
 
   const fetchData = () => {
+    setSortOrderFeedbackDate('desc')
+    setSortOrderEventDate('desc')
     setLoading(true);
-    setSortOrderFeedbackDate('desc');
-    setSortOrderEventDate('desc');
     axios
-      .get("/api/reports/volunteer-feedback-report/")
+      .get("/api/reports/feedback-report/")
       .then((response) => {
-        const allFeedbacks = response.data.volunteer_feedback || [];
+        const allFeedbacks = response.data.feedback || [];
         setFeedbacks(allFeedbacks);
-        setFilteredFeedbacks(allFeedbacks); // Initially show all data
+        setFilteredFeedbacks(allFeedbacks);
       })
       .catch((error) => {
-        console.error("Error fetching volunteer feedback report:", error);
-        showErrorToast(t("Error fetching data"));
+        console.error("Error fetching feedback report:", error);
+        toast.error(t("Error fetching data"));
       })
       .finally(() => {
         setLoading(false);
@@ -103,7 +100,7 @@ const VolunteerFeedbackReport = () => {
     }
 
     const filtered = feedbacks.filter((feedback) => {
-      const eventDate = new Date(feedback.event_date.split("/").reverse().join("-")); // Convert to Date object
+      const eventDate = new Date(feedback.event_date.split("/").reverse().join("-"));
       const from = new Date(fromDate);
       const to = new Date(toDate);
       return eventDate >= from && eventDate <= to;
@@ -124,7 +121,7 @@ const VolunteerFeedbackReport = () => {
     fetchData();
   }, []);
 
-  // Set zoom level when component mounts (match the feedbacks list pages)
+  // Set zoom level when component mounts (match the feedbacks list page)
   useEffect(() => {
     document.body.style.zoom = "80%";
     return () => {
@@ -133,11 +130,11 @@ const VolunteerFeedbackReport = () => {
   }, []);
 
   return (
-    <div className="volunteer-feedback-report-main-content">
+    <div className="tutor-feedback-report-main-content">
       <Sidebar />
-      <InnerPageHeader title={t("Volunteer Feedback Report")} />
+      <InnerPageHeader title={t("Feedback Report")} />
       <div className="page-content">
-        
+
         {loading ? (
           <div className="loader">{t("Loading data...")}</div>
         ) : (
@@ -146,13 +143,13 @@ const VolunteerFeedbackReport = () => {
               <div className="actions">
                 <button
                   className="export-button excel-button"
-                  onClick={() => exportVolunteerFeedbackToExcel(filteredFeedbacks, t)}
+                  onClick={() => exportFeedbackToExcel(filteredFeedbacks, t)}
                 >
                   <img src="/assets/excel-icon.png" alt="Excel" />
                 </button>
                 <button
                   className="export-button pdf-button"
-                  onClick={() => exportVolunteerFeedbackToPDF(filteredFeedbacks, t)}
+                  onClick={() => exportFeedbackToPDF(filteredFeedbacks, t)}
                 >
                   <img src="/assets/pdf-icon.png" alt="PDF" />
                 </button>
@@ -188,7 +185,7 @@ const VolunteerFeedbackReport = () => {
                 </button>
               </div>
             )}
-            <div className="volunteer-feedback-report-grid-container feedback-grid-container">
+            <div className="tutor-feedback-report-grid-container feedback-grid-container">
               {filteredFeedbacks.length === 0 ? (
                 <div className="no-data">{t("No data to display")}</div>
               ) : (
@@ -202,8 +199,9 @@ const VolunteerFeedbackReport = () => {
                             onChange={(e) => handleSelectAllCheckbox(e.target.checked)}
                           />
                         </th>
-                        <th>{t("Volunteer Name")}</th>
-                        <th>{t("Child Name")}</th>
+                        <th>{t("Volunteer/Tutor Name")}</th>
+                        <th>{t("Tutee Name / Hospital Name")}</th>
+                        <th>{t("Is It Your Tutee?")}</th>
                         <th className="feedbacks-wide-column">
                           {t("Event Date")}
                           <button
@@ -240,31 +238,32 @@ const VolunteerFeedbackReport = () => {
                               onChange={() => handleCheckboxChange(index)}
                             />
                           </td>
-                          <td>{feedback.volunteer_name}</td>
-                          <td>{feedback.child_name}</td>
+                          <td>{feedback.filler_name}</td>
+                          <td>{feedback.subject_name || feedback.hospital_name}</td>
+                          <td>{feedback.is_it_your_tutee ? t("Yes") : t("No")}</td>
                           <td>{feedback.event_date}</td>
-                          <td>{feedback.feedback_filled_at}</td>
-                          <td><div className="td-scrollable">{feedback.description}</div></td>
+                          <td>{feedback["feedback_filled_at"]}</td>
+                          <td><div className="td-scroll">{feedback.description}</div></td>
                           <td>{t(feedback.feedback_type)}</td>
                           <td><div className="td-scroll">{feedback.exceptional_events}</div></td>
                           <td><div className="td-scroll">{feedback.anything_else}</div></td>
                           <td><div className="td-scroll">{feedback.comments}</div></td>
                           <td>
-                            <div className="td-scrollable">
-                              {[
-                                feedback.names,
-                                feedback.phones,
-                                feedback.other_information
-                              ].filter(Boolean).length > 0
-                                ? (
-                                  <>
-                                    {feedback.names && <div>{t("Names")}: {feedback.names}</div>}
-                                    {feedback.phones && <div>{t("Phones")}: {feedback.phones}</div>}
-                                    {feedback.other_information && <div>{t("Other Information")}: {feedback.other_information}</div>}
-                                  </>
-                                )
-                                : "---"
-                              }
+                            <div className="td-scroll">
+                            {[
+                              feedback.names,
+                              feedback.phones,
+                              feedback.other_information
+                            ].filter(Boolean).length > 0
+                              ? (
+                                <>
+                                  {feedback.names && <div>{t("Names")}: {feedback.names}</div>}
+                                  {feedback.phones && <div>{t("Phones")}: {feedback.phones}</div>}
+                                  {feedback.other_information && <div>{t("Other Information")}: {feedback.other_information}</div>}
+                                </>
+                              )
+                              : "---"
+                            }
                             </div>
                           </td>
                         </tr>
@@ -305,4 +304,4 @@ const VolunteerFeedbackReport = () => {
   );
 };
 
-export default VolunteerFeedbackReport;
+export default FeedbackReport;

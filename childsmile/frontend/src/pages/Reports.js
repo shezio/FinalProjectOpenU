@@ -61,11 +61,8 @@ const Reports = () => {
     { resource: tutorships_resource, action: actions },
     { resource: staff_resource, action: actions },
   ];
-  const volunteer_feedback_report_permissions = [
+  const feedback_report_permissions = [
     { resource: general_v_feedback_resource, action: actions },
-    { resource: staff_resource, action: actions },
-  ];
-  const tutor_feedback_report_permissions = [
     { resource: tutor_feedback_resource, action: actions },
     { resource: staff_resource, action: actions },
   ];
@@ -79,8 +76,7 @@ const Reports = () => {
   const hasPermissionToFamiliesWaitingForTutorshipReport = hasSomePermissions(families_waiting_for_tutorship_report_permissions);
   const hasPermissionToActiveTutorsReport = hasSomePermissions(active_tutors_report_permissions);
   const hasPermissionToPossibleTutorshipMatchesReport = hasSomePermissions(possible_tutorship_matches_report_permissions);
-  const hasPermissionToVolunteerFeedbackReport = hasSomePermissions(volunteer_feedback_report_permissions);
-  const hasPermissionToTutorFeedbackReport = hasSomePermissions(tutor_feedback_report_permissions);
+  const hasPermissionToFeedbackReport = hasSomePermissions(feedback_report_permissions);
   const hasPermissionToFamiliesTutorshipStatsReport = hasSomePermissions(families_tutorship_stats_report_permissions);
 
   // IRS Volunteer Report permissions
@@ -123,8 +119,7 @@ const Reports = () => {
     families_duplicate_report:                { name: 'דוח כפילויות משפחות',                          path: '/reports/families_duplicate_report',                 category: 'families' },
     active_tutors_report:                     { name: 'דוח חונכויות פעילות',                         path: '/reports/active_tutors_report',                      category: 'volunteers' },
     possible_tutorship_matches_report:        { name: 'דוח התאמות חניך חונך אפשריות',               path: '/reports/possible_tutorship_matches_report',         category: 'volunteers' },
-    volunteer_feedback_report:                { name: 'דוח משוב מתנדבים',                            path: '/reports/volunteer-feedback',                        category: 'volunteers' },
-    tutor_feedback_report:                    { name: 'דוח משוב חונכים',                             path: '/reports/tutor-feedback',                            category: 'volunteers' },
+    feedback_report:                          { name: 'דוח משובים',                                 path: '/reports/feedback',                                  category: 'volunteers' },
     all_volunteers_irs_report:                { name: 'דוח מתנדבים כללי',                            path: '/reports/all_volunteers_irs_report',                 category: 'volunteers' },
     roles_spread_stats_report:                { name: 'דוח התפלגות הרשאות',                          path: '/reports/roles_spread_stats_report',                 category: 'volunteers' },
     refunds_per_timeperiod:                   { name: 'דוח החזרי הוצאות לפי תקופה',                  path: '/reports/refunds-report',                                    category: 'finances' },
@@ -137,8 +132,7 @@ const Reports = () => {
     families_waiting_for_tutorship_report: hasPermissionToFamiliesWaitingForTutorshipReport,
     active_tutors_report: hasPermissionToActiveTutorsReport,
     possible_tutorship_matches_report: hasPermissionToPossibleTutorshipMatchesReport,
-    volunteer_feedback_report: hasPermissionToVolunteerFeedbackReport,
-    tutor_feedback_report: hasPermissionToTutorFeedbackReport,
+    feedback_report: hasPermissionToFeedbackReport,
     families_tutorship_stats_report: hasPermissionToFamiliesTutorshipStatsReport,
     all_volunteers_irs_report: hasPermissionToAllVolunteersIRSReport,
     all_families_export_report: hasPermissionToAllFamiliesExportReport,

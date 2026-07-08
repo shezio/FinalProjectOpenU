@@ -378,6 +378,66 @@ class General_V_Feedback(models.Model):
         db_table = "childsmile_app_general_v_feedback"
 
 
+class Feedbacks(models.Model):
+    """
+    Unified feedback table (tutor + volunteer feedback combined into one).
+
+    The schema is created/managed via SQL (unify_feedbacks_migration.sql), so
+    ``managed = False`` keeps Django from generating/altering it via migrations.
+
+    - ``staff``       = the actual submitter of the record. May be an admin/coordinator
+                        filling on behalf of someone else -> preserves the "fill for" flow.
+    - ``filler``      = the tutor/volunteer the feedback is ATTRIBUTED to (the person
+                        chosen in the unified "שם המתנדב/חונך" dropdown).
+    - ``filler_name`` = denormalized display name of that tutor/volunteer.
+    - ``subject_name``= the tutee/child name(s) (comma-joined for multi-select).
+    """
+
+    feedback_id = models.AutoField(primary_key=True)
+    timestamp = models.DateTimeField(auto_now_add=True)
+    event_date = models.DateTimeField()
+    staff = models.ForeignKey(
+        Staff, on_delete=models.CASCADE, related_name="submitted_feedbacks"
+    )
+    filler = models.ForeignKey(
+        Staff,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="attributed_feedbacks",
+    )
+    filler_name = models.CharField(max_length=255)
+    subject_name = models.CharField(max_length=255, null=True, blank=True)
+    is_it_your_tutee = models.BooleanField(null=True, blank=True)
+    description = models.TextField()
+    exceptional_events = models.TextField(null=True, blank=True)
+    anything_else = models.TextField(null=True, blank=True)
+    comments = models.TextField(null=True, blank=True)
+    feedback_type = models.CharField(
+        max_length=50,
+        choices=[
+            ("tutor_fun_day", "Tutor Fun Day"),
+            ("general_volunteer_fun_day", "General Volunteer Fun Day"),
+            ("general_volunteer_hospital_visit", "General Volunteer Hospital Visit"),
+            ("general_house_visit", "General House Visit"),
+            ("tutorship", "Tutorship"),
+        ],
+        default="tutorship",
+    )
+    hospital_name = models.CharField(max_length=50, null=True, blank=True)
+    additional_volunteers = models.TextField(null=True, blank=True)
+    names = models.CharField(max_length=500, null=True, blank=True)
+    phones = models.CharField(max_length=500, null=True, blank=True)
+    other_information = models.TextField(max_length=500, null=True, blank=True)
+
+    def __str__(self):
+        return f"Feedback {self.feedback_id} by {self.filler_name}"
+
+    class Meta:
+        managed = False
+        db_table = "childsmile_app_feedbacks"
+
+
 class PossibleMatches(models.Model):
     match_id = models.AutoField(primary_key=True)
     child_id = models.BigIntegerField()

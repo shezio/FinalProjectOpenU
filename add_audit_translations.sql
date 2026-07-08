@@ -53,6 +53,13 @@ INSERT INTO public.childsmile_app_audittranslation (action, hebrew_translation) 
     ('UPDATE_VOLUNTEER_FEEDBACK_FAILED',   'כישלון בעדכון משוב מתנדב כללי'),
     ('DELETE_VOLUNTEER_FEEDBACK_SUCCESS',  'מחיקת משוב מתנדב כללי הצליחה'),
     ('DELETE_VOLUNTEER_FEEDBACK_FAILED',   'כישלון במחיקת משוב מתנדב כללי'),
+    -- Unified feedbacks (tutor + volunteer merged into childsmile_app_feedbacks)
+    ('CREATE_FEEDBACK_SUCCESS',            'יצירת משוב הצליחה'),
+    ('CREATE_FEEDBACK_FAILED',             'כישלון ביצירת משוב'),
+    ('UPDATE_FEEDBACK_SUCCESS',            'עדכון משוב הצליח'),
+    ('UPDATE_FEEDBACK_FAILED',             'כישלון בעדכון משוב'),
+    ('DELETE_FEEDBACK_SUCCESS',            'מחיקת משוב הצליחה'),
+    ('DELETE_FEEDBACK_FAILED',             'כישלון במחיקת משוב'),
 
     -- Mail
     ('SEND_MAIL_SUCCESS',             'שליחת מייל הצליחה'),
@@ -174,6 +181,9 @@ INSERT INTO public.childsmile_app_audittranslation (action, hebrew_translation) 
     ('CREATE_TUTORSHIP',              'יצירת חונכות'),
     ('CREATE_TUTOR_FEEDBACK',         'יצירת משוב חונך'),
     ('CREATE_VOLUNTEER_FEEDBACK',     'יצירת משוב מתנדב כללי'),
+    ('CREATE_FEEDBACK',               'יצירת משוב'),
+    ('UPDATE_FEEDBACK',               'עדכון משוב'),
+    ('DELETE_FEEDBACK',               'מחיקת משוב'),
     ('CREATE_VOLUNTEER_OR_TUTOR',     'יצירת מתנדב או חונך'),
     ('DELETE_FAMILY',                 'מחיקת משפחה'),
     ('DELETE_INITIAL_FAMILY_DATA',    'מחיקת פרטי משפחה ראשוניים'),
