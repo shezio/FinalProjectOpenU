@@ -86,6 +86,20 @@ const Feedbacks = () => {
   const [showAdditionalVolunteersDropdown, setShowAdditionalVolunteersDropdown] = useState(false);
   const [additionalVolunteersSearch, setAdditionalVolunteersSearch] = useState("");
   const [showSubjectDropdown, setShowSubjectDropdown] = useState(false);
+  // Free-text volunteer/tutor name entry: tracks the text typed into the filler
+  // Select so an unlisted name can be confirmed (✓) straight from the dropdown.
+  const [fillerInput, setFillerInput] = useState("");
+  const fillerSelectRef = useRef(null);
+
+  // Bulk-edit (admins only): reassign every feedback attributed to volunteer X
+  // over to volunteer Y, sending one PUT per matching feedback (no dedicated API).
+  const [showBulkEditModal, setShowBulkEditModal] = useState(false);
+  const [bulkFromName, setBulkFromName] = useState("");
+  const [bulkToId, setBulkToId] = useState("");
+  const [bulkToName, setBulkToName] = useState("");
+  const [bulkToInput, setBulkToInput] = useState("");
+  const [bulkSubmitting, setBulkSubmitting] = useState(false);
+  const bulkToSelectRef = useRef(null);
 
   // data fetching
   const [people, setPeople] = useState([]);
@@ -282,12 +296,102 @@ const Feedbacks = () => {
     setShowSubjectDropdown(false);
   };
 
+  // ── Bulk edit: reassign every feedback from one volunteer name to another ──
+  const openBulkEditModal = () => {
+    setBulkFromName("");
+    setBulkToId("");
+    setBulkToName("");
+    setBulkToInput("");
+    setShowBulkEditModal(true);
+  };
+
+  const closeBulkEditModal = () => {
+    setShowBulkEditModal(false);
+    setBulkFromName("");
+    setBulkToId("");
+    setBulkToName("");
+    setBulkToInput("");
+  };
+
+  // DD/MM/YYYY (feedback-report format) → YYYY-MM-DD (what update_feedback expects).
+  const feedbackDateToISO = (value) => {
+    if (!value || !value.includes("/")) return value || "";
+    const [day, month, year] = value.split("/");
+    return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
+  };
+
+  // Rebuild a full update payload for one existing feedback, changing only the
+  // volunteer (filler) it is attributed to. update_feedback overwrites the whole
+  // row, so every existing field must be resent to avoid clearing data.
+  const buildBulkEditPayload = (fb, newFillerStaffId, newFillerName) => {
+    const data = {
+      id: fb.feedback_id,
+      staff_id: currentStaffid,
+      filler_staff_id: newFillerStaffId || "",
+      filler_name: newFillerName,
+      subject_id: "",
+      subject_name: fb.subject_name || "",
+      event_date: feedbackDateToISO(fb.event_date),
+      description: fb.description || "",
+      exceptional_events: fb.exceptional_events || "",
+      anything_else: fb.anything_else || "",
+      comments: fb.comments || "",
+      is_it_your_tutee: fb.is_it_your_tutee || false,
+      feedback_filled_at: feedbackDateToISO(fb.feedback_filled_at),
+      feedback_type: fb.feedback_type,
+      hospital_name: fb.hospital_name || "",
+      additional_volunteers: fb.additional_volunteers || "",
+    };
+    if (fb.feedback_type === "general_volunteer_hospital_visit") {
+      data.names = fb.names || "";
+      data.phones = fb.phones || "";
+      data.other_information = fb.other_information || "";
+    }
+    return data;
+  };
+
+  const handleBulkEditSubmit = async () => {
+    const person = people.find(p => p.id === bulkToId);
+    const newFillerName = person?.name || bulkToName;
+    const newFillerStaffId = person?.staff_id || "";
+
+    const errors = [];
+    if (!bulkFromName) errors.push(t("Please select the volunteer to reassign from"));
+    if (!newFillerName) errors.push(t("Please choose the new volunteer name"));
+    const matches = feedbacks.filter(fb => fb.filler_name === bulkFromName);
+    if (bulkFromName && matches.length === 0) errors.push(t("No feedbacks found for the selected volunteer"));
+    if (errors.length > 0) {
+      setValidationPopup(errors);
+      return;
+    }
+
+    setBulkSubmitting(true);
+    let succeeded = 0;
+    let failed = 0;
+    for (const fb of matches) {
+      try {
+        await axios.put(`/api/update_feedback/${fb.feedback_id}/`, buildBulkEditPayload(fb, newFillerStaffId, newFillerName));
+        succeeded++;
+      } catch (error) {
+        failed++;
+        console.error("Error bulk-updating feedback", fb.feedback_id, error);
+      }
+    }
+    setBulkSubmitting(false);
+
+    if (succeeded > 0) toast.success(`${t("Feedbacks updated successfully")}: ${succeeded}`);
+    if (failed > 0) toast.error(`${t("Failed to update feedbacks")}: ${failed}`);
+
+    closeBulkEditModal();
+    fetchData();
+  };
+
 
   const [validationPopup, setValidationPopup] = useState(null);
 
   const validateModal = () => {
     const errors = {};
-    if (!modalData.filler_id) errors.filler_name = t("Volunteer/Tutor Name is required");
+    if (!modalData.filler_id && !modalData.filler_name) errors.filler_name = t("Volunteer/Tutor Name is required");
     const hasSubject = (modalData.subject_ids && modalData.subject_ids.length > 0) || !!modalData.subject_name;
     if (!hasSubject && modalData.feedback_type !== "general_volunteer_hospital_visit") errors.subject_name = t("Tutee Name is required");
     if (!modalData.event_date) {
@@ -347,7 +451,7 @@ const Feedbacks = () => {
     const data = {
       staff_id: currentStaffid,
       filler_staff_id: person?.staff_id,
-      filler_name: person?.name,
+      filler_name: person?.name || modalData.filler_name || "",
       subject_id: (modalData.subject_ids && modalData.subject_ids[0]) || "",
       subject_name: (modalData.subject_ids || [])
         .map(id => subjects.find(s => s.id === id)?.name)
@@ -507,6 +611,11 @@ const Feedbacks = () => {
             <button className="feedbacks-refund-link-btn" onClick={() => navigateTo('/refunds')}>
               {t("הגש בקשת החזר הוצאות")}
             </button>
+            {currentUserRoles.includes("System Administrator") && (
+              <button className="feedbacks-bulk-edit-btn" onClick={openBulkEditModal}>
+                {t("Bulk Edit Volunteer Name")}
+              </button>
+            )}
           </div>
           {/* Row 2: filters */}
           <div className="feedbacks-toolbar-filters">
@@ -777,6 +886,126 @@ const Feedbacks = () => {
             </div>
           </div>
         )}
+        {/* Modal: bulk-reassign feedbacks from volunteer X to volunteer Y (admins) */}
+        {showBulkEditModal && (
+          <div className="feedbacks-modal-overlay">
+            <div className="feedbacks-modal-content">
+              <span className="feedbacks-close" onClick={closeBulkEditModal}>&times;</span>
+              <h2>{t("Bulk Edit Volunteer Name")}</h2>
+              <div className="feedbacks-bulk-edit-body">
+                {/* FROM: existing volunteer name whose feedbacks will be reassigned */}
+                <div className="feedbacks-form-row">
+                  <label>{t("From Volunteer")}</label>
+                  <Select
+                    value={bulkFromName ? { value: bulkFromName, label: bulkFromName } : null}
+                    onChange={option => setBulkFromName(option ? option.value : "")}
+                    options={[...new Set(feedbacks.map(fb => fb.filler_name).filter(Boolean))]
+                      .sort((a, b) => a.localeCompare(b, "he"))
+                      .map(name => ({ value: name, label: name }))}
+                    placeholder={t("Select Volunteer/Tutor")}
+                    isClearable
+                    classNamePrefix={"feedbacks-select"}
+                    noOptionsMessage={() => t("No options")}
+                  />
+                  {bulkFromName && (
+                    <span className="feedbacks-bulk-edit-count">
+                      {`${t("Matching feedbacks")}: ${feedbacks.filter(fb => fb.filler_name === bulkFromName).length}`}
+                    </span>
+                  )}
+                </div>
+
+                {/* TO: target volunteer — an existing person or a free-text name */}
+                <div className="feedbacks-form-row">
+                  <label>{t("To Volunteer")}</label>
+                  <Select
+                    ref={bulkToSelectRef}
+                    inputValue={bulkToInput}
+                    onInputChange={(val, meta) => {
+                      if (meta.action === "input-change") {
+                        setBulkToInput(val);
+                      } else if (meta.action === "menu-close" || meta.action === "input-blur") {
+                        setBulkToInput("");
+                      }
+                    }}
+                    value={
+                      people.find(p => p.id === bulkToId) ||
+                      (bulkToName ? { id: "__custom__", name: bulkToName } : null)
+                    }
+                    onChange={option => {
+                      if (!option) {
+                        setBulkToId("");
+                        setBulkToName("");
+                      } else if (option.id === "__custom__") {
+                        setBulkToId("");
+                        setBulkToName(option.name);
+                      } else {
+                        setBulkToId(option.id);
+                        setBulkToName("");
+                      }
+                      setBulkToInput("");
+                    }}
+                    options={people}
+                    getOptionLabel={option => option.name}
+                    getOptionValue={option => option.id}
+                    placeholder={t("Select Volunteer/Tutor")}
+                    isClearable
+                    classNamePrefix={"feedbacks-select"}
+                    noOptionsMessage={({ inputValue }) =>
+                      inputValue && inputValue.trim() ? (
+                        <div
+                          className="feedbacks-freetext-prompt"
+                          onMouseDown={e => e.preventDefault()}
+                        >
+                          <span className="feedbacks-freetext-question">
+                            {t("Use this name?")}
+                          </span>
+                          <span className="feedbacks-freetext-value">"{inputValue.trim()}"</span>
+                          <button
+                            type="button"
+                            className="feedbacks-freetext-btn feedbacks-freetext-confirm"
+                            title={t("Use this name")}
+                            onClick={() => {
+                              const name = inputValue.trim();
+                              setBulkToId("");
+                              setBulkToName(name);
+                              setBulkToInput("");
+                              bulkToSelectRef.current?.blur();
+                            }}
+                          >
+                            ✓
+                          </button>
+                          <button
+                            type="button"
+                            className="feedbacks-freetext-btn feedbacks-freetext-cancel"
+                            title={t("Cancel")}
+                            onClick={() => setBulkToInput("")}
+                          >
+                            ✗
+                          </button>
+                        </div>
+                      ) : (
+                        t("No options")
+                      )
+                    }
+                  />
+                </div>
+              </div>
+              <div className="feedbacks-form-actions">
+                <button type="button" disabled={bulkSubmitting} onClick={handleBulkEditSubmit}>
+                  {bulkSubmitting ? (
+                    <span className="feedbacks-btn-loading">
+                      <span className="feedbacks-btn-spinner" />
+                      {t("Loading data...")}
+                    </span>
+                  ) : (
+                    t("Update Feedbacks")
+                  )}
+                </button>
+                <button type="button" onClick={closeBulkEditModal}>{t("Cancel")}</button>
+              </div>
+            </div>
+          </div>
+        )}
         {/* Modal for create/edit */}
         {showModal && (
           <div className="feedbacks-modal-overlay">
@@ -905,14 +1134,74 @@ const Feedbacks = () => {
                       />
                     ) : (
                       <Select
-                        value={people.find(p => p.id === modalData.filler_id) || null}
-                        onChange={option => setModalData({ ...modalData, filler_id: option ? option.id : "" })}
+                        ref={fillerSelectRef}
+                        inputValue={fillerInput}
+                        onInputChange={(val, meta) => {
+                          if (meta.action === "input-change") {
+                            setFillerInput(val);
+                          } else if (meta.action === "menu-close" || meta.action === "input-blur") {
+                            setFillerInput("");
+                          }
+                        }}
+                        value={
+                          people.find(p => p.id === modalData.filler_id) ||
+                          (modalData.filler_name
+                            ? { id: "__custom__", name: modalData.filler_name }
+                            : null)
+                        }
+                        onChange={option => {
+                          if (!option) {
+                            setModalData({ ...modalData, filler_id: "", filler_name: "" });
+                          } else if (option.id === "__custom__") {
+                            setModalData({ ...modalData, filler_id: "", filler_name: option.name });
+                          } else {
+                            setModalData({ ...modalData, filler_id: option.id, filler_name: "" });
+                          }
+                          setFillerInput("");
+                        }}
                         options={people}
                         getOptionLabel={option => option.name}
                         getOptionValue={option => option.id}
                         placeholder={t("Select Volunteer/Tutor")}
                         isClearable
                         classNamePrefix={"feedbacks-select"}
+                        noOptionsMessage={({ inputValue }) =>
+                          inputValue && inputValue.trim() ? (
+                            <div
+                              className="feedbacks-freetext-prompt"
+                              onMouseDown={e => e.preventDefault()}
+                            >
+                              <span className="feedbacks-freetext-question">
+                                {t("Use this name?")}
+                              </span>
+                              <span className="feedbacks-freetext-value">"{inputValue.trim()}"</span>
+                              <button
+                                type="button"
+                                className="feedbacks-freetext-btn feedbacks-freetext-confirm"
+                                title={t("Use this name")}
+                                onClick={() => {
+                                  const name = inputValue.trim();
+                                  setModalData(prev => ({ ...prev, filler_id: "", filler_name: name }));
+                                  setModalErrors(prev => ({ ...prev, filler_name: undefined }));
+                                  setFillerInput("");
+                                  fillerSelectRef.current?.blur();
+                                }}
+                              >
+                                ✓
+                              </button>
+                              <button
+                                type="button"
+                                className="feedbacks-freetext-btn feedbacks-freetext-cancel"
+                                title={t("Cancel")}
+                                onClick={() => setFillerInput("")}
+                              >
+                                ✗
+                              </button>
+                            </div>
+                          ) : (
+                            t("No options")
+                          )
+                        }
                       />
                     )}
                   </div>
