@@ -9,7 +9,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   flex-grow: 1;
   margin-top: 200px;
 }
@@ -268,7 +268,7 @@
   width: auto;
   max-width: 100%;
   align-self: flex-start; /* RTL flex column → flex-start is the right edge; fit content */
-  margin-top: 570px;
+  margin-top: 160px;      /* clear the absolutely-positioned filter panel above (was 570px = grid way down the screen) */
   margin-right: 200px;    /* pull the data section off the far-right edge */
 }
 
