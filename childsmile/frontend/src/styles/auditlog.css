@@ -18,6 +18,7 @@
    and .audit-log-grid-container now sit directly under .audit-log-main-content. */
 
 @media (max-width: 1000px) {
+
   .audit-log-grid-container {
     margin-top: 300px;
     margin-bottom: 200px;
@@ -267,11 +268,55 @@
   flex-direction: column;
   width: auto;
   max-width: 100%;
-  /* No align-self → inherits main-content's align-items:center, so the grid stays
-     centered and clears the fixed right sidebar at ALL widths (the old
-     align-self:flex-start pinned it to the right edge, under the sidebar). */
+
+  /* Centered by main-content's align-items:center, then pulled toward the sidebar side
+     by a negative right margin so the DATA GRID (what the user actually sees) sits a
+     comfortable distance from the far-left edge instead of being stranded left. -120px
+     is tuned by eye for wide screens (≥~2240px the grid still clears the ~312px sidebar);
+     on ≤1920px laptops or with very wide description text the right edge can tuck under
+     the sidebar — judge by the visible table, not this card. */
+  margin-right: -120px !important;
   margin-top: 160px;      /* clear the absolutely-positioned filter panel above (was 570px = grid way down the screen) */
-  margin-right: 200px;    /* pull the data section off the far-right edge */
+}
+
+/* ===== JUMP CONTROLS: a toolbar strip at the TOP of the grid card (jump to page X
+   + jump to a time today). It's a child of .audit-log-grid-container, so it stretches
+   to the table width and can never shift the grid's centered position. ===== */
+.audit-jump-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px 40px;
+  padding: 14px 10px;
+  background-color: #f9f9f9;
+  border-bottom: 1px solid #ddd;
+}
+
+.audit-jump-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.audit-jump-group label {
+  font-size: 24px;
+  font-weight: 600;
+  color: #333;
+  white-space: nowrap;
+}
+
+.audit-jump-input,
+.audit-jump-time {
+  padding: 8px 12px;
+  font-size: 24px;
+  border: 2px solid rgba(102, 126, 234, 0.6);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.95);
+  color: #333;
+}
+
+.audit-jump-input {
+  width: 110px;
 }
 
 .audit-log-data-grid {
