@@ -618,7 +618,14 @@ def create_volunteer_or_tutor_internal(data, request=None):
         
         # CREATE REGISTRATION APPROVAL TASK FOR ADMINS
         full_name = f"{first_name} {surname}"
-        create_tasks_for_admins_async(staff.staff_id, full_name, email)
+        # Defer until AFTER this @transaction.atomic signup COMMITS. Otherwise the
+        # async task-creation thread runs on a separate DB connection that can't
+        # yet see the just-created Staff/SignedUp rows, so it builds an empty
+        # user_info ({}), and on completion the admin (Liam) final-approval task
+        # is never created — leaving the user permanently unable to get access.
+        transaction.on_commit(
+            lambda: create_tasks_for_admins_async(staff.staff_id, full_name, email)
+        )
         api_logger.info(f"Created registration approval tasks for admins for user {staff.staff_id} ({email})")
 
         # Create volunteer or pending tutor

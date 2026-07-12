@@ -75,17 +75,24 @@ def create_tasks_for_admins(staff_user_id, user_name, user_email):
             api_logger.error("Task type 'אישור הרשמה' not found in the database.")
             return
 
-        # Get the staff user and SignedUp record to extract their data
-        user_info = {}
+        # Get the staff user and SignedUp record to extract their data.
+        # Seed with the caller-provided name/email FIRST so user_info is NEVER
+        # empty even if the DB lookups miss (e.g. a signup tx that hadn't committed
+        # yet) — an empty user_info silently breaks the final admin-approval task
+        # on completion (no email to key off), stranding the user with no access.
+        user_info = {
+            "full_name": user_name,
+            "email": user_email,
+        }
         try:
             staff_user = Staff.objects.get(staff_id=staff_user_id)
-            user_info = {
+            user_info.update({
                 "full_name": staff_user.first_name + " " + staff_user.last_name,
                 "email": staff_user.email,
                 "created_at": staff_user.created_at.isoformat() if staff_user.created_at else None,  # Convert to ISO string
-            }
+            })
         except Staff.DoesNotExist:
-            api_logger.error(f"Staff user with ID {staff_user_id} not found")
+            api_logger.error(f"Staff user with ID {staff_user_id} not found — using caller-provided name/email for user_info")
         
         # Also get SignedUp data if available
         try:
