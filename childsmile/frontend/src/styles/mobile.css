@@ -3258,6 +3258,29 @@
   .feedbacks-select__single-value,
   .feedbacks-select__input input { font-size: 13px !important; }
 
+  /* Free-text volunteer/tutor name prompt (✓ / ✗) shown inside the
+     react-select "no options" menu when an unlisted name is typed. Shrink
+     the text and keep comfortable, tappable button targets on phones. */
+  .feedbacks-freetext-prompt {
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+    direction: rtl !important;
+  }
+  .feedbacks-freetext-question { font-size: 13px !important; }
+  .feedbacks-freetext-value {
+    font-size: 13px !important;
+    max-width: 150px !important;
+  }
+  .feedbacks-freetext-btn {
+    width: 28px !important;
+    height: 28px !important;
+    font-size: 15px !important;
+  }
+
+  /* Bulk-edit modal: tighten spacing and shrink the match-count line. */
+  .feedbacks-bulk-edit-body { gap: 12px !important; }
+  .feedbacks-bulk-edit-count { font-size: 12px !important; }
+
   /* Additional-volunteers custom dropdown: open UPWARD on mobile so the
      checkbox list doesn't run off the bottom of the viewport (this field
      sits near the end of a long modal). Desktop still opens it downward.
