@@ -8,7 +8,9 @@
 }
 
 .all-volunteers-report-main-content .page-content {
-    padding: 20px;
+    margin-top: 160px; /* clear the fixed 200px InnerPageHeader. all_families gets this from families.css; the volunteers-IRS report does NOT import families.css, so without this its controls + back button hide behind the header. */
+    padding: 20px 360px 20px 20px; /* right padding reserves the fixed sidebar (280px box = 312px incl. its padding/border, + shadow) so NO child (controls, back button, grid) can sit under it */
+    box-sizing: border-box;
     overflow-y: auto;
     overflow-x: hidden;
     max-height: calc(100vh - 80px);
@@ -17,6 +19,8 @@
 /* ===== FILTER/CONTROLS STYLING ===== */
 .all-volunteers-report-main-content .filter-create-container {
     font-size: 24px;
+    margin-right: 240px; /* sidebar clearance is handled by .page-content padding-right; families.css sets margin-right:160px which would push the controls under the fixed sidebar */
+    max-width: none;
 }
 
 .all-volunteers-report-main-content .filter-create-container .actions {
@@ -49,20 +53,28 @@
     width: 400px;
 }
 
-/* ===== GRID CONTAINER WITH SPECIFIC MARGINS ===== */
+/* ===== GRID CONTAINER — fluid, full available width ==========================
+   Overrides the magic-number rules from reports.css (.page-content
+   .grid-container: margin-left:900px, height:calc(100vh - 4000px) → collapses,
+   transform:scale(.95), and the ≤1800px width:2000px) that squeezed this table
+   into a narrow strip on wide screens — the reason it only became readable at
+   ~150% browser zoom. The right margin clears the fixed 280px sidebar (RTL). */
 .all-volunteers-report-main-content .page-content .grid-container {
-    margin-top: 20px;
-    margin-right: 180px;
-    overflow: visible;
+    margin: 120px 0 0 20px !important;
+    width: auto !important;
+    max-width: none !important;
+    height: auto !important;
+    transform: none !important;
+    overflow-x: auto !important;
+    overflow-y: visible !important;
     position: relative;
 }
 
-/* ===== DATA GRID TABLE ===== */
+/* ===== DATA GRID TABLE — fill the (now fluid) container ===== */
 .all-volunteers-report-main-content .data-grid {
-    margin-top: 50px;
-    margin-right: 50px;
+    margin: 20px 0 0 0 !important;
     overflow: visible;
-    width: calc(100% - 50px);
+    width: 100% !important;
 }
 
 /* ===== TABLE COLUMN WIDTHS (8 columns) ===== */
@@ -98,13 +110,8 @@
     width: 100px !important;
 }
 
-/* ===== BACK BUTTON - below controls, above grid ===== */
-.all-families-back-to-reports {
-    display: flex;
-    justify-content: flex-start;
-    margin-top: 10px;
-    margin-right: 50px;
-}
+/* Back-to-reports button now lives at the end of the controls row
+   (.filter-create-container .actions); it uses the default button styling. */
 
 /* ===== MATURE FILTER BUTTON - restore families.css styling ===== */
 .all-volunteers-report-main-content .actions .toggle-mature-btn {

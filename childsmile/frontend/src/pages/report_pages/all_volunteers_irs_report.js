@@ -175,18 +175,16 @@ const AllVolunteersIRSReport = () => {
                         <button className="refresh-button" onClick={refreshData} disabled={loading}>
                             {t('Refresh')}
                         </button>
+                        {!loading && (
+                            <button
+                                className="back-button"
+                                onClick={() => navigateTo('/reports')}
+                            >
+                                → {t('Click to return to Report page')}
+                            </button>
+                        )}
                     </div>
                 </div>
-                {!loading && (
-                    <div className="back-to-reports">
-                        <button
-                            className="back-button"
-                            onClick={() => navigateTo('/reports')}
-                        >
-                            → {t('Click to return to Report page')}
-                        </button>
-                    </div>
-                )}
                 {loading ? (
                     <div className="loader">{t("Loading data...")}</div>
                 ) : (
