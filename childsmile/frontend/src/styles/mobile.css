@@ -356,6 +356,17 @@
     box-sizing: border-box !important;
   }
 
+  /* Admin "show only my tasks" toggle – compact, content-width, and kept on a
+     single line so its label doesn't overflow the toolbar on small screens.
+     Colours (teal / active amber) come from tasks.css and carry over here. */
+  .refresh .show-my-tasks-btn {
+    font-size: 11px !important;
+    padding: 6px 10px !important;
+    line-height: 1.2 !important;
+    white-space: nowrap !important;
+    width: auto !important;
+  }
+
   /* Top controls (create / task-type filter / refresh) size to their content
      and wrap neatly — no stretching, so they stay narrow on small screens.
      SCOPED to the Tasks page: other pages (e.g. Families) put ALL their buttons
