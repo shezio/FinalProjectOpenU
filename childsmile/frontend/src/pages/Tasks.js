@@ -71,6 +71,9 @@ const Tasks = () => {
   const [selectedFilter, setSelectedFilter] = useState('');
   const [selectedChildFilter, setSelectedChildFilter] = useState('');
   const [selectedTaskTypeFilters, setSelectedTaskTypeFilters] = useState({});
+  // Admin-only "show only my tasks" toggle. When on it overrides every filter
+  // (dates, type, child) so an admin sees just their own assigned tasks.
+  const [showOnlyMyTasks, setShowOnlyMyTasks] = useState(false);
   const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState('');
   const [taskToUpdate, setTaskToUpdate] = useState(null);
@@ -190,9 +193,11 @@ const Tasks = () => {
     try {
       const params = new URLSearchParams();
       params.append('date_field', selectedDateField);
-      params.append('start_date', startDate);
-      params.append('end_date', endDate);
-      if (selectedFilter) {
+      // "Show only my tasks" overrides the date pickers — fetch the full range
+      // so an admin sees every task assigned to them regardless of the filters.
+      params.append('start_date', showOnlyMyTasks ? '2000-01-01' : startDate);
+      params.append('end_date', showOnlyMyTasks ? '2100-12-31' : endDate);
+      if (selectedFilter && !showOnlyMyTasks) {
         params.append('task_type_id', selectedFilter);
       }
       const tasksUrl = `/api/tasks/?${params.toString()}`;
@@ -254,6 +259,16 @@ const Tasks = () => {
       setPermissions(cachedPermissions);
       setStaffUserNamesAndRoles(newStaffUserNamesAndRoles);
 
+      // Dev + liam tasks are admin-only: keep them out of the create/edit type
+      // dropdown and the (non-admin) filter dropdown for everyone else. Compute
+      // admin status from the freshly-fetched roles (state isn't updated yet).
+      const currentUsernameLocal = localStorage.getItem('username');
+      const currentStaffUserLocal = newStaffUserNamesAndRoles.find(u => u.username === currentUsernameLocal);
+      const isAdminLocal = !!currentStaffUserLocal && (
+        currentStaffUserLocal.roles.includes('System Administrator') ||
+        currentStaffUserLocal.roles.includes('Viewer')
+      );
+
       const filteredTypes = newTaskTypes.filter((taskType) =>
         cachedPermissions.some(
           (permission) =>
@@ -261,7 +276,9 @@ const Tasks = () => {
             permission.action === taskType.action
         ) &&
         taskType.name !== "ראיון מועמד לחונכות" && // Exclude interview task
-        taskType.name !== "התאמת חניך" // Exclude tutee match task
+        taskType.name !== "התאמת חניך" && // Exclude tutee match task
+        // Dev/Liam tasks are admin-only
+        (isAdminLocal || (taskType.name !== 'משימת פיתוח' && taskType.name !== 'משימת ליאם'))
         // Note: "צירוף משפחה לקבוצה" and "הסרת משפחה מקבוצה" are INCLUDED in filters
       );
       setFilteredTaskTypes(filteredTypes);
@@ -295,7 +312,7 @@ const Tasks = () => {
   // Re-fetch tasks when date field, date range, or task type filter changes
   useEffect(() => {
     fetchData(true);
-  }, [selectedDateField, startDate, endDate, selectedFilter]);
+  }, [selectedDateField, startDate, endDate, selectedFilter, showOnlyMyTasks]);
 
   // Initialize task type filters for admins - review task unchecked, others checked by default
   useEffect(() => {
@@ -319,6 +336,16 @@ const Tasks = () => {
         s.label && s.label.includes('שלמה') && s.label.includes('בונצל')
       );
       if (shlomo) setSelectedStaff(shlomo);
+    }
+  }, [selectedTaskType, staffOptions]);
+
+  // Auto-assign ליאם אביבי when liam task type is selected (mirrors dev task)
+  useEffect(() => {
+    if (selectedTaskType?.label === 'משימת ליאם') {
+      const liam = staffOptions.find(s =>
+        s.label && s.label.includes('ליאם') && s.label.includes('אביבי')
+      );
+      if (liam) setSelectedStaff(liam);
     }
   }, [selectedTaskType, staffOptions]);
 
@@ -354,16 +381,24 @@ const Tasks = () => {
   };
 
   // Group tasks by status for Kanban columns
+  const currentUsername = localStorage.getItem('username');
   const tasksByStatus = statusColumns.reduce((acc, col) => {
     acc[col.key] = tasks
-      .filter(
-        (task) =>
-          (!selectedFilter || task.type === parseInt(selectedFilter)) &&
-          (!selectedChildFilter || task.child === parseInt(selectedChildFilter)) &&
-          // For admins: apply task type filters; for non-admins: show all
-          (isUserAdmin() ? selectedTaskTypeFilters[task.type] !== false : true) &&
-          task.status === col.key
-      );
+      .filter((task) => {
+        // Non-admins must never see (or open) dev/liam tasks anywhere on the board.
+        if (!isUserAdmin() && (task.type_name === 'משימת פיתוח' || task.type_name === 'משימת ליאם')) {
+          return false;
+        }
+        // "Show only my tasks" (admins) overrides every other filter — just the
+        // current user's own OPEN assigned tasks (done tasks are hidden — no need).
+        return showOnlyMyTasks
+          ? task.assignee === currentUsername && task.status === col.key && task.status !== 'הושלמה'
+          : (!selectedFilter || task.type === parseInt(selectedFilter)) &&
+            (!selectedChildFilter || task.child === parseInt(selectedChildFilter)) &&
+            // For admins: apply task type filters; for non-admins: show all
+            (isUserAdmin() ? selectedTaskTypeFilters[task.type] !== false : true) &&
+            task.status === col.key;
+      });
     return acc;
   }, {});
 
@@ -726,6 +761,17 @@ const Tasks = () => {
   const isDevTaskByName = (typeName) => {
     return typeName === 'משימת פיתוח';
   };
+
+  // Helper to check if task is a liam task (mirrors dev task, no notifications)
+  const isLiamTaskByName = (typeName) => {
+    return typeName === 'משימת ליאם';
+  };
+
+  // Dev + liam tasks share the rich-text explanation editor and a forced,
+  // self-assigned owner (dev → שלמה בונצל, liam → ליאם אביבי).
+  const isRichTaskLabel = (label) => label === 'משימת פיתוח' || label === 'משימת ליאם';
+  const richTaskAssigneeName = (label) =>
+    label === 'משימת פיתוח' ? 'שלמה בונצל' : label === 'משימת ליאם' ? 'ליאם אביבי' : '';
 
   // Renders a plain-text explanation as rich text (bullets, numbered lists, checkboxes)
   // onToggleCheckbox: optional callback(lineIndex, newText) to allow toggling checkboxes
@@ -1093,6 +1139,18 @@ const Tasks = () => {
               <div className="refresh">
                 <button onClick={() => fetchData(true)}>{t("Refresh Task List")}</button>
               </div>
+              {/* Admin-only: show only tasks assigned to me, ignoring every filter */}
+              {isUserAdmin() && (
+                <div className="refresh show-my-tasks">
+                  <button
+                    className={showOnlyMyTasks ? 'show-my-tasks-btn active' : 'show-my-tasks-btn'}
+                    onClick={() => setShowOnlyMyTasks(prev => !prev)}
+                    title="הצג רק משימות שמשויכות אליי — מבטל את כל הסינונים"
+                  >
+                    {showOnlyMyTasks ? 'הצג את כל המשימות' : 'הצג רק את המשימות שלי'}
+                  </button>
+                </div>
+              )}
               {/* Manual trigger for monthly review task creation — dev/admin only */}
               {process.env.REACT_APP_TRIGGER_MONTHLY_CREATOR === 'true' && isUserAdmin() && (
                 <div className="refresh">
@@ -1129,6 +1187,7 @@ const Tasks = () => {
                     id="date-field"
                     value={selectedDateField}
                     onChange={e => setSelectedDateField(e.target.value)}
+                    disabled={showOnlyMyTasks}
                   >
                     <option value="due_date">{t('Due Date')}</option>
                     <option value="created_at">{t('Created At')}</option>
@@ -1142,6 +1201,7 @@ const Tasks = () => {
                   value={startDate}
                   onChange={e => setStartDate(e.target.value)}
                   className="date-input"
+                  disabled={showOnlyMyTasks}
                 />
                 <label htmlFor="date-to">{t("To")}</label>
                 <input
@@ -1150,6 +1210,7 @@ const Tasks = () => {
                   value={endDate}
                   onChange={e => setEndDate(e.target.value)}
                   className="date-input"
+                  disabled={showOnlyMyTasks}
                 />
               </div>
             </div>
@@ -1323,7 +1384,7 @@ const Tasks = () => {
                     <p>סוג משימה: {getTaskTypeName(selectedTask.type)}</p>
                     <p>לביצוע על ידי: {selectedTask.assignee.replace(/_/g, ' ')}</p>
                     {/* Show Child and Tutor only if NOT special task types */}
-                    {!isInterviewTask(selectedTask.type) && !isFamilyAdditionTask(selectedTask.type) && !isRegistrationApprovalTaskByName(selectedTask.type_name) && !isTuteeMatchTaskByName(selectedTask.type_name) && !isFamilyGroupAssignmentTaskByName(selectedTask.type_name) && !isRemoveFamilyFromGroupTaskByName(selectedTask.type_name) && !isRefundTaskByName(selectedTask.type_name) && !isDevTaskByName(selectedTask.type_name) && (
+                    {!isInterviewTask(selectedTask.type) && !isFamilyAdditionTask(selectedTask.type) && !isRegistrationApprovalTaskByName(selectedTask.type_name) && !isTuteeMatchTaskByName(selectedTask.type_name) && !isFamilyGroupAssignmentTaskByName(selectedTask.type_name) && !isRemoveFamilyFromGroupTaskByName(selectedTask.type_name) && !isRefundTaskByName(selectedTask.type_name) && !isDevTaskByName(selectedTask.type_name) && !isLiamTaskByName(selectedTask.type_name) && (
                       <>
                         <p>חניך: {getChildFullName(selectedTask.child, childrenOptions)}</p>
                         <p>חונך: {getTutorFullName(selectedTask.tutor, tutorsOptions)}</p>
@@ -1412,11 +1473,11 @@ const Tasks = () => {
                       </>
                     )}
                     {/* Show explanation field — but not for refund tasks (explanation is the /refunds?highlight URL) */}
-                    {selectedTask.explanation && !isRefundTaskByName(selectedTask.type_name) && !isDevTaskByName(selectedTask.type_name) && (
+                    {selectedTask.explanation && !isRefundTaskByName(selectedTask.type_name) && !isDevTaskByName(selectedTask.type_name) && !isLiamTaskByName(selectedTask.type_name) && (
                       <p><strong>הסבר:</strong> {selectedTask.explanation}</p>
                     )}
-                    {/* Dev task: rich-text explanation (bullets, numbered, checkboxes) */}
-                    {isDevTaskByName(selectedTask.type_name) && selectedTask.explanation && (
+                    {/* Dev/Liam task: rich-text explanation (bullets, numbered, checkboxes) */}
+                    {(isDevTaskByName(selectedTask.type_name) || isLiamTaskByName(selectedTask.type_name)) && selectedTask.explanation && (
                       <div style={{ marginTop: '10px' }}>
                         <strong>פירוט משימה:</strong>
                         <div style={{
@@ -1566,8 +1627,8 @@ const Tasks = () => {
                   </>
                 )}
                 {/* Explanation field */}
-                <label>{selectedTaskType?.label === 'משימת פיתוח' ? 'פירוט המשימה:' : 'הסבר:'}</label>
-                {selectedTaskType?.label === 'משימת פיתוח' && (
+                <label>{isRichTaskLabel(selectedTaskType?.label) ? 'פירוט המשימה:' : 'הסבר:'}</label>
+                {isRichTaskLabel(selectedTaskType?.label) && (
                   <div style={{ display: 'flex', gap: '6px', marginBottom: '6px', flexWrap: 'wrap' }}>
                     {[
                       { label: '• רשימה', insert: '- ' },
@@ -1598,7 +1659,7 @@ const Tasks = () => {
                   className="scrollable-textarea"
                   value={explanation}
                   onChange={e => setExplanation(e.target.value)}
-                  style={selectedTaskType?.label === 'משימת פיתוח' ? { minHeight: '120px', resize: 'vertical' } : {}}
+                  style={isRichTaskLabel(selectedTaskType?.label) ? { minHeight: '120px', resize: 'vertical' } : {}}
                 />
                 <button onClick={handleUpdateTask}>{t('Update Task')}</button>
               </div>
@@ -1639,9 +1700,9 @@ const Tasks = () => {
                   "staffOptions for assigned_to",
                   staffOptions.map(staff => ({ label: staff.label, role: staff.role }))
                 )}
-                {selectedTaskType?.label === 'משימת פיתוח' ? (
+                {isRichTaskLabel(selectedTaskType?.label) ? (
                   <div style={{ padding: '8px 12px', background: '#f0f4ff', borderRadius: '6px', border: '1px solid #c5d0e6', color: '#1a3a5c', fontWeight: '600', marginBottom: '4px' }}>
-                    שלמה בונצל
+                    {richTaskAssigneeName(selectedTaskType?.label)}
                   </div>
                 ) : (
                 <Select
@@ -1664,7 +1725,7 @@ const Tasks = () => {
                 />
                 )}
                 {errors.assigned_to && <p className="error-text">{errors.assigned_to}</p>}
-                {!isInterviewTask(selectedTaskType?.value) && !isFamilyAdditionTask(selectedTaskType?.value) && selectedTaskType?.label !== "הסרת משפחה מקבוצה" && selectedTaskType?.label !== 'משימת פיתוח' && (
+                {!isInterviewTask(selectedTaskType?.value) && !isFamilyAdditionTask(selectedTaskType?.value) && selectedTaskType?.label !== "הסרת משפחה מקבוצה" && !isRichTaskLabel(selectedTaskType?.label) && (
                   <>
                     <label>ילד</label>
                     <Select
@@ -1710,8 +1771,8 @@ const Tasks = () => {
                   </>
                 )}
                 {/* Explanation field */}
-                <label>{selectedTaskType?.label === 'משימת פיתוח' ? 'פירוט המשימה:' : 'הסבר:'}</label>
-                {selectedTaskType?.label === 'משימת פיתוח' && (
+                <label>{isRichTaskLabel(selectedTaskType?.label) ? 'פירוט המשימה:' : 'הסבר:'}</label>
+                {isRichTaskLabel(selectedTaskType?.label) && (
                   <div style={{ display: 'flex', gap: '6px', marginBottom: '6px', flexWrap: 'wrap' }}>
                     {[
                       { label: '• רשימה', insert: '- ' },
@@ -1747,7 +1808,7 @@ const Tasks = () => {
                   className="scrollable-textarea"
                   value={explanation}
                   onChange={e => setExplanation(e.target.value)}
-                  style={selectedTaskType?.label === 'משימת פיתוח' ? { minHeight: '120px', resize: 'vertical' } : {}}
+                  style={isRichTaskLabel(selectedTaskType?.label) ? { minHeight: '120px', resize: 'vertical' } : {}}
                 />
                 <button onClick={handleSubmitTask} disabled={isGuestUser()}>צור</button>
               </div>
