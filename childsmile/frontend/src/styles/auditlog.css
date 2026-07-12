@@ -267,7 +267,9 @@
   flex-direction: column;
   width: auto;
   max-width: 100%;
-  align-self: flex-start; /* RTL flex column → flex-start is the right edge; fit content */
+  /* No align-self → inherits main-content's align-items:center, so the grid stays
+     centered and clears the fixed right sidebar at ALL widths (the old
+     align-self:flex-start pinned it to the right edge, under the sidebar). */
   margin-top: 160px;      /* clear the absolutely-positioned filter panel above (was 570px = grid way down the screen) */
   margin-right: 200px;    /* pull the data section off the far-right edge */
 }
