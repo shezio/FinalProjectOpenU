@@ -256,6 +256,8 @@ const AuditLog = () => {
   const [page, setPage] = useState(1);
   const [pageSize] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
+  const [pageJumpInput, setPageJumpInput] = useState('');
+  const [timeJumpInput, setTimeJumpInput] = useState('');
   const [loading, setLoading] = useState(true);
   const [actions, setActions] = useState([]);
   const [selectedLogs, setSelectedLogs] = useState(new Set());
@@ -879,6 +881,35 @@ const AuditLog = () => {
     return pages;
   };
 
+  // Jump straight to a page number (pageSize is 1, so page N == entry N).
+  // Called live from the input's onChange, so it takes the raw value.
+  const handleJumpToPage = (value) => {
+    const n = parseInt(value, 10);
+    if (Number.isNaN(n)) return;
+    setPage(Math.min(Math.max(1, n), totalPages || 1));
+  };
+
+  // Jump the pagination to the log entry closest to a chosen time TODAY,
+  // within the currently filtered + sorted set. value is "HH:MM".
+  const handleJumpToTime = (value) => {
+    if (!value || filteredLogs.length === 0) return;
+    const [hh, mm] = value.split(':').map(Number);
+    if (Number.isNaN(hh) || Number.isNaN(mm)) return;
+    const targetDate = new Date();
+    targetDate.setHours(hh, mm, 0, 0);
+    const target = targetDate.getTime();
+    let closestIdx = 0;
+    let closestDiff = Infinity;
+    filteredLogs.forEach((log, i) => {
+      const diff = Math.abs(new Date(log.timestamp).getTime() - target);
+      if (diff < closestDiff) {
+        closestDiff = diff;
+        closestIdx = i;
+      }
+    });
+    setPage(closestIdx + 1);
+  };
+
   if (!hasPermissionOnAuditLog) {
     return (
       <div className="audit-log-main-content">
@@ -977,6 +1008,32 @@ const AuditLog = () => {
               <div className="no-data">{t('No audit logs to display')}</div>
             ) : (
               <>
+                {/* Jump controls live at the top of the grid card (between the
+                    filter/actions panel above and the data rows below). They're a
+                    child of the grid container, so they stretch to the table width
+                    and never shift the grid's centered position. */}
+                <div className="audit-jump-controls">
+                  <div className="audit-jump-group">
+                    <label>{t('Jump to page')}:</label>
+                    <input
+                      type="number"
+                      min="1"
+                      max={totalPages}
+                      value={pageJumpInput}
+                      onChange={e => { setPageJumpInput(e.target.value); handleJumpToPage(e.target.value); }}
+                      className="audit-jump-input"
+                    />
+                  </div>
+                  <div className="audit-jump-group">
+                    <label>{t('Jump to time')}:</label>
+                    <input
+                      type="time"
+                      value={timeJumpInput}
+                      onChange={e => { setTimeJumpInput(e.target.value); handleJumpToTime(e.target.value); }}
+                      className="audit-jump-time"
+                    />
+                  </div>
+                </div>
                 <table className="audit-log-data-grid">
                   <thead>
                     <tr>
