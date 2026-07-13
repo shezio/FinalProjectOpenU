@@ -3386,6 +3386,13 @@
     width: 20px !important;
     height: 20px !important;
   }
+  /* Tutee/child + additional-volunteers dropdown search box: span the full
+     dropdown width (the generic .feedbacks-form-row input rule caps it at 90%)
+     so it lines up with the checkbox rows beneath it. */
+  .additional-volunteers-dropdown .additional-volunteers-search {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
 
   .feedbacks-form-actions {
     position: sticky !important;
