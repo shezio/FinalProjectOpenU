@@ -86,6 +86,7 @@ const Feedbacks = () => {
   const [showAdditionalVolunteersDropdown, setShowAdditionalVolunteersDropdown] = useState(false);
   const [additionalVolunteersSearch, setAdditionalVolunteersSearch] = useState("");
   const [showSubjectDropdown, setShowSubjectDropdown] = useState(false);
+  const [subjectSearch, setSubjectSearch] = useState("");
   // Free-text volunteer/tutor name entry: tracks the text typed into the filler
   // Select so an unlisted name can be confirmed (✓) straight from the dropdown.
   const [fillerInput, setFillerInput] = useState("");
@@ -294,6 +295,7 @@ const Feedbacks = () => {
     setShowAdditionalVolunteersDropdown(false);
     setAdditionalVolunteersSearch("");
     setShowSubjectDropdown(false);
+    setSubjectSearch("");
   };
 
   // ── Bulk edit: reassign every feedback from one volunteer name to another ──
@@ -1223,7 +1225,10 @@ const Feedbacks = () => {
                             <button
                               type="button"
                               className={`additional-volunteers-dropdown-button`}
-                              onClick={() => setShowSubjectDropdown(prev => !prev)}
+                              onClick={() => {
+                                setShowSubjectDropdown(prev => !prev);
+                                setSubjectSearch("");
+                              }}
                             >
                               {modalData.subject_ids && modalData.subject_ids.length > 0
                                 ? subjects.filter(s => modalData.subject_ids.includes(s.id)).map(s => s.name).join(', ')
@@ -1231,7 +1236,17 @@ const Feedbacks = () => {
                             </button>
                             {showSubjectDropdown && (
                               <div className="additional-volunteers-dropdown">
-                                {subjects.map((subject) => (
+                                <input
+                                  type="text"
+                                  className="additional-volunteers-search"
+                                  placeholder={t('Search Tutee')}
+                                  value={subjectSearch}
+                                  onChange={e => setSubjectSearch(e.target.value)}
+                                  autoFocus
+                                />
+                                {subjects
+                                  .filter(subject => subject.name.toLowerCase().includes(subjectSearch.trim().toLowerCase()))
+                                  .map((subject) => (
                                   <div key={subject.id} className="additional-volunteers-dropdown-item">
                                     <input
                                       type="checkbox"
@@ -1247,6 +1262,9 @@ const Feedbacks = () => {
                                     <label htmlFor={`subject-${subject.id}`}>{subject.name}</label>
                                   </div>
                                 ))}
+                                {subjects.filter(subject => subject.name.toLowerCase().includes(subjectSearch.trim().toLowerCase())).length === 0 && (
+                                  <div className="additional-volunteers-no-results">{t('No data to display')}</div>
+                                )}
                               </div>
                             )}
                           </div>
