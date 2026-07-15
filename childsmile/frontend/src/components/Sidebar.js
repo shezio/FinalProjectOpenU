@@ -99,8 +99,11 @@ const Sidebar = () => {
   const isCoordinator = roles.some(r => typeof r === 'string' && r.includes('Coordinator'));
   // "only tutor/volunteer" = has EXACTLY ONE role and it is Tutor or General Volunteer
   const isOnlyTutorOrVolunteer = roles.length === 1 && (roles[0] === 'Tutor' || roles[0] === 'General Volunteer');
-  // "only reviewer" = has reviewer role but NO coordinator/admin
-  const isOnlyReviewer = isReviewer && !isAdmin && !isCoordinator;
+  // "only reviewer" = has EXACTLY ONE role and it is Reviewer. A reviewer who ALSO
+  // holds another role (General Volunteer, Tutor, Coordinator, Admin…) must keep
+  // seeing that role's pages (e.g. Feedbacks/Tutorships for a General Volunteer),
+  // so the restriction only applies when Reviewer is the sole role.
+  const isOnlyReviewer = roles.length === 1 && roles[0] === 'Reviewer';
 
   // ── Permissions ───────────────────────────────────────────────
   const hasPermissionToTasks           = !isOnlyReviewer && !isOnlyTutorOrVolunteer && (isGuest || hasViewPermissionForTable('tasks'));
