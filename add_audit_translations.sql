@@ -257,3 +257,19 @@ INSERT INTO public.childsmile_app_audittranslation (action, hebrew_translation) 
     ('DELETE_ONGOING_EXPENSE_FAILED',    'כישלון במחיקת הוצאה שוטפת')
 ON CONFLICT (action) DO UPDATE
     SET hebrew_translation = EXCLUDED.hebrew_translation;
+
+-- Financial Aid (סיוע כספי) — added with add_financial_aid_table.sql
+INSERT INTO public.childsmile_app_audittranslation (action, hebrew_translation) VALUES
+    ('VIEW_FINANCIAL_AID',                 'צפייה בסיוע כספי'),
+    ('VIEW_FINANCIAL_AID_FAILED',          'כישלון בצפייה בסיוע כספי'),
+    ('CREATE_FINANCIAL_AID',               'הוספת רישום סיוע כספי'),
+    ('CREATE_FINANCIAL_AID_FAILED',        'כישלון בהוספת רישום סיוע כספי'),
+    ('UPDATE_FINANCIAL_AID',               'עדכון רישום סיוע כספי'),
+    ('UPDATE_FINANCIAL_AID_FAILED',        'כישלון בעדכון רישום סיוע כספי'),
+    ('DELETE_FINANCIAL_AID',               'מחיקת רישום סיוע כספי'),
+    ('DELETE_FINANCIAL_AID_FAILED',        'כישלון במחיקת רישום סיוע כספי'),
+    ('DELETE_FINANCIAL_AID_ATTACHMENT',        'מחיקת מסמך מסיוע כספי'),
+    ('DELETE_FINANCIAL_AID_ATTACHMENT_FAILED', 'כישלון במחיקת מסמך מסיוע כספי')
+ON CONFLICT (action) DO UPDATE
+    SET hebrew_translation = EXCLUDED.hebrew_translation;
+

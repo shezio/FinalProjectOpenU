@@ -998,6 +998,91 @@ class OngoingExpense(models.Model):
         ]
 
 
+class FinancialAid(models.Model):
+    """
+    Tracks one-off financial aid payments made to supported families (סיוע כספי).
+    Source spreadsheet: "רשימת נתמכים סיוע כספי".
+
+    ADMIN-ONLY module (System Administrator / Viewer), same base shape as
+    PettyCashExpense/OngoingExpense, PLUS two things neither of those have:
+      - an OPTIONAL link to an existing family record (`linked_child`) — most
+        recipients are NOT registered families (they have no login/user account
+        at all; this table works identically for registered and unregistered
+        recipients — `family_name` is always free text regardless of whether
+        `linked_child` is set).
+      - supporting documents (מכתב בקשה ומסמכים) — see FinancialAidAttachment,
+        a record can have MULTIPLE files (unlike ExpenseRefund.file_url, which
+        is a single URLField).
+    """
+
+    class Method(models.TextChoices):
+        BANK_TRANSFER = 'העברה בנקאית', 'Bank Transfer'
+        CASH = 'מזומן', 'Cash'
+        OTHER = 'אחר', 'Other'
+
+    financial_aid_id = models.AutoField(primary_key=True)
+
+    family_name = models.CharField(max_length=255)  # "שם משפחה" - always free text, required
+    aid_date = models.DateField()  # "תאריך סיוע"
+    amount = models.DecimalField(max_digits=10, decimal_places=2)  # "סכום סיוע"
+    method = models.CharField(max_length=30, choices=Method.choices)  # "אופן ביצוע"
+    notes = models.TextField(null=True, blank=True)  # "הערות"
+
+    # Optional link to an existing family record - set ONLY when staff picks a
+    # registered family from the search dropdown (never auto-detected). NULL =
+    # not registered / one-off recipient. SET_NULL (not CASCADE) so deleting the
+    # family record later doesn't wipe this financial aid history row.
+    linked_child = models.ForeignKey(
+        Children, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='financial_aid_records'
+    )
+
+    # Timestamps - Django manages these automatically, matching all other models
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    # Tracks which staff username last modified this record (username string, not FK)
+    # — same convention as ExpenseRefund.updated_by / PettyCashExpense.updated_by.
+    updated_by = models.CharField(max_length=255, null=True, blank=True)
+
+    def __str__(self):
+        return f"FinancialAid #{self.financial_aid_id} - {self.family_name} - {self.amount}₪"
+
+    class Meta:
+        db_table = "childsmile_app_financialaid"
+        ordering = ['-aid_date', '-financial_aid_id']
+        indexes = [
+            models.Index(fields=['-aid_date'], name='idx_financialaid_aid_date'),
+            models.Index(fields=['linked_child'], name='idx_financialaid_child'),
+        ]
+
+
+class FinancialAidAttachment(models.Model):
+    """
+    Supporting documents for a FinancialAid record (מכתב בקשה ומסמכים) — request
+    letter + any supporting docs. A FinancialAid record can have MULTIPLE
+    attachments, so this is a separate one-to-many table rather than another
+    URLField on FinancialAid itself (unlike ExpenseRefund's single file_url).
+    Storage: Azure Blob Storage URL, same upload flow as ExpenseRefund.file_url
+    — see financial_aid_views.py::get_financial_aid_upload_url.
+    """
+
+    attachment_id = models.AutoField(primary_key=True)
+    financial_aid = models.ForeignKey(
+        FinancialAid, on_delete=models.CASCADE, related_name='attachments'
+    )
+    file_url = models.URLField(max_length=2048)
+    file_name = models.CharField(max_length=255, null=True, blank=True)  # original filename, for display
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"FinancialAidAttachment #{self.attachment_id} for FinancialAid #{self.financial_aid_id}"
+
+    class Meta:
+        db_table = "childsmile_app_financialaidattachment"
+        ordering = ['uploaded_at']
+
+
 class NotificationMessage(models.Model):
     """
     Notification messages displayed in the notification center bell panel.

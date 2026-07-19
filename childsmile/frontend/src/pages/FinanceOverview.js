@@ -16,12 +16,14 @@ import '../styles/financeoverview.css';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend);
 
-// ADMIN-ONLY page (aggregates Petty Cash + Ongoing Expenses, both admin-only —
-// see add_petty_cash_table.sql / add_ongoing_expenses_table.sql). Same
-// requiredPermissions + hasAllPermissions pattern as SystemManagement.js / AuditLog.js.
+// ADMIN-ONLY page (aggregates Petty Cash + Ongoing Expenses + Financial Aid, all
+// admin-only — see add_petty_cash_table.sql / add_ongoing_expenses_table.sql /
+// add_financial_aid_table.sql). Same requiredPermissions + hasAllPermissions
+// pattern as SystemManagement.js / AuditLog.js.
 const requiredPermissions = [
   { resource: 'childsmile_app_pettycashexpense', action: 'VIEW' },
   { resource: 'childsmile_app_ongoingexpense', action: 'VIEW' },
+  { resource: 'childsmile_app_financialaid', action: 'VIEW' },
 ];
 
 const HEBREW_MONTHS = ['ינו', 'פבר', 'מרץ', 'אפר', 'מאי', 'יונ', 'יול', 'אוג', 'ספט', 'אוק', 'נוב', 'דצמ'];
@@ -41,6 +43,7 @@ const FinanceOverview = () => {
   const [refunds, setRefunds] = useState([]);
   const [pettyCash, setPettyCash] = useState([]);
   const [ongoingExpenses, setOngoingExpenses] = useState([]);
+  const [financialAid, setFinancialAid] = useState([]);
   const [loading, setLoading] = useState(true);
   const [sendingMonthlySummary, setSendingMonthlySummary] = useState(false);
 
@@ -55,11 +58,13 @@ const FinanceOverview = () => {
       axios.get('/api/refunds/'),
       axios.get('/api/petty-cash/'),
       axios.get('/api/ongoing-expenses/'),
+      axios.get('/api/financial-aid/'),
     ])
-      .then(([refundsRes, pettyCashRes, ongoingRes]) => {
+      .then(([refundsRes, pettyCashRes, ongoingRes, financialAidRes]) => {
         setRefunds(refundsRes.data.refunds || []);
         setPettyCash(pettyCashRes.data.petty_cash || []);
         setOngoingExpenses(ongoingRes.data.ongoing_expenses || []);
+        setFinancialAid(financialAidRes.data.financial_aid || []);
       })
       .catch(err => {
         showErrorToast(t, err.response?.data?.error || 'שגיאה בטעינת נתוני הסקירה', '');
@@ -109,12 +114,14 @@ const FinanceOverview = () => {
 
   const ongoingTotal = ongoingExpenses.reduce((s, o) => s + parseFloat(o.amount || 0), 0);
 
-  const grandTotal = refundsPaidTotal + pettyCashManualTotal + ongoingTotal;
-  const totalTransactions = refunds.length + pettyCash.length + ongoingExpenses.length;
+  const financialAidTotal = financialAid.reduce((s, a) => s + parseFloat(a.amount || 0), 0);
+
+  const grandTotal = refundsPaidTotal + pettyCashManualTotal + ongoingTotal + financialAidTotal;
+  const totalTransactions = refunds.length + pettyCash.length + ongoingExpenses.length + financialAid.length;
 
   // Combined ledger for the "ייצוא לאקסל" button — same de-duplication as grandTotal
   // above (paid refunds + manual petty cash only, so auto-synced rows aren't
-  // double counted), one row per transaction across all 3 modules.
+  // double counted), one row per transaction across all active modules.
   const combinedTransactions = [
     ...paidRefunds.map(r => ({
       date: r.expense_date,
@@ -134,9 +141,15 @@ const FinanceOverview = () => {
       description: o.expense_name,
       amount: parseFloat(o.amount || 0),
     })),
+    ...financialAid.map(a => ({
+      date: a.aid_date,
+      source: 'סיוע כספי',
+      description: a.family_name,
+      amount: parseFloat(a.amount || 0),
+    })),
   ].sort((a, b) => new Date(b.date) - new Date(a.date));
 
-  const ACTIVE_MODULES = 3;
+  const ACTIVE_MODULES = 4;
   const TOTAL_MODULES = 5;
 
   // ── Monthly trend (last 6 months, de-duplicated the same way as grandTotal) ─
@@ -145,6 +158,7 @@ const FinanceOverview = () => {
       ...ongoingExpenses.map(o => ({ key: monthKeyOf(o.expense_date), amount: parseFloat(o.amount || 0) })),
       ...pettyCashManual.map(p => ({ key: monthKeyOf(p.expense_date), amount: parseFloat(p.amount || 0) })),
       ...paidRefunds.map(r => ({ key: monthKeyOf(r.expense_date), amount: parseFloat(r.approved_amount || r.requested_amount || 0) })),
+      ...financialAid.map(a => ({ key: monthKeyOf(a.aid_date), amount: parseFloat(a.amount || 0) })),
     ];
     const totalsByMonth = {};
     combined.forEach(({ key, amount }) => {
@@ -269,10 +283,11 @@ const FinanceOverview = () => {
                   <div className="finance-overview-modcard-vv">{ongoingTotal.toFixed(2)} ₪</div>
                   <div className="finance-overview-modcard-cnt">{ongoingExpenses.length} רשומות</div>
                 </div>
-                <div className="finance-overview-modcard finance-overview-modcard--soon">
+                <div className="finance-overview-modcard" onClick={() => navigate('/financial-aid')}>
                   <div className="finance-overview-modcard-ic">🤝</div>
                   <div className="finance-overview-modcard-nm">סיוע כספי</div>
-                  <span className="finance-overview-soon-badge">בקרוב</span>
+                  <div className="finance-overview-modcard-vv">{financialAidTotal.toFixed(2)} ₪</div>
+                  <div className="finance-overview-modcard-cnt">{financialAid.length} רשומות</div>
                 </div>
               </div>
             </div>

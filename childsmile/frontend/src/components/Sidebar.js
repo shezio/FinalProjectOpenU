@@ -117,6 +117,9 @@ const Sidebar = () => {
   const hasPermissionToPettyCash        = isGuest || hasViewPermissionForTable('pettycashexpense');
   // Ongoing Expenses (הוצאות שוטפות) — same admin-only, desktop-only treatment as Petty Cash.
   const hasPermissionToOngoingExpenses   = isGuest || hasViewPermissionForTable('ongoingexpense');
+  // Financial Aid (סיוע כספי) — admin-only, desktop-only, same treatment as Petty Cash/Ongoing
+  // Expenses. Sensitive personal/financial data about supported families.
+  const hasPermissionToFinancialAid      = isGuest || hasViewPermissionForTable('financialaid');
   // Finance Overview (סקירה כללית) — aggregates Petty Cash + Ongoing Expenses (both admin-only),
   // so requires VIEW on both — effectively admin/Viewer-only, same as its underlying data.
   const hasPermissionToFinanceOverview   = isGuest || (hasViewPermissionForTable('pettycashexpense') && hasViewPermissionForTable('ongoingexpense'));
@@ -131,7 +134,7 @@ const Sidebar = () => {
   // כספים (Finance) section: Refunds + Petty Cash + Ongoing Expenses. Each item keeps
   // its OWN existing permission gate (unchanged) — a non-admin who only has Refunds
   // access still only sees that one item here, same access as before this section existed.
-  const hasFinanceSection     = hasPermissionToFinanceOverview || hasPermissionToRefunds || hasPermissionToPettyCash || hasPermissionToOngoingExpenses;
+  const hasFinanceSection     = hasPermissionToFinanceOverview || hasPermissionToRefunds || hasPermissionToPettyCash || hasPermissionToOngoingExpenses || hasPermissionToFinancialAid;
   const hasManagementSection  = hasPermissionToAnyReport || hasPermissionToSystemManagement || hasPermissionToReviewer || hasPermissionToAuditLog;
 
   useEffect(() => {
@@ -322,6 +325,9 @@ const Sidebar = () => {
                 {hasPermissionToOngoingExpenses && (
                   <NavBtn path="/ongoing-expenses" icon="⛽" label="הוצאות שוטפות" {...navProps} />
                 )}
+                {hasPermissionToFinancialAid && (
+                  <NavBtn path="/financial-aid" icon="🤝" label="סיוע כספי" {...navProps} />
+                )}
               </div>
             )}
             {isCollapsed && (
@@ -330,6 +336,7 @@ const Sidebar = () => {
                 {hasPermissionToRefunds && <NavBtn path="/refunds" icon="💰" label="החזרי הוצאות" {...navProps} />}
                 {hasPermissionToPettyCash && <NavBtn path="/petty-cash" icon="💵" label="קופה קטנה" {...navProps} />}
                 {hasPermissionToOngoingExpenses && <NavBtn path="/ongoing-expenses" icon="⛽" label="הוצאות שוטפות" {...navProps} />}
+                {hasPermissionToFinancialAid && <NavBtn path="/financial-aid" icon="🤝" label="סיוע כספי" {...navProps} />}
               </>
             )}
           </>

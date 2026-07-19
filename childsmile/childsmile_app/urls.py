@@ -447,6 +447,8 @@ urlpatterns = [
     path("api/petty-cash/", include("childsmile_app.urls_petty_cash")),
     # Ongoing Expenses (הוצאות שוטפות) — admin-only
     path("api/ongoing-expenses/", include("childsmile_app.urls_ongoing_expense")),
+    # Financial Aid (סיוע כספי) — admin-only
+    path("api/financial-aid/", include("childsmile_app.urls_financial_aid")),
     # Twilio WhatsApp webhooks
     path("api/webhooks/whatsapp-incoming/", whatsapp_incoming, name="whatsapp_incoming"),
     # Notification Center

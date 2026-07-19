@@ -2100,3 +2100,44 @@ export const exportFinanceOverviewToExcel = async (transactions, t) => {
     showErrorToast(t, '', { message: 'Export failed' });
   }
 };
+
+export const exportFinancialAidToExcel = async (entries, t) => {
+  const reportName = 'financial_aid';
+  const format = 'EXCEL';
+  try {
+    if (!entries || entries.length === 0) {
+      const errorMsg = 'אין נתונים לייצוא';
+      await auditExportFailure(format, reportName, errorMsg, 'VALIDATION');
+      showErrorToast(t, '', { message: errorMsg });
+      return;
+    }
+
+    const headers = ['#', 'שם משפחה', 'תאריך סיוע', 'סכום (₪)', 'אופן ביצוע', 'מקושר לתיק משפחה', 'מסמכים', 'הערות'];
+    const rows = entries.map(e => [
+      e.id,
+      e.family_name,
+      e.aid_date,
+      Number(e.amount || 0).toFixed(2),
+      e.method || '',
+      e.linked_child_id ? 'כן' : 'לא',
+      (e.attachments || []).length,
+      e.notes || '',
+    ]);
+
+    const worksheetData = [headers, ...rows];
+    const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
+    worksheet['!cols'] = _autoFitColumns(worksheetData);
+    worksheet['!dir'] = 'rtl';
+
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'סיוע כספי');
+    XLSX.writeFile(workbook, 'סיוע_כספי.xlsx');
+    toast.success(t('Exported to Excel successfully'));
+
+    await auditExportSuccess(format, entries.length, reportName, ['family_names', 'aid_amounts']);
+  } catch (error) {
+    console.error('Export failed:', error);
+    await auditExportFailure(format, reportName, error.message, 'TECHNICAL');
+    showErrorToast(t, '', { message: 'Export failed' });
+  }
+};

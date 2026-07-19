@@ -646,6 +646,37 @@ textarea.error {
   line-height: 1.5;
 }
 
+/* Financial Aid history (סיוע כספי) — read-only section in the family details modal */
+.family-financial-aid-history {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(99, 102, 241, 0.2);
+}
+
+.family-financial-aid-history h3 {
+  font-size: 1.4em;
+  color: #4f46e5;
+  margin: 0 0 10px 0;
+}
+
+.family-financial-aid-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.family-financial-aid-table th,
+.family-financial-aid-table td {
+  padding: 8px 12px;
+  text-align: right;
+  font-size: 1.1em;
+  border-bottom: 1px solid rgba(99, 102, 241, 0.1);
+}
+
+.family-financial-aid-table th {
+  color: #6b7280;
+  font-weight: 600;
+}
+
 /* MULTI-TUTOR SUPPORT: Tutors section styling */
 .tutors-section {
   grid-column: span 2;
