@@ -263,6 +263,47 @@ class Children(models.Model):
         db_table = "childsmile_app_children"
 
 
+class ChildrenLookup(models.Model):
+    """
+    SECURITY HARDENING — minimal read-only view of Children (see
+    add_children_lookup_view.sql). Exposes ONLY child_id/first name/last
+    name/city/status — no medical data, no phone numbers, no address, no
+    coordinator notes. `managed = False`: Django never creates/migrates
+    this table, it's a plain SQL VIEW over childsmile_app_children.
+
+    Use this (never the real Children model) anywhere a feature only needs
+    to search/display a family by name — e.g. Vouchers' "link to family"
+    picker, linked_child_name labels, linked_child_id existence checks, AND
+    comparing a recipient's self-reported child_treatment_status against the
+    child's REAL status (`status` is a workflow/lifecycle field, not medical
+    detail — same sensitivity tier as `city`). This makes it a structural
+    guarantee (not just serializer discipline) that those features can never
+    leak medical/personal data: the sensitive columns simply don't exist in
+    this model/view at all.
+
+    SCOPE: only used by voucher_views.py (genuine unauthenticated public
+    surface). financial_aid_views.py is 100% authenticated-admin-only and
+    queries Children directly — no benefit from this view there.
+
+    The actual linked_child ForeignKey fields on FinancialAid/VoucherRecipient
+    still reference the real Children table directly for the FK constraint
+    itself (Postgres can't FK to a view) — this model is READ-ONLY lookups.
+    """
+    child_id = models.BigIntegerField(primary_key=True)
+    childfirstname = models.CharField(max_length=255)
+    childsurname = models.CharField(max_length=255)
+    city = models.CharField(max_length=255)
+    status = models.CharField(max_length=20)
+
+    class Meta:
+        managed = False
+        db_table = "childsmile_app_children_lookup"
+
+    @property
+    def full_name(self):
+        return f"{self.childfirstname} {self.childsurname}"
+
+
 class Tutorships(models.Model):
     id = models.AutoField(primary_key=True)
     child = models.ForeignKey(Children, on_delete=models.CASCADE)
@@ -1098,6 +1139,160 @@ class FinancialAidAttachment(models.Model):
     class Meta:
         db_table = "childsmile_app_financialaidattachment"
         ordering = ['uploaded_at']
+
+
+class VoucherDistribution(models.Model):
+    """
+    A single voucher distribution round (חלוקת תלושים) — e.g. "חלוקת חג הפסח 2026".
+    Source spreadsheet: "סיכומי חלוקת תלושים" (+ per-distribution response sheets
+    like "פסח 26"). ADMIN-ONLY module.
+
+    `distributed_amount` is deliberately NOT stored — it's computed from the sum
+    of this distribution's VoucherRecipient.approved_amount (same
+    don't-store-what-you-can-compute approach as Financial Aid/Ongoing Expenses'
+    totals, computed client-side from the list endpoint's data).
+    """
+
+    class VoucherType(models.TextChoices):
+        RAMI_LEVI = 'רמי לוי', 'Rami Levy'
+        TAV_PLUS_CARREFOUR = 'תו פלוס - קרפור', 'Tav Plus - Carrefour'
+        OTHER = 'אחר', 'Other'
+
+    class QuestionnaireType(models.TextChoices):
+        ORGANIZATION = 'עמותה', 'Organization family'
+        GENERAL = 'כללי', 'General / not registered'
+        NONE = 'ללא', 'No public questionnaire (internal list only)'
+
+    distribution_id = models.AutoField(primary_key=True)
+
+    name = models.CharField(max_length=255)  # "שם החלוקה"
+    voucher_type = models.CharField(max_length=30, choices=VoucherType.choices)  # "סוג תו"
+    initial_amount = models.DecimalField(max_digits=12, decimal_places=2)  # "סכום התחלתי"
+    start_date = models.DateField(null=True, blank=True)  # "תאריך התחלה/קבלה"
+    end_date = models.DateField(null=True, blank=True)  # "תאריך סיום"
+
+    # "דרכנו / לא דרכנו" — a real boolean field per the spec's own explicit
+    # improvement recommendation (today it's crammed into a free-text notes
+    # column; a dedicated field enables filtering).
+    is_completed = models.BooleanField(default=False)
+
+    # Which public questionnaire template (if any) feeds this distribution's
+    # recipient list — see VoucherRecipient. NONE = internal list only, staff
+    # add recipients manually (no public form for this particular round).
+    questionnaire_type = models.CharField(
+        max_length=10, choices=QuestionnaireType.choices, default=QuestionnaireType.NONE
+    )
+
+    notes = models.TextField(null=True, blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    updated_by = models.CharField(max_length=255, null=True, blank=True)
+
+    def __str__(self):
+        return f"VoucherDistribution #{self.distribution_id} - {self.name}"
+
+    class Meta:
+        db_table = "childsmile_app_voucherdistribution"
+        ordering = ['-start_date', '-distribution_id']
+
+
+class VoucherRecipient(models.Model):
+    """
+    One family's entry in a voucher distribution's recipient list (מקבל בחלוקה).
+    Built from 2 sources, same row either way:
+      (a) the family's own PUBLIC questionnaire submission (no login — same
+          "action of a non-user" precedent as volunteer/tutor registration;
+          see voucher_views.py::submit_voucher_questionnaire, which has no
+          auth check at all, matching views_volunteer.py's public endpoints).
+      (b) processing fields the team fills in afterward (approved_amount,
+          ready, assigned_volunteer, delivered, notes, linked_child).
+
+    Two questionnaire variants (per distribution.questionnaire_type) share this
+    ONE table — variant-specific fields are simply left blank for the other
+    variant (e.g. `referral_source` only applies to כללי, `child_name` etc.
+    only apply to עמותה) rather than splitting into two tables, since every
+    processing field is shared and the two field sets mostly overlap.
+
+    `linked_child` is set in ONE of two ways: (a) AUTO-MATCHED - `child_id` on
+    `Children` IS the real government ת"ז (imported directly from the
+    "תעודת זהות ילד/ה" column, see family_views.py's bulk import /
+    sqlizeforphones.py - NOT an opaque internal PK), so when the עמותה
+    questionnaire's `child_id_number` matches an existing child, it's linked
+    automatically (see voucher_views.py::_apply_recipient_fields) - or (b) a
+    MANUAL pick by staff (financial_aid-style family combo-picker) for cases
+    the auto-match missed (typo'd ID, כללי submissions with no ID field at
+    all, or manually-added recipients). An admin's explicit manual pick always
+    takes priority over auto-matching.
+    """
+
+    class DeliveredStatus(models.TextChoices):
+        YES = 'כן', 'Yes'
+        SELF_PICKUP = 'איסוף עצמי', 'Self pickup'
+        NO = 'לא', 'No'
+
+    recipient_id = models.AutoField(primary_key=True)
+    distribution = models.ForeignKey(
+        VoucherDistribution, on_delete=models.CASCADE, related_name='recipients'
+    )
+
+    # ── Questionnaire fields (submitted by the family, or typed in by staff for
+    # internal-only lists with no public form) ──────────────────────────────
+    full_name = models.CharField(max_length=255)  # "שם מלא" (הורה / פונה)
+    parent_id_number = models.CharField(max_length=20, null=True, blank=True)  # "תעודת זהות של ההורה"
+    phone = models.CharField(max_length=20, null=True, blank=True)
+    child_name = models.CharField(max_length=255, null=True, blank=True)  # עמותה only
+    # עמותה only - MUST match Children.status's real choices exactly (same real-world
+    # concept, same children) - NOT invented values. Kept as a plain (non-required)
+    # CharField with matching choices= for self-documentation/consistency; actual
+    # enforcement happens server-side in voucher_views.py's _CHILD_TREATMENT_STATUSES.
+    child_treatment_status = models.CharField(
+        max_length=50, null=True, blank=True,
+        choices=[
+            ("טיפולים", "טיפולים"),
+            ("מעקבים", "מעקבים"),
+            ("אחזקה", "אחזקה"),
+            ("ז״ל", "ז״ל"),
+            ("בריא", "בריא"),
+            ("עזב", "עזב"),
+        ],
+    )
+    child_id_number = models.CharField(max_length=20, null=True, blank=True)  # עמותה only - "תעודת זהות של הילד"
+    num_children_at_home = models.IntegerField(null=True, blank=True)
+    city = models.CharField(max_length=255, null=True, blank=True)  # separate field (spec improvement)
+    street_address = models.CharField(max_length=255, null=True, blank=True)  # street+number+floor+apt (spec improvement)
+    case_description = models.TextField(null=True, blank=True)  # "תיאור המקרה"
+    referral_source = models.CharField(max_length=255, null=True, blank=True)  # כללי only - "גורם מפנה"
+    submitted_at = models.DateTimeField(null=True, blank=True)  # "חותמת זמן" - null for manually-added rows
+
+    # ── Processing fields (added by staff afterward) ─────────────────────────
+    approved_amount = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)  # "סכום"
+    ready = models.BooleanField(default=False)  # "מוכן"
+    assigned_volunteer = models.CharField(max_length=255, null=True, blank=True)  # "מתנדב" - free text, same as PettyCash.paid_by
+    delivered = models.CharField(max_length=20, choices=DeliveredStatus.choices, null=True, blank=True)  # "נמסר"
+    notes = models.TextField(null=True, blank=True)  # e.g. "סל מזון"
+
+    # Link to an existing registered family - AUTO-matched by child_id_number
+    # (the real ת"ז) when possible, else a manual pick by staff. See class docstring.
+    linked_child = models.ForeignKey(
+        Children, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='voucher_recipient_records'
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    updated_by = models.CharField(max_length=255, null=True, blank=True)
+
+    def __str__(self):
+        return f"VoucherRecipient #{self.recipient_id} - {self.full_name} (distribution #{self.distribution_id})"
+
+    class Meta:
+        db_table = "childsmile_app_voucherrecipient"
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['distribution'], name='idx_voucherrecip_distribution'),
+            models.Index(fields=['linked_child'], name='idx_voucherrecip_child'),
+        ]
 
 
 class NotificationMessage(models.Model):

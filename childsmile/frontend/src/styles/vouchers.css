@@ -1,0 +1,390 @@
+/* vouchers.css */
+
+* {
+  font-family: Rubik, sans-serif;
+}
+
+/* ── Main layout ─────────────────────────────────────────────────────────── */
+.vouchers-main-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  flex-grow: 1;
+  padding: 230px 40px 40px 40px;
+  margin-right: 280px;
+  width: calc(100% - 280px);
+  background: transparent;
+}
+
+.vouchers-main-content.sidebar-collapsed {
+  margin-right: 80px;
+  width: calc(100% - 80px);
+}
+
+/* ── Page header controls ───────────────────────────────────────────────── */
+.vouchers-controls {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  width: 100%;
+  align-items: center;
+}
+
+.vouchers-controls button {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.9), rgba(168, 85, 247, 0.9));
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 10px 20px;
+  font-size: 22px;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+  font-family: Rubik, sans-serif;
+}
+
+.vouchers-controls button:hover {
+  opacity: 0.85;
+}
+
+.vouchers-controls .tutorship-search-bar {
+  width: 380px;
+}
+
+/* ── Totals bar ─────────────────────────────────────────────────────────── */
+.vouchers-totals-bar {
+  display: flex;
+  gap: 24px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+  width: 100%;
+  justify-content: flex-start;
+}
+
+.vouchers-total-chip {
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  border-radius: 12px;
+  padding: 8px 18px;
+  font-size: 22px;
+  color: #374151;
+}
+
+.vouchers-total-chip strong {
+  color: #4f46e5;
+  font-size: 22px;
+}
+
+/* ── Table ──────────────────────────────────────────────────────────────── */
+.vouchers-table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  border-radius: 16px;
+  box-shadow: 0 4px 24px rgba(99, 102, 241, 0.15);
+}
+
+.vouchers-table {
+  width: 95%;
+  table-layout: auto;
+  border-collapse: collapse;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+}
+
+.vouchers-table thead tr {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.9), rgba(168, 85, 247, 0.9));
+  color: white;
+}
+
+.vouchers-table th,
+.vouchers-table td {
+  padding: 12px 18px;
+  text-align: right;
+  font-size: 20px;
+  white-space: nowrap;
+  border-bottom: 1px solid rgba(99, 102, 241, 0.08);
+}
+
+.vouchers-table tbody tr:hover {
+  background: rgba(99, 102, 241, 0.05);
+}
+
+/* Clickable recipient-count link */
+.vouchers-link {
+  color: #4f46e5;
+  text-decoration: underline;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+/* Distribution status badge */
+.vouchers-status-badge {
+  display: inline-block;
+  padding: 3px 12px;
+  border-radius: 20px;
+  font-size: 16px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.vouchers-status-badge--done {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.vouchers-status-badge--progress {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+/* Family linkage badges (recipients table) */
+.vouchers-linked-badge {
+  color: #059669;
+  font-size: 17px;
+}
+
+.vouchers-unregistered-badge {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 20px;
+  font-size: 15px;
+  font-weight: 600;
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+/* Shown when a recipient's self-reported child_treatment_status (עמותה
+   questionnaire) doesn't match the linked child's REAL current status. */
+.vouchers-status-mismatch {
+  margin-right: 6px;
+  cursor: help;
+  font-size: 16px;
+}
+
+/* ── Table action buttons ──────────────────────────────────────────────── */
+.vouchers-row-actions {
+  display: inline-flex;
+  gap: 6px;
+}
+
+.vouchers-action-btn {
+  cursor: pointer;
+  font-size: 20px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 5px;
+  border: none;
+  font-family: Rubik, sans-serif;
+  color: #fff;
+  background: #3b82f6;
+  transition: background 0.15s;
+}
+
+.vouchers-action-btn:hover {
+  background: #2563eb;
+}
+
+.vouchers-action-btn[title="מחק"] {
+  background: #ef4444;
+}
+
+.vouchers-action-btn[title="מחק"]:hover {
+  background: #dc2626;
+}
+
+.vouchers-action-btn--link {
+  background: #10b981;
+}
+
+.vouchers-action-btn--link:hover {
+  background: #059669;
+}
+
+/* ── Modal overlay ──────────────────────────────────────────────────────── */
+.vouchers-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+
+.vouchers-modal {
+  background: white;
+  border-radius: 20px;
+  padding: 40px 48px;
+  width: 90vw;
+  max-width: 900px;
+  max-height: 90vh;
+  overflow-y: auto;
+  direction: rtl;
+  box-shadow: 0 20px 60px rgba(99, 102, 241, 0.25);
+  position: relative;
+}
+
+.vouchers-modal.vouchers-modal--narrow {
+  width: 420px;
+}
+
+.vouchers-modal h2 {
+  margin: 0 0 24px 0;
+  font-size: 26px;
+  color: #4f46e5;
+}
+
+.vouchers-modal-close {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  background: none;
+  border: none;
+  font-size: 28px;
+  cursor: pointer;
+  color: #6b7280;
+  line-height: 1;
+}
+
+/* ── Form fields ─────────────────────────────────────────────────────────── */
+.vouchers-modal-body {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.vouchers-form-group {
+  margin-bottom: 16px;
+}
+
+.vouchers-form-group.full-width {
+  grid-column: 1 / -1;
+}
+
+.vouchers-form-group label {
+  display: block;
+  font-size: 20px;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 5px;
+}
+
+.vouchers-form-group input,
+.vouchers-form-group select,
+.vouchers-form-group textarea {
+  width: 100%;
+  padding: 9px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  font-size: 20px;
+  font-family: Rubik, sans-serif;
+  direction: rtl;
+  box-sizing: border-box;
+  transition: border-color 0.2s ease;
+}
+
+.vouchers-form-group input:focus,
+.vouchers-form-group select:focus,
+.vouchers-form-group textarea:focus {
+  outline: none;
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+}
+
+.vouchers-form-group textarea {
+  resize: vertical;
+  min-height: 70px;
+}
+
+.vouchers-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 18px;
+  font-weight: 400;
+  color: #374151;
+}
+
+.vouchers-checkbox-label input[type="checkbox"] {
+  width: auto;
+  accent-color: #6366f1;
+}
+
+.vouchers-field-error {
+  color: #ef4444;
+  font-size: 17px;
+  margin-top: 3px;
+}
+
+/* react-select sizing to match the rest of the form */
+.vouchers-select__control,
+.vouchers-select__menu,
+.vouchers-select__option,
+.vouchers-select__single-value,
+.vouchers-select__input input {
+  font-size: 19px !important;
+  font-family: Rubik, sans-serif !important;
+}
+
+/* Section divider inside the recipient form (questionnaire fields vs processing fields) */
+.vouchers-modal-divider {
+  border-top: 1px solid rgba(99, 102, 241, 0.2);
+  padding-top: 14px;
+  margin-top: 4px;
+  font-size: 19px;
+  font-weight: 600;
+  color: #6366f1;
+}
+
+/* ── Modal action buttons ───────────────────────────────────────────────── */
+.vouchers-modal-actions {
+  display: flex;
+  justify-content: flex-start;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.vouchers-modal-actions button {
+  padding: 10px 24px;
+  border: none;
+  border-radius: 12px;
+  font-size: 22px;
+  font-family: Rubik, sans-serif;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.vouchers-modal-actions .btn-primary {
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  color: white;
+}
+
+.vouchers-modal-actions .btn-primary.danger {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+}
+
+.vouchers-modal-actions .btn-secondary {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.vouchers-modal-actions button:hover {
+  opacity: 0.85;
+}
+
+.vouchers-delete-hint {
+  color: #9ca3af;
+  font-size: 18px;
+}
+
+/* ── Loading / empty state ──────────────────────────────────────────────── */
+.vouchers-loading,
+.vouchers-empty {
+  text-align: center;
+  padding: 60px;
+  color: #6b7280;
+  font-size: 22px;
+}

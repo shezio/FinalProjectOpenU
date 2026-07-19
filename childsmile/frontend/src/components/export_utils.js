@@ -2141,3 +2141,98 @@ export const exportFinancialAidToExcel = async (entries, t) => {
     showErrorToast(t, '', { message: 'Export failed' });
   }
 };
+
+export const exportVoucherDistributionsToExcel = async (distributions, t) => {
+  const reportName = 'voucher_distributions';
+  const format = 'EXCEL';
+  try {
+    if (!distributions || distributions.length === 0) {
+      const errorMsg = 'אין נתונים לייצוא';
+      await auditExportFailure(format, reportName, errorMsg, 'VALIDATION');
+      showErrorToast(t, '', { message: errorMsg });
+      return;
+    }
+
+    const headers = ['#', 'שם החלוקה', 'סוג תו', 'סכום התחלתי', 'חולק', 'נשאר', 'מקבלים', 'שאלון', 'סטטוס'];
+    const rows = distributions.map(d => [
+      d.id,
+      d.name,
+      d.voucher_type,
+      Number(d.initial_amount || 0).toFixed(2),
+      Number(d.distributed_amount || 0).toFixed(2),
+      Number(d.remaining_amount || 0).toFixed(2),
+      d.recipients_count,
+      d.questionnaire_type,
+      d.is_completed ? 'הושלם' : 'בתהליך',
+    ]);
+
+    const worksheetData = [headers, ...rows];
+    const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
+    worksheet['!cols'] = _autoFitColumns(worksheetData);
+    worksheet['!dir'] = 'rtl';
+
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'חלוקות תלושים');
+    XLSX.writeFile(workbook, 'חלוקות_תלושים.xlsx');
+    toast.success(t('Exported to Excel successfully'));
+
+    await auditExportSuccess(format, distributions.length, reportName, ['distribution_names', 'amounts']);
+  } catch (error) {
+    console.error('Export failed:', error);
+    await auditExportFailure(format, reportName, error.message, 'TECHNICAL');
+    showErrorToast(t, '', { message: 'Export failed' });
+  }
+};
+
+export const exportVoucherRecipientsToExcel = async (recipients, t) => {
+  const reportName = 'voucher_recipients';
+  const format = 'EXCEL';
+  try {
+    if (!recipients || recipients.length === 0) {
+      const errorMsg = 'אין נתונים לייצוא';
+      await auditExportFailure(format, reportName, errorMsg, 'VALIDATION');
+      showErrorToast(t, '', { message: errorMsg });
+      return;
+    }
+
+    const headers = [
+      '#', 'שם מלא', 'טלפון', 'עיר', 'כתובת', 'שם הילד', 'מצב טיפול (מדווח)', 'מספר ילדים בבית',
+      'תיאור המקרה', 'גורם מפנה', 'סכום מאושר', 'מוכן', 'מתנדב', 'נמסר', 'משפחה רשומה', 'מצב טיפול (במערכת)', 'הערות',
+    ];
+    const rows = recipients.map(r => [
+      r.id,
+      r.full_name,
+      r.phone || '',
+      r.city || '',
+      r.street_address || '',
+      r.child_name || '',
+      r.child_treatment_status || '',
+      r.num_children_at_home ?? '',
+      r.case_description || '',
+      r.referral_source || '',
+      r.approved_amount ? Number(r.approved_amount).toFixed(2) : '',
+      r.ready ? 'כן' : 'לא',
+      r.assigned_volunteer || '',
+      r.delivered || '',
+      r.linked_child_id ? (r.linked_child_name || 'כן') : 'לא רשומה',
+      r.linked_child_id ? (r.linked_child_status || '') : '',
+      r.notes || '',
+    ]);
+
+    const worksheetData = [headers, ...rows];
+    const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
+    worksheet['!cols'] = _autoFitColumns(worksheetData);
+    worksheet['!dir'] = 'rtl';
+
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'מקבלי תלושים');
+    XLSX.writeFile(workbook, 'מקבלי_תלושים.xlsx');
+    toast.success(t('Exported to Excel successfully'));
+
+    await auditExportSuccess(format, recipients.length, reportName, ['recipient_names', 'amounts', 'addresses']);
+  } catch (error) {
+    console.error('Export failed:', error);
+    await auditExportFailure(format, reportName, error.message, 'TECHNICAL');
+    showErrorToast(t, '', { message: 'Export failed' });
+  }
+};

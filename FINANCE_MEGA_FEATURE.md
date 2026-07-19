@@ -95,7 +95,7 @@ eventual unified tabbed "כספים" shell with Overview + one tab per module).
 | 3 | **הוצאות שוטפות (Ongoing Expenses)** | ✅ **Done** | `/ongoing-expenses` | See full spec below. |
 | 4 | **קופה קטנה (Petty Cash)** | ✅ Done | `/petty-cash` | See full spec below. |
 | 5 | **סיוע כספי (Financial Aid)** | ✅ **Done** | `/financial-aid` | See full spec below. |
-| 6 | חלוקת תלושים (Vouchers) | ⏳ Planned | — | Most complex: sub-tabs (summary/recipients/forms), public questionnaire, family linking by ת"ז. שורת כ-בקריה "בקרוב" במודול ה-Overview. |
+| 6 | **חלוקת תלושים (Vouchers)** | ✅ **Done** | `/vouchers` + public `/voucher-questionnaire/:distributionId` | See full spec below. |
 
 ---
 
@@ -103,10 +103,9 @@ eventual unified tabbed "כספים" shell with Overview + one tab per module).
 
 100% frontend — no backend/DB changes, no new permission resource. Aggregates
 the existing GET endpoints (`/api/refunds/`, `/api/petty-cash/`,
-`/api/ongoing-expenses/`, `/api/financial-aid/` — the last one added when the
-Financial Aid module was built, see its own section below) client-side;
-Vouchers still shows as a **"בקרוב"** (Coming Soon) card — greyed out, not
-clickable — until it's built.
+`/api/ongoing-expenses/`, `/api/financial-aid/`, `/api/vouchers/distributions/`
+— the last two added when their respective modules were built, see their own
+sections below) client-side.
 
 ### Key design decision: avoiding double-counting the Refunds→Petty Cash sync
 
@@ -142,8 +141,10 @@ checks on both resources, ANDed) rather than importing `hasAllPermissions` there
   — no prior card-grid precedent existed for a dashboard-style page, but
   colors/radius/shadows reuse the established violet-gradient theme):
   Refunds / Petty Cash / Ongoing Expenses / Financial Aid show real totals and
-  are clickable (`navigate()` to that module); Vouchers renders as a disabled
-  "בקרוב" card (opacity 0.55, `cursor:not-allowed`, no hover, no onClick).
+  are clickable (`navigate()` to that module) in a 2x2 grid; Vouchers (5th
+  module, doesn't fit the 2x2 grid) gets its own real, clickable, full-width
+  strip below (`.finance-overview-modcard--wide`) showing its distributed
+  total + distribution/recipient counts, same click-to-navigate pattern.
 - **Monthly trend bar chart:** reuses the codebase's EXISTING chart library
   (`chart.js` + `react-chartjs-2`, already used by `DashboardCharts.js` and
   several report pages) rather than hand-rolling CSS bars — same
@@ -163,7 +164,6 @@ checks on both resources, ANDed) rather than importing `hasAllPermissions` there
 
 ### Explicitly NOT built
 
-- Vouchers real card (still shows "בקרוב" until that module exists).
 - Any backend aggregation endpoint (pure frontend computation over existing APIs).
 - Report export (PDF/Excel) of the overview.
 
@@ -484,87 +484,281 @@ add a `refund_method`/`refund.refund_method not in (...)` filter in
 
 ---
 
-## Remaining modules — not started (rough spec from the concept file only, refine before building)
+## חלוקת תלושים (Vouchers) — built this pass ✅
 
-### חלוקת תלושים (Vouchers) — ⏳ Planned, most complex
-- Three sub-views per the concept: סיכום חלוקות (distribution summary),
-  רשימת מקבלים (recipient list, built from a questionnaire + team
-  processing fields: סכום/מוכן/מתנדב/נמסר), השאלונים (two questionnaire
-  variants: עמותה family vs. כללי/external family).
-- Needs family-record auto-matching by ת"ז (child + parent), with manual
-  linking fallback ("לא רשומה" when no match). This is a significant scope
-  on its own — needs its own planning pass before implementation starts.
-- REUSE from Financial Aid (don't reinvent): the family combo-picker (search
-  existing family OR free-type a name, see FinancialAid.js's `familyPickerValue`
-  / react-select `noOptionsMessage` "Use this name?" confirm pattern — itself
-  borrowed from Feedbacks.js), the lightweight `get_family_options` endpoint
-  (id/name/city only, NOT the heavy `get_complete_family_details`), and the
-  multi-file Azure Blob upload pattern (`FinancialAidAttachment` junction
-  table + per-file SAS upload loop) if recipient documents are needed here too.
+### Decisions locked in for v1 (confirmed with the user before/during building)
+
+- **Questionnaire = a BUILT-IN system form, not a Google Forms sync.** Public,
+  unauthenticated submission page (`/voucher-questionnaire/:distributionId`) —
+  same "action of a non-user" precedent as volunteer/tutor registration
+  (`views_volunteer.py`'s public endpoints), NOT an integration with Google
+  Forms. One single page component conditionally renders either questionnaire
+  variant based on the distribution's `questionnaire_type`, rather than two
+  separate page components.
+- **Permission tier: `System Administrator` only**, all actions (view+write) —
+  same convention as every other finance module.
+- **Family linking = AUTO-MATCHED when possible, MANUAL fallback otherwise.**
+  `Children.child_id` IS the real government ת"ז (imported directly from the
+  "תעודת זהות ילד/ה" column during bulk import — see `family_views.py` /
+  `sqlizeforphones.py` — NOT a meaningless internal PK, confirmed by the fact
+  it's `BigIntegerField(primary_key=True)`, not `AutoField` like every other
+  model's PK in this codebase). So the עמותה questionnaire's `child_id_number`
+  is looked up directly against `Children`/`ChildrenLookup` and auto-links on
+  a match (`voucher_views.py::_apply_recipient_fields`) — an admin's explicit
+  manual pick (financial_aid-style combo-picker) always wins over an
+  auto-match, and a link is never auto-cleared. Manual linking is the only
+  option for כללי submissions (no ID field collected at all) or a missed/
+  typo'd match.
+- **Real Israeli ת"ז checksum** (standard Luhn-style algorithm — alternate
+  ×1/×2 per digit after left-padding to 9 digits, subtract 9 from any
+  product >9, valid iff the sum is divisible by 10) validates `parent_id_number`
+  and `child_id_number` — both server-side (`voucher_views.py::_is_valid_israeli_id`)
+  and mirrored in JS on both the public form and the admin recipient form.
+  Replaces an earlier, weaker "just check it's 5-9 digits" version.
+- **Driver tracking (מעקב נהגים) — CANCELLED, not built.** The concept/source
+  spreadsheet has a dedicated "מעקב נהגים" tab, and this was initially planned
+  as its own separate feature/view — the NPO confirmed it isn't needed at all.
+  `assigned_volunteer` still exists as a plain field on `VoucherRecipient`
+  (free text, same shape as `PettyCashExpense.paid_by`) — there's just no
+  dedicated page/view built around it.
+- **`is_completed`** ("דרכנו / לא דרכנו") is a real `BooleanField`, not a
+  free-text notes column — matches the concept spec's own explicit
+  improvement recommendation, same pattern as every other finance module's
+  boolean-over-notes decisions.
+- **CAPTCHA explicitly NOT added** to the public questionnaire — no such
+  service/dependency exists anywhere in this codebase already; not
+  introducing a brand-new external dependency for this alone. Hardening
+  instead relies on rate limiting, honeypot, and full server-side validation
+  (see Security section below).
+
+### Data model (`childsmile/childsmile_app/models.py`)
+
+- `VoucherDistribution` — `distribution_id` PK, `name`, `voucher_type`
+  (TextChoices: רמי לוי / תו פלוס - קרפור / אחר), `initial_amount`,
+  `start_date`/`end_date` (nullable), `is_completed` (bool), `questionnaire_type`
+  (TextChoices: עמותה / כללי / ללא, default ללא), `notes`, timestamps,
+  `updated_by`. `distributed_amount`/`remaining_amount` are NEVER stored —
+  computed from the sum of that distribution's recipients' `approved_amount`
+  (same don't-store-what-you-can-compute approach as every other finance
+  module's totals).
+- `VoucherRecipient` — `recipient_id` PK, `distribution` FK (CASCADE).
+  Questionnaire fields (submitted by the family, or typed in by staff for
+  `questionnaire_type='ללא'` internal-only lists): `full_name`,
+  `parent_id_number`, `phone`, `child_name` (עמותה only), `child_treatment_status`
+  (עמותה only — CharField with `choices=` MATCHING `Children.status` exactly,
+  NOT invented values), `child_id_number` (עמותה only), `num_children_at_home`,
+  `city`, `street_address` (both separate fields — spec improvement over the
+  source spreadsheet's single combined address column), `case_description`,
+  `referral_source` (כללי only), `submitted_at` (nullable — null for
+  manually-added rows). Processing fields (added by staff afterward):
+  `approved_amount`, `ready` (bool), `assigned_volunteer` (free text),
+  `delivered` (TextChoices: כן / איסוף עצמי / לא), `notes`, `linked_child`
+  (FK → `Children`, `SET_NULL`, auto-matched or manual — see Decisions above).
+- `ChildrenLookup` (SECURITY HARDENING, shared with the rest of the codebase,
+  not Vouchers-specific) — a `managed=False` model over a Postgres VIEW
+  (`add_children_lookup_view.sql`) exposing ONLY `child_id`/`childfirstname`/
+  `childsurname`/`city`/`status` from `Children` — no medical data, no phone
+  numbers, no address, no coordinator notes. Used by `voucher_views.py`
+  (genuine unauthenticated public surface) for the family-linking existence
+  checks, `linked_child_name` labels, and comparing a recipient's
+  self-reported `child_treatment_status` against the linked child's REAL
+  `status` (exposed as `linked_child_status` — the admin UI flags a ⚠️
+  mismatch, e.g. family reports "טיפולים" but the system already shows
+  "ז״ל"/"עזב"). Deliberately **NOT** used in `financial_aid_views.py` — that
+  module is 100% authenticated-admin-only with no public surface, so
+  restricting its queries added complexity with no real security benefit
+  there; it still queries `Children` directly.
+
+### Backend files
+
+- `childsmile/childsmile_app/voucher_views.py` (NEW) — admin CRUD for
+  distributions (`get/create/update/delete_voucher_distribution`) and
+  recipients (`get/create/update/delete_voucher_recipient`, with an optional
+  `?distribution_id=` filter on the list endpoint), PLUS two PUBLIC
+  unauthenticated endpoints: `get_voucher_distribution_public_info` (minimal
+  info so the form knows which template to render — no amounts, no other
+  recipients' data) and `submit_voucher_questionnaire` (the actual
+  submission). Shared `_apply_recipient_fields`/`_validate_recipient_data`
+  helpers used by ALL THREE write paths (public submit + admin create/update)
+  for consistent validation and auto-matching everywhere, not just publicly.
+- `childsmile/childsmile_app/urls_vouchers.py` (NEW) — route definitions
+  under `distributions/*`, `recipients/*`, and `public/<distribution_id>/*`.
+- `childsmile/childsmile_app/urls.py` — added
+  `path("api/vouchers/", include("childsmile_app.urls_vouchers"))`.
+
+### Security hardening (public endpoints — extra, since there's no session to act as a first barrier)
+
+- `django_ratelimit` (already a dependency, same pattern as
+  `register_send_totp`/login views): `5/min/IP` on the submit endpoint,
+  `30/min/IP` on the info endpoint (slows distribution_id enumeration).
+- `_validate_recipient_data()`: explicit server-side length caps per field
+  (independent of DB column limits — turns an ugly 500 into a clean 400),
+  Israeli phone format, REAL ת"ז checksum (not just a digit-count check —
+  see Decisions above) for `parent_id_number`/`child_id_number`, an allow-list
+  check for `child_treatment_status` (must match `Children.status`'s real
+  values), and a 0-30 range check for `num_children_at_home`. Independent of
+  whatever the React form validates client-side (a direct script/curl POST
+  bypasses that entirely).
+- Honeypot: a hidden `website` field — non-empty silently returns the SAME
+  success response (doesn't tip off bots), logs a warning server-side.
+- CSRF: relies on the exact same already-working mechanism as `/register`
+  (`conditional_csrf` + `axiosConfig.js`'s cookie-read `X-CSRFToken` header) —
+  no new CSRF plumbing invented.
+
+### Raw SQL
+
+- `add_vouchers_table.sql` (NEW, repo root) — `CREATE TABLE IF NOT EXISTS
+  childsmile_app_voucherdistribution` + `childsmile_app_voucherrecipient`
+  (with `linked_child_id BIGINT NULL REFERENCES childsmile_app_children(
+  child_id) ON DELETE SET NULL`) + indexes + idempotent permission grant
+  (VIEW/CREATE/UPDATE/DELETE → `System Administrator` ONLY, by name — same
+  technique as every other module). **Run this on the DB cluster**, then
+  **re-run `add_viewer_role.sql`**.
+- `add_children_lookup_view.sql` (NEW, repo root, SECURITY HARDENING) —
+  `CREATE OR REPLACE VIEW childsmile_app_children_lookup AS SELECT child_id,
+  childfirstname, childsurname, city, status FROM childsmile_app_children`.
+  **Run this on the DB cluster too** — without it, every voucher_views.py
+  endpoint that touches `ChildrenLookup` will fail (the view won't exist).
+- `add_audit_translations.sql` — appended Hebrew labels for
+  `VIEW/CREATE/UPDATE/DELETE_VOUCHER_DISTRIBUTION(_FAILED)`,
+  `VIEW/CREATE/UPDATE/DELETE_VOUCHER_RECIPIENT(_FAILED)`,
+  `SUBMIT_VOUCHER_QUESTIONNAIRE(_FAILED)`.
+
+### Frontend files
+
+- `childsmile/frontend/src/pages/Vouchers.js` (NEW) — admin page, single
+  master-detail component (NOT split into separate distributions/recipients
+  files): a `view` state toggles between the distributions list and a
+  drill-in recipients list per distribution. Distributions view: searchable/
+  paginated table, create/edit/delete modals, "העתק קישור לשאלון" (copies
+  `/voucher-questionnaire/:id` to the clipboard, only shown when
+  `questionnaire_type !== 'ללא'`). Recipients view: totals bar, searchable/
+  paginated table with a family-linking react-select (reusing Financial
+  Aid's `get_family-options` endpoint — a SIMPLE picker here, not the
+  search-or-freetext combo Financial Aid uses, since `full_name` is always
+  independently collected), a ⚠️ status-mismatch badge when a linked
+  recipient's self-reported `child_treatment_status` differs from the real
+  `linked_child_status`, and real ת"ז-checksum validation on the ID fields.
+- `childsmile/frontend/src/pages/VoucherQuestionnaire.js` (NEW) — the PUBLIC
+  form itself, reached via `/voucher-questionnaire/:distributionId` (a
+  top-level route, same "clean URL, unrelated to file location under
+  `pages/`" pattern as every other route in this app — react-router paths are
+  fully decoupled from where the `.js` file physically lives). Conditionally
+  renders עמותה/כללי-specific fields, includes the hidden honeypot field,
+  mirrors the server's exact validation (checksum, phone format, length
+  caps) for instant feedback.
+- `childsmile/frontend/src/styles/vouchers.css` + `voucherquestionnaire.css`
+  (NEW) — the latter is a standalone public-form stylesheet (not reusing the
+  authenticated-app chrome), honeypot visually hidden off-screen
+  (`position:absolute; left:-9999px`) rather than `display:none`.
+- `childsmile/frontend/src/App.js` — import + admin `<Route path="/vouchers">`
+  + PUBLIC `<Route path="/voucher-questionnaire/:distributionId">` (no auth
+  guard — none exists anywhere in this app's routing). `NO_BELL_PATHS`'s
+  `showBell` logic extended with `!location.pathname.startsWith(
+  '/voucher-questionnaire/')` since it's a dynamic path, not a static one the
+  exact-match array can handle.
+- `childsmile/frontend/src/components/Sidebar.js` —
+  `hasPermissionToVouchers` flag (🎟️ icon, "חלוקת תלושים" label) added to the
+  "כספים" section (desktop only, both expanded/collapsed variants).
+- `childsmile/frontend/src/pages/FinanceOverview.js` — wired the real
+  Vouchers distributed-total/recipient-count into the KPI grid, grand total,
+  monthly trend chart (keyed by each distribution's `start_date`, since
+  individual recipients have no reliable per-record date), combined Excel
+  export, and its own real modcard (replacing the "בקרוב" placeholder);
+  `ACTIVE_MODULES` bumped 4 → 5 (now `5 מתוך 5`).
+- `childsmile/frontend/src/components/export_utils.js` —
+  `exportVoucherDistributionsToExcel` + `exportVoucherRecipientsToExcel`
+  (same no-selection shape as the other finance exports).
+
+### Explicitly NOT built (v1) — revisit later if needed
+
+- Driver tracking (מעקב נהגים) as its own dedicated page/view — CANCELLED per
+  NPO request (see Decisions above).
+- CAPTCHA on the public questionnaire (see Decisions above).
+- A period/date-range filter beyond search (matches the simpler precedent
+  already set by every other finance module).
 
 ---
 
-## File manifest (Overview + Petty Cash + Ongoing Expenses + Financial Aid passes)
+## File manifest (Overview + Petty Cash + Ongoing Expenses + Financial Aid + Vouchers passes)
 
 **Created:**
 - `add_petty_cash_table.sql`
 - `add_ongoing_expenses_table.sql`
 - `add_financial_aid_table.sql`
+- `add_vouchers_table.sql`
+- `add_children_lookup_view.sql` (security hardening — restricted VIEW, see Vouchers section above)
 - `childsmile/childsmile_app/petty_cash_views.py`
 - `childsmile/childsmile_app/urls_petty_cash.py`
 - `childsmile/childsmile_app/ongoing_expense_views.py`
 - `childsmile/childsmile_app/urls_ongoing_expense.py`
 - `childsmile/childsmile_app/financial_aid_views.py`
 - `childsmile/childsmile_app/urls_financial_aid.py`
+- `childsmile/childsmile_app/voucher_views.py`
+- `childsmile/childsmile_app/urls_vouchers.py`
 - `childsmile/frontend/src/pages/PettyCash.js`
 - `childsmile/frontend/src/styles/pettycash.css`
 - `childsmile/frontend/src/pages/OngoingExpenses.js`
 - `childsmile/frontend/src/styles/ongoingexpenses.css`
 - `childsmile/frontend/src/pages/FinancialAid.js`
 - `childsmile/frontend/src/styles/financialaid.css`
+- `childsmile/frontend/src/pages/Vouchers.js`
+- `childsmile/frontend/src/pages/VoucherQuestionnaire.js` (PUBLIC form)
+- `childsmile/frontend/src/styles/vouchers.css`
+- `childsmile/frontend/src/styles/voucherquestionnaire.css`
 - `childsmile/frontend/src/pages/FinanceOverview.js` (frontend-only, no backend)
 - `childsmile/frontend/src/styles/financeoverview.css`
 - `FINANCE_MEGA_FEATURE.md` (this file)
 
 **Modified:**
 - `childsmile/childsmile_app/models.py` (added `PettyCashExpense`, `OngoingExpense`,
-  `FinancialAid`, `FinancialAidAttachment`)
+  `FinancialAid`, `FinancialAidAttachment`, `VoucherDistribution`,
+  `VoucherRecipient`, `ChildrenLookup`)
 - `childsmile/childsmile_app/refund_views.py` (Petty Cash sync automation)
 - `childsmile/childsmile_app/urls.py` (registered `urls_petty_cash`,
-  `urls_ongoing_expense`, `urls_financial_aid`)
-- `childsmile/childsmile_app/version.txt` (bumped for these backend changes — see
-  Ground Rules; MUST bump again for every future backend change in this doc)
-- `add_audit_translations.sql` (Petty Cash + Ongoing Expenses + Financial Aid action codes)
-- `childsmile/frontend/src/App.js` (routes)
+  `urls_ongoing_expense`, `urls_financial_aid`, `urls_vouchers`)
+- `childsmile/childsmile_app/version.txt` (bumped repeatedly for these backend
+  changes — see Ground Rules; MUST bump again for every future backend change)
+- `add_audit_translations.sql` (Petty Cash + Ongoing Expenses + Financial Aid +
+  Vouchers action codes)
+- `childsmile/frontend/src/App.js` (routes, incl. the PUBLIC voucher-questionnaire
+  route + `NO_BELL_PATHS`/`showBell` dynamic-path handling)
 - `childsmile/frontend/src/components/Sidebar.js` (nav entries, desktop-only)
 - `childsmile/frontend/src/components/export_utils.js` (added
   `exportPettyCashToExcel` / `exportOngoingExpensesToExcel` /
-  `exportFinanceOverviewToExcel` / `exportFinancialAidToExcel` — see Ground
-  Rules' Excel-export rule)
+  `exportFinanceOverviewToExcel` / `exportFinancialAidToExcel` /
+  `exportVoucherDistributionsToExcel` / `exportVoucherRecipientsToExcel` — see
+  Ground Rules' Excel-export rule)
 - `childsmile/frontend/src/pages/Families.js` (Financial Aid history section
   in the family details modal)
 
 ## Deploy checklist
 
-1. Run `add_petty_cash_table.sql`, `add_ongoing_expenses_table.sql`, and
-   `add_financial_aid_table.sql` on the DB cluster (tables + indexes +
+1. Run `add_petty_cash_table.sql`, `add_ongoing_expenses_table.sql`,
+   `add_financial_aid_table.sql`, `add_vouchers_table.sql`, and
+   `add_children_lookup_view.sql` on the DB cluster (tables + view + indexes +
    `System Administrator` permissions).
 2. Re-run `add_viewer_role.sql` so the `Viewer` role picks up the new
    `childsmile_app_pettycashexpense` / `childsmile_app_ongoingexpense` /
-   `childsmile_app_financialaid` permissions too (same step needed any time
-   a new admin-only resource is added — this is how Refunds' admin-only
-   actions reached Viewer as well).
+   `childsmile_app_financialaid` / `childsmile_app_voucherdistribution`
+   permissions too (same step needed any time a new admin-only resource is
+   added — this is how Refunds' admin-only actions reached Viewer as well).
 3. Run `add_audit_translations.sql` (idempotent — safe to run the whole
    file, or just the new blocks).
 4. Restart Django (new views/urls/models).
 5. Rebuild/redeploy the frontend.
 6. Spot-check: log in as System Administrator → sidebar "כספים" section
    shows "סקירה כללית" (📊), "החזרי הוצאות" (💰), "קופה קטנה" (💵),
-   "הוצאות שוטפות" (⛽) and "סיוע כספי" (🤝) → open each, add an entry. Then
-   mark an existing refund as "שולם" in `/refunds` → confirm a linked row
-   now appears in `/petty-cash` tagged "מהחזר #<id>". For Financial Aid:
-   create a record linked to a registered family, then open that family's
-   details in `/families` → confirm the aid history section shows it.
+   "הוצאות שוטפות" (⛽), "סיוע כספי" (🤝) and "חלוקת תלושים" (🎟️) → open
+   each, add an entry. Then mark an existing refund as "שולם" in `/refunds`
+   → confirm a linked row now appears in `/petty-cash` tagged "מהחזר #<id>".
+   For Financial Aid: create a record linked to a registered family, then
+   open that family's details in `/families` → confirm the aid history
+   section shows it. For Vouchers: create a distribution with a
+   questionnaire type, copy its public link, submit the form as an
+   anonymous visitor (e.g. a private browser window), confirm the
+   submission appears in `/vouchers`'s recipients view, and — if the child's
+   ת"ז matches an existing registered child — confirm it auto-links.
 7. Set `AZURE_FINANCIAL_AID_CONTAINER` (or accept the `financial-aid-docs`
    default) alongside the existing `AZURE_STORAGE_*` env vars if file
    uploads are needed in PROD (same Azure Storage account as Refunds, just a

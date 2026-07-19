@@ -35,6 +35,8 @@ import RefundsReport from './pages/report_pages/RefundsReport'; // Import the Ex
 import PettyCash from './pages/PettyCash'; // Import the Petty Cash component (admin-only, desktop-only)
 import OngoingExpenses from './pages/OngoingExpenses'; // Import the Ongoing Expenses component (admin-only, desktop-only)
 import FinancialAid from './pages/FinancialAid'; // Import the Financial Aid component (admin-only, desktop-only)
+import Vouchers from './pages/Vouchers'; // Import the Vouchers component (admin-only, desktop-only)
+import VoucherQuestionnaire from './pages/VoucherQuestionnaire'; // PUBLIC - no login required
 import FinanceOverview from './pages/FinanceOverview'; // Import the Finance Overview component (admin-only, desktop-only)
 import NotificationMessages from './pages/NotificationMessages'; // Import the Notification Messages management page
 
@@ -57,7 +59,7 @@ const App = () => {
   const location = useLocation();
   // Don't show the bell on login / registration / google-success (unauthenticated pages)
   const NO_BELL_PATHS = ['/', '/register', '/google-success'];
-  const showBell = !NO_BELL_PATHS.includes(location.pathname);
+  const showBell = !NO_BELL_PATHS.includes(location.pathname) && !location.pathname.startsWith('/voucher-questionnaire/');
 
   return (
     <>
@@ -96,6 +98,8 @@ const App = () => {
       <Route path="/petty-cash" element={<PettyCash />} /> {/* Petty Cash (קופה קטנה) - admin-only, desktop-only */}
       <Route path="/ongoing-expenses" element={<OngoingExpenses />} /> {/* Ongoing Expenses (הוצאות שוטפות) - admin-only, desktop-only */}
       <Route path="/financial-aid" element={<FinancialAid />} /> {/* Financial Aid (סיוע כספי) - admin-only, desktop-only */}
+      <Route path="/vouchers" element={<Vouchers />} /> {/* Vouchers (חלוקת תלושים) - admin-only, desktop-only */}
+      <Route path="/voucher-questionnaire/:distributionId" element={<VoucherQuestionnaire />} /> {/* PUBLIC questionnaire - no login required */}
       <Route path="/finance-overview" element={<FinanceOverview />} /> {/* Finance Overview (סקירה כללית) - admin-only, desktop-only */}
       <Route path="/notification-messages" element={<NotificationMessages />} /> {/* Notification Center management */}
       <Route path="*" element={<NotFound />} /> {/* 404 catch-all */}

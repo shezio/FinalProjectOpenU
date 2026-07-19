@@ -273,3 +273,26 @@ INSERT INTO public.childsmile_app_audittranslation (action, hebrew_translation) 
 ON CONFLICT (action) DO UPDATE
     SET hebrew_translation = EXCLUDED.hebrew_translation;
 
+-- Vouchers (חלוקת תלושים) — added with add_vouchers_table.sql
+INSERT INTO public.childsmile_app_audittranslation (action, hebrew_translation) VALUES
+    ('VIEW_VOUCHER_DISTRIBUTIONS',            'צפייה בחלוקות תלושים'),
+    ('VIEW_VOUCHER_DISTRIBUTIONS_FAILED',     'כישלון בצפייה בחלוקות תלושים'),
+    ('CREATE_VOUCHER_DISTRIBUTION',           'הוספת חלוקת תלושים'),
+    ('CREATE_VOUCHER_DISTRIBUTION_FAILED',    'כישלון בהוספת חלוקת תלושים'),
+    ('UPDATE_VOUCHER_DISTRIBUTION',           'עדכון חלוקת תלושים'),
+    ('UPDATE_VOUCHER_DISTRIBUTION_FAILED',    'כישלון בעדכון חלוקת תלושים'),
+    ('DELETE_VOUCHER_DISTRIBUTION',           'מחיקת חלוקת תלושים'),
+    ('DELETE_VOUCHER_DISTRIBUTION_FAILED',    'כישלון במחיקת חלוקת תלושים'),
+    ('VIEW_VOUCHER_RECIPIENTS',               'צפייה במקבלי תלושים'),
+    ('VIEW_VOUCHER_RECIPIENTS_FAILED',        'כישלון בצפייה במקבלי תלושים'),
+    ('CREATE_VOUCHER_RECIPIENT',              'הוספת מקבל תלושים'),
+    ('CREATE_VOUCHER_RECIPIENT_FAILED',       'כישלון בהוספת מקבל תלושים'),
+    ('UPDATE_VOUCHER_RECIPIENT',              'עדכון פרטי מקבל תלושים'),
+    ('UPDATE_VOUCHER_RECIPIENT_FAILED',       'כישלון בעדכון פרטי מקבל תלושים'),
+    ('DELETE_VOUCHER_RECIPIENT',              'מחיקת מקבל תלושים'),
+    ('DELETE_VOUCHER_RECIPIENT_FAILED',       'כישלון במחיקת מקבל תלושים'),
+    ('SUBMIT_VOUCHER_QUESTIONNAIRE',          'שליחת שאלון חלוקת תלושים'),
+    ('SUBMIT_VOUCHER_QUESTIONNAIRE_FAILED',   'כישלון בשליחת שאלון חלוקת תלושים')
+ON CONFLICT (action) DO UPDATE
+    SET hebrew_translation = EXCLUDED.hebrew_translation;
+
