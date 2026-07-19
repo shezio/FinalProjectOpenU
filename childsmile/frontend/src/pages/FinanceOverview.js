@@ -7,6 +7,7 @@ import InnerPageHeader from '../components/InnerPageHeader';
 import axios from '../axiosConfig';
 import { toast } from 'react-toastify';
 import { showErrorToast } from '../components/toastUtils';
+import { exportFinanceOverviewToExcel } from '../components/export_utils';
 import { useTranslation } from 'react-i18next';
 import { hasAllPermissions } from '../components/utils';
 import '../i18n';
@@ -111,6 +112,30 @@ const FinanceOverview = () => {
   const grandTotal = refundsPaidTotal + pettyCashManualTotal + ongoingTotal;
   const totalTransactions = refunds.length + pettyCash.length + ongoingExpenses.length;
 
+  // Combined ledger for the "ייצוא לאקסל" button — same de-duplication as grandTotal
+  // above (paid refunds + manual petty cash only, so auto-synced rows aren't
+  // double counted), one row per transaction across all 3 modules.
+  const combinedTransactions = [
+    ...paidRefunds.map(r => ({
+      date: r.expense_date,
+      source: 'החזר הוצאות',
+      description: r.staff_full_name ? `${r.staff_full_name}${r.description ? ' — ' + r.description : ''}` : (r.description || ''),
+      amount: parseFloat(r.approved_amount || r.requested_amount || 0),
+    })),
+    ...pettyCashManual.map(p => ({
+      date: p.expense_date,
+      source: 'קופה קטנה',
+      description: p.expense_name,
+      amount: parseFloat(p.amount || 0),
+    })),
+    ...ongoingExpenses.map(o => ({
+      date: o.expense_date,
+      source: 'הוצאה שוטפת',
+      description: o.expense_name,
+      amount: parseFloat(o.amount || 0),
+    })),
+  ].sort((a, b) => new Date(b.date) - new Date(a.date));
+
   const ACTIVE_MODULES = 3;
   const TOTAL_MODULES = 5;
 
@@ -181,6 +206,7 @@ const FinanceOverview = () => {
       <div className="finance-overview-inner">
       <div className="finance-overview-controls">
         <button onClick={fetchAll}>רענן</button>
+        <button onClick={() => exportFinanceOverviewToExcel(combinedTransactions, t)}>ייצוא לאקסל</button>
         <button
           className="finance-overview-send-summary-btn"
           onClick={handleSendMonthlySummaryNow}
