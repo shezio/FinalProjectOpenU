@@ -112,6 +112,9 @@ const Sidebar = () => {
   const hasPermissionToTutorVolunteerMgmt = !isOnlyReviewer && !isOnlyTutorOrVolunteer && (isGuest || hasViewPermissionForTable('tutors') || hasViewPermissionForTable('volunteers'));
   const hasPermissionToFeedbacks       = !isOnlyReviewer && (isGuest || hasViewPermissionForTable('general_v_feedback') || hasViewPermissionForTable('tutor_feedback'));
   const hasPermissionToRefunds         = isGuest || hasViewPermissionForTable('expenserefund');
+  // Petty Cash (קופה קטנה) — admin-only for now, DESKTOP-ONLY (intentionally omitted from the
+  // mobile bottom-nav array below, mirroring the Audit Log / Reports desktop-only convention).
+  const hasPermissionToPettyCash        = isGuest || hasViewPermissionForTable('pettycashexpense');
   const hasPermissionToAnyReport       = !isOnlyReviewer && !isOnlyTutorOrVolunteer && (isGuest || hasViewPermissionForReports());
   const hasPermissionToSystemManagement = !isOnlyReviewer && (isGuest || hasDeletePermissionForTable('staff'));
   const hasPermissionToAuditLog        = !isOnlyReviewer && (isGuest || hasDeletePermissionForTable('staff'));
@@ -120,7 +123,7 @@ const Sidebar = () => {
   // Section visibility
   const hasFamiliesSection   = hasPermissionToFamilies || hasPermissionToTutorships;
   const hasVolunteersSection  = hasPermissionToTutorVolunteerMgmt || hasPermissionToFeedbacks;
-  const hasManagementSection  = hasPermissionToRefunds || hasPermissionToAnyReport || hasPermissionToSystemManagement || hasPermissionToReviewer || hasPermissionToAuditLog;
+  const hasManagementSection  = hasPermissionToRefunds || hasPermissionToPettyCash || hasPermissionToAnyReport || hasPermissionToSystemManagement || hasPermissionToReviewer || hasPermissionToAuditLog;
 
   useEffect(() => {
     if (isCollapsed) document.body.classList.add('sidebar-collapsed');
@@ -301,6 +304,9 @@ const Sidebar = () => {
                 {hasPermissionToRefunds && (
                   <NavBtn path="/refunds" icon="💰" label="החזרי הוצאות" {...navProps} />
                 )}
+                {hasPermissionToPettyCash && (
+                  <NavBtn path="/petty-cash" icon="💵" label="קופה קטנה" {...navProps} />
+                )}
                 {hasPermissionToAnyReport && (
                   <NavBtn path="/reports" icon="📊" label="דוחות" {...navProps} />
                 )}
@@ -327,6 +333,7 @@ const Sidebar = () => {
             {isCollapsed && (
               <>
                 {hasPermissionToRefunds && <NavBtn path="/refunds" icon="💰" label="החזרי הוצאות" {...navProps} />}
+                {hasPermissionToPettyCash && <NavBtn path="/petty-cash" icon="💵" label="קופה קטנה" {...navProps} />}
                 {hasPermissionToAnyReport && <NavBtn path="/reports" icon="📊" label="דוחות" {...navProps} />}
                 {hasPermissionToSystemManagement && <NavBtn path="/system-management" icon="🛠️" label="ניהול מערכת" {...navProps} />}
                 {hasPermissionToSystemManagement && <NavBtn path="/meeting-management" icon="📅" label="ניהול פגישות" {...navProps} />}

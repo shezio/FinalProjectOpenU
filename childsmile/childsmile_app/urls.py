@@ -443,6 +443,8 @@ urlpatterns = [
     path("api/", include("childsmile_app.urls_coordinator_chat")),
     # Expense Refunds (החזרי הוצאות)
     path("api/refunds/", include("childsmile_app.urls_refunds")),
+    # Petty Cash (קופה קטנה) — admin-only
+    path("api/petty-cash/", include("childsmile_app.urls_petty_cash")),
     # Twilio WhatsApp webhooks
     path("api/webhooks/whatsapp-incoming/", whatsapp_incoming, name="whatsapp_incoming"),
     # Notification Center
