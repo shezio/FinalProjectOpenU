@@ -1969,3 +1969,134 @@ export const exportRefundsReportToPDF = async (refunds, period, selectedYear) =>
     toast.error('שגיאה בייצוא הדוח');
   }
 };
+
+// ── Finance mega-feature exports (קופה קטנה / הוצאות שוטפות / סקירה כללית) ──
+// Unlike the report_pages exports above (which require row checkboxes / a
+// .selected flag), these finance pages are simple admin CRUD tables with no
+// row-selection UI — so these export whatever array is passed in directly
+// (the caller passes the already search-filtered list), same no-selection
+// shape as exportRefundsReportToExcel just above.
+
+const _autoFitColumns = (worksheetData) =>
+  worksheetData[0].map((_, colIndex) => ({
+    wch: Math.max(
+      ...worksheetData.map(row => (row[colIndex] !== undefined && row[colIndex] !== null ? row[colIndex].toString().length : 0))
+    ) + 2,
+  }));
+
+export const exportPettyCashToExcel = async (entries, t) => {
+  const reportName = 'petty_cash';
+  const format = 'EXCEL';
+  try {
+    if (!entries || entries.length === 0) {
+      const errorMsg = 'אין נתונים לייצוא';
+      await auditExportFailure(format, reportName, errorMsg, 'VALIDATION');
+      showErrorToast(t, '', { message: errorMsg });
+      return;
+    }
+
+    const headers = ['#', 'תאריך', 'הוצאה', 'סכום (₪)', 'שולם ע"י', 'הערות', 'מקור'];
+    const rows = entries.map(e => [
+      e.id,
+      e.expense_date,
+      e.expense_name,
+      Number(e.amount || 0).toFixed(2),
+      e.paid_by || '',
+      e.notes || '',
+      e.source_refund_id ? `מהחזר #${e.source_refund_id}` : '',
+    ]);
+
+    const worksheetData = [headers, ...rows];
+    const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
+    worksheet['!cols'] = _autoFitColumns(worksheetData);
+    worksheet['!dir'] = 'rtl';
+
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'קופה קטנה');
+    XLSX.writeFile(workbook, 'קופה_קטנה.xlsx');
+    toast.success(t('Exported to Excel successfully'));
+
+    await auditExportSuccess(format, entries.length, reportName, ['expense_amounts', 'expense_descriptions']);
+  } catch (error) {
+    console.error('Export failed:', error);
+    await auditExportFailure(format, reportName, error.message, 'TECHNICAL');
+    showErrorToast(t, '', { message: 'Export failed' });
+  }
+};
+
+export const exportOngoingExpensesToExcel = async (entries, t) => {
+  const reportName = 'ongoing_expenses';
+  const format = 'EXCEL';
+  try {
+    if (!entries || entries.length === 0) {
+      const errorMsg = 'אין נתונים לייצוא';
+      await auditExportFailure(format, reportName, errorMsg, 'VALIDATION');
+      showErrorToast(t, '', { message: errorMsg });
+      return;
+    }
+
+    const headers = ['#', 'תאריך', 'הוצאה', 'קטגוריה', 'סכום (₪)', 'מספר חשבונית', 'הערות'];
+    const rows = entries.map(e => [
+      e.id,
+      e.expense_date,
+      e.expense_name,
+      e.category || '',
+      Number(e.amount || 0).toFixed(2),
+      e.invoice_number || '',
+      e.notes || '',
+    ]);
+
+    const worksheetData = [headers, ...rows];
+    const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
+    worksheet['!cols'] = _autoFitColumns(worksheetData);
+    worksheet['!dir'] = 'rtl';
+
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'הוצאות שוטפות');
+    XLSX.writeFile(workbook, 'הוצאות_שוטפות.xlsx');
+    toast.success(t('Exported to Excel successfully'));
+
+    await auditExportSuccess(format, entries.length, reportName, ['expense_amounts', 'expense_descriptions']);
+  } catch (error) {
+    console.error('Export failed:', error);
+    await auditExportFailure(format, reportName, error.message, 'TECHNICAL');
+    showErrorToast(t, '', { message: 'Export failed' });
+  }
+};
+
+export const exportFinanceOverviewToExcel = async (transactions, t) => {
+  const reportName = 'finance_overview';
+  const format = 'EXCEL';
+  try {
+    if (!transactions || transactions.length === 0) {
+      const errorMsg = 'אין נתונים לייצוא';
+      await auditExportFailure(format, reportName, errorMsg, 'VALIDATION');
+      showErrorToast(t, '', { message: errorMsg });
+      return;
+    }
+
+    const headers = ['תאריך', 'מקור', 'תיאור', 'סכום (₪)'];
+    const rows = transactions.map(tr => [
+      tr.date || '',
+      tr.source,
+      tr.description || '',
+      Number(tr.amount || 0).toFixed(2),
+    ]);
+
+    const worksheetData = [headers, ...rows];
+    const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
+    worksheet['!cols'] = _autoFitColumns(worksheetData);
+    worksheet['!dir'] = 'rtl';
+
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'סקירה כללית');
+    XLSX.writeFile(workbook, 'סקירה_כללית_כספים.xlsx');
+    toast.success(t('Exported to Excel successfully'));
+
+    await auditExportSuccess(format, transactions.length, reportName, ['expense_amounts', 'expense_descriptions']);
+  } catch (error) {
+    console.error('Export failed:', error);
+    await auditExportFailure(format, reportName, error.message, 'TECHNICAL');
+    showErrorToast(t, '', { message: 'Export failed' });
+  }
+};

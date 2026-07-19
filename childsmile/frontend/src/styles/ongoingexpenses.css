@@ -48,6 +48,13 @@
   opacity: 0.85;
 }
 
+/* Scoped override — shared .tutorship-search-bar (tutorships.css) defaults to
+   350px; this page needs it wider. Scoped to .ongoing-expense-controls so other
+   pages reusing that shared class (Tutorships.js, Refunds.js, ...) are unaffected. */
+.ongoing-expense-controls .tutorship-search-bar {
+  width: 500px;
+}
+
 /* ── Totals bar ─────────────────────────────────────────────────────────── */
 .ongoing-expense-totals-bar {
   display: flex;

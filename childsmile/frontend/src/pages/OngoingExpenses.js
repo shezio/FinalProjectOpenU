@@ -4,6 +4,7 @@ import InnerPageHeader from '../components/InnerPageHeader';
 import axios from '../axiosConfig';
 import { toast } from 'react-toastify';
 import { showErrorToast } from '../components/toastUtils';
+import { exportOngoingExpensesToExcel } from '../components/export_utils';
 import { useTranslation } from 'react-i18next';
 import { hasAllPermissions } from '../components/utils';
 import '../i18n';
@@ -263,6 +264,7 @@ const OngoingExpenses = () => {
       <div className="ongoing-expense-controls">
         <button onClick={openCreateModal}>+ הוצאה חדשה</button>
         <button onClick={fetchEntries}>רענן</button>
+        <button onClick={() => exportOngoingExpensesToExcel(filteredEntries, t)}>ייצוא לאקסל</button>
         <input
           type="text"
           className="tutorship-search-bar"

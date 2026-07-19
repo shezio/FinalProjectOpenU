@@ -42,6 +42,24 @@ eventual unified tabbed "כספים" shell with Overview + one tab per module).
   with matching entries appended to `add_audit_translations.sql`, permission
   gate via `hasViewPermissionForTable('<resource>')` (checks
   `childsmile_app_<resource>` + `VIEW` in `localStorage.permissions`).
+- **Every finance page must offer "ייצוא לאקסל" (Export to Excel).** Add a
+  bespoke `export<Module>ToExcel(rows, t)` function to
+  `frontend/src/components/export_utils.js` (client-side only, via the
+  already-installed `xlsx` package — no backend endpoint needed) and a plain
+  button in the page's own `-controls` bar calling it with the
+  already-filtered/visible array (e.g. `filteredEntries`). Match the shape of
+  `exportPettyCashToExcel` / `exportOngoingExpensesToExcel` /
+  `exportFinanceOverviewToExcel` (added with Petty Cash / Ongoing Expenses /
+  Overview): headers array + `XLSX.utils.aoa_to_sheet`, `!dir: 'rtl'`,
+  auto-fit column widths, `toast.success(t('Exported to Excel successfully'))`
+  on success, and the existing `auditExportSuccess`/`auditExportFailure`
+  helpers already in that file (logs `EXPORT_REPORT_EXCEL_SUCCESS/FAILED` —
+  translations already exist, no new SQL needed). **Do NOT** copy the
+  `.selected`-checkbox-required pattern from the older `report_pages/*`
+  exports (e.g. `exportToExcel` for tutors, `exportFeedbackToExcel`) — these
+  finance pages are plain CRUD lists with no row-selection UI, so export
+  whatever's currently filtered/shown, same no-selection shape as the
+  pre-existing `exportRefundsReportToExcel`.
 - **⚠️ BUMP `childsmile/childsmile_app/version.txt` for EVERY backend change**
   (new/changed model, view, urls file — anything under `childsmile/**`
   excluding the frontend). This file is NOT cosmetic: the Azure deploy
@@ -393,6 +411,9 @@ add a `refund_method`/`refund.refund_method not in (...)` filter in
 - `add_audit_translations.sql` (Petty Cash + Ongoing Expenses action codes)
 - `childsmile/frontend/src/App.js` (routes)
 - `childsmile/frontend/src/components/Sidebar.js` (nav entries, desktop-only)
+- `childsmile/frontend/src/components/export_utils.js` (added
+  `exportPettyCashToExcel` / `exportOngoingExpensesToExcel` /
+  `exportFinanceOverviewToExcel` — see Ground Rules' Excel-export rule)
 
 ## Deploy checklist
 

@@ -48,6 +48,13 @@
   opacity: 0.85;
 }
 
+/* Scoped override — shared .tutorship-search-bar (tutorships.css) defaults to
+   350px; this page needs it wider. Scoped to .pettycash-controls so other
+   pages reusing that shared class (Tutorships.js, Refunds.js, ...) are unaffected. */
+.pettycash-controls .tutorship-search-bar {
+  width: 450px;
+}
+
 /* ── Totals bar ─────────────────────────────────────────────────────────── */
 .pettycash-totals-bar {
   display: flex;
