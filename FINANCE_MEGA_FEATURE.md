@@ -52,10 +52,91 @@ eventual unified tabbed "כספים" shell with Overview + one tab per module).
 |---|--------|--------|-------|-------|
 | 1 | סקירה כללית (Overview) | ⏳ Planned | — | Depends on all modules existing; read-only aggregation view. |
 | 2 | החזרי הוצאות (Refunds) | ✅ Done (pre-existing) | `/refunds` | Untouched, EXCEPT one additive hook: marking a refund "שולם" now auto-syncs a linked Petty Cash row (see below). |
-| 3 | הוצאות שוטפות (Ongoing Expenses) | ⏳ Planned | — | Concept columns: תאריך, הוצאה, קטגוריה, סכום, מס' חשבונית, חודש. |
-| 4 | **קופה קטנה (Petty Cash)** | ✅ **Done (this pass)** | `/petty-cash` | See full spec below. |
+| 3 | **הוצאות שוטפות (Ongoing Expenses)** | ✅ **Done (this pass)** | `/ongoing-expenses` | See full spec below. |
+| 4 | **קופה קטנה (Petty Cash)** | ✅ Done | `/petty-cash` | See full spec below. |
 | 5 | סיוע כספי (Financial Aid) | ⏳ Planned | — | Concept columns: שם משפחה, תאריך סיוע, סכום, אופן ביצוע. |
 | 6 | חלוקת תלושים (Vouchers) | ⏳ Planned | — | Most complex: sub-tabs (summary/recipients/forms), public questionnaire, family linking by ת"ז. |
+
+---
+
+## הוצאות שוטפות (Ongoing Expenses) — built this pass ✅
+
+Same shape as Petty Cash — built right after it, using the corrected
+conventions (see the checklist saved to repo memory after the Petty Cash
+self-audit). Source spreadsheet: "הוצאות נעם 2026".
+
+### Decisions locked in for v1
+
+- Standalone sidebar page (same as Petty Cash), admin-only, desktop-only, no
+  attachments, no task/WhatsApp notifications — all carried over unchanged
+  from the Petty Cash ground rules (not re-confirmed per-module; see
+  `FINANCE_MEGA_FEATURE.md` ground rules at the top).
+- `category` (קטגוריה) is **free text**, not a fixed dropdown — but the
+  frontend suggests previously-used values via a native HTML `<datalist>`
+  (distinct, non-empty `category` values already in the fetched list, sorted
+  he-locale). Explicit user decision: "free text but with autocompletion"
+  rather than a fixed choice list + colored badge as the concept mockup showed.
+  The category IS still rendered as a small badge in the table for readability
+  (cosmetic only — no fixed color-per-category mapping, unlike
+  Refunds'/Petty Cash's real status/badge enums which map specific values to
+  specific colors).
+- No `paid_by` field (unlike Petty Cash) — the concept mockup doesn't show one
+  for this module, and the source spreadsheet implies a single payer already.
+- "חודש" (month) is NOT stored — derived from `expense_date` on the frontend
+  when needed, same decision as Petty Cash.
+
+### Data model — `OngoingExpense` (`childsmile/childsmile_app/models.py`)
+
+- Table `childsmile_app_ongoingexpense`, PK `ongoing_expense_id`.
+- `expense_date` DATE · `expense_name` VARCHAR(255) · `category` VARCHAR(255)
+  NULL (free text) · `amount` NUMERIC(10,2) · `invoice_number` VARCHAR(100)
+  NULL · `notes` TEXT NULL.
+- `created_at`/`updated_at` auto; `updated_by` username string (NOT a
+  `created_by` field — same lesson learned from the Petty Cash self-audit:
+  `ExpenseRefund`/`PettyCashExpense` only have `updated_by`).
+- No FK to any other finance table (no cross-module automation for this one).
+
+### Backend files
+
+- `childsmile/childsmile_app/models.py` — `OngoingExpense` model.
+- `childsmile/childsmile_app/ongoing_expense_views.py` (NEW) —
+  `get_ongoing_expenses`, `create_ongoing_expense`, `update_ongoing_expense`,
+  `delete_ongoing_expense`. Admin-only via the plain `_get_authenticated_user`
+  + inline `is_admin(staff)` check repeated per view (NOT a combined helper
+  — matches `refund_views.py`'s/`petty_cash_views.py`'s exact shape).
+- `childsmile/childsmile_app/urls_ongoing_expense.py` (NEW) — routes.
+- `childsmile/childsmile_app/urls.py` — added
+  `path("api/ongoing-expenses/", include("childsmile_app.urls_ongoing_expense"))`.
+
+### Raw SQL
+
+- `add_ongoing_expenses_table.sql` (NEW, repo root) — `CREATE TABLE
+  childsmile_app_ongoingexpense` + index + idempotent permission grant
+  (VIEW/CREATE/UPDATE/DELETE → `System Administrator` ONLY, by name). **Run
+  this on the DB cluster, then re-run `add_viewer_role.sql`** so `Viewer`
+  picks up the same access — identical mechanism to Petty Cash.
+- `add_audit_translations.sql` — appended Hebrew labels for
+  `VIEW_ONGOING_EXPENSES(_FAILED)`, `CREATE_ONGOING_EXPENSE(_FAILED)`,
+  `UPDATE_ONGOING_EXPENSE(_FAILED)`, `DELETE_ONGOING_EXPENSE(_FAILED)`.
+
+### Frontend files
+
+- `childsmile/frontend/src/pages/OngoingExpenses.js` (NEW) — list + search +
+  totals bar (סה"כ / עסקאות / הגבוהה ביותר) + create/edit/delete modals +
+  windowed pagination + category `<datalist>` autocomplete. Same
+  `hasAllPermissions(requiredPermissions)` full-page gate as `PettyCash.js`.
+- `childsmile/frontend/src/styles/ongoingexpenses.css` (NEW) — same
+  violet-gradient theme, scoped under `.ongoing-expense-*`.
+- `childsmile/frontend/src/App.js` — import + `<Route path="/ongoing-expenses">`.
+- `childsmile/frontend/src/components/Sidebar.js` —
+  `hasPermissionToOngoingExpenses` flag (⛽ icon — same one the concept file
+  itself uses for this tab — "הוצאות שוטפות" label), Management section,
+  desktop-only (omitted from the mobile `allNavItems` array).
+
+### Explicitly NOT built (v1)
+
+- Fixed category list/enum + color-per-category mapping, month filter,
+  receipts/attachments, report export.
 
 ---
 
@@ -179,12 +260,6 @@ add a `refund_method`/`refund.refund_method not in (...)` filter in
 
 ## Remaining modules — not started (rough spec from the concept file only, refine before building)
 
-### הוצאות שוטפות (Ongoing Expenses) — ⏳ Planned
-- Source: "הוצאות נעם 2026" spreadsheet. Columns: תאריך, הוצאה, קטגוריה
-  (badge, e.g. רכב/תפעול), סכום, מס' חשבונית, חודש.
-- Likely same CRUD+modal shape as Petty Cash; add a category field (probably
-  a small fixed choice list — confirm with user) and a month filter.
-
 ### סיוע כספי (Financial Aid) — ⏳ Planned
 - Source: "רשימת נתמכים סיוע כספי" spreadsheet. Columns: שם משפחה, תאריך
   סיוע, סכום, אופן ביצוע (בנקאית/מזומן badge).
@@ -209,38 +284,43 @@ add a `refund_method`/`refund.refund_method not in (...)` filter in
 
 ---
 
-## File manifest (this pass — Petty Cash + this plan)
+## File manifest (Petty Cash + Ongoing Expenses passes)
 
 **Created:**
 - `add_petty_cash_table.sql`
+- `add_ongoing_expenses_table.sql`
 - `childsmile/childsmile_app/petty_cash_views.py`
 - `childsmile/childsmile_app/urls_petty_cash.py`
+- `childsmile/childsmile_app/ongoing_expense_views.py`
+- `childsmile/childsmile_app/urls_ongoing_expense.py`
 - `childsmile/frontend/src/pages/PettyCash.js`
 - `childsmile/frontend/src/styles/pettycash.css`
+- `childsmile/frontend/src/pages/OngoingExpenses.js`
+- `childsmile/frontend/src/styles/ongoingexpenses.css`
 - `FINANCE_MEGA_FEATURE.md` (this file)
 
 **Modified:**
-- `childsmile/childsmile_app/models.py` (added `PettyCashExpense`)
+- `childsmile/childsmile_app/models.py` (added `PettyCashExpense`, `OngoingExpense`)
 - `childsmile/childsmile_app/refund_views.py` (Petty Cash sync automation)
-- `childsmile/childsmile_app/urls.py` (registered `urls_petty_cash`)
-- `add_audit_translations.sql` (Petty Cash action codes)
-- `childsmile/frontend/src/App.js` (route)
-- `childsmile/frontend/src/components/Sidebar.js` (nav entry, desktop-only)
+- `childsmile/childsmile_app/urls.py` (registered `urls_petty_cash`, `urls_ongoing_expense`)
+- `add_audit_translations.sql` (Petty Cash + Ongoing Expenses action codes)
+- `childsmile/frontend/src/App.js` (routes)
+- `childsmile/frontend/src/components/Sidebar.js` (nav entries, desktop-only)
 
 ## Deploy checklist
 
-1. Run `add_petty_cash_table.sql` on the DB cluster (table + indexes +
-   `System Administrator` permissions).
+1. Run `add_petty_cash_table.sql` and `add_ongoing_expenses_table.sql` on the
+   DB cluster (tables + indexes + `System Administrator` permissions).
 2. Re-run `add_viewer_role.sql` so the `Viewer` role picks up the new
-   `childsmile_app_pettycashexpense` permissions too (same step needed any
-   time a new admin-only resource is added — this is how Refunds' admin-only
-   actions reached Viewer as well).
+   `childsmile_app_pettycashexpense` / `childsmile_app_ongoingexpense`
+   permissions too (same step needed any time a new admin-only resource is
+   added — this is how Refunds' admin-only actions reached Viewer as well).
 3. Run `add_audit_translations.sql` (idempotent — safe to run the whole
-   file, or just the new Petty Cash block).
-4. Restart Django (new views/urls/model).
+   file, or just the new Petty Cash / Ongoing Expenses blocks).
+4. Restart Django (new views/urls/models).
 5. Rebuild/redeploy the frontend.
 6. Spot-check: log in as System Administrator → sidebar Management section
-   shows "קופה קטנה" (💵) → open it, add an entry. Then mark an existing
-   refund as "שולם" in `/refunds` → confirm a linked row now appears in
-   `/petty-cash` tagged "מהחזר #<id>".
+   shows "קופה קטנה" (💵) and "הוצאות שוטפות" (⛽) → open each, add an entry.
+   Then mark an existing refund as "שולם" in `/refunds` → confirm a linked
+   row now appears in `/petty-cash` tagged "מהחזר #<id>".
 

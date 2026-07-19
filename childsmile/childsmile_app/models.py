@@ -957,6 +957,47 @@ class PettyCashExpense(models.Model):
         ]
 
 
+class OngoingExpense(models.Model):
+    """
+    Tracks recurring/ongoing organizational expenses (הוצאות שוטפות) — e.g. fuel,
+    tolls, warehouse rent. Source spreadsheet: "הוצאות נעם 2026".
+
+    ADMIN-ONLY module (System Administrator / Viewer), same shape as
+    PettyCashExpense: no volunteer-facing workflow, no approval status, no
+    receipt/attachment (v1), no task/WhatsApp notifications. `category` is
+    free text (not a fixed choice list) — the frontend offers autocomplete
+    suggestions from previously-used values via a native <datalist>, it is
+    NOT enforced/validated server-side.
+    """
+
+    ongoing_expense_id = models.AutoField(primary_key=True)
+
+    expense_date = models.DateField()
+    expense_name = models.CharField(max_length=255)  # "הוצאה" - short description
+    category = models.CharField(max_length=255, null=True, blank=True)  # free text - "קטגוריה"
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    invoice_number = models.CharField(max_length=100, null=True, blank=True)  # "מספר חשבונית"
+    notes = models.TextField(null=True, blank=True)  # "הערות"
+
+    # Timestamps - Django manages these automatically, matching all other models
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    # Tracks which staff username last modified this record (username string, not FK)
+    # — same convention as ExpenseRefund.updated_by / PettyCashExpense.updated_by.
+    updated_by = models.CharField(max_length=255, null=True, blank=True)
+
+    def __str__(self):
+        return f"OngoingExpense #{self.ongoing_expense_id} - {self.expense_name} - {self.amount}₪"
+
+    class Meta:
+        db_table = "childsmile_app_ongoingexpense"
+        ordering = ['-expense_date', '-ongoing_expense_id']
+        indexes = [
+            models.Index(fields=['-expense_date'], name='idx_ongoingexp_expense_date'),
+        ]
+
+
 class NotificationMessage(models.Model):
     """
     Notification messages displayed in the notification center bell panel.

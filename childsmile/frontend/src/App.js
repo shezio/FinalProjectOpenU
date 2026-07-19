@@ -33,6 +33,7 @@ import NotFound from './pages/NotFound'; // Import the 404 Not Found page
 import Refunds from './pages/Refunds'; // Import the Expense Refunds component
 import RefundsReport from './pages/report_pages/RefundsReport'; // Import the Expense Refunds Report component
 import PettyCash from './pages/PettyCash'; // Import the Petty Cash component (admin-only, desktop-only)
+import OngoingExpenses from './pages/OngoingExpenses'; // Import the Ongoing Expenses component (admin-only, desktop-only)
 import NotificationMessages from './pages/NotificationMessages'; // Import the Notification Messages management page
 
 // Add this route to your router:
@@ -91,6 +92,7 @@ const App = () => {
       <Route path="/refunds" element={<Refunds />} /> {/* Expense Refunds (החזרי הוצאות) */}
       <Route path="/reports/refunds-report" element={<RefundsReport />} /> {/* Expense Refunds Report */}
       <Route path="/petty-cash" element={<PettyCash />} /> {/* Petty Cash (קופה קטנה) - admin-only, desktop-only */}
+      <Route path="/ongoing-expenses" element={<OngoingExpenses />} /> {/* Ongoing Expenses (הוצאות שוטפות) - admin-only, desktop-only */}
       <Route path="/notification-messages" element={<NotificationMessages />} /> {/* Notification Center management */}
       <Route path="*" element={<NotFound />} /> {/* 404 catch-all */}
     </Routes>
