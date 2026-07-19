@@ -2,10 +2,12 @@
 Ongoing Expenses Views (הוצאות שוטפות)
 
 Endpoints:
-  GET    /api/ongoing-expenses/                 – list all entries (admin only)
-  POST   /api/ongoing-expenses/create/          – create a new entry (admin only)
-  PUT    /api/ongoing-expenses/update/<id>/     – update an entry (admin only)
-  DELETE /api/ongoing-expenses/delete/<id>/     – hard delete an entry (admin only)
+  GET    /api/ongoing-expenses/                        – list all entries (admin only)
+  POST   /api/ongoing-expenses/create/                 – create a new entry (admin only)
+  PUT    /api/ongoing-expenses/update/<id>/            – update an entry (admin only)
+  DELETE /api/ongoing-expenses/delete/<id>/            – hard delete an entry (admin only)
+  POST   /api/ongoing-expenses/send-monthly-summary-now/ – send the monthly
+                                                           WhatsApp summary proactively, right now (admin only)
 
 Security rules:
   - ADMIN-ONLY for now (System Administrator / Viewer, see utils.is_admin). Same
@@ -245,3 +247,38 @@ def delete_ongoing_expense(request, ongoing_expense_id):
                    affected_tables=['childsmile_app_ongoingexpense'],
                    additional_data={"deleted_by": staff.username})
     return JsonResponse({"message": "ההוצאה נמחקה בהצלחה."}, status=200)
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# SEND MONTHLY WHATSAPP SUMMARY NOW  (proactive on-demand send — admin only)
+# ──────────────────────────────────────────────────────────────────────────────
+
+@conditional_csrf
+@api_view(["POST"])
+@block_viewer_writes
+def send_monthly_expenses_summary_now(request):
+    """
+    POST: Send the monthly Ongoing Expenses WhatsApp summary right now
+    (bypasses only the "last day of month" check — see
+    monthly_expense_summary.py::send_monthly_ongoing_expenses_summary). Lets an
+    admin send the summary proactively/on demand instead of waiting for
+    month-end. Admin only, same shape as coordinator_reports_views.py's own
+    manual "send-now" trigger.
+    """
+    api_logger.info("send_monthly_expenses_summary_now called")
+
+    staff, err = _get_authenticated_user(request)
+    if err:
+        return err
+
+    if not is_admin(staff):
+        return JsonResponse({"detail": "Forbidden."}, status=403)
+
+    from .monthly_expense_summary import send_monthly_ongoing_expenses_summary
+    try:
+        result = send_monthly_ongoing_expenses_summary(force=True)
+    except Exception as e:
+        api_logger.error(f"send_monthly_expenses_summary_now error: {e}")
+        return JsonResponse({"success": False, "message": str(e)}, status=500)
+
+    return JsonResponse(result, status=200 if result.get("success") else 400)

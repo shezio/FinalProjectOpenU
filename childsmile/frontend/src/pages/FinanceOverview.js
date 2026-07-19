@@ -5,6 +5,7 @@ import { Bar } from 'react-chartjs-2';
 import Sidebar from '../components/Sidebar';
 import InnerPageHeader from '../components/InnerPageHeader';
 import axios from '../axiosConfig';
+import { toast } from 'react-toastify';
 import { showErrorToast } from '../components/toastUtils';
 import { useTranslation } from 'react-i18next';
 import { hasAllPermissions } from '../components/utils';
@@ -40,6 +41,7 @@ const FinanceOverview = () => {
   const [pettyCash, setPettyCash] = useState([]);
   const [ongoingExpenses, setOngoingExpenses] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [sendingMonthlySummary, setSendingMonthlySummary] = useState(false);
 
   useEffect(() => {
     if (hasPermissionOnFinanceOverview) fetchAll();
@@ -62,6 +64,26 @@ const FinanceOverview = () => {
         showErrorToast(t, err.response?.data?.error || 'שגיאה בטעינת נתוני הסקירה', '');
       })
       .finally(() => setLoading(false));
+  };
+
+  // Manual proactive trigger for the monthly Ongoing Expenses WhatsApp summary
+  // (see monthly_expense_summary.py) — lets an admin send the summary on demand,
+  // without waiting for the last day of the month.
+  const handleSendMonthlySummaryNow = () => {
+    if (sendingMonthlySummary) return;
+    setSendingMonthlySummary(true);
+    axios.post('/api/ongoing-expenses/send-monthly-summary-now/')
+      .then(res => {
+        if (res.data.success) {
+          toast.success(res.data.message);
+        } else {
+          showErrorToast(t, res.data.message || 'השליחה נכשלה', '');
+        }
+      })
+      .catch(err => {
+        showErrorToast(t, err.response?.data?.message || err.response?.data?.error || 'השליחה נכשלה', '');
+      })
+      .finally(() => setSendingMonthlySummary(false));
   };
 
   // ── Aggregation ───────────────────────────────────────────────────────────
@@ -159,6 +181,14 @@ const FinanceOverview = () => {
       <div className="finance-overview-inner">
       <div className="finance-overview-controls">
         <button onClick={fetchAll}>רענן</button>
+        <button
+          className="finance-overview-send-summary-btn"
+          onClick={handleSendMonthlySummaryNow}
+          disabled={sendingMonthlySummary}
+          title="שולח מיידית בוואטסאפ את סיכום ההוצאות השוטפות של החודש הנוכחי"
+        >
+          {sendingMonthlySummary ? 'שולח...' : '📤 שליחת סיכום חודשי יזום'}
+        </button>
       </div>
 
       {loading ? (
