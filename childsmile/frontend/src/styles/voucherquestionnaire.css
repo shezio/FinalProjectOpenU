@@ -1,0 +1,137 @@
+/* voucherquestionnaire.css — PUBLIC page (no login), standalone styling */
+
+.voucher-form-page {
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 60px 20px;
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.08), rgba(168, 85, 247, 0.08));
+  direction: rtl;
+  font-family: Rubik, sans-serif;
+  box-sizing: border-box;
+}
+
+.voucher-form-card {
+  background: white;
+  border-radius: 20px;
+  padding: 40px;
+  width: 100%;
+  max-width: 640px;
+  box-shadow: 0 10px 40px rgba(99, 102, 241, 0.15);
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.voucher-form-logo {
+  grid-column: 1 / -1;
+  display: block;
+  max-width: 140px;
+  margin: 0 auto 10px auto;
+}
+
+.voucher-form-card h2 {
+  grid-column: 1 / -1;
+  text-align: center;
+  color: #4f46e5;
+  font-size: 26px;
+  margin: 0 0 6px 0;
+}
+
+.voucher-form-card > p,
+.voucher-form-subtitle {
+  grid-column: 1 / -1;
+  text-align: center;
+  color: #6b7280;
+  font-size: 18px;
+  margin: 0 0 10px 0;
+}
+
+.voucher-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.voucher-form-group.full-width {
+  grid-column: 1 / -1;
+}
+
+.voucher-form-group label {
+  font-size: 17px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.voucher-form-group input,
+.voucher-form-group select,
+.voucher-form-group textarea {
+  padding: 10px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  font-size: 17px;
+  font-family: Rubik, sans-serif;
+  direction: rtl;
+  box-sizing: border-box;
+}
+
+.voucher-form-group input:focus,
+.voucher-form-group select:focus,
+.voucher-form-group textarea:focus {
+  outline: none;
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+}
+
+.voucher-form-group textarea {
+  min-height: 80px;
+  resize: vertical;
+}
+
+.voucher-form-error {
+  color: #ef4444;
+  font-size: 14px;
+}
+
+/* Honeypot — visually hidden from real visitors (kept in the DOM/tab order out
+   of the way so only bots that blindly fill every field trip it) */
+.voucher-form-honeypot {
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+.voucher-form-submit {
+  grid-column: 1 / -1;
+  margin-top: 10px;
+  padding: 14px;
+  border: none;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  color: white;
+  font-size: 20px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: Rubik, sans-serif;
+  transition: opacity 0.2s;
+}
+
+.voucher-form-submit:hover {
+  opacity: 0.9;
+}
+
+.voucher-form-submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+@media (max-width: 640px) {
+  .voucher-form-card {
+    grid-template-columns: 1fr;
+  }
+}

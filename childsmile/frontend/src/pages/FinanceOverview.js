@@ -44,6 +44,7 @@ const FinanceOverview = () => {
   const [pettyCash, setPettyCash] = useState([]);
   const [ongoingExpenses, setOngoingExpenses] = useState([]);
   const [financialAid, setFinancialAid] = useState([]);
+  const [vouchers, setVouchers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [sendingMonthlySummary, setSendingMonthlySummary] = useState(false);
 
@@ -59,12 +60,14 @@ const FinanceOverview = () => {
       axios.get('/api/petty-cash/'),
       axios.get('/api/ongoing-expenses/'),
       axios.get('/api/financial-aid/'),
+      axios.get('/api/vouchers/distributions/'),
     ])
-      .then(([refundsRes, pettyCashRes, ongoingRes, financialAidRes]) => {
+      .then(([refundsRes, pettyCashRes, ongoingRes, financialAidRes, vouchersRes]) => {
         setRefunds(refundsRes.data.refunds || []);
         setPettyCash(pettyCashRes.data.petty_cash || []);
         setOngoingExpenses(ongoingRes.data.ongoing_expenses || []);
         setFinancialAid(financialAidRes.data.financial_aid || []);
+        setVouchers(vouchersRes.data.distributions || []);
       })
       .catch(err => {
         showErrorToast(t, err.response?.data?.error || 'שגיאה בטעינת נתוני הסקירה', '');
@@ -116,12 +119,23 @@ const FinanceOverview = () => {
 
   const financialAidTotal = financialAid.reduce((s, a) => s + parseFloat(a.amount || 0), 0);
 
-  const grandTotal = refundsPaidTotal + pettyCashManualTotal + ongoingTotal + financialAidTotal;
-  const totalTransactions = refunds.length + pettyCash.length + ongoingExpenses.length + financialAid.length;
+  // Vouchers: distributed_amount is already the sum of that distribution's
+  // approved recipient amounts (computed server-side, see voucher_views.py's
+  // _distribution_to_dict) - money ACTUALLY given out, same semantic as the
+  // other modules' totals. recipients_count sums across all distributions for
+  // the "how many individual transactions" semantic used by totalTransactions.
+  const vouchersDistributedTotal = vouchers.reduce((s, d) => s + parseFloat(d.distributed_amount || 0), 0);
+  const vouchersRecipientsCount = vouchers.reduce((s, d) => s + (d.recipients_count || 0), 0);
+
+  const grandTotal = refundsPaidTotal + pettyCashManualTotal + ongoingTotal + financialAidTotal + vouchersDistributedTotal;
+  const totalTransactions = refunds.length + pettyCash.length + ongoingExpenses.length + financialAid.length + vouchersRecipientsCount;
 
   // Combined ledger for the "ייצוא לאקסל" button — same de-duplication as grandTotal
   // above (paid refunds + manual petty cash only, so auto-synced rows aren't
   // double counted), one row per transaction across all active modules.
+  // Vouchers: no reliable per-recipient date exists (submitted_at is null for
+  // manually-added recipients), so it's one row per DISTRIBUTION dated by
+  // start_date - coarser than the other modules but avoids fabricating dates.
   const combinedTransactions = [
     ...paidRefunds.map(r => ({
       date: r.expense_date,
@@ -147,9 +161,15 @@ const FinanceOverview = () => {
       description: a.family_name,
       amount: parseFloat(a.amount || 0),
     })),
+    ...vouchers.filter(d => parseFloat(d.distributed_amount || 0) > 0).map(d => ({
+      date: d.start_date,
+      source: 'חלוקת תלושים',
+      description: d.name,
+      amount: parseFloat(d.distributed_amount || 0),
+    })),
   ].sort((a, b) => new Date(b.date) - new Date(a.date));
 
-  const ACTIVE_MODULES = 4;
+  const ACTIVE_MODULES = 5;
   const TOTAL_MODULES = 5;
 
   // ── Monthly trend (last 6 months, de-duplicated the same way as grandTotal) ─
@@ -159,6 +179,7 @@ const FinanceOverview = () => {
       ...pettyCashManual.map(p => ({ key: monthKeyOf(p.expense_date), amount: parseFloat(p.amount || 0) })),
       ...paidRefunds.map(r => ({ key: monthKeyOf(r.expense_date), amount: parseFloat(r.approved_amount || r.requested_amount || 0) })),
       ...financialAid.map(a => ({ key: monthKeyOf(a.aid_date), amount: parseFloat(a.amount || 0) })),
+      ...vouchers.map(d => ({ key: monthKeyOf(d.start_date), amount: parseFloat(d.distributed_amount || 0) })),
     ];
     const totalsByMonth = {};
     combined.forEach(({ key, amount }) => {
@@ -301,12 +322,13 @@ const FinanceOverview = () => {
             </div>
           </div>
 
-          {/* Vouchers — coming soon, shown as its own compact strip (5th module, doesn't fit the 2x2 grid) */}
+          {/* Vouchers - 5th module, shown as its own wide strip since it doesn't fit the 2x2 grid */}
           <div className="finance-overview-soon-strip">
-            <div className="finance-overview-modcard finance-overview-modcard--soon finance-overview-modcard--wide">
+            <div className="finance-overview-modcard finance-overview-modcard--wide" onClick={() => navigate('/vouchers')}>
               <div className="finance-overview-modcard-ic">🎟️</div>
               <div className="finance-overview-modcard-nm">חלוקת תלושים</div>
-              <span className="finance-overview-soon-badge">בקרוב</span>
+              <div className="finance-overview-modcard-vv">{vouchersDistributedTotal.toFixed(2)} ₪</div>
+              <div className="finance-overview-modcard-cnt">{vouchers.length} חלוקות ({vouchersRecipientsCount} מקבלים)</div>
             </div>
           </div>
         </>
