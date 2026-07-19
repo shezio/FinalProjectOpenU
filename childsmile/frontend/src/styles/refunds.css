@@ -332,6 +332,54 @@
   margin-top: 6px;
 }
 
+/* Multi-file list (up to MAX_FILES per refund) */
+.refund-attachments-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.refund-attachment-chip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  background: rgba(99, 102, 241, 0.06);
+  border-radius: 10px;
+  padding: 8px 14px;
+  font-size: 20px;
+}
+
+.refund-attachment-chip a {
+  color: #4f46e5;
+  text-decoration: underline;
+}
+
+.refund-attachment-chip--pending {
+  background: rgba(16, 185, 129, 0.08);
+  color: #065f46;
+}
+
+.refund-attachment-chip--removed {
+  background: rgba(239, 68, 68, 0.08);
+  color: #991b1b;
+  text-decoration: line-through;
+}
+
+.refund-attachment-chip--removed button {
+  text-decoration: none;
+}
+
+.refund-attachment-chip button {
+  background: none;
+  border: none;
+  color: #ef4444;
+  cursor: pointer;
+  font-size: 20px;
+  font-weight: 700;
+}
+
 /* ── Modal action buttons ───────────────────────────────────────────────── */
 .refund-modal-actions {
   display: flex;

@@ -134,6 +134,7 @@ const Refunds = () => {
   const [uploadingFile, setUploadingFile] = useState(false);
   const [pendingFiles, setPendingFiles] = useState([]);   // File[] — picked, not yet uploaded
   const [existingFiles, setExistingFiles] = useState([]);  // [{slot, file_url, file_name, file_size}] — already on the refund (edit/view)
+  const [removedSlots, setRemovedSlots] = useState([]);    // slot numbers marked for removal this edit session (not yet saved)
   const fileInputRef = useRef(null);
 
   // ── Fetch data on mount ───────────────────────────────────────────────────
@@ -283,7 +284,8 @@ const Refunds = () => {
     if (!data.requested_amount || isNaN(data.requested_amount) || parseFloat(data.requested_amount) <= 0)
       errs.requested_amount = 'סכום מבוקש חייב להיות מספר חיובי';
     if (!data.description?.trim()) errs.description = 'תיאור נדרש';
-    if (!data.file_url && !pendingFile) errs.file = 'יש לצרף קבלה / אסמכתה';
+    const remainingExisting = existingFiles.filter(f => !removedSlots.includes(f.slot));
+    if (remainingExisting.length === 0 && pendingFiles.length === 0) errs.file = 'יש לצרף קבלה / אסמכתא אחת';
     if (['אושר', 'אושר חלקית'].includes(data.status) && !data.approved_amount)
       errs.approved_amount = 'סכום שאושר נדרש בעת אישור (מלא או חלקי)';
     if (['אושר', 'אושר חלקית', 'שולם'].includes(data.status) && !data.refund_method)
@@ -301,43 +303,74 @@ const Refunds = () => {
 
   // ── File upload helpers ───────────────────────────────────────────────────
 
-  // Select file locally — DO NOT upload yet
-  const handleFileSelect = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
-      showErrorToast(t, `קובץ גדול מדי. מקסימום ${MAX_FILE_SIZE_MB}MB`, '');
+  // Select file(s) locally — DO NOT upload yet. Enforces MAX_FILES (existing kept
+  // + pending + new) and MAX_FILE_SIZE_MB as a COMBINED total (not per-file).
+  const handleFileSelect = (e) => {
+    const newFiles = Array.from(e.target.files || []);
+    if (newFiles.length === 0) return;
+
+    const remainingExisting = existingFiles.filter(f => !removedSlots.includes(f.slot));
+    const totalCount = remainingExisting.length + pendingFiles.length + newFiles.length;
+    if (totalCount > MAX_FILES) {
+      showErrorToast(t, `ניתן לצרף עד ${MAX_FILES} קבצים בסך הכל`, '');
+      e.target.value = '';
       return;
     }
-    setPendingFile(file);
-    // Clear any previously stored URL so the user sees the pending file name
-    setFormData(prev => ({ ...prev, file_url: '' }));
+
+    const existingBytes = remainingExisting.reduce((s, f) => s + (f.file_size || 0), 0);
+    const pendingBytes = pendingFiles.reduce((s, f) => s + f.size, 0);
+    const newBytes = newFiles.reduce((s, f) => s + f.size, 0);
+    if (existingBytes + pendingBytes + newBytes > MAX_FILE_SIZE_MB * 1024 * 1024) {
+      showErrorToast(t, `הגודל הכולל של כל הקבצים חורג מהמותר. מקסימום כולל: ${MAX_FILE_SIZE_MB}MB`, '');
+      e.target.value = '';
+      return;
+    }
+
+    setPendingFiles(prev => [...prev, ...newFiles]);
+    setFormErrors(prev => ({ ...prev, file: '' }));
+    e.target.value = ''; // allow re-selecting the same file name
   };
 
-  // Actually upload to Azure — called just before POST/PUT, only if a new file was picked
-  const uploadPendingFileIfNeeded = async () => {
-    if (!pendingFile) return null; // nothing new to upload
+  const removePendingFile = (index) => {
+    setPendingFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
+  // Mark/unmark an already-saved file for removal — no API call happens until
+  // Save is clicked (sent as remove_slots in the same update_refund PUT that
+  // can also add new files, i.e. how "replace a receipt" works).
+  const toggleRemoveExistingSlot = (slot) => {
+    setRemovedSlots(prev => prev.includes(slot) ? prev.filter(s => s !== slot) : [...prev, slot]);
+  };
+
+  // Actually upload every pending file to Azure — called just before POST/PUT.
+  // Returns [{file_url, file_name, file_size}, ...] for whatever's newly picked.
+  const uploadPendingFilesIfNeeded = async () => {
+    if (pendingFiles.length === 0) return [];
 
     setUploadingFile(true);
     try {
-      const urlRes = await axios.get('/api/refunds/upload-url/', {
-        params: { filename: pendingFile.name }
-      });
-      const { upload_url, blob_url } = urlRes.data;
+      const uploaded = [];
+      for (const file of pendingFiles) {
+        const urlRes = await axios.get('/api/refunds/upload-url/', {
+          params: { filename: file.name }
+        });
+        const { upload_url, blob_url } = urlRes.data;
 
-      const isAzure = upload_url.includes('blob.core.windows.net');
-      const uploadHeaders = { 'Content-Type': pendingFile.type };
-      if (isAzure) uploadHeaders['x-ms-blob-type'] = 'BlockBlob';
+        const isAzure = upload_url.includes('blob.core.windows.net');
+        const uploadHeaders = { 'Content-Type': file.type };
+        if (isAzure) uploadHeaders['x-ms-blob-type'] = 'BlockBlob';
 
-      await fetch(upload_url, {
-        method: 'PUT',
-        headers: uploadHeaders,
-        body: pendingFile,
-      });
+        await fetch(upload_url, {
+          method: 'PUT',
+          headers: uploadHeaders,
+          body: file,
+        });
 
-      return blob_url;
+        uploaded.push({ file_url: blob_url, file_name: file.name, file_size: file.size });
+      }
+      return uploaded;
     } catch (err) {
-      showErrorToast(t, 'שגיאה בהעלאת הקובץ', '');
+      showErrorToast(t, 'שגיאה בהעלאת הקבצים', '');
       throw err;
     } finally {
       setUploadingFile(false);
@@ -351,7 +384,9 @@ const Refunds = () => {
       use_hint_phone: !!phoneHint,
     });
     setFormErrors({});
-    setPendingFile(null);
+    setPendingFiles([]);
+    setExistingFiles([]);
+    setRemovedSlots([]);
     setStaffSearch('');
     setSelectedStaffId('');
     setIsCreateModalOpen(true);
@@ -361,16 +396,15 @@ const Refunds = () => {
     const errs = validateForm(formData);
     if (Object.keys(errs).length > 0) { setFormErrors(errs); return; }
 
-    let fileUrl = formData.file_url;
+    let attachments;
     try {
-      const uploaded = await uploadPendingFileIfNeeded();
-      if (uploaded) fileUrl = uploaded;
+      attachments = await uploadPendingFilesIfNeeded();
     } catch { return; }
 
     const payload = {
       ...formData,
       on_behalf_of_staff_id: selectedStaffId || '',
-      file_url: fileUrl,
+      attachments,
       phone_number: normalizePhone(formData.use_hint_phone ? phoneHint : formData.phone_number),
     };
 
@@ -378,7 +412,7 @@ const Refunds = () => {
       .then(() => {
         toast.success('בקשת ההחזר נוצרה בהצלחה');
         setIsCreateModalOpen(false);
-        setPendingFile(null);
+        setPendingFiles([]);
         fetchRefunds();
         fetchPhoneHint();
       })
@@ -399,7 +433,6 @@ const Refunds = () => {
       volunteer_comment: refund.volunteer_comment || '',
       admin_comment: refund.admin_comment || '',
       approved_by: refund.approved_by || '',
-      file_url: refund.file_url || '',
       status: refund.status,
       refund_method: refund.refund_method || '',
       phone_number: refund.phone_number || '',
@@ -408,7 +441,9 @@ const Refunds = () => {
       on_behalf_of_staff_id: refund.staff_id ? Number(refund.staff_id) : '',
     });
     setFormErrors({});
-    setPendingFile(null);
+    setPendingFiles([]);
+    setExistingFiles(refund.attachments || []);
+    setRemovedSlots([]);
     setStaffSearch('');
     setSelectedStaffId(refund.staff_id ? Number(refund.staff_id) : '');
     setIsEditModalOpen(true);
@@ -418,16 +453,16 @@ const Refunds = () => {
     const errs = validateForm(formData, isAdminUser);
     if (Object.keys(errs).length > 0) { setFormErrors(errs); return; }
 
-    let fileUrl = formData.file_url;
+    let attachments;
     try {
-      const uploaded = await uploadPendingFileIfNeeded();
-      if (uploaded) fileUrl = uploaded;
+      attachments = await uploadPendingFilesIfNeeded();
     } catch { return; }
 
     const payload = {
       ...formData,
       on_behalf_of_staff_id: selectedStaffId || '',
-      file_url: fileUrl,
+      attachments,
+      remove_slots: removedSlots,
       phone_number: normalizePhone(formData.use_hint_phone ? (selectedRefund.phone_number || phoneHint) : formData.phone_number),
     };
 
@@ -435,7 +470,7 @@ const Refunds = () => {
       .then(() => {
         toast.success('בקשת ההחזר עודכנה בהצלחה');
         setIsEditModalOpen(false);
-        setPendingFile(null);
+        setPendingFiles([]);
         fetchRefunds();
       })
       .catch(err => showErrorToast(t, err.response?.data?.error || 'שגיאה בעדכון הבקשה', ''));
@@ -468,13 +503,14 @@ const Refunds = () => {
       volunteer_comment: refund.volunteer_comment || '',
       admin_comment: refund.admin_comment || '',
       approved_by: refund.approved_by || '',
-      file_url: refund.file_url || '',
       status: refund.status,
       refund_method: refund.refund_method || '',
       phone_number: refund.phone_number || '',
       use_hint_phone: false,
       save_phone_for_future: false,
     });
+    setExistingFiles(refund.attachments || []);
+    setRemovedSlots([]);
     setIsViewModalOpen(true);
   };
 
@@ -659,31 +695,74 @@ const Refunds = () => {
         </div>
       )}
 
-      {/* Full-width: receipt upload */}
+      {/* Full-width: receipt upload (up to MAX_FILES total, combined size ≤ MAX_FILE_SIZE_MB) */}
       {!readOnly && (
         <div className="refund-form-group full-width">
-          <label>קבלה / אסמכתה (עד {MAX_FILE_SIZE_MB}MB) *</label>
-          <div
-            className={`refund-upload-zone ${pendingFile ? 'has-file' : formData.file_url ? 'has-file' : ''}`}
-            onClick={() => fileInputRef.current?.click()}
-          >
-            {uploadingFile
-              ? 'מעלה קובץ...'
-              : pendingFile
-                ? `📎 ${pendingFile.name} — יועלה עם שמירת הבקשה`
-                : formData.file_url
-                  ? '✅ קובץ קיים — לחץ להחלפה'
-                  : 'לחץ לבחירת קובץ (PDF / תמונה)'}
-          </div>
-          {formErrors.file && <div className="refund-field-error">{formErrors.file}</div>}
-          <input ref={fileInputRef} type="file" className="refund-file-input-hidden" accept=".pdf,.jpg,.jpeg,.png,.webp" onChange={handleFileSelect} />
+          <label>קבלה / אסמכתה (עד {MAX_FILES} קבצים, עד {MAX_FILE_SIZE_MB}MB בסך הכל) *</label>
+          {(() => {
+            const remainingExisting = existingFiles.filter(f => !removedSlots.includes(f.slot));
+            const atLimit = remainingExisting.length + pendingFiles.length >= MAX_FILES;
+            return (
+              <>
+                <div
+                  className={`refund-upload-zone ${remainingExisting.length + pendingFiles.length > 0 ? 'has-file' : ''}`}
+                  onClick={() => { if (!atLimit) fileInputRef.current?.click(); }}
+                  style={atLimit ? { opacity: 0.5, cursor: 'not-allowed' } : undefined}
+                >
+                  {uploadingFile
+                    ? 'מעלה קבצים...'
+                    : atLimit
+                      ? `צורפו ${MAX_FILES} קבצים (המקסימום)`
+                      : 'לחץ לבחירת קובץ (PDF / תמונה)'}
+                </div>
+                {formErrors.file && <div className="refund-field-error">{formErrors.file}</div>}
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  multiple
+                  className="refund-file-input-hidden"
+                  accept=".pdf,.jpg,.jpeg,.png,.webp"
+                  onChange={handleFileSelect}
+                />
+                {(remainingExisting.length > 0 || pendingFiles.length > 0 || removedSlots.length > 0) && (
+                  <div className="refund-attachments-list">
+                    {remainingExisting.map(f => (
+                      <div key={f.slot} className="refund-attachment-chip">
+                        <a href={f.file_url} target="_blank" rel="noopener noreferrer">📎 {f.file_name || 'קובץ קיים'}</a>
+                        <button type="button" onClick={() => toggleRemoveExistingSlot(f.slot)} title="הסר">✕</button>
+                      </div>
+                    ))}
+                    {existingFiles.filter(f => removedSlots.includes(f.slot)).map(f => (
+                      <div key={f.slot} className="refund-attachment-chip refund-attachment-chip--removed">
+                        <span>🗑️ {f.file_name || 'קובץ קיים'} — יימחק עם השמירה</span>
+                        <button type="button" onClick={() => toggleRemoveExistingSlot(f.slot)} title="בטל מחיקה">↩️</button>
+                      </div>
+                    ))}
+                    {pendingFiles.map((file, i) => (
+                      <div key={`pending-${i}`} className="refund-attachment-chip refund-attachment-chip--pending">
+                        <span>📎 {file.name} — יועלה עם שמירת הבקשה</span>
+                        <button type="button" onClick={() => removePendingFile(i)} title="הסר">✕</button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </>
+            );
+          })()}
         </div>
       )}
 
-      {/* Full-width: receipt preview */}
-      {formData.file_url && (
+      {/* Full-width: receipt list (read-only view modal) */}
+      {readOnly && existingFiles.length > 0 && (
         <div className="refund-form-group full-width">
-          <a className="refund-receipt-preview" href={formData.file_url} target="_blank" rel="noopener noreferrer">צפה בקבלה בדפדפן</a>
+          <label>קבלות / אסמכתאות</label>
+          <div className="refund-attachments-list">
+            {existingFiles.map(f => (
+              <div key={f.slot} className="refund-attachment-chip">
+                <a className="refund-receipt-preview" href={f.file_url} target="_blank" rel="noopener noreferrer">📎 {f.file_name || 'צפה בקבלה בדפדפן'}</a>
+              </div>
+            ))}
+          </div>
         </div>
       )}
     </div>
