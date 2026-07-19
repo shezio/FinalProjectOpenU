@@ -42,6 +42,18 @@ eventual unified tabbed "כספים" shell with Overview + one tab per module).
   with matching entries appended to `add_audit_translations.sql`, permission
   gate via `hasViewPermissionForTable('<resource>')` (checks
   `childsmile_app_<resource>` + `VIEW` in `localStorage.permissions`).
+- **⚠️ BUMP `childsmile/childsmile_app/version.txt` for EVERY backend change**
+  (new/changed model, view, urls file — anything under `childsmile/**`
+  excluding the frontend). This file is NOT cosmetic: the Azure deploy
+  workflow's startup command (`.github/workflows/azure-deploy.yml`) does
+  `cmp -s <new>/version.txt <deployed>/version.txt` and **skips syncing the
+  new code entirely if the two match** ("Deploy Versions match — Skipping").
+  Forgetting to bump it means a backend change can be pushed/merged and the
+  live server keeps running the OLD code with no error or warning. Convention
+  observed in git history: `YY.MM.<feature-index>.<patch-index>` — bump the
+  3rd number (reset 4th to 0) for a new logical feature/pass, bump the 4th
+  for a small follow-up fix within the same feature (e.g. `26.07.2.1` →
+  `26.07.3.0` for the Petty Cash + Ongoing Expenses pass).
 - Each module ships as its **own standalone sidebar page** for now (like
   Refunds today) — the unified tabbed "כספים" shell from the concept file is
   a later nice-to-have, not being built yet (explicit user decision).
