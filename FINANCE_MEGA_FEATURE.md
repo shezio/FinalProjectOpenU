@@ -315,6 +315,8 @@ add a `refund_method`/`refund.refund_method not in (...)` filter in
 - `childsmile/childsmile_app/models.py` (added `PettyCashExpense`, `OngoingExpense`)
 - `childsmile/childsmile_app/refund_views.py` (Petty Cash sync automation)
 - `childsmile/childsmile_app/urls.py` (registered `urls_petty_cash`, `urls_ongoing_expense`)
+- `childsmile/childsmile_app/version.txt` (bumped for these backend changes — see
+  Ground Rules; MUST bump again for every future backend change in this doc)
 - `add_audit_translations.sql` (Petty Cash + Ongoing Expenses action codes)
 - `childsmile/frontend/src/App.js` (routes)
 - `childsmile/frontend/src/components/Sidebar.js` (nav entries, desktop-only)
@@ -335,4 +337,7 @@ add a `refund_method`/`refund.refund_method not in (...)` filter in
    shows "קופה קטנה" (💵) and "הוצאות שוטפות" (⛽) → open each, add an entry.
    Then mark an existing refund as "שולם" in `/refunds` → confirm a linked
    row now appears in `/petty-cash` tagged "מהחזר #<id>".
+7. **Before merging/pushing: confirm `childsmile/childsmile_app/version.txt`
+   was bumped** (see Ground Rules) — otherwise the Azure deploy workflow will
+   see no version change and SKIP deploying this backend change entirely.
 
