@@ -94,7 +94,7 @@ eventual unified tabbed "כספים" shell with Overview + one tab per module).
 | 2 | חזרי הוצאות (Refunds) | ✅ Done (pre-existing) | `/refunds` | Untouched, EXCEPT one additive hook: marking a refund "שולם" now auto-syncs a linked Petty Cash row (see below). |
 | 3 | **הוצאות שוטפות (Ongoing Expenses)** | ✅ **Done** | `/ongoing-expenses` | See full spec below. |
 | 4 | **קופה קטנה (Petty Cash)** | ✅ Done | `/petty-cash` | See full spec below. |
-| 5 | סיוע כספי (Financial Aid) | ⏳ Planned | — | Concept columns: שם משפחה, תאריך סיוע, סכום, אופן ביצוע. שורת כ-בקריה "בקרוב" במודול ה-Overview. |
+| 5 | **סיוע כספי (Financial Aid)** | ✅ **Done** | `/financial-aid` | See full spec below. |
 | 6 | חלוקת תלושים (Vouchers) | ⏳ Planned | — | Most complex: sub-tabs (summary/recipients/forms), public questionnaire, family linking by ת"ז. שורת כ-בקריה "בקרוב" במודול ה-Overview. |
 
 ---
@@ -102,9 +102,11 @@ eventual unified tabbed "כספים" shell with Overview + one tab per module).
 ## סקירה כללית (Overview) — built this pass ✅
 
 100% frontend — no backend/DB changes, no new permission resource. Aggregates
-the 3 existing GET endpoints (`/api/refunds/`, `/api/petty-cash/`,
-`/api/ongoing-expenses/`) client-side; Financial Aid and Vouchers show as
-**"בקרוב"** (Coming Soon) cards — greyed out, not clickable — until they're built.
+the existing GET endpoints (`/api/refunds/`, `/api/petty-cash/`,
+`/api/ongoing-expenses/`, `/api/financial-aid/` — the last one added when the
+Financial Aid module was built, see its own section below) client-side;
+Vouchers still shows as a **"בקרוב"** (Coming Soon) card — greyed out, not
+clickable — until it's built.
 
 ### Key design decision: avoiding double-counting the Refunds→Petty Cash sync
 
@@ -139,9 +141,9 @@ checks on both resources, ANDed) rather than importing `hasAllPermissions` there
 - **Module breakdown cards** (`.finance-overview-modcards` grid, NEW pattern
   — no prior card-grid precedent existed for a dashboard-style page, but
   colors/radius/shadows reuse the established violet-gradient theme):
-  Refunds / Petty Cash / Ongoing Expenses show real totals and are clickable
-  (`navigate()` to that module); Financial Aid / Vouchers render as disabled
-  "בקרוב" cards (opacity 0.55, `cursor:not-allowed`, no hover, no onClick).
+  Refunds / Petty Cash / Ongoing Expenses / Financial Aid show real totals and
+  are clickable (`navigate()` to that module); Vouchers renders as a disabled
+  "בקרוב" card (opacity 0.55, `cursor:not-allowed`, no hover, no onClick).
 - **Monthly trend bar chart:** reuses the codebase's EXISTING chart library
   (`chart.js` + `react-chartjs-2`, already used by `DashboardCharts.js` and
   several report pages) rather than hand-rolling CSS bars — same
@@ -161,7 +163,7 @@ checks on both resources, ANDed) rather than importing `hasAllPermissions` there
 
 ### Explicitly NOT built
 
-- Financial Aid / Vouchers real cards (show "בקרוב" until those modules exist).
+- Vouchers real card (still shows "בקרוב" until that module exists).
 - Any backend aggregation endpoint (pure frontend computation over existing APIs).
 - Report export (PDF/Excel) of the overview.
 
@@ -365,14 +367,124 @@ add a `refund_method`/`refund.refund_method not in (...)` filter in
 
 ---
 
-## Remaining modules — not started (rough spec from the concept file only, refine before building)
+## סיוע כספי (Financial Aid) — built this pass ✅
 
-### סיוע כספי (Financial Aid) — ⏳ Planned
-- Source: "רשימת נתמכים סיוע כספי" spreadsheet. Columns: שם משפחה, תאריך
-  סיוע, סכום, אופן ביצוע (בנקאית/מזומן badge).
-- Open question to confirm before building: should this link to an existing
-  family record (like Refunds links to `Staff`), or stay free-text like
-  Petty Cash? The concept mockup only shows free-text family names.
+### Decisions locked in for v1 (confirmed with the user before building)
+
+- **Permission tier: `System Administrator` only** — same convention as Petty
+  Cash/Ongoing Expenses. The concept spec recommends a senior "הנהלה"
+  (management/board) tier, but no such role exists in this system yet
+  (`System Administrator` is the most senior tier). Not inventing a new role
+  for this — revisit only if explicitly requested later.
+- **Family linkage is OPTIONAL, via ONE combo-picker field, not two.** The
+  concept spec lists `שם משפחה` (free text, required) and a separate
+  `משפחה (תיק אישי)` link field (optional) — implemented as a SINGLE
+  react-select field that either searches existing registered families or
+  falls back to free-typing a name (exact same UX as Feedbacks.js's
+  volunteer/tutor picker: search → pick, or type a name → "השתמש בשם זה?"
+  confirm). Most recipients are NOT registered families (no login/user
+  accounts at all) — the table works identically either way; `family_name`
+  is always populated, `linked_child` is set only when a real family was
+  picked from the dropdown.
+- **"Syncs to the family's תיק אישי" = a read-only history section** added
+  to the EXISTING family details modal in `Families.js` (NOT a new page, NOT
+  writing into any `Children` field) — lazy-fetched by `child_id` when the
+  modal opens, gated behind `childsmile_app_financialaid` VIEW permission.
+- **Multiple file attachments** (מכתב בקשה ומסמכים) — unlike Refunds' single
+  `file_url`, this needed a separate `FinancialAidAttachment` junction table
+  (one FinancialAid record → many attachments), reusing the exact same Azure
+  Blob SAS upload flow as Refunds (see below), looped once per file.
+- **Lightweight family search endpoint** (`get_family_options`) was added
+  instead of reusing `family_views.get_complete_family_details` — that
+  endpoint returns 25+ fields per family for the full Families page, overkill
+  for a simple search dropdown.
+
+### Data model (`childsmile/childsmile_app/models.py`)
+
+- `FinancialAid` — `financial_aid_id` PK, `family_name` (CharField, always
+  required), `aid_date`, `amount`, `method` (TextChoices: העברה בנקאית /
+  מזומן / אחר), `notes`, `linked_child` (ForeignKey → `Children`,
+  `on_delete=SET_NULL`, nullable — SET_NULL not CASCADE so deleting a family
+  record later doesn't wipe aid history), `created_at`/`updated_at` auto,
+  `updated_by` CharField (same "who did this" convention as
+  PettyCashExpense/OngoingExpense — no `created_by` field, per the
+  established rule that this codebase only has 2 such patterns).
+- `FinancialAidAttachment` — `attachment_id` PK, `financial_aid` FK
+  (CASCADE), `file_url`, `file_name`, `uploaded_at`.
+
+### Backend files
+
+- `childsmile/childsmile_app/financial_aid_views.py` (NEW) — full CRUD
+  (`get_financial_aid`, `create_financial_aid`, `update_financial_aid`,
+  `delete_financial_aid`) + `delete_financial_aid_attachment` (remove one
+  file without deleting the record) + Azure Blob upload trio
+  (`get_financial_aid_upload_url` / `local_upload_financial_aid_file` /
+  `serve_local_financial_aid_file`, mirroring `refund_views.py`'s exact SAS
+  flow, own `AZURE_FINANCIAL_AID_CONTAINER` env var) + `get_family_options`
+  (lightweight picker search) + `get_financial_aid_by_child` (feeds the
+  Families.js history section). Every endpoint requires `is_admin(staff)` —
+  including the upload-url endpoint, UNLIKE Refunds' equivalent (open to any
+  authenticated user there because any volunteer can submit a refund
+  request; here the whole module is admin-only).
+- `childsmile/childsmile_app/urls_financial_aid.py` (NEW) — route
+  definitions.
+- `childsmile/childsmile_app/urls.py` — added
+  `path("api/financial-aid/", include("childsmile_app.urls_financial_aid"))`.
+
+### Raw SQL
+
+- `add_financial_aid_table.sql` (NEW, repo root) — `CREATE TABLE
+  childsmile_app_financialaid` + `childsmile_app_financialaidattachment` +
+  indexes + idempotent permission grant (VIEW/CREATE/UPDATE/DELETE →
+  `System Administrator` ONLY, by name) + verify query. Attachments are
+  governed by the SAME `childsmile_app_financialaid` permission (no separate
+  grant row — they're only ever reached through the parent record's own
+  admin-only views). **Run this on the DB cluster**, then **re-run
+  `add_viewer_role.sql`** so `Viewer` picks up the same access.
+- `add_audit_translations.sql` — appended Hebrew labels for
+  `VIEW_FINANCIAL_AID(_FAILED)`, `CREATE_FINANCIAL_AID(_FAILED)`,
+  `UPDATE_FINANCIAL_AID(_FAILED)`, `DELETE_FINANCIAL_AID(_FAILED)`,
+  `DELETE_FINANCIAL_AID_ATTACHMENT(_FAILED)`.
+
+### Frontend files
+
+- `childsmile/frontend/src/pages/FinancialAid.js` (NEW) — list + search +
+  method filter + totals bar (סה"כ סיוע / מספר משפחות) + create/edit/delete
+  modals + windowed pagination + family combo-picker + multi-file upload UI.
+  Full-page "no-permission" fallback via `hasAllPermissions` over a
+  module-level `requiredPermissions` array, same as PettyCash.js/AuditLog.js.
+- `childsmile/frontend/src/styles/financialaid.css` (NEW) — same
+  violet-gradient theme, `.financial-aid-*` classes. Reuses global classes
+  from `tutorships.css`/`feedbacks.css` the same way other finance pages do.
+- `childsmile/frontend/src/App.js` — import + `<Route path="/financial-aid">`.
+- `childsmile/frontend/src/components/Sidebar.js` —
+  `hasPermissionToFinancialAid` flag (🤝 icon, "סיוע כספי" label) added to
+  the "כספים" section (desktop only, same as the other finance items).
+- `childsmile/frontend/src/pages/Families.js` — added a read-only "Financial
+  Aid history" section to the existing family details modal (see decisions
+  above), gated by `hasViewPermissionForTable('financialaid')`.
+- `childsmile/frontend/src/pages/FinanceOverview.js` — wired the real
+  Financial Aid total/count into the KPI grid, monthly trend chart, combined
+  Excel export, and its own modcard (replacing the "בקרוב" placeholder);
+  `ACTIVE_MODULES` bumped 3 → 4.
+- `childsmile/frontend/src/components/export_utils.js` —
+  `exportFinancialAidToExcel` (same no-selection shape as the other finance
+  exports).
+
+### Explicitly NOT built (v1) — revisit later if needed
+
+- Period/date-range filter beyond the method dropdown (matches the simpler
+  precedent already set by Petty Cash/Ongoing Expenses, which also only have
+  text search, not a full period filter despite the concept spec asking for
+  one on every module).
+- Automatic family-record matching (e.g. by ID number) — linking is always a
+  manual pick from the combo-picker, never auto-detected.
+
+---
+
+---
+
+## Remaining modules — not started (rough spec from the concept file only, refine before building)
 
 ### חלוקת תלושים (Vouchers) — ⏳ Planned, most complex
 - Three sub-views per the concept: סיכום חלוקות (distribution summary),
@@ -382,58 +494,82 @@ add a `refund_method`/`refund.refund_method not in (...)` filter in
 - Needs family-record auto-matching by ת"ז (child + parent), with manual
   linking fallback ("לא רשומה" when no match). This is a significant scope
   on its own — needs its own planning pass before implementation starts.
+- REUSE from Financial Aid (don't reinvent): the family combo-picker (search
+  existing family OR free-type a name, see FinancialAid.js's `familyPickerValue`
+  / react-select `noOptionsMessage` "Use this name?" confirm pattern — itself
+  borrowed from Feedbacks.js), the lightweight `get_family_options` endpoint
+  (id/name/city only, NOT the heavy `get_complete_family_details`), and the
+  multi-file Azure Blob upload pattern (`FinancialAidAttachment` junction
+  table + per-file SAS upload loop) if recipient documents are needed here too.
 
 ---
 
-## File manifest (Overview + Petty Cash + Ongoing Expenses passes)
+## File manifest (Overview + Petty Cash + Ongoing Expenses + Financial Aid passes)
 
 **Created:**
 - `add_petty_cash_table.sql`
 - `add_ongoing_expenses_table.sql`
+- `add_financial_aid_table.sql`
 - `childsmile/childsmile_app/petty_cash_views.py`
 - `childsmile/childsmile_app/urls_petty_cash.py`
 - `childsmile/childsmile_app/ongoing_expense_views.py`
 - `childsmile/childsmile_app/urls_ongoing_expense.py`
+- `childsmile/childsmile_app/financial_aid_views.py`
+- `childsmile/childsmile_app/urls_financial_aid.py`
 - `childsmile/frontend/src/pages/PettyCash.js`
 - `childsmile/frontend/src/styles/pettycash.css`
 - `childsmile/frontend/src/pages/OngoingExpenses.js`
 - `childsmile/frontend/src/styles/ongoingexpenses.css`
+- `childsmile/frontend/src/pages/FinancialAid.js`
+- `childsmile/frontend/src/styles/financialaid.css`
 - `childsmile/frontend/src/pages/FinanceOverview.js` (frontend-only, no backend)
 - `childsmile/frontend/src/styles/financeoverview.css`
 - `FINANCE_MEGA_FEATURE.md` (this file)
 
 **Modified:**
-- `childsmile/childsmile_app/models.py` (added `PettyCashExpense`, `OngoingExpense`)
+- `childsmile/childsmile_app/models.py` (added `PettyCashExpense`, `OngoingExpense`,
+  `FinancialAid`, `FinancialAidAttachment`)
 - `childsmile/childsmile_app/refund_views.py` (Petty Cash sync automation)
-- `childsmile/childsmile_app/urls.py` (registered `urls_petty_cash`, `urls_ongoing_expense`)
+- `childsmile/childsmile_app/urls.py` (registered `urls_petty_cash`,
+  `urls_ongoing_expense`, `urls_financial_aid`)
 - `childsmile/childsmile_app/version.txt` (bumped for these backend changes — see
   Ground Rules; MUST bump again for every future backend change in this doc)
-- `add_audit_translations.sql` (Petty Cash + Ongoing Expenses action codes)
+- `add_audit_translations.sql` (Petty Cash + Ongoing Expenses + Financial Aid action codes)
 - `childsmile/frontend/src/App.js` (routes)
 - `childsmile/frontend/src/components/Sidebar.js` (nav entries, desktop-only)
 - `childsmile/frontend/src/components/export_utils.js` (added
   `exportPettyCashToExcel` / `exportOngoingExpensesToExcel` /
-  `exportFinanceOverviewToExcel` — see Ground Rules' Excel-export rule)
+  `exportFinanceOverviewToExcel` / `exportFinancialAidToExcel` — see Ground
+  Rules' Excel-export rule)
+- `childsmile/frontend/src/pages/Families.js` (Financial Aid history section
+  in the family details modal)
 
 ## Deploy checklist
 
-1. Run `add_petty_cash_table.sql` and `add_ongoing_expenses_table.sql` on the
-   DB cluster (tables + indexes + `System Administrator` permissions).
+1. Run `add_petty_cash_table.sql`, `add_ongoing_expenses_table.sql`, and
+   `add_financial_aid_table.sql` on the DB cluster (tables + indexes +
+   `System Administrator` permissions).
 2. Re-run `add_viewer_role.sql` so the `Viewer` role picks up the new
-   `childsmile_app_pettycashexpense` / `childsmile_app_ongoingexpense`
-   permissions too (same step needed any time a new admin-only resource is
-   added — this is how Refunds' admin-only actions reached Viewer as well).
+   `childsmile_app_pettycashexpense` / `childsmile_app_ongoingexpense` /
+   `childsmile_app_financialaid` permissions too (same step needed any time
+   a new admin-only resource is added — this is how Refunds' admin-only
+   actions reached Viewer as well).
 3. Run `add_audit_translations.sql` (idempotent — safe to run the whole
-   file, or just the new Petty Cash / Ongoing Expenses blocks).
+   file, or just the new blocks).
 4. Restart Django (new views/urls/models).
 5. Rebuild/redeploy the frontend.
 6. Spot-check: log in as System Administrator → sidebar "כספים" section
-   shows "סקירה כללית" (📊), "החזרי הוצאות" (💰), "קופה קטנה" (💵) and
-   "הוצאות שוטפות" (⛽) → open each, add an entry. Then mark an existing
-   refund as "שולם" in `/refunds` → confirm a linked row now appears in
-   `/petty-cash` tagged "מהחזר #<id>", AND that the Overview page's totals
-   update accordingly (without double-counting that refund).
-7. **Before merging/pushing: confirm `childsmile/childsmile_app/version.txt`
+   shows "סקירה כללית" (📊), "החזרי הוצאות" (💰), "קופה קטנה" (💵),
+   "הוצאות שוטפות" (⛽) and "סיוע כספי" (🤝) → open each, add an entry. Then
+   mark an existing refund as "שולם" in `/refunds` → confirm a linked row
+   now appears in `/petty-cash` tagged "מהחזר #<id>". For Financial Aid:
+   create a record linked to a registered family, then open that family's
+   details in `/families` → confirm the aid history section shows it.
+7. Set `AZURE_FINANCIAL_AID_CONTAINER` (or accept the `financial-aid-docs`
+   default) alongside the existing `AZURE_STORAGE_*` env vars if file
+   uploads are needed in PROD (same Azure Storage account as Refunds, just a
+   different container).
+8. **Before merging/pushing: confirm `childsmile/childsmile_app/version.txt`
    was bumped** (see Ground Rules) — otherwise the Azure deploy workflow will
    see no version change and SKIP deploying this backend change entirely.
    (The Overview page itself is frontend-only — no bump needed for it alone.)

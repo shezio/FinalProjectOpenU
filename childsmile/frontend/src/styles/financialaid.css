@@ -1,0 +1,452 @@
+/* financialaid.css */
+
+* {
+  font-family: Rubik, sans-serif;
+}
+
+/* ── Main layout ─────────────────────────────────────────────────────────── */
+.financial-aid-main-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  flex-grow: 1;
+  padding: 230px 40px 40px 40px;
+  margin-right: 280px;
+  width: calc(100% - 280px);
+  background: transparent;
+}
+
+.financial-aid-main-content.sidebar-collapsed {
+  margin-right: 80px;
+  width: calc(100% - 80px);
+}
+
+/* ── Page header controls ───────────────────────────────────────────────── */
+.financial-aid-controls {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  width: 100%;
+  align-items: center;
+}
+
+.financial-aid-controls button {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.9), rgba(168, 85, 247, 0.9));
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 10px 20px;
+  font-size: 24px;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+  font-family: Rubik, sans-serif;
+}
+
+.financial-aid-controls button:hover {
+  opacity: 0.85;
+}
+
+/* Scoped override — shared .tutorship-search-bar (tutorships.css) defaults to
+   350px. Scoped to .financial-aid-controls so other pages reusing that shared
+   class (Tutorships.js, Refunds.js, ...) are unaffected. */
+.financial-aid-controls .tutorship-search-bar {
+  width: 400px;
+}
+
+.financial-aid-method-filter {
+  padding: 10px 15px;
+  border: 3px solid rgba(59, 130, 246, 0.75);
+  border-radius: 16px;
+  font-size: 20px;
+  font-family: Rubik, sans-serif;
+  color: #1f2937;
+  background: #fff;
+  cursor: pointer;
+}
+
+/* ── Totals bar ─────────────────────────────────────────────────────────── */
+.financial-aid-totals-bar {
+  display: flex;
+  gap: 24px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+  width: 100%;
+  justify-content: flex-start;
+}
+
+.financial-aid-total-chip {
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  border-radius: 12px;
+  padding: 8px 18px;
+  font-size: 24px;
+  color: #374151;
+}
+
+.financial-aid-total-chip strong {
+  color: #4f46e5;
+  font-size: 24px;
+}
+
+/* ── Table ──────────────────────────────────────────────────────────────── */
+.financial-aid-table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  border-radius: 16px;
+  box-shadow: 0 4px 24px rgba(99, 102, 241, 0.15);
+}
+
+.financial-aid-table {
+  width: 90%;
+  table-layout: auto;
+  border-collapse: collapse;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+}
+
+.financial-aid-table thead tr {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.9), rgba(168, 85, 247, 0.9));
+  color: white;
+}
+
+.financial-aid-table th,
+.financial-aid-table td {
+  padding: 12px 20px;
+  text-align: right;
+  font-size: 24px;
+  white-space: nowrap;
+  border-bottom: 1px solid rgba(99, 102, 241, 0.08);
+}
+
+.financial-aid-table tbody tr:hover {
+  background: rgba(99, 102, 241, 0.05);
+}
+
+.financial-aid-desc-cell {
+  max-width: 260px;
+  white-space: normal;
+  word-break: break-word;
+  line-height: 1.4;
+}
+
+/* Linked-to-existing-family indicator (table badge + form hint) */
+.financial-aid-linked-badge {
+  margin-right: 6px;
+  font-size: 18px;
+}
+
+.financial-aid-linked-hint {
+  font-size: 18px;
+  color: #059669;
+  margin-top: 4px;
+}
+
+/* ── Table action buttons ──────────────────────────────────────────────── */
+.financial-aid-row-actions {
+  display: inline-flex;
+  gap: 6px;
+}
+
+.financial-aid-action-btn {
+  cursor: pointer;
+  font-size: 24px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 5px;
+  border: none;
+  font-family: Rubik, sans-serif;
+  color: #fff;
+  background: #3b82f6;
+  transition: background 0.15s;
+}
+
+.financial-aid-action-btn:hover {
+  background: #2563eb;
+}
+
+.financial-aid-action-btn[title="מחק"] {
+  background: #ef4444;
+}
+
+.financial-aid-action-btn[title="מחק"]:hover {
+  background: #dc2626;
+}
+
+/* ── Modal overlay ──────────────────────────────────────────────────────── */
+.financial-aid-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+
+.financial-aid-modal {
+  background: white;
+  border-radius: 20px;
+  padding: 40px 48px;
+  width: 90vw;
+  max-width: 900px;
+  max-height: 90vh;
+  overflow-y: auto;
+  direction: rtl;
+  box-shadow: 0 20px 60px rgba(99, 102, 241, 0.25);
+  position: relative;
+}
+
+.financial-aid-modal.financial-aid-modal--narrow {
+  width: 420px;
+}
+
+.financial-aid-modal h2 {
+  margin: 0 0 24px 0;
+  font-size: 28px;
+  color: #4f46e5;
+}
+
+.financial-aid-modal-close {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  background: none;
+  border: none;
+  font-size: 28px;
+  cursor: pointer;
+  color: #6b7280;
+  line-height: 1;
+}
+
+/* ── Form fields ─────────────────────────────────────────────────────────── */
+.financial-aid-modal-body {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+  align-items: start;
+}
+
+.financial-aid-form-group {
+  margin-bottom: 18px;
+}
+
+.financial-aid-form-group.full-width {
+  grid-column: 1 / -1;
+}
+
+.financial-aid-form-group label {
+  display: block;
+  font-size: 24px;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 5px;
+}
+
+.financial-aid-form-group input,
+.financial-aid-form-group select,
+.financial-aid-form-group textarea {
+  width: 100%;
+  padding: 9px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  font-size: 24px;
+  font-family: Rubik, sans-serif;
+  direction: rtl;
+  box-sizing: border-box;
+  transition: border-color 0.2s ease;
+}
+
+.financial-aid-form-group input:focus,
+.financial-aid-form-group select:focus,
+.financial-aid-form-group textarea:focus {
+  outline: none;
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+}
+
+.financial-aid-form-group textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.financial-aid-field-error {
+  color: #ef4444;
+  font-size: 20px;
+  margin-top: 3px;
+}
+
+/* react-select sizing to match the rest of the form */
+.financial-aid-select__control,
+.financial-aid-select__menu,
+.financial-aid-select__option,
+.financial-aid-select__single-value,
+.financial-aid-select__input input {
+  font-size: 22px !important;
+  font-family: Rubik, sans-serif !important;
+}
+
+/* "Use this name?" free-text confirm row (family not found in the picker) */
+.financial-aid-freetext-prompt {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 4px 2px;
+}
+
+.financial-aid-freetext-question {
+  font-size: 18px;
+  color: #444;
+}
+
+.financial-aid-freetext-value {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1a1a1a;
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.financial-aid-freetext-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1;
+  color: #fff;
+  transition: transform 0.15s ease;
+}
+
+.financial-aid-freetext-btn:hover {
+  transform: translateY(-1px);
+}
+
+.financial-aid-freetext-confirm {
+  background: linear-gradient(135deg, rgba(76, 175, 80, 0.95) 0%, rgba(56, 142, 60, 0.95) 100%);
+  box-shadow: 0 2px 6px rgba(76, 175, 80, 0.4);
+}
+
+.financial-aid-freetext-cancel {
+  background: linear-gradient(135deg, rgba(244, 67, 54, 0.95) 0%, rgba(218, 25, 11, 0.95) 100%);
+  box-shadow: 0 2px 6px rgba(244, 67, 54, 0.4);
+}
+
+/* ── Supporting document uploads (multiple files) ───────────────────────── */
+.financial-aid-upload-zone {
+  border: 2px dashed #c4b5fd;
+  border-radius: 12px;
+  padding: 16px;
+  text-align: center;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  font-size: 22px;
+  color: #6b7280;
+}
+
+.financial-aid-upload-zone:hover {
+  background: rgba(99, 102, 241, 0.04);
+}
+
+.financial-aid-attachments-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.financial-aid-attachment-chip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  background: rgba(99, 102, 241, 0.06);
+  border-radius: 10px;
+  padding: 8px 14px;
+  font-size: 18px;
+}
+
+.financial-aid-attachment-chip a {
+  color: #4f46e5;
+  text-decoration: underline;
+}
+
+.financial-aid-attachment-chip--pending {
+  background: rgba(16, 185, 129, 0.08);
+  color: #065f46;
+}
+
+.financial-aid-attachment-chip button {
+  background: none;
+  border: none;
+  color: #ef4444;
+  cursor: pointer;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+/* ── Modal action buttons ───────────────────────────────────────────────── */
+.financial-aid-modal-actions {
+  display: flex;
+  justify-content: flex-start;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.financial-aid-modal-actions button {
+  padding: 10px 24px;
+  border: none;
+  border-radius: 12px;
+  font-size: 24px;
+  font-family: Rubik, sans-serif;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.financial-aid-modal-actions .btn-primary {
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  color: white;
+}
+
+.financial-aid-modal-actions .btn-primary.danger {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+}
+
+.financial-aid-modal-actions .btn-secondary {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.financial-aid-modal-actions button:hover {
+  opacity: 0.85;
+}
+
+.financial-aid-modal-actions button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.financial-aid-delete-hint {
+  color: #9ca3af;
+  font-size: 20px;
+}
+
+/* ── Loading / empty state ──────────────────────────────────────────────── */
+.financial-aid-loading,
+.financial-aid-empty {
+  text-align: center;
+  padding: 60px;
+  color: #6b7280;
+  font-size: 24px;
+}

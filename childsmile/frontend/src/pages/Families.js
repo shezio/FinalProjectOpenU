@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import axios from '../axiosConfig';
 import Sidebar from '../components/Sidebar';
 import InnerPageHeader from '../components/InnerPageHeader';
-import { isGuestUser, hasUpdatePermissionForTable, hasDeletePermissionForTable, hasCreatePermissionForTable } from '../components/utils';
+import { isGuestUser, hasUpdatePermissionForTable, hasDeletePermissionForTable, hasCreatePermissionForTable, hasViewPermissionForTable } from '../components/utils';
 import { toast } from 'react-toastify';
 import { useTranslation } from 'react-i18next';
 import '../styles/common.css';
@@ -28,6 +28,12 @@ const Families = () => {
   const [loading, setLoading] = useState(true);
   const [families, setFamilies] = useState([]);
   const [selectedFamily, setSelectedFamily] = useState(null);
+  // Financial Aid history (סיוע כספי) for the family currently open in the details modal —
+  // lazy-fetched (only admins/Viewer have childsmile_app_financialaid VIEW), see
+  // financial_aid_views.py::get_financial_aid_by_child.
+  const [financialAidHistory, setFinancialAidHistory] = useState([]);
+  const [financialAidLoading, setFinancialAidLoading] = useState(false);
+  const hasPermissionOnFinancialAid = hasViewPermissionForTable('financialaid');
   const [editFamily, setEditFamily] = useState(null);
   const [showAddModal, setShowAddModal] = useState(false); // State for Add Family modal
   const [maritalStatuses, setMaritalStatuses] = useState([]);
@@ -630,10 +636,19 @@ const Families = () => {
 
   const showFamilyDetails = (family) => {
     setSelectedFamily(family);
+    setFinancialAidHistory([]);
+    if (hasPermissionOnFinancialAid && family?.id) {
+      setFinancialAidLoading(true);
+      axios.get(`/api/financial-aid/by-child/${family.id}/`)
+        .then(res => setFinancialAidHistory(res.data.financial_aid || []))
+        .catch(() => setFinancialAidHistory([]))
+        .finally(() => setFinancialAidLoading(false));
+    }
   };
 
   const closeFamilyDetails = () => {
     setSelectedFamily(null);
+    setFinancialAidHistory([]);
   };
 
   const handleManualMatch = (family) => {
@@ -1392,6 +1407,43 @@ const Families = () => {
                 <p>{t('Is In Group')}: {selectedFamily.is_in_group ? t('Yes') : t('No')}</p>
                 <p>{t('Why Not In Group')}: {selectedFamily.is_in_group ? '---' : (selectedFamily.why_not_in_group || '---')}</p>
               </div>
+
+              {/* Financial Aid history (\u05e1\u05d9\u05d5\u05e2 \u05db\u05e1\u05e4\u05d9) \u2014 read-only, admin/Viewer only (childsmile_app_financialaid
+                  VIEW). Lazy-fetched by showFamilyDetails() when this modal opens. This is the
+                  "sync to the family's \u05ea\u05d9\u05e7 \u05d0\u05d9\u05e9\u05d9" automation from FINANCE_MEGA_FEATURE.md \u2014 aid recorded
+                  against a linked family shows up here automatically, no manual duplication. */}
+              {hasPermissionOnFinancialAid && (
+                <div className="family-financial-aid-history">
+                  <h3>היסטוריית סיוע כספי</h3>
+                  {financialAidLoading ? (
+                    <p>טוען...</p>
+                  ) : financialAidHistory.length === 0 ? (
+                    <p>אין רישומי סיוע כספי למשפחה זו</p>
+                  ) : (
+                    <table className="family-financial-aid-table">
+                      <thead>
+                        <tr>
+                          <th>תאריך</th>
+                          <th>סכום</th>
+                          <th>אופן ביצוע</th>
+                          <th>הערות</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {financialAidHistory.map(aid => (
+                          <tr key={aid.id}>
+                            <td>{aid.aid_date}</td>
+                            <td>{parseFloat(aid.amount).toFixed(2)} ₪</td>
+                            <td>{aid.method}</td>
+                            <td>{aid.notes || '---'}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  )}
+                </div>
+              )}
+
               <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', marginTop: '20px' }}>
                 {hasCreatePermissionForTable("tutorships") && (
                   <button
