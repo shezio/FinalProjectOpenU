@@ -15,7 +15,11 @@ const REFUND_STATUS_OPTIONS = ['ממתין', 'אושר', 'אושר חלקית', 
 const PAYMENT_METHOD_OPTIONS = ['ביט', 'פייבוקס', 'העברה בנקאית', 'אשראי', 'מזומן'];
 const COORDINATOR_OPTIONS = ['נעם', 'טל', 'נבו', 'אורי', 'ליאם'];
 const ISRAELI_PHONE_REGEX = /^0[2-9]\d{7,8}$/;
+// Up to 3 files per refund (see ExpenseRefund.file_url/_2/_3 in models.py) —
+// MAX_FILE_SIZE_MB is the COMBINED total across however many files are attached,
+// same overall cap the single-file version always used (not per-file).
 const MAX_FILE_SIZE_MB = 10;
+const MAX_FILES = 3;
 
 const normalizePhone = (phone) => phone ? phone.replace(/[\s\-().]/g, '') : phone;
 
@@ -117,7 +121,6 @@ const Refunds = () => {
     volunteer_comment: '',
     admin_comment: '',
     approved_by: '',
-    file_url: '',
     status: 'ממתין',
     refund_method: '',
     phone_number: '',
@@ -127,9 +130,10 @@ const Refunds = () => {
   const [formData, setFormData] = useState(emptyForm);
   const [formErrors, setFormErrors] = useState({});
 
-  // ── File upload ───────────────────────────────────────────────────────────
+  // ── File upload ── up to MAX_FILES (3) per refund, combined size ≤ MAX_FILE_SIZE_MB ──
   const [uploadingFile, setUploadingFile] = useState(false);
-  const [pendingFile, setPendingFile] = useState(null);       // File object, not yet uploaded
+  const [pendingFiles, setPendingFiles] = useState([]);   // File[] — picked, not yet uploaded
+  const [existingFiles, setExistingFiles] = useState([]);  // [{slot, file_url, file_name, file_size}] — already on the refund (edit/view)
   const fileInputRef = useRef(null);
 
   // ── Fetch data on mount ───────────────────────────────────────────────────
