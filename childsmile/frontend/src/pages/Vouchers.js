@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 import InnerPageHeader from '../components/InnerPageHeader';
 import axios from '../axiosConfig';
@@ -62,6 +63,7 @@ const fmtDate = (dateStr) => {
 
 const Vouchers = () => {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const hasPermissionOnVouchers = hasAllPermissions(requiredPermissions);
 
   // ── View state: distributions list <-> recipients list for one distribution ──
@@ -480,6 +482,7 @@ const Vouchers = () => {
         <InnerPageHeader title="חלוקת תלושים" />
 
         <div className="vouchers-controls">
+          <button onClick={() => navigate('/finance-overview')}>← לסקירה כללית</button>
           <button onClick={openCreateDistModal}>+ חלוקה חדשה</button>
           <button onClick={fetchDistributions}>רענן</button>
           <button onClick={() => exportVoucherDistributionsToExcel(filteredDistributions, t)}>ייצוא לאקסל</button>

@@ -106,7 +106,12 @@ const FinanceOverview = () => {
   // (e.g. Petty Cash's card includes the auto-synced rows too) — only the
   // combined grand total needs the de-duplication.
   const paidRefunds = refunds.filter(r => r.status === 'שולם');
-  const pendingRefundsCount = refunds.filter(r => r.status === 'ממתין').length;
+  // "Still needs action" = anything not in a FINAL state (שולם/בוטלנדחה) - i.e.
+  // ממתין (pending review) OR אושר/אושר חלקית (approved but not yet paid out) ALL
+  // still need staff to do something. Was previously only counting the literal
+  // 'ממתין' status, which undercounted (e.g. showed 0 even with several
+  // approved-but-unpaid refunds still outstanding).
+  const pendingRefundsCount = refunds.filter(r => r.status !== 'שולם' && r.status !== 'בוטל/נדחה').length;
   const refundsPaidTotal = paidRefunds.reduce(
     (s, r) => s + parseFloat(r.approved_amount || r.requested_amount || 0), 0
   );
@@ -122,13 +127,15 @@ const FinanceOverview = () => {
   // Vouchers: distributed_amount is already the sum of that distribution's
   // approved recipient amounts (computed server-side, see voucher_views.py's
   // _distribution_to_dict) - money ACTUALLY given out, same semantic as the
-  // other modules' totals. recipients_count sums across all distributions for
-  // the "how many individual transactions" semantic used by totalTransactions.
+  // other modules' totals. recipients_count sums across all distributions,
+  // shown in the modcard below ("X חלוקות (Y מקבלים)").
   const vouchersDistributedTotal = vouchers.reduce((s, d) => s + parseFloat(d.distributed_amount || 0), 0);
   const vouchersRecipientsCount = vouchers.reduce((s, d) => s + (d.recipients_count || 0), 0);
 
   const grandTotal = refundsPaidTotal + pettyCashManualTotal + ongoingTotal + financialAidTotal + vouchersDistributedTotal;
-  const totalTransactions = refunds.length + pettyCash.length + ongoingExpenses.length + financialAid.length + vouchersRecipientsCount;
+  // Vouchers' own "remaining budget" (not yet distributed) - the mock's 4th KPI
+  // ("🎟️ נשאר לחלק") is specifically ABOUT vouchers, not a general transaction count.
+  const vouchersRemainingTotal = vouchers.reduce((s, d) => s + parseFloat(d.remaining_amount || 0), 0);
 
   // Combined ledger for the "ייצוא לאקסל" button — same de-duplication as grandTotal
   // above (paid refunds + manual petty cash only, so auto-synced rows aren't
@@ -274,9 +281,9 @@ const FinanceOverview = () => {
               <div className="finance-overview-kpi-sub">החזרים לאישור / תשלום</div>
             </div>
             <div className="finance-overview-kpi-chip finance-overview-kpi-chip--red">
-              <div className="finance-overview-kpi-label"><span>🧾</span> עסקאות (סה"כ)</div>
-              <div className="finance-overview-kpi-value">{totalTransactions}</div>
-              <div className="finance-overview-kpi-sub">בכל המודולים הפעילים</div>
+              <div className="finance-overview-kpi-label"><span>🎟️</span> נשאר לחלק</div>
+              <div className="finance-overview-kpi-value">{vouchersRemainingTotal.toFixed(2)} ₪</div>
+              <div className="finance-overview-kpi-sub">תלושים שטרם חולקו</div>
             </div>
           </div>
 

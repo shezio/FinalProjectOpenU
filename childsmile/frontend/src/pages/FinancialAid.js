@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 import InnerPageHeader from '../components/InnerPageHeader';
 import axios from '../axiosConfig';
@@ -38,6 +39,7 @@ const fmtDate = (dateStr) => {
 // ── Component ──────────────────────────────────────────────────────────────────
 const FinancialAid = () => {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const hasPermissionOnFinancialAid = hasAllPermissions(requiredPermissions);
 
   // ── Data state ────────────────────────────────────────────────────────────
@@ -438,6 +440,7 @@ const FinancialAid = () => {
 
       {/* Controls */}
       <div className="financial-aid-controls">
+        <button onClick={() => navigate('/finance-overview')}>← לסקירה כללית</button>
         <button onClick={openCreateModal}>+ רישום סיוע</button>
         <button onClick={fetchEntries}>רענן</button>
         <button onClick={() => exportFinancialAidToExcel(filteredEntries, t)}>ייצוא לאקסל</button>

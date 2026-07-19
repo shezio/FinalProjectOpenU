@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 import InnerPageHeader from '../components/InnerPageHeader';
 import axios from '../axiosConfig';
@@ -34,6 +35,7 @@ const fmtDate = (dateStr) => {
 // ── Component ──────────────────────────────────────────────────────────────────
 const OngoingExpenses = () => {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   // ADMIN-ONLY page for now (System Administrator / Viewer — see add_ongoing_expenses_table.sql)
   const hasPermissionOnOngoingExpenses = hasAllPermissions(requiredPermissions);
 
@@ -262,6 +264,7 @@ const OngoingExpenses = () => {
 
       {/* Controls */}
       <div className="ongoing-expense-controls">
+        <button onClick={() => navigate('/finance-overview')}>← לסקירה כללית</button>
         <button onClick={openCreateModal}>+ הוצאה חדשה</button>
         <button onClick={fetchEntries}>רענן</button>
         <button onClick={() => exportOngoingExpensesToExcel(filteredEntries, t)}>ייצוא לאקסל</button>
