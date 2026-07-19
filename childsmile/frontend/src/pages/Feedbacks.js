@@ -1124,18 +1124,12 @@ const Feedbacks = () => {
                     </div>
                   )}
 
-                  {/* Volunteer/Tutor Name (person the feedback is attributed to) */}
+                  {/* Volunteer/Tutor Name (person the feedback is attributed to) —
+                      editable on BOTH create and edit (previously hard-disabled on
+                      edit for everyone regardless of role — bug fix) */}
                   <div className="feedbacks-form-row">
                     <label>{t("Volunteer/Tutor Name")}</label>
-                    {modalData.id ? (
-                      <input
-                        type="text"
-                        value={people.find(p => p.id === modalData.filler_id)?.name || modalData.filler_name || ""}
-                        disabled
-                        className="feedbacks-readonly-input"
-                      />
-                    ) : (
-                      <Select
+                    <Select
                         ref={fillerSelectRef}
                         inputValue={fillerInput}
                         onInputChange={(val, meta) => {
@@ -1205,8 +1199,8 @@ const Feedbacks = () => {
                           )
                         }
                       />
-                    )}
                   </div>
+
 
                   {/* Subject (Tutee/Child) Name, Is It Your Tutee - only for non-hospital visit */}
                   {modalData.feedback_type !== "general_volunteer_hospital_visit" && (
