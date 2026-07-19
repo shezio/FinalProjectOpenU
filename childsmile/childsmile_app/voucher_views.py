@@ -49,6 +49,7 @@ import re
 from decimal import Decimal, InvalidOperation
 
 from django.db import transaction
+from django.db.models import Sum
 from django.http import JsonResponse
 from django.utils import timezone
 from rest_framework.decorators import api_view
@@ -493,7 +494,28 @@ def _apply_recipient_fields(recipient, data, updated_by):
         recipient.referral_source = data['referral_source'] or None
 
     if 'approved_amount' in data:
-        recipient.approved_amount = Decimal(str(data['approved_amount'])) if data['approved_amount'] not in (None, '') else None
+        new_amount = Decimal(str(data['approved_amount'])) if data['approved_amount'] not in (None, '') else None
+        if new_amount is not None:
+            if new_amount < 0:
+                raise ValueError("סכום מאושר לא יכול להיות שלילי.")
+            # Budget guard: the sum of ALL recipients' approved_amount in this
+            # distribution (this one excluded, so its OWN previous value isn't
+            # double-counted) plus the NEW amount must not exceed the
+            # distribution's initial_amount - otherwise "remaining" goes
+            # negative (no server-side check existed before this, so nothing
+            # stopped an admin from over-approving past the actual budget).
+            distribution = recipient.distribution
+            already_distributed = VoucherRecipient.objects.filter(
+                distribution=distribution
+            ).exclude(recipient_id=recipient.recipient_id).aggregate(
+                total=Sum('approved_amount')
+            )['total'] or Decimal('0')
+            max_allowed = distribution.initial_amount - already_distributed
+            if new_amount > max_allowed:
+                raise ValueError(
+                    f"הסכום חורג מהתקציב שנותר לחלוקה. מקסימום מותר: {max_allowed:.2f}₪."
+                )
+        recipient.approved_amount = new_amount
     if 'ready' in data:
         recipient.ready = bool(data['ready'])
     if 'assigned_volunteer' in data:
@@ -615,33 +637,26 @@ _FIELD_MAX_LENGTHS = {
 }
 _TEXT_FIELD_MAX_LENGTH = 4000  # case_description / notes (TextField, no DB cap, cap here instead)
 
-_ISRAELI_PHONE_RE = re.compile(r'^0[2-9]\d{7,8}$')
-_ID_NUMBER_RE = re.compile(r'^\d{5,9}$')  # basic shape check, done BEFORE the checksum below
+# Israeli phone = exactly 10 digits: a 3-digit prefix (leading 0 + 2 more, e.g.
+# 050/052/054) + 7 more digits. The frontend now rejects (not silently strips)
+# dashes/spaces at input time, but this server-side check still tolerantly
+# strips them before testing - a direct API/script call bypasses the frontend
+# entirely, so being lenient here (while the UI itself enforces digits-only)
+# is a reasonable "strict UX, tolerant API" split.
+_ISRAELI_PHONE_RE = re.compile(r'^0\d{9}$')
+_ID_NUMBER_RE = re.compile(r'^\d{5,9}$')  # loose sanity check, not the full ת"ז checksum -
+# deliberately NOT a strict checksum: this is a voluntary aid-request form, and a
+# false rejection (blocking a genuine family over a harmless typo) is worse than
+# accepting a slightly malformed ID (a mismatch here just means auto-matching
+# against Children/ChildrenLookup silently won't fire - a benign outcome, not a
+# security issue). A stricter Luhn-style checksum was tried and reverted after
+# real user testing showed it rejects too many legitimate entries.
 
 # Must match Children.status's real choices exactly (models.py) - a voucher
 # recipient's child_treatment_status describes the SAME real-world concept for
 # the SAME children, so it has to use the identical vocabulary, never invented
 # values (e.g. NOT 'פעיל'/'באחזקה'/'סיים', which don't exist anywhere else in the system).
 _CHILD_TREATMENT_STATUSES = ['טיפולים', 'מעקבים', 'אחזקה', 'ז״ל', 'בריא', 'עזב']
-
-
-def _is_valid_israeli_id(id_number):
-    """Real Israeli ת"ז checksum (standard Luhn-style algorithm), NOT just a
-    digit-count check. Catches typos/made-up numbers (transposed digits,
-    "123456789", etc.) before we even try to look them up. NOTE: Children.child_id
-    IS the real government ת"ז (imported from the "תעודת זהות ילד/ה" column —
-    see family_views.py's bulk import / sqlizeforphones.py) — checksum validity
-    here is a cheap pre-check with no DB hit; the actual existence/auto-match
-    lookup against ChildrenLookup happens separately in _apply_recipient_fields."""
-    s = str(id_number).strip()
-    if not _ID_NUMBER_RE.match(s):
-        return False
-    s = s.zfill(9)
-    total = 0
-    for i, ch in enumerate(s):
-        d = int(ch) * (1 if i % 2 == 0 else 2)
-        total += d - 9 if d > 9 else d
-    return total % 10 == 0
 
 
 def _validate_recipient_data(data):
@@ -671,8 +686,8 @@ def _validate_recipient_data(data):
 
     for field, label in (('parent_id_number', 'תעודת זהות ההורה'), ('child_id_number', 'תעודת זהות הילד')):
         val = data.get(field)
-        if val and not _is_valid_israeli_id(val):
-            return f"{label} אינה תקינה - נא לבדוק שוב."
+        if val and not _ID_NUMBER_RE.match(str(val).strip()):
+            return f"{label} לא תקינה (צריכים 5-9 ספרות)."
 
     treatment_status = data.get('child_treatment_status')
     if treatment_status and treatment_status not in _CHILD_TREATMENT_STATUSES:

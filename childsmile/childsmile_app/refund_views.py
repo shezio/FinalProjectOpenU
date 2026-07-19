@@ -158,6 +158,36 @@ def _sync_petty_cash_for_refund(refund, actor_username):
         api_logger.error(f"_sync_petty_cash_for_refund failed for refund #{refund.refund_id}: {sync_err}")
 
 
+def _sync_task_for_refund(refund):
+    """
+    Keep the linked "החזר הוצאות" task's status in step with the refund's own
+    status, same shape/spirit as _sync_petty_cash_for_refund. Idempotent, safe
+    to call after every status change, never raises (a sync failure must not
+    block the refund update itself):
+      - status in ('אושר', 'אושר חלקית') -> task status = 'בביצוע' (still needs payout)
+      - status in ('שולם', 'בוטל/נדחה')   -> task status = 'הושלמה' (nothing left to do)
+      - status == 'ממתין'                -> task status = 'לא הושלמה' (back to the initial state)
+    Looks the task up the SAME way delete_refund already does (by
+    task_type + user_info.refund_id) rather than relying solely on
+    refund.related_task, in case that FK is ever unset/stale.
+    """
+    try:
+        linked_tasks = Tasks.objects.filter(task_type__task_type='החזר הוצאות')
+        for t in linked_tasks:
+            if isinstance(t.user_info, dict) and str(t.user_info.get('refund_id')) == str(refund.refund_id):
+                if refund.status in ('אושר', 'אושר חלקית'):
+                    new_task_status = 'בביצוע'
+                elif refund.status in ('שולם', 'בוטל/נדחה'):
+                    new_task_status = 'הושלמה'
+                else:
+                    new_task_status = 'לא הושלמה'
+                if t.status != new_task_status:
+                    t.status = new_task_status
+                    t.save(update_fields=['status', 'updated_at'])
+    except Exception as sync_err:
+        api_logger.error(f"_sync_task_for_refund failed for refund #{refund.refund_id}: {sync_err}")
+
+
 def _delete_refund_blob(file_url):
     """Best-effort delete of an Azure blob given its full URL. Never raises —
     shared by delete_refund (legacy file_url + every RefundAttachment) and
@@ -562,6 +592,12 @@ def update_refund(request, refund_id):
             # refund's paid state (create/update on 'שולם', remove otherwise) —
             # avoids double data entry between Refunds and Petty Cash.
             _sync_petty_cash_for_refund(refund, staff.username)
+
+            # ── Task sync: keep the linked "החזר הוצאות" task's status in step
+            # with the refund's own status (אושר/אושר חלקית -> בביצוע,
+            # שולם/בוטל/נדחה -> הושלמה) so Liam's task board reflects reality
+            # without a separate manual update.
+            _sync_task_for_refund(refund)
 
             new_status = refund.status
             status_changed = old_status != new_status

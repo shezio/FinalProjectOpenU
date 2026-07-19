@@ -32,26 +32,31 @@ const DELIVERED_OPTIONS = ['כן', 'איסוף עצמי', 'לא'];
 
 // Must mirror voucher_views.py's _validate_recipient_data exactly (server-side
 // is the real authority, this just gives instant feedback in the admin form too).
-const ISRAELI_PHONE_RE = /^0[2-9]\d{7,8}$/;
+// Israeli phone = exactly 10 digits: a 3-digit prefix (leading 0 + 2 more, e.g.
+// 050/052/054) + 7 more digits. Digits ONLY - no dashes/spaces accepted, see
+// the phone input's onChange below (rejected at input time, not silently stripped).
+const ISRAELI_PHONE_RE = /^0\d{9}$/;
+const PHONE_INPUT_MAX_LENGTH = 10;
 const RECIPIENT_FIELD_MAX_LENGTHS = {
   full_name: 255, parent_id_number: 20, phone: 20, child_name: 255,
   child_id_number: 20, city: 255, street_address: 255, referral_source: 255,
 };
 
-// Real Israeli ת"ז checksum (standard Luhn-style algorithm) - mirrors
-// voucher_views.py's _is_valid_israeli_id exactly. child_id on Children IS
-// the real government ת"ז (imported from the "תעודת זהות ילד/ה" column).
-const isValidIsraeliId = (idNumber) => {
-  const s = String(idNumber).trim();
-  if (!/^\d{5,9}$/.test(s)) return false;
-  const padded = s.padStart(9, '0');
-  let total = 0;
-  for (let i = 0; i < padded.length; i++) {
-    const d = Number(padded[i]) * (i % 2 === 0 ? 1 : 2);
-    total += d > 9 ? d - 9 : d;
-  }
-  return total % 10 === 0;
+// Robustly clamp to max length in JS - don't rely solely on the native HTML
+// maxlength attribute, which isn't reliably enforced for type="tel"/"number"
+// inputs on every browser/device (same real bug fixed on the public
+// VoucherQuestionnaire.js form - applying the same fix here for consistency).
+const clampRecipientField = (name, value) => {
+  const maxLen = RECIPIENT_FIELD_MAX_LENGTHS[name];
+  return maxLen != null ? String(value).slice(0, maxLen) : value;
 };
+
+// Loose ID sanity check (digits, 5-9 chars), NOT a full ת"ז checksum - mirrors
+// voucher_views.py's _ID_NUMBER_RE exactly. Deliberately NOT stricter: a
+// mismatch here is a benign outcome (auto-matching against Children just
+// won't fire), and a stricter checksum was tried and reverted after real
+// user testing showed it rejects too many legitimate entries.
+const isValidIsraeliId = (idNumber) => /^\d{5,9}$/.test(String(idNumber).trim());
 
 const fmtDate = (dateStr) => {
   if (!dateStr) return '—';
@@ -245,7 +250,7 @@ const Vouchers = () => {
     if (!data.full_name?.trim()) errs.full_name = 'שם מלא נדרש';
     else if (data.full_name.length > RECIPIENT_FIELD_MAX_LENGTHS.full_name) errs.full_name = `מקסימום ${RECIPIENT_FIELD_MAX_LENGTHS.full_name} תווים`;
 
-    if (data.phone?.trim() && !ISRAELI_PHONE_RE.test(data.phone.replace(/[-\s]/g, ''))) {
+    if (data.phone?.trim() && !ISRAELI_PHONE_RE.test(data.phone)) {
       errs.phone = 'מספר טלפון לא תקין (לדוגמה: 0541234567)';
     }
     if (data.parent_id_number?.trim() && !isValidIsraeliId(data.parent_id_number)) {
@@ -262,6 +267,24 @@ const Vouchers = () => {
     if (data.num_children_at_home !== '' && data.num_children_at_home !== undefined && data.num_children_at_home !== null &&
       (Number(data.num_children_at_home) < 0 || Number(data.num_children_at_home) > 30)) {
       errs.num_children_at_home = 'מספר ילדים בבית לא תקין';
+    }
+
+    // Budget guard - mirrors voucher_views.py's server-side check exactly, using
+    // the recipients already loaded for this distribution (this recipient's OWN
+    // current amount excluded, so editing it doesn't double-count against itself).
+    if (data.approved_amount !== '' && data.approved_amount !== undefined && data.approved_amount !== null) {
+      const newAmount = Number(data.approved_amount);
+      if (isNaN(newAmount) || newAmount < 0) {
+        errs.approved_amount = 'סכום לא תקין';
+      } else if (selectedDistribution) {
+        const alreadyDistributed = recipients
+          .filter(r => r.id !== selectedRecipient?.id)
+          .reduce((s, r) => s + parseFloat(r.approved_amount || 0), 0);
+        const maxAllowed = parseFloat(selectedDistribution.initial_amount || 0) - alreadyDistributed;
+        if (newAmount > maxAllowed) {
+          errs.approved_amount = `הסכום חורג מהתקציב שנותר. מקסימום מותר: ${maxAllowed.toFixed(2)}₪`;
+        }
+      }
     }
 
     return errs;
@@ -335,19 +358,25 @@ const Vouchers = () => {
         <div className="vouchers-form-group">
           <label>שם מלא *</label>
           <input type="text" maxLength={RECIPIENT_FIELD_MAX_LENGTHS.full_name} value={recipientFormData.full_name}
-            onChange={e => setRecipientFormData(p => ({ ...p, full_name: e.target.value }))} />
+            onChange={e => setRecipientFormData(p => ({ ...p, full_name: clampRecipientField('full_name', e.target.value) }))} />
           {recipientFormErrors.full_name && <div className="vouchers-field-error">{recipientFormErrors.full_name}</div>}
         </div>
         <div className="vouchers-form-group">
           <label>טלפון</label>
-          <input type="text" inputMode="tel" maxLength={RECIPIENT_FIELD_MAX_LENGTHS.phone} value={recipientFormData.phone}
-            onChange={e => setRecipientFormData(p => ({ ...p, phone: e.target.value }))} />
+          <input type="text" inputMode="numeric" maxLength={PHONE_INPUT_MAX_LENGTH} value={recipientFormData.phone}
+            onChange={e => {
+              const raw = e.target.value;
+              const hasNonDigit = raw !== '' && /\D/.test(raw);
+              const digitsOnly = raw.replace(/\D/g, '').slice(0, PHONE_INPUT_MAX_LENGTH);
+              setRecipientFormData(p => ({ ...p, phone: digitsOnly }));
+              setRecipientFormErrors(p => ({ ...p, phone: hasNonDigit ? 'מספר טלפון - ספרות בלבד, ללא מקפים או רווחים' : '' }));
+            }} />
           {recipientFormErrors.phone && <div className="vouchers-field-error">{recipientFormErrors.phone}</div>}
         </div>
         <div className="vouchers-form-group">
           <label>ת"ז הורה</label>
           <input type="text" inputMode="numeric" maxLength={9} value={recipientFormData.parent_id_number}
-            onChange={e => setRecipientFormData(p => ({ ...p, parent_id_number: e.target.value }))} />
+            onChange={e => setRecipientFormData(p => ({ ...p, parent_id_number: clampRecipientField('parent_id_number', e.target.value) }))} />
           {recipientFormErrors.parent_id_number && <div className="vouchers-field-error">{recipientFormErrors.parent_id_number}</div>}
         </div>
         <div className="vouchers-form-group">
@@ -362,7 +391,7 @@ const Vouchers = () => {
             <div className="vouchers-form-group">
               <label>שם הילד{qType === 'עמותה' ? ' *' : ''}</label>
               <input type="text" maxLength={RECIPIENT_FIELD_MAX_LENGTHS.child_name} value={recipientFormData.child_name}
-                onChange={e => setRecipientFormData(p => ({ ...p, child_name: e.target.value }))} />
+                onChange={e => setRecipientFormData(p => ({ ...p, child_name: clampRecipientField('child_name', e.target.value) }))} />
               {recipientFormErrors.child_name && <div className="vouchers-field-error">{recipientFormErrors.child_name}</div>}
             </div>
             <div className="vouchers-form-group">
@@ -376,7 +405,7 @@ const Vouchers = () => {
             <div className="vouchers-form-group">
               <label>ת"ז הילד</label>
               <input type="text" inputMode="numeric" maxLength={9} value={recipientFormData.child_id_number}
-                onChange={e => setRecipientFormData(p => ({ ...p, child_id_number: e.target.value }))} />
+                onChange={e => setRecipientFormData(p => ({ ...p, child_id_number: clampRecipientField('child_id_number', e.target.value) }))} />
               {recipientFormErrors.child_id_number && <div className="vouchers-field-error">{recipientFormErrors.child_id_number}</div>}
             </div>
           </>
@@ -386,24 +415,24 @@ const Vouchers = () => {
           <div className="vouchers-form-group">
             <label>גורם מפנה</label>
             <input type="text" maxLength={RECIPIENT_FIELD_MAX_LENGTHS.referral_source} value={recipientFormData.referral_source}
-              onChange={e => setRecipientFormData(p => ({ ...p, referral_source: e.target.value }))} />
+              onChange={e => setRecipientFormData(p => ({ ...p, referral_source: clampRecipientField('referral_source', e.target.value) }))} />
           </div>
         )}
 
         <div className="vouchers-form-group">
           <label>עיר</label>
           <input type="text" maxLength={RECIPIENT_FIELD_MAX_LENGTHS.city} value={recipientFormData.city}
-            onChange={e => setRecipientFormData(p => ({ ...p, city: e.target.value }))} />
+            onChange={e => setRecipientFormData(p => ({ ...p, city: clampRecipientField('city', e.target.value) }))} />
         </div>
         <div className="vouchers-form-group full-width">
           <label>כתובת מלאה (רחוב, מספר, קומה, דירה)</label>
           <input type="text" maxLength={RECIPIENT_FIELD_MAX_LENGTHS.street_address} value={recipientFormData.street_address}
-            onChange={e => setRecipientFormData(p => ({ ...p, street_address: e.target.value }))} />
+            onChange={e => setRecipientFormData(p => ({ ...p, street_address: clampRecipientField('street_address', e.target.value) }))} />
         </div>
         <div className="vouchers-form-group full-width">
           <label>תיאור המקרה</label>
-          <textarea value={recipientFormData.case_description}
-            onChange={e => setRecipientFormData(p => ({ ...p, case_description: e.target.value }))} />
+          <textarea maxLength={4000} value={recipientFormData.case_description}
+            onChange={e => setRecipientFormData(p => ({ ...p, case_description: e.target.value.slice(0, 4000) }))} />
         </div>
 
         <div className="vouchers-modal-divider full-width">שדות עיבוד (למילוי הצוות)</div>
@@ -412,6 +441,7 @@ const Vouchers = () => {
           <label>סכום מאושר (₪)</label>
           <input type="number" min="0" step="0.01" value={recipientFormData.approved_amount}
             onChange={e => setRecipientFormData(p => ({ ...p, approved_amount: e.target.value }))} />
+          {recipientFormErrors.approved_amount && <div className="vouchers-field-error">{recipientFormErrors.approved_amount}</div>}
         </div>
         <div className="vouchers-form-group">
           <label>מוכן למסירה</label>

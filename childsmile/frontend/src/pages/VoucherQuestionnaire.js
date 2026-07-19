@@ -14,28 +14,25 @@ const CHILD_TREATMENT_STATUSES = ['טיפולים', 'מעקבים', 'אחזקה'
 // Must mirror voucher_views.py's _validate_recipient_data exactly (server-side
 // is the real authority - a direct script/curl POST bypasses all of this -
 // but matching it here gives instant feedback instead of a round-trip error).
-const ISRAELI_PHONE_RE = /^0[2-9]\d{7,8}$/;
+// Israeli phone = exactly 10 digits: a 3-digit prefix (leading 0 + 2 more,
+// e.g. 050/052/054) + 7 more digits. Digits ONLY - no dashes/spaces accepted,
+// see handleChange below (rejected at input time, not silently stripped).
+const ISRAELI_PHONE_RE = /^0\d{9}$/;
 const FIELD_MAX_LENGTHS = {
   full_name: 255, parent_id_number: 20, phone: 20, child_name: 255,
   child_id_number: 20, city: 255, street_address: 255, referral_source: 255,
 };
 const TEXT_FIELD_MAX_LENGTH = 4000; // case_description
+const PHONE_INPUT_MAX_LENGTH = 10; // exactly 10 digits, no formatting characters stored
 
-// Real Israeli ת"ז checksum (standard Luhn-style algorithm) - mirrors
-// voucher_views.py's _is_valid_israeli_id exactly. child_id on Children IS
-// the real government ת"ז (imported from the "תעודת זהות ילד/ה" column), so
-// this catches typos/made-up numbers instantly instead of a round-trip 400.
-const isValidIsraeliId = (idNumber) => {
-  const s = String(idNumber).trim();
-  if (!/^\d{5,9}$/.test(s)) return false;
-  const padded = s.padStart(9, '0');
-  let total = 0;
-  for (let i = 0; i < padded.length; i++) {
-    const d = Number(padded[i]) * (i % 2 === 0 ? 1 : 2);
-    total += d > 9 ? d - 9 : d;
-  }
-  return total % 10 === 0;
-};
+// Loose ID sanity check (digits, 5-9 chars), NOT a full ת"ז checksum - mirrors
+// voucher_views.py's _ID_NUMBER_RE exactly. Deliberately NOT stricter: this is a
+// voluntary aid-request form, and rejecting a genuine family over a harmless
+// typo is worse than accepting a slightly malformed ID (a mismatch here just
+// means auto-matching against Children won't fire - a benign, non-security
+// outcome). A stricter checksum was tried and reverted after real user testing
+// showed it rejects too many legitimate entries.
+const isValidIdFormat = (idNumber) => /^\d{5,9}$/.test(String(idNumber).trim());
 
 // PUBLIC page — no login required, mirrors Registration.js's "action of a
 // non-user" precedent. Reached via a direct link shared per distribution
@@ -70,7 +67,25 @@ const VoucherQuestionnaire = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+
+    if (name === 'phone') {
+      // Digits ONLY - reject (don't silently strip) a dash/space/letter, and
+      // tell the user immediately instead of just accepting it and failing
+      // later on submit.
+      const hasNonDigit = value !== '' && /\D/.test(value);
+      const digitsOnly = value.replace(/\D/g, '').slice(0, PHONE_INPUT_MAX_LENGTH);
+      setFormData(prev => ({ ...prev, phone: digitsOnly }));
+      setFormErrors(prev => ({ ...prev, phone: hasNonDigit ? 'מספר טלפון - ספרות בלבד, ללא מקפים או רווחים' : '' }));
+      return;
+    }
+
+    // Robustly clamp to max length in JS - don't rely solely on the native
+    // HTML maxlength attribute, which isn't reliably enforced for type=tel
+    // (and similar) inputs on every browser/device (a real bug report: users
+    // could paste/type far beyond the intended limit on some mobile browsers).
+    const maxLen = FIELD_MAX_LENGTHS[name] ?? (name === 'case_description' ? TEXT_FIELD_MAX_LENGTH : null);
+    const clamped = maxLen != null ? value.slice(0, maxLen) : value;
+    setFormData(prev => ({ ...prev, [name]: clamped }));
     setFormErrors(prev => ({ ...prev, [name]: '' }));
   };
 
@@ -80,10 +95,10 @@ const VoucherQuestionnaire = () => {
     if (formData.full_name.length > FIELD_MAX_LENGTHS.full_name) errs.full_name = `מקסימום ${FIELD_MAX_LENGTHS.full_name} תווים`;
 
     if (!formData.phone.trim()) errs.phone = 'שדה חובה';
-    else if (!ISRAELI_PHONE_RE.test(formData.phone.replace(/[-\s]/g, ''))) errs.phone = 'מספר טלפון לא תקין (לדוגמה: 0541234567)';
+    else if (!ISRAELI_PHONE_RE.test(formData.phone)) errs.phone = 'מספר טלפון לא תקין (לדוגמה: 0541234567)';
 
-    if (formData.parent_id_number.trim() && !isValidIsraeliId(formData.parent_id_number)) {
-      errs.parent_id_number = 'תעודת זהות אינה תקינה - נא לבדוק שוב';
+    if (formData.parent_id_number.trim() && !isValidIdFormat(formData.parent_id_number)) {
+      errs.parent_id_number = 'תעודת זהות לא תקינה (צריכים 5-9 ספרות)';
     }
 
     if (info?.questionnaire_type === 'עמותה') {
@@ -91,7 +106,7 @@ const VoucherQuestionnaire = () => {
       else if (formData.child_name.length > FIELD_MAX_LENGTHS.child_name) errs.child_name = `מקסימום ${FIELD_MAX_LENGTHS.child_name} תווים`;
 
       if (!formData.child_id_number.trim()) errs.child_id_number = 'שדה חובה';
-      else if (!isValidIsraeliId(formData.child_id_number)) errs.child_id_number = 'תעודת זהות אינה תקינה - נא לבדוק שוב';
+      else if (!isValidIdFormat(formData.child_id_number)) errs.child_id_number = 'תעודת זהות לא תקינה (צריכים 5-9 ספרות)';
     } else if (info?.questionnaire_type === 'כללי') {
       if (!formData.referral_source.trim()) errs.referral_source = 'שדה חובה';
       else if (formData.referral_source.length > FIELD_MAX_LENGTHS.referral_source) errs.referral_source = `מקסימום ${FIELD_MAX_LENGTHS.referral_source} תווים`;
@@ -176,7 +191,7 @@ const VoucherQuestionnaire = () => {
 
         <div className="voucher-form-group">
           <label>מספר טלפון *</label>
-          <input type="tel" inputMode="tel" name="phone" maxLength={FIELD_MAX_LENGTHS.phone} value={formData.phone} onChange={handleChange} placeholder="0541234567" />
+          <input type="tel" inputMode="numeric" name="phone" maxLength={PHONE_INPUT_MAX_LENGTH} value={formData.phone} onChange={handleChange} placeholder="0541234567" />
           {formErrors.phone && <div className="voucher-form-error">{formErrors.phone}</div>}
         </div>
 
