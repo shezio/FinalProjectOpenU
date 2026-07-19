@@ -231,3 +231,29 @@ INSERT INTO public.childsmile_app_audittranslation (action, hebrew_translation) 
     ('UPDATE_VOLUNTEER_PHONE_FAILED', 'כישלון בעדכון טלפון מתנדב')
 ON CONFLICT (action) DO UPDATE
     SET hebrew_translation = EXCLUDED.hebrew_translation;
+
+-- Petty Cash (קופה קטנה) — added with add_petty_cash_table.sql
+INSERT INTO public.childsmile_app_audittranslation (action, hebrew_translation) VALUES
+    ('VIEW_PETTY_CASH',               'צפייה בקופה קטנה'),
+    ('VIEW_PETTY_CASH_FAILED',        'כישלון בצפייה בקופה קטנה'),
+    ('CREATE_PETTY_CASH',             'הוספת הוצאת קופה קטנה'),
+    ('CREATE_PETTY_CASH_FAILED',      'כישלון בהוספת הוצאת קופה קטנה'),
+    ('UPDATE_PETTY_CASH',             'עדכון הוצאת קופה קטנה'),
+    ('UPDATE_PETTY_CASH_FAILED',      'כישלון בעדכון הוצאת קופה קטנה'),
+    ('DELETE_PETTY_CASH',             'מחיקת הוצאת קופה קטנה'),
+    ('DELETE_PETTY_CASH_FAILED',      'כישלון במחיקת הוצאת קופה קטנה')
+ON CONFLICT (action) DO UPDATE
+    SET hebrew_translation = EXCLUDED.hebrew_translation;
+
+-- Ongoing Expenses (הוצאות שוטפות) — added with add_ongoing_expenses_table.sql
+INSERT INTO public.childsmile_app_audittranslation (action, hebrew_translation) VALUES
+    ('VIEW_ONGOING_EXPENSES',            'צפייה בהוצאות שוטפות'),
+    ('VIEW_ONGOING_EXPENSES_FAILED',     'כישלון בצפייה בהוצאות שוטפות'),
+    ('CREATE_ONGOING_EXPENSE',           'הוספת הוצאה שוטפת'),
+    ('CREATE_ONGOING_EXPENSE_FAILED',    'כישלון בהוספת הוצאה שוטפת'),
+    ('UPDATE_ONGOING_EXPENSE',           'עדכון הוצאה שוטפת'),
+    ('UPDATE_ONGOING_EXPENSE_FAILED',    'כישלון בעדכון הוצאה שוטפת'),
+    ('DELETE_ONGOING_EXPENSE',           'מחיקת הוצאה שוטפת'),
+    ('DELETE_ONGOING_EXPENSE_FAILED',    'כישלון במחיקת הוצאה שוטפת')
+ON CONFLICT (action) DO UPDATE
+    SET hebrew_translation = EXCLUDED.hebrew_translation;

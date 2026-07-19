@@ -112,6 +112,14 @@ const Sidebar = () => {
   const hasPermissionToTutorVolunteerMgmt = !isOnlyReviewer && !isOnlyTutorOrVolunteer && (isGuest || hasViewPermissionForTable('tutors') || hasViewPermissionForTable('volunteers'));
   const hasPermissionToFeedbacks       = !isOnlyReviewer && (isGuest || hasViewPermissionForTable('general_v_feedback') || hasViewPermissionForTable('tutor_feedback'));
   const hasPermissionToRefunds         = isGuest || hasViewPermissionForTable('expenserefund');
+  // Petty Cash (קופה קטנה) — admin-only for now, DESKTOP-ONLY (intentionally omitted from the
+  // mobile bottom-nav array below, mirroring the Audit Log / Reports desktop-only convention).
+  const hasPermissionToPettyCash        = isGuest || hasViewPermissionForTable('pettycashexpense');
+  // Ongoing Expenses (הוצאות שוטפות) — same admin-only, desktop-only treatment as Petty Cash.
+  const hasPermissionToOngoingExpenses   = isGuest || hasViewPermissionForTable('ongoingexpense');
+  // Finance Overview (סקירה כללית) — aggregates Petty Cash + Ongoing Expenses (both admin-only),
+  // so requires VIEW on both — effectively admin/Viewer-only, same as its underlying data.
+  const hasPermissionToFinanceOverview   = isGuest || (hasViewPermissionForTable('pettycashexpense') && hasViewPermissionForTable('ongoingexpense'));
   const hasPermissionToAnyReport       = !isOnlyReviewer && !isOnlyTutorOrVolunteer && (isGuest || hasViewPermissionForReports());
   const hasPermissionToSystemManagement = !isOnlyReviewer && (isGuest || hasDeletePermissionForTable('staff'));
   const hasPermissionToAuditLog        = !isOnlyReviewer && (isGuest || hasDeletePermissionForTable('staff'));
@@ -120,7 +128,11 @@ const Sidebar = () => {
   // Section visibility
   const hasFamiliesSection   = hasPermissionToFamilies || hasPermissionToTutorships;
   const hasVolunteersSection  = hasPermissionToTutorVolunteerMgmt || hasPermissionToFeedbacks;
-  const hasManagementSection  = hasPermissionToRefunds || hasPermissionToAnyReport || hasPermissionToSystemManagement || hasPermissionToReviewer || hasPermissionToAuditLog;
+  // כספים (Finance) section: Refunds + Petty Cash + Ongoing Expenses. Each item keeps
+  // its OWN existing permission gate (unchanged) — a non-admin who only has Refunds
+  // access still only sees that one item here, same access as before this section existed.
+  const hasFinanceSection     = hasPermissionToFinanceOverview || hasPermissionToRefunds || hasPermissionToPettyCash || hasPermissionToOngoingExpenses;
+  const hasManagementSection  = hasPermissionToAnyReport || hasPermissionToSystemManagement || hasPermissionToReviewer || hasPermissionToAuditLog;
 
   useEffect(() => {
     if (isCollapsed) document.body.classList.add('sidebar-collapsed');
@@ -292,15 +304,43 @@ const Sidebar = () => {
           </>
         )}
 
-        {/* ── MANAGEMENT section ────────────────────────────── */}
+        {/* ── FINANCE (כספים) section ───────────────────── */}
+        {hasFinanceSection && (
+          <>
+            <SectionHeader sectionKey="finance" icon="💰" label="כספים" {...sectionProps} />
+            {isSectionOpen('finance') && !isCollapsed && (
+              <div className="sidebar-section-items">
+                {hasPermissionToFinanceOverview && (
+                  <NavBtn path="/finance-overview" icon="📊" label="סקירה כללית" {...navProps} />
+                )}
+                {hasPermissionToRefunds && (
+                  <NavBtn path="/refunds" icon="💰" label="החזרי הוצאות" {...navProps} />
+                )}
+                {hasPermissionToPettyCash && (
+                  <NavBtn path="/petty-cash" icon="💵" label="קופה קטנה" {...navProps} />
+                )}
+                {hasPermissionToOngoingExpenses && (
+                  <NavBtn path="/ongoing-expenses" icon="⛽" label="הוצאות שוטפות" {...navProps} />
+                )}
+              </div>
+            )}
+            {isCollapsed && (
+              <>
+                {hasPermissionToFinanceOverview && <NavBtn path="/finance-overview" icon="📊" label="סקירה כללית" {...navProps} />}
+                {hasPermissionToRefunds && <NavBtn path="/refunds" icon="💰" label="החזרי הוצאות" {...navProps} />}
+                {hasPermissionToPettyCash && <NavBtn path="/petty-cash" icon="💵" label="קופה קטנה" {...navProps} />}
+                {hasPermissionToOngoingExpenses && <NavBtn path="/ongoing-expenses" icon="⛽" label="הוצאות שוטפות" {...navProps} />}
+              </>
+            )}
+          </>
+        )}
+
+        {/* ── MANAGEMENT section ───────────────────── */}
         {hasManagementSection && (
           <>
             <SectionHeader sectionKey="management" icon="⚙️" label="ניהול" {...sectionProps} />
             {isSectionOpen('management') && !isCollapsed && (
               <div className="sidebar-section-items">
-                {hasPermissionToRefunds && (
-                  <NavBtn path="/refunds" icon="💰" label="החזרי הוצאות" {...navProps} />
-                )}
                 {hasPermissionToAnyReport && (
                   <NavBtn path="/reports" icon="📊" label="דוחות" {...navProps} />
                 )}
@@ -326,7 +366,6 @@ const Sidebar = () => {
             )}
             {isCollapsed && (
               <>
-                {hasPermissionToRefunds && <NavBtn path="/refunds" icon="💰" label="החזרי הוצאות" {...navProps} />}
                 {hasPermissionToAnyReport && <NavBtn path="/reports" icon="📊" label="דוחות" {...navProps} />}
                 {hasPermissionToSystemManagement && <NavBtn path="/system-management" icon="🛠️" label="ניהול מערכת" {...navProps} />}
                 {hasPermissionToSystemManagement && <NavBtn path="/meeting-management" icon="📅" label="ניהול פגישות" {...navProps} />}

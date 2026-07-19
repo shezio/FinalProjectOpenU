@@ -38,6 +38,7 @@ from .models import (
     Tasks,
     Task_Types,
     ExpenseRefund,
+    PettyCashExpense,
 )
 from .utils import (
     has_permission,
@@ -112,6 +113,39 @@ def _validate_israeli_phone(phone):
     """Basic Israeli phone validation (10-digit, starts with 05/02/03/04/08/09)."""
     import re
     return bool(re.match(r'^0[2-9]\d{7,8}$', phone))
+
+
+def _sync_petty_cash_for_refund(refund, actor_username):
+    """
+    Keep Petty Cash (קופה קטנה) in sync with a refund's paid state so an admin never
+    has to type the same payment into both screens (see PettyCashExpense.source_refund).
+    Idempotent — safe to call after every create/update:
+      - status == 'שולם' -> create (or update the amount/date on) the linked row.
+      - any other status -> remove the linked row (payment was undone/corrected).
+    Never raises — a sync failure must not block the refund request itself.
+    """
+    try:
+        existing = PettyCashExpense.objects.filter(source_refund=refund).first()
+        if refund.status == 'שולם':
+            amount = refund.approved_amount or refund.requested_amount
+            if existing:
+                existing.amount = amount
+                existing.updated_by = actor_username
+                existing.save(update_fields=['amount', 'updated_by', 'updated_at'])
+            else:
+                PettyCashExpense.objects.create(
+                    source_refund=refund,
+                    expense_date=datetime.date.today(),
+                    expense_name=f"החזר הוצאות - {refund.staff_full_name}",
+                    amount=amount,
+                    paid_by='קופה קטנה',
+                    notes=f"נוצר אוטומטית מבקשת החזר הוצאות #{refund.refund_id}",
+                    updated_by=actor_username,
+                )
+        elif existing:
+            existing.delete()
+    except Exception as sync_err:
+        api_logger.error(f"_sync_petty_cash_for_refund failed for refund #{refund.refund_id}: {sync_err}")
 
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -267,6 +301,11 @@ def create_refund(request):
                 target_staff.staff_phone = phone_number
                 target_staff.save(update_fields=['staff_phone'])
 
+            # ── Petty Cash sync: a refund created directly as 'שולם' (rare —
+            # the frontend never does this on create) still needs a linked row
+            # so the amount isn't entered twice. No-op for the normal 'ממתין' case.
+            _sync_petty_cash_for_refund(refund, staff.username)
+
             # ── Auto-create task for Liam (System Administrator) ─────────────
             try:
                 task_type = Task_Types.objects.filter(task_type="החזר הוצאות").first()
@@ -408,6 +447,11 @@ def update_refund(request, refund_id):
             # auto_now=True on updated_at means Django sets it on every .save()
             refund.updated_by = staff.username
             refund.save()
+
+            # ── Petty Cash sync: keep the linked ledger row in step with the
+            # refund's paid state (create/update on 'שולם', remove otherwise) —
+            # avoids double data entry between Refunds and Petty Cash.
+            _sync_petty_cash_for_refund(refund, staff.username)
 
             new_status = refund.status
             status_changed = old_status != new_status

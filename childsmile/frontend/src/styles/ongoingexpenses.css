@@ -1,0 +1,321 @@
+/* ongoingexpenses.css */
+
+* {
+  font-family: Rubik, sans-serif;
+}
+
+/* ── Main layout ─────────────────────────────────────────────────────────── */
+.ongoing-expense-main-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  flex-grow: 1;
+  padding: 230px 40px 40px 40px;
+  margin-right: 280px;
+  width: calc(100% - 280px);
+  background: transparent;
+}
+
+.ongoing-expense-main-content.sidebar-collapsed {
+  margin-right: 80px;
+  width: calc(100% - 80px);
+}
+
+/* ── Page header controls ───────────────────────────────────────────────── */
+.ongoing-expense-controls {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  width: 100%;
+}
+
+.ongoing-expense-controls button {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.9), rgba(168, 85, 247, 0.9));
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 10px 20px;
+  font-size: 24px;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+  font-family: Rubik, sans-serif;
+}
+
+.ongoing-expense-controls button:hover {
+  opacity: 0.85;
+}
+
+/* ── Totals bar ─────────────────────────────────────────────────────────── */
+.ongoing-expense-totals-bar {
+  display: flex;
+  gap: 24px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+  width: 100%;
+  justify-content: flex-start;
+}
+
+.ongoing-expense-total-chip {
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  border-radius: 12px;
+  padding: 8px 18px;
+  font-size: 24px;
+  color: #374151;
+}
+
+.ongoing-expense-total-chip strong {
+  color: #4f46e5;
+  font-size: 24px;
+}
+
+/* ── Table ──────────────────────────────────────────────────────────────── */
+.ongoing-expense-table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  border-radius: 16px;
+  box-shadow: 0 4px 24px rgba(99, 102, 241, 0.15);
+}
+
+.ongoing-expense-table {
+  width: 90%;
+  table-layout: auto;
+  border-collapse: collapse;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+}
+
+.ongoing-expense-table thead tr {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.9), rgba(168, 85, 247, 0.9));
+  color: white;
+}
+
+.ongoing-expense-table th,
+.ongoing-expense-table td {
+  padding: 12px 20px;
+  text-align: right;
+  font-size: 24px;
+  white-space: nowrap;
+  border-bottom: 1px solid rgba(99, 102, 241, 0.08);
+}
+
+.ongoing-expense-table tbody tr:hover {
+  background: rgba(99, 102, 241, 0.05);
+}
+
+.ongoing-expense-desc-cell {
+  max-width: 260px;
+  white-space: normal;
+  word-break: break-word;
+  line-height: 1.4;
+}
+
+/* Category badge */
+.ongoing-expense-category-badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 20px;
+  font-weight: 600;
+  white-space: nowrap;
+  background: #ede9fe;
+  color: #5b21b6;
+}
+
+/* ── Table action buttons ──────────────────────────────────────────────── */
+.ongoing-expense-row-actions {
+  display: inline-flex;
+  gap: 6px;
+}
+
+.ongoing-expense-action-btn {
+  cursor: pointer;
+  font-size: 24px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 5px;
+  border: none;
+  font-family: Rubik, sans-serif;
+  color: #fff;
+  background: #3b82f6;
+  transition: background 0.15s;
+}
+
+.ongoing-expense-action-btn:hover {
+  background: #2563eb;
+}
+
+.ongoing-expense-action-btn[title="מחק"] {
+  background: #ef4444;
+}
+
+.ongoing-expense-action-btn[title="מחק"]:hover {
+  background: #dc2626;
+}
+
+/* ── Modal overlay ──────────────────────────────────────────────────────── */
+.ongoing-expense-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+
+.ongoing-expense-modal {
+  background: white;
+  border-radius: 20px;
+  padding: 40px 48px;
+  width: 90vw;
+  max-width: 900px;
+  max-height: 90vh;
+  overflow-y: auto;
+  direction: rtl;
+  box-shadow: 0 20px 60px rgba(99, 102, 241, 0.25);
+  position: relative;
+}
+
+.ongoing-expense-modal.ongoing-expense-modal--narrow {
+  width: 420px;
+}
+
+.ongoing-expense-modal h2 {
+  margin: 0 0 24px 0;
+  font-size: 28px;
+  color: #4f46e5;
+}
+
+.ongoing-expense-modal-close {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  background: none;
+  border: none;
+  font-size: 28px;
+  cursor: pointer;
+  color: #6b7280;
+  line-height: 1;
+}
+
+/* ── Form fields ─────────────────────────────────────────────────────────── */
+.ongoing-expense-modal-body {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+  align-items: start;
+}
+
+.ongoing-expense-form-group {
+  margin-bottom: 18px;
+}
+
+.ongoing-expense-form-group.full-width {
+  grid-column: 1 / -1;
+}
+
+.ongoing-expense-form-group label {
+  display: block;
+  font-size: 24px;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 5px;
+}
+
+.ongoing-expense-form-group input,
+.ongoing-expense-form-group textarea {
+  width: 100%;
+  padding: 9px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  font-size: 24px;
+  font-family: Rubik, sans-serif;
+  direction: rtl;
+  box-sizing: border-box;
+  transition: border-color 0.2s ease;
+}
+
+.ongoing-expense-form-group input:focus,
+.ongoing-expense-form-group textarea:focus {
+  outline: none;
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+}
+
+.ongoing-expense-form-group textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.ongoing-expense-field-error {
+  color: #ef4444;
+  font-size: 24px;
+  margin-top: 3px;
+}
+
+/* ── Modal action buttons ───────────────────────────────────────────────── */
+.ongoing-expense-modal-actions {
+  display: flex;
+  justify-content: flex-start;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.ongoing-expense-modal-actions button {
+  padding: 10px 24px;
+  border: none;
+  border-radius: 12px;
+  font-size: 24px;
+  font-family: Rubik, sans-serif;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.ongoing-expense-modal-actions .btn-primary {
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  color: white;
+}
+
+.ongoing-expense-modal-actions .btn-primary.danger {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+}
+
+.ongoing-expense-modal-actions .btn-secondary {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.ongoing-expense-modal-actions button:hover {
+  opacity: 0.85;
+}
+
+.ongoing-expense-delete-hint {
+  color: #9ca3af;
+  font-size: 24px;
+}
+
+/* ── Loading / empty state ──────────────────────────────────────────────── */
+.ongoing-expense-loading,
+.ongoing-expense-empty {
+  text-align: center;
+  padding: 60px;
+  color: #6b7280;
+  font-size: 24px;
+}
+
+/* ── No-permission (admin-only page) ─────────────────────────────────────── */
+.no-permission {
+  padding: 60px 20px;
+  text-align: center;
+  color: #dc3545;
+}
+
+.no-permission h2 {
+  font-size: 28px;
+  margin: 0;
+  font-weight: 600;
+}
