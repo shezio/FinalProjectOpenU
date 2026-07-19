@@ -10,6 +10,15 @@ Endpoints:
   POST   /api/refunds/import/                 – bulk import from Excel (admin only)
   GET    /api/refunds/phone-hint/             – return last successful payout phone for current user
 
+Files (receipts): up to 3 per refund, stored as plain columns on ExpenseRefund
+(file_url/_2/_3, see _REFUND_FILE_SLOTS) — NOT a separate table/endpoint.
+There is deliberately NO standalone "delete a file" API: that would be a public
+write surface with no other justification. Instead, update_refund accepts
+`remove_slots` (e.g. [1]) to clear a slot and `attachments` to fill empty ones
+IN THE SAME call — this is how an admin "replaces" a receipt during edit,
+entirely inside the already authenticated/admin-only/audited update endpoint.
+Deleting the whole refund (delete_refund) removes every file's blob too.
+
 Security rules:
   - All endpoints require an authenticated session (user_id in session).
   - Volunteers can VIEW their own records only.
@@ -77,6 +86,7 @@ def _get_liam_admin_phone():
         return LIAM_ADMIN_PHONE
 
 MAX_RECEIPT_SIZE_MB = 10
+MAX_RECEIPT_ATTACHMENTS = 3  # 3 fixed file slots on ExpenseRefund — see _REFUND_FILE_SLOTS
 
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -148,6 +158,73 @@ def _sync_petty_cash_for_refund(refund, actor_username):
         api_logger.error(f"_sync_petty_cash_for_refund failed for refund #{refund.refund_id}: {sync_err}")
 
 
+def _delete_refund_blob(file_url):
+    """Best-effort delete of an Azure blob given its full URL. Never raises —
+    shared by delete_refund (legacy file_url + every RefundAttachment) and
+    delete_refund_attachment."""
+    if not (file_url and settings.IS_PROD):
+        return
+    try:
+        from azure.storage.blob import BlobServiceClient
+        conn_str = os.getenv('AZURE_STORAGE_CONNECTION_STRING')
+        container = os.getenv('AZURE_REFUNDS_CONTAINER', 'refund-receipts')
+        if conn_str:
+            # Extract blob name from URL: everything after the container segment
+            # URL format: https://<account>.blob.core.windows.net/<container>/<blob_name>
+            url_path = file_url.split(f"/{container}/", 1)
+            if len(url_path) == 2:
+                blob_name = url_path[1].split("?")[0]  # strip any SAS query string
+                service = BlobServiceClient.from_connection_string(conn_str)
+                service.get_blob_client(container=container, blob=blob_name).delete_blob()
+                api_logger.info(f"refund blob deleted — {blob_name}")
+    except Exception as blob_err:
+        # Log but don't block DB deletion — blob has its own lifecycle anyway
+        api_logger.warning(f"refund blob deletion failed for {file_url}: {blob_err}")
+
+
+# The 3 file "slots" on ExpenseRefund, in order — (url_field, name_field, size_field).
+# Plain columns rather than a separate attachment table (see add_refund_extra_files_columns.sql):
+# the cap is small and fixed at exactly 3, so 3 sets of nullable columns are simpler than a
+# new FK/CASCADE/table for this.
+_REFUND_FILE_SLOTS = [
+    ('file_url', 'file_name', 'file_size'),
+    ('file_url_2', 'file_name_2', 'file_size_2'),
+    ('file_url_3', 'file_name_3', 'file_size_3'),
+]
+
+
+def _refund_attachments_list(refund):
+    """Build a list of {slot, file_url, file_name, file_size} dicts from whichever
+    of the 3 file slots are occupied — lets the frontend iterate over "however many
+    files this refund has" without knowing about the flat column scheme."""
+    result = []
+    for i, (url_f, name_f, size_f) in enumerate(_REFUND_FILE_SLOTS, start=1):
+        url = getattr(refund, url_f)
+        if url:
+            result.append({
+                "slot": i,
+                "file_url": url,
+                "file_name": getattr(refund, name_f),
+                "file_size": getattr(refund, size_f),
+            })
+    return result
+
+
+def _fill_empty_refund_slots(refund, new_attachments):
+    """Write up to len(new_attachments) new files into whichever slots are
+    currently empty, in order. Caller must have already validated there's
+    enough room (see MAX_RECEIPT_ATTACHMENTS checks in create/update_refund)."""
+    remaining = list(new_attachments)
+    for url_f, name_f, size_f in _REFUND_FILE_SLOTS:
+        if not remaining:
+            break
+        if not getattr(refund, url_f):
+            att = remaining.pop(0)
+            setattr(refund, url_f, att.get('file_url'))
+            setattr(refund, name_f, att.get('file_name') or None)
+            setattr(refund, size_f, att.get('file_size') or None)
+
+
 # ──────────────────────────────────────────────────────────────────────────────
 # GET REFUNDS  (list)
 # ──────────────────────────────────────────────────────────────────────────────
@@ -187,6 +264,7 @@ def get_refunds(request):
             "admin_comment": r.admin_comment,
             "approved_by": r.approved_by,
             "file_url": r.file_url,
+            "attachments": _refund_attachments_list(r),
             "status": r.status,
             "refund_method": r.refund_method,
             "phone_number": r.phone_number,
@@ -264,6 +342,11 @@ def create_refund(request):
     if phone_number and not _validate_israeli_phone(phone_number):
         return JsonResponse({"error": "phone_number must be a valid Israeli phone number (e.g. 0541234567)."}, status=400)
 
+    # ── Validate attachments (max 3 per refund, see RefundAttachment) ─────────
+    attachments_data = data.get('attachments') or []
+    if len(attachments_data) > MAX_RECEIPT_ATTACHMENTS:
+        return JsonResponse({"error": f"ניתן לצרף עד {MAX_RECEIPT_ATTACHMENTS} קבצים."}, status=400)
+
     # ── Resolve target staff (allow submitting on behalf of another user) ────────
     on_behalf_id = data.get('on_behalf_of_staff_id')
     target_staff = staff
@@ -288,12 +371,15 @@ def create_refund(request):
                 volunteer_comment=data.get('volunteer_comment') or None,
                 admin_comment=None,
                 approved_by=approved_by,
-                file_url=data.get('file_url') or None,
                 status=status_val,
                 refund_method=refund_method,
                 phone_number=phone_number,
                 updated_by=staff.username,
             )
+
+            if attachments_data:
+                _fill_empty_refund_slots(refund, attachments_data)
+                refund.save()
 
             # ── Save phone preference if volunteer requested it ───────────────
             save_phone = data.get('save_phone_for_future', False)
@@ -394,6 +480,18 @@ def update_refund(request, refund_id):
     data = request.data
     old_status = refund.status
 
+    # ── Validate attachments (max 3 per refund TOTAL — existing occupied slots, minus
+    # any being removed THIS call, plus new ones being added THIS call). This is how
+    # "replace a receipt" works: send remove_slots:[1] AND attachments:[{...}] in the
+    # SAME PUT — there is no separate delete-a-file endpoint (that would be a public
+    # write surface with no other justification; folding it into the already
+    # authenticated/audited update_refund call avoids that entirely).
+    new_attachments_data = data.get('attachments') or []
+    remove_slots = [s for s in (data.get('remove_slots') or []) if s in (1, 2, 3)]
+    existing_attachments_count = len(_refund_attachments_list(refund)) - len(remove_slots)
+    if existing_attachments_count + len(new_attachments_data) > MAX_RECEIPT_ATTACHMENTS:
+        return JsonResponse({"error": f"ניתן לצרף עד {MAX_RECEIPT_ATTACHMENTS} קבצים בסך הכל."}, status=400)
+
     try:
         with transaction.atomic():
             # Admin-only: update any field
@@ -420,8 +518,6 @@ def update_refund(request, refund_id):
                 if approved_by and approved_by not in COORDINATOR_CHOICES:
                     return JsonResponse({"error": f"approved_by לא תקין: {approved_by}"}, status=400)
                 refund.approved_by = approved_by or None
-            if 'file_url' in data:
-                refund.file_url = data['file_url'] or None
             if 'phone_number' in data:
                 refund.phone_number = data['phone_number'] or None
             if 'refund_method' in data:
@@ -446,6 +542,20 @@ def update_refund(request, refund_id):
 
             # auto_now=True on updated_at means Django sets it on every .save()
             refund.updated_by = staff.username
+
+            # Clear any requested slots FIRST (deleting their blobs) so they can be
+            # immediately refilled by new_attachments_data below — this is what makes
+            # "replace a receipt" work in a single call.
+            for slot in remove_slots:
+                url_f, name_f, size_f = _REFUND_FILE_SLOTS[slot - 1]
+                _delete_refund_blob(getattr(refund, url_f))
+                setattr(refund, url_f, None)
+                setattr(refund, name_f, None)
+                setattr(refund, size_f, None)
+
+            if new_attachments_data:
+                _fill_empty_refund_slots(refund, new_attachments_data)
+
             refund.save()
 
             # ── Petty Cash sync: keep the linked ledger row in step with the
@@ -541,24 +651,11 @@ def delete_refund(request, refund_id):
     except ExpenseRefund.DoesNotExist:
         return JsonResponse({"error": "בקשת ההחזר לא נמצאה."}, status=404)
 
-    # ── Delete blob from Azure before removing the DB row ─────────────────────
-    if refund.file_url and settings.IS_PROD:
-        try:
-            from azure.storage.blob import BlobServiceClient
-            conn_str = os.getenv('AZURE_STORAGE_CONNECTION_STRING')
-            container = os.getenv('AZURE_REFUNDS_CONTAINER', 'refund-receipts')
-            if conn_str:
-                # Extract blob name from URL: everything after the container segment
-                # URL format: https://<account>.blob.core.windows.net/<container>/<blob_name>
-                url_path = refund.file_url.split(f"/{container}/", 1)
-                if len(url_path) == 2:
-                    blob_name = url_path[1].split("?")[0]  # strip any SAS query string
-                    service = BlobServiceClient.from_connection_string(conn_str)
-                    service.get_blob_client(container=container, blob=blob_name).delete_blob()
-                    api_logger.info(f"delete_refund: blob deleted — {blob_name}")
-        except Exception as blob_err:
-            # Log but don't block DB deletion — blob has 7-day lifecycle anyway
-            api_logger.warning(f"delete_refund: blob deletion failed for refund {refund_id}: {blob_err}")
+    # ── Delete every attached blob from Azure before removing the DB row (all
+    # 3 possible file slots — see _REFUND_FILE_SLOTS) — the columns themselves
+    # disappear along with the row, this just cleans up the actual blob storage.
+    for url_f, _name_f, _size_f in _REFUND_FILE_SLOTS:
+        _delete_refund_blob(getattr(refund, url_f))
 
     # ── Delete any open "החזר הוצאות" tasks linked to this refund ────────────
     try:

@@ -871,8 +871,25 @@ class ExpenseRefund(models.Model):
     # Coordinator who verbally approved offline (hardcoded choices)
     approved_by = models.CharField(max_length=20, choices=COORDINATOR_APPROVAL_CHOICES, null=True, blank=True)
 
-    # Receipt file — Azure Blob Storage URL. Nullable to support historical Excel imports.
+    # Receipt file(s) — Azure Blob Storage URLs, up to 3 per refund (combined size
+    # capped client-side in Refunds.js at the same MAX_FILE_SIZE_MB the original
+    # single-file version always used). Plain columns rather than a separate
+    # attachment table since the cap is small and fixed at exactly 3 — no new
+    # FK/CASCADE/table needed for that. `file_url` is the ORIGINAL field (every
+    # refund ever created has at most used this one) — `file_name`/`file_size`
+    # for it are nullable and only populated going forward (older refunds only
+    # ever stored the bare URL, no metadata). `_2`/`_3` are the 2nd/3rd file
+    # slots, added later when multi-file support was introduced — all nullable,
+    # empty slot = no file there.
     file_url = models.URLField(max_length=2048, null=True, blank=True)
+    file_name = models.CharField(max_length=255, null=True, blank=True)
+    file_size = models.BigIntegerField(null=True, blank=True)  # bytes
+    file_url_2 = models.URLField(max_length=2048, null=True, blank=True)
+    file_name_2 = models.CharField(max_length=255, null=True, blank=True)
+    file_size_2 = models.BigIntegerField(null=True, blank=True)  # bytes
+    file_url_3 = models.URLField(max_length=2048, null=True, blank=True)
+    file_name_3 = models.CharField(max_length=255, null=True, blank=True)
+    file_size_3 = models.BigIntegerField(null=True, blank=True)  # bytes
 
     # Status & payment
     status = models.CharField(
