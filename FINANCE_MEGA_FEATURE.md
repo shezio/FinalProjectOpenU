@@ -57,17 +57,95 @@ eventual unified tabbed "כספים" shell with Overview + one tab per module).
 - Each module ships as its **own standalone sidebar page** for now (like
   Refunds today) — the unified tabbed "כספים" shell from the concept file is
   a later nice-to-have, not being built yet (explicit user decision).
+- **Dedicated "כספים" sidebar section** (`Sidebar.js`, `sectionKey="finance"`,
+  💰 icon): Refunds + Petty Cash + Ongoing Expenses were pulled OUT of the
+  generic "ניהול" (Management) section into their own section, mirroring the
+  Families/Volunteers section pattern exactly (`hasFinanceSection = hasPermissionToRefunds
+  || hasPermissionToPettyCash || hasPermissionToOngoingExpenses`). Future
+  finance modules (Financial Aid, Vouchers) should be added HERE too, not to
+  Management. Each item keeps its OWN pre-existing permission gate unchanged
+  — so non-admins see exactly what they saw before (e.g. just "החזרי הוצאות"
+  if that's the only one they have), just filed under a new section header;
+  no permissions were added/removed for anyone.
 
 ## Modules
 
 | # | Module | Status | Route | Notes |
 |---|--------|--------|-------|-------|
-| 1 | סקירה כללית (Overview) | ⏳ Planned | — | Depends on all modules existing; read-only aggregation view. |
-| 2 | החזרי הוצאות (Refunds) | ✅ Done (pre-existing) | `/refunds` | Untouched, EXCEPT one additive hook: marking a refund "שולם" now auto-syncs a linked Petty Cash row (see below). |
-| 3 | **הוצאות שוטפות (Ongoing Expenses)** | ✅ **Done (this pass)** | `/ongoing-expenses` | See full spec below. |
+| 1 | **סקירה כללית (Overview)** | ✅ **Done (this pass)** | `/finance-overview` | See full spec below. |
+| 2 | חזרי הוצאות (Refunds) | ✅ Done (pre-existing) | `/refunds` | Untouched, EXCEPT one additive hook: marking a refund "שולם" now auto-syncs a linked Petty Cash row (see below). |
+| 3 | **הוצאות שוטפות (Ongoing Expenses)** | ✅ **Done** | `/ongoing-expenses` | See full spec below. |
 | 4 | **קופה קטנה (Petty Cash)** | ✅ Done | `/petty-cash` | See full spec below. |
-| 5 | סיוע כספי (Financial Aid) | ⏳ Planned | — | Concept columns: שם משפחה, תאריך סיוע, סכום, אופן ביצוע. |
-| 6 | חלוקת תלושים (Vouchers) | ⏳ Planned | — | Most complex: sub-tabs (summary/recipients/forms), public questionnaire, family linking by ת"ז. |
+| 5 | סיוע כספי (Financial Aid) | ⏳ Planned | — | Concept columns: שם משפחה, תאריך סיוע, סכום, אופן ביצוע. שורת כ-בקריה "בקרוב" במודול ה-Overview. |
+| 6 | חלוקת תלושים (Vouchers) | ⏳ Planned | — | Most complex: sub-tabs (summary/recipients/forms), public questionnaire, family linking by ת"ז. שורת כ-בקריה "בקרוב" במודול ה-Overview. |
+
+---
+
+## סקירה כללית (Overview) — built this pass ✅
+
+100% frontend — no backend/DB changes, no new permission resource. Aggregates
+the 3 existing GET endpoints (`/api/refunds/`, `/api/petty-cash/`,
+`/api/ongoing-expenses/`) client-side; Financial Aid and Vouchers show as
+**"בקרוב"** (Coming Soon) cards — greyed out, not clickable — until they're built.
+
+### Key design decision: avoiding double-counting the Refunds→Petty Cash sync
+
+A paid refund ('שולם') auto-creates a linked Petty Cash row (see the Petty Cash
+section below). If the grand total just summed "all Refunds paid" +
+"all Petty Cash rows", that money would be counted TWICE. Fix: the combined
+total (KPI + monthly trend) only sums:
+- Refunds with `status === 'שולם'` (their approved/requested amount)
+- Petty Cash rows where `source_refund_id` is falsy (manually entered only)
+- All Ongoing Expenses (no cross-module overlap there)
+
+Each module's OWN breakdown card still shows its OWN full ledger total (e.g.
+the Petty Cash card includes the auto-synced rows too, since that's an
+accurate total for that ledger) — only the CROSS-module grand total and
+monthly trend need the de-duplication.
+
+### Permission
+
+Admin-only (aggregates two admin-only modules). Page gate: `hasAllPermissions`
+over a module-level `requiredPermissions` array requiring VIEW on BOTH
+`childsmile_app_pettycashexpense` and `childsmile_app_ongoingexpense` — same
+`hasAllPermissions`-style full-page gate as `SystemManagement.js`/`AuditLog.js`/
+`PettyCash.js`/`OngoingExpenses.js`. Sidebar flag `hasPermissionToFinanceOverview`
+follows Sidebar.js's own simpler per-file convention (`hasViewPermissionForTable`
+checks on both resources, ANDed) rather than importing `hasAllPermissions` there.
+
+### Content
+
+- **KPI chips:** total combined spend, total transaction count, refunds
+  pending count ("ready-to-act" indicator, amber when > 0 — same modifier
+  convention as Refunds' `--pending` chip), "X מתוך 5" active-module count.
+- **Module breakdown cards** (`.finance-overview-modcards` grid, NEW pattern
+  — no prior card-grid precedent existed for a dashboard-style page, but
+  colors/radius/shadows reuse the established violet-gradient theme):
+  Refunds / Petty Cash / Ongoing Expenses show real totals and are clickable
+  (`navigate()` to that module); Financial Aid / Vouchers render as disabled
+  "בקרוב" cards (opacity 0.55, `cursor:not-allowed`, no hover, no onClick).
+- **Monthly trend bar chart:** reuses the codebase's EXISTING chart library
+  (`chart.js` + `react-chartjs-2`, already used by `DashboardCharts.js` and
+  several report pages) rather than hand-rolling CSS bars — same
+  `ChartJS.register(...)` per-file pattern, same large-font `chartOptions`
+  convention (16–18px vs. Dashboard's 20–24px, scaled down for a smaller panel).
+  Shows the last 6 calendar months (fixed window, zero-filled) using the
+  same de-duplicated dataset as the grand-total KPI.
+
+### Files
+
+- `childsmile/frontend/src/pages/FinanceOverview.js` (NEW)
+- `childsmile/frontend/src/styles/financeoverview.css` (NEW)
+- `childsmile/frontend/src/App.js` — import + `<Route path="/finance-overview">`
+- `childsmile/frontend/src/components/Sidebar.js` — `hasPermissionToFinanceOverview`
+  flag, placed FIRST in the "כספים" section (📊 icon, matches the concept file's
+  own Overview-tab icon), desktop-only (omitted from mobile `allNavItems`).
+
+### Explicitly NOT built
+
+- Financial Aid / Vouchers real cards (show "בקרוב" until those modules exist).
+- Any backend aggregation endpoint (pure frontend computation over existing APIs).
+- Report export (PDF/Excel) of the overview.
 
 ---
 
@@ -142,8 +220,8 @@ self-audit). Source spreadsheet: "הוצאות נעם 2026".
 - `childsmile/frontend/src/App.js` — import + `<Route path="/ongoing-expenses">`.
 - `childsmile/frontend/src/components/Sidebar.js` —
   `hasPermissionToOngoingExpenses` flag (⛽ icon — same one the concept file
-  itself uses for this tab — "הוצאות שוטפות" label), Management section,
-  desktop-only (omitted from the mobile `allNavItems` array).
+  itself uses for this tab — "הוצאות שוטפות" label), dedicated "כספים" (Finance)
+  section, desktop-only (omitted from the mobile `allNavItems` array).
 
 ### Explicitly NOT built (v1)
 
@@ -257,16 +335,15 @@ add a `refund_method`/`refund.refund_method not in (...)` filter in
   way `Refunds.js` already relies on.
 - `childsmile/frontend/src/App.js` — import + `<Route path="/petty-cash">`.
 - `childsmile/frontend/src/components/Sidebar.js` — `hasPermissionToPettyCash`
-  flag (💵 icon, "קופה קטנה" label) added to the Management section
-  (expanded + collapsed **desktop** JSX only — intentionally NOT added to
+  flag (💵 icon, "קופה קטנה" label) added to the dedicated "כספים" (Finance)
+  section (expanded + collapsed **desktop** JSX only — intentionally NOT added to
   the mobile `allNavItems` array, so it never appears in the mobile bottom
   nav, matching the Audit Log / Reports desktop-only convention).
 
 ### Explicitly NOT built (v1) — revisit later if needed
 
 - Receipts/attachments, reimbursement/"owed money" tracking + KPI, unified
-  tabbed Finance shell, Overview aggregation tab, month filter, report
-  export (PDF/Excel).
+  tabbed Finance shell, month filter, report export (PDF/Excel).
 
 ---
 
@@ -288,15 +365,9 @@ add a `refund_method`/`refund.refund_method not in (...)` filter in
   linking fallback ("לא רשומה" when no match). This is a significant scope
   on its own — needs its own planning pass before implementation starts.
 
-### סקירה כללית (Overview) — ⏳ Planned
-- Aggregates KPIs across all modules (total spend, per-module breakdown,
-  monthly trend bars). Build LAST, once the other modules exist — the
-  concept file's dev note suggests "one DB table per module + a unified
-  view for the overview", which still holds.
-
 ---
 
-## File manifest (Petty Cash + Ongoing Expenses passes)
+## File manifest (Overview + Petty Cash + Ongoing Expenses passes)
 
 **Created:**
 - `add_petty_cash_table.sql`
@@ -309,6 +380,8 @@ add a `refund_method`/`refund.refund_method not in (...)` filter in
 - `childsmile/frontend/src/styles/pettycash.css`
 - `childsmile/frontend/src/pages/OngoingExpenses.js`
 - `childsmile/frontend/src/styles/ongoingexpenses.css`
+- `childsmile/frontend/src/pages/FinanceOverview.js` (frontend-only, no backend)
+- `childsmile/frontend/src/styles/financeoverview.css`
 - `FINANCE_MEGA_FEATURE.md` (this file)
 
 **Modified:**
@@ -333,11 +406,14 @@ add a `refund_method`/`refund.refund_method not in (...)` filter in
    file, or just the new Petty Cash / Ongoing Expenses blocks).
 4. Restart Django (new views/urls/models).
 5. Rebuild/redeploy the frontend.
-6. Spot-check: log in as System Administrator → sidebar Management section
-   shows "קופה קטנה" (💵) and "הוצאות שוטפות" (⛽) → open each, add an entry.
-   Then mark an existing refund as "שולם" in `/refunds` → confirm a linked
-   row now appears in `/petty-cash` tagged "מהחזר #<id>".
+6. Spot-check: log in as System Administrator → sidebar "כספים" section
+   shows "סקירה כללית" (📊), "החזרי הוצאות" (💰), "קופה קטנה" (💵) and
+   "הוצאות שוטפות" (⛽) → open each, add an entry. Then mark an existing
+   refund as "שולם" in `/refunds` → confirm a linked row now appears in
+   `/petty-cash` tagged "מהחזר #<id>", AND that the Overview page's totals
+   update accordingly (without double-counting that refund).
 7. **Before merging/pushing: confirm `childsmile/childsmile_app/version.txt`
    was bumped** (see Ground Rules) — otherwise the Azure deploy workflow will
    see no version change and SKIP deploying this backend change entirely.
+   (The Overview page itself is frontend-only — no bump needed for it alone.)
 

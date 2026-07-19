@@ -1,0 +1,287 @@
+/* financeoverview.css
+   Sizing here intentionally mirrors finance-section-concept.html (the mock)
+   almost 1:1 — small fonts, tight padding/gaps — NOT the 24px "big font"
+   convention used by refunds.css/pettycash.css/ongoingexpenses.css. Those are
+   simple CRUD tables; this is a compact dashboard meant to fit one screen
+   without scrolling, exactly like the mock. Only the outer container keeps
+   the shared sidebar/header clearance (230px top / 280px right). */
+
+* {
+  font-family: Rubik, sans-serif;
+}
+
+/* ── Main layout ─────────────────────────────────────────────────────────── */
+.finance-overview-main-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  flex-grow: 1;
+  padding: 230px 30px 30px 30px;
+  margin-right: 280px;
+  width: calc(100% - 280px);
+  background: transparent;
+}
+
+.finance-overview-main-content.sidebar-collapsed {
+  margin-right: 80px;
+  width: calc(100% - 80px);
+}
+
+/* Mock wraps everything in .app{max-width:1280px;margin:0 auto} — on wide
+   screens the dashboard content is CAPPED and CENTERED, not stretched full
+   width. Reproduce that here for the KPI/grid2/soon-strip block only
+   (Sidebar/InnerPageHeader are outside this wrapper, unaffected). */
+.finance-overview-inner {
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+/* ── Controls ────────────────────────────────────────────────────────────── */
+.finance-overview-controls {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 14px;
+  width: 100%;
+}
+
+.finance-overview-controls button {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.9), rgba(168, 85, 247, 0.9));
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 12px 22px;
+  font-size: 18px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+  font-family: Rubik, sans-serif;
+}
+
+.finance-overview-controls button:hover {
+  opacity: 0.85;
+}
+
+/* ── KPI chips (mirrors mock .kpis / .kpi) ──────────────────────────────── */
+.finance-overview-kpis {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 15px;
+  margin-bottom: 22px;
+  width: 100%;
+}
+
+.finance-overview-kpi-chip {
+  position: relative;
+  overflow: hidden;
+  background: #ffffff;
+  border: 1px solid #ece8f5;
+  border-radius: 18px;
+  padding: 22px 24px;
+  box-shadow: 0 1px 2px rgba(80, 60, 140, 0.05), 0 10px 30px rgba(80, 60, 140, 0.08);
+}
+
+.finance-overview-kpi-chip::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 5px;
+  background: #7c3aed;
+}
+
+.finance-overview-kpi-chip--green::before { background: #16a34a; }
+.finance-overview-kpi-chip--amber::before { background: #d97706; }
+.finance-overview-kpi-chip--red::before { background: #e23b3b; }
+
+.finance-overview-kpi-chip--amber.finance-overview-kpi-chip--active {
+  background: #fffaf0;
+}
+
+.finance-overview-kpi-label {
+  font-size: 18px;
+  color: #8b86a0;
+  font-weight: 500;
+  display: flex;
+  gap: 9px;
+  align-items: center;
+}
+
+.finance-overview-kpi-value {
+  font-size: 40px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  color: #2b2540;
+  margin-top: 9px;
+}
+
+.finance-overview-kpi-sub {
+  font-size: 17px;
+  color: #8b86a0;
+  margin-top: 4px;
+}
+
+/* ── Two-column layout (mirrors mock .grid2: 1.1fr / 1fr) ────────────────── */
+.finance-overview-grid2 {
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;
+  gap: 16px;
+  width: 100%;
+  margin-bottom: 8px;
+}
+
+/* ── Panels (mirrors mock .panel) ────────────────────────────────────────── */
+.finance-overview-panel {
+  background: #ffffff;
+  border: 1px solid #ece8f5;
+  border-radius: 18px;
+  padding: 28px;
+  box-shadow: 0 1px 2px rgba(80, 60, 140, 0.05), 0 10px 30px rgba(80, 60, 140, 0.08);
+}
+
+.finance-overview-panel h3 {
+  font-size: 25px;
+  font-weight: 700;
+  margin: 0 0 5px 0;
+  color: #2b2540;
+}
+
+.finance-overview-panel-sub {
+  font-size: 17px;
+  color: #8b86a0;
+  margin: 0 0 18px 0;
+}
+
+/* ── Module breakdown cards (mirrors mock .modcards / .modcard — 2 cols) ── */
+.finance-overview-modcards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.finance-overview-modcard {
+  position: relative;
+  border: 1px solid #ece8f5;
+  border-radius: 14px;
+  padding: 20px;
+  cursor: pointer;
+  transition: 0.16s;
+  background: #f6f4fb;
+}
+
+.finance-overview-modcard:hover {
+  border-color: #a78bfa;
+  transform: translateY(-2px);
+  box-shadow: 0 1px 2px rgba(80, 60, 140, 0.05), 0 10px 30px rgba(80, 60, 140, 0.08);
+  background: #fff;
+}
+
+.finance-overview-modcard-ic {
+  font-size: 32px;
+}
+
+.finance-overview-modcard-nm {
+  font-weight: 700;
+  font-size: 19px;
+  margin-top: 9px;
+  color: #2b2540;
+}
+
+.finance-overview-modcard-vv {
+  font-size: 28px;
+  font-weight: 800;
+  color: #7c3aed;
+  margin-top: 5px;
+}
+
+.finance-overview-modcard-cnt {
+  font-size: 16px;
+  color: #8b86a0;
+  margin-top: 3px;
+}
+
+/* Coming-soon modules — not clickable, greyed out */
+.finance-overview-modcard--soon {
+  cursor: not-allowed;
+  opacity: 0.55;
+  background: #f3f4f6;
+}
+
+.finance-overview-modcard--soon:hover {
+  border-color: #ece8f5;
+  transform: none;
+  box-shadow: none;
+  background: #f3f4f6;
+}
+
+.finance-overview-soon-badge {
+  display: inline-block;
+  margin-top: 8px;
+  padding: 4px 13px;
+  border-radius: 999px;
+  font-size: 15px;
+  font-weight: 700;
+  background: #e5e7eb;
+  color: #6b7280;
+}
+
+/* Vouchers strip below the grid2 row — a single wide "coming soon" card
+   (the 5th module doesn't fit the mock's 2x2 modcards grid) */
+.finance-overview-soon-strip {
+  width: 100%;
+  margin-bottom: 4px;
+}
+
+.finance-overview-modcard--wide {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+}
+
+.finance-overview-modcard--wide .finance-overview-modcard-nm {
+  margin-top: 0;
+}
+
+.finance-overview-modcard--wide .finance-overview-soon-badge {
+  margin-top: 0;
+  margin-right: auto;
+}
+
+/* ── Chart (mirrors mock .bars height: 200px, enlarged for legible fonts) ─── */
+.finance-overview-chart-container {
+  position: relative;
+  height: 260px;
+  width: 100%;
+}
+
+/* ── Loading state ───────────────────────────────────────────────────────── */
+.finance-overview-loading {
+  text-align: center;
+  padding: 40px;
+  color: #8b86a0;
+  font-size: 22px;
+}
+
+/* ── No-permission (admin-only page) ─────────────────────────────────────── */
+.no-permission {
+  padding: 60px 20px;
+  text-align: center;
+  color: #dc3545;
+}
+
+.no-permission h2 {
+  font-size: 28px;
+  margin: 0;
+  font-weight: 600;
+}
+
+@media (max-width: 1100px) {
+  .finance-overview-kpis {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .finance-overview-grid2 {
+    grid-template-columns: 1fr;
+  }
+}
+
