@@ -1,0 +1,32 @@
+TWILIO MESSAGE TEMPLATE FOR MONTHLY ONGOING EXPENSES SUMMARY (הוצאות שוטפות)
+
+Template Name: monthly_ongoing_expenses_summary
+
+Template Body:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📊 סיכום הוצאות שוטפות חודשי
+
+שלום נעם,
+
+הוצאות שוטפות עבור {{1}}:
+💰 סה"כ: {{2}} ₪
+
+המשך יום נעים!
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Variables:
+  {{1}} = month + year label, e.g. "יולי 2026"
+  {{2}} = total amount for the month, e.g. "4250.00"
+
+After creating this template in the Twilio Console / WhatsApp Content Editor,
+copy its Content SID and set it as the environment variable:
+
+  TWILIO_MONTHLY_EXPENSES_SUMMARY_SID=<content_sid>
+
+Sent automatically on the last calendar day of every month (28/29/30/31 —
+leap years handled) by monthly_expense_summary.py, scheduled in scheduler.py.
+There is NO plain-text fallback: if this SID is not configured, the job skips
+sending and logs an error instead — create this template and set the SID
+BEFORE deploying/merging.
+

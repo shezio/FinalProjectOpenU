@@ -7,6 +7,7 @@ Scheduled Jobs:
   3. Weekly coordinator WhatsApp reminders (progress requests)
   4. Meeting reminders (daily)
   5. Cleanup old tasks (weekly)
+  6. Monthly ongoing-expenses WhatsApp summary (last day of every month)
 
 Environment Variables:
   MONTHLY_CREATOR_TIME          - Daily check time for review task creation (default disabled)
@@ -17,6 +18,10 @@ Environment Variables:
   WEEKLY_COORDINATOR_REPORTS_ENABLED - Enable WhatsApp reminders (default true)
   TWILIO_WEEKLY_COORDINATOR_REQUEST_SID - Twilio template SID for WhatsApp (REQUIRED for production)
   MEETING_REMINDER_TIME         - Daily meeting reminders (default "08:00")
+  MONTHLY_EXPENSES_SUMMARY_TIME  - Send הוצאות שוטפות WhatsApp summary to נעם ניזרי,
+                                   HH:MM, on the last day of the month (default disabled)
+  TWILIO_MONTHLY_EXPENSES_SUMMARY_SID - Twilio template SID for the above (see
+                                   TWILIO_MONTHLY_EXPENSES_SUMMARY_TEMPLATE.txt)
 
 Timezone: All times in Asia/Jerusalem (Israel Time)
 
@@ -165,6 +170,30 @@ def start_scheduler():
                 misfire_grace_time=300,
             )
             api_logger.info(f'🔔 Birthday notification refresh scheduled every {bdays_interval}s (BDAYS_REFRESH_RATE)')
+
+            # Add job: Send the monthly הוצאות שוטפות WhatsApp summary to נעם ניזרי on the
+            # LAST calendar day of every month. CronTrigger(day='last', ...) already
+            # handles 28/29 (leap year) / 30 / 31 correctly on its own; the function
+            # itself ALSO re-verifies via calendar.monthrange() as a safety net.
+            # Controlled by MONTHLY_EXPENSES_SUMMARY_TIME env var (HH:MM) - disabled
+            # entirely unless set, same opt-in convention as MONTHLY_CREATOR_TIME.
+            expenses_summary_time = os.environ.get('MONTHLY_EXPENSES_SUMMARY_TIME', '').strip()
+            if expenses_summary_time:
+                try:
+                    es_hour, es_minute = map(int, expenses_summary_time.split(':'))
+                    _scheduler.add_job(
+                        func=_run_monthly_expense_summary,
+                        trigger=CronTrigger(day='last', hour=es_hour, minute=es_minute, timezone=israel_tz),
+                        id='monthly_expense_summary',
+                        name='Monthly Ongoing Expenses WhatsApp Summary',
+                        replace_existing=True,
+                        misfire_grace_time=600,
+                    )
+                    api_logger.info(f'📊 Monthly ongoing-expenses WhatsApp summary scheduled: last day of month at {expenses_summary_time} Israel time')
+                except Exception as es_err:
+                    api_logger.error(f'❌ Could not schedule monthly expenses summary: {es_err}')
+            else:
+                api_logger.info('Monthly ongoing-expenses WhatsApp summary: Feature disabled (MONTHLY_EXPENSES_SUMMARY_TIME not set)')
 
             _scheduler.start()
             api_logger.info(f'✅ Scheduler started | Monthly review: {scheduled_time} Israel time | Cleanup: Friday 11 PM Israel time')
@@ -317,3 +346,18 @@ def _run_birthday_notification_refresh():
         )
     except Exception as e:
         api_logger.error(f'❌ Error in scheduled birthday notification check: {str(e)}')
+
+
+def _run_monthly_expense_summary():
+    """
+    Send the end-of-month הוצאות שוטפות WhatsApp summary to נעם ניזרי.
+    Called by the scheduler on the last calendar day of every month (see
+    CronTrigger(day='last', ...) above; MONTHLY_EXPENSES_SUMMARY_TIME env var).
+    """
+    try:
+        from .monthly_expense_summary import send_monthly_ongoing_expenses_summary
+        api_logger.info('📊 Monthly ongoing-expenses summary triggered by scheduler')
+        send_monthly_ongoing_expenses_summary()
+        api_logger.info('✅ Monthly ongoing-expenses summary check completed')
+    except Exception as e:
+        api_logger.error(f'❌ Error in scheduled monthly expenses summary: {str(e)}')

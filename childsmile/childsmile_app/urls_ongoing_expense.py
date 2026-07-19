@@ -10,6 +10,7 @@ from .ongoing_expense_views import (
     create_ongoing_expense,
     update_ongoing_expense,
     delete_ongoing_expense,
+    send_monthly_expenses_summary_now,
 )
 
 urlpatterns = [
@@ -17,4 +18,5 @@ urlpatterns = [
     path("create/", create_ongoing_expense, name="create_ongoing_expense"),
     path("update/<int:ongoing_expense_id>/", update_ongoing_expense, name="update_ongoing_expense"),
     path("delete/<int:ongoing_expense_id>/", delete_ongoing_expense, name="delete_ongoing_expense"),
+    path("send-monthly-summary-now/", send_monthly_expenses_summary_now, name="send_monthly_expenses_summary_now"),
 ]

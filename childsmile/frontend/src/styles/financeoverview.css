@@ -63,6 +63,15 @@
   opacity: 0.85;
 }
 
+.finance-overview-send-summary-btn {
+  background: linear-gradient(135deg, rgba(37, 211, 102, 0.9), rgba(18, 140, 126, 0.9)) !important;
+}
+
+.finance-overview-controls button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 /* ── KPI chips (mirrors mock .kpis / .kpi) ──────────────────────────────── */
 .finance-overview-kpis {
   display: grid;
