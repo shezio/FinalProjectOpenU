@@ -268,6 +268,7 @@ const OngoingExpenses = () => {
         <button onClick={openCreateModal}>+ הוצאה חדשה</button>
         <button onClick={fetchEntries}>רענן</button>
         <button onClick={() => exportOngoingExpensesToExcel(filteredEntries, t)}>ייצוא לאקסל</button>
+        <button className="btn-report" onClick={() => navigate('/reports/ongoing-expenses-report')}>דוח לפי תקופה</button>
         <input
           type="text"
           className="tutorship-search-bar"
