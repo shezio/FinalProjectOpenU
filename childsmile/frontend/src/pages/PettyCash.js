@@ -112,6 +112,17 @@ const PettyCash = () => {
 
   const totalAmount = filteredEntries.reduce((s, e) => s + parseFloat(e.amount || 0), 0);
 
+  // ── Per-payer tags — total amount grouped by paid_by (שולם ע״י), highest first ──
+  // Fully dynamic: one tag per distinct paid_by value (usually 2–3), computed from the
+  // currently-filtered rows so it stays in sync with the סה״כ / עסקאות chips above.
+  const paidByTotals = Object.entries(
+    filteredEntries.reduce((acc, e) => {
+      const key = (e.paid_by || '').trim() || 'ללא שם';
+      acc[key] = (acc[key] || 0) + parseFloat(e.amount || 0);
+      return acc;
+    }, {})
+  ).sort((a, b) => b[1] - a[1]);
+
   // ── Form helpers ──────────────────────────────────────────────────────────
   const handleFormChange = (e) => {
     const { name, value } = e.target;
@@ -269,6 +280,11 @@ const PettyCash = () => {
           <div className="pettycash-total-chip">
             עסקאות: <strong>{filteredEntries.length}</strong>
           </div>
+          {paidByTotals.map(([payer, sum]) => (
+            <div key={payer} className="pettycash-total-chip pettycash-total-chip--payer">
+              {payer}: <strong>{sum.toFixed(2)} ₪</strong>
+            </div>
+          ))}
         </div>
       )}
 
