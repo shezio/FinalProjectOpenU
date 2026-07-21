@@ -13,7 +13,7 @@ import '../styles/refunds.css';
 // ── Constants ─────────────────────────────────────────────────────────────────
 const REFUND_STATUS_OPTIONS = ['ממתין', 'אושר', 'אושר חלקית', 'שולם', 'בוטל/נדחה'];
 const PAYMENT_METHOD_OPTIONS = ['ביט', 'פייבוקס', 'העברה בנקאית', 'אשראי', 'מזומן'];
-const COORDINATOR_OPTIONS = ['נעם', 'טל', 'נבו', 'אורי', 'ליאם'];
+const COORDINATOR_OPTIONS = ['נעם', 'טל', 'נבו', 'אורי', 'ליאם', 'גבריאלה'];
 const ISRAELI_PHONE_REGEX = /^0[2-9]\d{7,8}$/;
 // Up to 3 files per refund (see ExpenseRefund.file_url/_2/_3 in models.py) —
 // MAX_FILE_SIZE_MB is the COMBINED total across however many files are attached,
