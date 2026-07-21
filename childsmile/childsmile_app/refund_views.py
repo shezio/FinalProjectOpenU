@@ -70,7 +70,7 @@ from .whatsapp_utils import (
 
 REFUND_STATUS_CHOICES = ['ממתין', 'אושר', 'אושר חלקית', 'שולם', 'בוטל/נדחה']
 PAYMENT_METHOD_CHOICES = ['ביט', 'פייבוקס', 'העברה בנקאית', 'אשראי', 'מזומן']
-COORDINATOR_CHOICES = ['נעם', 'טל', 'נבו', 'אורי', 'ליאם']
+COORDINATOR_CHOICES = ['נעם', 'טל', 'נבו', 'אורי', 'ליאם', 'גבריאלה']
 ISRAELI_PHONE_IMPORT = r'^0[2-9]\d{7,8}$'  # used in validation helper
 
 # Admin phone for WhatsApp notifications — resolved from DB at runtime (same as utils.py)
