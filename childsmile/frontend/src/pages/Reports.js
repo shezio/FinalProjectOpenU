@@ -109,6 +109,10 @@ const Reports = () => {
   const refunds_report_permissions = [{ resource: 'childsmile_app_expenserefund', action: 'UPDATE' }];
   const hasPermissionToRefundsReport = hasSomePermissions(refunds_report_permissions);
 
+  // Ongoing Expenses Report — requires UPDATE on ongoingexpense (admin-only module)
+  const ongoing_expenses_report_permissions = [{ resource: 'childsmile_app_ongoingexpense', action: 'UPDATE' }];
+  const hasPermissionToOngoingExpensesReport = hasSomePermissions(ongoing_expenses_report_permissions);
+
   const reportDetails = {
     get_families_per_location_report:         { name: 'דוח משפחות לפי מיקום',                       path: '/reports/families_per_location_report',              category: 'families' },
     new_families_report:                      { name: 'דוח משפחות חדשות מהחודש האחרון',              path: '/reports/new-families-report',                       category: 'families' },
@@ -123,6 +127,7 @@ const Reports = () => {
     all_volunteers_irs_report:                { name: 'דוח מתנדבים כללי',                            path: '/reports/all_volunteers_irs_report',                 category: 'volunteers' },
     roles_spread_stats_report:                { name: 'דוח התפלגות הרשאות',                          path: '/reports/roles_spread_stats_report',                 category: 'volunteers' },
     refunds_per_timeperiod:                   { name: 'דוח החזרי הוצאות לפי תקופה',                  path: '/reports/refunds-report',                                    category: 'finances' },
+    ongoing_expenses_per_timeperiod:          { name: 'דוח הוצאות שוטפות לפי תקופה',                 path: '/reports/ongoing-expenses-report',                           category: 'finances' },
   };
 
   const reportPermissions = {
@@ -139,6 +144,7 @@ const Reports = () => {
     families_missing_data_report: hasPermissionToFamiliesMissingDataReport,
     families_duplicate_report: hasPermissionToFamiliesDuplicateReport,
     refunds_per_timeperiod: hasPermissionToRefundsReport,
+    ongoing_expenses_per_timeperiod: hasPermissionToOngoingExpensesReport,
   };
 
   const categoryLabels = { all: 'הכל', families: 'משפחות', volunteers: 'מתנדבים', finances: 'כספים' };

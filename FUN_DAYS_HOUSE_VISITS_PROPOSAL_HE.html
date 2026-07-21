@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>הצעת אפיון – ימי כיף וביקורי בית | חיוך של ילד</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700;900&family=Rubik:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#143852;         /* מהצבע הרשמי של אתר העמותה */
+    --navy-soft:#1d4d6e;
+    --pink:#e6337f;
+    --pink-soft:#fbe3ef;
+    --green:#1b8a5a;
+    --green-soft:#e5f5ec;
+    --blue:#1565c0;
+    --blue-soft:#e6f0fb;
+    --amber:#d98a00;
+    --amber-soft:#fff6e2;
+    --ink:#26333d;
+    --muted:#6a7a86;
+    --line:#e3e9ee;
+    --bg:#eef2f5;
+  }
+  *{box-sizing:border-box;}
+  body{
+    font-family:'Heebo','Rubik',Arial,sans-serif;
+    background:var(--bg); color:var(--ink);
+    margin:0; padding:0 0 60px; direction:rtl; line-height:1.75;
+    -webkit-print-color-adjust:exact; print-color-adjust:exact;
+  }
+  .wrap{max-width:1040px; margin:0 auto; padding:0 22px;}
+
+  /* HERO */
+  .hero{
+    background:linear-gradient(135deg,var(--navy) 0%,var(--navy-soft) 55%,#2a6b8f 100%);
+    color:#fff; padding:46px 22px 40px; text-align:center; position:relative; overflow:hidden;
+  }
+  .hero::after{content:""; position:absolute; inset:0;
+    background:radial-gradient(circle at 15% 20%, rgba(230,51,127,.25), transparent 40%),
+               radial-gradient(circle at 85% 90%, rgba(230,51,127,.18), transparent 45%);}
+  .hero .inner{position:relative; z-index:1; max-width:1040px; margin:0 auto;}
+  .brand{font-family:'Rubik'; font-weight:900; letter-spacing:.5px; font-size:19px; opacity:.95;}
+  .brand .heart{color:#ff8bc0;}
+  .hero h1{font-family:'Rubik'; font-weight:900; font-size:40px; margin:14px 0 6px;}
+  .hero p{font-size:18px; opacity:.92; margin:0; font-weight:300;}
+  .hero .tag{display:inline-block; margin-top:18px; background:rgba(255,255,255,.14);
+    border:1px solid rgba(255,255,255,.35); padding:7px 18px; border-radius:30px; font-size:14px;}
+
+  /* CARDS */
+  .card{background:#fff; border-radius:16px; padding:26px 28px; margin:22px 0;
+    box-shadow:0 6px 22px rgba(20,56,82,.08); border:1px solid var(--line);}
+  h2{font-family:'Rubik'; font-weight:700; color:var(--navy); font-size:26px;
+    margin:6px 0 14px; display:flex; align-items:center; gap:10px;}
+  h2 .ic{width:38px; height:38px; border-radius:10px; background:var(--pink-soft);
+    display:inline-flex; align-items:center; justify-content:center; font-size:20px;}
+  h3{font-family:'Rubik'; color:var(--navy-soft); font-size:19px; margin:22px 0 8px;}
+  p{margin:8px 0;}
+  .lead{font-size:17px; color:var(--muted);}
+
+  /* SUMMARY GRID */
+  .sum-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(215px,1fr)); gap:16px; margin-top:8px;}
+  .sum{background:linear-gradient(160deg,#fff,#f7fafc); border:1px solid var(--line);
+    border-radius:14px; padding:18px; position:relative;}
+  .sum .n{font-family:'Rubik'; font-weight:900; font-size:15px; color:var(--pink);
+    letter-spacing:.5px; text-transform:uppercase;}
+  .sum h4{margin:6px 0 4px; font-size:18px; color:var(--navy);}
+  .sum p{margin:0; font-size:14.5px; color:var(--muted);}
+
+  /* STEPS */
+  .step{display:flex; gap:16px; margin:14px 0; align-items:flex-start;}
+  .step-num{flex:0 0 auto; width:34px; height:34px; border-radius:50%;
+    background:var(--navy); color:#fff; display:flex; align-items:center; justify-content:center;
+    font-weight:700; font-family:'Rubik'; box-shadow:0 3px 8px rgba(20,56,82,.25);}
+  .step.green .step-num{background:var(--green);}
+  .step-body{flex:1; padding-top:2px;}
+  .step-body strong{color:var(--navy);}
+
+  /* CALLOUTS */
+  .note{border-radius:10px; padding:13px 17px; margin:14px 0; font-size:15px;}
+  .note.pain{background:#fdecef; border-right:4px solid var(--pink);}
+  .note.win{background:var(--green-soft); border-right:4px solid var(--green);}
+  .note.info{background:var(--blue-soft); border-right:4px solid var(--blue);}
+  .note.tip{background:var(--amber-soft); border-right:4px solid var(--amber);}
+  .note b{color:var(--navy);}
+
+  /* BADGES */
+  .badge{display:inline-block; padding:3px 11px; border-radius:20px; font-size:12.5px;
+    font-weight:700; font-family:'Rubik'; vertical-align:middle;}
+  .b-new{background:var(--green-soft); color:var(--green);}
+  .b-reuse{background:var(--blue-soft); color:var(--blue);}
+  .b-q{background:var(--amber-soft); color:var(--amber);}
+
+  /* WHATSAPP MOCK */
+  .wa{background:#e5ddd5; border-radius:14px; padding:16px; margin:12px 0;
+    background-image:linear-gradient(rgba(229,221,213,.6),rgba(229,221,213,.6));}
+  .wa-bubble{background:#dcf8c6; border-radius:10px 10px 2px 10px; padding:12px 14px;
+    max-width:80%; margin-inline-start:auto; box-shadow:0 1px 2px rgba(0,0,0,.15); font-size:14.5px; white-space:pre-line;}
+  .wa-bubble .city-line{font-family:monospace; direction:rtl;}
+  .wa-time{font-size:11px; color:#667; text-align:start; margin-top:6px;}
+
+  /* TABLE */
+  table{width:100%; border-collapse:collapse; margin-top:14px; font-size:15px; overflow:hidden; border-radius:12px;}
+  thead th{background:var(--navy); color:#fff; padding:12px 14px; text-align:right; font-family:'Rubik'; font-weight:500;}
+  td{padding:11px 14px; border-bottom:1px solid var(--line); vertical-align:top;}
+  tbody tr:nth-child(even){background:#f7fafc;}
+  .yes{color:var(--green); font-weight:700;}
+  .no{color:#c0392b;}
+  .col-tag{font-weight:700; color:var(--navy);}
+
+  /* FLOW DIAGRAM */
+  .flow{display:flex; flex-wrap:wrap; align-items:stretch; gap:10px; margin:18px 0; justify-content:center;}
+  .fnode{flex:1 1 150px; min-width:140px; max-width:200px; background:#fff; border:2px solid var(--navy);
+    border-radius:12px; padding:14px 12px; text-align:center; position:relative;}
+  .fnode .ficon{font-size:24px;}
+  .fnode .ftitle{font-weight:700; color:var(--navy); font-size:15px; margin-top:4px; font-family:'Rubik';}
+  .fnode .fsub{font-size:12.5px; color:var(--muted); margin-top:3px;}
+  .fnode.new{border-color:var(--green); background:var(--green-soft);}
+  .fnode.reuse{border-color:var(--blue); background:var(--blue-soft);}
+  .farrow{display:flex; align-items:center; color:var(--pink); font-size:26px; font-weight:900;}
+  .flow-legend{display:flex; gap:18px; flex-wrap:wrap; justify-content:center; margin-top:10px; font-size:13.5px;}
+  .flow-legend span{display:inline-flex; align-items:center; gap:6px;}
+  .dot{width:13px; height:13px; border-radius:4px; display:inline-block;}
+
+  /* DATA MODEL */
+  .erd{display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:16px; margin-top:14px;}
+  .entity{border:1px solid var(--line); border-radius:12px; overflow:hidden;}
+  .entity .ehead{padding:11px 15px; font-family:'Rubik'; font-weight:700; color:#fff; display:flex; justify-content:space-between; align-items:center;}
+  .entity.new .ehead{background:var(--green);}
+  .entity.reuse .ehead{background:var(--blue);}
+  .entity ul{list-style:none; margin:0; padding:10px 15px; font-size:14px;}
+  .entity li{padding:3px 0; border-bottom:1px dashed var(--line); color:var(--ink);}
+  .entity li:last-child{border-bottom:0;}
+  .entity li .k{color:var(--pink); font-weight:700;}
+
+  /* QUESTIONS */
+  .q{background:var(--amber-soft); border:2px dashed var(--amber); border-radius:14px; padding:16px 20px; margin:14px 0;}
+  .q .qnum{font-family:'Rubik'; font-weight:900; color:var(--amber); font-size:15px;}
+  .q h4{margin:2px 0 6px; color:var(--navy); font-size:17px;}
+  .q .opts{font-size:14.5px; color:var(--muted);}
+  .q .rec{margin-top:7px; font-size:14px; color:var(--green); font-weight:600;}
+
+  /* NEXT STEPS */
+  .steps-final{counter-reset:s; list-style:none; padding:0; margin:10px 0 0;}
+  .steps-final li{counter-increment:s; position:relative; padding:10px 46px 10px 10px; margin:8px 0;
+    background:#f7fafc; border-radius:10px; border:1px solid var(--line);}
+  .steps-final li::before{content:counter(s); position:absolute; right:10px; top:50%; transform:translateY(-50%);
+    width:28px; height:28px; background:var(--pink); color:#fff; border-radius:50%;
+    display:flex; align-items:center; justify-content:center; font-weight:700; font-family:'Rubik';}
+
+  footer{text-align:center; color:var(--muted); font-size:13.5px; margin-top:30px;}
+  footer .heart{color:var(--pink);}
+
+  @media (max-width:640px){
+    .hero h1{font-size:30px;} h2{font-size:22px;}
+    .farrow{transform:rotate(90deg);}
+  }
+  @media print{ body{background:#fff;} .card{box-shadow:none; break-inside:avoid;} .hero{padding:30px 20px;} }
+</style>
+</head>
+<body>
+
+<!-- ============ HERO ============ -->
+<div class="hero">
+  <div class="inner">
+    <div class="brand"><span class="heart">🩷</span> חיוך של ילד</div>
+    <h1>ימי כיף וביקורי בית</h1>
+    <p>הצעת אפיון ותהליך – לאישור העמותה טרם תחילת הפיתוח</p>
+    <div class="tag">מסמך תכנון בלבד · אין עדיין שינוי במערכת · ממתין לאישורכם</div>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <!-- ============ EXECUTIVE SUMMARY ============ -->
+  <div class="card">
+    <h2><span class="ic">💡</span> תקציר מנהלים</h2>
+    <p class="lead">המטרה: להעביר את כל תהליך ימי הכיף וביקורי הבית מטופסי Google וקבצי אקסל מפוזרים – אל תוך מערכת "חיוך של ילד", בזרימה אחת רציפה ומעקב מלא, מבלי לשנות את אופן העבודה שאתם רגילים אליו.</p>
+    <div class="sum-grid">
+      <div class="sum">
+        <div class="n">01 · בקשה</div>
+        <h4>טופס חכם אחד</h4>
+        <p>המשפחה נרשמת דרך קישור קבוע – מה שמשתנה זה רק התאריך המבוקש וסוג הפעילות.</p>
+      </div>
+      <div class="sum">
+        <div class="n">02 · שיבוץ</div>
+        <h4>לוח בקשות</h4>
+        <p>הרכז רואה את כל הבקשות במסך אחד; המתנדבים משתבצים ישירות או דרך קבוצת הווטסאפ.</p>
+      </div>
+      <div class="sum">
+        <div class="n">03 · משוב</div>
+        <h4>סגירת מעגל</h4>
+        <p>לאחר הפעילות ממלאים דוח סיכום – רכיב שכבר <b>קיים היום</b> במערכת המשובים.</p>
+      </div>
+      <div class="sum">
+        <div class="n">✓ · תועלת</div>
+        <h4>ניצול מה שיש</h4>
+        <p>רוב הרכיבים כבר בנויים (תלושים, משובים, משימות, ווטסאפ) – פיתוח קצר ובטוח.</p>
+      </div>
+    </div>
+    <div class="note win">
+      <b>התובנה המרכזית:</b> חצי מהתהליך כבר קיים במערכת. "דוח הסיכום" שממלאים אחרי כל פעילות הוא בדיוק המשוב שכבר בנוי אצלנו (יום כיף בחונכות / יום כיף בהתנדבות כללית / ביקור בית / ביקור בית חולים). לכן אנחנו בונים בעיקר את <b>תחילת</b> התהליך – הבקשה והשיבוץ – ומחברים אותם למשוב הקיים.
+    </div>
+  </div>
+
+  <!-- ============ CURRENT PROCESS ============ -->
+  <div class="card">
+    <h2><span class="ic">🔵</span> איך זה עובד היום</h2>
+    <div class="step"><div class="step-num">1</div><div class="step-body">
+      <strong>הרכז שולח שאלון</strong> – בערך בימי חמישי נשלח למשפחות טופס הרשמה (Google Form) לימי כיף / ביקורי בית של השבוע שאחרי.
+    </div></div>
+    <div class="step"><div class="step-num">2</div><div class="step-body">
+      <strong>התשובות נאספות באקסל</strong> – כל בקשה נכנסת כשורה בגיליון (כפי שראינו בקובץ "ימי כיף וביקורי בית").
+    </div></div>
+    <div class="step"><div class="step-num">3</div><div class="step-body">
+      <strong>הרכז מסכם ומפרסם בקבוצה</strong> – עובר על האקסל, ומעתיק ידנית לקבוצת המתנדבים רשימה <b>מצומצמת ומוסתרת פרטים</b> (עיר, גיל, מגדר בלבד – ללא שמות וטלפונים).
+    </div></div>
+    <div class="wa">
+      <div class="wa-bubble">בוקר טוב חברים 🩷
+בואו ננסה לשמח כמה שיותר את הילדים ואת המשפחות שלהם.
+מצרפת פה רשימה של ערים מעודכנת – מי שיכול בבקשה לכתוב כאן 🙏🏻🩷
+
+<span class="city-line">רמלה 4 נקבה
+קרית ביאליק 17 נקבה
+באר שבע 4 זכר
+הוד השרון 9 זכר
+מצפה יריחו 21 זכר</span>
+      <div class="wa-time">קבוצת ימי כיף · 09:14</div>
+      </div>
+    </div>
+    <div class="step"><div class="step-num">4</div><div class="step-body">
+      <strong>המתנדבים משתבצים</strong> – עונים בקבוצה "אני לוקח/ת את X".
+    </div></div>
+    <div class="step"><div class="step-num">5</div><div class="step-body">
+      <strong>הרכז יוצר קשר ומצרף</strong> – מתקשר למתנדב שנרשם ומוסיף אותו לקבוצת ווטסאפ ייעודית של ימי כיף.
+    </div></div>
+    <div class="step"><div class="step-num">6</div><div class="step-body">
+      <strong>מילוי דוח סיכום</strong> – לאחר הפעילות המתנדבים ממלאים דוח (טופס נוסף) על מה שהיה.
+    </div></div>
+  </div>
+
+  <!-- ============ PAIN POINTS ============ -->
+  <div class="card">
+    <h2><span class="ic">⚠️</span> הכאבים בתהליך הנוכחי</h2>
+    <div class="note pain"><b>עבודה ידנית כפולה:</b> העתקה ידנית מהאקסל לווטסאפ – גוזלת זמן ופוגעת בדיוק (טעויות הקלדה בעיר / גיל / מגדר).</div>
+    <div class="note pain"><b>אין מעקב:</b> קשה לדעת מי שובץ לאיזו בקשה, מי כבר קיבל מענה ומי "נפל בין הכיסאות".</div>
+    <div class="note pain"><b>נתונים מפוזרים:</b> שני טפסים נפרדים (יום כיף / ביקור בית) וגיליונות שונים לכל שנה – אין תמונה אחת.</div>
+    <div class="note pain"><b>אין סגירת מעגל:</b> אין דרך אוטומטית לוודא שאכן מולא דוח סיכום עבור כל פעילות שהתקיימה.</div>
+    <div class="note pain"><b>אין חיבור למשפחות במערכת:</b> הבקשה לא מקושרת אוטומטית לילד/משפחה הרשומים אצלנו.</div>
+  </div>
+
+  <!-- ============ PROPOSED SOLUTION ============ -->
+  <div class="card">
+    <h2><span class="ic">🟢</span> התהליך המוצע – שלושה שלבים</h2>
+    <p class="lead">אותו רצף עבודה שאתם מכירים, רק בתוך המערכת – עם אוטומציה במקומות שחוסכים זמן.</p>
+
+    <h3>שלב 1 · טופס בקשה חכם <span class="badge b-new">חדש</span> <span class="badge b-reuse">מבוסס על שאלוני התלושים</span></h3>
+    <div class="step green"><div class="step-num">1</div><div class="step-body">
+      <strong>קישור ציבורי קבוע</strong> – בדיוק כמו שאלון התלושים הציבורי במערכת: המשפחה נכנסת ללא צורך בהתחברות. <b>הקישור לא משתנה</b> – מה שמשתנה זה <b>התאריך המבוקש</b> של יום הכיף / ביקור הבית, אותו בוחרת המשפחה בטופס.
+    </div></div>
+    <div class="step green"><div class="step-num">2</div><div class="step-body">
+      <strong>טופס אחד, שני סוגים</strong> – בורר בראש הטופס: "יום כיף" או "ביקור בית". לפי הבחירה נפתחים השדות הייעודיים (הטפסים כמעט זהים – ההבדל בכמה שדות בלבד, ראו טבלה למטה).
+    </div></div>
+    <div class="step green"><div class="step-num">3</div><div class="step-body">
+      <strong>חיבור אוטומטי למשפחה</strong> – אם תעודת הזהות של הילד/ה מזוהה במערכת, הבקשה מתקשרת אוטומטית למשפחה הקיימת (בדיוק כמו הזיהוי האוטומטי שכבר עובד בתלושים).
+    </div></div>
+
+    <h3>שלב 2 · לוח בקשות ושיבוץ <span class="badge b-new">חדש</span> <span class="badge b-reuse">מבוסס על מסך המקבלים בתלושים</span></h3>
+    <div class="step green"><div class="step-num">4</div><div class="step-body">
+      <strong>מסך אחד לרכז</strong> – טבלה של כל הבקשות, עם התאריך המבוקש, סוג הפעילות, סטטוס, וסינון/חיפוש – בדיוק כמו מסך "המקבלים" בתלושים.
+    </div></div>
+    <div class="step green"><div class="step-num">5</div><div class="step-body">
+      <strong>כפתור "העתקה לווטסאפ"</strong> <span class="badge b-new">חדש</span> – בלחיצה אחת המערכת מייצרת את הטקסט המצומצם והמוסתר (עיר · גיל · מגדר) מוכן להדבקה בקבוצה. חוסך הקלדה ידנית ומונע טעויות.
+      <div class="note tip">כך הרכז ממשיך לעבוד בדיוק כמו היום (פרסום בקבוצה) – רק בלי להעתיק שורה-שורה מהאקסל.</div>
+    </div></div>
+    <div class="step green"><div class="step-num">6</div><div class="step-body">
+      <strong>שיבוץ עצמאי של מתנדבים</strong> – למתנדבים יש תצוגה <b>מצומצמת ומוגנת</b> (עיר · גיל · מגדר · תאריך בלבד). מתנדב לוחץ "אני משתבץ/ת" ומשריין את הבקשה – זה מחליף את שלב ה"תכתבו כאן" בווטסאפ. הרכז יכול כמובן גם לשבץ ידנית מי שנרשם בקבוצה.
+    </div></div>
+
+    <h3>שלב 3 · הודעה למערכת ומשוב <span class="badge b-reuse">רובו כבר קיים</span></h3>
+    <div class="step green"><div class="step-num">7</div><div class="step-body">
+      <strong>התראה לרכז על שיבוץ</strong> – כשמתנדב משתבץ במערכת, נשלחת הודעה לרכז (משימה במערכת + ווטסאפ, בדיוק כמו מנגנון ההתראות הקיים לרכזים). אם הרכז עצמו משבץ מישהו מהווטסאפ – אין צורך בהתראה.
+    </div></div>
+    <div class="step green"><div class="step-num">8</div><div class="step-body">
+      <strong>דוח סיכום = משוב קיים</strong> – לאחר הפעילות המתנדב ממלא משוב מהסוג המתאים, <b>שכבר קיים במערכת היום</b> (יום כיף בחונכות / יום כיף בהתנדבות כללית / ביקור בית / ביקור בית חולים). הבקשה מתחברת למשוב שנוצר – כך רואים לכל פעילות אם הוגש דוח.
+    </div></div>
+    <div class="step green"><div class="step-num">9</div><div class="step-body">
+      <strong>בדיקת שלמות משובים</strong> – המערכת יכולה להציג לרכז אם התקבלו כל הדוחות הצפויים (למשל 3 מתנדבים ביום כיף → 3 דוחות). ראו שאלה 3 לאישורכם.
+    </div></div>
+  </div>
+
+  <!-- ============ USER FLOW ============ -->
+  <div class="card">
+    <h2><span class="ic">🔄</span> זרימת המשתמש – מקצה לקצה</h2>
+    <div class="flow">
+      <div class="fnode reuse"><div class="ficon">👨‍👩‍👧</div><div class="ftitle">משפחה</div><div class="fsub">ממלאת טופס בקשה (קישור קבוע)</div></div>
+      <div class="farrow">←</div>
+      <div class="fnode new"><div class="ftitle">בקשת פעילות</div><div class="fsub">נשמרת + חיבור אוטומטי לילד</div></div>
+      <div class="farrow">←</div>
+      <div class="fnode new"><div class="ficon">📋</div><div class="ftitle">לוח בקשות</div><div class="fsub">הרכז מסנן ומפרסם</div></div>
+      <div class="farrow">←</div>
+      <div class="fnode reuse"><div class="ficon">💬</div><div class="ftitle">קבוצת ווטסאפ</div><div class="fsub">העתקה בלחיצה</div></div>
+      <div class="farrow">←</div>
+      <div class="fnode new"><div class="ficon">🙋</div><div class="ftitle">שיבוץ מתנדב</div><div class="fsub">עצמאי או ע"י הרכז</div></div>
+      <div class="farrow">←</div>
+      <div class="fnode reuse"><div class="ficon">📝</div><div class="ftitle">משוב / דוח</div><div class="fsub">רכיב קיים במערכת</div></div>
+    </div>
+    <div class="flow-legend">
+      <span><span class="dot" style="background:var(--green)"></span> רכיב חדש שנבנה</span>
+      <span><span class="dot" style="background:var(--blue)"></span> רכיב קיים שמנוצל מחדש</span>
+    </div>
+  </div>
+
+  <!-- ============ FORM FIELDS TABLE ============ -->
+  <div class="card">
+    <h2><span class="ic">📝</span> שדות הטופס – משותף מול ייחודי</h2>
+    <p class="lead">כפי שציינתם – הטפסים כמעט זהים. ההבדל הוא במספר שדות בלבד (מבוסס על הנתונים האמיתיים מהאקסל שלכם).</p>
+    <table>
+      <thead>
+        <tr><th>שדה</th><th style="text-align:center">יום כיף</th><th style="text-align:center">ביקור בית</th></tr>
+      </thead>
+      <tbody>
+        <tr><td class="col-tag">סוג פעילות (בורר)</td><td style="text-align:center" class="yes">✔</td><td style="text-align:center" class="yes">✔</td></tr>
+        <tr><td class="col-tag">תאריך מבוקש</td><td style="text-align:center" class="yes">✔</td><td style="text-align:center" class="yes">✔</td></tr>
+        <tr><td>שם מלא של המטופל/ת</td><td style="text-align:center" class="yes">✔</td><td style="text-align:center" class="yes">✔</td></tr>
+        <tr><td>מגדר · גיל</td><td style="text-align:center" class="yes">✔</td><td style="text-align:center" class="yes">✔</td></tr>
+        <tr><td>שם הורה · טלפון הורה</td><td style="text-align:center" class="yes">✔</td><td style="text-align:center" class="yes">✔</td></tr>
+        <tr><td>עיר מגורים</td><td style="text-align:center" class="yes">✔</td><td style="text-align:center" class="yes">✔</td></tr>
+        <tr><td>בית חולים מטפל</td><td style="text-align:center" class="yes">✔</td><td style="text-align:center" class="yes">✔</td></tr>
+        <tr><td>הערות / הארות</td><td style="text-align:center" class="yes">✔</td><td style="text-align:center" class="yes">✔</td></tr>
+        <tr><td class="col-tag" style="color:var(--pink)">מגבלות שכדאי לדעת</td><td style="text-align:center" class="yes">✔</td><td style="text-align:center" class="no">—</td></tr>
+        <tr><td class="col-tag" style="color:var(--pink)">פעילויות אהובות על הילד/ה</td><td style="text-align:center" class="yes">✔</td><td style="text-align:center" class="no">—</td></tr>
+        <tr><td class="col-tag" style="color:var(--blue)">מספר אחים</td><td style="text-align:center" class="no">—</td><td style="text-align:center" class="yes">✔</td></tr>
+        <tr><td class="col-tag" style="color:var(--blue)">כתובת מלאה</td><td style="text-align:center" class="no">—</td><td style="text-align:center" class="yes">✔</td></tr>
+        <tr><td class="col-tag" style="color:var(--blue)">ימים מועדפים בשבוע</td><td style="text-align:center" class="no">—</td><td style="text-align:center" class="yes">✔</td></tr>
+        <tr><td class="col-tag" style="color:var(--blue)">יש מרחב מוגן קרוב (ממ"ד)</td><td style="text-align:center" class="no">—</td><td style="text-align:center" class="yes">✔</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ============ DATA MODEL ============ -->
+  <div class="card">
+    <h2><span class="ic">🗄️</span> מודל הנתונים ברמת-על</h2>
+    <p class="lead">שתי טבלאות חדשות בלבד – והשאר חיבור לרכיבים קיימים. אותו עיקרון מוכח כמו התלושים.</p>
+    <div class="erd">
+      <div class="entity new">
+        <div class="ehead">מחזור בקשות <span class="badge" style="background:rgba(255,255,255,.25);color:#fff">חדש</span></div>
+        <ul>
+          <li><span class="k">שם המחזור</span> · לדוגמה "ימי כיף – שבוע 30"</li>
+          <li><span class="k">סוג פעילות</span> · יום כיף / ביקור בית</li>
+          <li><span class="k">סטטוס</span> · פתוח / סגור לרישום</li>
+          <li><span class="k">טווח תאריכים</span></li>
+        </ul>
+      </div>
+      <div class="entity new">
+        <div class="ehead">בקשת פעילות <span class="badge" style="background:rgba(255,255,255,.25);color:#fff">חדש</span></div>
+        <ul>
+          <li><span class="k">פרטי הבקשה</span> · שם, גיל, מגדר, עיר, טלפון...</li>
+          <li><span class="k">תאריך מבוקש</span></li>
+          <li><span class="k">מתנדב משובץ · סטטוס</span></li>
+          <li><span class="k">קישור לילד</span> · אוטומטי לפי ת"ז</li>
+          <li><span class="k">קישור למשוב</span> · לאחר הפעילות</li>
+        </ul>
+      </div>
+      <div class="entity reuse">
+        <div class="ehead">משוב / דוח <span class="badge" style="background:rgba(255,255,255,.25);color:#fff">קיים</span></div>
+        <ul>
+          <li>יום כיף בחונכות</li>
+          <li>יום כיף בהתנדבות כללית</li>
+          <li>ביקור בית</li>
+          <li>ביקור בית חולים</li>
+          <li style="color:var(--green);font-weight:700">✔ ללא צורך בטבלה חדשה</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ NEW VS REUSED ============ -->
+  <div class="card">
+    <h2><span class="ic">♻️</span> מה נבנה מחדש · ומה כבר קיים</h2>
+    <table>
+      <thead><tr><th>רכיב</th><th>סטטוס</th><th>מקור / הערה</th></tr></thead>
+      <tbody>
+        <tr><td>טופס בקשה ציבורי (ללא התחברות)</td><td><span class="badge b-reuse">מנוצל מחדש</span></td><td>אותו מנגנון של שאלון התלושים הציבורי</td></tr>
+        <tr><td>חיבור אוטומטי לילד לפי ת"ז</td><td><span class="badge b-reuse">מנוצל מחדש</span></td><td>קיים בתלושים</td></tr>
+        <tr><td>הסתרת פרטים למתנדבים (עיר/גיל/מגדר)</td><td><span class="badge b-reuse">מנוצל מחדש</span></td><td>מנגנון תצוגה מוגן שכבר קיים</td></tr>
+        <tr><td>התראות לרכז (משימה + ווטסאפ)</td><td><span class="badge b-reuse">מנוצל מחדש</span></td><td>מנגנון ההתראות הקיים לרכזים</td></tr>
+        <tr><td>מערכת המשובים / דוחות</td><td><span class="badge b-reuse">מנוצל מחדש</span></td><td>סוגי המשוב כבר קיימים</td></tr>
+        <tr><td>ייצוא לאקסל</td><td><span class="badge b-reuse">מנוצל מחדש</span></td><td>מנגנון ייצוא קיים בכל המסכים</td></tr>
+        <tr><td>שתי טבלאות נתונים (מחזור + בקשה)</td><td><span class="badge b-new">חדש</span></td><td>קטן וממוקד</td></tr>
+        <tr><td>מסך טופס הבקשה + מסך לוח הבקשות</td><td><span class="badge b-new">חדש</span></td><td>שני מסכים, כולל תצוגת מתנדב מצומצמת</td></tr>
+        <tr><td>כפתור "העתקה לווטסאפ"</td><td><span class="badge b-new">חדש</span></td><td>הרכיב היחיד החדש לגמרי – קטן</td></tr>
+      </tbody>
+    </table>
+    <div class="note win"><b>שורה תחתונה:</b> רוב העבודה היא חיבור בין רכיבים קיימים ומוכחים. הסיכון נמוך והפיתוח ממוקד.</div>
+  </div>
+
+  <!-- ============ PRIVACY ============ -->
+  <div class="card">
+    <h2><span class="ic">🔒</span> פרטיות והרשאות</h2>
+    <div class="note info"><b>הרכז</b> רואה את התמונה המלאה: שם, טלפון, כתובת, בית חולים ופרטי הטיפול – כדי לתאם.</div>
+    <div class="note info"><b>המתנדב</b> רואה רק את המידע ההכרחי לבחירה: <b>עיר · גיל · מגדר · סוג פעילות · תאריך</b> – ללא שמות, טלפונים או פרטים רפואיים. בדיוק כמו ההודעה שמפורסמת היום בקבוצה.</div>
+    <div class="note tip">רק לאחר שיבוץ ואישור הרכז, מקבל המתנדב את פרטי הקשר הדרושים לפעילות עצמה.</div>
+  </div>
+
+  <!-- ============ OPEN QUESTIONS ============ -->
+  <div class="card">
+    <h2><span class="ic">❓</span> שאלות לאישור העמותה</h2>
+    <p class="lead">כדי לסגור את האפיון לפני פיתוח, נשמח להחלטתכם ב-5 נקודות:</p>
+
+    <div class="q">
+      <div class="qnum">שאלה 1</div>
+      <h4>טופס אחד או שני קישורים?</h4>
+      <div class="opts">א׳ · טופס אחד עם בורר "יום כיף / ביקור בית" &nbsp;|&nbsp; ב׳ · שני קישורים נפרדים כמו היום.</div>
+      <div class="rec">★ המלצתנו: טופס אחד עם בורר – פשוט יותר לתחזוקה ולמשפחות.</div>
+    </div>
+    <div class="q">
+      <div class="qnum">שאלה 2</div>
+      <h4>שיבוץ עצמאי של מתנדבים במערכת?</h4>
+      <div class="opts">א׳ · מתנדב משבץ את עצמו במערכת &nbsp;|&nbsp; ב׳ · רק הרכז משבץ (המתנדבים ממשיכים בווטסאפ).</div>
+      <div class="rec">★ המלצתנו: לאפשר את שניהם – מי שרוצה משבץ עצמו, והרכז תמיד יכול לשבץ ידנית.</div>
+    </div>
+    <div class="q">
+      <div class="qnum">שאלה 3</div>
+      <h4>כמה משובים מצופים לכל פעילות?</h4>
+      <div class="opts">א׳ · משוב אחד לכל מתנדב משובץ (3 מתנדבים → 3 דוחות) &nbsp;|&nbsp; ב׳ · דוח אחד לכל פעילות.</div>
+      <div class="rec">★ המלצתנו: משוב לכל מתנדב, עם אפשרות לרכז לסמן "הושלם" ידנית.</div>
+    </div>
+    <div class="q">
+      <div class="qnum">שאלה 4</div>
+      <h4>מי רשאי לראות ולנהל את לוח הבקשות?</h4>
+      <div class="opts">אילו תפקידים (רכז מתנדבים / רכז משפחות / מנהל) יראו ויערכו את הלוח?</div>
+      <div class="rec">★ המלצתנו: רכז מתנדבים ומנהל מערכת – בהתאמה להרשאות הקיימות.</div>
+    </div>
+    <div class="q">
+      <div class="qnum">שאלה 5</div>
+      <h4>נתוני העבר מהאקסל?</h4>
+      <div class="opts">א׳ · לייבא את ההיסטוריה מהגיליונות הקיימים &nbsp;|&nbsp; ב׳ · להתחיל "דף חדש" מרגע ההשקה.</div>
+      <div class="rec">★ המלצתנו: להתחיל נקי – ולשקול ייבוא היסטורי רק אם יש בו צורך אמיתי.</div>
+    </div>
+  </div>
+
+  <!-- ============ NEXT STEPS ============ -->
+  <div class="card">
+    <h2><span class="ic">🚀</span> השלבים הבאים</h2>
+    <ol class="steps-final">
+      <li><b>אישור המסמך</b> – אתם מאשרים את התהליך והתשובות ל-5 השאלות.</li>
+      <li><b>סגירת אפיון סופי</b> – נעדכן את המסמך לפי החלטותיכם.</li>
+      <li><b>פיתוח</b> – בניית שתי הטבלאות, הטופס והלוח, וחיבור למשוב הקיים.</li>
+      <li><b>בדיקות מול הרכזים</b> – הרצה ניסיונית על מחזור אחד אמיתי.</li>
+      <li><b>עלייה לאוויר</b> – החלפת טופסי Google והאקסל בזרימה שבמערכת.</li>
+    </ol>
+    <div class="note win" style="margin-top:18px"><b>חשוב:</b> עד לאישורכם – לא בוצע שום שינוי במערכת. מסמך זה הוא הצעת תכנון בלבד.</div>
+  </div>
+
+  <footer>
+    נבנה עבור עמותת <b>חיוך של ילד</b> <span class="heart">🩷</span> · הצעת אפיון – ימי כיף וביקורי בית · יולי 2026
+  </footer>
+
+</div>
+</body>
+</html>
