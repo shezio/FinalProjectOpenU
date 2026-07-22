@@ -1,0 +1,123 @@
+/* Activity questionnaire — fun-day / house-visit toggle.
+   Reuses voucherquestionnaire.css for the card/group/error/submit/honeypot;
+   this file only adds the activity-type toggle at the top of the form. */
+
+.activity-type-toggle {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.activity-type-btn {
+  flex: 1;
+  padding: 14px 10px;
+  border: 2px solid #e5c1d4;
+  border-radius: 12px;
+  background: #fff;
+  color: #7a3b5c;
+  font-size: 18px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s, box-shadow 0.15s;
+}
+
+.activity-type-btn:hover {
+  border-color: #d6336c;
+}
+
+.activity-type-btn.active {
+  background: linear-gradient(135deg, #ec4899, #d6336c);
+  color: #fff;
+  border-color: #d6336c;
+  box-shadow: 0 4px 12px rgba(214, 51, 108, 0.3);
+}
+
+/* ── Toggle switch for boolean fields (shared; loads globally, also used by the
+   board). Replaces a כן/לא dropdown with an iOS-style switch. RTL: knob starts
+   on the right (off) and slides left (on). ───────────────────────────────── */
+.activity-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  user-select: none;
+}
+.activity-switch input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+.activity-switch-slider {
+  position: relative;
+  width: 52px;
+  height: 28px;
+  background: #cbd5e1;
+  border-radius: 999px;
+  transition: background 0.2s ease;
+  flex-shrink: 0;
+}
+.activity-switch-slider::before {
+  content: '';
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  width: 22px;
+  height: 22px;
+  background: #fff;
+  border-radius: 50%;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  transition: transform 0.2s ease;
+}
+.activity-switch input:checked + .activity-switch-slider {
+  background: linear-gradient(135deg, #ec4899, #d6336c);
+}
+.activity-switch input:checked + .activity-switch-slider::before {
+  transform: translateX(-24px);
+}
+.activity-switch input:focus-visible + .activity-switch-slider {
+  outline: 2px solid #d6336c;
+  outline-offset: 2px;
+}
+.activity-switch-text {
+  font-size: 16px;
+  font-weight: 600;
+  color: #374151;
+}
+
+/* ── "ימים מועדפים בשבוע" — weekday checkbox chips (house visit) ─────────── */
+.activity-days-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.activity-day-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 62px;
+  padding: 10px 14px;
+  border: 2px solid #e5c1d4;
+  border-radius: 12px;
+  background: #fff;
+  color: #7a3b5c;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.15s, color 0.15s, border-color 0.15s, box-shadow 0.15s;
+}
+.activity-day-chip input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+.activity-day-chip:hover { border-color: #d6336c; }
+.activity-day-chip.selected {
+  background: linear-gradient(135deg, #ec4899, #d6336c);
+  color: #fff;
+  border-color: #d6336c;
+  box-shadow: 0 3px 10px rgba(214, 51, 108, 0.25);
+}

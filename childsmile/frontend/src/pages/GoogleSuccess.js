@@ -55,9 +55,9 @@ const GoogleSuccess = () => {
         // Animate progress while loading
         const progressInterval = setInterval(() => {
           setProgress(prev => Math.min(prev + Math.random() * 8, 90));
-        }, 5000);
+        }, 3000);
 
-        const loginAnimationDelay = 5000;
+        const loginAnimationDelay = 3000;
         setStatusText('מכינים חיוך...');
         await new Promise(resolve => setTimeout(resolve, loginAnimationDelay));
 

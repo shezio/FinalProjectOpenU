@@ -451,6 +451,8 @@ urlpatterns = [
     path("api/financial-aid/", include("childsmile_app.urls_financial_aid")),
     # Vouchers (חלוקת תלושים) — admin-only, except /api/vouchers/public/* (public questionnaire)
     path("api/vouchers/", include("childsmile_app.urls_vouchers")),
+    # Fun Days & House Visits (ימי כיף וביקורי בית) — coordinator/admin, except /api/activities/public/* (public questionnaire)
+    path("api/activities/", include("childsmile_app.urls_activities")),
     # Twilio WhatsApp webhooks
     path("api/webhooks/whatsapp-incoming/", whatsapp_incoming, name="whatsapp_incoming"),
     # Notification Center

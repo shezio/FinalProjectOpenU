@@ -38,6 +38,9 @@ import OngoingExpensesReport from './pages/report_pages/OngoingExpensesReport'; 
 import FinancialAid from './pages/FinancialAid'; // Import the Financial Aid component (admin-only, desktop-only)
 import Vouchers from './pages/Vouchers'; // Import the Vouchers component (admin-only, desktop-only)
 import VoucherQuestionnaire from './pages/VoucherQuestionnaire'; // PUBLIC - no login required
+import ActivityQuestionnaire from './pages/ActivityQuestionnaire'; // PUBLIC - no login required (fun days & house visits)
+import ActivityBoard from './pages/ActivityBoard'; // Coordinator board (fun days & house visits)
+import ActivitySignup from './pages/ActivitySignup'; // Volunteer self-service (fun days & house visits)
 import FinanceOverview from './pages/FinanceOverview'; // Import the Finance Overview component (admin-only, desktop-only)
 import NotificationMessages from './pages/NotificationMessages'; // Import the Notification Messages management page
 
@@ -60,7 +63,7 @@ const App = () => {
   const location = useLocation();
   // Don't show the bell on login / registration / google-success (unauthenticated pages)
   const NO_BELL_PATHS = ['/', '/register', '/google-success'];
-  const showBell = !NO_BELL_PATHS.includes(location.pathname) && !location.pathname.startsWith('/voucher-questionnaire/');
+  const showBell = !NO_BELL_PATHS.includes(location.pathname) && !location.pathname.startsWith('/voucher-questionnaire/') && !location.pathname.startsWith('/activity-questionnaire/');
 
   return (
     <>
@@ -102,6 +105,9 @@ const App = () => {
       <Route path="/financial-aid" element={<FinancialAid />} /> {/* Financial Aid (סיוע כספי) - admin-only, desktop-only */}
       <Route path="/vouchers" element={<Vouchers />} /> {/* Vouchers (חלוקת תלושים) - admin-only, desktop-only */}
       <Route path="/voucher-questionnaire/:distributionId" element={<VoucherQuestionnaire />} /> {/* PUBLIC questionnaire - no login required */}
+      <Route path="/activity-questionnaire/:roundId" element={<ActivityQuestionnaire />} /> {/* PUBLIC questionnaire - no login required (fun days & house visits) */}
+      <Route path="/activity-board" element={<ActivityBoard />} /> {/* Fun days & house visits - coordinator board */}
+      <Route path="/activity-signup" element={<ActivitySignup />} /> {/* Fun days & house visits - volunteer self-service */}
       <Route path="/finance-overview" element={<FinanceOverview />} /> {/* Finance Overview (סקירה כללית) - admin-only, desktop-only */}
       <Route path="/notification-messages" element={<NotificationMessages />} /> {/* Notification Center management */}
       <Route path="*" element={<NotFound />} /> {/* 404 catch-all */}
