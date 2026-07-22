@@ -1,0 +1,41 @@
+TWILIO MESSAGE TEMPLATE FOR VOLUNTEER SELF-ASSIGN TO ACTIVITY (ימי כיף וביקורי בית)
+
+Template Name: activity_self_assign
+
+Template Body:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🙋 מתנדב שיבץ את עצמו לפעילות!
+
+שלום {{1}},
+
+המתנדב {{2}} שיבץ את עצמו ל{{3}} 🎉
+
+👤 עבור: {{4}}
+📍 עיר: {{5}}
+📅 תאריך מבוקש: {{6}}
+
+אנא צרו קשר עם המתנדב לתיאום סופי 🤝
+צוות חיוך של ילד
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Variables:
+  {{1}} = coordinator name, e.g. "טל"
+  {{2}} = volunteer name, e.g. "נויה דוידזון"
+  {{3}} = activity label — "יום כיף" or "ביקור בית"
+  {{4}} = child name, e.g. "רוי אוקנין"
+  {{5}} = city, e.g. "באר שבע"
+  {{6}} = requested date, e.g. "24/07/2026" (or "לא צוין")
+
+After creating this template in the Twilio Console / WhatsApp Content Editor,
+copy its Content SID and set it as the environment variable:
+
+  ACTIVITY_SELF_ASSIGN_SID=HX80b049839e33cef33f86dbce250d9641
+
+Sent to ALL Volunteer Coordinators when a volunteer self-assigns to an activity
+request in the system (whatsapp_utils.send_activity_assignment_whatsapp, called
+from activity_views._notify_coordinators_of_assignment). Prod-only + non-fatal.
+There is NO plain-text fallback: if this SID is not configured, the send is
+skipped and an error is logged (same convention as the monthly ongoing-expenses
+summary) — create this template and set the SID to enable the notification.

@@ -1350,3 +1350,200 @@ class NotificationMessage(models.Model):
         db_table = "childsmile_app_notification_message"
         ordering = ['-created_at']
 
+
+class ActivityRound(models.Model):
+    """
+    A single registration window (מחזור בקשות) for fun-day / house-visit activity
+    requests — e.g. "ימי כיף וביקורי בית – שבוע 31". Families submit ActivityRequest
+    rows into the currently-OPEN round via the public questionnaire; the coordinator
+    then processes them and volunteers sign up.
+
+    NEW feature (ימי כיף וביקורי בית). Modeled on VoucherDistribution (a round /
+    container that owns many public submissions). A round is type-AGNOSTIC — it
+    holds BOTH fun-day and house-visit requests, because per the approved spec the
+    family picks the activity type per submission via a single unified form (a
+    toggle), so the type lives on ActivityRequest, NOT here.
+
+    Table created via repo-root add_activity_tables.sql (NO Django migration —
+    same convention as the finance modules / vouchers).
+    """
+
+    class Status(models.TextChoices):
+        OPEN   = 'open',   'פתוח לרישום'
+        CLOSED = 'closed', 'סגור'
+
+    activity_round_id = models.AutoField(primary_key=True)
+    name = models.CharField(max_length=255)  # "שם המחזור"
+    status = models.CharField(max_length=10, choices=Status.choices, default=Status.OPEN)
+    start_date = models.DateField(null=True, blank=True)
+    end_date = models.DateField(null=True, blank=True)
+    notes = models.TextField(null=True, blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    updated_by = models.CharField(max_length=255, null=True, blank=True)
+
+    def __str__(self):
+        return f"ActivityRound #{self.activity_round_id} - {self.name}"
+
+    class Meta:
+        db_table = "childsmile_app_activityround"
+        ordering = ['-start_date', '-activity_round_id']
+
+
+class ActivityRequest(models.Model):
+    """
+    One family's request for a fun day / house visit (בקשת פעילות), plus the
+    processing fields the team fills in afterward. Built from 2 sources, same row:
+      (a) the family's own PUBLIC questionnaire submission (no login — same
+          "action of a non-user" precedent as the voucher questionnaire /
+          volunteer registration; see activity_views.py::submit_activity_request);
+      (b) processing fields (assigned_volunteer, status, linked_child,
+          feedback_received) filled by the coordinator / set on volunteer self-assign.
+
+    ONE unified form, TWO activity types (fun_day / house_visit) sharing this ONE
+    table — variant-specific fields are simply left blank for the other type
+    (limitations / favorite_activities apply only to fun_day; num_siblings /
+    full_address / preferred_days / has_safe_room only to house_visit), rather than
+    splitting into two tables, since every processing field is shared and the two
+    field sets mostly overlap. Same one-table-two-variants approach as
+    VoucherRecipient's עמותה / כללי variants.
+
+    Table created via repo-root add_activity_tables.sql (NO Django migration).
+    """
+
+    class ActivityType(models.TextChoices):
+        FUN_DAY     = 'fun_day',     'יום כיף'
+        HOUSE_VISIT = 'house_visit', 'ביקור בית'
+
+    class Status(models.TextChoices):
+        OPEN      = 'open',      'ממתין לשיבוץ'
+        ASSIGNED  = 'assigned',  'משובץ'
+        COMPLETED = 'completed', 'הושלם'
+        CANCELLED = 'cancelled', 'בוטל'
+
+    activity_request_id = models.AutoField(primary_key=True)
+    round = models.ForeignKey(
+        ActivityRound, on_delete=models.CASCADE, related_name='requests'
+    )
+    activity_type = models.CharField(max_length=15, choices=ActivityType.choices)
+    requested_date = models.DateField(null=True, blank=True)  # "תאריך מבוקש"
+
+    # ── Family-submitted detail fields (shared across both types) ────────────
+    child_name = models.CharField(max_length=255)  # "שם מלא של המטופל/ת"
+    # "מגדר" — free text (source has זכר/נקבה/בן/בת), kept as a small CharField
+    child_gender = models.CharField(max_length=20, null=True, blank=True)
+    # "גיל" — CharField (NOT Integer): the source data has half-years (e.g. "7.5")
+    child_age = models.CharField(max_length=10, null=True, blank=True)
+    parent_name = models.CharField(max_length=255, null=True, blank=True)  # "שם הורה"
+    parent_phone = models.CharField(max_length=20, null=True, blank=True)  # "טלפון הורה"
+    city = models.CharField(max_length=255, null=True, blank=True)  # "עיר מגורים"
+    treating_hospital = models.CharField(max_length=255, null=True, blank=True)  # "בית חולים מטפל"
+    notes = models.TextField(null=True, blank=True)  # "הערות / הארות"
+
+    # ── Fun-day-only fields ──────────────────────────────────────────────────
+    limitations = models.TextField(null=True, blank=True)  # "מגבלות שכדאי לדעת"
+    favorite_activities = models.TextField(null=True, blank=True)  # "פעילויות אהובות על הילד/ה"
+
+    # ── House-visit-only fields ──────────────────────────────────────────────
+    num_siblings = models.IntegerField(null=True, blank=True)  # "מספר אחים"
+    full_address = models.CharField(max_length=255, null=True, blank=True)  # "כתובת מלאה"
+    preferred_days = models.CharField(max_length=255, null=True, blank=True)  # "ימים מועדפים בשבוע"
+    has_safe_room = models.BooleanField(null=True, blank=True)  # "יש מרחב מוגן קרוב (ממ״ד)"
+
+    # ── Processing / tracking fields (filled by staff or on self-assign) ─────
+    # Free-text display name of the assigned volunteer (same idea as
+    # VoucherRecipient.assigned_volunteer) — set from a coordinator typing a
+    # WhatsApp claimer's name OR from a self-assigning system volunteer.
+    assigned_volunteer = models.CharField(max_length=255, null=True, blank=True)  # "מתנדב משובץ"
+    # Real link to the assigning system user (NULL when the coordinator only typed
+    # a free-text name). Enables "my activities" + coordinator notifications.
+    assigned_volunteer_staff = models.ForeignKey(
+        Staff, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='assigned_activity_requests'
+    )
+    status = models.CharField(max_length=15, choices=Status.choices, default=Status.OPEN)
+
+    # Optional link to an existing registered family — set MANUALLY by the
+    # coordinator (unlike Vouchers, the activity form does NOT collect the child's
+    # ת"ז, so there is no auto-match here; kept optional for future use).
+    linked_child = models.ForeignKey(
+        Children, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='activity_requests'
+    )
+
+    # Q3 (Liam's decision): the MINIMUM expected is ONE feedback per activity; any
+    # additional volunteer feedbacks on the same activity are a BONUS and are NOT
+    # tracked separately here. This flag = "at least one report received".
+    feedback_received = models.BooleanField(default=False)
+
+    submitted_at = models.DateTimeField(null=True, blank=True)  # "חותמת זמן" — NULL for manually-added rows
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    updated_by = models.CharField(max_length=255, null=True, blank=True)
+
+    def __str__(self):
+        return f"ActivityRequest #{self.activity_request_id} - {self.child_name} ({self.activity_type})"
+
+    class Meta:
+        db_table = "childsmile_app_activityrequest"
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['round'], name='idx_activityreq_round'),
+            models.Index(fields=['status'], name='idx_activityreq_status'),
+            models.Index(fields=['activity_type'], name='idx_activityreq_type'),
+        ]
+
+
+class ActivityAssignment(models.Model):
+    """
+    One volunteer's assignment to ONE activity request — a join row making the
+    who-is-assigned relationship a true MANY-to-many (a fun day / house visit is
+    run by a TEAM of volunteers, and a volunteer can be on many activities).
+
+    This table is the SOURCE OF TRUTH for who is on an activity. The older single
+    ActivityRequest.assigned_volunteer_staff FK + assigned_volunteer text are kept
+    only as a denormalized convenience (primary member + comma-joined names for
+    the board list / search), refreshed from these rows on every change.
+
+    Rows are created when a volunteer self-assigns (activity_views.py::
+    assign_self_to_activity) or a coordinator adds them from the board, and deleted
+    when a volunteer leaves or the coordinator removes them. ON DELETE CASCADE from
+    BOTH sides (deleting the request OR the staff row removes the assignment). The
+    (activity_request, staff) pair is UNIQUE — a volunteer can't join twice.
+
+    Table created via repo-root add_activity_assignments.sql (NO Django migration —
+    same convention as the rest of the feature / finance modules).
+    """
+
+    assignment_id = models.AutoField(primary_key=True)
+    activity_request = models.ForeignKey(
+        ActivityRequest, on_delete=models.CASCADE, related_name='assignments'
+    )
+    staff = models.ForeignKey(
+        Staff, on_delete=models.CASCADE, related_name='activity_assignments'
+    )
+    # Denormalized display name captured at assign time (mirrors
+    # ActivityRequest.assigned_volunteer; survives a later Staff rename).
+    volunteer_name = models.CharField(max_length=255, null=True, blank=True)
+    assigned_at = models.DateTimeField(auto_now_add=True)
+    updated_by = models.CharField(max_length=255, null=True, blank=True)
+
+    def __str__(self):
+        return f"ActivityAssignment #{self.assignment_id} - req {self.activity_request_id} / staff {self.staff_id}"
+
+    class Meta:
+        db_table = "childsmile_app_activityassignment"
+        ordering = ['assigned_at', 'assignment_id']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['activity_request', 'staff'],
+                name='uq_activityassignment_req_staff',
+            ),
+        ]
+        indexes = [
+            models.Index(fields=['activity_request'], name='idx_activityassign_req'),
+            models.Index(fields=['staff'], name='idx_activityassign_staff'),
+        ]
+

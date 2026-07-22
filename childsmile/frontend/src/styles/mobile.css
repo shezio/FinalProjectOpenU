@@ -305,6 +305,70 @@
     margin-right: 0 !important;
   }
 
+  /* ── Fun Days & House Visits — signup cards + board (mobile) ───────────── */
+  .activity-signup-grid {
+    grid-template-columns: 1fr !important;
+    gap: 14px !important;
+  }
+  .activity-signup-tabs {
+    gap: 8px !important;
+    margin-bottom: 16px !important;
+  }
+  .activity-signup-tab {
+    font-size: 16px !important;
+    padding: 8px 14px !important;
+  }
+  .activity-signup-refresh {
+    font-size: 15px !important;
+    padding: 8px 12px !important;
+  }
+  .activity-card-type { font-size: 19px !important; }
+  .activity-card-row { font-size: 16px !important; }
+  .activity-card-assign { font-size: 18px !important; }
+  .activity-card-leave { font-size: 16px !important; padding: 12px !important; }
+  /* "See who is already on it" team chips wrap on narrow screens */
+  .activity-card-team-label { font-size: 16px !important; }
+  .activity-card-team-names { gap: 6px !important; }
+  .activity-team-chip { font-size: 16px !important; padding: 4px 12px !important; }
+  .activity-signup-loading,
+  .activity-signup-empty { font-size: 18px !important; }
+  /* Board round title + action icons readable on phones (board reuses refunds table/modal) */
+  .activity-round-title { font-size: 16px !important; }
+  .activity-icon-btn { font-size: 22px !important; }
+
+  /* ── Public questionnaires (voucher + activity) — non-admin, families fill on
+     phones. The .voucher-form-card is a 2-col grid on desktop → 1-col on mobile.
+     These pages are standalone (no sidebar / not a -main-content), so the generic
+     mobile rules don't touch them — style them explicitly here. ─────────────── */
+  .voucher-form-page {
+    padding: 20px 12px !important;
+    align-items: flex-start !important;
+  }
+  .voucher-form-card {
+    grid-template-columns: 1fr !important;
+    padding: 22px 18px !important;
+    gap: 12px !important;
+    max-width: 100% !important;
+  }
+  .voucher-form-card h2 { font-size: 22px !important; }
+  .voucher-form-card > p,
+  .voucher-form-subtitle { font-size: 16px !important; }
+  .voucher-form-group label { font-size: 15px !important; }
+  .voucher-form-group input,
+  .voucher-form-group select,
+  .voucher-form-group textarea { font-size: 16px !important; }
+  .voucher-form-logo { max-width: 110px !important; }
+  .voucher-form-submit { font-size: 18px !important; padding: 14px !important; }
+  /* Activity questionnaire type toggle — keep side-by-side but shrink for phones */
+  .activity-type-toggle { gap: 8px !important; }
+  .activity-type-btn { font-size: 16px !important; padding: 12px 8px !important; }
+  /* Validation errors + the has_safe_room iOS-style switch readable on phones */
+  .voucher-form-error { font-size: 14px !important; }
+  .activity-switch-text { font-size: 15px !important; }
+  /* "ימים מועדפים" weekday chips — compact + wrapping on phones */
+  .activity-days-grid { gap: 8px !important; }
+  .activity-day-chip { font-size: 15px !important; min-width: 54px !important; padding: 9px 12px !important; }
+
   /* ── 5. Tasks page content area ───────────────────────────── */
   .tasks-page-content {
     padding: 8px 0 !important;

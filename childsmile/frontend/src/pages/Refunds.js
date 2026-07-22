@@ -776,7 +776,9 @@ const Refunds = () => {
 
       {/* Controls */}
       <div className="refunds-controls">
-        <button onClick={() => navigate('/finance-overview')}>← לסקירה כללית</button>
+        {isAdminUser && (
+          <button onClick={() => navigate('/finance-overview')}>← לסקירה כללית</button>
+        )}
         <button onClick={openCreateModal}>+ הגש בקשת החזר</button>
         <button onClick={fetchRefunds}>רענן</button>
         {isAdminUser && (

@@ -125,6 +125,12 @@ const Sidebar = () => {
   // Finance Overview (סקירה כללית) — aggregates Petty Cash + Ongoing Expenses (both admin-only),
   // so requires VIEW on both — effectively admin/Viewer-only, same as its underlying data.
   const hasPermissionToFinanceOverview   = isGuest || (hasViewPermissionForTable('pettycashexpense') && hasViewPermissionForTable('ongoingexpense'));
+  // Fun Days & House Visits (ימי כיף וביקורי בית) — the coordinator board is governed by the
+  // 'activityrequest' resource (Coordinator + Admin + Viewer); the volunteer self-signup
+  // page is shown to General Volunteers (its data is a separate de-identified endpoint).
+  const isGeneralVolunteer = roles.includes('General Volunteer');
+  const hasPermissionToActivityBoard  = !isOnlyReviewer && !isOnlyTutorOrVolunteer && (isGuest || hasViewPermissionForTable('activityrequest'));
+  const hasPermissionToActivitySignup = isGuest || isGeneralVolunteer;
   const hasPermissionToAnyReport       = !isOnlyReviewer && !isOnlyTutorOrVolunteer && (isGuest || hasViewPermissionForReports());
   const hasPermissionToSystemManagement = !isOnlyReviewer && (isGuest || hasDeletePermissionForTable('staff'));
   const hasPermissionToAuditLog        = !isOnlyReviewer && (isGuest || hasDeletePermissionForTable('staff'));
@@ -137,6 +143,7 @@ const Sidebar = () => {
   // its OWN existing permission gate (unchanged) — a non-admin who only has Refunds
   // access still only sees that one item here, same access as before this section existed.
   const hasFinanceSection     = hasPermissionToFinanceOverview || hasPermissionToRefunds || hasPermissionToPettyCash || hasPermissionToOngoingExpenses || hasPermissionToFinancialAid || hasPermissionToVouchers;
+  const hasActivitiesSection  = hasPermissionToActivityBoard || hasPermissionToActivitySignup;
   const hasManagementSection  = hasPermissionToAnyReport || hasPermissionToSystemManagement || hasPermissionToReviewer || hasPermissionToAuditLog;
 
   useEffect(() => {
@@ -161,6 +168,9 @@ const Sidebar = () => {
       hasPermissionToTutorships        && { path: '/tutorships',         icon: '🤝', label: 'חונכות' },
       hasPermissionToFeedbacks         && { path: '/feedbacks',          icon: '💬', label: 'משובים' },
       hasPermissionToRefunds           && { path: '/refunds',            icon: '💰', label: 'החזרי הוצאות' },
+      // Fun Days & House Visits — MUST be on mobile (volunteers sign up from their phones)
+      hasPermissionToActivityBoard     && { path: '/activity-board',     icon: '🎈', label: 'ימי כיף וביקורי בית' },
+      hasPermissionToActivitySignup    && { path: '/activity-signup',    icon: '🙋', label: 'שיבוץ לפעילויות' },
       // Reports page intentionally omitted from the MOBILE bottom nav (kept in desktop sidebar).
       hasPermissionToSystemManagement  && { path: '/system-management',  icon: '⚙️', label: 'ניהול מערכת' },
       hasPermissionToSystemManagement  && { path: '/meeting-management', icon: '📅', label: 'ניהול פגישות' },
@@ -347,7 +357,28 @@ const Sidebar = () => {
             )}
           </>
         )}
-
+        {/* ── ACTIVITIES (פעילויות) section ───────────────── */}
+        {hasActivitiesSection && (
+          <>
+            <SectionHeader sectionKey="activities" icon="🎈" label="פעילויות" {...sectionProps} />
+            {isSectionOpen('activities') && !isCollapsed && (
+              <div className="sidebar-section-items">
+                {hasPermissionToActivityBoard && (
+                  <NavBtn path="/activity-board" icon="🎈" label="ימי כיף וביקורי בית" {...navProps} />
+                )}
+                {hasPermissionToActivitySignup && (
+                  <NavBtn path="/activity-signup" icon="🙋" label="שיבוץ לפעילויות" {...navProps} />
+                )}
+              </div>
+            )}
+            {isCollapsed && (
+              <>
+                {hasPermissionToActivityBoard && <NavBtn path="/activity-board" icon="🎈" label="ימי כיף וביקורי בית" {...navProps} />}
+                {hasPermissionToActivitySignup && <NavBtn path="/activity-signup" icon="🙋" label="שיבוץ לפעילויות" {...navProps} />}
+              </>
+            )}
+          </>
+        )}
         {/* ── MANAGEMENT section ───────────────────── */}
         {hasManagementSection && (
           <>

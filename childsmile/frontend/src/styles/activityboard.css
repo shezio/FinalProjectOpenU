@@ -1,0 +1,147 @@
+/* Activity board (coordinator) — reuses refunds.css for the page shell / table /
+   modal / controls. This file defines ONLY the classes ActivityBoard.js uses
+   that refunds.css does not already provide. */
+
+/* ── Status badges (rounds + requests) ─────────────────────────────────── */
+.activity-badge {
+  display: inline-block;
+  padding: 3px 12px;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.activity-badge--open      { background: #fef3c7; color: #b45309; }  /* פתוח / ממתין לשיבוץ */
+.activity-badge--closed    { background: #e5e7eb; color: #374151; }  /* סגור */
+.activity-badge--assigned  { background: #dbeafe; color: #1d4ed8; }  /* משובץ */
+.activity-badge--completed { background: #d1fae5; color: #047857; }  /* הושלם */
+.activity-badge--cancelled { background: #fee2e2; color: #b91c1c; }  /* בוטל */
+
+/* ── Row action cluster ─────────────────────────────────────────────────── */
+.activity-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+.activity-icon-btn {
+  cursor: pointer;
+  font-size: 20px;
+  line-height: 1;
+  transition: transform 0.1s ease;
+}
+.activity-icon-btn:hover { transform: scale(1.2); }
+
+.activity-round-title {
+  font-size: 20px;
+  color: #4f46e5;
+  margin: 8px 0 16px;
+  width: 100%;
+}
+.activity-round-title strong { color: #312e81; }
+
+/* Checkbox row inside the request modal — override refund-form-group's full-width input */
+.refund-form-group.activity-checkbox-row label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 16px;
+}
+.refund-form-group.activity-checkbox-row input[type="checkbox"] {
+  width: auto;
+  margin: 0;
+}
+
+/* ── Modal save / delete buttons + small modal (not in refunds.css) ─────── */
+.refund-submit-btn {
+  margin-top: 18px;
+  padding: 12px 28px;
+  border: none;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #6366f1, #4f46e5);
+  color: #fff;
+  font-size: 18px;
+  font-weight: 700;
+  cursor: pointer;
+  width: 100%;
+  transition: opacity 0.2s ease;
+}
+.refund-submit-btn:hover { opacity: 0.9; }
+.refund-delete-btn {
+  background: linear-gradient(135deg, #ef4444, #b91c1c);
+}
+.refund-modal--small { max-width: 440px; }
+
+/* Round modal has only a handful of fields — the shared .refund-modal is 1200px
+   wide (built for the wide refund form), far too wide here. */
+.refund-modal.refund-modal--narrow { max-width: 520px; }
+
+/* Rounds grid — board-scoped font bump (does NOT touch the shared Refunds page,
+   which uses .refunds-table without this class). The in-cell "בקשות" btn-report
+   sits inside a <td> (not .refunds-controls) so it needs its own styling. */
+.activity-board-grid th,
+.activity-board-grid td {
+  font-size: 28px;
+}
+.activity-board-grid .btn-report {
+  padding: 6px 18px;
+  font-size: 22px;
+  border: none;
+  border-radius: 10px;
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.9), rgba(168, 85, 247, 0.9));
+  color: #fff;
+  cursor: pointer;
+}
+/* Badges + action icons were small next to the 28px cells — scale them up too */
+.activity-board-grid .activity-badge {
+  font-size: 22px;
+  padding: 5px 18px;
+}
+.activity-board-grid .activity-icon-btn {
+  font-size: 30px;
+}
+
+/* ── Pagination "X / Y" label ───────────────────────────────────────────── */
+.pagination-info {
+  padding: 0 12px;
+  font-size: 16px;
+  color: #374151;
+  align-self: center;
+}
+
+/* ── Assign-volunteer modal: read-only request summary ──────────────────── */
+.activity-request-summary {
+  background: rgba(99, 102, 241, 0.05);
+  border: 1px solid rgba(99, 102, 241, 0.15);
+  border-radius: 12px;
+  padding: 14px 18px;
+  margin-bottom: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.activity-summary-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  font-size: 17px;
+  line-height: 1.4;
+}
+.activity-summary-row > span { color: #6b7280; flex-shrink: 0; }
+.activity-summary-row > strong { color: #111827; text-align: left; }
+
+/* react-select ("מתנדב משובץ" picker) — same look as Feedbacks, sized for the
+   narrow assign modal so it is NOT oversized. */
+.activity-select__control {
+  min-height: 44px;
+  border-radius: 10px !important;
+  border-color: #d1d5db !important;
+  font-size: 16px;
+}
+.activity-select__control--is-focused {
+  border-color: #6366f1 !important;
+  box-shadow: 0 0 0 1px #6366f1 !important;
+}
+.activity-select__menu { font-size: 16px; z-index: 20; }
