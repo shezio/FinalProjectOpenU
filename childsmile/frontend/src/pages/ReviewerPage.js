@@ -19,12 +19,14 @@ const STATUS_OPTIONS = [
   { value: '', label: 'כל הסטטוסים' },
   { value: 'לא הושלמה', label: 'לא הושלמה' },
   { value: 'בביצוע',    label: 'בביצוע'    },
+  { value: 'המשך בירור', label: 'המשך בירור' },
   { value: 'הושלמה',    label: 'הושלמה'    },
 ];
 
 const STATUS_UPDATE_OPTIONS = [
   { value: 'לא הושלמה', label: 'לא הושלמה' },
   { value: 'בביצוע',    label: 'בביצוע'    },
+  { value: 'המשך בירור', label: 'המשך בירור' },
   { value: 'הושלמה',   label: 'הושלמה'   },
 ];
 
@@ -560,7 +562,7 @@ const ReviewerPage = () => {
                         <td>{task.child_last_review_talk_conducted || '---'}</td>
                         <td>
                           <span className={`reviewer-status-badge reviewer-status-${
-                            isCompleted ? 'done' : task.status === 'בביצוע' ? 'inprog' : 'pending'
+                            isCompleted ? 'done' : task.status === 'בביצוע' ? 'inprog' : task.status === 'המשך בירור' ? 'followup' : 'pending'
                           }`}>
                             {task.status}
                           </span>

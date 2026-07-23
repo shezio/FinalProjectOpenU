@@ -968,6 +968,74 @@ def delete_task(request, task_id):
         return JsonResponse({"error": str(e)}, status=500)
 
 
+def _notify_coordinator_review_followup(task, performed_by_staff):
+    """
+    Notify the family's responsible coordinator via WhatsApp that a review-talk
+    (שיחת ביקורת) task was moved to "המשך בירור" (needs continued clarification).
+    Special NPO request. Fully NON-FATAL — never breaks the status update if
+    anything here fails; skips silently (with a warning) if the coordinator can't
+    be resolved, has no phone, or the REVIEW_FOLLOWUP_SID template isn't set.
+    """
+    try:
+        from .whatsapp_utils import send_review_followup_whatsapp
+
+        child = task.related_child
+        if not child:
+            return
+
+        # responsible_coordinator is a CharField that normally holds the staff_id
+        # (numeric string); legacy/edge rows may hold a name or "ללא"/"Unknown".
+        coord_raw = (child.responsible_coordinator or "").strip()
+        coordinator = None
+        if coord_raw.isdigit():
+            coordinator = Staff.objects.filter(staff_id=int(coord_raw)).first()
+        elif coord_raw and coord_raw not in ("ללא", "Unknown", "---"):
+            parts = coord_raw.split()
+            if len(parts) >= 2:
+                coordinator = Staff.objects.filter(
+                    first_name=parts[0], last_name=" ".join(parts[1:])
+                ).first()
+
+        if not coordinator:
+            api_logger.warning(
+                f"[REVIEW_FOLLOWUP] Could not resolve responsible coordinator "
+                f"'{coord_raw}' for child {child.child_id} — WhatsApp skipped"
+            )
+            return
+        if not coordinator.staff_phone:
+            api_logger.warning(
+                f"[REVIEW_FOLLOWUP] Coordinator {coordinator.staff_id} has no staff_phone — WhatsApp skipped"
+            )
+            return
+
+        family_name = f"{child.childfirstname} {child.childsurname}".strip() or "המשפחה"
+        coord_name = f"{coordinator.first_name} {coordinator.last_name}".strip() or coordinator.username
+        flagged_by = "צוות הביקורת"
+        if performed_by_staff:
+            flagged_by = (
+                f"{performed_by_staff.first_name} {performed_by_staff.last_name}".strip()
+                or performed_by_staff.username
+            )
+
+        result = send_review_followup_whatsapp(
+            coordinator_phone=coordinator.staff_phone,
+            coordinator_name=coord_name,
+            family_name=family_name,
+            flagged_by=flagged_by,
+        )
+        if result.get("success"):
+            api_logger.info(
+                f"[REVIEW_FOLLOWUP] WhatsApp sent to coordinator {coordinator.staff_id} "
+                f"for child {child.child_id} (sid={result.get('message_sid')})"
+            )
+        else:
+            api_logger.warning(
+                f"[REVIEW_FOLLOWUP] WhatsApp NOT sent to coordinator {coordinator.staff_id}: {result.get('error')}"
+            )
+    except Exception as e:
+        api_logger.error(f"[REVIEW_FOLLOWUP] error (non-fatal): {e}")
+
+
 @conditional_csrf
 @api_view(["PUT"])
 @block_viewer_writes
@@ -1108,6 +1176,25 @@ def update_task_status(request, task_id):
                     api_logger.error(f"Error regenerating audit-call task descriptions for child {task.related_child.child_id}: {str(e)}")
             except Exception as e:
                 api_logger.error(f"Error updating last_review_talk_conducted for child {task.related_child_id}: {str(e)}")
+
+        # HANDLE REVIEW TALK "המשך בירור" (continued clarification) — special NPO request.
+        # When a שיחת ביקורת task is moved to "המשך בירור", WhatsApp the family's
+        # responsible coordinator (via the REVIEW_FOLLOWUP_SID template) so they know
+        # the family needs further follow-up before the review can be completed.
+        # Guarded by old_status != new_status so it fires only on the actual transition
+        # (not on a repeat save of the same status). Fully non-fatal.
+        if (
+            new_status == "המשך בירור"
+            and old_status != new_status
+            and task.task_type
+            and task.task_type.task_type == "שיחת ביקורת"
+            and task.related_child
+        ):
+            try:
+                performer = Staff.objects.filter(staff_id=user_id).first()
+                _notify_coordinator_review_followup(task, performer)
+            except Exception as e:
+                api_logger.error(f"Error sending review-followup WhatsApp for task {task_id}: {str(e)}")
 
         # HANDLE GROUP TASK COMPLETION - "צירוף משפחה לקבוצה" (Add family to group)
         if new_status == "הושלמה" and task.task_type and task.task_type.task_type == "צירוף משפחה לקבוצה" and task.related_child:

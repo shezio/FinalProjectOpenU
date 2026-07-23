@@ -1,0 +1,40 @@
+TWILIO MESSAGE TEMPLATE FOR REVIEW-TALK FOLLOW-UP (שיחת ביקורת — "המשך בירור")
+
+Template Name: review_followup_to_coordinator
+
+Template Body:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🔍 שיחת ביקורת — נדרש המשך בירור
+
+שלום {{1}},
+
+במסגרת שיחת הביקורת עבור המשפחה {{2}} עלה כי נדרש המשך בירור לפני סגירת המשימה.
+
+המשימה סומנה על ידי {{3}}.
+
+אנא בדקו את פרטי המשפחה והמשיכו בבירור לפי הצורך 🙏
+צוות חיוך של ילד
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Variables:
+  {{1}} = coordinator name (the family's responsible coordinator), e.g. "טל"
+  {{2}} = family / child name, e.g. "רוי אוקנין"
+  {{3}} = the staff member who moved the task to "המשך בירור", e.g. "נעם ניזרי"
+          (or "צוות הביקורת" if unknown)
+
+After creating this template in the Twilio Console / WhatsApp Content Editor,
+copy its Content SID and set it as the environment variable:
+
+  REVIEW_FOLLOWUP_SID=HXxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+Sent to the family's responsible coordinator when a "שיחת ביקורת" (monthly family
+review talk) task is moved to the status "המשך בירור" from the Reviewers page
+(whatsapp_utils.send_review_followup_whatsapp, called from
+task_views._notify_coordinator_review_followup inside update_task_status). Fires
+only on the actual transition into "המשך בירור", is fully non-fatal, and is NOT
+prod-gated (so it can be tested on dev too). There is NO plain-text fallback: if
+this SID is not configured, the send is skipped and an error is logged (same
+convention as TWILIO_ACTIVITY_SELF_ASSIGN_TEMPLATE.txt) — create this template
+and set the SID to enable the notification.
