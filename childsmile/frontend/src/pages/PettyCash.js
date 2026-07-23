@@ -256,6 +256,7 @@ const PettyCash = () => {
         <button onClick={openCreateModal}>+ הוצאה חדשה</button>
         <button onClick={fetchEntries}>רענן</button>
         <button onClick={() => exportPettyCashToExcel(filteredEntries, t)}>ייצוא לאקסל</button>
+        <button className="btn-report" onClick={() => navigate('/reports/petty-cash-report')}>דוח לפי תקופה</button>
         <input
           type="text"
           className="tutorship-search-bar"

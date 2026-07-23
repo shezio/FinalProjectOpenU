@@ -159,7 +159,10 @@ const Vouchers = () => {
   };
 
   const copyPublicLink = (dist) => {
-    const url = `${window.location.origin}/voucher-questionnaire/${dist.id}`;
+    // Prod uses HashRouter (see index.js) so the shareable link must include '/#',
+    // otherwise the static host returns a 404. Dev uses BrowserRouter (no hash).
+    const isProd = process.env.NODE_ENV === 'production';
+    const url = `${window.location.origin}${isProd ? '/#' : ''}/voucher-questionnaire/${dist.id}`;
     navigator.clipboard.writeText(url)
       .then(() => toast.success('הקישור לשאלון הועתק'))
       .catch(() => showErrorToast(t, 'שגיאה בהעתקת הקישור', ''));

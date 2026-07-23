@@ -2281,6 +2281,135 @@ export const exportOngoingExpensesReportToPDF = async (entries, period, selected
   }
 };
 
+// ── Petty Cash period report (קופה קטנה לפי תקופה) ──
+// Petty cash rows share the same { expense_date, amount } shape as Ongoing
+// Expenses, so these reuse the generic computeOngoingReportRows / period chart
+// helpers above rather than duplicating the aggregation + canvas code.
+export const exportPettyCashReportToExcel = async (entries, period, selectedYear) => {
+  const reportName = 'petty_cash_period_report';
+  const format = 'EXCEL';
+  try {
+    const periodRows = computeOngoingReportRows(entries || [], period, selectedYear);
+    const periodLabel = period === 'monthly' ? `חודשי — ${selectedYear}` : period === 'quarterly' ? `רבעוני — ${selectedYear}` : 'שנתי';
+
+    const sheetData = [
+      ['תקופה', "מס' הוצאות", 'סה"כ (₪)', 'ממוצע להוצאה (₪)'],
+      ...periodRows.map(r => [
+        r.label, r.count,
+        Number(r.amount).toFixed(2),
+        Number(r.count > 0 ? r.amount / r.count : 0).toFixed(2),
+      ]),
+    ];
+    const ws = XLSX.utils.aoa_to_sheet(sheetData);
+    ws['!dir'] = 'rtl';
+    ws['!cols'] = sheetData[0].map((_, i) => ({ wch: Math.max(...sheetData.map(r => (r[i] || '').toString().length)) + 2 }));
+
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, ws, `סיכום ${periodLabel}`);
+    XLSX.writeFile(workbook, `דוח_קופה_קטנה_${periodLabel}.xlsx`);
+    toast.success('הדוח יוצא בהצלחה');
+    await auditExportSuccess(format, (entries || []).length, reportName, ['petty_cash_report_data']);
+  } catch (error) {
+    console.error('Export failed:', error);
+    await auditExportFailure(format, reportName, error.message, 'TECHNICAL');
+    toast.error('שגיאה בייצוא הדוח');
+  }
+};
+
+export const exportPettyCashReportToPDF = async (entries, period, selectedYear) => {
+  const reportName = 'petty_cash_period_report';
+  const format = 'PDF';
+  try {
+    const safeEntries = entries || [];
+    const periodRows = computeOngoingReportRows(safeEntries, period, selectedYear);
+    const periodLabel = period === 'monthly' ? `חודשי — ${selectedYear}` : period === 'quarterly' ? `רבעוני — ${selectedYear}` : 'שנתי';
+
+    const doc = new jsPDF('landscape', 'mm', 'a4');
+    doc.addFileToVFS('Alef-Bold.ttf', AlefBold);
+    doc.addFont('Alef-Bold.ttf', 'Alef', 'bold');
+    doc.setFont('Alef', 'bold');
+
+    const pageW = doc.internal.pageSize.getWidth();
+
+    // Logo + title — use reverseText for Hebrew (jsPDF requires it for RTL)
+    doc.addImage(logo, 'PNG', 10, 6, 18, 18);
+    doc.setFontSize(16);
+    doc.text(reverseText(`דוח קופה קטנה — ${periodLabel}`), pageW / 2, 16, { align: 'center' });
+    doc.setFontSize(12);
+    const periodTypeLabel = period === 'monthly' ? 'חודש' : period === 'quarterly' ? 'רבעון' : 'שנה';
+    doc.text(reverseText(`סיכום לפי ${periodTypeLabel}`), pageW - 14, 28, { align: 'right' });
+
+    // Period summary table — reverse column array so PDF (LTR) matches UI (RTL) visual order
+    // Note: don't pass (₪) through reverseText — parens would flip to )₪(
+    doc.autoTable({
+      head: [[
+        reverseText('תקופה'),
+        reverseText("מס' הוצאות"),
+        reverseText('סה"כ') + ' (₪)',
+        reverseText('ממוצע להוצאה') + ' (₪)',
+      ].reverse()],
+      body: periodRows.map(r => [
+        reverseText(r.label),
+        r.count,
+        Number(r.amount).toFixed(2),
+        Number(r.count > 0 ? r.amount / r.count : 0).toFixed(2),
+      ].reverse()),
+      startY: 32,
+      styles: { font: 'Alef', fontSize: 9, halign: 'right' },
+      headStyles: { fillColor: [99, 102, 241], textColor: 255, halign: 'right' },
+    });
+
+    // Charts — pie (right) + vertical bar (left), side by side
+    if (safeEntries.length > 0 && periodRows.length > 0) {
+      const pageH = doc.internal.pageSize.getHeight();
+      const afterTable = doc.lastAutoTable.finalY + 10;
+      const chartsNeedH = 90;
+
+      let chartY;
+      if (afterTable + chartsNeedH > pageH) {
+        doc.addPage();
+        chartY = 20;
+      } else {
+        chartY = afterTable;
+      }
+
+      const chartH = 72;
+      const pieW = 100;
+      const barW = pageW - 28 - pieW - 6;
+
+      doc.setFontSize(9);
+
+      // Pie chart — right side
+      const pieImg = drawOngoingPeriodPieChart(periodRows);
+      const pieTitleLabel = period === 'monthly'
+        ? reverseText('התפלגות הוצאות לפי חודש')
+        : period === 'quarterly'
+          ? reverseText('התפלגות הוצאות לפי רבעון')
+          : reverseText('התפלגות הוצאות לפי שנה');
+      doc.text(pieTitleLabel, pageW - 14, chartY, { align: 'right' });
+      doc.addImage(pieImg, 'PNG', pageW - 14 - pieW, chartY + 5, pieW, chartH);
+
+      // Vertical bar chart — left side
+      const barImg = drawOngoingPeriodBarChart(periodRows, period);
+      const barTitleLabel = period === 'monthly'
+        ? reverseText(`סכומים לפי חודש — ${selectedYear}`)
+        : period === 'quarterly'
+          ? reverseText(`סכומים לפי רבעון — ${selectedYear}`)
+          : reverseText('סכומים לפי שנה');
+      doc.text(barTitleLabel, 14 + barW, chartY, { align: 'right' });
+      doc.addImage(barImg, 'PNG', 14, chartY + 5, barW, chartH);
+    }
+
+    doc.save(`דוח_קופה_קטנה_${periodLabel}.pdf`);
+    toast.success('הדוח יוצא בהצלחה');
+    await auditExportSuccess(format, safeEntries.length, reportName, ['petty_cash_report_data']);
+  } catch (error) {
+    console.error('Export failed:', error);
+    await auditExportFailure(format, reportName, error.message, 'TECHNICAL');
+    toast.error('שגיאה בייצוא הדוח');
+  }
+};
+
 // ── Finance mega-feature exports (קופה קטנה / הוצאות שוטפות / סקירה כללית) ──
 // Unlike the report_pages exports above (which require row checkboxes / a
 // .selected flag), these finance pages are simple admin CRUD tables with no
