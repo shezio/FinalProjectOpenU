@@ -113,6 +113,10 @@ const Reports = () => {
   const ongoing_expenses_report_permissions = [{ resource: 'childsmile_app_ongoingexpense', action: 'UPDATE' }];
   const hasPermissionToOngoingExpensesReport = hasSomePermissions(ongoing_expenses_report_permissions);
 
+  // Petty Cash Report — requires UPDATE on pettycashexpense (admin-only module)
+  const petty_cash_report_permissions = [{ resource: 'childsmile_app_pettycashexpense', action: 'UPDATE' }];
+  const hasPermissionToPettyCashReport = hasSomePermissions(petty_cash_report_permissions);
+
   const reportDetails = {
     get_families_per_location_report:         { name: 'דוח משפחות לפי מיקום',                       path: '/reports/families_per_location_report',              category: 'families' },
     new_families_report:                      { name: 'דוח משפחות חדשות מהחודש האחרון',              path: '/reports/new-families-report',                       category: 'families' },
@@ -128,6 +132,7 @@ const Reports = () => {
     roles_spread_stats_report:                { name: 'דוח התפלגות הרשאות',                          path: '/reports/roles_spread_stats_report',                 category: 'volunteers' },
     refunds_per_timeperiod:                   { name: 'דוח החזרי הוצאות לפי תקופה',                  path: '/reports/refunds-report',                                    category: 'finances' },
     ongoing_expenses_per_timeperiod:          { name: 'דוח הוצאות שוטפות לפי תקופה',                 path: '/reports/ongoing-expenses-report',                           category: 'finances' },
+    petty_cash_per_timeperiod:                { name: 'דוח קופה קטנה לפי תקופה',                     path: '/reports/petty-cash-report',                                 category: 'finances' },
   };
 
   const reportPermissions = {
@@ -145,6 +150,7 @@ const Reports = () => {
     families_duplicate_report: hasPermissionToFamiliesDuplicateReport,
     refunds_per_timeperiod: hasPermissionToRefundsReport,
     ongoing_expenses_per_timeperiod: hasPermissionToOngoingExpensesReport,
+    petty_cash_per_timeperiod: hasPermissionToPettyCashReport,
   };
 
   const categoryLabels = { all: 'הכל', families: 'משפחות', volunteers: 'מתנדבים', finances: 'כספים' };

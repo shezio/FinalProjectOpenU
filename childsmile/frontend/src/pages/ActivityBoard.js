@@ -114,7 +114,10 @@ const ActivityBoard = () => {
   const backToRounds = () => { setView('rounds'); setSelectedRound(null); setRequests([]); };
 
   const copyPublicLink = (round) => {
-    const url = `${window.location.origin}/activity-questionnaire/${round.id}`;
+    // Prod uses HashRouter (see index.js) so the shareable link must include '/#',
+    // otherwise the static host returns a 404. Dev uses BrowserRouter (no hash).
+    const isProd = process.env.NODE_ENV === 'production';
+    const url = `${window.location.origin}${isProd ? '/#' : ''}/activity-questionnaire/${round.id}`;
     navigator.clipboard.writeText(url)
       .then(() => toast.success('הקישור לשאלון הועתק'))
       .catch(() => showErrorToast(null, 'שגיאה בהעתקת הקישור', ''));

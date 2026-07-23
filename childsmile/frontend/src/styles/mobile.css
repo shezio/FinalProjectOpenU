@@ -24,6 +24,16 @@
     min-height: 100dvh !important;
   }
 
+  /* Public questionnaires (voucher + activity) render <div class="voucher-form-page">
+     — tall forms, like registration. Release the body overflow:hidden (section 1) so
+     the whole form can scroll on phones; otherwise everything below the fold is
+     clipped and unreachable. Covers BOTH questionnaires (shared .voucher-form-page). */
+  body:has(.voucher-form-page) {
+    overflow-y: auto !important;
+    height: auto !important;
+    min-height: 100dvh !important;
+  }
+
   .registration-form {
     width: 90% !important;
     margin: 20px auto 40px !important;

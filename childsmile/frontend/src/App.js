@@ -33,6 +33,7 @@ import NotFound from './pages/NotFound'; // Import the 404 Not Found page
 import Refunds from './pages/Refunds'; // Import the Expense Refunds component
 import RefundsReport from './pages/report_pages/RefundsReport'; // Import the Expense Refunds Report component
 import PettyCash from './pages/PettyCash'; // Import the Petty Cash component (admin-only, desktop-only)
+import PettyCashReport from './pages/report_pages/PettyCashReport'; // Import the Petty Cash Report component
 import OngoingExpenses from './pages/OngoingExpenses'; // Import the Ongoing Expenses component (admin-only, desktop-only)
 import OngoingExpensesReport from './pages/report_pages/OngoingExpensesReport'; // Import the Ongoing Expenses Report component
 import FinancialAid from './pages/FinancialAid'; // Import the Financial Aid component (admin-only, desktop-only)
@@ -100,6 +101,7 @@ const App = () => {
       <Route path="/refunds" element={<Refunds />} /> {/* Expense Refunds (החזרי הוצאות) */}
       <Route path="/reports/refunds-report" element={<RefundsReport />} /> {/* Expense Refunds Report */}
       <Route path="/petty-cash" element={<PettyCash />} /> {/* Petty Cash (קופה קטנה) - admin-only, desktop-only */}
+      <Route path="/reports/petty-cash-report" element={<PettyCashReport />} /> {/* Petty Cash Report (קופה קטנה לפי תקופה) */}
       <Route path="/ongoing-expenses" element={<OngoingExpenses />} /> {/* Ongoing Expenses (הוצאות שוטפות) - admin-only, desktop-only */}
       <Route path="/reports/ongoing-expenses-report" element={<OngoingExpensesReport />} /> {/* Ongoing Expenses Report (הוצאות שוטפות לפי תקופה) */}
       <Route path="/financial-aid" element={<FinancialAid />} /> {/* Financial Aid (סיוע כספי) - admin-only, desktop-only */}

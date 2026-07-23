@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>מדריך למתנדב/ת — שיבוץ לפעילויות</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body {
+    font-family: 'Rubik', 'Segoe UI', Arial, sans-serif;
+    color: #1f2937; background: #fdf2f8; line-height: 1.75; padding: 32px 16px;
+  }
+  .page { max-width: 860px; margin: 0 auto; }
+
+  .cover {
+    background: linear-gradient(135deg, #ec4899, #d6336c 60%, #9d174d);
+    color: #fff; border-radius: 22px; padding: 40px 44px;
+    box-shadow: 0 10px 30px rgba(214,51,108,0.35); margin-bottom: 28px; position: relative; overflow: hidden;
+  }
+  .cover::after { content: "🙋"; position: absolute; font-size: 190px; left: -14px; bottom: -46px; opacity: 0.14; }
+  .cover .kicker { font-size: 18px; font-weight: 600; opacity: 0.92; letter-spacing: .5px; }
+  .cover h1 { font-size: 40px; font-weight: 800; margin: 6px 0 10px; }
+  .cover p { font-size: 19px; opacity: 0.96; max-width: 620px; }
+  .cover .badge {
+    display: inline-block; margin-top: 18px; background: rgba(255,255,255,0.20);
+    border: 1px solid rgba(255,255,255,0.4); padding: 8px 18px; border-radius: 999px; font-size: 16px; font-weight: 600;
+  }
+
+  .print-hint {
+    background: #ecfdf5; border: 1px solid #a7f3d0; color: #065f46; border-radius: 12px;
+    padding: 12px 18px; margin-bottom: 26px; font-size: 15px; display: flex; align-items: center;
+    gap: 10px; justify-content: space-between; flex-wrap: wrap;
+  }
+  .print-btn {
+    background: linear-gradient(135deg, #10b981, #059669); color: #fff; border: none;
+    padding: 10px 22px; border-radius: 10px; font-size: 15px; font-weight: 700; cursor: pointer; font-family: inherit;
+  }
+
+  h2.section {
+    font-size: 26px; font-weight: 800; color: #be185d; margin: 34px 0 16px;
+    padding-bottom: 8px; border-bottom: 3px solid #fbcfe8; display: flex; align-items: center; gap: 12px;
+  }
+  h2.section .num {
+    background: linear-gradient(135deg, #ec4899, #d6336c); color: #fff; width: 40px; height: 40px;
+    border-radius: 12px; display: inline-flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0;
+  }
+
+  .card {
+    background: #fff; border-radius: 16px; padding: 22px 26px; margin-bottom: 18px;
+    box-shadow: 0 3px 12px rgba(0,0,0,0.06); border: 1px solid #fce7f3;
+  }
+  .card h3 { font-size: 20px; color: #9d174d; margin-bottom: 10px; }
+
+  ol.steps { list-style: none; counter-reset: step; }
+  ol.steps > li { counter-increment: step; position: relative; padding: 10px 52px 10px 8px; margin-bottom: 6px; font-size: 18px; }
+  ol.steps > li::before {
+    content: counter(step); position: absolute; right: 8px; top: 8px; background: #fce7f3; color: #be185d;
+    font-weight: 700; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px;
+  }
+  ul.plain { list-style: none; }
+  ul.plain > li { padding: 6px 26px 6px 0; position: relative; font-size: 18px; }
+  ul.plain > li::before { content: "◂"; position: absolute; right: 6px; color: #f472b6; }
+
+  .ui { background: #fdf2f8; border: 1px solid #fbcfe8; border-radius: 7px; padding: 1px 9px; font-weight: 600; white-space: nowrap; }
+  .btn-demo {
+    display: inline-block; background: linear-gradient(135deg, #ec4899, #d6336c); color: #fff;
+    padding: 6px 18px; border-radius: 10px; font-weight: 700; font-size: 16px;
+  }
+  .btn-leave {
+    display: inline-block; background: #fff; color: #b91c1c; border: 2px solid #f3c0c0;
+    padding: 5px 16px; border-radius: 10px; font-weight: 700; font-size: 16px;
+  }
+
+  .callout { border-radius: 12px; padding: 14px 18px; margin: 14px 0; font-size: 16px; border-right: 5px solid; }
+  .tip { background: #fdf2f8; border-color: #ec4899; }
+  .info { background: #eff6ff; border-color: #3b82f6; }
+  .callout .lead { font-weight: 700; display: block; margin-bottom: 3px; }
+
+  table.legend { width: 100%; border-collapse: collapse; background: #fff; border-radius: 14px; overflow: hidden; box-shadow: 0 3px 12px rgba(0,0,0,0.06); }
+  table.legend td { padding: 11px 16px; border-bottom: 1px solid #fdf2f8; font-size: 16px; }
+  table.legend tr td:first-child { width: 70px; font-size: 24px; text-align: center; background: #fdf2f8; }
+  table.legend tr:last-child td { border-bottom: none; }
+
+  footer { text-align: center; color: #9ca3af; font-size: 14px; margin-top: 34px; padding-top: 16px; border-top: 1px dashed #fbcfe8; }
+
+  @media print {
+    body { background: #fff; padding: 0; font-size: 13px; }
+    .print-hint { display: none; }
+    .cover { box-shadow: none; border-radius: 0; }
+    .card, table.legend { box-shadow: none; break-inside: avoid; }
+    h2.section { break-after: avoid; }
+  }
+  @media (max-width: 600px) { .cover h1 { font-size: 30px; } }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="cover">
+    <div class="kicker">חיוך של ילד · מדריך למתנדב/ת</div>
+    <h1>שיבוץ לפעילויות</h1>
+    <p>כך מוצאים ימי כיף וביקורי בית פנויים, משבצים את עצמכם, ורואים מי עוד בצוות — הכל מהטלפון.</p>
+    <span class="badge">🙋 מיועד למתנדבים/ות וחונכים/ות</span>
+  </div>
+
+  <div class="print-hint">
+    <span>💡 לשמירה כקובץ PDF: לחצו על הכפתור או הקישו <b>Ctrl/Cmd + P</b> ובחרו "שמירה כ‑PDF".</span>
+    <button class="print-btn" onclick="window.print()">🖨️ הדפסה / שמירה כ‑PDF</button>
+  </div>
+
+  <div class="card">
+    <h3>מה זה?</h3>
+    <p>במקום לחכות להודעה בקבוצת הוואטסאפ ולכתוב "אני לוקח/ת 🙏", אפשר להיכנס למערכת, לראות אילו פעילויות פנויות מחכות למתנדבים — ולשבץ את עצמכם בלחיצה אחת. אפשר גם לראות מי כבר נרשם, ולהצטרף אליו לאותה פעילות.</p>
+  </div>
+
+  <h2 class="section"><span class="num">1</span> כניסה למסך</h2>
+  <div class="card">
+    <ul class="plain">
+      <li>בתפריט לחצו על <span class="ui">🙋 שיבוץ לפעילויות</span>.</li>
+      <li>יש שתי לשוניות: <span class="ui">פעילויות פנויות</span> (להצטרפות) ו־<span class="ui">הפעילויות שלי</span> (מה שכבר שובצתם אליו).</li>
+      <li>כפתור <span class="ui">🔄 רענן</span> מרענן את הרשימות.</li>
+    </ul>
+  </div>
+
+  <h2 class="section"><span class="num">2</span> להצטרף לפעילות</h2>
+  <div class="card">
+    <p>בלשונית <span class="ui">פעילויות פנויות</span> כל כרטיס מציג פרטים כלליים בלבד — <b>ללא שם ילד או טלפון</b> — כדי לשמור על פרטיות המשפחה:</p>
+    <ul class="plain">
+      <li>🎉 יום כיף / 🏠 ביקור בית · 📍 עיר · 🎂 גיל · 👫 מין · 📅 תאריך.</li>
+      <li>אם כבר יש מתנדבים בפעילות תראו אותם תחת <b>"כבר על הפעילות"</b>.</li>
+    </ul>
+    <ol class="steps">
+      <li>מצאו פעילות שמתאימה לכם.</li>
+      <li>לחצו על <span class="btn-demo">אני משתבץ/ת 🙋</span></li>
+      <li>זהו! הפעילות עברה ללשונית <span class="ui">הפעילויות שלי</span>, ושם יופיעו כל פרטי הקשר.</li>
+    </ol>
+    <div class="callout tip"><span class="lead">💡 אפשר יותר מאחת</span> אפשר לשבץ את עצמכם ל<b>כמה פעילויות</b>, וכמה מתנדבים יכולים להיות באותה פעילות — אתם צוות! אין הגבלה על מספר המתנדבים לפעילות.</div>
+  </div>
+
+  <h2 class="section"><span class="num">3</span> הפעילויות שלי</h2>
+  <div class="card">
+    <p>בלשונית <span class="ui">הפעילויות שלי</span> תראו את הפעילויות שלכם עם כל מה שצריך כדי לצאת לדרך:</p>
+    <ul class="plain">
+      <li>👤 שם המטופל/ת · 📍 עיר · 📅 תאריך · 👪 הורה · 📱 טלפון · 🏠 כתובת · 🏥 בית חולים.</li>
+      <li>תחת <b>"הצוות"</b> תראו את שאר המתנדבים שמשובצים לאותה פעילות — כדי לתאם ביניכם.</li>
+    </ul>
+    <div class="callout info"><span class="lead">↩️ נבצר מכם?</span> אם אתם לא יכולים להגיע, לחצו על <span class="btn-leave">בטל שיבוץ</span> בכרטיס. הפעילות תחזור לרשימת הפנויות ומתנדב אחר יוכל לקחת אותה.</div>
+  </div>
+
+  <h2 class="section"><span class="num">4</span> מה קורה אחרי שמשבצים?</h2>
+  <div class="card">
+    <ul class="plain">
+      <li>הרכז/ת מקבל/ת התראה על השיבוץ שלכם ו<b>יוצר/ת איתכם קשר</b> להמשך התיאום.</li>
+      <li>אחרי הפעילות — כמו תמיד — ממלאים משוב/דו"ח על מה שהיה. 🩷</li>
+    </ul>
+  </div>
+
+  <h2 class="section"><span class="num">5</span> מקרא אייקונים</h2>
+  <table class="legend">
+    <tr><td>🙋</td><td>כניסה למסך "שיבוץ לפעילויות" / שיבוץ עצמי לפעילות</td></tr>
+    <tr><td>🎉 / 🏠</td><td>יום כיף / ביקור בית</td></tr>
+    <tr><td>📍 🎂 👫 📅</td><td>עיר · גיל · מין · תאריך הפעילות</td></tr>
+    <tr><td>👤 👪 📱 🏥</td><td>פרטי הקשר בלשונית "הפעילויות שלי"</td></tr>
+    <tr><td>🔄</td><td>רענון הרשימות</td></tr>
+  </table>
+
+  <div class="callout tip" style="margin-top:22px">
+    <span class="lead">🩷 תודה שאתם מתנדבים!</span>
+    כל שיבוץ שלכם = יום שמח יותר לילד ולמשפחה. אם משהו לא ברור — פנו לרכז/ת שלכם.
+  </div>
+
+  <footer>מדריך מתנדב/ת · שיבוץ לפעילויות · עמותת "חיוך של ילד"</footer>
+</div>
+</body>
+</html>
