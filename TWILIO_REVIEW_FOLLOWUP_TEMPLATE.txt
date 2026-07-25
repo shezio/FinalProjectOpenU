@@ -27,7 +27,7 @@ Variables:
 After creating this template in the Twilio Console / WhatsApp Content Editor,
 copy its Content SID and set it as the environment variable:
 
-  REVIEW_FOLLOWUP_SID=HXxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+  REVIEW_FOLLOWUP_SID=HX347212d5fbf3af99b0f0c61f34cf4984
 
 Sent to the family's responsible coordinator when a "שיחת ביקורת" (monthly family
 review talk) task is moved to the status "המשך בירור" from the Reviewers page
