@@ -36,6 +36,7 @@ const resources = {
       "לא הושלמה": "not completed",
       "בביצוע": "in progress",
       "הושלמה": "completed",
+      "המשך בירור": "continued clarification",
       "Confirm Update": "Confirm Update",
       "Edit Task": "Edit Task",
       "Task Type": "Task Type",

@@ -22,6 +22,13 @@ const statusColumns = [
   { key: "הושלמה", label: "הושלמה" }
 ];
 
+// A review-talk task flagged "המשך בירור" (set from the Reviewers page) has no
+// column of its own on this board (by design — NPO request managed via ReviewerPage).
+// Group it under "בביצוע" so it stays visible here instead of silently
+// disappearing — it's a pre-completion state.
+const statusMatchesColumn = (status, colKey) =>
+  status === colKey || (colKey === 'בביצוע' && status === 'המשך בירור');
+
 const getFirstDayOfMonth = () => {
   const now = new Date();
   // Get the last day of the previous month by setting day to 0 of current month
@@ -392,12 +399,12 @@ const Tasks = () => {
         // "Show only my tasks" (admins) overrides every other filter — just the
         // current user's own OPEN assigned tasks (done tasks are hidden — no need).
         return showOnlyMyTasks
-          ? task.assignee === currentUsername && task.status === col.key && task.status !== 'הושלמה'
+          ? task.assignee === currentUsername && statusMatchesColumn(task.status, col.key) && task.status !== 'הושלמה'
           : (!selectedFilter || task.type === parseInt(selectedFilter)) &&
             (!selectedChildFilter || task.child === parseInt(selectedChildFilter)) &&
             // For admins: apply task type filters; for non-admins: show all
             (isUserAdmin() ? selectedTaskTypeFilters[task.type] !== false : true) &&
-            task.status === col.key;
+            statusMatchesColumn(task.status, col.key);
       });
     return acc;
   }, {});

@@ -490,6 +490,7 @@
 .reviewer-status-done    { background: #d4edda; color: #155724; }
 .reviewer-status-inprog  { background: #fff3cd; color: #856404; }
 .reviewer-status-pending { background: #e8eef6; color: #1a3a5c; }
+.reviewer-status-followup { background: #ede7f6; color: #5e35b1; }
 
 /* ---- Action buttons cell ---- */
 .reviewer-actions-cell {

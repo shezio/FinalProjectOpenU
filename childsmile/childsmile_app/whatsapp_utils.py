@@ -333,6 +333,48 @@ def send_activity_assignment_whatsapp(coordinator_phone, coordinator_name, volun
     )
 
 
+def send_review_followup_whatsapp(coordinator_phone, coordinator_name, family_name, flagged_by):
+    """
+    Notify a family's responsible coordinator via WhatsApp that a review-talk
+    (שיחת ביקורת) task was flagged "המשך בירור" (needs continued clarification) —
+    a special NPO request. Uses the REVIEW_FOLLOWUP_SID content template.
+
+    NO plain-text fallback (same convention as send_activity_assignment_whatsapp):
+    if the SID is not configured the send is skipped and an error is logged. See
+    TWILIO_REVIEW_FOLLOWUP_TEMPLATE.txt.
+
+    Args:
+        coordinator_phone (str): Coordinator's phone (any format, e.g. "054-2652949").
+        coordinator_name (str): Coordinator's full name.
+        family_name (str): The family / child the review talk is about.
+        flagged_by (str): The staff member who moved the task to "המשך בירור".
+
+    Returns:
+        dict: Response from send_whatsapp_message, or an error dict if the SID is unset.
+    """
+    template_sid = os.getenv('REVIEW_FOLLOWUP_SID', '').strip()
+    if not template_sid:
+        api_logger.error(
+            "REVIEW_FOLLOWUP_SID not configured — review-followup WhatsApp skipped "
+            f"(coordinator {coordinator_name})"
+        )
+        return {"success": False, "error": "REVIEW_FOLLOWUP_SID not configured", "phone": coordinator_phone}
+
+    # Twilio content template with 3 numbered variables
+    template_variables = {
+        "1": coordinator_name,
+        "2": family_name,
+        "3": flagged_by,
+    }
+    return send_whatsapp_message(
+        coordinator_phone,
+        message_body=None,
+        use_template=True,
+        template_sid=template_sid,
+        template_variables=template_variables
+    )
+
+
 def send_coordinator_notification_whatsapp_family(coordinator_phone, coordinator_name, child_name, child_age, child_gender, parent_phone, child_city, child_hospital, tutoring_status, registration_date):
     """
     Send a WhatsApp notification to a Tutored Families Coordinator about a new family needing a tutor.
