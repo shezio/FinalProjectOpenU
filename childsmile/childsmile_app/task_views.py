@@ -1661,7 +1661,7 @@ def update_task_status(request, task_id):
                 'task_type': task.task_type.task_type if task.task_type else 'Unknown',
                 'old_status': old_status,
                 'new_status': new_status,
-                'field_changes': [f"Status: '{new_status}' → '{old_status}'"],
+                'field_changes': [f"Status: '{old_status}' → '{new_status}'"],
                 'changes_count': 1
             }
         )
@@ -1975,7 +1975,7 @@ def update_task(request, task_id):
         if original_description != task.description:
             field_changes.append("Description changed")
         if original_status != task.status:
-            field_changes.append(f"Status: '{task.status}' → '{original_status}'")
+            field_changes.append(f"Status: '{original_status}' → '{task.status}'")
         if original_assigned_to != task.assigned_to_id:
             old_name = "Unknown"
             new_name = "Unknown"

@@ -124,11 +124,16 @@ const ActivityBoard = () => {
   };
 
   // De-identified WhatsApp summary of the OPEN (unassigned) requests, in the same
-  // "עיר גיל מין" shape the coordinators post in the group today.
+  // "עיר גיל מין (סוג פעילות)" shape the coordinators post in the group today.
+  // The activity type is appended so a mixed list (fun days + house visits) is clear.
   const copyWhatsappSummary = () => {
     const open = requests.filter(r => r.status === 'open');
     if (open.length === 0) { toast.info('אין בקשות פנויות לשיבוץ'); return; }
-    const lines = open.map(r => [r.city || '', r.child_age || '', r.child_gender || ''].filter(Boolean).join(' '));
+    const lines = open.map(r => {
+      const base = [r.city || '', r.child_age || '', r.child_gender || ''].filter(Boolean).join(' ');
+      const typeLabel = ACTIVITY_TYPE_LABELS[r.activity_type] || r.activity_type;
+      return typeLabel ? `${base} (${typeLabel})` : base;
+    });
     const header = 'בוקר טוב חברים 🩷\nמצרפת רשימה מעודכנת — מי שיכול בבקשה לכתוב כאן 🙏\n';
     const text = `${header}\n${lines.join('\n')}`;
     navigator.clipboard.writeText(text)
