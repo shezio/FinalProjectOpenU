@@ -23,6 +23,7 @@ from .utils import create_task_internal
 
 # Import WhatsApp utils if available (optional feature - graceful fallback)
 from .whatsapp_utils import send_coordinator_notification_whatsapp, send_coordinator_notification_whatsapp_family, send_coordinator_notification_whatsapp_family_with_age_unit, send_family_left_tutorship_whatsapp
+from .notification_mute import is_whatsapp_muted
 
 
 # ============================================================================
@@ -246,6 +247,8 @@ def create_tasks_for_admins(staff_user_id, user_name, user_email):
                         api_logger.warning(f"⚠️ IS_PROD=False — WhatsApp skipped for coordinator {staff_member.staff_id} ({staff_member.email})")
                     elif not staff_member.staff_phone:
                         api_logger.warning(f"⚠️ Coordinator {staff_member.staff_id} ({staff_member.email}) has NO staff_phone in DB — WhatsApp notification will NOT be sent")
+                    elif is_whatsapp_muted(staff_member, 'new_volunteer_registration'):
+                        api_logger.info(f"🔕 Coordinator {staff_member.staff_id} muted 'new_volunteer_registration' — WhatsApp skipped")
                     else:
                         api_logger.info(f"📱 Sending WhatsApp to coordinator {staff_member.staff_id} at {staff_member.staff_phone}")
                         try:
@@ -520,7 +523,7 @@ def notify_tutored_families_coordinators(child_id):
             )
             
             # Send WhatsApp message to coordinator (prod only)
-            if coordinator.staff_phone and getattr(settings, 'IS_PROD', False):
+            if coordinator.staff_phone and getattr(settings, 'IS_PROD', False) and not is_whatsapp_muted(coordinator, 'new_family_needs_tutor'):
                 try:
                     whatsapp_result = send_coordinator_notification_whatsapp_family(
                         coordinator_phone=coordinator.staff_phone,
@@ -735,7 +738,7 @@ def notify_tutored_coordinators_family_left(child_id, new_tutoring_status):
                 api_logger.error(f"❌ notify_tutored_coordinators_family_left: email failed for {coordinator.email}: {mail_err}")
 
             # WhatsApp (prod only)
-            if coordinator.staff_phone:# and getattr(settings, 'IS_PROD', False):
+            if coordinator.staff_phone and not is_whatsapp_muted(coordinator, 'family_left_tutorship'):# and getattr(settings, 'IS_PROD', False):
                 try:
                     wa_result = send_family_left_tutorship_whatsapp(
                         coordinator_phone=coordinator.staff_phone,
@@ -925,7 +928,7 @@ def notify_families_coordinator_of_new_family(child_id):
                 )
 
             # WhatsApp (prod only, same template as admin/tutored coordinator)
-            if coordinator.staff_phone and getattr(settings, 'IS_PROD', False):
+            if coordinator.staff_phone and getattr(settings, 'IS_PROD', False) and not is_whatsapp_muted(coordinator, 'new_family_families_coordinator'):
                 try:
                     wa_result = send_coordinator_notification_whatsapp_family_with_age_unit(
                         coordinator_phone=coordinator.staff_phone,
@@ -1071,7 +1074,11 @@ def notify_admins_of_new_family(child_id):
                 else:
                     api_logger.debug(f"Admin {admin.staff_id} ({admin.username}) - WhatsApp skipped (not prod)")
                 continue
-            
+
+            if is_whatsapp_muted(admin, 'new_family_admins'):
+                api_logger.info(f"🔕 Admin {admin.staff_id} muted 'new_family_admins' — WhatsApp skipped")
+                continue
+
             try:
                 admin_name = f"{admin.first_name} {admin.last_name}"
                 api_logger.debug(f"🔵 Sending WhatsApp to {admin_name} at {admin.staff_phone}")

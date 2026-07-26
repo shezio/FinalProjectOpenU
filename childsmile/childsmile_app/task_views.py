@@ -978,6 +978,7 @@ def _notify_coordinator_review_followup(task, performed_by_staff):
     """
     try:
         from .whatsapp_utils import send_review_followup_whatsapp
+        from .notification_mute import is_whatsapp_muted
 
         child = task.related_child
         if not child:
@@ -1005,6 +1006,11 @@ def _notify_coordinator_review_followup(task, performed_by_staff):
         if not coordinator.staff_phone:
             api_logger.warning(
                 f"[REVIEW_FOLLOWUP] Coordinator {coordinator.staff_id} has no staff_phone — WhatsApp skipped"
+            )
+            return
+        if is_whatsapp_muted(coordinator, 'review_followup'):
+            api_logger.info(
+                f"[REVIEW_FOLLOWUP] Coordinator {coordinator.staff_id} muted 'review_followup' — WhatsApp skipped"
             )
             return
 

@@ -378,6 +378,7 @@ def _notify_coordinators_of_assignment(activity_request, volunteer_name):
     without deploying)."""
     try:
         from .whatsapp_utils import send_activity_assignment_whatsapp
+        from .notification_mute import is_whatsapp_muted
 
         coordinator_role = Role.objects.filter(role_name="Volunteer Coordinator").first()
         if not coordinator_role:
@@ -395,6 +396,9 @@ def _notify_coordinators_of_assignment(activity_request, volunteer_name):
             # local/dev too), so it can be tested without deploying.
             if not coord.staff_phone:
                 api_logger.warning(f"Coordinator {coord.staff_id} has no staff_phone — activity WhatsApp skipped")
+                continue
+            if is_whatsapp_muted(coord, 'activity_self_assign'):
+                api_logger.info(f"🔕 Coordinator {coord.staff_id} muted 'activity_self_assign' — WhatsApp skipped")
                 continue
             try:
                 coord_name = f"{coord.first_name} {coord.last_name}".strip() or coord.username

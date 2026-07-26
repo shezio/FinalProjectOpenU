@@ -43,6 +43,7 @@ from .unused_views import (
     PotentialTutorshipMatchReportView,
 )
 from .whatsapp_utils import send_admin_approval_task_notification_whatsapp
+from .notification_mute import is_whatsapp_muted
 from django.db import DatabaseError
 from django.core.cache import cache
 from rest_framework import viewsets, status
@@ -1413,10 +1414,12 @@ def create_admin_approval_tasks(staff_user_id, user_email):
             except:
                 pass
         
-        if liam.staff_phone:
+        if liam.staff_phone and not is_whatsapp_muted(liam, 'registration_final_task'):
             send_admin_approval_task_notification_whatsapp(liam.staff_phone, user_full_name, user_phone, user_created_at)
-        else:
+        elif not liam.staff_phone:
             api_logger.warning(f"Liam's phone number not found for WhatsApp notification")
+        else:
+            api_logger.info("🔕 Liam muted 'registration_final_task' — WhatsApp skipped")
             
     except Exception as e:
         api_logger.error(f"ERROR: An error occurred while creating final admin approval task: {str(e)}")

@@ -53,7 +53,25 @@ const SystemManagement = () => {
     staff_gender: '',
     staff_phone: '',
     staff_city: '',
+    muted_notifications: [],
   });
+  // Per-user WhatsApp mute prefs — the registry (Hebrew labels) comes from the profile endpoint.
+  const [muteableNotifications, setMuteableNotifications] = useState([]);
+  // "Edit notifications" modal — a temp selection so Cancel reverts and Save applies.
+  const [isMuteModalOpen, setIsMuteModalOpen] = useState(false);
+  const [muteModalSelection, setMuteModalSelection] = useState([]);
+  const openMuteModal = () => {
+    setMuteModalSelection(Array.isArray(staffData.muted_notifications) ? [...staffData.muted_notifications] : []);
+    setIsMuteModalOpen(true);
+  };
+  const closeMuteModal = () => setIsMuteModalOpen(false);
+  const toggleMuteSelection = (key) => {
+    setMuteModalSelection(prev => prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key]);
+  };
+  const saveMuteModal = () => {
+    setStaffData(prev => ({ ...prev, muted_notifications: muteModalSelection }));
+    setIsMuteModalOpen(false);
+  };
   const [showStaffTotpModal, setShowStaffTotpModal] = useState(false);
   const [staffTotpCode, setStaffTotpCode] = useState('');
   const [newUserEmail, setNewUserEmail] = useState(''); // Change from adminEmail
@@ -546,6 +564,7 @@ const SystemManagement = () => {
   const fetchProfileDataFromSignUp = async (staffId, email) => {
     try {
       const response = await axios.get(`/api/get_staff_profile_data/${email}/`);
+      setMuteableNotifications(response.data?.muteable_notifications || []);
       if (response.data && response.data.profile_data) {
         const profileData = response.data.profile_data;
         // Update staffData with profile data from SignedUp or Staff
@@ -557,7 +576,10 @@ const SystemManagement = () => {
           staff_gender: profileData.staff_gender !== null ? (profileData.staff_gender ? 'female' : 'male') : (prev.staff_gender || ''),
           staff_phone: profileData.staff_phone || prev.staff_phone || '',
           staff_city: profileData.staff_city || prev.staff_city || '',
+          muted_notifications: response.data.muted_notifications || [],
         }));
+      } else {
+        setStaffData(prev => ({ ...prev, muted_notifications: response.data?.muted_notifications || [] }));
       }
     } catch (error) {
       // Silently fail - profile data may not exist
@@ -779,6 +801,8 @@ const SystemManagement = () => {
       if (staffData.staff_city) {
         updatePayload.staff_city = staffData.staff_city;
       }
+      // Per-user WhatsApp mute preferences (always send so unchecking persists).
+      updatePayload.muted_notifications = Array.isArray(staffData.muted_notifications) ? staffData.muted_notifications : [];
       
       // Call the update API endpoint
       const response = await axios.put(`/api/update_staff_member/${staffData.id}/`, updatePayload);
@@ -1653,6 +1677,20 @@ const SystemManagement = () => {
                       ))}
                     </select>
                   </div>
+
+                  {modalType === 'edit' && muteableNotifications.length > 0 && (
+                    <div className="staff-form-row" style={{ gridColumn: '1 / -1' }}>
+                      <label>התראות וואטסאפ</label>
+                      <button
+                        type="button"
+                        className="mute-notifications-btn"
+                        onClick={openMuteModal}
+                        style={{ padding: '10px 16px', cursor: 'pointer', borderRadius: '8px', border: '1px solid #6366f1', background: '#eef0ff', color: '#4338ca', fontWeight: 600 }}
+                      >
+                        ✏️ עריכת התראות{(staffData.muted_notifications || []).length > 0 ? ` (${(staffData.muted_notifications || []).length} מושתקות)` : ''}
+                      </button>
+                    </div>
+                  )}
                 </>
               )}
 
@@ -1663,6 +1701,35 @@ const SystemManagement = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Notifications (mute) Modal — opened from the Edit User modal */}
+      {isMuteModalOpen && (
+        <div className="staff-modal-overlay">
+          <div className="staff-modal-content" style={{ maxWidth: '560px' }}>
+            <span className="staff-close" onClick={closeMuteModal}>&times;</span>
+            <h2>עריכת התראות וואטסאפ</h2>
+            <p style={{ fontSize: '0.9em', color: '#666', marginBottom: '12px' }}>
+              כל ההתראות פעילות כברירת מחדל. בטלו סימון של התראה כדי להשתיק אותה עבור {staffData.first_name} {staffData.last_name} (לא תישלח בוואטסאפ).
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '55vh', overflowY: 'auto', padding: '4px 2px' }}>
+              {muteableNotifications.map(n => (
+                <label key={n.key} style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: 'normal', cursor: 'pointer', padding: '8px 10px', borderRadius: '6px', background: muteModalSelection.includes(n.key) ? '#fdecec' : '#f7f7f9' }}>
+                  <input
+                    type="checkbox"
+                    checked={!muteModalSelection.includes(n.key)}
+                    onChange={() => toggleMuteSelection(n.key)}
+                  />
+                  <span>{n.label}</span>
+                </label>
+              ))}
+            </div>
+            <div className="staff-form-actions" style={{ marginTop: '16px' }}>
+              <button type="button" onClick={saveMuteModal}>שמירה</button>
+              <button type="button" onClick={closeMuteModal}>ביטול</button>
+            </div>
           </div>
         </div>
       )}

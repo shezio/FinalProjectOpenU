@@ -63,6 +63,7 @@ from .whatsapp_utils import (
     send_refund_status_update_to_volunteer_whatsapp,
     send_refund_payment_required_whatsapp,
 )
+from .notification_mute import is_whatsapp_muted
 
 # ──────────────────────────────────────────────────────────────────────────────
 # CONSTANTS
@@ -453,7 +454,12 @@ def create_refund(request):
 
             # ── WhatsApp: notify admin of new request ─────────────────────────
             liam_phone = _get_liam_admin_phone()
-            if liam_phone:
+            liam_staff = Staff.objects.filter(first_name="ליאם", last_name="אביבי").first()
+            if not liam_phone:
+                api_logger.warning("Liam's phone not found — skipping WhatsApp notify for new refund")
+            elif is_whatsapp_muted(liam_staff, 'refund_new_request'):
+                api_logger.info("🔕 Liam muted 'refund_new_request' — WhatsApp skipped for new refund")
+            else:
                 try:
                     send_refund_new_request_to_admin_whatsapp(
                         admin_phone=liam_phone,
@@ -462,8 +468,6 @@ def create_refund(request):
                     )
                 except Exception as wa_err:
                     api_logger.error(f"WhatsApp admin notify failed for refund #{refund.refund_id}: {wa_err}")
-            else:
-                api_logger.warning("Liam's phone not found — skipping WhatsApp notify for new refund")
 
         log_api_action(request=request, action='CREATE_REFUND', success=True,
                        status_code=201, entity_type='ExpenseRefund',
@@ -605,7 +609,7 @@ def update_refund(request, refund_id):
             # ── WhatsApp: notify volunteer of status change ───────────────────
             if status_changed:
                 volunteer_phone = refund.phone_number or refund.staff.staff_phone
-                if volunteer_phone:
+                if volunteer_phone and not is_whatsapp_muted(refund.staff, 'refund_status_update'):
                     try:
                         send_refund_status_update_to_volunteer_whatsapp(
                             volunteer_phone=volunteer_phone,
@@ -627,7 +631,7 @@ def update_refund(request, refund_id):
                     if not uri_phone:
                         uri_signedup = SignedUp.objects.filter(email='oriplezner1@gmail.com').first()
                         uri_phone = uri_signedup.phone if uri_signedup and uri_signedup.phone else None
-                    if uri_phone:
+                    if uri_phone and not is_whatsapp_muted(uri_staff, 'refund_payment_required'):
                         payment_phone = refund.phone_number or refund.staff.staff_phone
                         send_refund_payment_required_whatsapp(
                             uri_phone=uri_phone,
