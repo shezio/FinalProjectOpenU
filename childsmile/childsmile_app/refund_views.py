@@ -610,13 +610,19 @@ def update_refund(request, refund_id):
             if status_changed:
                 volunteer_phone = refund.phone_number or refund.staff.staff_phone
                 if volunteer_phone and not is_whatsapp_muted(refund.staff, 'refund_status_update'):
+                    # admin_comment is an INTERNAL note — never leak its content to a
+                    # non-admin recipient. Show a neutral placeholder so the volunteer
+                    # knows a note exists in the system without exposing what it says.
+                    comment_for_volunteer = refund.admin_comment
+                    if refund.admin_comment and not is_admin(refund.staff):
+                        comment_for_volunteer = "שמורה במערכת"
                     try:
                         send_refund_status_update_to_volunteer_whatsapp(
                             volunteer_phone=volunteer_phone,
                             volunteer_full_name=refund.staff_full_name,
                             new_status=new_status,
                             approved_amount=refund.approved_amount if new_status != 'בוטל/נדחה' else 0,
-                            admin_comment=refund.admin_comment,
+                            admin_comment=comment_for_volunteer,
                         )
                     except Exception as wa_err:
                         api_logger.error(f"WhatsApp volunteer notify failed for refund #{refund_id}: {wa_err}")
