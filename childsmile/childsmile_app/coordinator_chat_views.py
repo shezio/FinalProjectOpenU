@@ -23,6 +23,7 @@ from .audit_utils import is_admin
 from .logger import api_logger
 from .utils import conditional_csrf, block_viewer_writes
 from .whatsapp_utils import send_whatsapp_message
+from .notification_mute import is_whatsapp_muted
 
 
 def _get_staff(request):
@@ -253,6 +254,17 @@ def send_message_to_coordinator(request, coordinator_id):
             is_read=True
         )
 
+        # Per-user mute: if the coordinator muted admin chat messages, store the
+        # message but skip the WhatsApp push.
+        if is_whatsapp_muted(coordinator, 'admin_chat_message'):
+            api_logger.info(f"🔕 Coordinator {coordinator.staff_id} muted 'admin_chat_message' — WhatsApp skipped (message stored)")
+            return JsonResponse({
+                "success": True,
+                "message_id": admin_msg.id,
+                "whatsapp_sid": None,
+                "message": _message_to_dict(admin_msg),
+            })
+
         # Send via WhatsApp using template (for consistency)
         template_sid = os.getenv('TWILIO_ADMIN_MESSAGE_SID')
         
@@ -342,6 +354,11 @@ def send_message_to_many(request):
 
         coordinators = Staff.objects.filter(staff_id__in=coordinator_ids)
         if not coordinators.exists():
+            return JsonResponse({"error": "No coordinators found"}, status=404)
+
+        # Per-user mute: drop coordinators who muted admin chat messages (no WhatsApp push for them).
+        coordinators = [c for c in coordinators if not is_whatsapp_muted(c, 'admin_chat_message')]
+        if not coordinators:
             return JsonResponse({"error": "No coordinators found"}, status=404)
 
         # Get ליאם אביבי (the official sender)
@@ -507,6 +524,11 @@ def send_message_to_all(request):
         ).distinct()
 
         if not coordinators.exists():
+            return JsonResponse({"error": "No coordinators found"}, status=404)
+
+        # Per-user mute: drop coordinators who muted admin chat messages (no WhatsApp push for them).
+        coordinators = [c for c in coordinators if not is_whatsapp_muted(c, 'admin_chat_message')]
+        if not coordinators:
             return JsonResponse({"error": "No coordinators found"}, status=404)
 
         # Get ליאם אביבי (the official sender)

@@ -100,6 +100,12 @@ class Staff(models.Model):
     staff_phone = models.CharField(max_length=20, null=True, blank=True)
     staff_city = models.CharField(max_length=255, null=True, blank=True)
 
+    # WhatsApp notifications this staff member has muted — a JSON list of stable
+    # event keys (see notification_mute.MUTEABLE_WHATSAPP_NOTIFICATIONS). Empty =
+    # receives everything. Only "operational" notifications can be muted; security/
+    # OTP/account-lifecycle ones are never listed and always sent.
+    muted_notifications = models.JSONField(default=list, blank=True)
+
     def __str__(self):
         return self.username
 

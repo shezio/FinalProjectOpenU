@@ -13,6 +13,7 @@ from .models import Staff, Role, TOTPCode, SignedUp, Tutors, Pending_Tutor, Task
 from .utils import *
 from .audit_utils import log_api_action
 from .logger import api_logger
+from .notification_mute import MUTEABLE_WHATSAPP_NOTIFICATIONS, sanitize_muted_notifications
 from .whatsapp_utils import send_totp_login_code_whatsapp
 import json
 import datetime
@@ -1367,6 +1368,10 @@ def update_staff_member(request, staff_id):
             city = str(data.get("staff_city", "")).strip()
             staff_member.staff_city = city if city else None
 
+        # Per-user WhatsApp notification mute preferences (list of stable keys).
+        if "muted_notifications" in data:
+            staff_member.muted_notifications = sanitize_muted_notifications(data.get("muted_notifications"))
+
         # Save the updated staff record
         try:
             api_logger.debug(f"BEFORE SAVE: staff_id={staff_id}, staff_phone={staff_member.staff_phone}, email={staff_member.email}")
@@ -2517,7 +2522,9 @@ def get_staff_profile_data(request, email):
             return JsonResponse({
                 "message": "Profile data retrieved successfully",
                 "profile_data": profile_data,
-                "source": "Staff"
+                "source": "Staff",
+                "muted_notifications": sanitize_muted_notifications(staff.muted_notifications),
+                "muteable_notifications": MUTEABLE_WHATSAPP_NOTIFICATIONS,
             }, status=200)
         else:
             # For non-management staff, use SignedUp model - id field IS the Israeli ID
@@ -2538,7 +2545,9 @@ def get_staff_profile_data(request, email):
                 return JsonResponse({
                     "message": "Profile data retrieved successfully",
                     "profile_data": profile_data,
-                    "source": "SignedUp"
+                    "source": "SignedUp",
+                    "muted_notifications": sanitize_muted_notifications(staff.muted_notifications),
+                    "muteable_notifications": MUTEABLE_WHATSAPP_NOTIFICATIONS,
                 }, status=200)
             else:
                 api_logger.info(f"No SignedUp record found for non-management staff {email}")

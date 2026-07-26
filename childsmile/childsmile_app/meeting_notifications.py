@@ -16,6 +16,7 @@ from datetime import datetime as dt
 from .logger import api_logger
 from .whatsapp_utils import send_meeting_reminder_whatsapp, send_meeting_event_notification_whatsapp
 from .models import Staff, StaffMeeting
+from .notification_mute import is_whatsapp_muted
 
 
 # ──────────────────────────────────────────────
@@ -137,6 +138,9 @@ def send_meeting_reminder(meeting, reminder_type):
         )
         # Only send WhatsApp to coordinators/admins in the recipient list
         wa_recipients = [s for s in recipients if s.staff_id in coordinator_ids]
+        _mute_key = {'week_before': 'meeting_reminder_week', 'two_days_before': 'meeting_reminder_two_days', 'same_day': 'meeting_reminder_same_day'}.get(reminder_type)
+        if _mute_key:
+            wa_recipients = [s for s in wa_recipients if not is_whatsapp_muted(s, _mute_key)]
         phones = [s.staff_phone for s in wa_recipients if s.staff_phone]
         if phones:
             wa_results = send_meeting_reminder_whatsapp(
@@ -286,6 +290,7 @@ def notify_meeting_created(meeting):
             ).values_list('staff_id', flat=True)
         )
         wa_recipients = [s for s in recipients if s.staff_id in coordinator_ids]
+        wa_recipients = [s for s in wa_recipients if not is_whatsapp_muted(s, 'meeting_created')]
         phones = [s.staff_phone for s in wa_recipients if s.staff_phone]
         if phones:
             wa_results = send_meeting_event_notification_whatsapp(
@@ -389,6 +394,7 @@ def notify_meeting_updated(meeting):
             ).values_list('staff_id', flat=True)
         )
         wa_recipients = [s for s in recipients if s.staff_id in coordinator_ids]
+        wa_recipients = [s for s in wa_recipients if not is_whatsapp_muted(s, 'meeting_updated')]
         phones = [s.staff_phone for s in wa_recipients if s.staff_phone]
         if phones:
             wa_results = send_meeting_event_notification_whatsapp(
@@ -491,6 +497,7 @@ def notify_meeting_cancelled(meeting):
             ).values_list('staff_id', flat=True)
         )
         wa_recipients = [s for s in recipients if s.staff_id in coordinator_ids]
+        wa_recipients = [s for s in wa_recipients if not is_whatsapp_muted(s, 'meeting_cancelled')]
         phones = [s.staff_phone for s in wa_recipients if s.staff_phone]
         if phones:
             wa_results = send_meeting_event_notification_whatsapp(
