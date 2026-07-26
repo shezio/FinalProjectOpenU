@@ -11,6 +11,11 @@ import '../styles/voucherquestionnaire.css';
 // Must match Children.status's real choices exactly (models.py) - NOT invented values.
 const CHILD_TREATMENT_STATUSES = ['טיפולים', 'מעקבים', 'אחזקה', 'ז״ל', 'בריא', 'עזב'];
 
+// A distribution can serve BOTH questionnaires (עמותה וכללי) via TWO separate links
+// — the link's URL variant slug maps to the questionnaire type, so the family
+// opens straight into the right form and is NEVER shown a choice.
+const VARIANT_TO_TYPE = { organization: 'עמותה', general: 'כללי' };
+
 // Must mirror voucher_views.py's _validate_recipient_data exactly (server-side
 // is the real authority - a direct script/curl POST bypasses all of this -
 // but matching it here gives instant feedback instead of a round-trip error).
@@ -38,7 +43,7 @@ const isValidIdFormat = (idNumber) => /^\d{5,9}$/.test(String(idNumber).trim());
 // non-user" precedent. Reached via a direct link shared per distribution
 // (see Vouchers.js's "עתק קישור לשאלון" button), e.g. /voucher-questionnaire/12.
 const VoucherQuestionnaire = () => {
-  const { distributionId } = useParams();
+  const { distributionId, variant } = useParams();
   const { t } = useTranslation();
 
   const [loading, setLoading] = useState(true);
@@ -56,6 +61,12 @@ const VoucherQuestionnaire = () => {
   };
   const [formData, setFormData] = useState(emptyForm);
   const [formErrors, setFormErrors] = useState({});
+  // A distribution can serve BOTH questionnaires (עמותה וכללי) via TWO separate
+  // links — one per type. The family is NEVER shown a choice: the link itself
+  // carries the variant (…/organization or …/general). For single-type
+  // distributions the type is the distribution's own type (variant ignored).
+  const isBothTypes = info?.questionnaire_type === 'עמותה וכללי';
+  const effectiveType = isBothTypes ? (VARIANT_TO_TYPE[variant] || null) : info?.questionnaire_type;
 
   useEffect(() => {
     axios.get(`/api/vouchers/public/${distributionId}/`)
@@ -101,13 +112,13 @@ const VoucherQuestionnaire = () => {
       errs.parent_id_number = 'תעודת זהות לא תקינה (צריכים 5-9 ספרות)';
     }
 
-    if (info?.questionnaire_type === 'עמותה') {
+    if (effectiveType === 'עמותה') {
       if (!formData.child_name.trim()) errs.child_name = 'שדה חובה';
       else if (formData.child_name.length > FIELD_MAX_LENGTHS.child_name) errs.child_name = `מקסימום ${FIELD_MAX_LENGTHS.child_name} תווים`;
 
       if (!formData.child_id_number.trim()) errs.child_id_number = 'שדה חובה';
       else if (!isValidIdFormat(formData.child_id_number)) errs.child_id_number = 'תעודת זהות לא תקינה (צריכים 5-9 ספרות)';
-    } else if (info?.questionnaire_type === 'כללי') {
+    } else if (effectiveType === 'כללי') {
       if (!formData.referral_source.trim()) errs.referral_source = 'שדה חובה';
       else if (formData.referral_source.length > FIELD_MAX_LENGTHS.referral_source) errs.referral_source = `מקסימום ${FIELD_MAX_LENGTHS.referral_source} תווים`;
     }
@@ -129,7 +140,12 @@ const VoucherQuestionnaire = () => {
     if (Object.keys(errs).length > 0) { setFormErrors(errs); return; }
 
     setSubmitting(true);
-    axios.post(`/api/vouchers/public/${distributionId}/submit/`, formData)
+    // The form only ever renders one variant's fields (the type comes from the
+    // link, not a family-facing choice), so the other variant's fields are
+    // naturally empty. Send the effective type so the backend validates the
+    // correct required fields for a mixed (עמותה וכללי) distribution.
+    const payload = { ...formData, questionnaire_type: effectiveType };
+    axios.post(`/api/vouchers/public/${distributionId}/submit/`, payload)
       .then(() => setSubmitted(true))
       .catch(err => showErrorToast(t, '', { message: err.response?.data?.error || 'שגיאה בשליחת הטופס' }))
       .finally(() => setSubmitting(false));
@@ -139,7 +155,7 @@ const VoucherQuestionnaire = () => {
     return <div className="voucher-form-page"><div className="voucher-form-card"><p>טוען...</p></div></div>;
   }
 
-  if (notAvailable || !info || info.questionnaire_type === 'ללא') {
+  if (notAvailable || !info || info.questionnaire_type === 'ללא' || (isBothTypes && !effectiveType)) {
     return (
       <div className="voucher-form-page">
         <div className="voucher-form-card">
@@ -207,7 +223,7 @@ const VoucherQuestionnaire = () => {
           {formErrors.num_children_at_home && <div className="voucher-form-error">{formErrors.num_children_at_home}</div>}
         </div>
 
-        {info.questionnaire_type === 'עמותה' && (
+        {effectiveType === 'עמותה' && (
           <>
             <div className="voucher-form-group">
               <label>שם הילד *</label>
@@ -229,7 +245,7 @@ const VoucherQuestionnaire = () => {
           </>
         )}
 
-        {info.questionnaire_type === 'כללי' && (
+        {effectiveType === 'כללי' && (
           <div className="voucher-form-group">
             <label>גורם מפנה *</label>
             <input type="text" name="referral_source" maxLength={FIELD_MAX_LENGTHS.referral_source} value={formData.referral_source} onChange={handleChange} placeholder="לדוגמה: עובדת סוציאלית, מוסד..." />

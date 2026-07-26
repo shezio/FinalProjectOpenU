@@ -141,7 +141,7 @@ def _distribution_to_dict(d, recipients=None):
 
 
 DISTRIBUTION_VOUCHER_TYPES = ['רמי לוי', 'תו פלוס - קרפור', 'אחר']
-DISTRIBUTION_QUESTIONNAIRE_TYPES = ['עמותה', 'כללי', 'ללא']
+DISTRIBUTION_QUESTIONNAIRE_TYPES = ['עמותה', 'כללי', 'ללא', 'עמותה וכללי']
 DELIVERED_CHOICES = ['כן', 'איסוף עצמי', 'לא']
 
 
@@ -762,7 +762,17 @@ def submit_voucher_questionnaire(request, distribution_id):
         return JsonResponse({"message": "הפנייה נשלחה בהצלחה. תודה!"}, status=201)
 
     required_fields = ['full_name', 'phone']
-    if distribution.questionnaire_type == VoucherDistribution.QuestionnaireType.ORGANIZATION:
+    if distribution.questionnaire_type == VoucherDistribution.QuestionnaireType.BOTH:
+        # Mixed round: the family chose which questionnaire applies to them, sent
+        # as `questionnaire_type` in the payload (עמותה / כללי).
+        effective_type = data.get('questionnaire_type')
+        if effective_type not in (VoucherDistribution.QuestionnaireType.ORGANIZATION,
+                                  VoucherDistribution.QuestionnaireType.GENERAL):
+            return JsonResponse({"error": "יש לבחור את סוג הפנייה (עמותה או כללי)."}, status=400)
+    else:
+        effective_type = distribution.questionnaire_type
+
+    if effective_type == VoucherDistribution.QuestionnaireType.ORGANIZATION:
         required_fields += ['child_name', 'child_id_number']
     else:  # כללי
         required_fields += ['referral_source']

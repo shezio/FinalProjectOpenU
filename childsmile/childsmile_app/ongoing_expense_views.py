@@ -76,6 +76,7 @@ def get_ongoing_expenses(request):
             "category": o.category,
             "amount": str(o.amount),
             "invoice_number": o.invoice_number,
+            "paid_by": o.paid_by,
             "notes": o.notes,
             "created_at": o.created_at.strftime("%d/%m/%Y %H:%M"),
             "updated_at": o.updated_at.strftime("%d/%m/%Y %H:%M"),
@@ -131,6 +132,7 @@ def create_ongoing_expense(request):
                 category=data.get('category') or None,
                 amount=amount,
                 invoice_number=data.get('invoice_number') or None,
+                paid_by=data.get('paid_by') or None,
                 notes=data.get('notes') or None,
                 updated_by=staff.username,
             )
@@ -192,6 +194,8 @@ def update_ongoing_expense(request, ongoing_expense_id):
                 return JsonResponse({"error": "amount לא תקין."}, status=400)
         if 'invoice_number' in data:
             entry.invoice_number = data['invoice_number'] or None
+        if 'paid_by' in data:
+            entry.paid_by = data['paid_by'] or None
         if 'notes' in data:
             entry.notes = data['notes'] or None
 

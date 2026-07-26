@@ -78,7 +78,11 @@
   color: #4f46e5;
   font-size: 24px;
 }
-
+/* Per-payer tags (סיכום לפי שולם ע״י) — subtle indigo tint so they read as tags */
+.ongoing-expense-total-chip--payer {
+  background: rgba(79, 70, 229, 0.08);
+  border-color: rgba(79, 70, 229, 0.35);
+}
 /* ── Table ──────────────────────────────────────────────────────────────── */
 .ongoing-expense-table-wrapper {
   width: 100%;
