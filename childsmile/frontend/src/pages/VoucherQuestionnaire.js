@@ -11,6 +11,11 @@ import '../styles/voucherquestionnaire.css';
 // Must match Children.status's real choices exactly (models.py) - NOT invented values.
 const CHILD_TREATMENT_STATUSES = ['טיפולים', 'מעקבים', 'אחזקה', 'ז״ל', 'בריא', 'עזב'];
 
+// A distribution can serve BOTH questionnaires (עמותה וכללי) via TWO separate links
+// — the link's URL variant slug maps to the questionnaire type, so the family
+// opens straight into the right form and is NEVER shown a choice.
+const VARIANT_TO_TYPE = { organization: 'עמותה', general: 'כללי' };
+
 // Must mirror voucher_views.py's _validate_recipient_data exactly (server-side
 // is the real authority - a direct script/curl POST bypasses all of this -
 // but matching it here gives instant feedback instead of a round-trip error).
@@ -38,7 +43,7 @@ const isValidIdFormat = (idNumber) => /^\d{5,9}$/.test(String(idNumber).trim());
 // non-user" precedent. Reached via a direct link shared per distribution
 // (see Vouchers.js's "עתק קישור לשאלון" button), e.g. /voucher-questionnaire/12.
 const VoucherQuestionnaire = () => {
-  const { distributionId } = useParams();
+  const { distributionId, variant } = useParams();
   const { t } = useTranslation();
 
   const [loading, setLoading] = useState(true);
@@ -56,13 +61,12 @@ const VoucherQuestionnaire = () => {
   };
   const [formData, setFormData] = useState(emptyForm);
   const [formErrors, setFormErrors] = useState({});
-  // When a distribution offers BOTH questionnaires (עמותה וכללי), the family picks
-  // which one applies to them via a toggle; effectiveType then drives validation +
-  // which variant-specific fields are shown/required. Defaults to עמותה (like the
-  // activity questionnaire's fun_day default).
-  const [voucherType, setVoucherType] = useState('עמותה');
+  // A distribution can serve BOTH questionnaires (עמותה וכללי) via TWO separate
+  // links — one per type. The family is NEVER shown a choice: the link itself
+  // carries the variant (…/organization or …/general). For single-type
+  // distributions the type is the distribution's own type (variant ignored).
   const isBothTypes = info?.questionnaire_type === 'עמותה וכללי';
-  const effectiveType = isBothTypes ? voucherType : info?.questionnaire_type;
+  const effectiveType = isBothTypes ? (VARIANT_TO_TYPE[variant] || null) : info?.questionnaire_type;
 
   useEffect(() => {
     axios.get(`/api/vouchers/public/${distributionId}/`)
@@ -136,19 +140,11 @@ const VoucherQuestionnaire = () => {
     if (Object.keys(errs).length > 0) { setFormErrors(errs); return; }
 
     setSubmitting(true);
-    // For a mixed (עמותה וכללי) round, send the family's chosen variant and drop
-    // the other variant's fields so a leftover value from toggling can't leak in
-    // (e.g. an auto-match on a child ID for someone who ended up choosing כללי).
+    // The form only ever renders one variant's fields (the type comes from the
+    // link, not a family-facing choice), so the other variant's fields are
+    // naturally empty. Send the effective type so the backend validates the
+    // correct required fields for a mixed (עמותה וכללי) distribution.
     const payload = { ...formData, questionnaire_type: effectiveType };
-    if (isBothTypes) {
-      if (effectiveType === 'עמותה') {
-        payload.referral_source = '';
-      } else {
-        payload.child_name = '';
-        payload.child_treatment_status = '';
-        payload.child_id_number = '';
-      }
-    }
     axios.post(`/api/vouchers/public/${distributionId}/submit/`, payload)
       .then(() => setSubmitted(true))
       .catch(err => showErrorToast(t, '', { message: err.response?.data?.error || 'שגיאה בשליחת הטופס' }))
@@ -159,7 +155,7 @@ const VoucherQuestionnaire = () => {
     return <div className="voucher-form-page"><div className="voucher-form-card"><p>טוען...</p></div></div>;
   }
 
-  if (notAvailable || !info || info.questionnaire_type === 'ללא') {
+  if (notAvailable || !info || info.questionnaire_type === 'ללא' || (isBothTypes && !effectiveType)) {
     return (
       <div className="voucher-form-page">
         <div className="voucher-form-card">
@@ -202,16 +198,6 @@ const VoucherQuestionnaire = () => {
         <img src={logo} alt="לוגו" className="voucher-form-logo" />
         <h2>{info.name}</h2>
         <p className="voucher-form-subtitle">אנא מלאו את הפרטים הבאים</p>
-
-        {isBothTypes && (
-          <div className="voucher-form-group full-width">
-            <label>סוג הפנייה *</label>
-            <div className="activity-type-toggle">
-              <button type="button" className={`activity-type-btn${voucherType === 'עמותה' ? ' active' : ''}`} onClick={() => { setVoucherType('עמותה'); setFormErrors({}); }}>משפחת עמותה</button>
-              <button type="button" className={`activity-type-btn${voucherType === 'כללי' ? ' active' : ''}`} onClick={() => { setVoucherType('כללי'); setFormErrors({}); }}>כללי</button>
-            </div>
-          </div>
-        )}
 
         <div className="voucher-form-group">
           <label>שם מלא *</label>

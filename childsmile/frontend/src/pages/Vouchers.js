@@ -158,13 +158,18 @@ const Vouchers = () => {
     fetchDistributions(); // refresh computed totals (distributed_amount) after any recipient edits
   };
 
-  const copyPublicLink = (dist) => {
+  const copyPublicLink = (dist, variant = null) => {
     // Prod uses HashRouter (see index.js) so the shareable link must include '/#',
     // otherwise the static host returns a 404. Dev uses BrowserRouter (no hash).
+    // A mixed (עמותה וכללי) distribution has TWO links — one per variant
+    // (…/organization or …/general) — so each family opens straight into the right
+    // form with no choice shown.
     const isProd = process.env.NODE_ENV === 'production';
-    const url = `${window.location.origin}${isProd ? '/#' : ''}/voucher-questionnaire/${dist.id}`;
+    const base = `${window.location.origin}${isProd ? '/#' : ''}/voucher-questionnaire/${dist.id}`;
+    const url = variant ? `${base}/${variant}` : base;
+    const label = variant === 'organization' ? ' (עמותה)' : variant === 'general' ? ' (כללי)' : '';
     navigator.clipboard.writeText(url)
-      .then(() => toast.success('הקישור לשאלון הועתק'))
+      .then(() => toast.success(`הקישור לשאלון${label} הועתק`))
       .catch(() => showErrorToast(t, 'שגיאה בהעתקת הקישור', ''));
   };
 
@@ -574,9 +579,14 @@ const Vouchers = () => {
                     <td>
                       <div className="vouchers-row-actions">
                         <span title="ניהול מקבלים" className="vouchers-action-btn" onClick={() => openDistributionRecipients(d)}>מקבלים</span>
-                        {d.questionnaire_type !== 'ללא' && (
+                        {d.questionnaire_type === 'עמותה וכללי' ? (
+                          <>
+                            <span title="העתק קישור שאלון עמותה" className="vouchers-action-btn vouchers-action-btn--link" onClick={() => copyPublicLink(d, 'organization')}>🔗 עמותה</span>
+                            <span title="העתק קישור שאלון כללי" className="vouchers-action-btn vouchers-action-btn--link" onClick={() => copyPublicLink(d, 'general')}>🔗 כללי</span>
+                          </>
+                        ) : d.questionnaire_type !== 'ללא' ? (
                           <span title="העתק קישור לשאלון" className="vouchers-action-btn vouchers-action-btn--link" onClick={() => copyPublicLink(d)}>🔗</span>
-                        )}
+                        ) : null}
                         <span title="ערוך" className="vouchers-action-btn" onClick={() => openEditDistModal(d)}>ערוך</span>
                         <span title="מחק" className="vouchers-action-btn" onClick={() => openDeleteDistModal(d)}>מחק</span>
                       </div>
@@ -769,8 +779,10 @@ const Vouchers = () => {
 
       {recipients.length > 0 && (
         <div className="vouchers-totals-bar">
-          <div className="vouchers-total-chip">סה"כ מאושר: <strong>{recipientsApprovedTotal.toFixed(2)} ₪</strong></div>
-          <div className="vouchers-total-chip">מוכנים למסירה: <strong>{recipientsReadyCount} / {filteredRecipients.length}</strong></div>
+          <div className="vouchers-total-chip">סה"כ מאושר: <strong dir="ltr">{recipientsApprovedTotal.toFixed(2)} / {parseFloat(selectedDistribution?.initial_amount || 0).toFixed(2)} ₪</strong></div>
+          {/* dir="ltr" so the ratio reads current/total (current on the LEFT, "out of" total on the RIGHT)
+              instead of getting bidi-reordered inside the RTL chip. */}
+          <div className="vouchers-total-chip">מוכנים למסירה: <strong dir="ltr">{recipientsReadyCount} / {filteredRecipients.length}</strong></div>
         </div>
       )}
 

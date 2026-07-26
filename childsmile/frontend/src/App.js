@@ -107,6 +107,7 @@ const App = () => {
       <Route path="/financial-aid" element={<FinancialAid />} /> {/* Financial Aid (סיוע כספי) - admin-only, desktop-only */}
       <Route path="/vouchers" element={<Vouchers />} /> {/* Vouchers (חלוקת תלושים) - admin-only, desktop-only */}
       <Route path="/voucher-questionnaire/:distributionId" element={<VoucherQuestionnaire />} /> {/* PUBLIC questionnaire - no login required */}
+      <Route path="/voucher-questionnaire/:distributionId/:variant" element={<VoucherQuestionnaire />} /> {/* PUBLIC - mixed distribution: /organization or /general (two links, one per type) */}
       <Route path="/activity-questionnaire/:roundId" element={<ActivityQuestionnaire />} /> {/* PUBLIC questionnaire - no login required (fun days & house visits) */}
       <Route path="/activity-board" element={<ActivityBoard />} /> {/* Fun days & house visits - coordinator board */}
       <Route path="/activity-signup" element={<ActivitySignup />} /> {/* Fun days & house visits - volunteer self-service */}
