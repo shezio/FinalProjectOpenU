@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>הצעת ארכיטקטורה — מעבר ממודל הרשאות מבוסס-DB לאסימונים</title>
+<style>
+  :root{
+    --navy:#16233b; --indigo:#2c3e73; --accent:#3f6fd1; --accent2:#6c8fd8;
+    --ink:#1f2733; --muted:#5b6472; --line:#e2e7ef; --bg:#f5f7fb; --card:#ffffff;
+    --green:#1f7a4d; --green-bg:#e8f6ee; --amber:#a9791b; --amber-bg:#fdf3e0;
+    --red:#b3341f; --red-bg:#fbecea; --blue:#22557f; --blue-bg:#e9f2fa;
+    --code-bg:#0f1626; --code-ink:#e6ebf5;
+  }
+  @import url('https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700;800&family=JetBrains+Mono:wght@400;600&display=swap');
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    font-family:'Heebo',-apple-system,Segoe UI,Arial,sans-serif;
+    color:var(--ink); background:var(--bg); margin:0; line-height:1.85;
+    font-size:17px;
+  }
+  .wrap{max-width:1040px; margin:0 auto; padding:0 22px 90px}
+  header.doc{
+    background:linear-gradient(135deg,var(--navy),var(--indigo) 70%);
+    color:#fff; padding:46px 22px 40px; margin-bottom:30px;
+    border-bottom:5px solid var(--accent);
+  }
+  header.doc .inner{max-width:1040px;margin:0 auto}
+  header.doc .brand{font-size:15px;letter-spacing:.5px;color:#b9c8ea;font-weight:500;margin-bottom:12px}
+  header.doc h1{font-size:33px;line-height:1.35;margin:0 0 10px;font-weight:800}
+  header.doc .sub{font-size:19px;color:#dbe4f7;font-weight:400;margin-bottom:20px}
+  header.doc .meta{font-size:14px;color:#aebbdc;display:flex;flex-wrap:wrap;gap:8px 26px;padding-top:16px;border-top:1px solid rgba(255,255,255,.15)}
+  header.doc .meta b{color:#e7edfb;font-weight:600}
+
+  h2{font-size:25px;color:var(--indigo);margin:44px 0 14px;padding-bottom:9px;border-bottom:2px solid var(--line);font-weight:800}
+  h2 .n{display:inline-block;background:var(--indigo);color:#fff;font-size:16px;width:32px;height:32px;line-height:32px;text-align:center;border-radius:8px;margin-left:10px;font-weight:700}
+  h3{font-size:20px;color:var(--navy);margin:26px 0 8px;font-weight:700}
+  p{margin:10px 0}
+  ul,ol{margin:10px 0;padding-right:24px}
+  li{margin:7px 0}
+  code.inl{background:#eef1f7;border:1px solid #dde3ee;border-radius:5px;padding:1px 6px;font-family:'JetBrains Mono',monospace;font-size:14px;direction:ltr;display:inline-block;color:#33405c}
+  strong{font-weight:700;color:var(--navy)}
+
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:22px 24px;margin:18px 0;box-shadow:0 2px 10px rgba(20,35,59,.05)}
+
+  .callout{border-radius:12px;padding:16px 20px 16px 18px;margin:18px 0;border-right:6px solid;font-size:16px}
+  .callout .t{font-weight:800;font-size:16px;margin-bottom:5px;display:flex;align-items:center;gap:8px}
+  .rec{background:var(--green-bg);border-color:var(--green)} .rec .t{color:var(--green)}
+  .warn{background:var(--amber-bg);border-color:var(--amber)} .warn .t{color:var(--amber)}
+  .danger{background:var(--red-bg);border-color:var(--red)} .danger .t{color:var(--red)}
+  .info{background:var(--blue-bg);border-color:var(--blue)} .info .t{color:var(--blue)}
+  .badge{display:inline-block;font-size:12.5px;font-weight:700;padding:2px 10px;border-radius:20px;vertical-align:middle}
+  .b-rec{background:var(--green-bg);color:var(--green);border:1px solid #b7e0c6}
+  .b-warn{background:var(--amber-bg);color:var(--amber);border:1px solid #ecd3a0}
+  .b-danger{background:var(--red-bg);color:var(--red);border:1px solid #eebfb8}
+  .b-info{background:var(--blue-bg);color:var(--blue);border:1px solid #b9d6ec}
+
+  .verdict{background:linear-gradient(135deg,#eef3fc,#e8f6ee);border:1px solid #cfe0d6;border-radius:16px;padding:24px 26px;margin:6px 0 10px}
+  .verdict h3{margin-top:0;color:var(--green);font-size:22px}
+
+  table{width:100%;border-collapse:collapse;margin:16px 0;font-size:15px;background:#fff;border-radius:10px;overflow:hidden;box-shadow:0 1px 6px rgba(20,35,59,.06)}
+  th,td{border:1px solid var(--line);padding:10px 12px;text-align:right;vertical-align:top}
+  thead th{background:var(--indigo);color:#fff;font-weight:600;font-size:14.5px}
+  tbody tr:nth-child(even){background:#f7f9fd}
+  td .yes{color:var(--green);font-weight:700}
+  td .no{color:var(--red);font-weight:700}
+  td .mid{color:var(--amber);font-weight:700}
+
+  pre{background:var(--code-bg);color:var(--code-ink);border-radius:12px;padding:16px 18px;overflow-x:auto;direction:ltr;text-align:left;font-family:'JetBrains Mono',monospace;font-size:13.5px;line-height:1.7;margin:14px 0;border:1px solid #26324a}
+  pre .cm{color:#7f8db0} pre .kw{color:#7fb3ff} pre .st{color:#9ede9e} pre .fn{color:#ffd48a}
+  .code-cap{font-size:13px;color:var(--muted);margin:-6px 0 14px;font-style:italic}
+
+  .toc{background:#fff;border:1px solid var(--line);border-radius:14px;padding:18px 24px;margin:20px 0}
+  .toc h3{margin-top:0}
+  .toc ol{padding-right:20px;columns:2;column-gap:34px}
+  .toc a{color:var(--accent);text-decoration:none} .toc a:hover{text-decoration:underline}
+
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:760px){.grid2{grid-template-columns:1fr}.toc ol{columns:1}header.doc h1{font-size:26px}}
+  .pill-row{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
+  hr.soft{border:none;border-top:1px dashed #cdd5e3;margin:34px 0}
+  .foot{margin-top:50px;padding-top:18px;border-top:2px solid var(--line);color:var(--muted);font-size:14px}
+  a.ref{color:var(--accent);text-decoration:none} a.ref:hover{text-decoration:underline}
+  .kpi{display:flex;gap:14px;flex-wrap:wrap;margin:14px 0}
+  .kpi div{flex:1;min-width:150px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+  .kpi .big{font-size:22px;font-weight:800;color:var(--indigo)}
+  .kpi .lbl{font-size:13.5px;color:var(--muted)}
+  @media print{body{background:#fff}.card,table,pre{box-shadow:none}header.doc{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+</style>
+</head>
+<body>
+
+<header class="doc">
+  <div class="inner">
+    <div class="brand">חיוך של ילד · מסמך ארכיטקטורת אבטחה</div>
+    <h1>מעבר ממודל הרשאות מבוסס־טבלאות ל־Stateless Authorization</h1>
+    <div class="sub">JWT, PASETO וחלופות מאובטחות יותר — ניתוח כן, מיפוי ל־OWASP והמלצה מדורגת</div>
+    <div class="meta">
+      <span><b>מיועד ל:</b> ליאם אביבי (מומחה אבטחה)</span>
+      <span><b>נכתב:</b> 26.07.2026</span>
+      <span><b>סטטוס:</b> הצעה לדיון</span>
+      <span><b>גרסת מערכת:</b> Backend 26.07.12.x</span>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <div class="verdict">
+    <h3>שורה תחתונה (TL;DR)</h3>
+    <p style="margin-top:6px"><strong>מעבר "תמים" ל־JWT ארוך־טווח שמאוחסן ב־<code class="inl">localStorage</code> יהיה הורדה באבטחה, לא שדרוג</strong> — הוא יאבד בדיוק את שתי התכונות שאנחנו כבר נשענים עליהן היום: <strong>ביטול מיידי (revocation)</strong> ו־<strong>טריות הרשאות (fresh authorization)</strong>, ויוסיף משטח תקיפה של גניבת אסימון ותקלות קריפטו קלאסיות של JWT.</p>
+    <p>לכן ההמלצה בשני צירים:</p>
+    <ul style="margin-bottom:4px">
+      <li><span class="badge b-rec">מומלץ ראשי</span> &nbsp;<strong>לפתור את הבעיה האמיתית (עומס DB) בלי לשנות את מודל האמון</strong> — להשאיר Sessions צד־שרת, להוסיף שכבת Cache להרשאות, ולהוסיף <code class="inl">security_version</code> לביטול מיידי. יותר מאובטח מ־JWT, פחות עבודה.</li>
+      <li><span class="badge b-info">אופציה עתידית</span> &nbsp;אם באמת נצטרך אסימונים חסרי־מצב (אפליקציית מובייל / API חיצוני / scale אופקי) — <strong>Hybrid מוקשח מבוסס PASETO</strong> (עדיף על JWT גולמי) עם access קצר־טווח + refresh מסתובב + kill-switch. משחזר את הביטול תוך שמירה על statelessness.</li>
+    </ul>
+    <p style="margin-bottom:0">כל מסקנה במסמך ממופה ל־<strong>OWASP Top 10 (2021)</strong> ולמסמכי ה־Cheat Sheet הרלוונטיים.</p>
+  </div>
+
+  <div class="toc">
+    <h3>תוכן העניינים</h3>
+    <ol>
+      <li><a href="#now">המצב הנוכחי — מה כבר יש לנו</a></li>
+      <li><a href="#problem">איזו בעיה אנחנו באמת פותרים?</a></li>
+      <li><a href="#jwt-trap">למה JWT תמים = הורדה באבטחה</a></li>
+      <li><a href="#optA">המלצה א' — Sessions + Cache + security_version</a></li>
+      <li><a href="#optB">המלצה ב' — Hybrid מוקשח (PASETO / JWT)</a></li>
+      <li><a href="#matrix">טבלת השוואה בין הגישות</a></li>
+      <li><a href="#owasp">מיפוי ל־OWASP Top 10</a></li>
+      <li><a href="#plan">תוכנית מעבר מדורגת</a></li>
+      <li><a href="#dont">מה <u>לא</u> לעשות (Anti-patterns)</a></li>
+      <li><a href="#code">קטעי קוד להמחשה</a></li>
+      <li><a href="#horizon">אופק עתידי — Policy-as-Code וקפבילטי</a></li>
+      <li><a href="#questions">שאלות פתוחות ל־ליאם</a></li>
+      <li><a href="#refs">מקורות</a></li>
+    </ol>
+  </div>
+
+  <!-- ========================= 1 ========================= -->
+  <h2 id="now"><span class="n">1</span>המצב הנוכחי — מה כבר יש לנו</h2>
+  <p>לפני שמחליפים, חשוב לתאר במדויק מה קיים, כי הבסיס הנוכחי חזק יותר ממה שנהוג לחשוב:</p>
+  <div class="card">
+    <ul style="margin:0">
+      <li><strong>כניסה ללא סיסמה (Passwordless TOTP):</strong> קוד חד־פעמי לאימייל, אין סיסמאות מאוחסנות כלל — יתרון אבטחה מובנה.</li>
+      <li><strong>Sessions צד־שרת מגובות ב־DB:</strong> לאחר אימות נוצר <code class="inl">sessionid</code> אטום בעוגייה; המצב עצמו נשמר בטבלת <code class="inl">django_session</code>. תוקף מוארך ל־24 שעות (<code class="inl">set_expiry(86400)</code>).</li>
+      <li><strong>אכיפת מכשיר יחיד:</strong> בכל התחברות <code class="inl">logout_all_other_sessions()</code> מוחק את כל שאר ה־sessions של המשתמש — כלומר אנחנו <em>כבר</em> נשענים על ביטול מיידי צד־שרת.</li>
+      <li><strong>עוגייה מוקשחת:</strong> <code class="inl">HttpOnly</code>, <code class="inl">Secure</code>, <code class="inl">SameSite=Lax</code> (בפרוד), Domain מוגבל ל־<code class="inl">.achildssmile.org.il</code>.</li>
+      <li><strong>מודל הרשאות:</strong> טבלאות <code class="inl">role</code> / <code class="inl">permissions</code> / <code class="inl">staff_roles</code>. בכניסה נטענת רשימת ההרשאות ב־JOIN אחד אל <code class="inl">session["permissions"]</code>, ו־<code class="inl">has_permission(request, resource, action)</code> קורא ממנה (ללא פנייה ל־DB).</li>
+    </ul>
+  </div>
+
+  <div class="callout warn">
+    <div class="t">נקודת הכאב האמיתית — ביצועים, לא אבטחה</div>
+    <p style="margin:0"><code class="inl">has_permission()</code> אמנם קורא מה־session, אבל <code class="inl">is_admin()</code> ו־<code class="inl">is_viewer_user()</code> מבצעים <strong>פנייה ל־DB בכל בקשה/כתיבה</strong>, וגם טעינת ה־session עצמה היא קריאת DB. זהו ה"מס" שמניע את הרצון לעבור לאסימונים — וזו בעיית <strong>עומס</strong>, שאפשר לפתור בלי לוותר על תכונות האבטחה.</p>
+  </div>
+
+  <!-- ========================= 2 ========================= -->
+  <h2 id="problem"><span class="n">2</span>איזו בעיה אנחנו באמת פותרים?</h2>
+  <p>"מעבר ל־JWT" מערבב שלוש מטרות נפרדות. חשוב להפריד ביניהן כי לכל אחת פתרון אחר:</p>
+  <div class="grid2">
+    <div class="card"><h3 style="margin-top:0">ביצועים / עומס</h3><p style="margin:0">להוריד פניות DB לכל בקשה. <span class="badge b-rec">פתיר עם Cache — ללא אסימונים</span></p></div>
+    <div class="card"><h3 style="margin-top:0">Statelessness / Scale</h3><p style="margin:0">אימות בלי מצב משותף, לריבוי מכונות / מובייל / API. <span class="badge b-info">מצריך אסימונים</span></p></div>
+    <div class="card"><h3 style="margin-top:0">חוויית מפתח</h3><p style="margin:0">אסימון שנושא הרשאות "מובנה". <span class="badge b-warn">נחמד — אך מביא איתו סיכונים</span></p></div>
+    <div class="card"><h3 style="margin-top:0">אבטחה</h3><p style="margin:0">כאן דווקא Sessions צד־שרת <strong>עדיפים</strong> ברוב הפרמטרים על JWT תמים.</p></div>
+  </div>
+  <p>עבור אפליקציה של עמותה עם SPA יחיד, המטרה הריאלית היום היא <strong>ביצועים</strong> — ולכן הפתרון המאובטח ביותר הוא לא בהכרח אסימונים.</p>
+
+  <!-- ========================= 3 ========================= -->
+  <h2 id="jwt-trap"><span class="n">3</span>למה JWT "תמים" הוא הורדה באבטחה</h2>
+  <p>כל אלה הן חולשות מוכרות של JWT ארוך־טווח נושא־הרשאות. מומחה אבטחה יזהה אותן מיד:</p>
+
+  <div class="callout danger">
+    <div class="t">3.1 · אין ביטול מיידי (No Revocation) — <span class="badge b-danger">A01 / A07</span></div>
+    <p style="margin:0">אסימון שנחתם תקף עד לפקיעתו. אם אסימון נגנב, אם עובד מסיים העסקה, או אם צריך "לנתק את כולם" — <strong>אי אפשר לבטל</strong> בלי להוסיף בחזרה רשימת שלילה צד־שרת (blocklist), שזה כבר… מצב צד־שרת. אנחנו <em>כבר</em> נשענים על ביטול מיידי (מכשיר יחיד) — מעבר ל־JWT תמים שובר יכולת קיימת.</p>
+  </div>
+  <div class="callout danger">
+    <div class="t">3.2 · הרשאות מתיישנות (Stale Authorization) — <span class="badge b-danger">A01 Broken Access Control</span></div>
+    <p style="margin:0">אם ההרשאות "צרובות" בתוך האסימון, שינוי תפקיד (הסרת רכז, שדרוג/שנמוך, מעבר ל־Viewer) <strong>לא ייכנס לתוקף</strong> עד שהאסימון יפקע. במערכת שכולה מונעת־הרשאות (רכזים עם הרשאות חוצות־תחום, Viewer לקריאה־בלבד, Reviewer) — זה כשל בקרת גישה ממשי.</p>
+  </div>
+  <div class="callout danger">
+    <div class="t">3.3 · תקלות קריפטוגרפיות קלאסיות של JWT — <span class="badge b-danger">A02 Cryptographic Failures</span></div>
+    <ul style="margin:6px 0 0">
+      <li><code class="inl">alg:none</code> — אסימון "לא חתום" שמתקבל בטעות.</li>
+      <li><strong>Algorithm confusion</strong> — הטעיית שרת שמצפה ל־RS256 לאמת HS256 עם המפתח הציבורי כ"סוד".</li>
+      <li><strong>Weak secret</strong> — HS256 עם סוד קצר/צפוי → כריית מפתח לא־מקוונת → זיוף אסימונים.</li>
+      <li><strong>ניהול מפתחות</strong> — דליפת מפתח חתימה אחד = השתלטות על כל המשתמשים עד לרוטציה.</li>
+    </ul>
+  </div>
+  <div class="callout danger">
+    <div class="t">3.4 · דילמת האחסון בצד־לקוח — <span class="badge b-danger">A03 (XSS)</span></div>
+    <p style="margin:0"><code class="inl">localStorage</code> נגיש ל־JavaScript ⇒ כל XSS גונב את האסימון. עוגייה <code class="inl">HttpOnly</code> פותרת XSS אבל אז חוזרים לצורך בהגנת CSRF — כלומר "יתרון ה־statelessness" מתאדה. היום ה־<code class="inl">sessionid</code> שלנו כבר <code class="inl">HttpOnly</code>, וה־<code class="inl">localStorage.permissions</code> משמש <em>רק</em> כרמז UI ולא כמקור סמכות.</p>
+  </div>
+
+  <!-- ========================= 4 ========================= -->
+  <h2 id="optA"><span class="n">4</span>המלצה א' — Sessions + Cache + <code class="inl" style="font-size:17px">security_version</code> <span class="badge b-rec">מומלץ ראשי</span></h2>
+  <p>לשמור על מודל האמון החזק הקיים, ולתקוף רק את בעיית העומס:</p>
+  <ol>
+    <li><strong>שכבת Cache להרשאות:</strong> להעביר את <code class="inl">is_admin</code>/<code class="inl">is_viewer</code>/רשימת ההרשאות ל־Cache לפי מזהה עובד (<code class="inl">perms:{staff_id}</code>) עם TTL קצר (למשל 60 שניות) או פינוי מפורש בעת שינוי תפקיד. פנייה ל־DB רק ב־miss.</li>
+    <li><strong>עמודת <code class="inl">security_version</code> על Staff:</strong> מספר שלם שמוגדל בכל שינוי תפקיד/הרשאה או "נתק אותי מכל המכשירים". הוא נשמר ב־session; אי־התאמה מאלצת רענון מיידי של ההרשאות (staleness ≈ 0).</li>
+    <li><strong>Cache ל־sessions:</strong> <code class="inl">cached_db</code> session backend (Redis + גיבוי DB) מוריד את קריאת ה־DB לכל בקשה, בלי לאבד עמידות או ביטול מיידי.</li>
+  </ol>
+  <div class="callout rec">
+    <div class="t">למה זה יותר מאובטח מ־JWT</div>
+    <p style="margin:0">שומר <strong>ביטול מיידי</strong>, <strong>הרשאות טריות</strong>, <strong>מכשיר יחיד</strong> ו־<strong>אחסון HttpOnly</strong> — ומבטל את עלות ה־DB שהיא המניע האמיתי. אין מפתחות חתימה, אין <code class="inl">alg</code>, אין אחסון אסימון ב־JS. משטח התקיפה קטֵן, לא גדל.</p>
+  </div>
+  <div class="callout info"><div class="t">תלות חדשה</div><p style="margin:0">Redis (או Django cache קיים). <code class="inl">cryptography</code> ו־<code class="inl">channels</code> כבר מותקנים; Redis הוא התוספת היחידה, ולרוב כבר קיים כתשתית.</p></div>
+
+  <!-- ========================= 5 ========================= -->
+  <h2 id="optB"><span class="n">5</span>המלצה ב' — Hybrid מוקשח (PASETO / JWT) <span class="badge b-info">אם באמת צריך Stateless</span></h2>
+  <p>אם בעתיד נוסיף אפליקציית מובייל, API לצד־שלישי, או ריבוי מכונות אמיתי — זו הדרך הנכונה לעשות אסימונים <em>בלי</em> ליפול למלכודות של פרק 3:</p>
+
+  <h3>5.1 · שני אסימונים, לא אחד</h3>
+  <ul>
+    <li><strong>Access token קצר־טווח (5–10 דק'):</strong> נושא <code class="inl">sub</code>, <code class="inl">roles</code> ו־<code class="inl">sv</code> (security_version). מומלץ לשאת <strong>תפקידים בלבד</strong> ולמפות תפקיד→הרשאות בשרת, כדי לא לדלוף את כל מטריצת ההרשאות ולשמור על אסימון קטן. אימות ללא DB.</li>
+    <li><strong>Refresh token אטום (opaque):</strong> אקראי, נשמר בשרת <strong>מגובב (hashed)</strong>, בעוגיית <code class="inl">HttpOnly + Secure + SameSite=Strict</code>. הוא זה שמאפשר ביטול.</li>
+  </ul>
+
+  <h3>5.2 · רוטציה + זיהוי שימוש חוזר (Refresh Rotation &amp; Reuse Detection)</h3>
+  <p>כל שימוש ב־refresh מנפיק חדש ומבטל את הקודם. אם מוצג refresh שכבר נוצל — זהו איתות גניבה ⇒ <strong>ביטול כל "המשפחה"</strong> של האסימונים למשתמש. זה משחזר את סמנטיקת ה"kill switch".</p>
+
+  <h3>5.3 · Kill-switch דרך <code class="inl" style="font-size:17px">security_version</code></h3>
+  <p>ה־access נושא <code class="inl">sv</code>; השרת משווה למספר per-user שנשמר ב־Cache. שינוי תפקיד או "נתק הכל" מגדיל את המספר ⇒ <strong>כל ה־access tokens הקיימים נדחים מיד</strong>. בדיקה של מספר שלם אחד (ניתן ל־Cache) — כך שומרים statelessness ל־99% מהבקשות אך מקבלים ביטול כמעט־מיידי. חלון ה־staleness חסום ל־TTL (דקות).</p>
+
+  <h3>5.4 · עדיף PASETO על JWT גולמי <span class="badge b-rec">"טוב יותר מ־JWT"</span></h3>
+  <div class="callout rec">
+    <div class="t">PASETO (Platform-Agnostic Security Tokens)</div>
+    <p style="margin:0"><strong>PASETO v4.public (Ed25519)</strong> מבטל בתכנון את כל משפחת ההתקפות של JWT: אין משא־ומתן על אלגוריתם, אין <code class="inl">alg:none</code>, אין algorithm confusion, אין בחירת ספרים חלשים. לכל גרסה אלגוריתם קשיח אחד. זו התשובה המדויקת ל"תעשה משהו מאובטח יותר מ־JWT".</p>
+  </div>
+  <p>אם בכל זאת נשארים עם JWT (בשל אקוסיסטם) — חובה: allow-list קשיח לאלגוריתמים, דחיית <code class="inl">none</code>, אלגוריתם א־סימטרי (EdDSA/ES256), אימות <code class="inl">iss/aud/exp/nbf</code>, ורוטציית מפתחות מבוססת <code class="inl">kid</code>. שימו לב: ב־requirements קיימת ספריית <code class="inl">jwt</code> — יש לוודא שמדובר בספרייה מתוחזקת (למשל <code class="inl">PyJWT</code>) לפני הישענות עליה.</p>
+
+  <h3>5.5 · אחסון בצד־לקוח</h3>
+  <p><strong>לעולם לא</strong> לשמור access token ב־<code class="inl">localStorage</code>. להחזיק אותו <strong>בזיכרון בלבד</strong> (משתנה JS), ולהסתמך על עוגיית ה־refresh (HttpOnly) כדי לחדש אותו בטעינה מחדש. זה חוסם את נתיב הדליפה דרך XSS.</p>
+  <div class="callout info"><div class="t">הקשחה מתקדמת (רשות)</div><p style="margin:0"><strong>אסימונים כבולי־שולח (DPoP, RFC 9449)</strong> או mTLS — כובלים את האסימון למפתח של הלקוח, כך שאסימון גנוב לא ניתן לשימוש חוזר ממכשיר אחר.</p></div>
+
+  <!-- ========================= 6 ========================= -->
+  <h2 id="matrix"><span class="n">6</span>טבלת השוואה בין הגישות</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>קריטריון</th>
+        <th>Sessions (היום)</th>
+        <th>JWT תמים ב־localStorage</th>
+        <th>א' — Sessions + Cache</th>
+        <th>ב' — Hybrid מוקשח</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td>ביטול מיידי</td><td><span class="yes">מלא</span></td><td><span class="no">אין</span></td><td><span class="yes">מלא</span></td><td><span class="mid">כמעט־מיידי (kill-switch)</span></td></tr>
+      <tr><td>טריות הרשאות</td><td><span class="yes">מיידית</span></td><td><span class="no">עד לפקיעה</span></td><td><span class="yes">מיידית</span></td><td><span class="mid">חלון TTL קצר</span></td></tr>
+      <tr><td>חשיפה ל־XSS (גניבת אסימון)</td><td><span class="yes">נמוכה (HttpOnly)</span></td><td><span class="no">גבוהה</span></td><td><span class="yes">נמוכה</span></td><td><span class="yes">נמוכה (בזיכרון + refresh HttpOnly)</span></td></tr>
+      <tr><td>עומס DB לכל בקשה</td><td><span class="mid">בינוני</span></td><td><span class="yes">אפס</span></td><td><span class="yes">נמוך (Cache)</span></td><td><span class="yes">אפס לגישה</span></td></tr>
+      <tr><td>מדרוג אופקי (Scale)</td><td><span class="mid">תלוי־DB</span></td><td><span class="yes">מצוין</span></td><td><span class="yes">טוב (Cache משותף)</span></td><td><span class="yes">מצוין</span></td></tr>
+      <tr><td>משטח קריפטו (alg/מפתחות)</td><td><span class="yes">אין</span></td><td><span class="no">גבוה</span></td><td><span class="yes">אין</span></td><td><span class="mid">מנוהל (PASETO ממזער)</span></td></tr>
+      <tr><td>מורכבות מימוש</td><td><span class="yes">קיים</span></td><td><span class="mid">נמוכה אך מסוכנת</span></td><td><span class="yes">נמוכה–בינונית</span></td><td><span class="no">גבוהה</span></td></tr>
+    </tbody>
+  </table>
+  <p style="font-size:14.5px;color:var(--muted)">מסקנה: "JWT תמים" מנצח רק ב־<em>עומס DB</em> ו־<em>scale</em> — בדיוק מה שהמלצה א' משיגה בלי שאר הסיכונים.</p>
+
+  <!-- ========================= 7 ========================= -->
+  <h2 id="owasp"><span class="n">7</span>מיפוי ל־OWASP Top 10 (2021)</h2>
+  <table>
+    <thead><tr><th>סיכון</th><th>רלוונטיות</th><th>איך מטפלים בהמלצה א' / ב'</th></tr></thead>
+    <tbody>
+      <tr><td><strong>A01 · Broken Access Control</strong></td><td>הרשאות מתיישנות ב־JWT צרוב</td><td>א': הרשאות מ־Cache טרי + <code class="inl">security_version</code>. ב': TTL קצר + kill-switch.</td></tr>
+      <tr><td><strong>A02 · Cryptographic Failures</strong></td><td><code class="inl">alg:none</code>, confusion, סוד חלש</td><td>א': אין קריפטו של אסימונים כלל. ב': PASETO / JWT א־סימטרי עם allow-list ורוטציית <code class="inl">kid</code>.</td></tr>
+      <tr><td><strong>A03 · Injection (XSS)</strong></td><td>גניבת אסימון מ־<code class="inl">localStorage</code></td><td>אסימון בזיכרון בלבד; refresh/session ב־<code class="inl">HttpOnly</code>. CSP קשיח.</td></tr>
+      <tr><td><strong>A05 · Security Misconfiguration</strong></td><td>דגלי עוגייה, ניהול מפתחות</td><td>שמירה על <code class="inl">Secure/HttpOnly/SameSite</code>; מפתחות ב־Key Vault; רוטציה מתוזמנת.</td></tr>
+      <tr><td><strong>A07 · Identification &amp; Auth Failures</strong></td><td>ביטול, session fixation, replay</td><td>ביטול מיידי נשמר; רוטציה עם reuse-detection; אופציונלי DPoP נגד replay.</td></tr>
+    </tbody>
+  </table>
+
+  <!-- ========================= 8 ========================= -->
+  <h2 id="plan"><span class="n">8</span>תוכנית מעבר מדורגת (כל שלב הפיך ובעל ערך בפני עצמו)</h2>
+  <div class="kpi">
+    <div><div class="big">שלב 0</div><div class="lbl">Cache ל־<code class="inl">is_admin</code>/<code class="inl">is_viewer</code> + הוספת <code class="inl">security_version</code>. רווח ביצועים מיידי, שינוי מינימלי.</div></div>
+    <div><div class="big">שלב 1</div><div class="lbl">Session backend מבוסס־Cache (Redis) + פינוי הרשאות בעת שינוי תפקיד. מסיים את "המלצה א'".</div></div>
+    <div><div class="big">שלב 2</div><div class="lbl">רק אם יידרש Stateless: Hybrid PASETO (access+refresh, רוטציה, kill-switch) לצד ה־session הקיים.</div></div>
+  </div>
+  <div class="callout rec"><div class="t">אסטרטגיית סיכון</div><p style="margin:0">לעצור אחרי שלב 1 עבור הצרכים של היום. שלב 2 נכנס רק כשיהיה טריגר מוצדק (מובייל/API). אין "big-bang", אין החלפה מסוכנת של כל מנגנון האימות בבת אחת.</p></div>
+
+  <!-- ========================= 9 ========================= -->
+  <h2 id="dont"><span class="n">9</span>מה <u>לא</u> לעשות (Anti-patterns)</h2>
+  <div class="callout danger"><div class="t">רשימת פסילה</div>
+  <ul style="margin:6px 0 0">
+    <li>אין לאחסן access/JWT ב־<code class="inl">localStorage</code> או <code class="inl">sessionStorage</code>.</li>
+    <li>אין להשתמש ב־HS256 עם סוד קצר; אין לקבל <code class="inl">alg</code> מהאסימון ללא allow-list; לדחות <code class="inl">none</code>.</li>
+    <li>אין אסימוני גישה ארוכי־טווח (שעות/ימים) בלי מנגנון ביטול.</li>
+    <li>אין לצרוב את כל מטריצת ההרשאות בתוך אסימון גלוי ללקוח.</li>
+    <li>אין להסתמך על <code class="inl">localStorage.permissions</code> בצד־לקוח כמקור סמכות — הוא רמז UI בלבד; הבדיקה הקובעת חייבת להישאר בשרת.</li>
+  </ul></div>
+
+  <!-- ========================= 10 ========================= -->
+  <h2 id="code"><span class="n">10</span>קטעי קוד להמחשה</h2>
+  <p class="code-cap">להמחשה בלבד — לא קוד לפרודקשן. מדגים עקרונות, לא מימוש סופי.</p>
+
+  <h3>10.1 · אימות JWT מוקשח (אם נבחר JWT ולא PASETO)</h3>
+<pre><span class="cm"># allow-list קשיח, דחיית none, אימות aud/iss, אלגוריתם א-סימטרי בלבד</span>
+<span class="kw">import</span> jwt
+<span class="kw">def</span> <span class="fn">verify_access</span>(token, public_key):
+    <span class="kw">return</span> jwt.decode(
+        token, public_key,
+        algorithms=[<span class="st">"EdDSA"</span>],        <span class="cm"># רק EdDSA — לא HS*, לא none</span>
+        audience=<span class="st">"childsmile-app"</span>,
+        issuer=<span class="st">"childsmile-auth"</span>,
+        options={<span class="st">"require"</span>: [<span class="st">"exp"</span>, <span class="st">"iat"</span>, <span class="st">"sub"</span>, <span class="st">"sv"</span>]},
+    )</pre>
+
+  <h3>10.2 · Kill-switch באמצעות security_version</h3>
+<pre><span class="cm"># מספר שלם אחד ב-Cache; אי-התאמה = דחייה מיידית של כל האסימונים הישנים</span>
+<span class="kw">def</span> <span class="fn">is_token_current</span>(claims):
+    current_sv = cache.get(<span class="st">f"sv:{claims['sub']}"</span>)
+    <span class="kw">if</span> current_sv <span class="kw">is</span> <span class="kw">None</span>:
+        current_sv = Staff.objects.only(<span class="st">"security_version"</span>) \
+                        .get(pk=claims[<span class="st">"sub"</span>]).security_version
+        cache.set(<span class="st">f"sv:{claims['sub']}"</span>, current_sv, <span class="st">300</span>)
+    <span class="kw">return</span> claims[<span class="st">"sv"</span>] == current_sv   <span class="cm"># bump ל-DB ⇒ פסילה מיידית</span></pre>
+
+  <h3>10.3 · המלצה א' — Cache להרשאות (המינימלי והמומלץ)</h3>
+<pre><span class="cm"># מסיר את פניית ה-DB לכל בקשה, בלי אסימונים ובלי לאבד ביטול מיידי</span>
+<span class="kw">def</span> <span class="fn">get_perms_cached</span>(staff_id):
+    key = <span class="st">f"perms:{staff_id}"</span>
+    perms = cache.get(key)
+    <span class="kw">if</span> perms <span class="kw">is</span> <span class="kw">None</span>:
+        perms = load_perms_from_db(staff_id)   <span class="cm"># ה-JOIN הקיים</span>
+        cache.set(key, perms, <span class="st">60</span>)             <span class="cm"># TTL קצר או פינוי בשינוי תפקיד</span>
+    <span class="kw">return</span> perms</pre>
+
+  <!-- ========================= 11 ========================= -->
+  <h2 id="horizon"><span class="n">11</span>אופק עתידי — מעבר ל"טוב יותר מ־JWT" ברמת הארכיטקטורה</h2>
+  <p>מכיוון שהתבקשתי "ללכת על זה" — הנה הכיוונים המתקדמים שמעבר לאסימונים גרידא, למקרה שמטריצת ההרשאות תמשיך לגדול (רכזים, Viewer, Reviewer, הרשאות חוצות־תחום):</p>
+  <div class="grid2">
+    <div class="card"><h3 style="margin-top:0">Policy-as-Code</h3><p style="margin:0"><strong>OPA/Rego</strong> או <strong>Cedar</strong> (AWS) מוציאים את החלטות ההרשאה מקוד היישום למנוע מדיניות ייעודי, בר־בדיקה ובר־אודיט. מתאים למערכת שבה הלוגיקה של "מי רשאי מה" מסתעפת.</p></div>
+    <div class="card"><h3 style="margin-top:0">אסימוני קפבילטי</h3><p style="margin:0"><strong>Biscuit / Macaroons</strong> — אסימונים מבוססי־יכולת שניתן "לצמצם" (attenuate) עם caveats ולאמת offline. עוצמתי להאצלת הרשאות מדויקת, אך overkill להיום.</p></div>
+  </div>
+  <div class="callout info"><div class="t">הערה</div><p style="margin:0">אלה מעבר להיקף הנוכחי — מובאים כדי להראות את מרחב הפתרונות המלא. אין צורך בהם כדי לפתור את בעיית העומס.</p></div>
+
+  <!-- ========================= 12 ========================= -->
+  <h2 id="questions"><span class="n">12</span>שאלות פתוחות ל־ליאם (החלטות שדורשות שיקול אבטחה)</h2>
+  <ol>
+    <li>האם צפוי בטווח הנראה לעין <strong>לקוח לא־דפדפני</strong> (מובייל / API לצד־שלישי) שבאמת מצדיק אסימונים חסרי־מצב? אם לא — המלצה א' מספיקה.</li>
+    <li>מהו <strong>חלון ה־staleness</strong> המקובל להרשאות? (0 = חובה Sessions/Cache; דקות ספורות = Hybrid לגיטימי.)</li>
+    <li>האם <strong>Redis</strong> זמין/מקובל כתשתית בפרוד (Azure)? זו התלות היחידה של המלצה א'.</li>
+    <li>אם נלך על אסימונים — <strong>PASETO</strong> (ממליץ) או JWT א־סימטרי מוקשח? היכן יישבו מפתחות החתימה (Key Vault) ובאיזו מדיניות רוטציה?</li>
+    <li>האם לאמץ <strong>DPoP / כבילת־שולח</strong> נגד replay, או שהסיכון לא מצדיק את המורכבות?</li>
+  </ol>
+
+  <!-- ========================= 13 ========================= -->
+  <h2 id="refs"><span class="n">13</span>מקורות וקריאה נוספת</h2>
+  <ul>
+    <li><a class="ref" href="https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html">OWASP — Session Management Cheat Sheet</a></li>
+    <li><a class="ref" href="https://cheatsheetseries.owasp.org/cheatsheets/JSON_Web_Token_for_Java_Cheat_Sheet.html">OWASP — JSON Web Token Cheat Sheet</a></li>
+    <li><a class="ref" href="https://cheatsheetseries.owasp.org/cheatsheets/Authentication_Cheat_Sheet.html">OWASP — Authentication Cheat Sheet</a></li>
+    <li><a class="ref" href="https://owasp.org/www-project-application-security-verification-standard/">OWASP ASVS — Application Security Verification Standard</a></li>
+    <li><a class="ref" href="https://paseto.io/">PASETO — Platform-Agnostic Security Tokens</a></li>
+    <li><a class="ref" href="https://datatracker.ietf.org/doc/html/rfc9449">RFC 9449 — OAuth 2.0 Demonstrating Proof of Possession (DPoP)</a></li>
+    <li><a class="ref" href="https://datatracker.ietf.org/doc/html/rfc6819">RFC 6819 — OAuth 2.0 Threat Model &amp; Security Considerations</a></li>
+  </ul>
+
+  <div class="foot">
+    <p><strong>חיוך של ילד</strong> · מסמך הצעה לדיון אבטחה · נכתב 26.07.2026.</p>
+    <p>ההמלצה: להתחיל בשלבים 0–1 (Sessions + Cache + <code class="inl">security_version</code>) — שיפור ביצועים מיידי תוך <em>חיזוק</em> עמדת האבטחה ולא החלשתה. לשמור את מודל האסימונים המוקשח (PASETO Hybrid) כמסלול עתידי מותנה־טריגר.</p>
+  </div>
+
+</div>
+</body>
+</html>
