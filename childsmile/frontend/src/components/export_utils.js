@@ -2491,7 +2491,7 @@ export const exportOngoingExpensesToExcel = async (entries, t) => {
       return;
     }
 
-    const headers = ['#', 'תאריך', 'הוצאה', 'קטגוריה', 'סכום (₪)', 'מספר חשבונית', 'הערות'];
+    const headers = ['#', 'תאריך', 'הוצאה', 'קטגוריה', 'סכום (₪)', 'מספר חשבונית', 'שולם ע"י', 'הערות'];
     const rows = entries.map(e => [
       e.id,
       e.expense_date,
@@ -2499,10 +2499,27 @@ export const exportOngoingExpensesToExcel = async (entries, t) => {
       e.category || '',
       Number(e.amount || 0).toFixed(2),
       e.invoice_number || '',
+      e.paid_by || '',
       e.notes || '',
     ]);
 
-    const worksheetData = [headers, ...rows];
+    // Per-payer sum-up (dynamic — one line per distinct שולם ע"י), highest first,
+    // appended below the data so the exported file mirrors the page's payer tags.
+    const payerMap = entries.reduce((acc, e) => {
+      const key = (e.paid_by || '').trim() || 'ללא שם';
+      acc[key] = (acc[key] || 0) + parseFloat(e.amount || 0);
+      return acc;
+    }, {});
+    const payerRows = Object.entries(payerMap).sort((a, b) => b[1] - a[1]);
+    const grandTotal = entries.reduce((s, e) => s + parseFloat(e.amount || 0), 0);
+    const summaryBlock = [
+      [],
+      ['סיכום לפי שולם ע"י', 'סכום (₪)'],
+      ...payerRows.map(([payer, sum]) => [payer, sum.toFixed(2)]),
+      ['סה"כ', grandTotal.toFixed(2)],
+    ];
+
+    const worksheetData = [headers, ...rows, ...summaryBlock];
     const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
     worksheet['!cols'] = _autoFitColumns(worksheetData);
     worksheet['!dir'] = 'rtl';

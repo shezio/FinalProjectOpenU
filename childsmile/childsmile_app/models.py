@@ -1035,6 +1035,7 @@ class OngoingExpense(models.Model):
     category = models.CharField(max_length=255, null=True, blank=True)  # free text - "קטגוריה"
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     invoice_number = models.CharField(max_length=100, null=True, blank=True)  # "מספר חשבונית"
+    paid_by = models.CharField(max_length=255, null=True, blank=True)  # free text - "שולם על ידי" (same as PettyCashExpense.paid_by)
     notes = models.TextField(null=True, blank=True)  # "הערות"
 
     # Timestamps - Django manages these automatically, matching all other models
@@ -1162,6 +1163,7 @@ class VoucherDistribution(models.Model):
         ORGANIZATION = 'עמותה', 'Organization family'
         GENERAL = 'כללי', 'General / not registered'
         NONE = 'ללא', 'No public questionnaire (internal list only)'
+        BOTH = 'עמותה וכללי', 'Both organization and general (family picks on the form)'
 
     distribution_id = models.AutoField(primary_key=True)
 
@@ -1178,9 +1180,11 @@ class VoucherDistribution(models.Model):
 
     # Which public questionnaire template (if any) feeds this distribution's
     # recipient list — see VoucherRecipient. NONE = internal list only, staff
-    # add recipients manually (no public form for this particular round).
+    # add recipients manually (no public form for this particular round). BOTH =
+    # the round serves both עמותה and כללי families; the public form lets each
+    # family pick which one applies to them.
     questionnaire_type = models.CharField(
-        max_length=10, choices=QuestionnaireType.choices, default=QuestionnaireType.NONE
+        max_length=20, choices=QuestionnaireType.choices, default=QuestionnaireType.NONE
     )
 
     notes = models.TextField(null=True, blank=True)

@@ -56,6 +56,13 @@ const VoucherQuestionnaire = () => {
   };
   const [formData, setFormData] = useState(emptyForm);
   const [formErrors, setFormErrors] = useState({});
+  // When a distribution offers BOTH questionnaires (עמותה וכללי), the family picks
+  // which one applies to them via a toggle; effectiveType then drives validation +
+  // which variant-specific fields are shown/required. Defaults to עמותה (like the
+  // activity questionnaire's fun_day default).
+  const [voucherType, setVoucherType] = useState('עמותה');
+  const isBothTypes = info?.questionnaire_type === 'עמותה וכללי';
+  const effectiveType = isBothTypes ? voucherType : info?.questionnaire_type;
 
   useEffect(() => {
     axios.get(`/api/vouchers/public/${distributionId}/`)
@@ -101,13 +108,13 @@ const VoucherQuestionnaire = () => {
       errs.parent_id_number = 'תעודת זהות לא תקינה (צריכים 5-9 ספרות)';
     }
 
-    if (info?.questionnaire_type === 'עמותה') {
+    if (effectiveType === 'עמותה') {
       if (!formData.child_name.trim()) errs.child_name = 'שדה חובה';
       else if (formData.child_name.length > FIELD_MAX_LENGTHS.child_name) errs.child_name = `מקסימום ${FIELD_MAX_LENGTHS.child_name} תווים`;
 
       if (!formData.child_id_number.trim()) errs.child_id_number = 'שדה חובה';
       else if (!isValidIdFormat(formData.child_id_number)) errs.child_id_number = 'תעודת זהות לא תקינה (צריכים 5-9 ספרות)';
-    } else if (info?.questionnaire_type === 'כללי') {
+    } else if (effectiveType === 'כללי') {
       if (!formData.referral_source.trim()) errs.referral_source = 'שדה חובה';
       else if (formData.referral_source.length > FIELD_MAX_LENGTHS.referral_source) errs.referral_source = `מקסימום ${FIELD_MAX_LENGTHS.referral_source} תווים`;
     }
@@ -129,7 +136,20 @@ const VoucherQuestionnaire = () => {
     if (Object.keys(errs).length > 0) { setFormErrors(errs); return; }
 
     setSubmitting(true);
-    axios.post(`/api/vouchers/public/${distributionId}/submit/`, formData)
+    // For a mixed (עמותה וכללי) round, send the family's chosen variant and drop
+    // the other variant's fields so a leftover value from toggling can't leak in
+    // (e.g. an auto-match on a child ID for someone who ended up choosing כללי).
+    const payload = { ...formData, questionnaire_type: effectiveType };
+    if (isBothTypes) {
+      if (effectiveType === 'עמותה') {
+        payload.referral_source = '';
+      } else {
+        payload.child_name = '';
+        payload.child_treatment_status = '';
+        payload.child_id_number = '';
+      }
+    }
+    axios.post(`/api/vouchers/public/${distributionId}/submit/`, payload)
       .then(() => setSubmitted(true))
       .catch(err => showErrorToast(t, '', { message: err.response?.data?.error || 'שגיאה בשליחת הטופס' }))
       .finally(() => setSubmitting(false));
@@ -183,6 +203,16 @@ const VoucherQuestionnaire = () => {
         <h2>{info.name}</h2>
         <p className="voucher-form-subtitle">אנא מלאו את הפרטים הבאים</p>
 
+        {isBothTypes && (
+          <div className="voucher-form-group full-width">
+            <label>סוג הפנייה *</label>
+            <div className="activity-type-toggle">
+              <button type="button" className={`activity-type-btn${voucherType === 'עמותה' ? ' active' : ''}`} onClick={() => { setVoucherType('עמותה'); setFormErrors({}); }}>משפחת עמותה</button>
+              <button type="button" className={`activity-type-btn${voucherType === 'כללי' ? ' active' : ''}`} onClick={() => { setVoucherType('כללי'); setFormErrors({}); }}>כללי</button>
+            </div>
+          </div>
+        )}
+
         <div className="voucher-form-group">
           <label>שם מלא *</label>
           <input type="text" name="full_name" maxLength={FIELD_MAX_LENGTHS.full_name} value={formData.full_name} onChange={handleChange} />
@@ -207,7 +237,7 @@ const VoucherQuestionnaire = () => {
           {formErrors.num_children_at_home && <div className="voucher-form-error">{formErrors.num_children_at_home}</div>}
         </div>
 
-        {info.questionnaire_type === 'עמותה' && (
+        {effectiveType === 'עמותה' && (
           <>
             <div className="voucher-form-group">
               <label>שם הילד *</label>
@@ -229,7 +259,7 @@ const VoucherQuestionnaire = () => {
           </>
         )}
 
-        {info.questionnaire_type === 'כללי' && (
+        {effectiveType === 'כללי' && (
           <div className="voucher-form-group">
             <label>גורם מפנה *</label>
             <input type="text" name="referral_source" maxLength={FIELD_MAX_LENGTHS.referral_source} value={formData.referral_source} onChange={handleChange} placeholder="לדוגמה: עובדת סוציאלית, מוסד..." />

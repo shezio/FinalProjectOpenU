@@ -24,8 +24,8 @@ const requiredPermissions = [
 
 const PAGE_SIZE = 8;
 const VOUCHER_TYPES = ['רמי לוי', 'תו פלוס - קרפור', 'אחר'];
-const QUESTIONNAIRE_TYPES = ['עמותה', 'כללי', 'ללא'];
-const QUESTIONNAIRE_TYPE_LABELS = { 'עמותה': 'שאלון עמותה', 'כללי': 'שאלון כללי', 'ללא': 'ללא שאלון (פנימי)' };
+const QUESTIONNAIRE_TYPES = ['עמותה', 'כללי', 'ללא', 'עמותה וכללי'];
+const QUESTIONNAIRE_TYPE_LABELS = { 'עמותה': 'שאלון עמותה', 'כללי': 'שאלון כללי', 'ללא': 'ללא שאלון (פנימי)', 'עמותה וכללי': 'שאלון עמותה + כללי' };
 // Must match Children.status's real choices exactly (models.py) - NOT invented values.
 const CHILD_TREATMENT_STATUSES = ['טיפולים', 'מעקבים', 'אחזקה', 'ז״ל', 'בריא', 'עזב'];
 const DELIVERED_OPTIONS = ['כן', 'איסוף עצמי', 'לא'];

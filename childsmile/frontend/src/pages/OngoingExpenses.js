@@ -67,6 +67,7 @@ const OngoingExpenses = () => {
     category: '',
     amount: '',
     invoice_number: '',
+    paid_by: '',
     notes: '',
   };
   const [formData, setFormData] = useState(emptyForm);
@@ -104,6 +105,7 @@ const OngoingExpenses = () => {
       (e.expense_name || '').includes(q) ||
       (e.category || '').includes(q) ||
       (e.invoice_number || '').includes(q) ||
+      (e.paid_by || '').includes(q) ||
       (e.notes || '').includes(q)
     );
   }).slice().sort((a, b) => {
@@ -119,6 +121,17 @@ const OngoingExpenses = () => {
 
   const totalAmount = filteredEntries.reduce((s, e) => s + parseFloat(e.amount || 0), 0);
   const highestAmount = filteredEntries.reduce((m, e) => Math.max(m, parseFloat(e.amount || 0)), 0);
+
+  // ── Per-payer tags — total amount grouped by paid_by (שולם ע״י), highest first ──
+  // Mirrors PettyCash: one chip per distinct paid_by value, computed from the
+  // currently-filtered rows so it stays in sync with the totals chips above.
+  const paidByTotals = Object.entries(
+    filteredEntries.reduce((acc, e) => {
+      const key = (e.paid_by || '').trim() || 'ללא שם';
+      acc[key] = (acc[key] || 0) + parseFloat(e.amount || 0);
+      return acc;
+    }, {})
+  ).sort((a, b) => b[1] - a[1]);
 
   // ── Form helpers ──────────────────────────────────────────────────────────
   const handleFormChange = (e) => {
@@ -165,6 +178,7 @@ const OngoingExpenses = () => {
       category: entry.category || '',
       amount: entry.amount,
       invoice_number: entry.invoice_number || '',
+      paid_by: entry.paid_by || '',
       notes: entry.notes || '',
     });
     setFormErrors({});
@@ -231,6 +245,10 @@ const OngoingExpenses = () => {
         <label>מספר חשבונית</label>
         <input type="text" name="invoice_number" value={formData.invoice_number} onChange={handleFormChange} />
       </div>
+      <div className="ongoing-expense-form-group">
+        <label>שולם על ידי</label>
+        <input type="text" name="paid_by" value={formData.paid_by} onChange={handleFormChange} placeholder="לדוגמה: נעם / כרטיס עמותה" />
+      </div>
       <div className="ongoing-expense-form-group full-width">
         <label>הוצאה *</label>
         <input type="text" name="expense_name" value={formData.expense_name} onChange={handleFormChange} placeholder="לדוגמה: דלק, כביש 6, שכירות מחסן..." />
@@ -296,6 +314,11 @@ const OngoingExpenses = () => {
           <div className="ongoing-expense-total-chip">
             הגבוהה ביותר: <strong>{highestAmount.toFixed(2)} ₪</strong>
           </div>
+          {paidByTotals.map(([payer, sum]) => (
+            <div key={payer} className="ongoing-expense-total-chip ongoing-expense-total-chip--payer">
+              {payer}: <strong>{sum.toFixed(2)} ₪</strong>
+            </div>
+          ))}
         </div>
       )}
 
@@ -323,6 +346,7 @@ const OngoingExpenses = () => {
                       <th>קטגוריה</th>
                       <th>סכום</th>
                       <th>מס' חשבונית</th>
+                      <th>שולם ע"י</th>
                       <th>הערות</th>
                       <th>פעולות</th>
                     </tr>
@@ -338,6 +362,7 @@ const OngoingExpenses = () => {
                           : '—'}</td>
                         <td>{parseFloat(e.amount).toFixed(2)} ₪</td>
                         <td>{e.invoice_number || '—'}</td>
+                        <td>{e.paid_by || '—'}</td>
                         <td className="ongoing-expense-desc-cell">{e.notes || '—'}</td>
                         <td>
                           <div className="ongoing-expense-row-actions">
