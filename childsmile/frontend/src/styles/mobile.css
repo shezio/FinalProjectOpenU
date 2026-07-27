@@ -1121,6 +1121,14 @@
     margin-bottom: 12px !important;
   }
 
+  /* Push the pink smile below the smaller mobile wordmark */
+  .login-main-content .amit-title .smile {
+    top: 100% !important;
+    bottom: auto !important;
+    height: 20px !important;
+    margin-top: 8px !important;
+  }
+
   .login-main-content input[type="text"],
   .login-main-content input[type="password"],
   .login-main-content input[type="email"] {
