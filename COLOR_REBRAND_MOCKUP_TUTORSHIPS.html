@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>מוקאפ — עמוד ניהול חונכויות (צבעי מותג חדשים)</title>
+<style>
+/* Same local Rubik variable font the real app uses (styles.css @font-face) so
+   the mock renders identically — NOT Google Fonts. */
+@font-face {
+  font-family: 'Rubik';
+  src: url('childsmile/frontend/src/fonts/Rubik-VariableFont_wght.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+}
+/* =====================================================================
+   Tutorships page — STATIC recolored mock.
+   Faithful reproduction of the real page (InnerPageHeader + Sidebar +
+   filter toolbar + tutorship-matching-data-grid + pagination), with the
+   theme swapped to the A Child's Smile palette.
+   Brand: sky #6EC1E4 · teal #3BC1C8 · pink #ED3B97 · yellow #FCD20E · navy #143852
+   The real page's primary theme colour (green #4CAF50 on grid-header + the
+   primary "Open Matching Wizard" button + default actions) is the app's OLD
+   theme accent, not a status indicator → recolored to TEAL (the new MAIN brand
+   colour), keeping this page visually consistent with the Families mock.
+   PINK (#ED3B97) is used ONLY as a SEPARATOR / accent (header lower edge, title
+   underline, sidebar divider). KEPT exactly as the real app: cyan "Refresh"
+   button (#03A9F4), blue search bar + blue filter-chip + blue info-icon
+   (#3b82f6 / #007bff), red "Delete". Structure/labels 1:1 with the code.
+   ===================================================================== */
+
+*{box-sizing:border-box;font-family:Rubik,sans-serif}
+html{zoom:.8}
+body{
+  margin:0;direction:rtl;min-height:100vh;
+  display:flex;flex-direction:row-reverse;
+  /* was rainbow indigo/blue/green/orange/pink → brand rainbow (decorative, low alpha) */
+  background:
+    linear-gradient(135deg,
+      rgba(237,59,151,.14) 0%,
+      rgba(110,193,228,.14) 25%,
+      rgba(59,193,200,.14) 50%,
+      rgba(252,210,14,.14) 75%,
+      rgba(242,103,34,.14) 100%);
+  background-attachment:fixed;
+}
+
+/* ===================== SIDEBAR (faithful to common.css; bg recolored TEAL) ===================== */
+.sidebar{
+  background:linear-gradient(135deg,
+    rgba(110,193,228,.9) 0%,
+    rgba(59,193,200,.92) 45%,
+    rgba(101,190,198,.94) 100%);
+  color:#fff;width:280px;min-height:100vh;padding:60px 15px 25px;
+  box-shadow:-4px 0 40px rgba(59,193,200,.4), -2px 0 20px rgba(101,190,198,.3), inset 1px 0 0 rgba(255,255,255,.3);
+  position:fixed;right:0;top:0;display:flex;flex-direction:column;z-index:1001;
+  border-left:2px solid rgba(255,255,255,.3);overflow-y:auto;
+}
+.sidebar-toggle{position:absolute;top:15px;right:25px;width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px}
+.sidebar-user-info{background:linear-gradient(135deg,rgba(255,255,255,.25),rgba(255,255,255,.15));border:2px solid rgba(255,255,255,.3);border-radius:16px;padding:20px;margin-bottom:20px;text-align:center;box-shadow:0 4px 20px rgba(0,0,0,.15),inset 0 1px 0 rgba(255,255,255,.4)}
+.sidebar-username{font-size:28px;font-weight:700;color:#fff;text-shadow:0 2px 8px rgba(0,0,0,.3);margin-bottom:12px;letter-spacing:.5px}
+.sidebar-roles{display:flex;flex-direction:column;gap:6px}
+.sidebar-role{background:linear-gradient(90deg,rgba(255,255,255,.2),rgba(255,255,255,.1));padding:6px 12px;border-radius:8px;font-size:18px;font-weight:600;color:#fff;border:1px solid rgba(255,255,255,.2)}
+/* clock stays GREEN (not indigo/purple) */
+.sidebar-clock{background:linear-gradient(135deg,rgba(16,185,129,.85),rgba(5,150,105,.85));border:2px solid rgba(255,255,255,.4);border-radius:16px;padding:20px;margin-bottom:20px;text-align:center;box-shadow:0 6px 25px rgba(16,185,129,.35),inset 0 1px 0 rgba(255,255,255,.4)}
+.sidebar-time{font-size:36px;font-weight:800;color:#fff;letter-spacing:2px;text-shadow:0 3px 10px rgba(0,0,0,.3);margin-bottom:8px}
+.sidebar-date{font-size:18px;font-weight:600;color:rgba(255,255,255,.95)}
+/* logout stays RED */
+.sidebar-logout-button{background:linear-gradient(135deg,rgba(239,68,68,.95),rgba(220,38,38,.95));color:#fff;padding:16px 24px;border:2px solid rgba(255,255,255,.4);border-radius:14px;cursor:pointer;font-size:22px;font-weight:700;width:100%;margin-bottom:20px;box-shadow:0 6px 25px rgba(239,68,68,.4),inset 0 1px 0 rgba(255,255,255,.3)}
+/* PINK = separator only — the sidebar divider */
+.sidebar-divider{height:3px;background:linear-gradient(90deg,transparent,rgba(237,59,151,.9),transparent);margin:20px 0;border-radius:2px}
+.sidebar-nav-btn{display:block;width:100%;background:none;border:none;color:rgba(255,255,255,.82);font-size:32px;padding:6px 2px;cursor:pointer;text-align:right}
+.sidebar-nav-btn.top-level{font-weight:600;color:rgba(255,255,255,.85)}
+.sidebar-nav-btn.active{color:#fff;font-weight:700}
+.sidebar-section-header{display:flex;align-items:center;gap:4px;width:100%;background:none;border:none;border-bottom:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.85);font-size:32px;font-weight:600;padding:8px 2px 6px;cursor:pointer;margin-top:10px;text-align:right}
+.sidebar-section-label{flex:1;text-align:right}
+.sidebar-section-arrow{font-size:20px;font-weight:300;color:rgba(255,255,255,.55);transition:transform .2s;transform:rotate(0deg);line-height:1}
+.sidebar-section-arrow.open{transform:rotate(90deg)}
+.sidebar-section-items{display:flex;flex-direction:column;padding-right:12px;border-right:1px solid rgba(255,255,255,.15);margin:2px 6px 0 0}
+.sidebar-section-items .sidebar-nav-btn{font-size:24px;color:rgba(255,255,255,.7);padding:5px 2px}
+.sidebar-section-items .sidebar-nav-btn.active{color:#fff;font-weight:700}
+
+/* ===================== HEADER (fixed top) ===================== */
+.header{
+  background:linear-gradient(135deg,
+    rgba(110,193,228,.9) 0%,
+    rgba(59,193,200,.92) 45%,
+    rgba(101,190,198,.95) 100%);
+  color:#fff;display:flex;align-items:center;justify-content:center;
+  padding:20px 30px;height:200px;position:fixed;right:0;top:0;left:0;z-index:1000;
+  border-bottom:3px solid rgba(255,255,255,.3);
+  box-shadow:0 8px 40px rgba(59,193,200,.35), 0 4px 20px rgba(101,190,198,.28), inset 0 -1px 0 rgba(255,255,255,.3);
+}
+/* PINK = separator only — the header's lower edge (echoes the site's pink underline) */
+.header::before{content:'';position:absolute;bottom:0;left:0;right:0;height:5px;
+  background:linear-gradient(90deg, rgba(237,59,151,1) 0%, rgba(219,75,149,1) 100%);
+  box-shadow:0 2px 15px rgba(237,59,151,.5);}
+.logo{width:180px;height:180px;position:absolute;right:310px;top:10px;border-radius:20px;
+  border:3px solid rgba(255,255,255,.5);background:#fff;padding:10px;object-fit:contain;
+  box-shadow:0 6px 30px rgba(0,0,0,.2),0 0 20px rgba(255,255,255,.25);z-index:1002;}
+.title{font-size:4em;font-weight:900;margin:0;position:absolute;left:50%;transform:translateX(-50%);
+  white-space:nowrap;letter-spacing:2px;
+  background:linear-gradient(135deg,#fff 0%,#f0f9ff 25%,#e0f7fa 50%,#bae6fd 75%,#fff 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  filter:drop-shadow(0 4px 20px rgba(255,255,255,.4)) drop-shadow(0 2px 10px rgba(59,193,200,.65)) drop-shadow(0 0 30px rgba(101,190,198,.4));}
+/* PINK underline separator under the page title (mirrors the site's heading underline) */
+.title::after{content:'';position:absolute;left:50%;bottom:-14px;transform:translateX(-50%);width:78%;height:5px;border-radius:6px;
+  background:linear-gradient(90deg,rgba(237,59,151,.95),rgba(219,75,149,.95));box-shadow:0 3px 12px rgba(237,59,151,.5)}
+.top-left{position:absolute;top:20px;left:40px;display:flex;align-items:center;gap:25px;z-index:1001}
+.amit-img{width:130px;height:170px;object-fit:cover;border-radius:18px;border:3px solid rgba(255,255,255,.5);box-shadow:0 6px 30px rgba(0,0,0,.25)}
+.quote{font-size:20px;font-weight:600;text-align:right;color:#143852;max-width:360px;
+  background:linear-gradient(135deg,rgba(255,255,255,.95),rgba(249,250,251,.95));padding:14px 18px;border-radius:14px;
+  box-shadow:0 6px 24px rgba(0,0,0,.12)}
+.qr-code{width:140px;height:140px;border-radius:16px;border:3px solid rgba(255,255,255,.5);background:#fff;padding:10px;box-shadow:0 6px 30px rgba(0,0,0,.2)}
+
+/* ===================== CONTENT ===================== */
+.content{flex:1;margin-right:280px;padding:220px 40px 60px;min-width:0}
+
+/* toolbar — faithful single horizontal row (RTL) like the real overflow-x toolbar */
+.filter-create-container{display:flex;justify-content:flex-start;align-items:center;margin-bottom:34px;overflow-x:auto;padding-bottom:10px}
+.create-task{display:flex;flex-wrap:nowrap;gap:12px;align-items:center;width:max-content}
+.tbtn{color:#fff;padding:12px 24px;font-size:24px;font-weight:600;border:2px solid rgba(255,255,255,.3);border-radius:14px;cursor:pointer;white-space:nowrap;transition:.25s;box-shadow:inset 0 1px 0 rgba(255,255,255,.3)}
+.tbtn:hover{transform:translateY(-2px) scale(1.02)}
+/* refresh — was PURPLE circle → brand TEAL (main colour) */
+.refresh-icon-button{width:45px;height:45px;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;font-size:22px;border-radius:50%;background:rgba(59,193,200,.92);color:#fff;border:2px solid rgba(255,255,255,.3);cursor:pointer}
+/* Initial Family Data — KEEP pink (real #ec4899, not indigo/purple) */
+.btn-initial{background:linear-gradient(135deg,rgba(236,72,153,.95),rgba(219,39,119,.95));box-shadow:0 6px 20px rgba(236,72,153,.3),inset 0 1px 0 rgba(255,255,255,.3)}
+/* Add New Family — KEEP cyan (real #06b6d4) */
+.btn-add{background:linear-gradient(135deg,rgba(6,182,212,.95),rgba(14,165,233,.95));box-shadow:0 6px 20px rgba(6,182,212,.3),inset 0 1px 0 rgba(255,255,255,.3)}
+/* toggle mature — was PURPLE → brand TEAL (main colour) */
+.toggle-mature-btn{background:linear-gradient(135deg,rgba(59,193,200,.95),rgba(110,193,228,.95));box-shadow:0 6px 20px rgba(59,193,200,.3),inset 0 1px 0 rgba(255,255,255,.3)}
+/* status filter — KEEP orange (real #fb923c→#f97316) */
+.status-filter-button{background:linear-gradient(135deg,rgba(251,146,60,.95),rgba(249,115,22,.95));display:inline-flex;align-items:center;gap:8px;box-shadow:0 6px 20px rgba(249,115,22,.3),inset 0 1px 0 rgba(255,255,255,.3)}
+.status-filter-button .chev{font-size:18px}
+.tutorship-status-filter{flex-shrink:0;padding:12px 18px;font-size:20px;font-weight:600;border-radius:14px;border:2px solid rgba(59,193,200,.55);background:linear-gradient(135deg,rgba(255,255,255,.95),rgba(249,250,251,.95));color:#143852;cursor:pointer;box-shadow:0 4px 14px rgba(59,193,200,.15)}
+.age-range-filter{flex-shrink:0;display:flex;flex-direction:column;gap:4px;background:rgba(255,255,255,.75);border:2px solid rgba(110,193,228,.45);border-radius:14px;padding:8px 16px;color:#143852;font-size:18px;font-weight:600;box-shadow:0 4px 14px rgba(110,193,228,.15)}
+.age-sliders{display:flex;gap:8px}
+.age-sliders input[type=range]{accent-color:#3BC1C8;width:110px}
+/* search bar — KEEP blue border (real #3b82f6, not indigo/purple) */
+.families-search-bar{flex-shrink:0;padding:0 20px;min-width:170px;width:340px;height:60px;border:3px solid rgba(59,130,246,.75);background:linear-gradient(135deg,rgba(255,255,255,.85),rgba(240,242,245,.8));border-radius:16px;font-size:22px;font-weight:500;box-shadow:0 4px 20px rgba(59,130,246,.3),inset 0 1px 0 rgba(255,255,255,.7)}
+.families-search-bar::placeholder{color:rgba(59,130,246,.5)}
+.families-search-bar:focus{outline:none;border-color:rgba(59,130,246,.95);box-shadow:0 6px 30px rgba(59,130,246,.3),0 0 0 4px rgba(59,130,246,.2)}
+
+/* ===================== GRID ===================== */
+.families-grid-container{display:flex;flex-direction:column;align-items:stretch;overflow-x:auto}
+.families-data-grid{width:100%;border-collapse:separate;border-spacing:0;
+  border:2px solid rgba(255,255,255,.5);border-radius:24px;overflow:hidden;
+  background:linear-gradient(135deg,rgba(255,255,255,.72) 0%,rgba(245,245,245,.6) 100%);
+  box-shadow:0 20px 60px rgba(59,193,200,.3), 0 10px 30px rgba(110,193,228,.25), inset 0 1px 0 rgba(255,255,255,.4);}
+.families-data-grid th,.families-data-grid td{border:1px solid #e3e8ec;padding:14px 12px;text-align:right;font-size:19px}
+.families-data-grid th{
+  background:linear-gradient(135deg,rgba(59,193,200,1) 0%,rgba(110,193,228,1) 100%);
+  color:#fff;font-weight:700;letter-spacing:.5px;text-shadow:0 2px 10px rgba(0,0,0,.2);
+  box-shadow:0 4px 20px rgba(59,193,200,.35);white-space:nowrap}
+.families-data-grid tbody tr:nth-child(even){background:linear-gradient(90deg,rgba(240,248,250,.85),rgba(230,245,246,.85))}
+.families-data-grid tbody tr:hover{background:linear-gradient(90deg,rgba(110,193,228,.28),rgba(59,193,200,.28))}
+.sort-button{background:rgba(255,255,255,.25);border:none;color:#fff;border-radius:6px;cursor:pointer;font-size:16px;margin-right:6px;padding:2px 6px}
+
+/* (Status + Tutorship-Status columns render as PLAIN TEXT in the real app — no pills) */
+
+/* action buttons */
+.family-actions{display:flex;gap:10px;justify-content:flex-start}
+.family-actions button{color:#fff;padding:9px 18px;border:2px solid rgba(255,255,255,.3);border-radius:12px;cursor:pointer;font-size:17px;font-weight:600;transition:.25s}
+.family-actions button:hover{transform:translateY(-2px) scale(1.04)}
+.info-button{background:linear-gradient(135deg,rgba(59,130,246,.97),rgba(37,99,235,.97));box-shadow:0 6px 18px rgba(59,130,246,.35)}  /* KEEP blue (real #3b82f6) */
+.edit-button{background:linear-gradient(135deg,rgba(59,193,200,.97),rgba(110,193,228,.97));box-shadow:0 6px 18px rgba(59,193,200,.35)}  /* was PURPLE → brand TEAL */
+.delete-button{background:linear-gradient(135deg,rgba(239,68,68,.97),rgba(220,38,38,.97));box-shadow:0 6px 18px rgba(239,68,68,.35)}   /* KEPT red */
+
+/* pagination */
+.pagination{display:flex;justify-content:center;align-items:center;gap:6px;margin-top:26px}
+.pagination button{padding:10px 16px;border:2px solid rgba(204,204,204,.3);border-radius:12px;cursor:pointer;font-size:20px;font-weight:600;
+  background:linear-gradient(135deg,rgba(255,255,255,.95),rgba(249,250,251,.95));box-shadow:0 4px 15px rgba(0,0,0,.08)}
+.pagination button.active{color:#fff;border:2px solid rgba(255,255,255,.4);
+  background:linear-gradient(135deg,rgba(59,193,200,.97),rgba(110,193,228,.97));box-shadow:0 6px 25px rgba(59,193,200,.4)}
+.pagination button:disabled{color:#cbd5e1;background:rgba(240,240,240,.5);cursor:not-allowed;box-shadow:none}
+
+/* mock badge */
+.mock-badge{position:fixed;bottom:16px;left:16px;z-index:3000;background:#143852;color:#fff;font-size:14px;font-weight:600;
+  padding:8px 14px;border-radius:10px;box-shadow:0 6px 20px rgba(0,0,0,.25);opacity:.92}
+.mock-badge b{color:#FCD20E}
+
+/* =====================================================================
+   TUTORSHIPS-PAGE SPECIFICS (faithful to tutorships.css; only colours change)
+   ===================================================================== */
+/* "Open Matching Wizard" — real primary was GREEN #4CAF50 → TEAL (new MAIN colour) */
+.btn-wizard{background:linear-gradient(135deg,rgba(59,193,200,.95),rgba(101,190,198,.95));box-shadow:0 6px 20px rgba(59,193,200,.3),inset 0 1px 0 rgba(255,255,255,.3)}
+/* "Refresh Tutorships" — KEEP cyan (real #03A9F4 → #42A5F5) */
+.btn-refresh-tutor{background:linear-gradient(135deg,rgba(3,169,244,.95),rgba(66,165,245,.95));box-shadow:0 6px 20px rgba(3,169,244,.3),inset 0 1px 0 rgba(255,255,255,.3)}
+/* search bar — KEEP blue (real #3b82f6) */
+.tutorship-search-bar{flex-shrink:0;padding:0 20px;min-width:170px;width:350px;height:60px;border:3px solid rgba(59,130,246,.75);background:linear-gradient(135deg,rgba(255,255,255,.9),rgba(240,242,245,.8));border-radius:16px;font-size:22px;font-weight:500;color:#1f2937;box-shadow:0 4px 20px rgba(59,130,246,.3),inset 0 1px 0 rgba(255,255,255,.7)}
+.tutorship-search-bar::placeholder{color:rgba(59,130,246,.5);font-weight:500}
+.tutorship-search-bar:focus{outline:none;border-color:rgba(59,130,246,.95);box-shadow:0 6px 30px rgba(59,130,246,.3),0 0 0 4px rgba(59,130,246,.2)}
+/* filter chip (active search) — KEEP blue (real #3b82f6) */
+.filter-chip-container{display:flex;gap:8px;margin-bottom:26px}
+.filter-chip{display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,rgba(59,130,246,.95),rgba(37,99,235,.95));color:#fff;padding:10px 20px;border-radius:24px;font-size:20px;font-weight:500;border:1px solid rgba(255,255,255,.3);box-shadow:0 4px 15px rgba(59,130,246,.25)}
+.filter-chip strong{font-weight:600;margin:0 4px}
+.filter-chip-close{background:rgba(255,255,255,.2);border:none;color:#fff;font-size:22px;width:28px;height:28px;border-radius:50%;cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center;font-weight:bold}
+/* info-icon column — KEEP blue (real #007bff circle) */
+.info-icon-container{display:inline-flex;cursor:pointer}
+.info-icon{font-style:normal;font-size:22px;font-weight:700;color:#007bff;border:2px solid #007bff;border-radius:50%;width:34px;height:34px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.85)}
+/* editable created-date cell (real DD/MM/YYYY inline-edit affordance) */
+.editable-date-cell{cursor:pointer}
+/* actions container — Delete only (real). Default action base was GREEN → TEAL, delete KEPT red */
+.tutorship-actions{display:flex;gap:12px;justify-content:flex-start}
+.tutorship-actions button{color:#fff;padding:9px 20px;border:2px solid rgba(255,255,255,.3);border-radius:12px;cursor:pointer;font-size:18px;font-weight:600;transition:.25s}
+.tutorship-actions button:hover{transform:translateY(-2px) scale(1.04)}
+.tutorship-actions .delete-button{background:linear-gradient(135deg,rgba(255,77,77,.97),rgba(209,26,42,.97));box-shadow:0 6px 18px rgba(255,77,77,.35)}
+</style>
+</head>
+<body>
+
+  <!-- ===================== SIDEBAR (1:1 with Sidebar.js) ===================== -->
+  <aside class="sidebar">
+    <button class="sidebar-toggle" title="צמצם סרגל">▶</button>
+    <div class="sidebar-user-info">
+      <div class="sidebar-username">שרה לוי</div>
+      <div class="sidebar-roles"><div class="sidebar-role">רכז משפחות</div></div>
+    </div>
+    <div class="sidebar-clock">
+      <div class="sidebar-time">09:42:15</div>
+      <div class="sidebar-date">יום ראשון, 27 ביולי 2026</div>
+    </div>
+    <button class="sidebar-logout-button">יציאה מהמערכת</button>
+    <div class="sidebar-divider"></div>
+
+    <button class="sidebar-nav-btn top-level">לוח משימות</button>
+
+    <button class="sidebar-section-header"><span class="sidebar-section-label">משפחות</span><span class="sidebar-section-arrow open">›</span></button>
+    <div class="sidebar-section-items">
+      <button class="sidebar-nav-btn">משפחות</button>
+      <button class="sidebar-nav-btn active">חונכות</button>
+    </div>
+
+    <button class="sidebar-section-header"><span class="sidebar-section-label">מתנדבים</span><span class="sidebar-section-arrow">›</span></button>
+    <button class="sidebar-section-header"><span class="sidebar-section-label">כספים</span><span class="sidebar-section-arrow">›</span></button>
+    <button class="sidebar-section-header"><span class="sidebar-section-label">פעילויות</span><span class="sidebar-section-arrow">›</span></button>
+    <button class="sidebar-section-header"><span class="sidebar-section-label">ניהול</span><span class="sidebar-section-arrow">›</span></button>
+  </aside>
+
+  <!-- ===================== HEADER ===================== -->
+  <header class="header">
+    <img class="logo" src="childsmile/frontend/src/assets/logo.png" alt="חיוך של ילד">
+    <div class="top-left">
+      <img class="amit-img" src="childsmile/frontend/src/assets/amit.jpg" alt="עמית">
+      <div class="quote">הרבה אנשים אומרים שהם רוצים להצליח אבל לא כולם מוכנים לשלם את המחיר שצריך כדי להצליח</div>
+      <img class="qr-code" src="childsmile/frontend/src/assets/qr-code.jpg" alt="QR">
+    </div>
+    <h1 class="title">חונכות</h1>
+  </header>
+
+  <!-- ===================== CONTENT ===================== -->
+  <main class="content">
+
+    <!-- toolbar (exact button order + labels from Tutorships.js) -->
+    <div class="filter-create-container">
+      <div class="create-task">
+        <button class="tbtn btn-wizard">פתח אשף התאמה</button>
+        <button class="tbtn btn-refresh-tutor">רענן חונכויות</button>
+        <input class="tutorship-search-bar" type="text" placeholder="חפש לפי שם חונך או חניך" value="דנה">
+      </div>
+    </div>
+
+    <!-- active-search filter chip (shows when a query is typed) -->
+    <div class="filter-chip-container">
+      <span class="filter-chip">סינון לפי: <strong>דנה</strong><button class="filter-chip-close" title="נקה סינון">×</button></span>
+    </div>
+
+    <!-- grid -->
+    <div class="families-grid-container">
+      <table class="families-data-grid tutorship-matching-data-grid">
+        <thead>
+          <tr>
+            <th>מידע</th>
+            <th>שם החניך</th>
+            <th>שם החונך</th>
+            <th>תאריך יצירת חונכות <button class="sort-button">▼</button></th>
+            <th>פעולות</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><div class="info-icon-container"><i class="info-icon" title="לחץ כדי לראות פרטים נוספים">i</i></div></td>
+            <td>יעל כהן</td><td>דנה לוי</td>
+            <td class="editable-date-cell">15/03/2025</td>
+            <td><div class="tutorship-actions"><button class="delete-button">מחק</button></div></td>
+          </tr>
+          <tr>
+            <td><div class="info-icon-container"><i class="info-icon" title="לחץ כדי לראות פרטים נוספים">i</i></div></td>
+            <td>איתי לוי</td><td>דנה לוי</td>
+            <td class="editable-date-cell">02/01/2025</td>
+            <td><div class="tutorship-actions"><button class="delete-button">מחק</button></div></td>
+          </tr>
+          <tr>
+            <td><div class="info-icon-container"><i class="info-icon" title="לחץ כדי לראות פרטים נוספים">i</i></div></td>
+            <td>נועה מזרחי</td><td>יוסי כהן</td>
+            <td class="editable-date-cell">20/11/2024</td>
+            <td><div class="tutorship-actions"><button class="delete-button">מחק</button></div></td>
+          </tr>
+          <tr>
+            <td><div class="info-icon-container"><i class="info-icon" title="לחץ כדי לראות פרטים נוספים">i</i></div></td>
+            <td>דניאל פרץ</td><td>מיכל אברהם</td>
+            <td class="editable-date-cell">08/07/2025</td>
+            <td><div class="tutorship-actions"><button class="delete-button">מחק</button></div></td>
+          </tr>
+          <tr>
+            <td><div class="info-icon-container"><i class="info-icon" title="לחץ כדי לראות פרטים נוספים">i</i></div></td>
+            <td>שירה אברהם</td><td>אורי בן דוד</td>
+            <td class="editable-date-cell">12/05/2025</td>
+            <td><div class="tutorship-actions"><button class="delete-button">מחק</button></div></td>
+          </tr>
+          <tr>
+            <td><div class="info-icon-container"><i class="info-icon" title="לחץ כדי לראות פרטים נוספים">i</i></div></td>
+            <td>עומר שטרן</td><td>נעמה כהן</td>
+            <td class="editable-date-cell">29/06/2025</td>
+            <td><div class="tutorship-actions"><button class="delete-button">מחק</button></div></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- pagination -->
+      <div class="pagination">
+        <button disabled>&laquo;</button>
+        <button disabled>&lsaquo;</button>
+        <button class="active">1</button>
+        <button>2</button>
+        <button>3</button>
+        <button>&rsaquo;</button>
+        <button>&raquo;</button>
+      </div>
+    </div>
+  </main>
+
+  <div class="mock-badge">מוקאפ סטטי · צבעי מותג חדשים <b>«חיוך של ילד»</b> — לא בוצעו שינויים בקוד</div>
+
+</body>
+</html>

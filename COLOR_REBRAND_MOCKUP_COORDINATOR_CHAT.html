@@ -1,0 +1,1187 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>מוקאפ — עדכוני צוות / צ'אט רכזים (צבעי מותג חדשים)</title>
+<style>
+/* Same local Rubik variable font the real app uses (styles.css @font-face) so
+   the mock renders identically — NOT Google Fonts. */
+@font-face {
+  font-family: 'Rubik';
+  src: url('childsmile/frontend/src/fonts/Rubik-VariableFont_wght.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+}
+/* =====================================================================
+   Coordinator Chat / Team Updates page (route /coordinator-chat ·
+   sidebar "עדכוני צוות") — STATIC recolored mock.
+   Faithful reproduction of the real page (InnerPageHeader + Sidebar +
+   broadcast section + conversations list + chat window), with the
+   indigo/purple theme swapped to the A Child's Smile palette.
+   Brand: sky #6EC1E4 · teal #3BC1C8 · pink #ED3B97 · yellow #FCD20E · navy #143852
+   Indigo/purple → TEAL (the MAIN brand colour): search focus, chips, reply
+   accent. PINK (#ED3B97) is a SEPARATOR / accent ONLY (header lower edge,
+   title underline, sidebar divider). KEPT exactly as the real app: blue
+   #4a90d9 broadcast/admin bubble, navy chat-header gradient, red #e74c3c
+   broadcast-all/unread badge, green #27ae60 send button. Structure/labels
+   1:1 with the code — ONLY colour values differ.
+   ===================================================================== */
+
+*{box-sizing:border-box;font-family:Rubik,sans-serif}
+html{zoom:.8}
+body{
+  margin:0;direction:rtl;min-height:100vh;
+  display:flex;flex-direction:row-reverse;
+  /* was rainbow indigo/blue/green/orange/pink → brand rainbow (decorative, low alpha) */
+  background:
+    linear-gradient(135deg,
+      rgba(237,59,151,.14) 0%,
+      rgba(110,193,228,.14) 25%,
+      rgba(59,193,200,.14) 50%,
+      rgba(252,210,14,.14) 75%,
+      rgba(242,103,34,.14) 100%);
+  background-attachment:fixed;
+}
+
+/* ===================== SIDEBAR (faithful to common.css; bg recolored TEAL) ===================== */
+.sidebar{
+  background:linear-gradient(135deg,
+    rgba(110,193,228,.9) 0%,
+    rgba(59,193,200,.92) 45%,
+    rgba(101,190,198,.94) 100%);
+  color:#fff;width:280px;min-height:100vh;padding:60px 15px 25px;
+  box-shadow:-4px 0 40px rgba(59,193,200,.4), -2px 0 20px rgba(101,190,198,.3), inset 1px 0 0 rgba(255,255,255,.3);
+  position:fixed;right:0;top:0;display:flex;flex-direction:column;z-index:1001;
+  border-left:2px solid rgba(255,255,255,.3);overflow-y:auto;
+}
+.sidebar-toggle{position:absolute;top:15px;right:25px;width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px}
+.sidebar-user-info{background:linear-gradient(135deg,rgba(255,255,255,.25),rgba(255,255,255,.15));border:2px solid rgba(255,255,255,.3);border-radius:16px;padding:20px;margin-bottom:20px;text-align:center;box-shadow:0 4px 20px rgba(0,0,0,.15),inset 0 1px 0 rgba(255,255,255,.4)}
+.sidebar-username{font-size:28px;font-weight:700;color:#fff;text-shadow:0 2px 8px rgba(0,0,0,.3);margin-bottom:12px;letter-spacing:.5px}
+.sidebar-roles{display:flex;flex-direction:column;gap:6px}
+.sidebar-role{background:linear-gradient(90deg,rgba(255,255,255,.2),rgba(255,255,255,.1));padding:6px 12px;border-radius:8px;font-size:18px;font-weight:600;color:#fff;border:1px solid rgba(255,255,255,.2)}
+/* clock stays GREEN (not indigo/purple) */
+.sidebar-clock{background:linear-gradient(135deg,rgba(16,185,129,.85),rgba(5,150,105,.85));border:2px solid rgba(255,255,255,.4);border-radius:16px;padding:20px;margin-bottom:20px;text-align:center;box-shadow:0 6px 25px rgba(16,185,129,.35),inset 0 1px 0 rgba(255,255,255,.4)}
+.sidebar-time{font-size:36px;font-weight:800;color:#fff;letter-spacing:2px;text-shadow:0 3px 10px rgba(0,0,0,.3);margin-bottom:8px}
+.sidebar-date{font-size:18px;font-weight:600;color:rgba(255,255,255,.95)}
+/* logout stays RED */
+.sidebar-logout-button{background:linear-gradient(135deg,rgba(239,68,68,.95),rgba(220,38,38,.95));color:#fff;padding:16px 24px;border:2px solid rgba(255,255,255,.4);border-radius:14px;cursor:pointer;font-size:22px;font-weight:700;width:100%;margin-bottom:20px;box-shadow:0 6px 25px rgba(239,68,68,.4),inset 0 1px 0 rgba(255,255,255,.3)}
+/* PINK = separator only — the sidebar divider */
+.sidebar-divider{height:3px;background:linear-gradient(90deg,transparent,rgba(237,59,151,.9),transparent);margin:20px 0;border-radius:2px}
+.sidebar-nav-btn{display:block;width:100%;background:none;border:none;color:rgba(255,255,255,.82);font-size:32px;padding:6px 2px;cursor:pointer;text-align:right}
+.sidebar-nav-btn.top-level{font-weight:600;color:rgba(255,255,255,.85)}
+.sidebar-nav-btn.active{color:#fff;font-weight:700}
+.sidebar-section-header{display:flex;align-items:center;gap:4px;width:100%;background:none;border:none;border-bottom:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.85);font-size:32px;font-weight:600;padding:8px 2px 6px;cursor:pointer;margin-top:10px;text-align:right}
+.sidebar-section-label{flex:1;text-align:right}
+.sidebar-section-arrow{font-size:20px;font-weight:300;color:rgba(255,255,255,.55);transition:transform .2s;transform:rotate(0deg);line-height:1}
+.sidebar-section-arrow.open{transform:rotate(90deg)}
+.sidebar-section-items{display:flex;flex-direction:column;padding-right:12px;border-right:1px solid rgba(255,255,255,.15);margin:2px 6px 0 0}
+.sidebar-section-items .sidebar-nav-btn{font-size:24px;color:rgba(255,255,255,.7);padding:5px 2px}
+.sidebar-section-items .sidebar-nav-btn.active{color:#fff;font-weight:700}
+
+/* ===================== HEADER (fixed top) ===================== */
+.header{
+  background:linear-gradient(135deg,
+    rgba(110,193,228,.9) 0%,
+    rgba(59,193,200,.92) 45%,
+    rgba(101,190,198,.95) 100%);
+  color:#fff;display:flex;align-items:center;justify-content:center;
+  padding:20px 30px;height:200px;position:fixed;right:0;top:0;left:0;z-index:1000;
+  border-bottom:3px solid rgba(255,255,255,.3);
+  box-shadow:0 8px 40px rgba(59,193,200,.35), 0 4px 20px rgba(101,190,198,.28), inset 0 -1px 0 rgba(255,255,255,.3);
+}
+/* PINK = separator only — the header's lower edge (echoes the site's pink underline) */
+.header::before{content:'';position:absolute;bottom:0;left:0;right:0;height:5px;
+  background:linear-gradient(90deg, rgba(237,59,151,1) 0%, rgba(219,75,149,1) 100%);
+  box-shadow:0 2px 15px rgba(237,59,151,.5);}
+.logo{width:180px;height:180px;position:absolute;right:310px;top:10px;border-radius:20px;
+  border:3px solid rgba(255,255,255,.5);background:#fff;padding:10px;object-fit:contain;
+  box-shadow:0 6px 30px rgba(0,0,0,.2),0 0 20px rgba(255,255,255,.25);z-index:1002;}
+.title{font-size:4em;font-weight:900;margin:0;position:absolute;left:50%;transform:translateX(-50%);
+  white-space:nowrap;letter-spacing:2px;
+  background:linear-gradient(135deg,#fff 0%,#f0f9ff 25%,#e0f7fa 50%,#bae6fd 75%,#fff 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  filter:drop-shadow(0 4px 20px rgba(255,255,255,.4)) drop-shadow(0 2px 10px rgba(59,193,200,.65)) drop-shadow(0 0 30px rgba(101,190,198,.4));}
+/* PINK underline separator under the page title (mirrors the site's heading underline) */
+.title::after{content:'';position:absolute;left:50%;bottom:-14px;transform:translateX(-50%);width:78%;height:5px;border-radius:6px;
+  background:linear-gradient(90deg,rgba(237,59,151,.95),rgba(219,75,149,.95));box-shadow:0 3px 12px rgba(237,59,151,.5)}
+.top-left{position:absolute;top:20px;left:40px;display:flex;align-items:center;gap:25px;z-index:1001}
+.amit-img{width:130px;height:170px;object-fit:cover;border-radius:18px;border:3px solid rgba(255,255,255,.5);box-shadow:0 6px 30px rgba(0,0,0,.25)}
+.quote{font-size:20px;font-weight:600;text-align:right;color:#143852;max-width:360px;
+  background:linear-gradient(135deg,rgba(255,255,255,.95),rgba(249,250,251,.95));padding:14px 18px;border-radius:14px;
+  box-shadow:0 6px 24px rgba(0,0,0,.12)}
+.qr-code{width:140px;height:140px;border-radius:16px;border:3px solid rgba(255,255,255,.5);background:#fff;padding:10px;box-shadow:0 6px 30px rgba(0,0,0,.2)}
+
+/* =====================================================================
+   CoordinatorChat.css — recolored (ONLY indigo/purple → brand). Every
+   other value (blues, navy chat-header, greens, reds, grays, sizes,
+   spacing, radii, shadows) is copied VERBATIM from the real stylesheet.
+   ===================================================================== */
+.coordinator-chat-page {
+  display: flex;
+  flex-direction: column;
+  background: #f4f6fb;
+  direction: rtl;
+  margin-top: 200px;
+  padding: 24px 32px;
+  padding-right: 320px;
+  gap: 24px;
+  overflow-y: auto;
+  max-height: calc(100vh - 200px);
+}
+
+.coordinator-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 400px;
+  font-size: 24px;
+  color: #666;
+}
+
+/* TOP SECTION: Broadcast Controls (Independent) */
+.coordinator-broadcast-section {
+  background: white;
+  padding: 20px 24px;
+  border-radius: 10px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.07);
+}
+
+.broadcast-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.broadcast-header h3 {
+  margin: 0;
+  color: #2c3e50;
+  font-size: 26px;
+  font-weight: 600;
+}
+
+.selection-count {
+  font-size: 24px;
+  color: #4a90d9;
+  font-weight: 600;
+}
+
+/* Coordinator Search */
+.coordinator-search-wrap {
+  position: relative;
+  margin: 6px 12px 8px;
+}
+
+.coordinator-search-input {
+  width: 100%;
+  padding: 8px 14px;
+  border: 1.5px solid #A9DCEF; /* was indigo tint #c4b5f4 → light sky */
+  border-radius: 10px;
+  font-size: 16px;
+  font-family: Rubik, sans-serif;
+  outline: none;
+  direction: rtl;
+  box-sizing: border-box;
+}
+
+.coordinator-search-input:focus {
+  border-color: #3BC1C8; /* was #7c3aed → teal */
+}
+
+.coordinator-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  left: 0;
+  background: #fff;
+  border: 1.5px solid #A9DCEF; /* was #c4b5f4 → light sky */
+  border-radius: 10px;
+  box-shadow: 0 6px 20px rgba(59, 193, 200, 0.15); /* was rgba(99,102,241,.15) → teal */
+  z-index: 1300;
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.coordinator-option {
+  padding: 9px 14px;
+  font-size: 16px;
+  font-family: Rubik, sans-serif;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  direction: rtl;
+  border-bottom: 1px solid #EAF7F8; /* was purple tint #f3f0ff → light teal */
+}
+
+.coordinator-option:last-child {
+  border-bottom: none;
+}
+
+.coordinator-option:hover:not(.already-added) {
+  background: #EAF7F8; /* was #f5f3ff → light teal */
+}
+
+.coordinator-option.already-added {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.option-phone {
+  font-size: 13px;
+  color: #888;
+}
+
+.option-added-badge {
+  margin-right: auto;
+  font-size: 13px;
+  color: #059669; /* KEPT green */
+  font-weight: 700;
+}
+
+/* Chips for selected coordinators */
+.coordinator-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  padding: 6px 12px 4px;
+}
+
+.coordinator-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: #EAF7F8; /* was #ede9fe → light teal */
+  color: #143852; /* was #5a3d8c → navy */
+  border-radius: 20px;
+  padding: 4px 12px 4px 8px;
+  font-size: 15px;
+  font-family: Rubik, sans-serif;
+  font-weight: 600;
+}
+
+.chip-remove-btn {
+  background: none;
+  border: none;
+  color: #3BC1C8; /* was #7c3aed → teal */
+  font-size: 14px;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+  margin-right: 2px;
+}
+
+.chip-remove-btn:hover {
+  color: #dc2626; /* KEPT red */
+}
+
+.coordinators-empty {
+  margin: 0;
+  padding: 8px 12px;
+  font-size: 14px;
+  color: #888;
+  text-align: right;
+  direction: rtl;
+}
+
+.broadcast-checkbox-label {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  font-weight: 600;
+  color: #2c3e50;
+  gap: 10px;
+  margin: 0;
+  font-size: 24px;
+}
+
+.broadcast-checkbox-label input[type="checkbox"] {
+  cursor: pointer;
+  width: 18px;
+  height: 18px;
+  accent-color: #3498db; /* KEPT blue */
+}
+
+.broadcast-message-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #e0e6ed;
+}
+
+.broadcast-message-input {
+  width: 100%;
+  min-height: 80px;
+  padding: 12px 16px;
+  border: 2px solid #e3eaf5;
+  border-radius: 8px;
+  font-family: Rubik, sans-serif;
+  font-size: 24px;
+  resize: vertical;
+  box-sizing: border-box;
+  direction: rtl;
+  text-align: right;
+  background: #fafbfc;
+}
+
+.broadcast-message-input:focus {
+  outline: none;
+  border-color: #4a90d9; /* KEPT blue */
+  box-shadow: 0 0 5px rgba(74, 144, 217, 0.2);
+}
+
+.broadcast-buttons {
+  display: flex;
+  gap: 12px;
+}
+
+.btn-broadcast-selected,
+.btn-broadcast-all {
+  flex: 1;
+  padding: 12px 16px;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 24px;
+  transition: all 0.3s ease;
+}
+
+.btn-broadcast-selected {
+  background: #4a90d9; /* KEPT blue */
+  color: white;
+}
+
+.btn-broadcast-selected:hover:not(:disabled) {
+  background: #3a7bc8;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(74, 144, 217, 0.3);
+}
+
+.btn-broadcast-all {
+  background: #e74c3c; /* KEPT red */
+  color: white;
+}
+
+.btn-broadcast-all:hover:not(:disabled) {
+  background: #c0392b;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(231, 76, 60, 0.3);
+}
+
+.btn-broadcast-selected:disabled,
+.btn-broadcast-all:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Main Chat Area */
+.chat-main {
+  display: flex;
+  gap: 20px;
+  flex: 1;
+  min-height: 500px;
+  max-height: 600px;
+  overflow: hidden;
+}
+
+/* Conversations List */
+.conversations-list {
+  width: 300px;
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.07);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.conversations-list h3 {
+  margin: 0;
+  padding: 16px;
+  border-bottom: 1px solid #ecf0f1;
+  font-size: 26px;
+  font-weight: 700;
+  color: #2c3e50;
+  background: #f8f9fa;
+}
+
+.conversations-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0;
+}
+
+.conversation-item {
+  padding: 14px 16px;
+  border-bottom: 1px solid #ecf0f1;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: white;
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.conversation-item:hover {
+  background: #f8f9fa;
+}
+
+.conversation-item.active {
+  background: #e3f2fd; /* KEPT light blue */
+  border-right: 4px solid #4a90d9; /* KEPT blue */
+  padding-right: 12px;
+}
+
+.conversation-item.unread {
+  font-weight: 600;
+  background: #fffaf0;
+}
+
+.conversation-item.broadcast-selected {
+  background: #d4edff;
+  border-right: 4px solid #4a90d9;
+  padding-right: 12px;
+}
+
+.list-subtitle {
+  padding: 0 16px;
+  margin-bottom: 8px;
+}
+
+.conversation-header {
+  flex: 1;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.coordinator-name {
+  flex: 1;
+  font-weight: 500;
+  color: #2c3e50;
+  font-size: 24px;
+}
+
+.unread-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #e74c3c; /* KEPT red */
+  color: white;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  font-size: 24px;
+  font-weight: bold;
+  flex-shrink: 0;
+}
+
+.last-message {
+  font-size: 24px;
+  color: #7f8c8d;
+  margin-top: 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.checkbox-wrapper {
+  display: flex;
+  align-items: center;
+  margin-left: 12px;
+  margin-right: -8px;
+  flex-shrink: 0;
+}
+
+.checkbox-wrapper input[type="checkbox"] {
+  cursor: pointer;
+  width: 18px;
+  height: 18px;
+  accent-color: #4a90d9;
+  margin: 0;
+}
+
+/* Chat Window */
+.chat-window {
+  flex: 1;
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.07);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+/* Background images for different coordinator types */
+.chat-window.bg-tutored-coordinator {
+  background-image: url('childsmile/frontend/src/assets/bg-tutored-coordinator.svg');
+}
+
+.chat-window.bg-families-coordinator {
+  background-image: url('childsmile/frontend/src/assets/bg-families-coordinator.svg');
+}
+
+.chat-window.bg-volunteer-coordinator {
+  background-image: url('childsmile/frontend/src/assets/bg-volunteer-coordinator.svg');
+}
+
+/* Broadcast Info Section */
+.broadcast-info {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 32px 24px;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+  text-align: center;
+}
+
+.broadcast-info h3 {
+  margin: 0;
+  color: #2c3e50;
+  font-size: 28px;
+  font-weight: 700;
+}
+
+.broadcast-info p {
+  margin: 0;
+  color: #666;
+  font-size: 24px;
+  line-height: 1.5;
+  max-width: 400px;
+}
+
+.message-preview {
+  background: #f0f4f8;
+  padding: 16px;
+  border-radius: 8px;
+  margin-top: 16px;
+  width: 100%;
+  max-width: 500px;
+  text-align: right;
+  direction: rtl;
+}
+
+.message-preview strong {
+  display: block;
+  margin-bottom: 10px;
+  color: #2c3e50;
+  font-size: 24px;
+}
+
+.message-preview p {
+  margin: 0;
+  color: #2c3e50;
+  font-size: 24px;
+  white-space: pre-wrap;
+  word-break: break-word;
+  line-height: 1.6;
+}
+
+.chat-header {
+  padding: 18px 24px;
+  border-bottom: 1px solid #ecf0f1;
+  background: linear-gradient(135deg, #1a3a5c 0%, #2c5aa0 100%); /* KEPT navy/blue */
+  color: white;
+}
+
+.chat-header h3 {
+  margin: 0 0 8px 0;
+  font-size: 26px;
+  font-weight: 700;
+}
+
+.coordinator-info {
+  display: flex;
+  gap: 20px;
+  font-size: 24px;
+  opacity: 0.9;
+  align-items: center;
+}
+
+.refresh-chat-btn {
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  opacity: 0.9;
+  transition: transform 0.3s, opacity 0.2s;
+  padding: 4px 8px;
+  border-radius: 6px;
+}
+
+.refresh-chat-btn:hover {
+  opacity: 1;
+  transform: rotate(180deg);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.refresh-chat-btn:active {
+  transform: rotate(180deg) scale(0.9);
+}
+
+
+.coordinator-info small {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.no-selection {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #95a5a6;
+  font-size: 24px;
+}
+
+/* Messages Container */
+.messages-container {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.no-messages {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: #95a5a6;
+  font-style: italic;
+  font-size: 24px;
+}
+
+.message {
+  display: flex;
+  margin-bottom: 8px;
+  animation: slideIn 0.3s ease;
+  gap: 8px;
+  align-items: flex-end;
+  position: relative;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.message-menu-wrapper {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  flex-shrink: 0;
+  z-index: 1401;
+}
+
+.message-menu-btn {
+  background: none;
+  border: none;
+  color: #000;
+  font-size: 16px;
+  cursor: pointer;
+  padding: 0;
+  opacity: 0;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  width: 20px;
+  height: 20px;
+  line-height: 1;
+  transform: rotate(-90deg);
+}
+
+.message:hover .message-menu-btn {
+  opacity: 1;
+  color: #000;
+}
+
+.message-menu-btn:hover {
+  opacity: 0.7;
+}
+
+.message-menu-dropdown {
+  position: absolute;
+  top: 24px;
+  right: 0;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 1400;
+  min-width: 120px;
+  overflow: hidden;
+}
+
+.menu-item {
+  width: 100%;
+  padding: 10px 14px;
+  border: none;
+  background: none;
+  text-align: right;
+  direction: rtl;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  font-family: Rubik, sans-serif;
+}
+
+.menu-item:hover {
+  background-color: #f5f5f5;
+}
+
+.menu-item.delete-option:hover {
+  background-color: #ffe6e6; /* KEPT red tint */
+  color: #e74c3c; /* KEPT red */
+}
+
+.menu-item.reply-option:hover {
+  background-color: #e6f2ff; /* KEPT blue tint */
+  color: #4a90d9; /* KEPT blue */
+}
+
+.admin-message {
+  justify-content: flex-end;
+  flex-direction: row-reverse;
+  direction: rtl;
+}
+
+.admin-message .message-content {
+  background: #4a90d9; /* KEPT blue */
+  color: white;
+  border-radius: 12px 12px 0 12px;
+  max-width: 70%;
+}
+
+.coordinator-message {
+  justify-content: flex-end;
+}
+
+.coordinator-message .message-content {
+  background: #ecf0f1;
+  color: #2c3e50;
+  border-radius: 12px 12px 12px 0;
+  max-width: 70%;
+  direction: rtl;
+  text-align: right;
+}
+
+.message-content {
+  padding: 12px 16px;
+  word-wrap: break-word;
+  direction: rtl;
+  text-align: right;
+  position: relative;
+}
+
+.message-content strong {
+  display: block;
+  font-size: 24px;
+  opacity: 0.9;
+  margin-bottom: 4px;
+  text-align: right;
+  direction: rtl;
+}
+
+.message-content p {
+  margin: 4px 0;
+  line-height: 1.4;
+  word-break: break-word;
+  font-size: 24px;
+}
+
+.message-content small {
+  display: block;
+  font-size: 24px;
+  opacity: 0.7;
+  margin-top: 6px;
+}
+
+/* Message Input Container */
+.message-input-container {
+  padding: 16px 20px;
+  border-top: 1px solid #ecf0f1;
+  display: flex;
+  gap: 12px;
+  background: #f8f9fa;
+  position: relative;
+  align-items: flex-end;
+}
+
+.message-input-wrapper {
+  display: flex;
+  gap: 12px;
+  padding: 16px 20px;
+  align-items: flex-end;
+}
+
+.reply-preview {
+  position: absolute;
+  top: 8px;
+  right: 16px;
+  left: 16px;
+  background: rgba(59, 193, 200, 0.1); /* was rgba(124,58,237,.1) → teal */
+  border-right: 3px solid #3BC1C8; /* was #7c3aed → teal */
+  padding: 8px 12px;
+  border-radius: 4px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  flex-direction: row-reverse;
+  z-index: 10;
+}
+
+.reply-preview-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  text-align: right;
+}
+
+.reply-preview-content strong {
+  font-size: 18px;
+  color: #3BC1C8; /* was #7c3aed → teal */
+}
+
+.reply-preview-content p {
+  margin: 0;
+  font-size: 16px;
+  color: #555;
+  line-height: 1.2;
+}
+
+.reply-close-btn {
+  background: none;
+  border: none;
+  font-size: 18px;
+  color: #3BC1C8; /* was #7c3aed → teal */
+  cursor: pointer;
+  padding: 0 4px;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.reply-close-btn:hover {
+  color: #143852; /* was #5b21b6 → navy */
+  transform: scale(1.15);
+}
+
+.message-input-container:has(.reply-preview) {
+  padding-top: 60px;
+}
+
+.message-input-container > textarea,
+.message-input-container > button {
+  padding: 16px 20px;
+}
+
+.message-input-container > textarea {
+  margin: 0;
+  padding: 12px 16px;
+  flex: 1;
+}
+
+.message-input-container > button {
+  padding: 12px 24px;
+}
+
+.message-input {
+  flex: 1;
+  padding: 12px 16px;
+  border: 2px solid #e3eaf5;
+  border-radius: 8px;
+  font-family: Rubik, sans-serif;
+  font-size: 24px;
+  resize: none;
+  max-height: 100px;
+  direction: rtl;
+  text-align: right;
+  box-sizing: border-box;
+  background: white;
+}
+
+.message-input:focus {
+  outline: none;
+  border-color: #4a90d9; /* KEPT blue */
+  box-shadow: 0 0 5px rgba(74, 144, 217, 0.2);
+}
+
+.send-button {
+  padding: 12px 24px;
+  background: #27ae60; /* KEPT green (send/success) */
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 24px;
+  white-space: nowrap;
+}
+
+.send-button:hover:not(:disabled) {
+  background: #229954;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(39, 174, 96, 0.3);
+}
+
+.send-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Scrollbar Styling */
+.conversations-scroll::-webkit-scrollbar,
+.messages-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.conversations-scroll::-webkit-scrollbar-track,
+.messages-container::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.conversations-scroll::-webkit-scrollbar-thumb,
+.messages-container::-webkit-scrollbar-thumb {
+  background: #bdc3c7;
+  border-radius: 3px;
+}
+
+.conversations-scroll::-webkit-scrollbar-thumb:hover,
+.messages-container::-webkit-scrollbar-thumb:hover {
+  background: #95a5a6;
+}
+
+/* mock badge */
+.mock-badge{position:fixed;bottom:16px;left:16px;z-index:3000;background:#143852;color:#fff;font-size:14px;font-weight:600;
+  padding:8px 14px;border-radius:10px;box-shadow:0 6px 20px rgba(0,0,0,.25);opacity:.92}
+.mock-badge b{color:#FCD20E}
+</style>
+</head>
+<body>
+
+  <!-- ===================== SIDEBAR (1:1 with Sidebar.js) ===================== -->
+  <aside class="sidebar">
+    <button class="sidebar-toggle" title="צמצם סרגל">▶</button>
+    <div class="sidebar-user-info">
+      <div class="sidebar-username">שרה לוי</div>
+      <div class="sidebar-roles"><div class="sidebar-role">מנהל מערכת</div></div>
+    </div>
+    <div class="sidebar-clock">
+      <div class="sidebar-time">09:42:15</div>
+      <div class="sidebar-date">יום ראשון, 27 ביולי 2026</div>
+    </div>
+    <button class="sidebar-logout-button">יציאה מהמערכת</button>
+    <div class="sidebar-divider"></div>
+
+    <button class="sidebar-nav-btn top-level">לוח משימות</button>
+
+    <button class="sidebar-section-header"><span class="sidebar-section-label">משפחות</span><span class="sidebar-section-arrow">›</span></button>
+    <button class="sidebar-section-header"><span class="sidebar-section-label">מתנדבים</span><span class="sidebar-section-arrow">›</span></button>
+    <button class="sidebar-section-header"><span class="sidebar-section-label">כספים</span><span class="sidebar-section-arrow">›</span></button>
+    <button class="sidebar-section-header"><span class="sidebar-section-label">פעילויות</span><span class="sidebar-section-arrow">›</span></button>
+
+    <button class="sidebar-section-header"><span class="sidebar-section-label">ניהול</span><span class="sidebar-section-arrow open">›</span></button>
+    <div class="sidebar-section-items">
+      <button class="sidebar-nav-btn">דוחות</button>
+      <button class="sidebar-nav-btn">ניהול מערכת</button>
+      <button class="sidebar-nav-btn">ניהול פגישות</button>
+      <button class="sidebar-nav-btn active">עדכוני צוות</button>
+      <button class="sidebar-nav-btn">יומן ביקורת</button>
+    </div>
+  </aside>
+
+  <!-- ===================== HEADER ===================== -->
+  <header class="header">
+    <img class="logo" src="childsmile/frontend/src/assets/logo.png" alt="חיוך של ילד">
+    <div class="top-left">
+      <img class="amit-img" src="childsmile/frontend/src/assets/amit.jpg" alt="עמית">
+      <div class="quote">הרבה אנשים אומרים שהם רוצים להצליח אבל לא כולם מוכנים לשלם את המחיר שצריך כדי להצליח</div>
+      <img class="qr-code" src="childsmile/frontend/src/assets/qr-code.jpg" alt="QR">
+    </div>
+    <h1 class="title">עדכוני צוות</h1>
+  </header>
+
+  <!-- ===================== PAGE (1:1 with CoordinatorChat.js render) ===================== -->
+  <div class="coordinator-chat-page">
+
+    <!-- TOP SECTION: Coordinator Search for Broadcasting -->
+    <div class="coordinator-broadcast-section">
+      <div class="broadcast-header">
+        <h3>שלח הודעה לכמה רכזים</h3>
+        <span class="selection-count">2 נבחרים</span>
+      </div>
+
+      <!-- Selected chips -->
+      <div class="coordinator-chips">
+        <span class="coordinator-chip">
+          רותם ברק
+          <button type="button" class="chip-remove-btn">✕</button>
+        </span>
+        <span class="coordinator-chip">
+          מיכל שרון
+          <button type="button" class="chip-remove-btn">✕</button>
+        </span>
+      </div>
+
+      <!-- Coordinator Search -->
+      <div class="coordinator-search-wrap">
+        <input type="text" class="coordinator-search-input" placeholder="🔍 חפש רכז להוסיף...">
+      </div>
+
+      <div class="broadcast-message-section">
+        <textarea placeholder="הודעה..." class="broadcast-message-input"></textarea>
+        <div class="broadcast-buttons">
+          <button class="btn-broadcast-all">שלח לכולם</button>
+          <button class="btn-broadcast-selected">שלח 2 </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- BOTTOM SECTION: Chat History with Selected Coordinator -->
+    <div class="chat-main">
+      <!-- Left Column: Conversations List -->
+      <div class="conversations-list">
+        <h3>שיחות (5)</h3>
+        <div class="conversations-scroll">
+          <div class="conversation-item active">
+            <div class="conversation-header">
+              <div class="manager-name">דנה לוי</div>
+            </div>
+            <div class="last-message">👨‍💼 כן, אושרה אתמול. אפשר להתקדם...</div>
+          </div>
+          <div class="conversation-item unread">
+            <div class="conversation-header">
+              <div class="manager-name">יוסי כהן</div>
+              <span class="unread-badge">3</span>
+            </div>
+            <div class="last-message">👤 מתי הפגישה הבאה של הצוות?...</div>
+          </div>
+          <div class="conversation-item">
+            <div class="conversation-header">
+              <div class="manager-name">רותם ברק</div>
+            </div>
+            <div class="last-message">👨‍💼 תודה על העדכון המהיר!...</div>
+          </div>
+          <div class="conversation-item unread">
+            <div class="conversation-header">
+              <div class="manager-name">מיכל שרון</div>
+              <span class="unread-badge">1</span>
+            </div>
+            <div class="last-message">👤 שלחתי את הדוח החודשי במייל...</div>
+          </div>
+          <div class="conversation-item">
+            <div class="conversation-header">
+              <div class="manager-name">אבי גולן</div>
+            </div>
+            <div class="last-message">👨‍💼 בסדר גמור, נדבר מחר בבוקר...</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Column: Chat Window -->
+      <div class="chat-window">
+        <div class="chat-header">
+          <h3>דנה לוי</h3>
+          <div class="coordinator-info">
+            <small>📱 050-1234567</small>
+            <button class="refresh-chat-btn" title="Refresh chat">🔄</button>
+          </div>
+        </div>
+
+        <div class="messages-container">
+          <div class="message admin-message">
+            <div class="message-content">
+              <div class="message-menu-wrapper">
+                <button class="message-menu-btn" title="אפשרויות הודעה">&gt;</button>
+              </div>
+              <strong>👨‍💼 ליאם</strong>
+              <p>שלום דנה, נא לעדכן את רשימת המשפחות עד סוף השבוע 🙏</p>
+              <small>27.7.2026, 9:12:04</small>
+            </div>
+          </div>
+          <div class="message coordinator-message">
+            <div class="message-content">
+              <div class="message-menu-wrapper">
+                <button class="message-menu-btn" title="אפשרויות הודעה">&gt;</button>
+              </div>
+              <strong>👤 רכז</strong>
+              <p>בטח, אעדכן היום אחר הצהריים</p>
+              <small>27.7.2026, 9:15:31</small>
+            </div>
+          </div>
+          <div class="message admin-message">
+            <div class="message-content">
+              <div class="message-menu-wrapper">
+                <button class="message-menu-btn" title="אפשרויות הודעה">&gt;</button>
+              </div>
+              <strong>👨‍💼 ליאם</strong>
+              <p>מעולה, תודה רבה!</p>
+              <small>27.7.2026, 9:16:12</small>
+            </div>
+          </div>
+          <div class="message coordinator-message">
+            <div class="message-content">
+              <div class="message-menu-wrapper">
+                <button class="message-menu-btn" title="אפשרויות הודעה">&gt;</button>
+              </div>
+              <strong>👤 רכז</strong>
+              <p>יש לי שאלה לגבי משפחת כהן — האם אושרה החונכות?</p>
+              <small>27.7.2026, 9:33:47</small>
+            </div>
+          </div>
+          <div class="message admin-message">
+            <div class="message-content">
+              <div class="message-menu-wrapper">
+                <button class="message-menu-btn" title="אפשרויות הודעה">&gt;</button>
+              </div>
+              <strong>👨‍💼 ליאם</strong>
+              <p>כן, אושרה אתמול. אפשר להתקדם.</p>
+              <small>27.7.2026, 9:41:58</small>
+            </div>
+          </div>
+        </div>
+
+        <div class="message-input-container">
+          <div class="reply-preview">
+            <div class="reply-preview-content">
+              <strong>📍 ענה ל: 👤 רכז</strong>
+              <p>יש לי שאלה לגבי משפחת כהן — האם אושרה החונכות?</p>
+            </div>
+            <button class="reply-close-btn">✕</button>
+          </div>
+          <textarea placeholder="הקלד הודעה..." class="message-input"></textarea>
+          <button class="send-button">שלח</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="mock-badge">מוקאפ סטטי · צבעי מותג חדשים <b>«חיוך של ילד»</b> — לא בוצעו שינויים בקוד</div>
+
+</body>
+</html>

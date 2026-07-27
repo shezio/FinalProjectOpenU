@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>מוקאפ מובייל — ניהול מערכת (iPhone 12 · צבעי מותג «חיוך של ילד»)</title>
+<style>
+/* Same local Rubik variable font the real app uses (styles.css @font-face) so
+   the mock renders identically — NOT Google Fonts. */
+@font-face {
+  font-family: 'Rubik';
+  src: url('childsmile/frontend/src/fonts/Rubik-VariableFont_wght.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+}
+/* =====================================================================
+   System Management page — STATIC recolored MOBILE mock (iPhone 12, 390×844).
+   Faithful reproduction of the REAL mobile layout (per mobile.css
+   @media(max-width:767px)): fixed InnerPageHeader (shrunk, single row) +
+   wrapping controls toolbar + horizontally-scrolling .staff-data-grid +
+   fixed bottom nav bar (#mobile-bottom-nav). The audit-log button is hidden
+   on mobile (isMobile in SystemManagement.js) — omitted here.
+   Colours ONLY differ from the real app: indigo/purple theme → A Child's Smile
+   palette (sky #6EC1E4 · teal #3BC1C8 · pink #ED3B97 separator · navy #143852).
+   The mobile.css @media block is assembled here WITH THE @media WRAPPER REMOVED
+   so it applies at the fixed 390px phone width, mimicking a real phone.
+   The iPhone 12 frame (bezel/status-bar/island/home-indicator) is presentation
+   chrome — kept independent of the app CSS so it is NOT recolored.
+   Base app CSS reused (recolored) from COLOR_REBRAND_MOCKUP_SYSTEM_MANAGEMENT.html;
+   chrome (header/nav/frame) copied VERBATIM from COLOR_REBRAND_MOCKUP_MOBILE_FAMILIES.html.
+   ===================================================================== */
+
+*{box-sizing:border-box;font-family:Rubik,sans-serif}
+
+/* =====================================================================
+   BASE APP CSS (recolored)
+   ===================================================================== */
+
+/* ---------- HEADER (fixed top, InnerPageHeader) ---------- */
+.header{
+  background:linear-gradient(135deg,
+    rgba(110,193,228,.9) 0%,
+    rgba(59,193,200,.92) 45%,
+    rgba(101,190,198,.95) 100%);
+  color:#fff;display:flex;align-items:center;justify-content:center;
+  padding:20px 30px;height:200px;position:fixed;right:0;top:0;left:0;z-index:1000;
+  border-bottom:3px solid rgba(255,255,255,.3);
+  box-shadow:0 8px 40px rgba(59,193,200,.35), 0 4px 20px rgba(101,190,198,.28), inset 0 -1px 0 rgba(255,255,255,.3);
+}
+/* PINK = separator only — the header's lower edge (echoes the site's pink underline) */
+.header::before{content:'';position:absolute;bottom:0;left:0;right:0;height:5px;
+  background:linear-gradient(90deg, rgba(237,59,151,1) 0%, rgba(219,75,149,1) 100%);
+  box-shadow:0 2px 15px rgba(237,59,151,.5);}
+.logo{width:180px;height:180px;position:absolute;right:310px;top:10px;border-radius:20px;
+  border:3px solid rgba(255,255,255,.5);background:#fff;padding:10px;object-fit:contain;
+  box-shadow:0 6px 30px rgba(0,0,0,.2),0 0 20px rgba(255,255,255,.25);z-index:1002;}
+.title{font-size:4em;font-weight:900;margin:0;position:absolute;left:50%;transform:translateX(-50%);
+  white-space:nowrap;letter-spacing:2px;
+  background:linear-gradient(135deg,#fff 0%,#f0f9ff 25%,#e0f7fa 50%,#bae6fd 75%,#fff 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  filter:drop-shadow(0 4px 20px rgba(255,255,255,.4)) drop-shadow(0 2px 10px rgba(59,193,200,.65)) drop-shadow(0 0 30px rgba(101,190,198,.4));}
+/* PINK underline separator under the page title (mirrors the site's heading underline) */
+.title::after{content:'';position:absolute;left:50%;bottom:-14px;transform:translateX(-50%);width:78%;height:5px;border-radius:6px;
+  background:linear-gradient(90deg,rgba(237,59,151,.95),rgba(219,75,149,.95));box-shadow:0 3px 12px rgba(237,59,151,.5)}
+.top-left{position:absolute;top:20px;left:40px;display:flex;align-items:center;gap:25px;z-index:1001}
+.amit-img{width:130px;height:170px;object-fit:cover;border-radius:18px;border:3px solid rgba(255,255,255,.5);box-shadow:0 6px 30px rgba(0,0,0,.25)}
+.quote{font-size:20px;font-weight:600;text-align:right;color:#143852;max-width:360px;
+  background:linear-gradient(135deg,rgba(255,255,255,.95),rgba(249,250,251,.95));padding:14px 18px;border-radius:14px;
+  box-shadow:0 6px 24px rgba(0,0,0,.12)}
+.qr-code{width:140px;height:140px;border-radius:16px;border:3px solid rgba(255,255,255,.5);background:#fff;padding:10px;box-shadow:0 6px 30px rgba(0,0,0,.2)}
+
+/* ---------- CONTENT (plain wrapper div in the real DOM) ---------- */
+.content{width:100%;box-sizing:border-box}
+
+/* =====================================================================
+   SYSTEM MANAGEMENT page CSS (styles/systemManagement.css) — recolored.
+   Only colour channels changed per the COLOUR MAP; all sizes/positions/fonts/
+   radii/shadow offsets are identical to the source file.
+   ===================================================================== */
+.staff-page-content{margin-top:60px;padding:20px}
+.staff-grid-container{margin-top:20px}
+.staff-page-content .search-bar{margin-bottom:40px;margin-left:10px;margin-top:40px}
+.staff-page-content .refresh-button{font-weight:600}
+.staff-grid-container .no-data{text-align:center;font-size:48px;font-weight:bold;color:#333;margin-top:20px}
+
+.staff-data-grid{
+  width:100%;border-collapse:separate;border-spacing:0;table-layout:auto !important;
+  border:2px solid rgba(255,255,255,.5);
+  background:linear-gradient(135deg, rgba(255,255,255,.65) 0%, rgba(245,245,245,.55) 100%);
+  backdrop-filter:blur(25px) saturate(180%);-webkit-backdrop-filter:blur(25px) saturate(180%);
+  box-shadow:
+    0 20px 60px rgba(59,130,246,.3),        /* KEPT blue */
+    0 10px 30px rgba(59,193,200,.25),        /* was rgba(168,85,247,.25) purple → teal */
+    inset 0 1px 0 rgba(255,255,255,.4);
+  border-radius:24px;overflow:hidden;position:relative;z-index:1;
+}
+.staff-data-grid th,
+.staff-data-grid td{border:1px solid #ddd;padding:10px;text-align:left;font-size:24px}
+.staff-data-grid th{
+  background:linear-gradient(135deg,
+    rgba(59,193,200,1) 0%,        /* was rgba(99,102,241,1) indigo → teal */
+    rgba(110,193,228,1) 100%);    /* was rgba(139,92,246,1) violet → sky */
+  backdrop-filter:blur(15px) saturate(180%);-webkit-backdrop-filter:blur(15px) saturate(180%);
+  font-weight:700;color:white;position:sticky !important;top:0;z-index:2;
+  border-bottom:2px solid rgba(255,255,255,.3);
+  box-shadow:0 4px 20px rgba(59,193,200,.35);   /* was rgba(99,102,241,.35) */
+  text-shadow:0 2px 10px rgba(0,0,0,.25);letter-spacing:.5px;text-align:right;
+}
+.staff-data-grid tr:nth-child(even){
+  background:linear-gradient(90deg, rgba(240,242,245,.8) 0%, rgba(230,232,236,.8) 100%);
+  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+}
+.staff-data-grid tr:hover{
+  background:linear-gradient(90deg,
+    rgba(110,193,228,.5) 0%,      /* was rgba(165,180,252,.5) → sky */
+    rgba(110,193,228,.5) 100%);   /* was rgba(192,132,252,.5) → sky */
+  backdrop-filter:blur(15px) saturate(150%);-webkit-backdrop-filter:blur(15px) saturate(150%);
+  box-shadow:0 8px 25px rgba(59,193,200,.3), inset 0 1px 0 rgba(255,255,255,.3);  /* was rgba(99,102,241,.3) */
+  transition:all .3s cubic-bezier(.4,0,.2,1);
+}
+.staff-data-grid tr:hover td{background-color:transparent !important}
+.staff-data-grid td{text-align:center;background-color:white;color:black;font-weight:normal}
+.inactive-user-row td{background-color:#84848b !important;color:#363434}   /* gray — KEPT */
+
+.controls{display:flex;justify-content:flex-start;gap:8px;align-items:center;margin-bottom:20px}
+
+/* refresh — KEEP blue (real #3b82f6 / #2563eb, not indigo/purple) */
+.refresh-button{
+  background:linear-gradient(135deg, rgba(59,130,246,.95) 0%, rgba(37,99,235,.95) 100%) !important;
+  backdrop-filter:blur(15px) !important;-webkit-backdrop-filter:blur(15px) !important;
+  color:white !important;border:2px solid rgba(255,255,255,.3) !important;border-radius:12px !important;
+  cursor:pointer !important;margin-left:0 !important;font-size:24px !important;font-weight:600;
+  letter-spacing:.3px;transition:all .3s cubic-bezier(.4,0,.2,1);
+  box-shadow:0 6px 20px rgba(59,130,246,.3) !important;position:relative;overflow:hidden;padding:12px 20px !important;
+}
+.refresh-button:hover{
+  background:linear-gradient(135deg, rgba(59,130,246,1) 0%, rgba(37,99,235,1) 100%) !important;
+  transform:translateY(-3px) scale(1.05);box-shadow:0 10px 30px rgba(59,130,246,.4) !important;
+}
+
+/* search bar — indigo border → TEAL */
+.search-bar{
+  padding:10px 15px;width:300px;
+  border:2px solid rgba(110,193,228,.6);   /* was rgba(102,126,234,.6) */
+  border-radius:8px;font-size:24px;
+  background:linear-gradient(135deg, rgba(240,242,245,.9) 0%, rgba(255,255,255,.95) 100%);
+  backdrop-filter:blur(15px) saturate(180%);-webkit-backdrop-filter:blur(15px) saturate(180%);
+  box-shadow:0 4px 12px rgba(110,193,228,.2), inset 0 1px 0 rgba(255,255,255,.5);  /* was rgba(102,126,234,.2) */
+  transition:all .3s ease;color:#333;
+}
+.search-bar:focus{
+  outline:none;border-color:rgba(110,193,228,.9);
+  box-shadow:0 6px 16px rgba(110,193,228,.3), inset 0 1px 0 rgba(255,255,255,.6);transform:translateY(-1px);
+}
+.staff-page-content input.search-bar{width:350px}
+
+/* role filter — KEEP blue (real #3b82f6 / #2563eb) */
+.role-filter-select{
+  background:linear-gradient(135deg, rgba(59,130,246,.95) 0%, rgba(37,99,235,.95) 100%);
+  backdrop-filter:blur(15px);-webkit-backdrop-filter:blur(15px);color:white;padding:12px 16px;
+  border:2px solid rgba(255,255,255,.3);border-radius:12px;cursor:pointer;font-size:24px;font-weight:600;
+  letter-spacing:.3px;transition:all .3s cubic-bezier(.4,0,.2,1);
+  box-shadow:0 6px 20px rgba(59,130,246,.3), inset 0 1px 0 rgba(255,255,255,.3);
+  position:relative;overflow:hidden;margin-left:0;appearance:none;padding-right:30px;
+}
+.role-filter-select option{background:white;color:#333;font-size:20px;padding:8px}
+.role-filter-select:hover{
+  background:linear-gradient(135deg, rgba(59,130,246,1) 0%, rgba(37,99,235,1) 100%);
+  transform:translateY(-3px) scale(1.05);box-shadow:0 10px 30px rgba(59,130,246,.4), inset 0 1px 0 rgba(255,255,255,.4);
+}
+
+/* add-button — KEEP green (real #10b981 / #059669) */
+.add-button{
+  background:linear-gradient(135deg, rgba(16,185,129,.95) 0%, rgba(5,150,105,.95) 100%);
+  backdrop-filter:blur(15px);-webkit-backdrop-filter:blur(15px);color:white;padding:12px 20px;
+  border:2px solid rgba(255,255,255,.3);border-radius:12px;cursor:pointer;font-size:24px;font-weight:600;
+  letter-spacing:.3px;transition:all .3s cubic-bezier(.4,0,.2,1);
+  box-shadow:0 6px 20px rgba(16,185,129,.3), inset 0 1px 0 rgba(255,255,255,.3);
+  position:relative;overflow:hidden;margin-left:0;
+}
+.add-button:hover{
+  background:linear-gradient(135deg, rgba(16,185,129,1) 0%, rgba(5,150,105,1) 100%);
+  transform:translateY(-3px) scale(1.05);box-shadow:0 10px 30px rgba(16,185,129,.4), inset 0 1px 0 rgba(255,255,255,.4);
+}
+
+/* show-inactive — KEEP gray, active KEEP red */
+.filter-inactive-button{
+  background:linear-gradient(135deg, rgba(107,114,128,.95) 0%, rgba(75,85,99,.95) 100%);
+  backdrop-filter:blur(15px);-webkit-backdrop-filter:blur(15px);color:white;padding:12px 20px;
+  border:2px solid rgba(255,255,255,.3);border-radius:12px;cursor:pointer;font-size:24px;font-weight:600;
+  letter-spacing:.3px;transition:all .3s cubic-bezier(.4,0,.2,1);
+  box-shadow:0 6px 20px rgba(107,114,128,.3), inset 0 1px 0 rgba(255,255,255,.3);
+  position:relative;overflow:hidden;margin-left:0;
+}
+.filter-inactive-button:hover{
+  background:linear-gradient(135deg, rgba(107,114,128,1) 0%, rgba(75,85,99,1) 100%);
+  transform:translateY(-3px) scale(1.05);box-shadow:0 10px 30px rgba(107,114,128,.4), inset 0 1px 0 rgba(255,255,255,.4);
+}
+.filter-inactive-button.active{
+  background:linear-gradient(135deg, rgba(239,68,68,.95) 0%, rgba(220,38,38,.95) 100%);
+  box-shadow:0 6px 20px rgba(239,68,68,.4), inset 0 1px 0 rgba(255,255,255,.3);border-color:rgba(255,255,255,.4);
+}
+
+/* dashboard — indigo → TEAL */
+.dashboard-button{
+  background:linear-gradient(135deg,
+    rgba(110,193,228,.95) 0%,     /* was rgba(102,126,234,.95) → sky */
+    rgba(59,193,200,.95) 100%);   /* was rgba(78,96,204,.95) indigo → teal */
+  backdrop-filter:blur(15px) !important;-webkit-backdrop-filter:blur(15px) !important;color:white;
+  padding:12px 20px;font-size:24px;border:2px solid rgba(255,255,255,.3) !important;border-radius:12px;
+  cursor:pointer;margin-left:0;font-weight:600;letter-spacing:.3px;transition:all .3s cubic-bezier(.4,0,.2,1);
+  box-shadow:0 6px 20px rgba(110,193,228,.3), inset 0 1px 0 rgba(255,255,255,.3);  /* was rgba(102,126,234,.3) */
+  position:relative;overflow:hidden;display:inline-flex;align-items:center;gap:8px;
+}
+.dashboard-button:hover{
+  background:linear-gradient(135deg, rgba(110,193,228,1) 0%, rgba(59,193,200,1) 100%) !important;
+  transform:translateY(-3px) scale(1.05);box-shadow:0 10px 30px rgba(110,193,228,.4) !important;
+}
+.dashboard-button svg{flex-shrink:0}
+
+/* info button — inline styled emoji in the source (background:none) */
+.info-button{cursor:pointer;background:none;border:none;font-size:18px;padding:0 5px;margin-right:5px}
+
+/* edit / delete base */
+.edit-button,
+.delete-button{
+  padding:12px 20px;margin-right:5px;border-radius:12px;cursor:pointer;font-size:24px;font-weight:600;
+  letter-spacing:.3px;transition:all .3s cubic-bezier(.4,0,.2,1);border:2px solid rgba(255,255,255,.3);
+  position:relative;overflow:hidden;
+}
+/* edit — KEEP blue (real #3b82f6 / #2563eb) */
+.edit-button{
+  background:linear-gradient(135deg, rgba(59,130,246,.95) 0%, rgba(37,99,235,.95) 100%);
+  backdrop-filter:blur(15px);-webkit-backdrop-filter:blur(15px);color:white;
+  box-shadow:0 6px 20px rgba(59,130,246,.3), inset 0 1px 0 rgba(255,255,255,.3);
+}
+.edit-button:hover{
+  background:linear-gradient(135deg, rgba(59,130,246,1) 0%, rgba(37,99,235,1) 100%);
+  transform:translateY(-3px) scale(1.05);box-shadow:0 10px 30px rgba(59,130,246,.4), inset 0 1px 0 rgba(255,255,255,.4);
+}
+/* delete — KEEP red */
+.delete-button{
+  background:linear-gradient(135deg, rgba(239,68,68,.95) 0%, rgba(220,38,38,.95) 100%);
+  backdrop-filter:blur(15px);-webkit-backdrop-filter:blur(15px);color:white;
+  box-shadow:0 6px 20px rgba(239,68,68,.3), inset 0 1px 0 rgba(255,255,255,.3);
+}
+.delete-button:hover{
+  background:linear-gradient(135deg, rgba(239,68,68,1) 0%, rgba(220,38,38,1) 100%);
+  transform:translateY(-3px) scale(1.05);box-shadow:0 10px 30px rgba(239,68,68,.4), inset 0 1px 0 rgba(255,255,255,.4);
+}
+
+/* mail — purple → TEAL/navy */
+.mail-button{
+  padding:12px 20px;margin-right:5px;
+  background:linear-gradient(135deg,
+    rgba(59,193,200,.95) 0%,      /* was rgba(147,51,234,.95) purple → teal */
+    rgba(20,56,82,.95) 100%);     /* was rgba(126,34,206,.95) [#7e22ce] → navy #143852 */
+  color:white;border:2px solid rgba(255,255,255,.3);border-radius:12px;cursor:pointer;font-size:24px;font-weight:600;
+  letter-spacing:.3px;transition:all .3s cubic-bezier(.4,0,.2,1);
+  box-shadow:0 6px 20px rgba(59,193,200,.3), inset 0 1px 0 rgba(255,255,255,.3);  /* was rgba(147,51,234,.3) */
+  position:relative;overflow:hidden;
+}
+.mail-button:hover{
+  background:linear-gradient(135deg, rgba(59,193,200,1) 0%, rgba(20,56,82,1) 100%);
+  transform:translateY(-3px) scale(1.05);box-shadow:0 10px 30px rgba(59,193,200,.4), inset 0 1px 0 rgba(255,255,255,.4);
+}
+
+/* sort button (in table header) */
+.sort-button{background:rgba(255,255,255,.25);border:none;color:#fff;border-radius:6px;cursor:pointer;font-size:16px;margin-right:6px;padding:2px 6px}
+
+/* pagination — indigo → TEAL */
+.pagination{display:flex;justify-content:center;align-items:center;gap:5px;margin-top:20px}
+.pagination button{
+  padding:10px 14px;
+  border:2px solid rgba(110,193,228,.6);    /* was rgba(102,126,234,.6) */
+  background:linear-gradient(135deg, rgba(240,242,245,.9) 0%, rgba(255,255,255,.95) 100%);
+  backdrop-filter:blur(15px) saturate(180%);-webkit-backdrop-filter:blur(15px) saturate(180%);
+  border-radius:6px;cursor:pointer;font-size:20px;font-weight:500;color:#333;transition:all .3s ease;
+  box-shadow:0 2px 8px rgba(110,193,228,.1);   /* was rgba(102,126,234,.1) */
+}
+.pagination button:hover:not(:disabled){
+  border-color:rgba(110,193,228,.9);
+  background:linear-gradient(135deg, rgba(110,193,228,.1) 0%, rgba(59,193,200,.1) 100%);  /* was rgba(102,126,234,.1)/rgba(118,75,162,.1) */
+  box-shadow:0 4px 12px rgba(110,193,228,.2);transform:translateY(-1px);
+}
+.pagination button.active{
+  background:linear-gradient(135deg, #6EC1E4 0%, #3BC1C8 100%);   /* was #667eea → #764ba2 */
+  color:white;font-weight:bold;border-color:rgba(110,193,228,.9);box-shadow:0 4px 12px rgba(110,193,228,.3);
+}
+.pagination button:disabled{background:rgba(240,242,245,.5);color:#ccc;cursor:not-allowed;border-color:rgba(110,193,228,.2);opacity:.6}
+.pagination-arrow{font-size:16px;font-weight:bold}
+
+/* =====================================================================
+   MOBILE OVERRIDES — transcribed from mobile.css @media(max-width:767px)
+   WITH THE @media WRAPPER REMOVED (so they apply at 390px). Colour map
+   applied to colour channels ONLY; every size/position/font left intact.
+   ===================================================================== */
+
+/* ── 2. Hide the desktop sidebar ─────────────────────────── */
+.sidebar{ display:none !important; }
+
+/* ── 3. Inner page header – shrunk but ALL elements visible ── */
+.header{
+  height:90px !important;
+  min-height:90px !important;
+  max-height:90px !important;
+  padding:6px 10px !important;
+  padding-bottom:0 !important;
+  padding-top:20px !important;
+  flex-direction:row !important;
+  align-items:center !important;
+  justify-content:flex-start !important;
+  flex-wrap:nowrap !important;
+  position:fixed !important;
+  top:0 !important;
+  left:0 !important;
+  right:0 !important;
+  z-index:900 !important;
+  box-sizing:border-box !important;
+  overflow:hidden !important;
+  gap:6px !important;
+}
+.header .top-left{ display:contents !important; }
+.header .logo     { order:1 !important; }
+.header .amit-img { order:2 !important; }
+.header .quote    { order:3 !important; }
+.header .qr-code-link,
+.header .qr-code  { order:4 !important; }
+.header .amit-img{
+  display:block !important;
+  width:54px !important;
+  height:70px !important;
+  object-fit:cover !important;
+  border-radius:10px !important;
+  flex-shrink:0 !important;
+}
+.header .quote{
+  display:block !important;
+  font-size:9px !important;
+  width:100px !important;
+  padding-top:3px !important;
+  padding-bottom:3px !important;
+  margin-bottom:20px !important;
+  padding-left:8px !important;
+  padding-right:8px !important;
+  margin-left:2px !important;
+  margin-right:2px !important;
+  line-height:1.4 !important;
+  border-radius:8px !important;
+  flex-shrink:0 !important;
+}
+.header .qr-code{
+  display:block !important;
+  width:54px !important;
+  height:54px !important;
+  border-radius:8px !important;
+  padding:4px !important;
+  flex-shrink:0 !important;
+}
+.header .logo{
+  display:block !important;
+  position:static !important;
+  width:60px !important;
+  height:60px !important;
+  right:unset !important;
+  top:unset !important;
+  flex-shrink:0 !important;
+  border-radius:10px !important;
+  padding:4px !important;
+  margin-right:13px !important;
+}
+.header .right-header{ display:contents !important; }
+/* Title – no room on mobile, hidden entirely */
+.header .title,
+.header h1{ display:none !important; }
+
+/* ── 4. Page content area – fill screen, scroll ──────────── */
+.sys-mgmt-main-content{
+  margin-right:0 !important;
+  margin-top:0 !important;
+  padding:0 !important;
+  padding-top:calc(90px + 8px) !important;
+  padding-bottom:calc(72px + 8px) !important;
+  padding-left:10px !important;
+  padding-right:10px !important;
+  width:100vw !important;
+  max-width:100vw !important;
+  height:100dvh !important;
+  overflow-y:auto !important;
+  overflow-x:auto !important;
+  -webkit-overflow-scrolling:touch !important;
+  box-sizing:border-box !important;
+  display:block !important;
+  flex-direction:unset !important;
+}
+
+/* ── 15. All grid containers – reset desktop margin-right ──── */
+.staff-grid-container,
+.staff-page-content{
+  margin-right:0 !important;
+  margin-left:0 !important;
+  margin-top:0 !important;
+  width:100% !important;
+  max-width:100% !important;
+  box-sizing:border-box !important;
+}
+
+/* ── 16. Search bars – compact on mobile ─────────────────── */
+.staff-page-content .search-bar{
+  width:100% !important;
+  max-width:100% !important;
+  font-size:14px !important;
+  height:40px !important;
+  padding:6px 10px !important;
+  box-sizing:border-box !important;
+}
+
+/* ── 21. System management – compact rows & scrollable grid ─ */
+.staff-data-grid th,
+.staff-data-grid td{
+  font-size:12px !important;
+  padding:6px 8px !important;
+  white-space:nowrap !important;   /* let table-layout:auto size to content */
+  max-width:none !important;       /* don't cap — let it size to text */
+  word-break:normal !important;
+  overflow:visible !important;
+}
+.staff-data-grid{
+  display:block !important;
+  overflow-x:auto !important;
+  -webkit-overflow-scrolling:touch !important;
+  width:100% !important;
+  font-size:12px !important;
+  table-layout:auto !important;    /* columns size to their content */
+}
+.staff-page-content{
+  padding:8px !important;
+  margin-top:0 !important;
+}
+.staff-page-content .search-bar{
+  margin:0 0 2px 0 !important;
+  width:100% !important;
+}
+/* Buttons row above system grid */
+.staff-page-content .filter-create-container,
+.staff-page-content .actions-bar,
+.staff-page-content > div:first-child{
+  flex-wrap:wrap !important;
+  gap:6px !important;
+}
+/* Toolbar order: move the full-width search to its own TOP line so the Refresh
+   button isn't stranded alone above it. All buttons then wrap together in a row
+   below the search, instead of Refresh taking a line and pushing the grid down. */
+.staff-page-content .controls{ margin-bottom:8px !important; }
+.staff-page-content .controls .search-bar{
+  order:-1 !important;
+  flex:1 1 100% !important;
+}
+.staff-page-content button{
+  font-size:12px !important;
+  padding:6px 8px !important;
+  white-space:nowrap !important;
+}
+/* Role filter <select> ("All Roles") – it's a <select>, not a <button>, so the
+   rule above doesn't catch it; shrink it to match the other compact controls */
+.staff-page-content .role-filter-select{
+  font-size:14px !important;
+  padding:8px 10px !important;
+  border-radius:8px !important;
+  transform:none !important;
+  box-shadow:0 1px 3px rgba(0,0,0,0.08) !important;
+}
+/* Action buttons inside table cells – override 24px td font-size */
+.staff-data-grid td button,
+.staff-data-grid td .edit-button,
+.staff-data-grid td .delete-button,
+.staff-data-grid td .info-button,
+.staff-data-grid td a{
+  font-size:12px !important;
+  padding:4px 8px !important;
+  transform:none !important;
+  box-shadow:none !important;
+  white-space:nowrap !important;
+}
+/* Also shrink the td font-size that was 24px */
+.staff-data-grid td{
+  font-size:12px !important;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   BOTTOM NAV BAR (#mobile-bottom-nav) — horizontally scrollable
+   Recolored: active/border indigo #6366f1 → teal #3BC1C8,
+   border-top rgba(99,102,241,.15) → rgba(59,193,200,.15).
+   ───────────────────────────────────────────────────────────── */
+#mobile-bottom-nav{
+  position:fixed !important;
+  bottom:0 !important;
+  left:0 !important;
+  right:0 !important;
+  height:72px !important;
+  display:flex !important;
+  flex-direction:row !important;
+  align-items:stretch !important;
+  justify-content:flex-start !important;
+  overflow-x:auto !important;
+  overflow-y:hidden !important;
+  -webkit-overflow-scrolling:touch !important;
+  scrollbar-width:none !important;
+  background:rgba(255, 255, 255, 0.97) !important;
+  backdrop-filter:blur(20px) !important;
+  -webkit-backdrop-filter:blur(20px) !important;
+  border-top:2px solid rgba(59, 193, 200, 0.15) !important;
+  box-shadow:0 -4px 20px rgba(0, 0, 0, 0.12) !important;
+  z-index:1100 !important;
+  padding-top:4px !important;
+}
+#mobile-bottom-nav::-webkit-scrollbar{ display:none !important; }
+#mobile-bottom-nav button{
+  flex:0 0 auto !important;
+  min-width:72px !important;
+  display:flex !important;
+  flex-direction:column !important;
+  align-items:center !important;
+  justify-content:center !important;
+  gap:3px !important;
+  background:none !important;
+  border:none !important;
+  border-radius:0 !important;
+  padding:6px 10px 4px !important;
+  margin:0 !important;
+  height:68px !important;
+  color:#6b7280 !important;
+  cursor:pointer !important;
+  box-shadow:none !important;
+  transform:none !important;
+  transition:color 0.15s ease !important;
+  -webkit-tap-highlight-color:transparent !important;
+  white-space:nowrap !important;
+}
+#mobile-bottom-nav button.active{
+  color:#3BC1C8 !important;
+  border-bottom:3px solid #3BC1C8 !important;
+}
+#mobile-bottom-nav button .nav-icon{
+  font-size:22px !important;
+  line-height:1 !important;
+  display:block !important;
+}
+#mobile-bottom-nav button .nav-label{
+  font-size:10px !important;
+  line-height:1.2 !important;
+  display:block !important;
+  font-weight:500 !important;
+  text-align:center !important;
+}
+#mobile-bottom-nav button.nav-logout-btn{
+  color:#ef4444 !important;
+  border-right:1px solid rgba(0,0,0,0.08) !important;
+}
+
+/* =====================================================================
+   iPhone 12 FRAME — presentation chrome (INDEPENDENT of the app CSS,
+   NOT recolored). Also normalizes the un-media'd mobile rules so their
+   100vw / 100dvh / position:fixed resolve against the 390×844 screen
+   (a real phone's viewport) instead of the desktop browser window.
+   ===================================================================== */
+body{
+  margin:0;
+  background:#e5e7eb;
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:24px;
+}
+.phone{
+  background:#000;
+  padding:12px;
+  border-radius:46px;
+  box-shadow:0 30px 80px rgba(0,0,0,.45), 0 12px 32px rgba(0,0,0,.3);
+  flex-shrink:0;
+}
+.phone-screen{
+  position:relative;
+  width:390px;
+  height:844px;
+  border-radius:36px;
+  overflow:hidden;
+  background:#f0f4f6;
+  /* transform makes this the containing block for the app's position:fixed
+     header + bottom nav, so they anchor to the SCREEN, not the browser window. */
+  transform:translateZ(0);
+}
+/* Status bar (thin strip over the header safe-area) */
+.status-bar{
+  position:absolute;
+  top:0;left:0;right:0;
+  height:34px;
+  z-index:2000;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:0 26px;
+  direction:ltr;
+  color:#fff;
+  pointer-events:none;
+  font-size:14px;
+  font-weight:700;
+}
+.status-bar .sb-time{ font-weight:700; letter-spacing:.5px; }
+.status-bar .sb-glyphs{ display:flex; align-items:center; gap:6px; }
+.status-bar .sb-signal{ display:flex; align-items:flex-end; gap:2px; height:11px; }
+.status-bar .sb-signal i{ width:3px; background:#fff; border-radius:1px; display:block; }
+.status-bar .sb-signal i:nth-child(1){ height:4px; }
+.status-bar .sb-signal i:nth-child(2){ height:6px; }
+.status-bar .sb-signal i:nth-child(3){ height:8px; }
+.status-bar .sb-signal i:nth-child(4){ height:11px; }
+.status-bar .sb-battery{ width:24px; height:12px; border:1px solid rgba(255,255,255,.9); border-radius:3px; position:relative; padding:1px; }
+.status-bar .sb-battery::after{ content:''; position:absolute; right:-3px; top:3px; width:2px; height:6px; background:rgba(255,255,255,.9); border-radius:0 1px 1px 0; }
+.status-bar .sb-battery i{ display:block; height:100%; width:80%; background:#fff; border-radius:1px; }
+/* Dynamic island */
+.dynamic-island{
+  position:absolute;
+  top:9px;left:50%;transform:translateX(-50%);
+  width:120px;height:30px;
+  background:#000;
+  border-radius:16px;
+  z-index:2100;
+}
+/* Home indicator */
+.home-indicator{
+  position:absolute;
+  bottom:8px;left:50%;transform:translateX(-50%);
+  width:134px;height:5px;
+  background:rgba(20,56,82,.55);
+  border-radius:3px;
+  z-index:2200;
+}
+
+/* Phone environment normalization (frame-level, higher specificity so it wins):
+   pin the app root to the 390×844 screen and offset for the status bar / home
+   indicator (which a real iPhone 12 handles via env(safe-area-inset-*)). */
+.phone-screen .sys-mgmt-main-content{
+  width:390px !important;
+  max-width:390px !important;
+  height:844px !important;
+  padding-top:112px !important;    /* status-bar(34) + header(90-ish, pushed) + gap */
+  padding-bottom:100px !important; /* bottom nav(84) + gap */
+}
+.phone-screen .header{
+  top:0 !important;
+  height:104px !important;
+  min-height:104px !important;
+  max-height:104px !important;
+  padding-top:34px !important;     /* clear the status bar (safe-area inset) */
+}
+.phone-screen #mobile-bottom-nav{
+  height:84px !important;
+  padding-bottom:16px !important;  /* clear the home indicator (safe-area inset) */
+}
+
+/* Mock badge (outside the phone) */
+.mock-badge{position:fixed;bottom:16px;left:16px;z-index:3000;background:#143852;color:#fff;font-size:14px;font-weight:600;
+  padding:8px 14px;border-radius:10px;box-shadow:0 6px 20px rgba(0,0,0,.25);opacity:.94}
+.mock-badge b{color:#FCD20E}
+</style>
+</head>
+<body>
+
+  <!-- =============== iPhone 12 device =============== -->
+  <div class="phone">
+    <div class="phone-screen">
+
+      <!-- status bar + island -->
+      <div class="dynamic-island"></div>
+      <div class="status-bar">
+        <div class="sb-glyphs">
+          <span class="sb-signal"><i></i><i></i><i></i><i></i></span>
+          <svg width="16" height="12" viewBox="0 0 16 12" fill="none" aria-hidden="true">
+            <path d="M8 11.2 1 4.4A9.9 9.9 0 0 1 15 4.4L8 11.2Z" fill="#fff" opacity=".35"/>
+            <path d="M8 11.2 3.4 6.7a6.5 6.5 0 0 1 9.2 0L8 11.2Z" fill="#fff"/>
+          </svg>
+          <span class="sb-battery"><i></i></span>
+        </div>
+        <div class="sb-time">9:41</div>
+      </div>
+
+      <!-- =============== APP (mobile System Management) =============== -->
+      <!-- NO desktop <aside class="sidebar"> on mobile -->
+      <div class="sys-mgmt-main-content">
+
+        <!-- InnerPageHeader (mobile-styled by the un-media'd rules; title hidden) -->
+        <header class="header">
+          <img class="logo" src="childsmile/frontend/src/assets/logo.png" alt="חיוך של ילד">
+          <div class="top-left">
+            <img class="amit-img" src="childsmile/frontend/src/assets/amit.jpg" alt="עמית">
+            <div class="quote">הרבה אנשים אומרים שהם רוצים להצליח אבל לא כולם מוכנים לשלם את המחיר שצריך כדי להצליח</div>
+            <img class="qr-code" src="childsmile/frontend/src/assets/qr-code.jpg" alt="QR">
+          </div>
+          <h1 class="title">ניהול מערכת</h1>
+        </header>
+
+        <!-- content (mirrors SystemManagement.js JSX) -->
+        <div class="staff-page-content">
+
+          <!-- controls toolbar (exact button order + labels from SystemManagement.js;
+               audit-log button hidden on mobile → omitted) -->
+          <div class="controls">
+            <button class="refresh-button">רענן</button>
+            <input type="text" class="search-bar" placeholder="חפש לפי שם, אימייל או תפקיד">
+            <select class="role-filter-select">
+              <option value="">כל התפקידים</option>
+              <option>מנהל מערכת</option>
+              <option>רכז משפחות</option>
+              <option>רכז מתנדבים</option>
+              <option>מתנדב כללי</option>
+              <option>חונך</option>
+              <option>מבקר</option>
+            </select>
+            <button class="add-button">הוסף משתמש חדש</button>
+            <button class="filter-inactive-button" title="הצג רק משתמשים שעזבו">הצג משתמשים שעזבו</button>
+            <button class="dashboard-button">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-left:8px">
+                <defs>
+                  <linearGradient id="barGradient1" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" style="stop-color:#ef4444;stop-opacity:1" />
+                    <stop offset="100%" style="stop-color:#dc2626;stop-opacity:1" />
+                  </linearGradient>
+                  <linearGradient id="barGradient2" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" style="stop-color:#10b981;stop-opacity:1" />
+                    <stop offset="100%" style="stop-color:#059669;stop-opacity:1" />
+                  </linearGradient>
+                  <linearGradient id="barGradient3" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" style="stop-color:#3b82f6;stop-opacity:1" />
+                    <stop offset="100%" style="stop-color:#2563eb;stop-opacity:1" />
+                  </linearGradient>
+                </defs>
+                <rect x="3" y="13" width="4" height="8" rx="1" fill="url(#barGradient1)" />
+                <rect x="10" y="8" width="4" height="13" rx="1" fill="url(#barGradient2)" />
+                <rect x="17" y="4" width="4" height="17" rx="1" fill="url(#barGradient3)" />
+                <line x1="2" y1="22" x2="22" y2="22" stroke="currentColor" stroke-width="2" />
+              </svg>
+              לוח בקרה
+            </button>
+          </div>
+
+          <!-- staff data grid (horizontally scrollable on mobile) -->
+          <div class="staff-grid-container">
+            <table class="staff-data-grid">
+              <thead>
+                <tr>
+                  <th>שם משתמש</th>
+                  <th>אימייל</th>
+                  <th>שם פרטי</th>
+                  <th>שם משפחה</th>
+                  <th>נוצר בתאריך <button class="sort-button">▼</button></th>
+                  <th>תפקידים</th>
+                  <th>פעולות</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><button class="info-button" title="הצג פרטי משתמש">ℹ️</button>dana levi</td>
+                  <td>dana.levi@childsmile.org.il</td>
+                  <td>דנה</td>
+                  <td>לוי</td>
+                  <td>15/03/2025</td>
+                  <td>מנהל מערכת</td>
+                  <td>
+                    <button class="mail-button" title="שלח דוא&quot;ל למשתמש זה">📧 שלח דוא"ל</button>
+                    <button class="edit-button">ערוך</button>
+                    <button class="delete-button">מחק</button>
+                  </td>
+                </tr>
+                <tr>
+                  <td><button class="info-button" title="הצג פרטי משתמש">ℹ️</button>yossi cohen</td>
+                  <td>yossi.cohen@childsmile.org.il</td>
+                  <td>יוסי</td>
+                  <td>כהן</td>
+                  <td>02/01/2025</td>
+                  <td>רכז משפחות</td>
+                  <td>
+                    <button class="mail-button" title="שלח דוא&quot;ל למשתמש זה">📧 שלח דוא"ל</button>
+                    <button class="edit-button">ערוך</button>
+                    <button class="delete-button">מחק</button>
+                  </td>
+                </tr>
+                <tr>
+                  <td><button class="info-button" title="הצג פרטי משתמש">ℹ️</button>noa mizrahi</td>
+                  <td>noa.mizrahi@childsmile.org.il</td>
+                  <td>נועה</td>
+                  <td>מזרחי</td>
+                  <td>20/11/2024</td>
+                  <td>רכז מתנדבים</td>
+                  <td>
+                    <button class="mail-button" title="שלח דוא&quot;ל למשתמש זה">📧 שלח דוא"ל</button>
+                    <button class="edit-button">ערוך</button>
+                    <button class="delete-button">מחק</button>
+                  </td>
+                </tr>
+                <tr>
+                  <td><button class="info-button" title="הצג פרטי משתמש">ℹ️</button>david peretz</td>
+                  <td>david.peretz@childsmile.org.il</td>
+                  <td>דוד</td>
+                  <td>פרץ</td>
+                  <td>08/07/2025</td>
+                  <td>חונך</td>
+                  <td>
+                    <button class="mail-button" title="שלח דוא&quot;ל למשתמש זה">📧 שלח דוא"ל</button>
+                    <button class="edit-button">ערוך</button>
+                    <button class="delete-button">מחק</button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+
+            <!-- pagination (mobile pageSize=4 → 2 pages) -->
+            <div class="pagination">
+              <button disabled class="pagination-arrow">&laquo;</button>
+              <button disabled class="pagination-arrow">&lsaquo;</button>
+              <button class="active">1</button>
+              <button>2</button>
+              <button class="pagination-arrow">&rsaquo;</button>
+              <button class="pagination-arrow">&raquo;</button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- =============== bottom nav (built in Sidebar.js on mobile) =============== -->
+      <nav id="mobile-bottom-nav">
+        <button data-path="/tasks"><span class="nav-icon">📋</span><span class="nav-label">לוח משימות</span></button>
+        <button data-path="/families"><span class="nav-icon">🏘️</span><span class="nav-label">משפחות</span></button>
+        <button data-path="/tutor-volunteer-mgmt"><span class="nav-icon">👥</span><span class="nav-label">חונכים ומתנדבים</span></button>
+        <button data-path="/tutorships"><span class="nav-icon">🤝</span><span class="nav-label">חונכות</span></button>
+        <button data-path="/feedbacks"><span class="nav-icon">💬</span><span class="nav-label">משובים</span></button>
+        <button data-path="/refunds"><span class="nav-icon">💰</span><span class="nav-label">החזרי הוצאות</span></button>
+        <button data-path="/activity-board"><span class="nav-icon">🎈</span><span class="nav-label">ימי כיף וביקורי בית</span></button>
+        <button data-path="/activity-signup"><span class="nav-icon">🙋</span><span class="nav-label">שיבוץ לפעילויות</span></button>
+        <button data-path="/system-management" class="active"><span class="nav-icon">⚙️</span><span class="nav-label">ניהול מערכת</span></button>
+        <button data-path="/meeting-management"><span class="nav-icon">📅</span><span class="nav-label">ניהול פגישות</span></button>
+        <button data-path="/coordinator-chat"><span class="nav-icon">📨</span><span class="nav-label">עדכוני צוות</span></button>
+        <button data-path="/reviewer"><span class="nav-icon">🔍</span><span class="nav-label">שיחות ביקורת</span></button>
+        <button data-path="/notification-messages"><span class="nav-icon">🔔</span><span class="nav-label">מרכז העדכונים</span></button>
+        <button class="nav-logout-btn"><span class="nav-icon">🚪</span><span class="nav-label">יציאה</span></button>
+      </nav>
+
+      <!-- home indicator -->
+      <div class="home-indicator"></div>
+
+    </div>
+  </div>
+
+  <div class="mock-badge">מוקאפ מובייל (iPhone 12) · צבעי מותג <b>«חיוך של ילד»</b></div>
+
+</body>
+</html>

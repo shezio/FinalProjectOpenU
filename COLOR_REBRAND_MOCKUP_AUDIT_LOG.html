@@ -1,0 +1,888 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>מוקאפ — יומן ביקורת (צבעי מותג חדשים)</title>
+<style>
+/* Same local Rubik variable font the real app uses (styles.css @font-face) so
+   the mock renders identically — NOT Google Fonts. */
+@font-face {
+  font-family: 'Rubik';
+  src: url('childsmile/frontend/src/fonts/Rubik-VariableFont_wght.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+}
+/* =====================================================================
+   Audit Log page (route /audit-log · sidebar "יומן ביקורת") — STATIC recolored mock.
+   Faithful reproduction of the real page (InnerPageHeader + Sidebar + filter/actions
+   panel + jump controls + audit-log-data-grid incl. nested old→new changes table +
+   pagination) with the indigo/purple theme swapped to the A Child's Smile palette.
+   Brand: sky #6EC1E4 · teal #3BC1C8 · pink #ED3B97 · yellow #FCD20E · navy #143852
+   NOTE on fidelity: auditlog.css is mostly BLUE (#3b82f6/#2563eb/#007bff) + GREEN
+   (#4caf50 grid header) which are KEPT (semantic). The only indigo/purple values are
+   the search/filter/export/jump input borders+shadows rgba(102,126,234,·) → sky
+   rgba(110,193,228,·), the panel shadow rgba(168,85,247,·) → teal, and the export
+   hover tint rgba(118,75,162,·) → teal. Structure/labels 1:1 with the code.
+   ===================================================================== */
+
+*{box-sizing:border-box;font-family:Rubik,sans-serif}
+html{zoom:.8}
+body{
+  margin:0;direction:rtl;min-height:100vh;
+  display:flex;flex-direction:row-reverse;
+  background:
+    linear-gradient(135deg,
+      rgba(237,59,151,.14) 0%,
+      rgba(110,193,228,.14) 25%,
+      rgba(59,193,200,.14) 50%,
+      rgba(252,210,14,.14) 75%,
+      rgba(242,103,34,.14) 100%);
+  background-attachment:fixed;
+}
+
+/* ===================== SIDEBAR (verbatim from FAMILIES mock; bg recolored TEAL) ===================== */
+.sidebar{
+  background:linear-gradient(135deg,
+    rgba(110,193,228,.9) 0%,
+    rgba(59,193,200,.92) 45%,
+    rgba(101,190,198,.94) 100%);
+  color:#fff;width:280px;min-height:100vh;padding:60px 15px 25px;
+  box-shadow:-4px 0 40px rgba(59,193,200,.4), -2px 0 20px rgba(101,190,198,.3), inset 1px 0 0 rgba(255,255,255,.3);
+  position:fixed;right:0;top:0;display:flex;flex-direction:column;z-index:1001;
+  border-left:2px solid rgba(255,255,255,.3);overflow-y:auto;
+}
+.sidebar-toggle{position:absolute;top:15px;right:25px;width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px}
+.sidebar-user-info{background:linear-gradient(135deg,rgba(255,255,255,.25),rgba(255,255,255,.15));border:2px solid rgba(255,255,255,.3);border-radius:16px;padding:20px;margin-bottom:20px;text-align:center;box-shadow:0 4px 20px rgba(0,0,0,.15),inset 0 1px 0 rgba(255,255,255,.4)}
+.sidebar-username{font-size:28px;font-weight:700;color:#fff;text-shadow:0 2px 8px rgba(0,0,0,.3);margin-bottom:12px;letter-spacing:.5px}
+.sidebar-roles{display:flex;flex-direction:column;gap:6px}
+.sidebar-role{background:linear-gradient(90deg,rgba(255,255,255,.2),rgba(255,255,255,.1));padding:6px 12px;border-radius:8px;font-size:18px;font-weight:600;color:#fff;border:1px solid rgba(255,255,255,.2)}
+/* clock stays GREEN (not indigo/purple) */
+.sidebar-clock{background:linear-gradient(135deg,rgba(16,185,129,.85),rgba(5,150,105,.85));border:2px solid rgba(255,255,255,.4);border-radius:16px;padding:20px;margin-bottom:20px;text-align:center;box-shadow:0 6px 25px rgba(16,185,129,.35),inset 0 1px 0 rgba(255,255,255,.4)}
+.sidebar-time{font-size:36px;font-weight:800;color:#fff;letter-spacing:2px;text-shadow:0 3px 10px rgba(0,0,0,.3);margin-bottom:8px}
+.sidebar-date{font-size:18px;font-weight:600;color:rgba(255,255,255,.95)}
+/* logout stays RED */
+.sidebar-logout-button{background:linear-gradient(135deg,rgba(239,68,68,.95),rgba(220,38,38,.95));color:#fff;padding:16px 24px;border:2px solid rgba(255,255,255,.4);border-radius:14px;cursor:pointer;font-size:22px;font-weight:700;width:100%;margin-bottom:20px;box-shadow:0 6px 25px rgba(239,68,68,.4),inset 0 1px 0 rgba(255,255,255,.3)}
+/* PINK = separator only — the sidebar divider */
+.sidebar-divider{height:3px;background:linear-gradient(90deg,transparent,rgba(237,59,151,.9),transparent);margin:20px 0;border-radius:2px}
+.sidebar-nav-btn{display:block;width:100%;background:none;border:none;color:rgba(255,255,255,.82);font-size:32px;padding:6px 2px;cursor:pointer;text-align:right}
+.sidebar-nav-btn.top-level{font-weight:600;color:rgba(255,255,255,.85)}
+.sidebar-nav-btn.active{color:#fff;font-weight:700}
+.sidebar-section-header{display:flex;align-items:center;gap:4px;width:100%;background:none;border:none;border-bottom:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.85);font-size:32px;font-weight:600;padding:8px 2px 6px;cursor:pointer;margin-top:10px;text-align:right}
+.sidebar-section-label{flex:1;text-align:right}
+.sidebar-section-arrow{font-size:20px;font-weight:300;color:rgba(255,255,255,.55);transition:transform .2s;transform:rotate(0deg);line-height:1}
+.sidebar-section-arrow.open{transform:rotate(90deg)}
+.sidebar-section-items{display:flex;flex-direction:column;padding-right:12px;border-right:1px solid rgba(255,255,255,.15);margin:2px 6px 0 0}
+.sidebar-section-items .sidebar-nav-btn{font-size:24px;color:rgba(255,255,255,.7);padding:5px 2px}
+.sidebar-section-items .sidebar-nav-btn.active{color:#fff;font-weight:700}
+
+/* ===================== HEADER (verbatim from FAMILIES mock; fixed top) ===================== */
+.header{
+  background:linear-gradient(135deg,
+    rgba(110,193,228,.9) 0%,
+    rgba(59,193,200,.92) 45%,
+    rgba(101,190,198,.95) 100%);
+  color:#fff;display:flex;align-items:center;justify-content:center;
+  padding:20px 30px;height:200px;position:fixed;right:0;top:0;left:0;z-index:1000;
+  border-bottom:3px solid rgba(255,255,255,.3);
+  box-shadow:0 8px 40px rgba(59,193,200,.35), 0 4px 20px rgba(101,190,198,.28), inset 0 -1px 0 rgba(255,255,255,.3);
+}
+/* PINK = separator only — the header's lower edge (echoes the site's pink underline) */
+.header::before{content:'';position:absolute;bottom:0;left:0;right:0;height:5px;
+  background:linear-gradient(90deg, rgba(237,59,151,1) 0%, rgba(219,75,149,1) 100%);
+  box-shadow:0 2px 15px rgba(237,59,151,.5);}
+.logo{width:180px;height:180px;position:absolute;right:310px;top:10px;border-radius:20px;
+  border:3px solid rgba(255,255,255,.5);background:#fff;padding:10px;object-fit:contain;
+  box-shadow:0 6px 30px rgba(0,0,0,.2),0 0 20px rgba(255,255,255,.25);z-index:1002;}
+.title{font-size:4em;font-weight:900;margin:0;position:absolute;left:50%;transform:translateX(-50%);
+  white-space:nowrap;letter-spacing:2px;
+  background:linear-gradient(135deg,#fff 0%,#f0f9ff 25%,#e0f7fa 50%,#bae6fd 75%,#fff 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  filter:drop-shadow(0 4px 20px rgba(255,255,255,.4)) drop-shadow(0 2px 10px rgba(59,193,200,.65)) drop-shadow(0 0 30px rgba(101,190,198,.4));}
+/* PINK underline separator under the page title (mirrors the site's heading underline) */
+.title::after{content:'';position:absolute;left:50%;bottom:-14px;transform:translateX(-50%);width:78%;height:5px;border-radius:6px;
+  background:linear-gradient(90deg,rgba(237,59,151,.95),rgba(219,75,149,.95));box-shadow:0 3px 12px rgba(237,59,151,.5)}
+.top-left{position:absolute;top:20px;left:40px;display:flex;align-items:center;gap:25px;z-index:1001}
+.amit-img{width:130px;height:170px;object-fit:cover;border-radius:18px;border:3px solid rgba(255,255,255,.5);box-shadow:0 6px 30px rgba(0,0,0,.25)}
+.quote{font-size:20px;font-weight:600;text-align:right;color:#143852;max-width:360px;
+  background:linear-gradient(135deg,rgba(255,255,255,.95),rgba(249,250,251,.95));padding:14px 18px;border-radius:14px;
+  box-shadow:0 6px 24px rgba(0,0,0,.12)}
+.qr-code{width:140px;height:140px;border-radius:16px;border:3px solid rgba(255,255,255,.5);background:#fff;padding:10px;box-shadow:0 6px 30px rgba(0,0,0,.2)}
+
+/* ============================================================
+   AUDIT LOG page CSS (from styles/auditlog.css) — recolored (indigo/purple only).
+   ============================================================ */
+
+/* Main content wrapper. Real: display:flex;flex-direction:column;align-items:center;
+   margin-top:200px (clears the fixed header). For the mock we add margin-right:280px
+   to clear the fixed sidebar + padding for breathing room (layout tune — colours unchanged). */
+.audit-log-main-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  flex-grow: 1;
+  margin-top: 200px;
+  margin-right: 280px;      /* mock: clear the fixed sidebar */
+  padding: 40px 40px 90px;  /* mock breathing room */
+}
+
+/* Filter / actions panel. Real is position:absolute (top/right); for the mock it flows
+   normally above the grid (position:relative) so the whole page stacks cleanly — colours
+   and every visual property are otherwise identical to auditlog.css. */
+.audit-log-main-content .filter-create-container {
+  display: flex;
+  gap: 20px;
+  justify-content: space-between;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  position: relative;      /* mock: was absolute */
+  width: 100%;
+  max-width: 1500px;
+  margin-bottom: 30px;
+  background: linear-gradient(135deg,
+    rgba(255, 255, 255, 0.95) 0%,
+    rgba(245, 245, 245, 0.9) 100%);
+  backdrop-filter: blur(25px) saturate(180%);
+  -webkit-backdrop-filter: blur(25px) saturate(180%);
+  border: 2px solid rgba(255, 255, 255, 0.5);
+  border-radius: 16px;
+  padding: 20px 25px;
+  box-shadow:
+    0 20px 60px rgba(59, 130, 246, 0.2),
+    0 10px 30px rgba(59, 193, 200, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  z-index: 100;
+}
+
+/* Search Bar Group */
+.audit-log-search-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.audit-log-search-bar {
+  padding: 0 10px;
+  width: 250px;
+  height: 50px;
+  border: 2px solid rgba(110, 193, 228, 0.6);
+  border-radius: 8px;
+  font-size: 24px;
+  background: linear-gradient(135deg,
+    rgba(240, 242, 245, 0.9) 0%,
+    rgba(255, 255, 255, 0.95) 100%);
+  backdrop-filter: blur(15px) saturate(180%);
+  -webkit-backdrop-filter: blur(15px) saturate(180%);
+  box-shadow:
+    0 4px 12px rgba(110, 193, 228, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  transition: all 0.3s ease;
+  color: #333;
+}
+
+.audit-log-search-bar:focus {
+  outline: none;
+  border-color: rgba(110, 193, 228, 0.9);
+  box-shadow:
+    0 6px 16px rgba(110, 193, 228, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  transform: translateY(-1px);
+}
+
+/* Filter Group for Actions and Dates */
+.audit-log-filters {
+  display: flex;
+  gap: 15px;
+  align-items: flex-end;
+  flex-wrap: wrap;
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.filter-group label {
+  font-weight: 600;
+  color: #333;
+  font-size: 24px;
+}
+
+.audit-log-filters .filter-select{
+  width: 100% !important;
+  max-width: 1800px !important;
+}
+
+.audit-log-filters .filter-select,
+.audit-log-filters .date-input {
+  padding: 8px 12px;
+  border: 2px solid rgba(110, 193, 228, 0.6);
+  border-radius: 8px;
+  font-size: 24px;
+  background: linear-gradient(135deg,
+    rgba(240, 242, 245, 0.9) 0%,
+    rgba(255, 255, 255, 0.95) 100%);
+  backdrop-filter: blur(15px) saturate(180%);
+  -webkit-backdrop-filter: blur(15px) saturate(180%);
+  box-shadow:
+    0 4px 12px rgba(110, 193, 228, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  transition: all 0.3s ease;
+  color: #333;
+  width: 180px;
+}
+
+.filter-select {
+  width: 300px;
+}
+
+.audit-log-filters .filter-select:focus,
+.audit-log-filters .date-input:focus {
+  outline: none;
+  border-color: rgba(110, 193, 228, 0.9);
+  box-shadow:
+    0 6px 16px rgba(110, 193, 228, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  transform: translateY(-1px);
+}
+
+/* Action Buttons Container */
+.audit-log-actions {
+  display: flex;
+  gap: 10px;
+  align-items: flex-end;
+}
+
+/* Refresh + Select-all buttons — real BLUE / GREEN (semantic), KEPT as-is. */
+.audit-log-actions .refresh-button,
+.audit-log-actions .select-all-button {
+  padding: 10px 20px;
+  background: linear-gradient(135deg,
+    rgba(59, 130, 246, 0.95) 0%,
+    rgba(37, 99, 235, 0.95) 100%);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  color: white;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 8px;
+  font-size: 24px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  font-weight: 600;
+  box-shadow:
+    0 6px 20px rgba(59, 130, 246, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+.audit-log-actions .select-all-button {
+  background: linear-gradient(135deg,
+    rgba(16, 185, 129, 0.95) 0%,
+    rgba(5, 150, 105, 0.95) 100%);
+  box-shadow:
+    0 6px 20px rgba(16, 185, 129, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.refresh-button::before,
+.select-all-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg,
+    transparent,
+    rgba(255, 255, 255, 0.3),
+    transparent);
+  transition: left 0.5s;
+}
+
+.refresh-button:hover::before,
+.select-all-button:hover::before {
+  left: 100%;
+}
+
+.audit-log-actions .refresh-button:hover {
+  background: linear-gradient(135deg,
+    rgba(59, 130, 246, 1) 0%,
+    rgba(37, 99, 235, 1) 100%);
+  transform: translateY(-3px) scale(1.05);
+  box-shadow:
+    0 10px 30px rgba(59, 130, 246, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+.select-all-button:hover {
+  background: linear-gradient(135deg,
+    rgba(16, 185, 129, 1) 0%,
+    rgba(5, 150, 105, 1) 100%);
+  transform: translateY(-3px) scale(1.05);
+  box-shadow:
+    0 10px 30px rgba(16, 185, 129, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+.audit-log-actions .export-button {
+  padding: 8px;
+  background: linear-gradient(135deg,
+    rgba(240, 242, 245, 0.9) 0%,
+    rgba(255, 255, 255, 0.95) 100%);
+  backdrop-filter: blur(15px) saturate(180%);
+  -webkit-backdrop-filter: blur(15px) saturate(180%);
+  border: 2px solid rgba(110, 193, 228, 0.6);
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  box-shadow:
+    0 4px 12px rgba(110, 193, 228, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+.audit-log-actions .export-button:hover {
+  border-color: rgba(110, 193, 228, 0.9);
+  background: linear-gradient(135deg,
+    rgba(110, 193, 228, 0.1) 0%,
+    rgba(59, 193, 200, 0.1) 100%);
+  box-shadow:
+    0 6px 16px rgba(110, 193, 228, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  transform: translateY(-1px);
+}
+
+.export-button img {
+  width: 60px;
+  height: 60px;
+}
+
+/* Data Grid Section */
+.audit-log-grid-container {
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  overflow: hidden;
+  flex: unset;
+  display: flex;
+  flex-direction: column;
+  width: auto;
+  max-width: 100%;
+  /* Real page pulls this toward the sidebar with margin-right:-120px + margin-top:160px.
+     For the mock the panel above flows normally, so we neutralize those offsets
+     (layout tune — colours unchanged). */
+  margin-right: 0;
+  margin-top: 0;
+}
+
+/* ===== JUMP CONTROLS (top strip of the grid card) ===== */
+.audit-jump-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px 40px;
+  padding: 14px 10px;
+  background-color: #f9f9f9;
+  border-bottom: 1px solid #ddd;
+}
+
+.audit-jump-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.audit-jump-group label {
+  font-size: 24px;
+  font-weight: 600;
+  color: #333;
+  white-space: nowrap;
+}
+
+.audit-jump-input,
+.audit-jump-time {
+  padding: 8px 12px;
+  font-size: 24px;
+  border: 2px solid rgba(110, 193, 228, 0.6);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.95);
+  color: #333;
+}
+
+.audit-jump-input {
+  width: 110px;
+}
+
+.audit-log-data-grid {
+  width: 100%;
+  max-width: 100%;
+  border-collapse: collapse;
+  table-layout: auto !important;
+  align-self: flex-start;
+}
+
+.audit-log-data-grid th,
+.audit-log-data-grid td {
+  border: 1px solid #ddd;
+  padding: 6px 10px;
+  text-align: right;
+  font-size: 24px;
+}
+
+/* Grid header — TEAL (rebrand: ALL table headers teal, was green #4caf50). */
+.audit-log-data-grid th {
+  background-color: #3BC1C8;
+  color: white;
+  font-weight: bold;
+  position: sticky !important;
+  top: 0;
+  z-index: 2;
+  font-size: 30px;
+}
+
+.audit-log-data-grid tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+
+.audit-log-data-grid tr:hover {
+  background-color: #f1f1f1;
+}
+
+.timestamp-column {
+  width: 50px;
+  font-weight: 500;
+  color: #333;
+  white-space: nowrap;
+}
+
+.description-column {
+  word-break: break-word;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  max-width: 800px;
+  text-align: right;
+  width: 100%;
+}
+
+.ip-column {
+  width: 120px;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.9em;
+  color: #555;
+  white-space: nowrap;
+  text-align: center;
+}
+
+/* Field-change table rendered inside a description cell (logs with "→" changes) */
+.audit-desc {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  direction: rtl;
+  align-items: flex-start;
+  text-align: right;
+}
+
+.audit-desc-text {
+  white-space: pre-wrap;
+  word-break: break-word;
+  text-align: right;
+  line-height: 1.5;
+}
+
+.audit-log-data-grid .audit-changes-table {
+  width: auto;
+  max-width: 100%;
+  border-collapse: collapse;
+  table-layout: auto;
+  margin: 0;
+  direction: rtl;
+  background: #fff;
+  border-radius: 6px;
+  overflow: hidden;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+}
+
+.audit-log-data-grid .audit-changes-table .audit-old-value,
+.audit-log-data-grid .audit-changes-table .audit-new-value {
+  max-width: 320px;
+}
+
+.audit-log-data-grid .audit-changes-table th,
+.audit-log-data-grid .audit-changes-table td {
+  border: 1px solid #e0e0e0;
+  padding: 3px 6px;
+  text-align: right;
+  font-size: 20px;
+  width: 1%;
+  white-space: nowrap;
+  vertical-align: top;
+}
+
+.audit-log-data-grid .audit-changes-table .audit-old-value,
+.audit-log-data-grid .audit-changes-table .audit-new-value {
+  white-space: normal;
+  word-break: break-word;
+}
+
+/* Nested header — real pale-blue #eaf1fb / navy-blue #1f3a5f (not indigo/purple), KEPT. */
+.audit-log-data-grid .audit-changes-table th {
+  background-color: #eaf1fb;
+  color: #1f3a5f;
+  font-weight: 700;
+  font-size: 20px;
+  position: static !important;
+  top: auto;
+  z-index: auto;
+}
+
+.audit-log-data-grid .audit-changes-table .audit-change-field {
+  font-weight: 600;
+  color: #333;
+  background-color: #f7f9fc;
+  white-space: nowrap;
+}
+
+/* Subtle red = previous value (KEPT) */
+.audit-log-data-grid .audit-changes-table .audit-old-value {
+  background-color: #fdecea;
+  color: #8a1c1c;
+  text-decoration: line-through;
+  text-decoration-color: rgba(138, 28, 28, 0.5);
+}
+
+/* Subtle green = new value (KEPT) */
+.audit-log-data-grid .audit-changes-table .audit-new-value {
+  background-color: #e7f6ec;
+  color: #1b5e20;
+  font-weight: 600;
+}
+
+.sort-button {
+  background: rgba(255, 255, 255, 0.25);
+  border: none;
+  color: #fff;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 20px;
+  margin-right: 6px;
+  padding: 2px 8px;
+}
+
+.audit-checkbox {
+  width: 20px;
+  height: 20px;
+}
+
+/* Pagination */
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 5px;
+  padding: 15px;
+  border-top: 1px solid #ddd;
+  background-color: #f9f9f9;
+  flex-wrap: wrap;
+}
+
+.pagination button {
+  padding: 8px 12px;
+  border: 1px solid #ccc;
+  background-color: #fff;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 24px;
+  transition: all 0.2s;
+}
+
+/* Pagination active — real BLUE #007bff (not indigo/purple), KEPT. */
+.pagination button.active {
+  background-color: #007bff;
+  color: white;
+  font-weight: bold;
+  border-color: #007bff;
+}
+
+.pagination button:hover:not(:disabled) {
+  background-color: #e9ecef;
+  border-color: #adb5bd;
+}
+
+.pagination button:disabled {
+  background-color: #f0f0f0;
+  color: #ccc;
+  cursor: not-allowed;
+}
+
+.pagination-arrow {
+  font-size: 24px;
+  font-weight: bold;
+}
+
+/* mock badge */
+.mock-badge{position:fixed;bottom:16px;left:16px;z-index:3000;background:#143852;color:#fff;font-size:14px;font-weight:600;
+  padding:8px 14px;border-radius:10px;box-shadow:0 6px 20px rgba(0,0,0,.25);opacity:.92}
+.mock-badge b{color:#FCD20E}
+</style>
+</head>
+<body>
+
+  <!-- ===================== SIDEBAR (1:1 with Sidebar.js) ===================== -->
+  <aside class="sidebar">
+    <button class="sidebar-toggle" title="צמצם סרגל">▶</button>
+    <div class="sidebar-user-info">
+      <div class="sidebar-username">שרה לוי</div>
+      <div class="sidebar-roles"><div class="sidebar-role">מנהל מערכת</div></div>
+    </div>
+    <div class="sidebar-clock">
+      <div class="sidebar-time">09:42:15</div>
+      <div class="sidebar-date">יום ראשון, 27 ביולי 2026</div>
+    </div>
+    <button class="sidebar-logout-button">יציאה מהמערכת</button>
+    <div class="sidebar-divider"></div>
+
+    <button class="sidebar-nav-btn top-level">לוח משימות</button>
+
+    <button class="sidebar-section-header"><span class="sidebar-section-label">משפחות</span><span class="sidebar-section-arrow">›</span></button>
+    <button class="sidebar-section-header"><span class="sidebar-section-label">מתנדבים</span><span class="sidebar-section-arrow">›</span></button>
+    <button class="sidebar-section-header"><span class="sidebar-section-label">כספים</span><span class="sidebar-section-arrow">›</span></button>
+    <button class="sidebar-section-header"><span class="sidebar-section-label">פעילויות</span><span class="sidebar-section-arrow">›</span></button>
+
+    <button class="sidebar-section-header"><span class="sidebar-section-label">ניהול</span><span class="sidebar-section-arrow open">›</span></button>
+    <div class="sidebar-section-items">
+      <button class="sidebar-nav-btn">דוחות</button>
+      <button class="sidebar-nav-btn">ניהול מערכת</button>
+      <button class="sidebar-nav-btn">ניהול פגישות</button>
+      <button class="sidebar-nav-btn">עדכוני צוות</button>
+      <button class="sidebar-nav-btn active">יומן ביקורת</button>
+    </div>
+  </aside>
+
+  <!-- ===================== HEADER (InnerPageHeader) ===================== -->
+  <header class="header">
+    <img class="logo" src="childsmile/frontend/src/assets/logo.png" alt="חיוך של ילד">
+    <div class="top-left">
+      <img class="amit-img" src="childsmile/frontend/src/assets/amit.jpg" alt="עמית">
+      <div class="quote">הרבה אנשים אומרים שהם רוצים להצליח אבל לא כולם מוכנים לשלם את המחיר שצריך כדי להצליח</div>
+      <img class="qr-code" src="childsmile/frontend/src/assets/qr-code.jpg" alt="QR">
+    </div>
+    <h1 class="title">יומן מערכת</h1>
+  </header>
+
+  <!-- ===================== MAIN CONTENT (audit-log-main-content) ===================== -->
+  <div class="audit-log-main-content">
+
+    <!-- Controls Section - Search and Filters -->
+    <div class="filter-create-container">
+      <div class="audit-log-actions">
+        <button class="export-button excel-button" title="ייצוא ל-CSV">
+          <img src="childsmile/frontend/src/assets/excel-icon.png" alt="CSV">
+        </button>
+        <button class="export-button pdf-button">
+          <img src="childsmile/frontend/src/assets/pdf-icon.png" alt="PDF">
+        </button>
+        <button class="select-all-button" title="בחר את כל השורות בכל הדפים">
+          בחר את כל השורות <br> בכל הדפים
+        </button>
+      </div>
+
+      <!-- Search Bar -->
+      <div class="audit-log-search-group">
+        <input type="text" placeholder="חפש בתיאור..." class="audit-log-search-bar">
+      </div>
+
+      <!-- Filters -->
+      <div class="audit-log-filters">
+        <div class="filter-group">
+          <label>סנן לפי פעולה</label>
+          <select class="filter-select">
+            <option value="">כל הפעולות</option>
+            <option>עדכון משפחה</option>
+            <option>התחברות</option>
+            <option>ייצוא דוח</option>
+            <option>יצירת משימה</option>
+            <option>עדכון חונך</option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label>תאריך התחלה</label>
+          <input type="date" class="date-input" value="2026-07-01">
+        </div>
+
+        <div class="filter-group">
+          <label>תאריך סיום</label>
+          <input type="date" class="date-input" value="2026-07-27">
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="audit-log-actions">
+        <button class="refresh-button">רענן</button>
+      </div>
+    </div>
+
+    <!-- Data Grid Section -->
+    <div class="audit-log-grid-container">
+
+      <!-- Jump controls -->
+      <div class="audit-jump-controls">
+        <div class="audit-jump-group">
+          <label>עבור לעמוד:</label>
+          <input type="number" min="1" max="128" class="audit-jump-input">
+        </div>
+        <div class="audit-jump-group">
+          <label>עבור לשעה:</label>
+          <input type="time" class="audit-jump-time">
+        </div>
+      </div>
+
+      <table class="audit-log-data-grid">
+        <thead>
+          <tr>
+            <th><input type="checkbox" class="audit-checkbox"></th>
+            <th>זמן הפעולה <button class="sort-button">▼</button></th>
+            <th>תיאור</th>
+            <th>הרשאות משתמש</th>
+            <th>כתובת IP</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Row 1 — family update WITH nested old→new changes table -->
+          <tr>
+            <td><input type="checkbox" class="audit-checkbox"></td>
+            <td class="timestamp-column">27.7.2026, 9:41:03</td>
+            <td class="description-column">
+              <div class="audit-desc">
+                <div class="audit-desc-text">משפחה עודכנה
+משתמש: דנה לוי
+משפחה: כהן</div>
+                <table class="audit-changes-table">
+                  <thead>
+                    <tr>
+                      <th>שדה</th>
+                      <th>ערך קודם</th>
+                      <th>ערך חדש</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td class="audit-change-field">שם האב</td>
+                      <td class="audit-old-value">אבי</td>
+                      <td class="audit-new-value">אברהם</td>
+                    </tr>
+                    <tr>
+                      <td class="audit-change-field">טלפון האב</td>
+                      <td class="audit-old-value">050-1111111</td>
+                      <td class="audit-new-value">050-2222222</td>
+                    </tr>
+                    <tr>
+                      <td class="audit-change-field">סטטוס חונכות</td>
+                      <td class="audit-old-value">ממתין לחונך</td>
+                      <td class="audit-new-value">יש חונך</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </td>
+            <td class="description-column">רכז משפחות</td>
+            <td class="ip-column">192.168.1.24</td>
+          </tr>
+
+          <!-- Row 2 — login (plain text) -->
+          <tr>
+            <td><input type="checkbox" class="audit-checkbox"></td>
+            <td class="timestamp-column">27.7.2026, 9:12:47</td>
+            <td class="description-column">התחברות הצליחה
+משתמש: שרה לוי
+אימייל: sarah@childsmile.org.il
+תפקידים: מנהל מערכת</td>
+            <td class="description-column">מנהל מערכת</td>
+            <td class="ip-column">192.168.1.10</td>
+          </tr>
+
+          <!-- Row 3 — exported report (plain text) -->
+          <tr>
+            <td><input type="checkbox" class="audit-checkbox"></td>
+            <td class="timestamp-column">26.7.2026, 18:05:22</td>
+            <td class="description-column">דוח יוצא
+דוח: דוח חונכויות פעילות
+פורמט: PDF
+רשומות: 42
+מכיל מידע אישי: כן</td>
+            <td class="description-column">מנהל מערכת</td>
+            <td class="ip-column">10.0.0.5</td>
+          </tr>
+
+          <!-- Row 4 — task created (plain text) -->
+          <tr>
+            <td><input type="checkbox" class="audit-checkbox"></td>
+            <td class="timestamp-column">26.7.2026, 14:33:10</td>
+            <td class="description-column">נוצרה משימה חדשה
+סוג משימה: שיחת ביקורת
+משוייך ל: יוסי כהן</td>
+            <td class="description-column">רכז חונכות</td>
+            <td class="ip-column">192.168.1.55</td>
+          </tr>
+
+          <!-- Row 5 — tutor update WITH nested old→new changes table -->
+          <tr>
+            <td><input type="checkbox" class="audit-checkbox"></td>
+            <td class="timestamp-column">25.7.2026, 11:20:58</td>
+            <td class="description-column">
+              <div class="audit-desc">
+                <div class="audit-desc-text">חונך עודכן
+חונך: מיכל דוד
+אימייל חונך: michal@childsmile.org.il</div>
+                <table class="audit-changes-table">
+                  <thead>
+                    <tr>
+                      <th>שדה</th>
+                      <th>ערך קודם</th>
+                      <th>ערך חדש</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td class="audit-change-field">טלפון</td>
+                      <td class="audit-old-value">054-1234567</td>
+                      <td class="audit-new-value">054-7654321</td>
+                    </tr>
+                    <tr>
+                      <td class="audit-change-field">עיר</td>
+                      <td class="audit-old-value">חיפה</td>
+                      <td class="audit-new-value">תל אביב</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </td>
+            <td class="description-column">מנהל מערכת</td>
+            <td class="ip-column">192.168.1.88</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- Pagination -->
+      <div class="pagination">
+        <button class="pagination-arrow" disabled>&laquo;</button>
+        <button class="pagination-arrow" disabled>&lsaquo;</button>
+        <button class="active">1</button>
+        <button>2</button>
+        <button>3</button>
+        <button class="pagination-arrow">&rsaquo;</button>
+        <button class="pagination-arrow">&raquo;</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="mock-badge">מוקאפ סטטי · צבעי מותג חדשים <b>«חיוך של ילד»</b></div>
+
+</body>
+</html>

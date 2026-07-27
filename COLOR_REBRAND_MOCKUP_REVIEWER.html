@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>מוקאפ — שיחות ביקורת (צבעי מותג חדשים)</title>
+<style>
+/* Same local Rubik variable font the real app uses (styles.css @font-face) so
+   the mock renders identically — NOT Google Fonts. */
+@font-face {
+  font-family: 'Rubik';
+  src: url('childsmile/frontend/src/fonts/Rubik-VariableFont_wght.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+}
+/* =====================================================================
+   Reviewer / "שיחות ביקורת" page — STATIC recolored mock.
+   Faithful reproduction of the real page (ReviewerPage.js: InnerPageHeader +
+   Sidebar + reviewers-filter-bar + reviewers-data-grid + status badges +
+   action buttons + pagination), with the indigo/purple accents swapped to the
+   A Child's Smile palette. Brand: sky #6EC1E4 · teal #3BC1C8 · pink #ED3B97 ·
+   yellow #FCD20E · navy #143852.
+   KEY fidelity: reviewer.css is MOSTLY navy #1a3a5c / blue #2a5298 / green / amber
+   (all KEPT — they are the page's own brand, not the indigo theme). ONLY the
+   indigo/purple values are recolored: the "שייך משימה" assign button (#7c3aed→teal,
+   hover #6d28d9→navy), the "המשך בירור" status badge (#ede7f6→pale teal, #5e35b1→navy),
+   and the pagination-active gradient (rgba 99,102,241 / 139,92,246 → teal/sky).
+   Chrome (Sidebar + Header markup + CSS) copied VERBATIM from
+   COLOR_REBRAND_MOCKUP_FAMILIES.html. Structure/labels 1:1 with the code.
+   ===================================================================== */
+
+*{box-sizing:border-box;font-family:Rubik,sans-serif}
+html{zoom:.8}
+body{
+  margin:0;direction:rtl;min-height:100vh;
+  /* was rainbow indigo/blue/green/orange/pink → brand rainbow (decorative, low alpha) */
+  background:
+    linear-gradient(135deg,
+      rgba(237,59,151,.14) 0%,
+      rgba(110,193,228,.14) 25%,
+      rgba(59,193,200,.14) 50%,
+      rgba(252,210,14,.14) 75%,
+      rgba(242,103,34,.14) 100%);
+  background-attachment:fixed;
+}
+
+/* ===================== SIDEBAR (faithful to common.css; bg recolored TEAL) ===================== */
+.sidebar{
+  background:linear-gradient(135deg,
+    rgba(110,193,228,.9) 0%,
+    rgba(59,193,200,.92) 45%,
+    rgba(101,190,198,.94) 100%);
+  color:#fff;width:280px;min-height:100vh;padding:60px 15px 25px;
+  box-shadow:-4px 0 40px rgba(59,193,200,.4), -2px 0 20px rgba(101,190,198,.3), inset 1px 0 0 rgba(255,255,255,.3);
+  position:fixed;right:0;top:0;display:flex;flex-direction:column;z-index:1001;
+  border-left:2px solid rgba(255,255,255,.3);overflow-y:auto;
+}
+.sidebar-toggle{position:absolute;top:15px;right:25px;width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px}
+.sidebar-user-info{background:linear-gradient(135deg,rgba(255,255,255,.25),rgba(255,255,255,.15));border:2px solid rgba(255,255,255,.3);border-radius:16px;padding:20px;margin-bottom:20px;text-align:center;box-shadow:0 4px 20px rgba(0,0,0,.15),inset 0 1px 0 rgba(255,255,255,.4)}
+.sidebar-username{font-size:28px;font-weight:700;color:#fff;text-shadow:0 2px 8px rgba(0,0,0,.3);margin-bottom:12px;letter-spacing:.5px}
+.sidebar-roles{display:flex;flex-direction:column;gap:6px}
+.sidebar-role{background:linear-gradient(90deg,rgba(255,255,255,.2),rgba(255,255,255,.1));padding:6px 12px;border-radius:8px;font-size:18px;font-weight:600;color:#fff;border:1px solid rgba(255,255,255,.2)}
+/* clock stays GREEN (not indigo/purple) */
+.sidebar-clock{background:linear-gradient(135deg,rgba(16,185,129,.85),rgba(5,150,105,.85));border:2px solid rgba(255,255,255,.4);border-radius:16px;padding:20px;margin-bottom:20px;text-align:center;box-shadow:0 6px 25px rgba(16,185,129,.35),inset 0 1px 0 rgba(255,255,255,.4)}
+.sidebar-time{font-size:36px;font-weight:800;color:#fff;letter-spacing:2px;text-shadow:0 3px 10px rgba(0,0,0,.3);margin-bottom:8px}
+.sidebar-date{font-size:18px;font-weight:600;color:rgba(255,255,255,.95)}
+/* logout stays RED */
+.sidebar-logout-button{background:linear-gradient(135deg,rgba(239,68,68,.95),rgba(220,38,38,.95));color:#fff;padding:16px 24px;border:2px solid rgba(255,255,255,.4);border-radius:14px;cursor:pointer;font-size:22px;font-weight:700;width:100%;margin-bottom:20px;box-shadow:0 6px 25px rgba(239,68,68,.4),inset 0 1px 0 rgba(255,255,255,.3)}
+/* PINK = separator only — the sidebar divider */
+.sidebar-divider{height:3px;background:linear-gradient(90deg,transparent,rgba(237,59,151,.9),transparent);margin:20px 0;border-radius:2px}
+.sidebar-nav-btn{display:block;width:100%;background:none;border:none;color:rgba(255,255,255,.82);font-size:32px;padding:6px 2px;cursor:pointer;text-align:right}
+.sidebar-nav-btn.top-level{font-weight:600;color:rgba(255,255,255,.85)}
+.sidebar-nav-btn.active{color:#fff;font-weight:700}
+.sidebar-section-header{display:flex;align-items:center;gap:4px;width:100%;background:none;border:none;border-bottom:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.85);font-size:32px;font-weight:600;padding:8px 2px 6px;cursor:pointer;margin-top:10px;text-align:right}
+.sidebar-section-label{flex:1;text-align:right}
+.sidebar-section-arrow{font-size:20px;font-weight:300;color:rgba(255,255,255,.55);transition:transform .2s;transform:rotate(0deg);line-height:1}
+.sidebar-section-arrow.open{transform:rotate(90deg)}
+.sidebar-section-items{display:flex;flex-direction:column;padding-right:12px;border-right:1px solid rgba(255,255,255,.15);margin:2px 6px 0 0}
+.sidebar-section-items .sidebar-nav-btn{font-size:24px;color:rgba(255,255,255,.7);padding:5px 2px}
+.sidebar-section-items .sidebar-nav-btn.active{color:#fff;font-weight:700}
+
+/* ===================== HEADER (fixed top) ===================== */
+.header{
+  background:linear-gradient(135deg,
+    rgba(110,193,228,.9) 0%,
+    rgba(59,193,200,.92) 45%,
+    rgba(101,190,198,.95) 100%);
+  color:#fff;display:flex;align-items:center;justify-content:center;
+  padding:20px 30px;height:200px;position:fixed;right:0;top:0;left:0;z-index:1000;
+  border-bottom:3px solid rgba(255,255,255,.3);
+  box-shadow:0 8px 40px rgba(59,193,200,.35), 0 4px 20px rgba(101,190,198,.28), inset 0 -1px 0 rgba(255,255,255,.3);
+}
+/* PINK = separator only — the header's lower edge (echoes the site's pink underline) */
+.header::before{content:'';position:absolute;bottom:0;left:0;right:0;height:5px;
+  background:linear-gradient(90deg, rgba(237,59,151,1) 0%, rgba(219,75,149,1) 100%);
+  box-shadow:0 2px 15px rgba(237,59,151,.5);}
+.logo{width:180px;height:180px;position:absolute;right:310px;top:10px;border-radius:20px;
+  border:3px solid rgba(255,255,255,.5);background:#fff;padding:10px;object-fit:contain;
+  box-shadow:0 6px 30px rgba(0,0,0,.2),0 0 20px rgba(255,255,255,.25);z-index:1002;}
+.title{font-size:4em;font-weight:900;margin:0;position:absolute;left:50%;transform:translateX(-50%);
+  white-space:nowrap;letter-spacing:2px;
+  background:linear-gradient(135deg,#fff 0%,#f0f9ff 25%,#e0f7fa 50%,#bae6fd 75%,#fff 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  filter:drop-shadow(0 4px 20px rgba(255,255,255,.4)) drop-shadow(0 2px 10px rgba(59,193,200,.65)) drop-shadow(0 0 30px rgba(101,190,198,.4));}
+/* PINK underline separator under the page title (mirrors the site's heading underline) */
+.title::after{content:'';position:absolute;left:50%;bottom:-14px;transform:translateX(-50%);width:78%;height:5px;border-radius:6px;
+  background:linear-gradient(90deg,rgba(237,59,151,.95),rgba(219,75,149,.95));box-shadow:0 3px 12px rgba(237,59,151,.5)}
+.top-left{position:absolute;top:20px;left:40px;display:flex;align-items:center;gap:25px;z-index:1001}
+.amit-img{width:130px;height:170px;object-fit:cover;border-radius:18px;border:3px solid rgba(255,255,255,.5);box-shadow:0 6px 30px rgba(0,0,0,.25)}
+.quote{font-size:20px;font-weight:600;text-align:right;color:#143852;max-width:360px;
+  background:linear-gradient(135deg,rgba(255,255,255,.95),rgba(249,250,251,.95));padding:14px 18px;border-radius:14px;
+  box-shadow:0 6px 24px rgba(0,0,0,.12)}
+.qr-code{width:140px;height:140px;border-radius:16px;border:3px solid rgba(255,255,255,.5);background:#fff;padding:10px;box-shadow:0 6px 30px rgba(0,0,0,.2)}
+
+/* ===================================================================
+   REVIEWER PAGE CONTENT — from reviewer.css (rendered subset)
+   Non-colour props unchanged; ONLY indigo/purple accents recolored.
+   =================================================================== */
+.reviewers-main-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  flex-grow: 1;
+  margin-top: 30px;
+  font-family: Rubik, sans-serif;
+  direction: rtl;
+}
+
+/* Inner content wrapper - clears sidebar */
+.reviewers-content {
+  width: calc(100% - 310px);
+  margin-right: 270px;
+  padding: 24px 24px;
+  box-sizing: border-box;
+}
+
+/* ---- Filter bar ---- */
+.reviewers-filter-bar {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 14px 18px;
+  background: rgba(255,255,255,0.8);
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  margin-bottom: 24px;
+  margin-top: 220px;
+}
+
+.reviewers-search-input,
+.reviewers-select,
+.reviewers-date-input,
+.reviewers-btn-refresh {
+  height: 44px;
+  font-size: 24px;
+  font-family: Rubik, sans-serif;
+  padding: 0 14px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  box-sizing: border-box;
+  outline: none;
+  background: #fff;
+}
+
+.reviewers-search-input {
+  min-width: 360px;
+  flex: 0 1 260px;
+}
+
+.reviewers-select {
+  min-width: 160px;
+}
+
+/* refresh button stays NAVY (page's own brand, not indigo theme) */
+.reviewers-btn-refresh {
+  background: #1a3a5c;
+  color: #fff;
+  border-color: #1a3a5c;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s;
+  padding: 0 20px;
+}
+.reviewers-btn-refresh:hover { background: #253f6b; }
+
+/* ---- Grid container ---- */
+.reviewers-grid-container {
+  width: 100%;
+  overflow-x: auto;
+  border-radius: 12px;
+  box-shadow: 0 4px 18px rgba(26,58,92,0.10);
+  background: rgba(255,255,255,0.7);
+}
+
+/* ---- Table ---- */
+.reviewers-data-grid {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 24px;
+  font-family: Rubik, sans-serif;
+  background: linear-gradient(135deg,
+    rgba(255,255,255,0.65) 0%,
+    rgba(240,246,255,0.70) 100%);
+  border: 2px solid rgba(255,255,255,0.5);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+/* grid header — TEAL (rebrand: ALL table headers teal, was navy→blue #1a3a5c/#2a5298) */
+.reviewers-data-grid th {
+  background: linear-gradient(135deg, #3BC1C8 0%, #6EC1E4 100%);
+  color: #fff;
+  padding: 14px 18px;
+  text-align: right;
+  font-size: 24px;
+  font-weight: 700;
+  white-space: nowrap;
+  border-bottom: 2px solid rgba(255,255,255,0.2);
+}
+
+.reviewers-data-grid td {
+  padding: 13px 18px;
+  text-align: right;
+  font-size: 24px;
+  color: #2c3e50;
+  border-bottom: 1px solid rgba(200,215,235,0.5);
+  vertical-align: middle;
+  background: transparent;
+}
+
+.reviewers-data-grid tbody tr:hover td {
+  background: rgba(59,193,200,0.07);
+}
+
+.reviewers-no-data {
+  text-align: center;
+  padding: 32px;
+  color: #888;
+  font-size: 24px;
+}
+
+/* ---- Task details cell ---- */
+.reviewer-task-details {
+  font-size: 15px;
+  color: #444;
+  line-height: 1.8;
+}
+.reviewer-task-details strong {
+  color: #1a3a5c;
+}
+
+/* ---- Status badges ---- */
+.reviewer-status-badge {
+  display: inline-block;
+  padding: 4px 13px;
+  border-radius: 12px;
+  font-size: 24px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.reviewer-status-done    { background: #d4edda; color: #155724; }  /* KEPT green */
+.reviewer-status-inprog  { background: #fff3cd; color: #856404; }  /* KEPT amber */
+.reviewer-status-pending { background: #e8eef6; color: #1a3a5c; }  /* KEPT navy */
+.reviewer-status-followup { background: #EAF7F8; color: #143852; } /* was #ede7f6/#5e35b1 → pale teal / navy */
+
+/* ---- Action buttons cell ---- */
+.reviewer-actions-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: stretch;
+  min-width: 130px;
+}
+.reviewer-btn-action {
+  padding: 7px 14px;
+  border: none;
+  border-radius: 7px;
+  font-size: 24px;
+  font-weight: 700;
+  font-family: Rubik, sans-serif;
+  cursor: pointer;
+  transition: opacity 0.15s, background 0.15s;
+  text-align: center;
+  white-space: nowrap;
+}
+.reviewer-btn-action:disabled { opacity: 0.45; cursor: not-allowed; }
+.reviewer-btn-status { background: #1a3a5c; color: #fff; }         /* KEPT navy */
+.reviewer-btn-status:hover:not(:disabled) { background: #253f6b; }
+.reviewer-btn-assign { background: #3BC1C8; color: #fff; }         /* was #7c3aed → brand TEAL */
+.reviewer-btn-assign:hover:not(:disabled) { background: #143852; } /* was #6d28d9 → brand navy */
+.reviewer-btn-edit   { background: #17a2b8; color: #fff; }         /* KEPT cyan/info */
+.reviewer-btn-edit:hover { background: #138496; }
+
+/* ================================================================
+   PAGINATION — from reviewer.css (scoped), indigo→teal on active
+   ================================================================ */
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 5px;
+  margin-top: 20px;
+}
+
+.pagination button {
+  padding: 10px 16px;
+  border: 2px solid rgba(204,204,204,0.3);
+  background: linear-gradient(135deg,
+    rgba(255,255,255,0.95) 0%,
+    rgba(249,250,251,0.95) 100%);
+  backdrop-filter: blur(15px) saturate(180%);
+  -webkit-backdrop-filter: blur(15px) saturate(180%);
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 20px;
+  font-weight: 600;
+  font-family: Rubik, sans-serif;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.6);
+}
+
+.pagination button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(59,193,200,0.2), inset 0 1px 0 rgba(255,255,255,0.8);
+  border-color: rgba(59,193,200,0.5);
+}
+
+.pagination button.active {
+  background: linear-gradient(135deg,
+    rgba(59,193,200,0.95) 0%,
+    rgba(110,193,228,0.95) 100%);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  color: white;
+  font-weight: 700;
+  border: 2px solid rgba(255,255,255,0.4);
+  box-shadow: 0 6px 25px rgba(59,193,200,0.4), inset 0 1px 0 rgba(255,255,255,0.4);
+}
+
+.pagination button:disabled {
+  background: rgba(240,240,240,0.5);
+  color: #cbd5e1;
+  cursor: not-allowed;
+  border: 2px solid rgba(204,204,204,0.2);
+  box-shadow: none;
+}
+
+.pagination-arrow {
+  font-size: 20px;
+  font-weight: bold;
+}
+
+/* mock badge */
+.mock-badge{position:fixed;bottom:16px;left:16px;z-index:3000;background:#143852;color:#fff;font-size:14px;font-weight:600;
+  padding:8px 14px;border-radius:10px;box-shadow:0 6px 20px rgba(0,0,0,.25);opacity:.92}
+.mock-badge b{color:#FCD20E}
+</style>
+</head>
+<body>
+
+  <!-- ===================== main content (mirrors ReviewerPage.js DOM) ===================== -->
+  <div class="reviewers-main-content">
+
+    <!-- ===================== SIDEBAR (1:1 with Sidebar.js) ===================== -->
+    <aside class="sidebar">
+      <button class="sidebar-toggle" title="צמצם סרגל">▶</button>
+      <div class="sidebar-user-info">
+        <div class="sidebar-username">שרה לוי</div>
+        <div class="sidebar-roles"><div class="sidebar-role">מנהל מערכת</div></div>
+      </div>
+      <div class="sidebar-clock">
+        <div class="sidebar-time">09:42:15</div>
+        <div class="sidebar-date">יום ראשון, 27 ביולי 2026</div>
+      </div>
+      <button class="sidebar-logout-button">יציאה מהמערכת</button>
+      <div class="sidebar-divider"></div>
+
+      <button class="sidebar-nav-btn top-level">לוח משימות</button>
+
+      <button class="sidebar-section-header"><span class="sidebar-section-label">משפחות</span><span class="sidebar-section-arrow">›</span></button>
+      <button class="sidebar-section-header"><span class="sidebar-section-label">מתנדבים</span><span class="sidebar-section-arrow">›</span></button>
+      <button class="sidebar-section-header"><span class="sidebar-section-label">כספים</span><span class="sidebar-section-arrow">›</span></button>
+      <button class="sidebar-section-header"><span class="sidebar-section-label">פעילויות</span><span class="sidebar-section-arrow">›</span></button>
+
+      <button class="sidebar-section-header"><span class="sidebar-section-label">ניהול</span><span class="sidebar-section-arrow open">›</span></button>
+      <div class="sidebar-section-items">
+        <button class="sidebar-nav-btn">דוחות</button>
+        <button class="sidebar-nav-btn">ניהול מערכת</button>
+        <button class="sidebar-nav-btn">ניהול פגישות</button>
+        <button class="sidebar-nav-btn">עדכוני צוות</button>
+        <button class="sidebar-nav-btn">יומן ביקורת</button>
+        <button class="sidebar-nav-btn">מרכז העדכונים</button>
+        <button class="sidebar-nav-btn active">שיחות ביקורת</button>
+      </div>
+    </aside>
+
+    <!-- ===================== CONTENT (reviewers-content wraps header + filters + grid) ===================== -->
+    <div class="reviewers-content">
+
+      <!-- ===================== HEADER (InnerPageHeader) ===================== -->
+      <header class="header">
+        <img class="logo" src="childsmile/frontend/src/assets/logo.png" alt="חיוך של ילד">
+        <div class="top-left">
+          <img class="amit-img" src="childsmile/frontend/src/assets/amit.jpg" alt="עמית">
+          <div class="quote">הרבה אנשים אומרים שהם רוצים להצליח אבל לא כולם מוכנים לשלם את המחיר שצריך כדי להצליח</div>
+          <img class="qr-code" src="childsmile/frontend/src/assets/qr-code.jpg" alt="QR">
+        </div>
+        <h1 class="title">שיחות ביקורת</h1>
+      </header>
+
+      <!-- Filters -->
+      <div class="reviewers-filter-bar">
+        <input class="reviewers-search-input" type="text" placeholder="חיפוש לפי שם משפחה / ילד..." value="">
+        <select class="reviewers-select">
+          <option>כל הסטטוסים</option>
+          <option>לא הושלמה</option>
+          <option>בביצוע</option>
+          <option>המשך בירור</option>
+          <option>הושלמה</option>
+        </select>
+        <button class="reviewers-btn-refresh">רענן</button>
+      </div>
+
+      <!-- Grid -->
+      <div class="reviewers-grid-container">
+        <table class="reviewers-data-grid">
+          <thead>
+            <tr>
+              <th style="width:40px;text-align:center;">
+                <input type="checkbox" title="בחר/בטל בחירה לכל הדף" style="width:18px;height:18px;cursor:pointer;">
+              </th>
+              <th>שם ילד</th>
+              <th>פרטי משימה</th>
+              <th>לבצע עד</th>
+              <th>שיחה אחרונה</th>
+              <th>סטטוס</th>
+              <th>לביצוע ע"י</th>
+              <th>פעולות</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td style="text-align:center;vertical-align:middle;"><input type="checkbox" style="width:18px;height:18px;cursor:pointer;"></td>
+              <td>יעל כהן</td>
+              <td>
+                <div class="reviewer-task-details">
+                  <div><strong>נוצרה:</strong> 12/06/2026</div>
+                  <div><strong>עודכנה:</strong> 18/07/2026</div>
+                  <div><strong>אב:</strong> אבי כהן | 050-1234567</div>
+                  <div><strong>אם:</strong> מיכל כהן | 052-7654321</div>
+                </div>
+              </td>
+              <td>30/07/2026</td>
+              <td>05/05/2026</td>
+              <td><span class="reviewer-status-badge reviewer-status-pending">לא הושלמה</span></td>
+              <td>דנה לוי</td>
+              <td class="reviewer-actions-cell">
+                <button class="reviewer-btn-action reviewer-btn-status">עדכן סטטוס</button>
+                <button class="reviewer-btn-action reviewer-btn-assign">שייך משימה</button>
+                <button class="reviewer-btn-action reviewer-btn-info">🔍 פרטים</button>
+                <button class="reviewer-btn-action reviewer-btn-edit">עריכת משפחה</button>
+              </td>
+            </tr>
+            <tr>
+              <td style="text-align:center;vertical-align:middle;"><input type="checkbox" style="width:18px;height:18px;cursor:pointer;"></td>
+              <td>איתי לוי</td>
+              <td>
+                <div class="reviewer-task-details">
+                  <div><strong>נוצרה:</strong> 01/06/2026</div>
+                  <div><strong>עודכנה:</strong> 20/07/2026</div>
+                  <div><strong>אב:</strong> רון לוי | 054-5551234</div>
+                  <div><strong>אם:</strong> נועה לוי | 053-4443322</div>
+                </div>
+              </td>
+              <td>25/07/2026</td>
+              <td>10/04/2026</td>
+              <td><span class="reviewer-status-badge reviewer-status-inprog">בביצוע</span></td>
+              <td>יוסי כהן</td>
+              <td class="reviewer-actions-cell">
+                <button class="reviewer-btn-action reviewer-btn-status">עדכן סטטוס</button>
+                <button class="reviewer-btn-action reviewer-btn-assign">שייך משימה</button>
+                <button class="reviewer-btn-action reviewer-btn-info">🔍 פרטים</button>
+                <button class="reviewer-btn-action reviewer-btn-edit">עריכת משפחה</button>
+              </td>
+            </tr>
+            <tr>
+              <td style="text-align:center;vertical-align:middle;"><input type="checkbox" style="width:18px;height:18px;cursor:pointer;"></td>
+              <td>נועה מזרחי</td>
+              <td>
+                <div class="reviewer-task-details">
+                  <div><strong>נוצרה:</strong> 15/05/2026</div>
+                  <div><strong>עודכנה:</strong> 22/07/2026</div>
+                  <div><strong>אב:</strong> דוד מזרחי | 050-7778899</div>
+                  <div><strong>אם:</strong> שירה מזרחי | 052-1112233</div>
+                </div>
+              </td>
+              <td>02/08/2026</td>
+              <td>18/06/2026</td>
+              <td><span class="reviewer-status-badge reviewer-status-followup">המשך בירור</span></td>
+              <td>דנה לוי</td>
+              <td class="reviewer-actions-cell">
+                <button class="reviewer-btn-action reviewer-btn-status">עדכן סטטוס</button>
+                <button class="reviewer-btn-action reviewer-btn-assign">שייך משימה</button>
+                <button class="reviewer-btn-action reviewer-btn-info">🔍 פרטים</button>
+                <button class="reviewer-btn-action reviewer-btn-edit">עריכת משפחה</button>
+              </td>
+            </tr>
+            <tr>
+              <td style="text-align:center;vertical-align:middle;"><input type="checkbox" style="width:18px;height:18px;cursor:pointer;"></td>
+              <td>דניאל פרץ</td>
+              <td>
+                <div class="reviewer-task-details">
+                  <div><strong>נוצרה:</strong> 20/04/2026</div>
+                  <div><strong>עודכנה:</strong> 14/07/2026</div>
+                  <div><strong>אב:</strong> משה פרץ | 053-9998877</div>
+                  <div><strong>אם:</strong> רבקה פרץ | 054-6665544</div>
+                </div>
+              </td>
+              <td>28/06/2026</td>
+              <td>12/03/2026</td>
+              <td><span class="reviewer-status-badge reviewer-status-done">הושלמה</span></td>
+              <td>יוסי כהן</td>
+              <td class="reviewer-actions-cell">
+                <button class="reviewer-btn-action reviewer-btn-assign">שייך משימה</button>
+                <button class="reviewer-btn-action reviewer-btn-info">🔍 פרטים</button>
+                <button class="reviewer-btn-action reviewer-btn-edit">עריכת משפחה</button>
+              </td>
+            </tr>
+            <tr>
+              <td style="text-align:center;vertical-align:middle;"><input type="checkbox" style="width:18px;height:18px;cursor:pointer;"></td>
+              <td>שירה אברהם</td>
+              <td>
+                <div class="reviewer-task-details">
+                  <div><strong>נוצרה:</strong> 08/06/2026</div>
+                  <div><strong>עודכנה:</strong> 24/07/2026</div>
+                  <div><strong>אב:</strong> יעקב אברהם | 050-3334455</div>
+                  <div><strong>אם:</strong> תמר אברהם | 052-2223344</div>
+                </div>
+              </td>
+              <td>31/07/2026</td>
+              <td>28/05/2026</td>
+              <td><span class="reviewer-status-badge reviewer-status-pending">לא הושלמה</span></td>
+              <td>דנה לוי</td>
+              <td class="reviewer-actions-cell">
+                <button class="reviewer-btn-action reviewer-btn-status">עדכן סטטוס</button>
+                <button class="reviewer-btn-action reviewer-btn-assign">שייך משימה</button>
+                <button class="reviewer-btn-action reviewer-btn-info">🔍 פרטים</button>
+                <button class="reviewer-btn-action reviewer-btn-edit">עריכת משפחה</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination Controls -->
+      <div class="pagination">
+        <button class="pagination-arrow" disabled>&laquo;</button>
+        <button class="pagination-arrow" disabled>&lsaquo;</button>
+        <button class="active">1</button>
+        <button>2</button>
+        <button>3</button>
+        <button class="pagination-arrow">&rsaquo;</button>
+        <button class="pagination-arrow">&raquo;</button>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="mock-badge">מוקאפ סטטי · צבעי מותג חדשים <b>«חיוך של ילד»</b></div>
+
+</body>
+</html>

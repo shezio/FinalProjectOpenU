@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Architecture Proposal — Moving from DB-backed Permissions to Stateless Authorization</title>
+<style>
+  :root{
+    --navy:#16233b; --indigo:#2c3e73; --accent:#3f6fd1; --accent2:#6c8fd8;
+    --ink:#1f2733; --muted:#5b6472; --line:#e2e7ef; --bg:#f5f7fb; --card:#ffffff;
+    --green:#1f7a4d; --green-bg:#e8f6ee; --amber:#a9791b; --amber-bg:#fdf3e0;
+    --red:#b3341f; --red-bg:#fbecea; --blue:#22557f; --blue-bg:#e9f2fa;
+    --code-bg:#0f1626; --code-ink:#e6ebf5;
+  }
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap');
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    font-family:'Inter',-apple-system,Segoe UI,Arial,sans-serif;
+    color:var(--ink); background:var(--bg); margin:0; line-height:1.75;
+    font-size:17px;
+  }
+  .wrap{max-width:1040px; margin:0 auto; padding:0 22px 90px}
+  header.doc{
+    background:linear-gradient(135deg,var(--navy),var(--indigo) 70%);
+    color:#fff; padding:46px 22px 40px; margin-bottom:30px;
+    border-bottom:5px solid var(--accent);
+  }
+  header.doc .inner{max-width:1040px;margin:0 auto}
+  header.doc .brand{font-size:15px;letter-spacing:.5px;color:#b9c8ea;font-weight:500;margin-bottom:12px}
+  header.doc h1{font-size:33px;line-height:1.3;margin:0 0 10px;font-weight:800}
+  header.doc .sub{font-size:19px;color:#dbe4f7;font-weight:400;margin-bottom:20px}
+  header.doc .meta{font-size:14px;color:#aebbdc;display:flex;flex-wrap:wrap;gap:8px 26px;padding-top:16px;border-top:1px solid rgba(255,255,255,.15)}
+  header.doc .meta b{color:#e7edfb;font-weight:600}
+
+  h2{font-size:25px;color:var(--indigo);margin:44px 0 14px;padding-bottom:9px;border-bottom:2px solid var(--line);font-weight:800}
+  h2 .n{display:inline-block;background:var(--indigo);color:#fff;font-size:16px;width:32px;height:32px;line-height:32px;text-align:center;border-radius:8px;margin-right:10px;font-weight:700}
+  h3{font-size:20px;color:var(--navy);margin:26px 0 8px;font-weight:700}
+  p{margin:10px 0}
+  ul,ol{margin:10px 0;padding-left:24px}
+  li{margin:7px 0}
+  code.inl{background:#eef1f7;border:1px solid #dde3ee;border-radius:5px;padding:1px 6px;font-family:'JetBrains Mono',monospace;font-size:14px;color:#33405c}
+  strong{font-weight:700;color:var(--navy)}
+
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:22px 24px;margin:18px 0;box-shadow:0 2px 10px rgba(20,35,59,.05)}
+
+  .callout{border-radius:12px;padding:16px 18px 16px 20px;margin:18px 0;border-left:6px solid;font-size:16px}
+  .callout .t{font-weight:800;font-size:16px;margin-bottom:5px;display:flex;align-items:center;gap:8px}
+  .rec{background:var(--green-bg);border-color:var(--green)} .rec .t{color:var(--green)}
+  .warn{background:var(--amber-bg);border-color:var(--amber)} .warn .t{color:var(--amber)}
+  .danger{background:var(--red-bg);border-color:var(--red)} .danger .t{color:var(--red)}
+  .info{background:var(--blue-bg);border-color:var(--blue)} .info .t{color:var(--blue)}
+  .badge{display:inline-block;font-size:12.5px;font-weight:700;padding:2px 10px;border-radius:20px;vertical-align:middle}
+  .b-rec{background:var(--green-bg);color:var(--green);border:1px solid #b7e0c6}
+  .b-warn{background:var(--amber-bg);color:var(--amber);border:1px solid #ecd3a0}
+  .b-danger{background:var(--red-bg);color:var(--red);border:1px solid #eebfb8}
+  .b-info{background:var(--blue-bg);color:var(--blue);border:1px solid #b9d6ec}
+
+  .verdict{background:linear-gradient(135deg,#eef3fc,#e8f6ee);border:1px solid #cfe0d6;border-radius:16px;padding:24px 26px;margin:6px 0 10px}
+  .verdict h3{margin-top:0;color:var(--green);font-size:22px}
+
+  table{width:100%;border-collapse:collapse;margin:16px 0;font-size:15px;background:#fff;border-radius:10px;overflow:hidden;box-shadow:0 1px 6px rgba(20,35,59,.06)}
+  th,td{border:1px solid var(--line);padding:10px 12px;text-align:left;vertical-align:top}
+  thead th{background:var(--indigo);color:#fff;font-weight:600;font-size:14.5px}
+  tbody tr:nth-child(even){background:#f7f9fd}
+  td .yes{color:var(--green);font-weight:700}
+  td .no{color:var(--red);font-weight:700}
+  td .mid{color:var(--amber);font-weight:700}
+
+  pre{background:var(--code-bg);color:var(--code-ink);border-radius:12px;padding:16px 18px;overflow-x:auto;direction:ltr;text-align:left;font-family:'JetBrains Mono',monospace;font-size:13.5px;line-height:1.7;margin:14px 0;border:1px solid #26324a}
+  pre .cm{color:#7f8db0} pre .kw{color:#7fb3ff} pre .st{color:#9ede9e} pre .fn{color:#ffd48a}
+  .code-cap{font-size:13px;color:var(--muted);margin:-6px 0 14px;font-style:italic}
+
+  .toc{background:#fff;border:1px solid var(--line);border-radius:14px;padding:18px 24px;margin:20px 0}
+  .toc h3{margin-top:0}
+  .toc ol{padding-left:20px;columns:2;column-gap:34px}
+  .toc a{color:var(--accent);text-decoration:none} .toc a:hover{text-decoration:underline}
+
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:760px){.grid2{grid-template-columns:1fr}.toc ol{columns:1}header.doc h1{font-size:26px}}
+  .pill-row{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
+  hr.soft{border:none;border-top:1px dashed #cdd5e3;margin:34px 0}
+  .foot{margin-top:50px;padding-top:18px;border-top:2px solid var(--line);color:var(--muted);font-size:14px}
+  a.ref{color:var(--accent);text-decoration:none} a.ref:hover{text-decoration:underline}
+  .kpi{display:flex;gap:14px;flex-wrap:wrap;margin:14px 0}
+  .kpi div{flex:1;min-width:150px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+  .kpi .big{font-size:22px;font-weight:800;color:var(--indigo)}
+  .kpi .lbl{font-size:13.5px;color:var(--muted)}
+  @media print{body{background:#fff}.card,table,pre{box-shadow:none}header.doc{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+</style>
+</head>
+<body>
+
+<header class="doc">
+  <div class="inner">
+    <div class="brand">A Child's Smile · Security Architecture Document</div>
+    <h1>Moving from Table-Based Permissions to Stateless Authorization</h1>
+    <div class="sub">JWT, PASETO and more-secure alternatives — an honest analysis, OWASP mapping, and a phased recommendation</div>
+    <div class="meta">
+      <span><b>For:</b> Liam Avivi (security expert)</span>
+      <span><b>Written:</b> 2026-07-26</span>
+      <span><b>Status:</b> Proposal for discussion</span>
+      <span><b>System version:</b> Backend 26.07.12.x</span>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <div class="verdict">
+    <h3>Bottom line (TL;DR)</h3>
+    <p style="margin-top:6px"><strong>A "naive" move to a long-lived JWT stored in <code class="inl">localStorage</code> would be a security downgrade, not an upgrade</strong> — it loses exactly the two properties we already rely on today: <strong>instant revocation</strong> and <strong>fresh authorization</strong>, and it adds a token-theft attack surface plus the classic cryptographic footguns of JWT.</p>
+    <p>The recommendation therefore has two tracks:</p>
+    <ul style="margin-bottom:4px">
+      <li><span class="badge b-rec">Primary recommendation</span> &nbsp;<strong>Solve the real problem (DB load) without changing the trust model</strong> — keep server-side sessions, add a permissions cache layer, and add a <code class="inl">security_version</code> for instant revocation. More secure than JWT, and less work.</li>
+      <li><span class="badge b-info">Future option</span> &nbsp;If we genuinely need stateless tokens (mobile app / external API / horizontal scale) — a <strong>hardened PASETO-based hybrid</strong> (preferred over raw JWT) with a short-lived access token + rotating refresh token + kill-switch. Restores revocation while keeping statelessness.</li>
+    </ul>
+    <p style="margin-bottom:0">Every conclusion in this document is mapped to the <strong>OWASP Top 10 (2021)</strong> and the relevant cheat sheets.</p>
+  </div>
+
+  <div class="toc">
+    <h3>Table of Contents</h3>
+    <ol>
+      <li><a href="#now">Current state — what we already have</a></li>
+      <li><a href="#problem">Which problem are we actually solving?</a></li>
+      <li><a href="#jwt-trap">Why naive JWT is a security downgrade</a></li>
+      <li><a href="#optA">Recommendation A — Sessions + Cache + security_version</a></li>
+      <li><a href="#optB">Recommendation B — Hardened hybrid (PASETO / JWT)</a></li>
+      <li><a href="#matrix">Comparison of the approaches</a></li>
+      <li><a href="#owasp">OWASP Top 10 mapping</a></li>
+      <li><a href="#plan">Phased migration plan</a></li>
+      <li><a href="#dont">What <u>not</u> to do (anti-patterns)</a></li>
+      <li><a href="#code">Illustrative code snippets</a></li>
+      <li><a href="#horizon">Future horizon — Policy-as-Code &amp; capabilities</a></li>
+      <li><a href="#questions">Open questions for Liam</a></li>
+      <li><a href="#refs">References</a></li>
+    </ol>
+  </div>
+
+  <!-- ========================= 1 ========================= -->
+  <h2 id="now"><span class="n">1</span>Current state — what we already have</h2>
+  <p>Before replacing anything, it's important to describe precisely what exists — because the current baseline is stronger than people tend to assume:</p>
+  <div class="card">
+    <ul style="margin:0">
+      <li><strong>Passwordless login (TOTP):</strong> a one-time code sent to email, with no stored passwords at all — a built-in security advantage.</li>
+      <li><strong>Server-side sessions backed by the DB:</strong> after verification an opaque <code class="inl">sessionid</code> is issued in a cookie; the state itself lives in the <code class="inl">django_session</code> table. Expiry is extended to 24 hours (<code class="inl">set_expiry(86400)</code>).</li>
+      <li><strong>Single-device enforcement:</strong> on every login, <code class="inl">logout_all_other_sessions()</code> deletes all of the user's other sessions — meaning we <em>already</em> rely on instant server-side revocation.</li>
+      <li><strong>Hardened cookie:</strong> <code class="inl">HttpOnly</code>, <code class="inl">Secure</code>, <code class="inl">SameSite=Lax</code> (in prod), with the Domain scoped to <code class="inl">.achildssmile.org.il</code>.</li>
+      <li><strong>Permissions model:</strong> <code class="inl">role</code> / <code class="inl">permissions</code> / <code class="inl">staff_roles</code> tables. At login the permission list is loaded in a single JOIN into <code class="inl">session["permissions"]</code>, and <code class="inl">has_permission(request, resource, action)</code> reads from it (no DB hit).</li>
+    </ul>
+  </div>
+
+  <div class="callout warn">
+    <div class="t">The real pain point — performance, not security</div>
+    <p style="margin:0"><code class="inl">has_permission()</code> does read from the session, but <code class="inl">is_admin()</code> and <code class="inl">is_viewer_user()</code> perform a <strong>DB query on every request/write</strong>, and loading the session itself is a DB read. This is the "tax" that motivates the move to tokens — and it's a <strong>load</strong> problem, solvable without giving up any security properties.</p>
+  </div>
+
+  <!-- ========================= 2 ========================= -->
+  <h2 id="problem"><span class="n">2</span>Which problem are we actually solving?</h2>
+  <p>"Move to JWT" conflates three separate goals. Separating them matters, because each has a different solution:</p>
+  <div class="grid2">
+    <div class="card"><h3 style="margin-top:0">Performance / load</h3><p style="margin:0">Reduce per-request DB queries. <span class="badge b-rec">Solvable with cache — no tokens needed</span></p></div>
+    <div class="card"><h3 style="margin-top:0">Statelessness / scale</h3><p style="margin:0">Auth with no shared state, for multi-instance / mobile / API. <span class="badge b-info">Requires tokens</span></p></div>
+    <div class="card"><h3 style="margin-top:0">Developer experience</h3><p style="margin:0">A token that carries permissions "built in". <span class="badge b-warn">Nice — but brings risk with it</span></p></div>
+    <div class="card"><h3 style="margin-top:0">Security</h3><p style="margin:0">Here server-side sessions are actually <strong>superior</strong> to naive JWT on most axes.</p></div>
+  </div>
+  <p>For an NPO app with a single SPA, the realistic goal today is <strong>performance</strong> — so the most secure solution is not necessarily tokens.</p>
+
+  <!-- ========================= 3 ========================= -->
+  <h2 id="jwt-trap"><span class="n">3</span>Why naive JWT is a security downgrade</h2>
+  <p>These are all well-known weaknesses of a long-lived, permission-carrying JWT. A security expert will spot them immediately:</p>
+
+  <div class="callout danger">
+    <div class="t">3.1 · No instant revocation — <span class="badge b-danger">A01 / A07</span></div>
+    <p style="margin:0">A signed token is valid until it expires. If a token is stolen, if an employee is offboarded, or if we need to "kick everyone out" — you <strong>cannot revoke it</strong> without adding a server-side blocklist, which is… server-side state again. We <em>already</em> rely on instant revocation (single-device); moving to naive JWT breaks an existing capability.</p>
+  </div>
+  <div class="callout danger">
+    <div class="t">3.2 · Stale authorization — <span class="badge b-danger">A01 Broken Access Control</span></div>
+    <p style="margin:0">If permissions are "baked" into the token, a role change (removing a coordinator, promotion/demotion, switching to Viewer) <strong>won't take effect</strong> until the token expires. In a fully permission-driven system (coordinators with cross-domain grants, read-only Viewer, Reviewer) — that's a real access-control failure.</p>
+  </div>
+  <div class="callout danger">
+    <div class="t">3.3 · Classic JWT cryptographic footguns — <span class="badge b-danger">A02 Cryptographic Failures</span></div>
+    <ul style="margin:6px 0 0">
+      <li><code class="inl">alg:none</code> — an "unsigned" token accepted by mistake.</li>
+      <li><strong>Algorithm confusion</strong> — tricking a server that expects RS256 into verifying HS256 using the public key as the "secret".</li>
+      <li><strong>Weak secret</strong> — HS256 with a short/guessable secret → offline key cracking → token forgery.</li>
+      <li><strong>Key management</strong> — one leaked signing key = account takeover across all users until rotation.</li>
+    </ul>
+  </div>
+  <div class="callout danger">
+    <div class="t">3.4 · The client-side storage dilemma — <span class="badge b-danger">A03 (XSS)</span></div>
+    <p style="margin:0"><code class="inl">localStorage</code> is accessible to JavaScript ⇒ any XSS steals the token. An <code class="inl">HttpOnly</code> cookie solves XSS but then you're back to needing CSRF protection — so the "statelessness benefit" evaporates. Today our <code class="inl">sessionid</code> is already <code class="inl">HttpOnly</code>, and <code class="inl">localStorage.permissions</code> is used <em>only</em> as a UI hint, never as a source of authority.</p>
+  </div>
+
+  <!-- ========================= 4 ========================= -->
+  <h2 id="optA"><span class="n">4</span>Recommendation A — Sessions + Cache + <code class="inl" style="font-size:17px">security_version</code> <span class="badge b-rec">Primary</span></h2>
+  <p>Keep the strong existing trust model, and attack only the load problem:</p>
+  <ol>
+    <li><strong>Permissions cache layer:</strong> move <code class="inl">is_admin</code>/<code class="inl">is_viewer</code>/the permission list into a cache keyed by staff id (<code class="inl">perms:{staff_id}</code>) with a short TTL (say 60 seconds) or explicit eviction on role change. Hit the DB only on a miss.</li>
+    <li><strong>A <code class="inl">security_version</code> column on Staff:</strong> an integer bumped on any role/permission change or "log me out of all devices". It's stored in the session; a mismatch forces an immediate refresh of the permissions (staleness ≈ 0).</li>
+    <li><strong>Cache for sessions:</strong> a <code class="inl">cached_db</code> session backend (Redis + DB fallback) removes the per-request DB read without losing durability or instant revocation.</li>
+  </ol>
+  <div class="callout rec">
+    <div class="t">Why this is more secure than JWT</div>
+    <p style="margin:0">It preserves <strong>instant revocation</strong>, <strong>fresh permissions</strong>, <strong>single-device</strong>, and <strong>HttpOnly storage</strong> — while eliminating the DB cost that is the actual motivation. No signing keys, no <code class="inl">alg</code>, no token stored in JS. The attack surface shrinks, not grows.</p>
+  </div>
+  <div class="callout info"><div class="t">New dependency</div><p style="margin:0">Redis (or the existing Django cache). <code class="inl">cryptography</code> and <code class="inl">channels</code> are already installed; Redis is the only addition, and it usually already exists as infrastructure.</p></div>
+
+  <!-- ========================= 5 ========================= -->
+  <h2 id="optB"><span class="n">5</span>Recommendation B — Hardened hybrid (PASETO / JWT) <span class="badge b-info">If stateless is genuinely required</span></h2>
+  <p>If we later add a mobile app, a third-party API, or true multi-instance scale — this is the right way to do tokens <em>without</em> falling into the traps of section 3:</p>
+
+  <h3>5.1 · Two tokens, not one</h3>
+  <ul>
+    <li><strong>Short-lived access token (5–10 min):</strong> carries <code class="inl">sub</code>, <code class="inl">roles</code>, and <code class="inl">sv</code> (security_version). Prefer carrying <strong>roles only</strong> and mapping role→permissions on the server, to avoid leaking the whole permission matrix and to keep the token small. Verified without a DB.</li>
+    <li><strong>Opaque refresh token:</strong> random, stored <strong>hashed</strong> on the server, in an <code class="inl">HttpOnly + Secure + SameSite=Strict</code> cookie. This is what enables revocation.</li>
+  </ul>
+
+  <h3>5.2 · Rotation + reuse detection</h3>
+  <p>Every use of the refresh token issues a new one and invalidates the old. If an already-used refresh token is presented — that's a theft signal ⇒ <strong>revoke the entire token "family"</strong> for that user. This restores kill-switch semantics.</p>
+
+  <h3>5.3 · Kill-switch via <code class="inl" style="font-size:17px">security_version</code></h3>
+  <p>The access token carries <code class="inl">sv</code>; the server compares it to a per-user integer held in cache. A role change or "log everyone out" increments that integer ⇒ <strong>all existing access tokens are rejected immediately</strong>. It's a single-integer lookup (cacheable) — so you keep statelessness for 99% of requests while gaining near-instant revocation. The staleness window is bounded by the TTL (minutes).</p>
+
+  <h3>5.4 · Prefer PASETO over raw JWT <span class="badge b-rec">"better than JWT"</span></h3>
+  <div class="callout rec">
+    <div class="t">PASETO (Platform-Agnostic Security Tokens)</div>
+    <p style="margin:0"><strong>PASETO v4.public (Ed25519)</strong> eliminates by design the entire family of JWT attacks: no algorithm negotiation, no <code class="inl">alg:none</code>, no algorithm confusion, no weak-cipher selection. Each version has one hard-coded algorithm. This is the precise answer to "do something more secure than JWT."</p>
+  </div>
+  <p>If we still stay with JWT (for ecosystem reasons) — it's mandatory to: use a hard algorithm allow-list, reject <code class="inl">none</code>, use an asymmetric algorithm (EdDSA/ES256), validate <code class="inl">iss/aud/exp/nbf</code>, and use <code class="inl">kid</code>-based key rotation. Note: a <code class="inl">jwt</code> library already exists in requirements — verify it's a maintained one (e.g. <code class="inl">PyJWT</code>) before relying on it.</p>
+
+  <h3>5.5 · Client-side storage</h3>
+  <p><strong>Never</strong> store the access token in <code class="inl">localStorage</code>. Keep it <strong>in memory only</strong> (a JS variable), and rely on the refresh cookie (HttpOnly) to re-mint it on reload. This closes the XSS-exfiltration path.</p>
+  <div class="callout info"><div class="t">Advanced hardening (optional)</div><p style="margin:0"><strong>Sender-constrained tokens (DPoP, RFC 9449)</strong> or mTLS — bind the token to the client's key, so a stolen access token cannot be replayed from another device.</p></div>
+
+  <!-- ========================= 6 ========================= -->
+  <h2 id="matrix"><span class="n">6</span>Comparison of the approaches</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Criterion</th>
+        <th>Sessions (today)</th>
+        <th>Naive JWT in localStorage</th>
+        <th>A — Sessions + Cache</th>
+        <th>B — Hardened hybrid</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td>Instant revocation</td><td><span class="yes">Full</span></td><td><span class="no">None</span></td><td><span class="yes">Full</span></td><td><span class="mid">Near-instant (kill-switch)</span></td></tr>
+      <tr><td>Authorization freshness</td><td><span class="yes">Immediate</span></td><td><span class="no">Until expiry</span></td><td><span class="yes">Immediate</span></td><td><span class="mid">Short TTL window</span></td></tr>
+      <tr><td>XSS exposure (token theft)</td><td><span class="yes">Low (HttpOnly)</span></td><td><span class="no">High</span></td><td><span class="yes">Low</span></td><td><span class="yes">Low (in-memory + HttpOnly refresh)</span></td></tr>
+      <tr><td>Per-request DB load</td><td><span class="mid">Medium</span></td><td><span class="yes">Zero</span></td><td><span class="yes">Low (cache)</span></td><td><span class="yes">Zero for access</span></td></tr>
+      <tr><td>Horizontal scale</td><td><span class="mid">DB-bound</span></td><td><span class="yes">Excellent</span></td><td><span class="yes">Good (shared cache)</span></td><td><span class="yes">Excellent</span></td></tr>
+      <tr><td>Crypto surface (alg/keys)</td><td><span class="yes">None</span></td><td><span class="no">High</span></td><td><span class="yes">None</span></td><td><span class="mid">Managed (PASETO minimizes)</span></td></tr>
+      <tr><td>Implementation complexity</td><td><span class="yes">Already exists</span></td><td><span class="mid">Low but dangerous</span></td><td><span class="yes">Low–medium</span></td><td><span class="no">High</span></td></tr>
+    </tbody>
+  </table>
+  <p style="font-size:14.5px;color:var(--muted)">Conclusion: "naive JWT" wins only on <em>DB load</em> and <em>scale</em> — exactly what Recommendation A achieves without the rest of the risks.</p>
+
+  <!-- ========================= 7 ========================= -->
+  <h2 id="owasp"><span class="n">7</span>OWASP Top 10 (2021) mapping</h2>
+  <table>
+    <thead><tr><th>Risk</th><th>Relevance</th><th>How A / B address it</th></tr></thead>
+    <tbody>
+      <tr><td><strong>A01 · Broken Access Control</strong></td><td>Stale permissions in a baked JWT</td><td>A: fresh permissions from cache + <code class="inl">security_version</code>. B: short TTL + kill-switch.</td></tr>
+      <tr><td><strong>A02 · Cryptographic Failures</strong></td><td><code class="inl">alg:none</code>, confusion, weak secret</td><td>A: no token crypto at all. B: PASETO / asymmetric JWT with allow-list and <code class="inl">kid</code> rotation.</td></tr>
+      <tr><td><strong>A03 · Injection (XSS)</strong></td><td>Token theft from <code class="inl">localStorage</code></td><td>Token in memory only; refresh/session in <code class="inl">HttpOnly</code>. Strict CSP.</td></tr>
+      <tr><td><strong>A05 · Security Misconfiguration</strong></td><td>Cookie flags, key management</td><td>Keep <code class="inl">Secure/HttpOnly/SameSite</code>; keys in Key Vault; scheduled rotation.</td></tr>
+      <tr><td><strong>A07 · Identification &amp; Auth Failures</strong></td><td>Revocation, session fixation, replay</td><td>Instant revocation preserved; rotation with reuse-detection; optional DPoP against replay.</td></tr>
+    </tbody>
+  </table>
+
+  <!-- ========================= 8 ========================= -->
+  <h2 id="plan"><span class="n">8</span>Phased migration plan (each step reversible and valuable on its own)</h2>
+  <div class="kpi">
+    <div><div class="big">Phase 0</div><div class="lbl">Cache <code class="inl">is_admin</code>/<code class="inl">is_viewer</code> + add <code class="inl">security_version</code>. Immediate performance gain, minimal change.</div></div>
+    <div><div class="big">Phase 1</div><div class="lbl">Cache-backed session backend (Redis) + permission eviction on role change. Completes "Recommendation A".</div></div>
+    <div><div class="big">Phase 2</div><div class="lbl">Only if stateless is required: a PASETO hybrid (access+refresh, rotation, kill-switch) alongside the existing session.</div></div>
+  </div>
+  <div class="callout rec"><div class="t">Risk strategy</div><p style="margin:0">Stop after Phase 1 for today's needs. Phase 2 only enters when there's a justified trigger (mobile/API). No "big-bang", no risky replacement of the entire auth mechanism at once.</p></div>
+
+  <!-- ========================= 9 ========================= -->
+  <h2 id="dont"><span class="n">9</span>What <u>not</u> to do (anti-patterns)</h2>
+  <div class="callout danger"><div class="t">Disqualification list</div>
+  <ul style="margin:6px 0 0">
+    <li>Do not store an access/JWT in <code class="inl">localStorage</code> or <code class="inl">sessionStorage</code>.</li>
+    <li>Do not use HS256 with a short secret; do not accept the <code class="inl">alg</code> from the token without an allow-list; reject <code class="inl">none</code>.</li>
+    <li>No long-lived (hours/days) access tokens without a revocation mechanism.</li>
+    <li>Do not bake the entire permission matrix into a client-visible token.</li>
+    <li>Do not rely on client-side <code class="inl">localStorage.permissions</code> as a source of authority — it's a UI hint only; the authoritative check must stay on the server.</li>
+  </ul></div>
+
+  <!-- ========================= 10 ========================= -->
+  <h2 id="code"><span class="n">10</span>Illustrative code snippets</h2>
+  <p class="code-cap">For illustration only — not production code. Demonstrates principles, not a final implementation.</p>
+
+  <h3>10.1 · Hardened JWT verification (if JWT is chosen over PASETO)</h3>
+<pre><span class="cm"># hard allow-list, reject none, validate aud/iss, asymmetric algorithm only</span>
+<span class="kw">import</span> jwt
+<span class="kw">def</span> <span class="fn">verify_access</span>(token, public_key):
+    <span class="kw">return</span> jwt.decode(
+        token, public_key,
+        algorithms=[<span class="st">"EdDSA"</span>],        <span class="cm"># EdDSA only — no HS*, no none</span>
+        audience=<span class="st">"childsmile-app"</span>,
+        issuer=<span class="st">"childsmile-auth"</span>,
+        options={<span class="st">"require"</span>: [<span class="st">"exp"</span>, <span class="st">"iat"</span>, <span class="st">"sub"</span>, <span class="st">"sv"</span>]},
+    )</pre>
+
+  <h3>10.2 · Kill-switch via security_version</h3>
+<pre><span class="cm"># one integer in cache; a mismatch = immediate rejection of all old tokens</span>
+<span class="kw">def</span> <span class="fn">is_token_current</span>(claims):
+    current_sv = cache.get(<span class="st">f"sv:{claims['sub']}"</span>)
+    <span class="kw">if</span> current_sv <span class="kw">is</span> <span class="kw">None</span>:
+        current_sv = Staff.objects.only(<span class="st">"security_version"</span>) \
+                        .get(pk=claims[<span class="st">"sub"</span>]).security_version
+        cache.set(<span class="st">f"sv:{claims['sub']}"</span>, current_sv, <span class="st">300</span>)
+    <span class="kw">return</span> claims[<span class="st">"sv"</span>] == current_sv   <span class="cm"># bump in DB ⇒ instant invalidation</span></pre>
+
+  <h3>10.3 · Recommendation A — permission cache (the minimal, recommended step)</h3>
+<pre><span class="cm"># removes the per-request DB query, no tokens and no loss of instant revocation</span>
+<span class="kw">def</span> <span class="fn">get_perms_cached</span>(staff_id):
+    key = <span class="st">f"perms:{staff_id}"</span>
+    perms = cache.get(key)
+    <span class="kw">if</span> perms <span class="kw">is</span> <span class="kw">None</span>:
+        perms = load_perms_from_db(staff_id)   <span class="cm"># the existing JOIN</span>
+        cache.set(key, perms, <span class="st">60</span>)             <span class="cm"># short TTL or evict on role change</span>
+    <span class="kw">return</span> perms</pre>
+
+  <!-- ========================= 11 ========================= -->
+  <h2 id="horizon"><span class="n">11</span>Future horizon — going "beyond JWT" at the architecture level</h2>
+  <p>Since I was asked to "go wild" — here are the advanced directions beyond tokens per se, in case the permission matrix keeps growing (coordinators, Viewer, Reviewer, cross-domain grants):</p>
+  <div class="grid2">
+    <div class="card"><h3 style="margin-top:0">Policy-as-Code</h3><p style="margin:0"><strong>OPA/Rego</strong> or <strong>Cedar</strong> (AWS) move authorization decisions out of application code into a dedicated, testable, auditable policy engine. A good fit for a system where "who may do what" is branching out.</p></div>
+    <div class="card"><h3 style="margin-top:0">Capability tokens</h3><p style="margin:0"><strong>Biscuit / Macaroons</strong> — capability-based tokens you can "attenuate" with caveats and verify offline. Powerful for fine-grained delegation, but overkill for today.</p></div>
+  </div>
+  <div class="callout info"><div class="t">Note</div><p style="margin:0">These are beyond the current scope — presented to show the full solution space. None are needed to solve the load problem.</p></div>
+
+  <!-- ========================= 12 ========================= -->
+  <h2 id="questions"><span class="n">12</span>Open questions for Liam (decisions that need a security judgment)</h2>
+  <ol>
+    <li>Is a <strong>non-browser client</strong> (mobile / third-party API) expected in the foreseeable future that genuinely justifies stateless tokens? If not — Recommendation A is sufficient.</li>
+    <li>What is the acceptable <strong>staleness window</strong> for permissions? (0 = sessions/cache required; a few minutes = a hybrid is legitimate.)</li>
+    <li>Is <strong>Redis</strong> available/acceptable as prod infrastructure (Azure)? It's the only dependency of Recommendation A.</li>
+    <li>If we go with tokens — <strong>PASETO</strong> (recommended) or a hardened asymmetric JWT? Where would the signing keys live (Key Vault) and under what rotation policy?</li>
+    <li>Should we adopt <strong>DPoP / sender-constraining</strong> against replay, or does the risk not justify the complexity?</li>
+  </ol>
+
+  <!-- ========================= 13 ========================= -->
+  <h2 id="refs"><span class="n">13</span>References &amp; further reading</h2>
+  <ul>
+    <li><a class="ref" href="https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html">OWASP — Session Management Cheat Sheet</a></li>
+    <li><a class="ref" href="https://cheatsheetseries.owasp.org/cheatsheets/JSON_Web_Token_for_Java_Cheat_Sheet.html">OWASP — JSON Web Token Cheat Sheet</a></li>
+    <li><a class="ref" href="https://cheatsheetseries.owasp.org/cheatsheets/Authentication_Cheat_Sheet.html">OWASP — Authentication Cheat Sheet</a></li>
+    <li><a class="ref" href="https://owasp.org/www-project-application-security-verification-standard/">OWASP ASVS — Application Security Verification Standard</a></li>
+    <li><a class="ref" href="https://paseto.io/">PASETO — Platform-Agnostic Security Tokens</a></li>
+    <li><a class="ref" href="https://datatracker.ietf.org/doc/html/rfc9449">RFC 9449 — OAuth 2.0 Demonstrating Proof of Possession (DPoP)</a></li>
+    <li><a class="ref" href="https://datatracker.ietf.org/doc/html/rfc6819">RFC 6819 — OAuth 2.0 Threat Model &amp; Security Considerations</a></li>
+  </ul>
+
+  <div class="foot">
+    <p><strong>A Child's Smile</strong> · Security discussion proposal · Written 2026-07-26.</p>
+    <p>Recommendation: start with Phases 0–1 (Sessions + Cache + <code class="inl">security_version</code>) — an immediate performance improvement that <em>strengthens</em> the security posture rather than weakening it. Keep the hardened token model (PASETO hybrid) as a conditional, trigger-based future track.</p>
+  </div>
+
+</div>
+</body>
+</html>

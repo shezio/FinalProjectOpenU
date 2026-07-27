@@ -1,0 +1,897 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>מוקאפ מובייל — עמוד רישום לעמותה (iPhone 12 · צבעי מותג חדשים)</title>
+<style>
+/* Same local Rubik variable font the real app uses (styles.css @font-face) so the
+   mock renders identically — NOT Google Fonts. */
+@font-face {
+  font-family: 'Rubik';
+  src: url('childsmile/frontend/src/fonts/Rubik-VariableFont_wght.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+}
+
+/* =====================================================================
+   Registration page (route /register — "הרשמה להתנדבות - חיוך של ילד") —
+   STATIC recolored MOBILE mock (iPhone 12, 390×844). PUBLIC standalone page:
+   NO sidebar, NO header, NO bottom nav — the <form class="registration-form">
+   renders directly (exactly like Login). ONLY colour values differ from the
+   real page; structure/layout/fonts/spacing/labels are IDENTICAL.
+   Brand: sky #6EC1E4 · teal #3BC1C8 · pink #ED3B97 · navy #143852.
+   NO html{zoom}. All CSS below is registration.css recolored mechanically,
+   PLUS the un-@media'd mobile.css registration rules (single-column form).
+   ===================================================================== */
+
+* {
+  box-sizing: border-box;
+  font-family: Rubik, sans-serif;
+}
+
+/* .registration-page background applied to the mobile scroll page (the form is the
+   only rendered JSX element, centered by margin:0 auto within this backdrop). */
+.reg-page {
+  margin: 0;
+  direction: rtl;
+  min-height: 100vh;
+  /* first stop #a855f7→teal; blue/green/orange/pink stops KEPT (semantic/existing) */
+  background: linear-gradient(135deg,
+    rgba(59, 193, 200, 0.15) 0%,
+    rgba(59, 130, 246, 0.15) 25%,
+    rgba(16, 185, 129, 0.15) 50%,
+    rgba(251, 146, 60, 0.15) 75%,
+    rgba(236, 72, 153, 0.15) 100%);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+}
+
+.regisration-logo {
+  max-width: 120px;
+  height: auto;
+  margin-bottom: 30px;
+  opacity: 0.95;
+  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1));
+}
+
+/* Main Registration Form Container */
+.registration-form {
+  background: linear-gradient(135deg,
+    rgba(255, 255, 255, 0.95) 0%,
+    rgba(245, 245, 245, 0.9) 100%);
+  backdrop-filter: blur(25px) saturate(180%);
+  -webkit-backdrop-filter: blur(25px) saturate(180%);
+  border: 2px solid rgba(255, 255, 255, 0.5);
+  border-radius: 24px;
+  padding: 50px;
+  box-shadow:
+    0 20px 60px rgba(59, 130, 246, 0.3),
+    0 10px 30px rgba(59, 193, 200, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.registration-form h2 {
+  text-align: center;
+  margin-bottom: 35px;
+  margin-top: -10px;
+  font-size: 56px;
+  font-weight: 700;
+  font-family: Rubik;
+  background: linear-gradient(135deg,
+    rgba(59, 193, 200, 1) 0%,
+    rgba(110, 193, 228, 1) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: -0.5px;
+}
+
+/* Button styles */
+.registration-form button {
+  width: 100%;
+  padding: 20px 32px;
+  background: linear-gradient(135deg,
+    rgba(59, 193, 200, 0.95) 0%,
+    rgba(110, 193, 228, 0.95) 100%);
+  color: white;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 28px;
+  font-weight: 700;
+  font-family: Rubik;
+  margin-top: 20px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow:
+    0 8px 25px rgba(59, 193, 200, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+.registration-form button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg,
+    transparent,
+    rgba(255, 255, 255, 0.3),
+    transparent);
+  transition: left 0.5s;
+}
+
+.registration-form button:hover::before {
+  left: 100%;
+}
+
+.registration-form button:hover {
+  background: linear-gradient(135deg,
+    rgba(110, 193, 228, 1) 0%,
+    rgba(59, 193, 200, 1) 100%);
+  transform: translateY(-3px) scale(1.02);
+  box-shadow:
+    0 12px 35px rgba(59, 193, 200, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+.registration-form label {
+  display: block;
+  margin-bottom: 10px;
+  font-weight: 600;
+  font-size: 22px;
+  font-family: Rubik;
+  color: #333;
+  letter-spacing: 0.3px;
+}
+
+.registration-form input,
+.registration-form select,
+.registration-form textarea {
+  width: 100%;
+  padding: 14px 18px;
+  margin-bottom: 24px;
+  border: 2px solid rgba(110, 193, 228, 0.6);
+  border-radius: 10px;
+  background: linear-gradient(135deg,
+    rgba(240, 242, 245, 0.9) 0%,
+    rgba(255, 255, 255, 0.95) 100%);
+  backdrop-filter: blur(15px) saturate(180%);
+  -webkit-backdrop-filter: blur(15px) saturate(180%);
+  font-size: 20px;
+  font-family: Rubik;
+  transition: all 0.3s ease;
+  box-shadow:
+    0 4px 12px rgba(110, 193, 228, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  color: #333;
+}
+
+.registration-form input:focus,
+.registration-form select:focus,
+.registration-form textarea:focus {
+  outline: none;
+  border-color: rgba(110, 193, 228, 0.9);
+  background: linear-gradient(135deg,
+    rgba(240, 242, 245, 0.95) 0%,
+    rgba(255, 255, 255, 1) 100%);
+  box-shadow:
+    0 6px 16px rgba(110, 193, 228, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  transform: translateY(-1px);
+}
+
+.registration-form textarea.no-resize {
+  resize: none;
+  max-height: 120px;
+  overflow-y: auto;
+}
+
+.registration-form input.error,
+.registration-form select.error,
+.registration-form textarea.error {
+  border-color: rgba(239, 68, 68, 0.8) !important;
+  background: linear-gradient(135deg,
+    rgba(254, 242, 242, 0.9) 0%,
+    rgba(254, 226, 226, 0.95) 100%) !important;
+}
+
+.error-message {
+  color: #dc3545;
+  font-size: 16px;
+  margin-top: -18px;
+  margin-bottom: 14px;
+  display: block;
+  direction: rtl;
+  font-family: Rubik;
+  font-weight: 500;
+}
+
+.registration-form .error-message {
+  font-size: 20px;
+  margin-top: 2px;
+}
+
+.error-message::before {
+  content: "⚠ ";
+  margin-right: 5px;
+}
+
+.error-message-inline {
+  color: #dc3545;
+  font-size: 16px !important;
+  margin-top: -18px;
+  margin-bottom: 14px;
+  display: block;
+  direction: rtl;
+  font-family: Rubik;
+  font-weight: 500;
+}
+
+.form-columns {
+  display: flex;
+  gap: 60px;
+  flex-wrap: wrap;
+}
+
+.column {
+  flex: 1;
+  min-width: 300px;
+}
+
+/* Range input styling */
+.registration-form input[type="range"] {
+  width: 100%;
+  height: 8px;
+  margin-bottom: 20px;
+  accent-color: #6EC1E4;
+  -webkit-appearance: none;
+  appearance: none;
+  background: linear-gradient(135deg,
+    rgba(240, 242, 245, 0.9) 0%,
+    rgba(255, 255, 255, 0.95) 100%);
+  border: none;
+  border-radius: 10px;
+  outline: none;
+}
+
+.registration-form input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: linear-gradient(135deg,
+    rgba(110, 193, 228, 1) 0%,
+    rgba(110, 193, 228, 1) 100%);
+  cursor: pointer;
+  border: 3px solid white;
+  box-shadow: 0 2px 8px rgba(110, 193, 228, 0.4);
+  transition: all 0.3s ease;
+}
+
+.registration-form input[type="range"]::-webkit-slider-thumb:hover {
+  box-shadow: 0 4px 12px rgba(110, 193, 228, 0.6);
+  transform: scale(1.1);
+}
+
+.registration-form input[type="range"]::-moz-range-thumb {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: linear-gradient(135deg,
+    rgba(110, 193, 228, 1) 0%,
+    rgba(110, 193, 228, 1) 100%);
+  cursor: pointer;
+  border: 3px solid white;
+  box-shadow: 0 2px 8px rgba(110, 193, 228, 0.4);
+  transition: all 0.3s ease;
+}
+
+/* Phone input container */
+.phone-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 24px;
+  font-size: 20px;
+}
+
+.phone-container select {
+  width: 120px;
+  padding: 10px 14px;
+  border: 2px solid rgba(110, 193, 228, 0.6);
+  border-radius: 8px;
+  font-size: 18px;
+  font-family: Rubik;
+  background: linear-gradient(135deg,
+    rgba(240, 242, 245, 0.9) 0%,
+    rgba(255, 255, 255, 0.95) 100%);
+  backdrop-filter: blur(15px) saturate(180%);
+  -webkit-backdrop-filter: blur(15px) saturate(180%);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.phone-container select:focus {
+  outline: none;
+  border-color: rgba(110, 193, 228, 0.9);
+  box-shadow: 0 4px 12px rgba(110, 193, 228, 0.2);
+}
+
+.phone-container .dash {
+  font-size: 20px;
+  font-weight: bold;
+  color: #666;
+}
+
+.phone-container input {
+  flex: 1;
+  padding: 10px 14px;
+  border: 2px solid rgba(110, 193, 228, 0.6);
+  border-radius: 8px;
+  font-size: 18px;
+  font-family: Rubik;
+  background: linear-gradient(135deg,
+    rgba(240, 242, 245, 0.9) 0%,
+    rgba(255, 255, 255, 0.95) 100%);
+  backdrop-filter: blur(15px) saturate(180%);
+  -webkit-backdrop-filter: blur(15px) saturate(180%);
+  transition: all 0.3s ease;
+}
+
+.phone-container input:focus {
+  outline: none;
+  border-color: rgba(110, 193, 228, 0.9);
+  box-shadow: 0 4px 12px rgba(110, 193, 228, 0.2);
+}
+
+.phone-container input.error,
+.phone-container select.error {
+  border-color: rgba(239, 68, 68, 0.8) !important;
+}
+
+/* Switch container styles */
+.switch-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 28px;
+  padding: 0;
+  background: transparent;
+  border-radius: 12px;
+  border: none;
+}
+
+/* Custom switch styles - target the wrapper */
+.switch-container .custom-switch {
+  filter: drop-shadow(0 4px 15px rgba(71, 85, 105, 0.15)) !important;
+}
+
+/* Style the handle - keep it circular */
+.switch-container .custom-switch .react-switch-handle {
+  background: #ffffff !important;
+  border-radius: 50% !important;
+  box-shadow:
+    0 4px 16px rgba(148, 163, 184, 0.3),
+    inset 0 -1px 3px rgba(0, 0, 0, 0.05),
+    inset 0 1px 3px rgba(255, 255, 255, 0.8) !important;
+}
+
+/* ON state handle shadow */
+.switch-container .custom-switch input:checked ~ .react-switch-handle {
+  background: #ffffff !important;
+  box-shadow:
+    0 4px 16px rgba(59, 193, 200, 0.4),
+    inset 0 -1px 3px rgba(0, 0, 0, 0.05),
+    inset 0 1px 3px rgba(255, 255, 255, 0.8) !important;
+}
+
+/* Text inside the switch */
+.switch-container .switch-label {
+  font-size: 24px;
+  font-weight: 700;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  width: 100%;
+  padding: 0 15px;
+  box-sizing: border-box;
+  font-family: Rubik;
+  letter-spacing: 0.5px;
+}
+
+/* Remove stickiness */
+.switch-container .react-switch:active .react-switch-handle {
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4) !important;
+}
+
+/* Toast notification styling (green — KEPT) */
+.registration-toast .Toastify__toast {
+  background: linear-gradient(135deg,
+    rgba(16, 185, 129, 0.95) 0%,
+    rgba(5, 150, 105, 0.95) 100%);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  color: white;
+  font-family: Rubik;
+  font-size: 20px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 12px;
+  min-width: 320px;
+  max-width: 480px;
+  box-shadow:
+    0 8px 25px rgba(16, 185, 129, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  padding: 0;
+}
+
+.registration-toast-body-inner {
+  white-space: pre-line;
+  padding: 18px 22px;
+  font-size: 18px;
+  font-weight: 500;
+}
+
+/* TOTP Verification Section (not in default DOM; kept recolored for completeness) */
+.totp-verification-section {
+  background: linear-gradient(135deg,
+    rgba(255, 255, 255, 0.95) 0%,
+    rgba(245, 245, 245, 0.9) 100%);
+  backdrop-filter: blur(25px) saturate(180%);
+  -webkit-backdrop-filter: blur(25px) saturate(180%);
+  border: 2px solid rgba(255, 255, 255, 0.5);
+  border-radius: 24px;
+  padding: 40px;
+  box-shadow:
+    0 20px 60px rgba(59, 130, 246, 0.3),
+    0 10px 30px rgba(59, 193, 200, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  text-align: center;
+  width: 100%;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.totp-verification-section p {
+  font-size: 24px;
+  margin-bottom: 30px;
+  color: #333;
+  font-family: Rubik;
+  font-weight: 500;
+}
+
+.totp-input-container {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin: 30px 0;
+}
+
+.totp-input-box {
+  width: 70px;
+  height: 70px;
+  text-align: center;
+  font-size: 32px;
+  font-weight: bold;
+  border: 2px solid rgba(110, 193, 228, 0.6);
+  border-radius: 10px;
+  outline: none;
+  background: linear-gradient(135deg,
+    rgba(240, 242, 245, 0.9) 0%,
+    rgba(255, 255, 255, 0.95) 100%);
+  backdrop-filter: blur(15px) saturate(180%);
+  -webkit-backdrop-filter: blur(15px) saturate(180%);
+  box-shadow:
+    0 4px 12px rgba(110, 193, 228, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  transition: all 0.3s ease;
+  color: #333;
+  font-family: Rubik, sans-serif;
+}
+
+.totp-input-box:focus {
+  outline: none;
+  border-color: rgba(110, 193, 228, 0.9);
+  box-shadow:
+    0 6px 16px rgba(110, 193, 228, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  transform: translateY(-2px);
+  background: linear-gradient(135deg,
+    rgba(240, 242, 245, 0.95) 0%,
+    rgba(255, 255, 255, 1) 100%);
+}
+
+.totp-buttons {
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+  margin-top: 30px;
+}
+
+.totp-buttons button {
+  padding: 14px 40px;
+  font-size: 20px;
+  font-weight: 600;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 10px;
+  cursor: pointer;
+  background: linear-gradient(135deg,
+    rgba(59, 193, 200, 0.95) 0%,
+    rgba(110, 193, 228, 0.95) 100%);
+  color: white;
+  font-family: Rubik;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow:
+    0 6px 20px rgba(59, 193, 200, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+.totp-buttons button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg,
+    transparent,
+    rgba(255, 255, 255, 0.3),
+    transparent);
+  transition: left 0.5s;
+}
+
+.totp-buttons button:hover::before {
+  left: 100%;
+}
+
+.totp-buttons button:hover {
+  background: linear-gradient(135deg,
+    rgba(110, 193, 228, 1) 0%,
+    rgba(59, 193, 200, 1) 100%);
+  transform: translateY(-3px) scale(1.05);
+  box-shadow:
+    0 10px 30px rgba(59, 193, 200, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+.totp-buttons button:last-child {
+  background: linear-gradient(135deg,
+    rgba(59, 193, 200, 0.95) 0%,
+    rgba(110, 193, 228, 0.95) 100%);
+  box-shadow:
+    0 6px 20px rgba(59, 193, 200, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.totp-buttons button:last-child:hover {
+  background: linear-gradient(135deg,
+    rgba(59, 193, 200, 1) 0%,
+    rgba(110, 193, 228, 1) 100%);
+  box-shadow:
+    0 10px 30px rgba(59, 193, 200, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+/* =====================================================================
+   MOBILE OVERRIDES — transcribed from styles/mobile.css registration rules
+   WITH THE @media(max-width:767px) WRAPPER REMOVED, placed AFTER the base
+   so the form renders single-column at the fixed 390px screen width.
+   ONLY layout (no colour) — mechanical copy from mobile.css §1 registration.
+   ===================================================================== */
+
+/* Release the mobile "body" (here the .reg-page scroll container) so the tall
+   form can scroll — mobile.css body:has(.registration-form) equivalent. */
+.reg-page {
+  overflow-y: auto !important;
+  height: auto !important;
+  min-height: 100dvh !important;
+  padding: 0 !important;
+  justify-content: flex-start !important;
+}
+
+.registration-form {
+  width: 90% !important;
+  margin: 20px auto 40px !important;
+  padding: 24px 16px !important;
+  border-radius: 16px !important;
+  box-sizing: border-box !important;
+}
+
+.registration-form h2 {
+  font-size: 30px !important;
+  margin-bottom: 20px !important;
+}
+
+/* Stack the two-column layout into one column so inputs don't overflow. */
+.registration-form .form-columns {
+  flex-direction: column !important;
+  gap: 0 !important;
+}
+
+.registration-form .column {
+  min-width: 0 !important;
+  width: 100% !important;
+  flex: 1 1 100% !important;
+}
+
+.registration-form input,
+.registration-form select,
+.registration-form textarea {
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+/* Native date inputs keep an intrinsic min-width; force them to shrink. */
+.registration-form input[type="date"] {
+  -webkit-appearance: none !important;
+  appearance: none !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+/* Phone row: restore a usable split — fixed-width prefix + flex-grow suffix. */
+.registration-form .phone-container select {
+  width: 90px !important;
+  flex: 0 0 90px !important;
+}
+
+.registration-form .phone-container input {
+  width: auto !important;
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+}
+
+/* =====================================================================
+   iPhone 12 FRAME — presentation chrome (INDEPENDENT of the app CSS,
+   NOT recolored). Copied VERBATIM from COLOR_REBRAND_MOCKUP_MOBILE_FAMILIES.
+   NO #mobile-bottom-nav (this is a PUBLIC standalone page).
+   ===================================================================== */
+body{
+  margin:0;
+  background:#e5e7eb;
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:24px;
+}
+.phone{
+  background:#000;
+  padding:12px;
+  border-radius:46px;
+  box-shadow:0 30px 80px rgba(0,0,0,.45), 0 12px 32px rgba(0,0,0,.3);
+  flex-shrink:0;
+}
+.phone-screen{
+  position:relative;
+  width:390px;
+  height:844px;
+  border-radius:36px;
+  overflow:hidden;
+  background:#f0f4f6;
+  /* transform makes this the containing block for the app's position:fixed
+     children, so they anchor to the SCREEN, not the browser window. */
+  transform:translateZ(0);
+}
+/* Status bar (thin strip over the safe-area) */
+.status-bar{
+  position:absolute;
+  top:0;left:0;right:0;
+  height:34px;
+  z-index:2000;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:0 26px;
+  direction:ltr;
+  color:#143852;
+  pointer-events:none;
+  font-size:14px;
+  font-weight:700;
+}
+.status-bar .sb-time{ font-weight:700; letter-spacing:.5px; }
+.status-bar .sb-glyphs{ display:flex; align-items:center; gap:6px; }
+.status-bar .sb-signal{ display:flex; align-items:flex-end; gap:2px; height:11px; }
+.status-bar .sb-signal i{ width:3px; background:#143852; border-radius:1px; display:block; }
+.status-bar .sb-signal i:nth-child(1){ height:4px; }
+.status-bar .sb-signal i:nth-child(2){ height:6px; }
+.status-bar .sb-signal i:nth-child(3){ height:8px; }
+.status-bar .sb-signal i:nth-child(4){ height:11px; }
+.status-bar .sb-battery{ width:24px; height:12px; border:1px solid rgba(20,56,82,.9); border-radius:3px; position:relative; padding:1px; }
+.status-bar .sb-battery::after{ content:''; position:absolute; right:-3px; top:3px; width:2px; height:6px; background:rgba(20,56,82,.9); border-radius:0 1px 1px 0; }
+.status-bar .sb-battery i{ display:block; height:100%; width:80%; background:#143852; border-radius:1px; }
+/* Dynamic island */
+.dynamic-island{
+  position:absolute;
+  top:9px;left:50%;transform:translateX(-50%);
+  width:120px;height:30px;
+  background:#000;
+  border-radius:16px;
+  z-index:2100;
+}
+/* Home indicator */
+.home-indicator{
+  position:absolute;
+  bottom:8px;left:50%;transform:translateX(-50%);
+  width:134px;height:5px;
+  background:rgba(20,56,82,.55);
+  border-radius:3px;
+  z-index:2200;
+}
+
+/* Phone environment normalization (frame-level, higher specificity so it wins):
+   pin the app root (.reg-page scroll container) to the 390×844 screen and offset
+   for the status bar / home indicator (a real iPhone 12 uses env(safe-area-inset-*)). */
+.phone-screen .reg-page{
+  width:390px !important;
+  max-width:390px !important;
+  height:844px !important;
+  overflow-y:auto !important;
+  overflow-x:hidden !important;
+  padding-top:44px !important;     /* clear the status bar (safe-area inset) */
+  padding-bottom:24px !important;  /* clear the home indicator (safe-area inset) */
+  box-sizing:border-box !important;
+}
+
+/* Mock badge (outside the phone) — copied from MOBILE_FAMILIES */
+.mock-badge{position:fixed;bottom:16px;left:16px;z-index:3000;background:#143852;color:#fff;font-size:14px;font-weight:600;
+  padding:8px 14px;border-radius:10px;box-shadow:0 6px 20px rgba(0,0,0,.25);opacity:.94}
+.mock-badge b{color:#FCD20E}
+</style>
+</head>
+<body>
+
+  <!-- =============== iPhone 12 device =============== -->
+  <div class="phone">
+    <div class="phone-screen">
+
+      <!-- status bar + island -->
+      <div class="dynamic-island"></div>
+      <div class="status-bar">
+        <div class="sb-glyphs">
+          <span class="sb-signal"><i></i><i></i><i></i><i></i></span>
+          <svg width="16" height="12" viewBox="0 0 16 12" fill="none" aria-hidden="true">
+            <path d="M8 11.2 1 4.4A9.9 9.9 0 0 1 15 4.4L8 11.2Z" fill="#143852" opacity=".35"/>
+            <path d="M8 11.2 3.4 6.7a6.5 6.5 0 0 1 9.2 0L8 11.2Z" fill="#143852"/>
+          </svg>
+          <span class="sb-battery"><i></i></span>
+        </div>
+        <div class="sb-time">9:41</div>
+      </div>
+      <div class="home-indicator"></div>
+
+      <!-- =============== APP (mobile Registration — PUBLIC, no sidebar/header/nav) =============== -->
+      <!-- Real rendered DOM = <form class="registration-form"> directly; the mobile
+           body:has(.registration-form) scroll page is the .reg-page container. -->
+      <div class="reg-page">
+        <form class="registration-form">
+          <img src="childsmile/frontend/src/assets/logo.png" alt="Logo" class="regisration-logo">
+          <h2>הרשמה להתנדבות - חיוך של ילד</h2>
+          <div class="form-columns">
+            <!-- עמודה ימנית -->
+            <div class="column">
+              <div class="label-error-row">
+                <label>שם פרטי</label>
+              </div>
+              <input type="text" name="first_name" value="יעל">
+
+              <div class="label-error-row">
+                <label>שם משפחה</label>
+              </div>
+              <input type="text" name="surname" value="כהן">
+
+              <div class="label-error-row">
+                <label>תאריך לידה (גיל: 21)</label>
+              </div>
+              <input type="date" name="birth_date" value="2005-04-12">
+
+              <div class="label-error-row">
+                <label>מין</label>
+              </div>
+              <div class="switch-container">
+                <div class="react-switch custom-switch" style="position:relative;display:inline-block;text-align:left;opacity:1;direction:ltr;border-radius:40px;touch-action:none;-webkit-tap-highlight-color:rgba(0,0,0,0);">
+                  <div class="react-switch-bg" style="height:80px;width:180px;margin:0;position:relative;background:#6e6e6f;border-radius:40px;cursor:pointer;transition:background .25s ease 0s;">
+                    <div style="height:80px;width:110px;position:absolute;opacity:0;pointer-events:none;left:0;">
+                      <div class="switch-label">נקבה</div>
+                    </div>
+                    <div style="height:80px;width:110px;position:absolute;opacity:1;pointer-events:none;right:0;">
+                      <div class="switch-label">זכר</div>
+                    </div>
+                  </div>
+                  <div class="react-switch-handle" style="height:60px;width:60px;background:#fff;display:inline-block;cursor:pointer;border-radius:50%;position:absolute;transform:translateX(10px);top:10px;border:0;outline:0;"></div>
+                </div>
+              </div>
+
+              <div class="label-error-row">
+                <label>תעודת זהות</label>
+              </div>
+              <input type="text" name="id" value="204857693" maxlength="9">
+            </div>
+
+            <!-- עמודה שמאלית -->
+            <div class="column">
+              <div class="label-error-row">
+                <label>טלפון נייד</label>
+              </div>
+              <div class="phone-container">
+                <input type="text" name="phone_suffix" value="1234567" maxlength="7">
+                <select name="phone_prefix">
+                  <option value="050">050</option>
+                  <option value="051">051</option>
+                  <option value="052" selected>052</option>
+                  <option value="053">053</option>
+                  <option value="054">054</option>
+                  <option value="055">055</option>
+                  <option value="056">056</option>
+                  <option value="057">057</option>
+                  <option value="058">058</option>
+                  <option value="059">059</option>
+                </select>
+              </div>
+
+              <div class="label-error-row">
+                <label>עיר</label>
+              </div>
+              <select name="city">
+                <option value="">בחר עיר</option>
+                <option value="תל אביב - יפו" selected>תל אביב - יפו</option>
+                <option value="ירושלים">ירושלים</option>
+                <option value="חיפה">חיפה</option>
+                <option value="באר שבע">באר שבע</option>
+                <option value="ראשון לציון">ראשון לציון</option>
+              </select>
+
+              <label>הערות</label>
+              <textarea name="comment" class="no-resize">אשמח להתנדב בפעילויות עם ילדים בסופי שבוע.</textarea>
+
+              <div class="label-error-row">
+                <label>אימייל</label>
+              </div>
+              <input type="email" name="email" value="yael.cohen@example.com">
+
+              <div class="label-error-row">
+                <label>רוצה להיות חונך?</label>
+              </div>
+              <div class="switch-container">
+                <div class="react-switch custom-switch" style="position:relative;display:inline-block;text-align:left;opacity:1;direction:ltr;border-radius:40px;touch-action:none;-webkit-tap-highlight-color:rgba(0,0,0,0);">
+                  <div class="react-switch-bg" style="height:80px;width:180px;margin:0;position:relative;background:#3BC1C8;border-radius:40px;cursor:pointer;transition:background .25s ease 0s;">
+                    <div style="height:80px;width:110px;position:absolute;opacity:1;pointer-events:none;left:0;">
+                      <div class="switch-label">כן</div>
+                    </div>
+                    <div style="height:80px;width:110px;position:absolute;opacity:0;pointer-events:none;right:0;">
+                      <div class="switch-label">לא</div>
+                    </div>
+                  </div>
+                  <div class="react-switch-handle" style="height:60px;width:60px;background:#fff;display:inline-block;cursor:pointer;border-radius:50%;position:absolute;transform:translateX(110px);top:10px;border:0;outline:0;box-shadow:0 4px 16px rgba(59,193,200,.4),inset 0 -1px 3px rgba(0,0,0,.05),inset 0 1px 3px rgba(255,255,255,.8);"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <button type="submit">הרשמה</button>
+        </form>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="mock-badge">מוקאפ מובייל (iPhone 12) · צבעי מותג <b>«חיוך של ילד»</b></div>
+</body>
+</html>

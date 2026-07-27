@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>מוקאפ מיתוג צבעים — חיוך של ילד</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Rubik:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    /* ===== CURRENT (indigo/purple) — "before" ===== */
+    --old-grad-a:#667eea; --old-grad-b:#764ba2;
+    --old-accent:#6366f1; --old-accent-2:#8b5cf6; --old-text:#4f46e5;
+    --old-pale:#eef0ff; --old-pale-2:#ede9fe;
+
+    /* ===== BRAND (A Child's Smile) — "after" ===== */
+    --brand-sky:#6EC1E4; --brand-teal:#3BC1C8; --brand-teal-bar:#65BEC6;
+    --brand-pink:#ED3B97; --brand-pink-donate:#DB4B95; --brand-pink-light:#F8C3D0;
+    --brand-yellow:#FCD20E; --brand-orange:#F26722; --brand-peach:#FFBC7D;
+    --brand-navy:#143852; --brand-gray:#54595F; --brand-text:#7A7A7A;
+    --brand-pale-sky:#E3F4FA; --brand-pale-teal:#EAF7F8;
+
+    /* ===== semantic (KEPT in both) ===== */
+    --ok:#10b981; --ok-bg:#d1fae5; --err:#ef4444; --err-bg:#fee2e2; --warn:#f59e0b; --warn-bg:#fef3c7;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:#f4f6fb;color:#1f2937;font-family:"Rubik",system-ui,Arial,sans-serif;line-height:1.5}
+  h1,h2,h3,.brandfont{font-family:"Fredoka","Rubik",sans-serif}
+  .wrap{max-width:1200px;margin:0 auto;padding:28px 20px 64px}
+  .pagehead{text-align:center;margin-bottom:8px}
+  .pagehead h1{font-size:34px;margin:0 0 6px;letter-spacing:.5px}
+  .pagehead p{margin:0;color:#6b7280;font-size:15px}
+  .note{background:#fff;border:1px solid #e5e7eb;border-right:5px solid var(--brand-teal);border-radius:10px;padding:12px 16px;margin:18px 0;font-size:14px;color:#374151}
+
+  section{margin-top:38px}
+  section > h2{font-size:22px;margin:0 0 14px;padding-bottom:8px;border-bottom:3px solid var(--brand-pale-teal);display:flex;align-items:center;gap:10px}
+  section > h2 .dot{width:14px;height:14px;border-radius:50%;background:linear-gradient(135deg,var(--brand-sky),var(--brand-teal))}
+
+  /* palette swatches */
+  .swatches{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+  .sw{border-radius:12px;overflow:hidden;background:#fff;border:1px solid #e5e7eb;box-shadow:0 2px 8px rgba(0,0,0,.05)}
+  .sw .chip{height:74px}
+  .sw .meta{padding:8px 10px}
+  .sw .meta b{display:block;font-size:13px}
+  .sw .meta code{font-size:12px;color:#6b7280}
+
+  /* before/after side by side */
+  .ba{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+  @media(max-width:820px){.ba{grid-template-columns:1fr}}
+  .panel{background:#fff;border-radius:16px;overflow:hidden;border:1px solid #e7e9f2;box-shadow:0 6px 22px rgba(0,0,0,.07)}
+  .panel .tag{font-size:12px;font-weight:700;letter-spacing:.5px;padding:6px 12px;text-align:center;color:#fff}
+  .tag.before{background:#9aa0ac}
+  .tag.after{background:linear-gradient(90deg,var(--brand-pink),var(--brand-orange))}
+
+  /* mock app chrome */
+  .app-header{padding:20px 18px;color:#fff}
+  .app-header h3{margin:0 0 4px;font-size:20px}
+  .app-header span{opacity:.9;font-size:13px}
+  .before .app-header{background:linear-gradient(135deg,var(--old-grad-a),var(--old-grad-b))}
+  .after  .app-header{background:linear-gradient(135deg,var(--brand-sky),var(--brand-teal))}
+
+  .app-body{padding:18px}
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:16px}
+
+  .btn{border:none;border-radius:10px;padding:10px 18px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;color:#fff}
+  .before .btn-primary{background:var(--old-accent)}
+  .before .btn-grad{background:linear-gradient(135deg,var(--old-grad-a),var(--old-grad-b))}
+  .before .btn-ghost{background:var(--old-pale);color:var(--old-text);border:1px solid var(--old-accent)}
+  .after  .btn-primary{background:var(--brand-teal)}
+  .after  .btn-grad{background:linear-gradient(135deg,var(--brand-sky),var(--brand-teal))}
+  .after  .btn-ghost{background:var(--brand-pale-sky);color:var(--brand-navy);border:1px solid var(--brand-teal)}
+  .after  .btn-cta{background:var(--brand-pink)}      /* signature CTA */
+  .before .btn-cta{background:#7c3aed}
+
+  /* stat cards */
+  .cards{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
+  .card{border-radius:12px;padding:12px;color:#fff;text-align:center}
+  .card .n{font-size:26px;font-weight:800;font-family:"Fredoka",sans-serif;line-height:1}
+  .card .l{font-size:12px;opacity:.92;margin-top:4px}
+  .before .card:nth-child(1){background:var(--old-accent)}
+  .before .card:nth-child(2){background:var(--old-accent-2)}
+  .before .card:nth-child(3){background:var(--old-grad-b)}
+  .after  .card:nth-child(1){background:var(--brand-sky)}
+  .after  .card:nth-child(2){background:var(--brand-teal)}
+  .after  .card:nth-child(3){background:var(--brand-pink)}
+
+  /* badges — semantic kept, "paid/manual/followup" rebranded */
+  .badges{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+  .badge{font-size:12px;font-weight:600;padding:5px 12px;border-radius:999px}
+  .b-ok{background:var(--ok-bg);color:#065f46}
+  .b-err{background:var(--err-bg);color:#991b1b}
+  .b-warn{background:var(--warn-bg);color:#92400e}
+  .before .b-info{background:var(--old-pale-2);color:#5b21b6}
+  .after  .b-info{background:var(--brand-pale-teal);color:var(--brand-navy)}
+
+  /* mini table */
+  table{width:100%;border-collapse:collapse;border-radius:10px;overflow:hidden;font-size:13px}
+  thead th{color:#fff;padding:9px 10px;text-align:right;font-weight:600}
+  .before thead th{background:linear-gradient(135deg,var(--old-accent),var(--old-accent-2))}
+  .after  thead th{background:linear-gradient(135deg,var(--brand-teal),var(--brand-sky))}
+  tbody td{padding:8px 10px;border-bottom:1px solid #eef0f4}
+  tbody tr:nth-child(even){background:#fafbff}
+  .link-before{color:var(--old-text);font-weight:600}
+  .link-after{color:var(--brand-navy);font-weight:600}
+
+  /* swap table */
+  .swap{width:100%;border-collapse:collapse;background:#fff;border-radius:12px;overflow:hidden;border:1px solid #e5e7eb;font-size:14px}
+  .swap th{background:#f8fafc;text-align:right;padding:10px 12px;font-weight:700;border-bottom:2px solid #eef0f4}
+  .swap td{padding:9px 12px;border-bottom:1px solid #f1f3f7;vertical-align:middle}
+  .cc{display:inline-flex;align-items:center;gap:8px}
+  .box{width:20px;height:20px;border-radius:6px;border:1px solid rgba(0,0,0,.12);flex:0 0 auto}
+  .arrow{color:#9ca3af;padding:0 6px}
+  code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+  .foot{text-align:center;color:#9ca3af;font-size:13px;margin-top:40px}
+  .kept-tag{display:inline-block;background:#ecfdf5;color:#065f46;border:1px solid #a7f3d0;border-radius:6px;font-size:11px;padding:1px 7px;margin-inline-start:6px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="pagehead">
+    <h1>מוקאפ מיתוג צבעים — חיוך של ילד</h1>
+    <p>החלפת ערכת האינדיגו/סגול הנוכחית בצבעי המותג הרשמיים מאתר העמותה · לפני / אחרי</p>
+  </div>
+
+  <div class="note">
+    <b>מקור הצבעים:</b> נלקחו במדויק מקובץ ה־Elementor של האתר החי
+    (<code>achildssmile.org.il → post-41.css</code>). הצבעים הסמנטיים (ירוק/אדום/כתום) נשמרים.
+    הגרדיאנט הראשי עובר מ־<code>#667eea→#764ba2</code> (אינדיגו→סגול) ל־<code>#6EC1E4→#3BC1C8</code> (תכלת→טורקיז).
+  </div>
+
+  <!-- ============ PALETTE ============ -->
+  <section>
+    <h2><span class="dot"></span>פלטת המותג</h2>
+    <div class="swatches">
+      <div class="sw"><div class="chip" style="background:#6EC1E4"></div><div class="meta"><b>תכלת · Sky</b><code>#6EC1E4</code></div></div>
+      <div class="sw"><div class="chip" style="background:#3BC1C8"></div><div class="meta"><b>טורקיז · Teal</b><code>#3BC1C8</code></div></div>
+      <div class="sw"><div class="chip" style="background:#65BEC6"></div><div class="meta"><b>טורקיז כותרת</b><code>#65BEC6</code></div></div>
+      <div class="sw"><div class="chip" style="background:#ED3B97"></div><div class="meta"><b>ורוד · Pink</b><code>#ED3B97</code></div></div>
+      <div class="sw"><div class="chip" style="background:#FCD20E"></div><div class="meta"><b>צהוב · Yellow</b><code>#FCD20E</code></div></div>
+      <div class="sw"><div class="chip" style="background:#F26722"></div><div class="meta"><b>כתום · Orange</b><code>#F26722</code></div></div>
+      <div class="sw"><div class="chip" style="background:#FFBC7D"></div><div class="meta"><b>אפרסק · Peach</b><code>#FFBC7D</code></div></div>
+      <div class="sw"><div class="chip" style="background:#143852"></div><div class="meta"><b>נייבי · Text</b><code>#143852</code></div></div>
+      <div class="sw"><div class="chip" style="background:#54595F"></div><div class="meta"><b>אפור משני</b><code>#54595F</code></div></div>
+      <div class="sw"><div class="chip" style="background:#E3F4FA"></div><div class="meta"><b>תכלת בהיר</b><code>#E3F4FA</code></div></div>
+    </div>
+  </section>
+
+  <!-- ============ BEFORE / AFTER ============ -->
+  <section>
+    <h2><span class="dot"></span>לפני / אחרי — מסך לדוגמה</h2>
+    <div class="ba">
+
+      <!-- BEFORE -->
+      <div class="panel before">
+        <div class="tag before">לפני — אינדיגו / סגול נוכחי</div>
+        <div class="app-header">
+          <h3>סקירת מערכת</h3><span>לוח בקרה · חיוך של ילד</span>
+        </div>
+        <div class="app-body">
+          <div class="cards">
+            <div class="card"><div class="n">128</div><div class="l">משפחות</div></div>
+            <div class="card"><div class="n">54</div><div class="l">חונכויות</div></div>
+            <div class="card"><div class="n">17</div><div class="l">משימות</div></div>
+          </div>
+          <div class="row">
+            <button class="btn btn-grad">שמור</button>
+            <button class="btn btn-primary">הוסף</button>
+            <button class="btn btn-cta">תרומה</button>
+            <button class="btn btn-ghost">ביטול</button>
+          </div>
+          <div class="badges">
+            <span class="badge b-ok">פעיל</span>
+            <span class="badge b-err">בוטל</span>
+            <span class="badge b-warn">ממתין</span>
+            <span class="badge b-info">שולם</span>
+          </div>
+          <table>
+            <thead><tr><th>שם</th><th>עיר</th><th>סטטוס</th></tr></thead>
+            <tbody>
+              <tr><td class="link-before">משפחת כהן</td><td>חיפה</td><td>פעיל</td></tr>
+              <tr><td class="link-before">משפחת לוי</td><td>תל אביב</td><td>ממתין</td></tr>
+              <tr><td class="link-before">משפחת מזרחי</td><td>באר שבע</td><td>פעיל</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- AFTER -->
+      <div class="panel after">
+        <div class="tag after">אחרי — צבעי המותג</div>
+        <div class="app-header">
+          <h3>סקירת מערכת</h3><span>לוח בקרה · חיוך של ילד</span>
+        </div>
+        <div class="app-body">
+          <div class="cards">
+            <div class="card"><div class="n">128</div><div class="l">משפחות</div></div>
+            <div class="card"><div class="n">54</div><div class="l">חונכויות</div></div>
+            <div class="card"><div class="n">17</div><div class="l">משימות</div></div>
+          </div>
+          <div class="row">
+            <button class="btn btn-grad">שמור</button>
+            <button class="btn btn-primary">הוסף</button>
+            <button class="btn btn-cta">תרומה</button>
+            <button class="btn btn-ghost">ביטול</button>
+          </div>
+          <div class="badges">
+            <span class="badge b-ok">פעיל</span>
+            <span class="badge b-err">בוטל</span>
+            <span class="badge b-warn">ממתין</span>
+            <span class="badge b-info">שולם</span>
+          </div>
+          <table>
+            <thead><tr><th>שם</th><th>עיר</th><th>סטטוס</th></tr></thead>
+            <tbody>
+              <tr><td class="link-after">משפחת כהן</td><td>חיפה</td><td>פעיל</td></tr>
+              <tr><td class="link-after">משפחת לוי</td><td>תל אביב</td><td>ממתין</td></tr>
+              <tr><td class="link-after">משפחת מזרחי</td><td>באר שבע</td><td>פעיל</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ============ SWAP TABLE ============ -->
+  <section>
+    <h2><span class="dot"></span>טבלת ההחלפה (1:1)</h2>
+    <table class="swap">
+      <thead><tr><th>נוכחי</th><th>→ מותג</th><th>תפקיד</th></tr></thead>
+      <tbody>
+        <tr><td><span class="cc"><span class="box" style="background:#667eea"></span><code>#667eea</code></span></td><td><span class="cc"><span class="box" style="background:#6EC1E4"></span><code>#6EC1E4</code> תכלת</span></td><td>תחילת גרדיאנט / ראשי</td></tr>
+        <tr><td><span class="cc"><span class="box" style="background:#764ba2"></span><code>#764ba2</code></span></td><td><span class="cc"><span class="box" style="background:#3BC1C8"></span><code>#3BC1C8</code> טורקיז</span></td><td>סוף גרדיאנט</td></tr>
+        <tr><td><span class="cc"><span class="box" style="background:#6366f1"></span><code>#6366f1</code></span></td><td><span class="cc"><span class="box" style="background:#3BC1C8"></span><code>#3BC1C8</code> טורקיז</span></td><td>אקסנט מלא (מסגרות/אייקונים/כפתורים)</td></tr>
+        <tr><td><span class="cc"><span class="box" style="background:#8b5cf6"></span><code>#8b5cf6</code></span></td><td><span class="cc"><span class="box" style="background:#6EC1E4"></span><code>#6EC1E4</code> תכלת</span></td><td>שותף גרדיאנט + גרפים</td></tr>
+        <tr><td><span class="cc"><span class="box" style="background:#7c3aed"></span><code>#7c3aed</code></span></td><td><span class="cc"><span class="box" style="background:#3BC1C8"></span><code>#3BC1C8</code> טורקיז</span></td><td>כפתורי פעולה / רכז</td></tr>
+        <tr><td><span class="cc"><span class="box" style="background:#a855f7"></span><code>#a855f7</code></span></td><td><span class="cc"><span class="box" style="background:#ED3B97"></span><code>#ED3B97</code> ורוד</span></td><td>גרדיאנטים סגולים בהירים</td></tr>
+        <tr><td><span class="cc"><span class="box" style="background:#4f46e5"></span><code>#4f46e5</code></span></td><td><span class="cc"><span class="box" style="background:#143852"></span><code>#143852</code> נייבי</span></td><td>טקסט אקסנט כהה (קונטרסט)</td></tr>
+        <tr><td><span class="cc"><span class="box" style="background:#eef0ff"></span><code>#eef0ff</code></span></td><td><span class="cc"><span class="box" style="background:#E3F4FA"></span><code>#E3F4FA</code> תכלת בהיר</span></td><td>רקעים מרוככים (אינדיגו)</td></tr>
+        <tr><td><span class="cc"><span class="box" style="background:#ede9fe"></span><code>#ede9fe</code></span></td><td><span class="cc"><span class="box" style="background:#EAF7F8"></span><code>#EAF7F8</code> טורקיז בהיר</span></td><td>רקעים מרוככים (סגול)</td></tr>
+        <tr><td colspan="3" style="background:#f0fdf4">
+          <b>נשמרים כמו שהם (סמנטי):</b>
+          <span class="cc"><span class="box" style="background:#10b981"></span>ירוק — הצלחה</span> <span class="kept-tag">KEEP</span>
+          &nbsp; <span class="cc"><span class="box" style="background:#ef4444"></span>אדום — שגיאה</span> <span class="kept-tag">KEEP</span>
+          &nbsp; <span class="cc"><span class="box" style="background:#f59e0b"></span>כתום — אזהרה</span> <span class="kept-tag">KEEP</span>
+        </td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <div class="foot">מסמך מלווה: <code>COLOR_REBRAND_PLAN.md</code> · מוקאפ סטטי להמחשה בלבד — טרם הוחלו שינויים בקוד.</div>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>מוקאפ — מרכז העדכונים (צבעי מותג חדשים)</title>
+<style>
+/* Same local Rubik variable font the real app uses (styles.css @font-face) so
+   the mock renders identically — NOT Google Fonts. */
+@font-face {
+  font-family: 'Rubik';
+  src: url('childsmile/frontend/src/fonts/Rubik-VariableFont_wght.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+}
+/* =====================================================================
+   Notification Messages / Updates Center — STATIC recolored mock.
+   Faithful reproduction of the real /notification-messages page
+   (InnerPageHeader + Sidebar + controls bar + summary chip + notif-table +
+   pagination), with the indigo/purple theme swapped to the A Child's Smile
+   palette. ONLY colour values differ — structure/layout/fonts/spacing/labels 1:1.
+   Brand: sky #6EC1E4 · teal #3BC1C8 · pink #ED3B97 · yellow #FCD20E · navy #143852
+   Indigo/purple → TEAL/SKY (create-btn, filter-select, table header, pagination,
+   modal accents). PINK (#ED3B97) is a SEPARATOR/accent ONLY. KEPT exactly: green
+   refresh + status-active + save btn, red delete + status-inactive, blue edit btn +
+   edit inputs, yellow/orange/blue/green type badges.
+   ===================================================================== */
+
+*{box-sizing:border-box;font-family:Rubik,sans-serif}
+html{zoom:.8}
+body{
+  margin:0;direction:rtl;min-height:100vh;
+  display:flex;flex-direction:row-reverse;
+  background:
+    linear-gradient(135deg,
+      rgba(237,59,151,.14) 0%,
+      rgba(110,193,228,.14) 25%,
+      rgba(59,193,200,.14) 50%,
+      rgba(252,210,14,.14) 75%,
+      rgba(242,103,34,.14) 100%);
+  background-attachment:fixed;
+}
+
+/* ===================== SIDEBAR (faithful to common.css; bg recolored TEAL) ===================== */
+.sidebar{
+  background:linear-gradient(135deg,
+    rgba(110,193,228,.9) 0%,
+    rgba(59,193,200,.92) 45%,
+    rgba(101,190,198,.94) 100%);
+  color:#fff;width:280px;min-height:100vh;padding:60px 15px 25px;
+  box-shadow:-4px 0 40px rgba(59,193,200,.4), -2px 0 20px rgba(101,190,198,.3), inset 1px 0 0 rgba(255,255,255,.3);
+  position:fixed;right:0;top:0;display:flex;flex-direction:column;z-index:1001;
+  border-left:2px solid rgba(255,255,255,.3);overflow-y:auto;
+}
+.sidebar-toggle{position:absolute;top:15px;right:25px;width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px}
+.sidebar-user-info{background:linear-gradient(135deg,rgba(255,255,255,.25),rgba(255,255,255,.15));border:2px solid rgba(255,255,255,.3);border-radius:16px;padding:20px;margin-bottom:20px;text-align:center;box-shadow:0 4px 20px rgba(0,0,0,.15),inset 0 1px 0 rgba(255,255,255,.4)}
+.sidebar-username{font-size:28px;font-weight:700;color:#fff;text-shadow:0 2px 8px rgba(0,0,0,.3);margin-bottom:12px;letter-spacing:.5px}
+.sidebar-roles{display:flex;flex-direction:column;gap:6px}
+.sidebar-role{background:linear-gradient(90deg,rgba(255,255,255,.2),rgba(255,255,255,.1));padding:6px 12px;border-radius:8px;font-size:18px;font-weight:600;color:#fff;border:1px solid rgba(255,255,255,.2)}
+/* clock stays GREEN (not indigo/purple) */
+.sidebar-clock{background:linear-gradient(135deg,rgba(16,185,129,.85),rgba(5,150,105,.85));border:2px solid rgba(255,255,255,.4);border-radius:16px;padding:20px;margin-bottom:20px;text-align:center;box-shadow:0 6px 25px rgba(16,185,129,.35),inset 0 1px 0 rgba(255,255,255,.4)}
+.sidebar-time{font-size:36px;font-weight:800;color:#fff;letter-spacing:2px;text-shadow:0 3px 10px rgba(0,0,0,.3);margin-bottom:8px}
+.sidebar-date{font-size:18px;font-weight:600;color:rgba(255,255,255,.95)}
+/* logout stays RED */
+.sidebar-logout-button{background:linear-gradient(135deg,rgba(239,68,68,.95),rgba(220,38,38,.95));color:#fff;padding:16px 24px;border:2px solid rgba(255,255,255,.4);border-radius:14px;cursor:pointer;font-size:22px;font-weight:700;width:100%;margin-bottom:20px;box-shadow:0 6px 25px rgba(239,68,68,.4),inset 0 1px 0 rgba(255,255,255,.3)}
+/* PINK = separator only — the sidebar divider */
+.sidebar-divider{height:3px;background:linear-gradient(90deg,transparent,rgba(237,59,151,.9),transparent);margin:20px 0;border-radius:2px}
+.sidebar-nav-btn{display:block;width:100%;background:none;border:none;color:rgba(255,255,255,.82);font-size:32px;padding:6px 2px;cursor:pointer;text-align:right}
+.sidebar-nav-btn.top-level{font-weight:600;color:rgba(255,255,255,.85)}
+.sidebar-nav-btn.active{color:#fff;font-weight:700}
+.sidebar-section-header{display:flex;align-items:center;gap:4px;width:100%;background:none;border:none;border-bottom:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.85);font-size:32px;font-weight:600;padding:8px 2px 6px;cursor:pointer;margin-top:10px;text-align:right}
+.sidebar-section-label{flex:1;text-align:right}
+.sidebar-section-arrow{font-size:20px;font-weight:300;color:rgba(255,255,255,.55);transition:transform .2s;transform:rotate(0deg);line-height:1}
+.sidebar-section-arrow.open{transform:rotate(90deg)}
+.sidebar-section-items{display:flex;flex-direction:column;padding-right:12px;border-right:1px solid rgba(255,255,255,.15);margin:2px 6px 0 0}
+.sidebar-section-items .sidebar-nav-btn{font-size:24px;color:rgba(255,255,255,.7);padding:5px 2px}
+.sidebar-section-items .sidebar-nav-btn.active{color:#fff;font-weight:700}
+
+/* ===================== HEADER (fixed top) ===================== */
+.header{
+  background:linear-gradient(135deg,
+    rgba(110,193,228,.9) 0%,
+    rgba(59,193,200,.92) 45%,
+    rgba(101,190,198,.95) 100%);
+  color:#fff;display:flex;align-items:center;justify-content:center;
+  padding:20px 30px;height:200px;position:fixed;right:0;top:0;left:0;z-index:1000;
+  border-bottom:3px solid rgba(255,255,255,.3);
+  box-shadow:0 8px 40px rgba(59,193,200,.35), 0 4px 20px rgba(101,190,198,.28), inset 0 -1px 0 rgba(255,255,255,.3);
+}
+/* PINK = separator only — the header's lower edge (echoes the site's pink underline) */
+.header::before{content:'';position:absolute;bottom:0;left:0;right:0;height:5px;
+  background:linear-gradient(90deg, rgba(237,59,151,1) 0%, rgba(219,75,149,1) 100%);
+  box-shadow:0 2px 15px rgba(237,59,151,.5);}
+.logo{width:180px;height:180px;position:absolute;right:310px;top:10px;border-radius:20px;
+  border:3px solid rgba(255,255,255,.5);background:#fff;padding:10px;object-fit:contain;
+  box-shadow:0 6px 30px rgba(0,0,0,.2),0 0 20px rgba(255,255,255,.25);z-index:1002;}
+.title{font-size:4em;font-weight:900;margin:0;position:absolute;left:50%;transform:translateX(-50%);
+  white-space:nowrap;letter-spacing:2px;
+  background:linear-gradient(135deg,#fff 0%,#f0f9ff 25%,#e0f7fa 50%,#bae6fd 75%,#fff 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  filter:drop-shadow(0 4px 20px rgba(255,255,255,.4)) drop-shadow(0 2px 10px rgba(59,193,200,.65)) drop-shadow(0 0 30px rgba(101,190,198,.4));}
+/* PINK underline separator under the page title (mirrors the site's heading underline) */
+.title::after{content:'';position:absolute;left:50%;bottom:-14px;transform:translateX(-50%);width:78%;height:5px;border-radius:6px;
+  background:linear-gradient(90deg,rgba(237,59,151,.95),rgba(219,75,149,.95));box-shadow:0 3px 12px rgba(237,59,151,.5)}
+.top-left{position:absolute;top:20px;left:40px;display:flex;align-items:center;gap:25px;z-index:1001}
+.amit-img{width:130px;height:170px;object-fit:cover;border-radius:18px;border:3px solid rgba(255,255,255,.5);box-shadow:0 6px 30px rgba(0,0,0,.25)}
+.quote{font-size:20px;font-weight:600;text-align:right;color:#143852;max-width:360px;
+  background:linear-gradient(135deg,rgba(255,255,255,.95),rgba(249,250,251,.95));padding:14px 18px;border-radius:14px;
+  box-shadow:0 6px 24px rgba(0,0,0,.12)}
+.qr-code{width:140px;height:140px;border-radius:16px;border:3px solid rgba(255,255,255,.5);background:#fff;padding:10px;box-shadow:0 6px 30px rgba(0,0,0,.2)}
+
+/* ===================== NOTIFICATION MESSAGES PAGE (notificationMessages.css, recolored) ===================== */
+/* Main layout */
+.notif-main-content{
+  display:flex;flex-direction:column;align-items:center;justify-content:flex-start;
+  flex-grow:1;padding:230px 40px 40px 40px;margin-right:280px;width:calc(100% - 280px);
+  background:transparent;
+}
+
+/* Controls bar */
+.notif-controls{display:flex;gap:12px;margin-bottom:12px;flex-wrap:wrap;justify-content:flex-start;align-items:center;width:100%}
+
+.notif-create-btn{
+  background:linear-gradient(135deg, rgba(59,193,200,0.9), rgba(110,193,228,0.9));
+  color:#fff;border:none;border-radius:12px;padding:10px 20px;font-size:24px;font-weight:700;
+  cursor:pointer;transition:opacity 0.2s;font-family:Rubik,sans-serif;
+}
+.notif-create-btn:hover{opacity:0.85}
+
+/* refresh — stays GREEN */
+.notif-refresh-btn{
+  background:linear-gradient(135deg, rgba(16,185,129,0.9), rgba(5,150,105,0.9));
+  color:#fff;border:none;border-radius:12px;padding:10px 20px;font-size:24px;font-weight:600;
+  cursor:pointer;transition:opacity 0.2s;font-family:Rubik,sans-serif;
+}
+.notif-refresh-btn:hover{opacity:0.85}
+.notif-refresh-btn:disabled{opacity:0.5;cursor:not-allowed}
+
+.notif-filter-select{
+  background:linear-gradient(135deg, rgba(59,193,200,0.9), rgba(110,193,228,0.9));
+  color:#fff;border:none;border-radius:12px;padding:10px 16px;font-size:24px;cursor:pointer;
+  font-family:Rubik,sans-serif;min-width:160px;transition:opacity 0.2s;
+}
+.notif-filter-select:hover{opacity:0.85}
+.notif-filter-select option{background:#fff;color:#333}
+
+.notif-search-input{
+  padding:0 14px;height:50px;border:2px solid rgba(110,193,228,0.6);border-radius:8px;
+  font-size:24px;font-family:Rubik,sans-serif;background:rgba(255,255,255,0.95);
+  min-width:220px;color:#333;direction:rtl;
+}
+.notif-search-input:focus{
+  outline:none;border-color:rgba(110,193,228,0.9);box-shadow:0 0 0 3px rgba(110,193,228,0.15);
+}
+
+/* Summary chip */
+.notif-summary{width:100%;font-size:22px;color:#64748b;margin-bottom:10px;text-align:right}
+
+/* Table */
+.notif-table-wrapper{
+  width:90%;margin-right:-100px;overflow-x:visible;border-radius:16px;
+  box-shadow:0 4px 24px rgba(59,193,200,0.15);
+}
+.notif-table{
+  width:100%;border-collapse:collapse;background:rgba(255,255,255,0.95);
+  backdrop-filter:blur(10px);table-layout:fixed;
+}
+.notif-table thead tr{
+  background:linear-gradient(135deg, rgba(59,193,200,0.9), rgba(110,193,228,0.9));
+  color:#fff;
+}
+.notif-table th,.notif-table td{
+  padding:12px 20px;text-align:right;font-size:24px;
+  border-bottom:1px solid rgba(59,193,200,0.08);overflow:hidden;
+}
+.notif-table th{font-weight:700;white-space:nowrap}
+.notif-table td{white-space:nowrap;vertical-align:top}
+/* Column widths — fixed layout */
+.notif-table th:nth-child(1), .notif-table td:nth-child(1){width:135px}
+.notif-table th:nth-child(2), .notif-table td:nth-child(2){width:135px}
+.notif-table th:nth-child(3), .notif-table td:nth-child(3){width:135px}
+.notif-table th:nth-child(4), .notif-table td:nth-child(4){width:20px}
+.notif-table th:nth-child(5), .notif-table td:nth-child(5){width:70px}
+.notif-table th:nth-child(6), .notif-table td:nth-child(6){width:100px}
+/* Text column */
+.notif-col-text{white-space:normal !important;word-break:break-word;overflow-wrap:break-word;width:135px}
+.notif-text-full{display:block;white-space:pre-wrap;word-break:break-word;line-height:1.5}
+
+/* Type badge — categorical, KEPT (except manual violet → teal-tint/navy) */
+.notif-badge{display:inline-block;padding:4px 12px;border-radius:20px;font-size:20px;font-weight:700;white-space:nowrap}
+.badge-birthday-today{background:#fef9c3;color:#a16207}
+.badge-birthday-this-week{background:#ffedd5;color:#c2410c}
+.badge-birthday-week{background:#dbeafe;color:#1e40af}
+.badge-custom{background:#dcfce7;color:#15803d}
+.badge-manual{background:#EAF7F8;color:#143852}
+
+/* Status pill — KEPT green/red */
+.notif-status{display:inline-block;padding:3px 10px;border-radius:14px;font-size:22px;font-weight:700;white-space:nowrap}
+.notif-status-active{background:#d1fae5;color:#065f46}
+.notif-status-inactive{background:#fee2e2;color:#991b1b}
+
+.notif-row:hover td{background:rgba(59,193,200,0.05)}
+.notif-row-inactive td{opacity:0.5}
+
+/* Date column */
+.notif-date-col{white-space:nowrap;font-size:20px;color:#64748b}
+.notif-created-by{font-size:18px;color:#94a3b8;margin-top:2px}
+
+/* Inline edit inputs — blue border KEPT */
+.notif-edit-input{width:100%;border:2px solid #93c5fd;border-radius:6px;padding:6px 10px;font-size:22px;font-family:Rubik,sans-serif;direction:rtl;box-sizing:border-box}
+.notif-edit-textarea{width:100%;min-height:70px;resize:vertical;border:2px solid #93c5fd;border-radius:6px;padding:6px 10px;font-size:22px;font-family:Rubik,sans-serif;direction:rtl;box-sizing:border-box}
+.notif-table td select{
+  appearance:auto;border:2px solid #93c5fd;border-radius:8px;padding:6px 12px;font-size:20px;
+  font-family:Rubik,sans-serif;direction:rtl;background:#fff;color:#1e3a5f;cursor:pointer;
+  box-shadow:0 2px 8px rgba(59,193,200,0.1);transition:border-color 0.15s;
+}
+.notif-table td select:focus{outline:none;border-color:rgba(59,193,200,0.7);box-shadow:0 0 0 3px rgba(59,193,200,0.12)}
+
+/* Action buttons */
+.notif-actions-col{white-space:nowrap}
+.notif-btn{border:none;border-radius:8px;padding:6px 14px;font-size:22px;font-family:Rubik,sans-serif;cursor:pointer;margin-left:6px;font-weight:600;transition:opacity 0.15s}
+.notif-btn:disabled{opacity:0.45;cursor:not-allowed}
+.notif-btn-edit{background:#dbeafe;color:#1e40af}
+.notif-btn-edit:hover{opacity:0.8}
+.notif-btn-delete{background:#fee2e2;color:#991b1b}
+.notif-btn-delete:hover{opacity:0.8}
+.notif-btn-save{background:#d1fae5;color:#065f46}
+.notif-btn-save:hover{opacity:0.8}
+.notif-btn-cancel{background:#f1f5f9;color:#475569}
+.notif-btn-cancel:hover{opacity:0.8}
+
+/* Empty / loading */
+.notif-empty{width:100%;text-align:center;padding:60px;color:#94a3b8;font-size:26px}
+.notif-loading{width:100%;text-align:center;padding:80px;color:#64748b;font-size:26px}
+
+/* Create modal */
+.notif-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:9000;display:flex;align-items:center;justify-content:center}
+.notif-modal{background:#fff;border-radius:20px;padding:40px 48px;width:560px;max-width:96vw;direction:rtl;display:flex;flex-direction:column;gap:14px;box-shadow:0 20px 60px rgba(59,193,200,0.25);position:relative;overflow:visible}
+.notif-modal h3{margin:0 0 4px;font-size:28px;color:#143852}
+.notif-modal-close{position:absolute;top:16px;left:20px;background:none;border:none;font-size:24px;cursor:pointer;color:#6b7280}
+.notif-form-row{display:flex;flex-direction:column;gap:4px}
+.notif-form-row label{font-size:22px;font-weight:700;color:#374151}
+.notif-form-row input,.notif-form-row select{width:100%;border:2px solid #d1d5db;border-radius:8px;padding:8px 14px;font-size:24px;font-family:Rubik,sans-serif;direction:rtl;box-sizing:border-box;color:#111}
+.notif-form-row input:focus,.notif-form-row select:focus{outline:none;border-color:rgba(59,193,200,0.7);box-shadow:0 0 0 3px rgba(59,193,200,0.12)}
+.notif-modal-actions{display:flex;gap:12px;margin-top:4px}
+
+/* Emoji picker */
+.notif-text-input-wrap{position:relative;display:flex;flex-direction:column;gap:4px}
+.notif-text-input-wrap textarea{width:100%;border:2px solid #d1d5db;border-radius:8px;padding:8px 14px;font-size:24px;font-family:Rubik,sans-serif;direction:rtl;box-sizing:border-box;color:#111;resize:vertical}
+.notif-text-input-wrap textarea:focus{outline:none;border-color:rgba(59,193,200,0.7);box-shadow:0 0 0 3px rgba(59,193,200,0.12)}
+.notif-emoji-toggle{align-self:flex-start;background:rgba(59,193,200,0.1);border:1.5px solid rgba(59,193,200,0.3);border-radius:8px;padding:4px 12px;font-size:22px;cursor:pointer;transition:background 0.15s}
+.notif-emoji-toggle:hover{background:rgba(59,193,200,0.2)}
+.notif-emoji-picker-wrap{position:absolute;top:calc(100% + 4px);right:0;z-index:9500;box-shadow:0 8px 32px rgba(0,0,0,0.18);border-radius:12px;overflow:hidden;width:460px;max-width:90vw}
+
+/* Pagination */
+.notif-table-wrapper .pagination{display:flex;justify-content:center;align-items:center;gap:5px;margin-top:20px;padding-bottom:16px}
+.notif-table-wrapper .pagination button{
+  padding:10px 16px;border:2px solid rgba(204,204,204,0.3);
+  background:linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(249,250,251,0.95) 100%);
+  backdrop-filter:blur(15px) saturate(180%);-webkit-backdrop-filter:blur(15px) saturate(180%);
+  border-radius:12px;cursor:pointer;font-size:20px;font-weight:600;font-family:Rubik,sans-serif;
+  transition:all 0.3s cubic-bezier(0.4,0,0.2,1);
+  box-shadow:0 4px 15px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.6);
+}
+.notif-table-wrapper .pagination button:hover:not(:disabled){
+  transform:translateY(-2px);
+  box-shadow:0 6px 20px rgba(59,193,200,0.2), inset 0 1px 0 rgba(255,255,255,0.8);
+  border-color:rgba(59,193,200,0.5);
+}
+.notif-table-wrapper .pagination button.active{
+  background:linear-gradient(135deg, rgba(59,193,200,0.95) 0%, rgba(110,193,228,0.95) 100%);
+  color:white;font-weight:700;border:2px solid rgba(255,255,255,0.4);
+  box-shadow:0 6px 25px rgba(59,193,200,0.4), inset 0 1px 0 rgba(255,255,255,0.4);
+}
+.notif-table-wrapper .pagination button:disabled{
+  background:rgba(240,240,240,0.5);color:#cbd5e1;cursor:not-allowed;
+  border:2px solid rgba(204,204,204,0.2);box-shadow:none;
+}
+.notif-table-wrapper .pagination-arrow{font-size:20px;font-weight:bold}
+
+/* mock badge */
+.mock-badge{position:fixed;bottom:16px;left:16px;z-index:3000;background:#143852;color:#fff;font-size:14px;font-weight:600;
+  padding:8px 14px;border-radius:10px;box-shadow:0 6px 20px rgba(0,0,0,.25);opacity:.92}
+.mock-badge b{color:#FCD20E}
+</style>
+</head>
+<body>
+
+  <!-- ===================== SIDEBAR (1:1 with Sidebar.js) ===================== -->
+  <aside class="sidebar">
+    <button class="sidebar-toggle" title="צמצם סרגל">▶</button>
+    <div class="sidebar-user-info">
+      <div class="sidebar-username">שרה לוי</div>
+      <div class="sidebar-roles"><div class="sidebar-role">מנהל מערכת</div></div>
+    </div>
+    <div class="sidebar-clock">
+      <div class="sidebar-time">09:42:15</div>
+      <div class="sidebar-date">יום ראשון, 27 ביולי 2026</div>
+    </div>
+    <button class="sidebar-logout-button">יציאה מהמערכת</button>
+    <div class="sidebar-divider"></div>
+
+    <button class="sidebar-nav-btn top-level">לוח משימות</button>
+
+    <button class="sidebar-section-header"><span class="sidebar-section-label">משפחות</span><span class="sidebar-section-arrow">›</span></button>
+    <button class="sidebar-section-header"><span class="sidebar-section-label">מתנדבים</span><span class="sidebar-section-arrow">›</span></button>
+    <button class="sidebar-section-header"><span class="sidebar-section-label">כספים</span><span class="sidebar-section-arrow">›</span></button>
+    <button class="sidebar-section-header"><span class="sidebar-section-label">פעילויות</span><span class="sidebar-section-arrow">›</span></button>
+
+    <button class="sidebar-section-header"><span class="sidebar-section-label">ניהול</span><span class="sidebar-section-arrow open">›</span></button>
+    <div class="sidebar-section-items">
+      <button class="sidebar-nav-btn">דוחות</button>
+      <button class="sidebar-nav-btn">ניהול מערכת</button>
+      <button class="sidebar-nav-btn">ניהול פגישות</button>
+      <button class="sidebar-nav-btn">עדכוני צוות</button>
+      <button class="sidebar-nav-btn">יומן ביקורת</button>
+      <button class="sidebar-nav-btn active">מרכז העדכונים</button>
+      <button class="sidebar-nav-btn">שיחות ביקורת</button>
+    </div>
+  </aside>
+
+  <!-- ===================== HEADER ===================== -->
+  <header class="header">
+    <img class="logo" src="childsmile/frontend/src/assets/logo.png" alt="חיוך של ילד">
+    <div class="top-left">
+      <img class="amit-img" src="childsmile/frontend/src/assets/amit.jpg" alt="עמית">
+      <div class="quote">הרבה אנשים אומרים שהם רוצים להצליח אבל לא כולם מוכנים לשלם את המחיר שצריך כדי להצליח</div>
+      <img class="qr-code" src="childsmile/frontend/src/assets/qr-code.jpg" alt="QR">
+    </div>
+    <h1 class="title">מרכז העדכונים</h1>
+  </header>
+
+  <!-- ===================== NOTIFICATION MESSAGES CONTENT (1:1 with NotificationMessages.js) ===================== -->
+  <div class="notif-main-content">
+
+    <!-- controls bar -->
+    <div class="notif-controls">
+      <button class="notif-create-btn">+ הודעה חדשה</button>
+      <button class="notif-refresh-btn" title="רענן ימי הולדת (מתבצע אוטומטית כל שעה)">רענן</button>
+      <select class="notif-filter-select">
+        <option value="">כל הסוגים</option>
+        <option>🎂 יום הולדת היום</option>
+        <option>🎂 יום הולדת השבוע</option>
+        <option>🎂 יום הולדת השבוע הבא</option>
+        <option>⚡ אוטומטית</option>
+        <option>✏️ ידנית</option>
+      </select>
+      <select class="notif-filter-select">
+        <option value="">כל הסטטוסים</option>
+        <option value="true">פעיל</option>
+        <option value="false">לא פעיל</option>
+      </select>
+      <input type="text" placeholder="חיפוש…" class="notif-search-input">
+    </div>
+
+    <!-- summary -->
+    <div class="notif-summary">סה״כ 5 הודעות</div>
+
+    <!-- table -->
+    <div class="notif-table-wrapper">
+      <table class="notif-table">
+        <thead>
+          <tr>
+            <th>סוג</th><th>כותרת</th><th class="notif-col-text">תוכן</th><th>סטטוס</th><th>תאריך יצירה</th><th>פעולות</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="notif-row">
+            <td><span class="notif-badge badge-birthday-today">🎂 יום הולדת היום</span></td>
+            <td><span style="white-space:pre-wrap">מזל טוב ליום ההולדת!</span></td>
+            <td class="notif-col-text"><span class="notif-text-full">היום חוגג יום הולדת אחד הילדים שלנו — שלחו ברכה חמה ומאחלים שנה מתוקה ומאושרת 🎈</span></td>
+            <td><span class="notif-status notif-status-active">פעיל</span></td>
+            <td class="notif-date-col">27.7.2026, 9:00:00</td>
+            <td class="notif-actions-col"><span class="notif-badge notif-badge-info">לא ניתן למחוק או לערוך <br> הודעות יום הולדת</span></td>
+          </tr>
+          <tr class="notif-row">
+            <td><span class="notif-badge badge-birthday-this-week">🎂 יום הולדת השבוע</span></td>
+            <td><span style="white-space:pre-wrap">יום הולדת השבוע</span></td>
+            <td class="notif-col-text"><span class="notif-text-full">השבוע חוגגים יום הולדת מספר ילדים — זו הזדמנות נהדרת לשמח ולהעניק תשומת לב מיוחדת 🎁</span></td>
+            <td><span class="notif-status notif-status-active">פעיל</span></td>
+            <td class="notif-date-col">26.7.2026, 8:00:00</td>
+            <td class="notif-actions-col"><span class="notif-badge notif-badge-info">לא ניתן למחוק או לערוך <br> הודעות יום הולדת</span></td>
+          </tr>
+          <tr class="notif-row">
+            <td><span class="notif-badge badge-custom">⚡ אוטומטית</span></td>
+            <td><span style="white-space:pre-wrap">תזכורת מפגש שבועי</span></td>
+            <td class="notif-col-text"><span class="notif-text-full">אל תשכחו את המפגש השבועי עם החניכים ביום שלישי בשעה 17:00 במרכז הקהילתי 📅</span></td>
+            <td><span class="notif-status notif-status-active">פעיל</span></td>
+            <td class="notif-date-col">20.7.2026, 14:30:00</td>
+            <td class="notif-actions-col"><button class="notif-btn notif-btn-edit">עריכה</button><button class="notif-btn notif-btn-delete">מחיקה</button></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- pagination — always visible -->
+      <div class="pagination">
+        <button class="pagination-arrow" disabled>&laquo;</button>
+        <button class="pagination-arrow" disabled>&lsaquo;</button>
+        <button class="active">1</button>
+        <button>2</button>
+        <button class="pagination-arrow">&rsaquo;</button>
+        <button class="pagination-arrow">&raquo;</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="mock-badge">מוקאפ סטטי · צבעי מותג חדשים <b>«חיוך של ילד»</b></div>
+
+</body>
+</html>
