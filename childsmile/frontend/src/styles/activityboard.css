@@ -34,7 +34,7 @@
 
 .activity-round-title {
   font-size: 20px;
-  color: #4f46e5;
+  color: #143852;
   margin: 8px 0 16px;
   width: 100%;
 }
@@ -59,7 +59,7 @@
   padding: 12px 28px;
   border: none;
   border-radius: 10px;
-  background: linear-gradient(135deg, #6366f1, #4f46e5);
+  background: linear-gradient(135deg, #3BC1C8, #143852);
   color: #fff;
   font-size: 18px;
   font-weight: 700;
@@ -89,7 +89,7 @@
   font-size: 22px;
   border: none;
   border-radius: 10px;
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.9), rgba(168, 85, 247, 0.9));
+  background: linear-gradient(135deg, rgba(59, 193, 200, 0.9), rgba(59, 193, 200, 0.9));
   color: #fff;
   cursor: pointer;
 }
@@ -112,8 +112,8 @@
 
 /* ── Assign-volunteer modal: read-only request summary ──────────────────── */
 .activity-request-summary {
-  background: rgba(99, 102, 241, 0.05);
-  border: 1px solid rgba(99, 102, 241, 0.15);
+  background: rgba(59, 193, 200, 0.05);
+  border: 1px solid rgba(59, 193, 200, 0.15);
   border-radius: 12px;
   padding: 14px 18px;
   margin-bottom: 18px;
@@ -141,7 +141,7 @@
   font-size: 16px;
 }
 .activity-select__control--is-focused {
-  border-color: #6366f1 !important;
-  box-shadow: 0 0 0 1px #6366f1 !important;
+  border-color: #3BC1C8 !important;
+  box-shadow: 0 0 0 1px #3BC1C8 !important;
 }
 .activity-select__menu { font-size: 16px; z-index: 20; }

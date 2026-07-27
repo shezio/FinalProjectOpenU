@@ -1163,7 +1163,7 @@ const Tasks = () => {
                 <div className="refresh">
                   <button
                     title="הפעל יצירת משימות ביקורת חודשיות ידנית"
-                    style={{ background: '#7c3aed', color: 'white' }}
+                    style={{ background: '#3BC1C8', color: 'white' }}
                     onClick={async () => {
                       try {
                         toast.info('⏳ מפעיל יצירת משימות ביקורת...', { autoClose: 3000 });
@@ -1654,7 +1654,7 @@ const Tasks = () => {
                           setExplanation(newVal);
                           setTimeout(() => { ta.focus(); ta.selectionStart = ta.selectionEnd = lineStart + insert.length; }, 0);
                         }}
-                        style={{ fontSize: '0.78rem', padding: '3px 9px', borderRadius: '4px', border: '1px solid #c5d0e6', background: '#f0f4ff', cursor: 'pointer', color: '#1a3a5c' }}
+                        style={{ fontSize: '0.78rem', padding: '3px 9px', borderRadius: '4px', border: '1px solid #c5d0e6', background: '#E3F4FA', cursor: 'pointer', color: '#1a3a5c' }}
                       >
                         {label}
                       </button>
@@ -1708,7 +1708,7 @@ const Tasks = () => {
                   staffOptions.map(staff => ({ label: staff.label, role: staff.role }))
                 )}
                 {isRichTaskLabel(selectedTaskType?.label) ? (
-                  <div style={{ padding: '8px 12px', background: '#f0f4ff', borderRadius: '6px', border: '1px solid #c5d0e6', color: '#1a3a5c', fontWeight: '600', marginBottom: '4px' }}>
+                  <div style={{ padding: '8px 12px', background: '#E3F4FA', borderRadius: '6px', border: '1px solid #c5d0e6', color: '#1a3a5c', fontWeight: '600', marginBottom: '4px' }}>
                     {richTaskAssigneeName(selectedTaskType?.label)}
                   </div>
                 ) : (
@@ -1803,7 +1803,7 @@ const Tasks = () => {
                           setExplanation(newVal);
                           setTimeout(() => { ta.focus(); ta.selectionStart = ta.selectionEnd = lineStart + insert.length; }, 0);
                         }}
-                        style={{ fontSize: '0.78rem', padding: '3px 9px', borderRadius: '4px', border: '1px solid #c5d0e6', background: '#f0f4ff', cursor: 'pointer', color: '#1a3a5c' }}
+                        style={{ fontSize: '0.78rem', padding: '3px 9px', borderRadius: '4px', border: '1px solid #c5d0e6', background: '#E3F4FA', cursor: 'pointer', color: '#1a3a5c' }}
                       >
                         {label}
                       </button>

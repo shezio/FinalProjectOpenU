@@ -72,7 +72,7 @@
 }
 
 .coordinator-search-input:focus {
-  border-color: #7c3aed;
+  border-color: #3BC1C8;
 }
 
 .coordinator-dropdown {
@@ -83,7 +83,7 @@
   background: #fff;
   border: 1.5px solid #c4b5f4;
   border-radius: 10px;
-  box-shadow: 0 6px 20px rgba(99, 102, 241, 0.15);
+  box-shadow: 0 6px 20px rgba(59, 193, 200, 0.15);
   z-index: 1300;
   max-height: 220px;
   overflow-y: auto;
@@ -106,7 +106,7 @@
 }
 
 .coordinator-option:hover:not(.already-added) {
-  background: #f5f3ff;
+  background: #EAF7F8;
 }
 
 .coordinator-option.already-added {
@@ -138,8 +138,8 @@
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  background: #ede9fe;
-  color: #5a3d8c;
+  background: #EAF7F8;
+  color: #143852;
   border-radius: 20px;
   padding: 4px 12px 4px 8px;
   font-size: 15px;
@@ -150,7 +150,7 @@
 .chip-remove-btn {
   background: none;
   border: none;
-  color: #7c3aed;
+  color: #3BC1C8;
   font-size: 14px;
   cursor: pointer;
   padding: 0;
@@ -727,8 +727,8 @@
   top: 8px;
   right: 16px;
   left: 16px;
-  background: rgba(124, 58, 237, 0.1);
-  border-right: 3px solid #7c3aed;
+  background: rgba(59, 193, 200, 0.1);
+  border-right: 3px solid #3BC1C8;
   padding: 8px 12px;
   border-radius: 4px;
   display: flex;
@@ -749,7 +749,7 @@
 
 .reply-preview-content strong {
   font-size: 18px;
-  color: #7c3aed;
+  color: #3BC1C8;
 }
 
 .reply-preview-content p {
@@ -763,7 +763,7 @@
   background: none;
   border: none;
   font-size: 18px;
-  color: #7c3aed;
+  color: #3BC1C8;
   cursor: pointer;
   padding: 0 4px;
   transition: all 0.2s ease;
@@ -771,7 +771,7 @@
 }
 
 .reply-close-btn:hover {
-  color: #5b21b6;
+  color: #143852;
   transform: scale(1.15);
 }
 

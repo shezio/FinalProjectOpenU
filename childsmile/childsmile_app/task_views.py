@@ -1312,7 +1312,7 @@ def update_task_status(request, task_id):
                 <table width="600" cellpadding="0" cellspacing="0" style="background-color: #f9f9f9; margin: 0 auto;">
                     <!-- HEADER -->
                     <tr>
-                        <td style="background-color: #667eea; color: white; padding: 30px; text-align: center;">
+                        <td style="background-color: #6EC1E4; color: white; padding: 30px; text-align: center;">
                             <h1 dir="rtl" style="margin: 0; font-size: 24px; font-weight: bold;">ברוכים הבאים לחיוך של ילד!</h1>
                             <p dir="rtl" style="margin: 10px 0 0 0; opacity: 0.9; font-size: 16px;">הרשמתך אושרה בשלב הראשון</p>
                         </td>
@@ -1325,25 +1325,25 @@ def update_task_status(request, task_id):
                             <p dir="rtl" style="text-align: right; margin: 15px 0;">תודה על הרשמתך לעמותת <strong>חיוך של ילד</strong>!</p>
                             
                             <!-- STEP 1 -->
-                            <table width="100%" cellpadding="0" cellspacing="0" style="margin: 20px 0; background-color: #f0f4ff; border-right: 4px solid #667eea; padding: 15px;">
+                            <table width="100%" cellpadding="0" cellspacing="0" style="margin: 20px 0; background-color: #E3F4FA; border-right: 4px solid #6EC1E4; padding: 15px;">
                                 <tr>
                                     <td style="padding: 0; text-align: right;">
-                                        <h3 dir="rtl" style="margin: 0 0 10px 0; color: #667eea; font-size: 16px;">✅ שלב ראשוני הסתיים בהצלחה</h3>
+                                        <h3 dir="rtl" style="margin: 0 0 10px 0; color: #6EC1E4; font-size: 16px;">✅ שלב ראשוני הסתיים בהצלחה</h3>
                                         <p dir="rtl" style="margin: 0; font-size: 14px; text-align: right;">הרשמתך עברה את השלב הראשון בהצלחה. אנחנו שמחים שהצטרפת אלינו!</p>
                                     </td>
                                 </tr>
                             </table>
                             
                             <!-- STEP 2 -->
-                            <table width="100%" cellpadding="0" cellspacing="0" style="margin: 20px 0; background-color: #f0f4ff; border-right: 4px solid #667eea; padding: 15px;">
+                            <table width="100%" cellpadding="0" cellspacing="0" style="margin: 20px 0; background-color: #E3F4FA; border-right: 4px solid #6EC1E4; padding: 15px;">
                                 <tr>
                                     <td style="padding: 0; text-align: right;">
-                                        <h3 dir="rtl" style="margin: 0 0 10px 0; color: #667eea; font-size: 16px;">📱 השלב הבא: הצטרף לקבוצת הווטסאפ</h3>
+                                        <h3 dir="rtl" style="margin: 0 0 10px 0; color: #6EC1E4; font-size: 16px;">📱 השלב הבא: הצטרף לקבוצת הווטסאפ</h3>
                                         <p dir="rtl" style="margin: 0 0 15px 0; font-size: 14px; text-align: right;">כדי להשלים את תהליך ההרשמה, אנא הצטרף לקבוצת הווטסאפ של הקהילה שלנו:</p>
                                         <table width="100%" cellpadding="0" cellspacing="0">
                                             <tr>
                                                 <td style="text-align: center;">
-                                                    <a href="https://chat.whatsapp.com/B7UcLqApSTzCpppWR221DB" style="display: inline-block; background-color: #667eea; color: white; padding: 15px 40px; text-decoration: none; border-radius: 5px; font-weight: bold; margin: 15px 0;">הצטרף לקבוצת הווטסאפ 👥</a>
+                                                    <a href="https://chat.whatsapp.com/B7UcLqApSTzCpppWR221DB" style="display: inline-block; background-color: #6EC1E4; color: white; padding: 15px 40px; text-decoration: none; border-radius: 5px; font-weight: bold; margin: 15px 0;">הצטרף לקבוצת הווטסאפ 👥</a>
                                                 </td>
                                             </tr>
                                         </table>
@@ -1352,27 +1352,27 @@ def update_task_status(request, task_id):
                             </table>
                             
                             <!-- STEP 3 -->
-                            <table width="100%" cellpadding="0" cellspacing="0" style="margin: 20px 0; background-color: #f0f4ff; border-right: 4px solid #667eea; padding: 15px;">
+                            <table width="100%" cellpadding="0" cellspacing="0" style="margin: 20px 0; background-color: #E3F4FA; border-right: 4px solid #6EC1E4; padding: 15px;">
                                 <tr>
                                     <td style="padding: 0; text-align: right;">
-                                        <h3 dir="rtl" style="margin: 0 0 10px 0; color: #667eea; font-size: 16px;">⏳ מה קורה כעת?</h3>
+                                        <h3 dir="rtl" style="margin: 0 0 10px 0; color: #6EC1E4; font-size: 16px;">⏳ מה קורה כעת?</h3>
                                         <p dir="rtl" style="margin: 0; font-size: 14px; text-align: right;">לאחר שתצטרף לקבוצת הווטסאפ שלנו, צוות הניהול שלנו יבדוק את הפרטים ויסיים את תהליך האישור הסופי בקרוב.</p>
                                     </td>
                                 </tr>
                             </table>
                             
                             <!-- STEP 4 -->
-                            <table width="100%" cellpadding="0" cellspacing="0" style="margin: 20px 0; background-color: #f0f4ff; border-right: 4px solid #667eea; padding: 15px;">
+                            <table width="100%" cellpadding="0" cellspacing="0" style="margin: 20px 0; background-color: #E3F4FA; border-right: 4px solid #6EC1E4; padding: 15px;">
                                 <tr>
                                     <td style="padding: 0; text-align: right;">
-                                        <h3 dir="rtl" style="margin: 0 0 10px 0; color: #667eea; font-size: 16px;">❓ שאלות?</h3>
+                                        <h3 dir="rtl" style="margin: 0 0 10px 0; color: #6EC1E4; font-size: 16px;">❓ שאלות?</h3>
                                         <p dir="rtl" style="margin: 0 0 10px 0; font-size: 14px; text-align: right;">אם יש לך שאלות או צריך עזרה, צור קשר עם צוות הניהול שלנו דרך קבוצת הווטסאפ.</p>
                                         <p dir="rtl" style="margin: 0 0 10px 0; font-size: 14px; text-align: right;"><strong>ניתן לפנות לטל חלימי רכזת מתנדבים</strong></p>
                                         <table width="100%" cellpadding="0" cellspacing="0">
                                             <tr>
                                                 <td style="text-align: center; padding: 10px 0;">
                                                     <a href="https://wa.me/972507225027" style="display: inline-block; margin: 0 15px; text-decoration: none; color: #25D366; font-weight: bold; font-size: 16px;">WhatsApp 💬</a>
-                                                    <a href="tel:+972507225027" style="display: inline-block; margin: 0 15px; text-decoration: none; color: #667eea; font-weight: bold; font-size: 16px;">+972 50-722-5027 📱</a>
+                                                    <a href="tel:+972507225027" style="display: inline-block; margin: 0 15px; text-decoration: none; color: #6EC1E4; font-weight: bold; font-size: 16px;">+972 50-722-5027 📱</a>
                                                 </td>
                                             </tr>
                                         </table>

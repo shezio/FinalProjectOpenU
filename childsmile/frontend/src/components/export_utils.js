@@ -514,7 +514,7 @@ export const exportToPDF = async (tutors, t) => {
       body: rows,
       startY: 50, // Position below the title
       styles: { font: 'Alef', fontSize: 10, cellPadding: 3, halign: 'right' }, // Align text to the right
-      headStyles: { fillColor: [76, 175, 80], textColor: 255, halign: 'right' }, // Align headers to the right
+      headStyles: { fillColor: [59, 193, 200], textColor: 255, halign: 'right' }, // Align headers to the right
       columnStyles: {
         0: { halign: 'right' }, // Align first column to the right
         1: { halign: 'right' }, // Align second column to the right
@@ -633,7 +633,7 @@ export const exportFamiliesToPDF = async (families, t) => {
       body: rows,
       startY: 50, // Position below the title
       styles: { font: 'Alef', fontSize: 10, cellPadding: 3, halign: 'right' }, // Align text to the right
-      headStyles: { fillColor: [76, 175, 80], textColor: 255, halign: 'right' }, // Align headers to the right
+      headStyles: { fillColor: [59, 193, 200], textColor: 255, halign: 'right' }, // Align headers to the right
       columnStyles: {
         0: { halign: 'right' }, // Align first column to the right
         1: { halign: 'right' }, // Align second column to the right
@@ -772,7 +772,7 @@ export const exportTutorshipPendingToPDF = async (families, t) => {
       body: rows,
       startY: 50, // Position below the title
       styles: { font: 'Alef', fontSize: 10, cellPadding: 3, halign: 'right' }, // Align text to the right
-      headStyles: { fillColor: [76, 175, 80], textColor: 255, halign: 'right' }, // Align headers to the right
+      headStyles: { fillColor: [59, 193, 200], textColor: 255, halign: 'right' }, // Align headers to the right
       columnStyles: {
         0: { halign: 'right', cellWidth: 30 }, // Align first column to the right
         1: { halign: 'right', cellWidth: 60 }, // Align second column to the right
@@ -902,7 +902,7 @@ export const exportNewFamiliesToPDF = async (families, t) => {
       body: rows,
       startY: 50, // Position below the title
       styles: { font: 'Alef', fontSize: 10, cellPadding: 3, halign: 'right' }, // Align text to the right
-      headStyles: { fillColor: [76, 175, 80], textColor: 255, halign: 'right' }, // Align headers to the right
+      headStyles: { fillColor: [59, 193, 200], textColor: 255, halign: 'right' }, // Align headers to the right
       columnStyles: {
         0: { halign: 'right' }, // Align first column to the right
         1: { halign: 'right' }, // Align second column to the right
@@ -1065,7 +1065,7 @@ export const exportPossibleMatchesToPDF = async (matches, t) => {
       body: rows,
       startY: 50, // Position below the title
       styles: { font: "Alef", fontSize: 10, cellPadding: 3, halign: "right" }, // Align text to the right
-      headStyles: { fillColor: [76, 175, 80], textColor: 255, halign: "right" }, // Align headers to the right
+      headStyles: { fillColor: [59, 193, 200], textColor: 255, halign: "right" }, // Align headers to the right
       columnStyles: {
         0: { halign: 'right' }, // Align first column to the right
         1: { halign: 'right' }, // Align second column to the right
@@ -1245,7 +1245,7 @@ export const exportFeedbackToPDF = async (feedbacks, t) => {
       })),
       startY: 50,
       styles: { font: "Alef", fontSize: 10, cellPadding: 3, halign: "right", rtl: true },
-      headStyles: { fillColor: [76, 175, 80], textColor: 255, halign: "right", rtl: true },
+      headStyles: { fillColor: [59, 193, 200], textColor: 255, halign: "right", rtl: true },
       columnStyles: {
         0: { halign: 'right', cellWidth: 25 }, // initial_family_data
         1: { halign: 'right', cellWidth: 25 }, // comments
@@ -1428,7 +1428,7 @@ export const exportAuditToPDF = async (auditLogs, t, changes = []) => {
       body: rows,
       startY: 50,
       styles: { font: 'Alef', fontSize: 10, cellPadding: 3, halign: 'center' },
-      headStyles: { fillColor: [76, 175, 80], textColor: 255, halign: 'center' },
+      headStyles: { fillColor: [59, 193, 200], textColor: 255, halign: 'center' },
       columnStyles: {
         0: { halign: 'center' },                 // Source IP
         1: { halign: 'center' },                 // User Roles
@@ -1467,7 +1467,7 @@ export const exportAuditToPDF = async (auditLogs, t, changes = []) => {
         ].reverse()),
         startY: titleY + 4,
         styles: { font: 'Alef', fontSize: 9, cellPadding: 3, halign: 'center', valign: 'top' },
-        headStyles: { fillColor: [59, 130, 246], textColor: 255, halign: 'center' },
+        headStyles: { fillColor: [59, 193, 200], textColor: 255, halign: 'center' },
         columnStyles: { 3: { cellWidth: 12 } }, // # column (narrow)
       });
     }
@@ -1713,7 +1713,7 @@ const drawPeriodPieChart = (periodRows) => {
     return canvas.toDataURL('image/png');
   }
 
-  const COLORS = ['#6366f1','#10b981','#f59e0b','#3b82f6','#ef4444','#8b5cf6','#14b8a6','#f97316','#ec4899','#06b6d4','#84cc16','#a78bfa'];
+  const COLORS = ['#3BC1C8','#10b981','#f59e0b','#3b82f6','#ef4444','#6EC1E4','#14b8a6','#f97316','#ec4899','#06b6d4','#84cc16','#6EC1E4'];
   const cx = SIZE / 2, cy = SIZE / 2, r = SIZE / 2 - 16;
 
   let startAngle = -Math.PI / 2;
@@ -1792,7 +1792,7 @@ const drawPeriodBarChart = (periodRows, period) => {
   }
 
   // Legend top-right
-  ctx.fillStyle = '#6366f1';
+  ctx.fillStyle = '#3BC1C8';
   ctx.fillRect(WIDTH - PAD_RIGHT - 120, 8, 14, 14);
   ctx.fillStyle = '#374151';
   ctx.font = '12px Arial';
@@ -1815,7 +1815,7 @@ const drawPeriodBarChart = (periodRows, period) => {
     const appH = Math.max((row.approved / maxVal) * CHART_H, row.approved > 0 ? 2 : 0);
 
     // Requested bar (right of pair)
-    ctx.fillStyle = '#6366f1';
+    ctx.fillStyle = '#3BC1C8';
     ctx.fillRect(groupX + barW + gap, PAD_TOP + CHART_H - reqH, barW, reqH);
 
     // Approved bar (left of pair)
@@ -1916,7 +1916,7 @@ export const exportRefundsReportToPDF = async (refunds, period, selectedYear) =>
       ].reverse()),
       startY: 32,
       styles: { font: 'Alef', fontSize: 9, halign: 'right' },
-      headStyles: { fillColor: [99, 102, 241], textColor: 255, halign: 'right' },
+      headStyles: { fillColor: [59, 193, 200], textColor: 255, halign: 'right' },
     });
 
     // Charts — pie (right) + vertical bar (left), side by side
@@ -2041,7 +2041,7 @@ const drawOngoingPeriodPieChart = (periodRows) => {
     return canvas.toDataURL('image/png');
   }
 
-  const COLORS = ['#6366f1','#10b981','#f59e0b','#3b82f6','#ef4444','#8b5cf6','#14b8a6','#f97316','#ec4899','#06b6d4','#84cc16','#a78bfa'];
+  const COLORS = ['#3BC1C8','#10b981','#f59e0b','#3b82f6','#ef4444','#6EC1E4','#14b8a6','#f97316','#ec4899','#06b6d4','#84cc16','#6EC1E4'];
   const cx = SIZE / 2, cy = SIZE / 2, r = SIZE / 2 - 16;
 
   let startAngle = -Math.PI / 2;
@@ -2120,7 +2120,7 @@ const drawOngoingPeriodBarChart = (periodRows, period) => {
   }
 
   // Legend top-right
-  ctx.fillStyle = '#6366f1';
+  ctx.fillStyle = '#3BC1C8';
   ctx.fillRect(WIDTH - PAD_RIGHT - 70, 8, 14, 14);
   ctx.fillStyle = '#374151';
   ctx.font = '12px Arial';
@@ -2134,7 +2134,7 @@ const drawOngoingPeriodBarChart = (periodRows, period) => {
     // RTL: first row (index 0) goes on the RIGHT side
     const groupX = PAD_LEFT + (n - 1 - i) * BAR_GROUP + Math.floor((BAR_GROUP - barW) / 2);
     const h = Math.max((row.amount / maxVal) * CHART_H, row.amount > 0 ? 2 : 0);
-    ctx.fillStyle = '#6366f1';
+    ctx.fillStyle = '#3BC1C8';
     ctx.fillRect(groupX, PAD_TOP + CHART_H - h, barW, h);
 
     // X-axis label — short label
@@ -2227,7 +2227,7 @@ export const exportOngoingExpensesReportToPDF = async (entries, period, selected
       ].reverse()),
       startY: 32,
       styles: { font: 'Alef', fontSize: 9, halign: 'right' },
-      headStyles: { fillColor: [99, 102, 241], textColor: 255, halign: 'right' },
+      headStyles: { fillColor: [59, 193, 200], textColor: 255, halign: 'right' },
     });
 
     // Charts — pie (right) + vertical bar (left), side by side
@@ -2356,7 +2356,7 @@ export const exportPettyCashReportToPDF = async (entries, period, selectedYear) 
       ].reverse()),
       startY: 32,
       styles: { font: 'Alef', fontSize: 9, halign: 'right' },
-      headStyles: { fillColor: [99, 102, 241], textColor: 255, halign: 'right' },
+      headStyles: { fillColor: [59, 193, 200], textColor: 255, halign: 'right' },
     });
 
     // Charts — pie (right) + vertical bar (left), side by side

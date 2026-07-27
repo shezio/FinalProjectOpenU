@@ -1236,7 +1236,7 @@ def get_refund_report(request):
                 ])
             t = Table(table_data)
             t.setStyle(TableStyle([
-                ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#6366f1')),
+                ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#3BC1C8')),
                 ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
                 ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
                 ('FONTSIZE', (0, 0), (-1, -1), 9),

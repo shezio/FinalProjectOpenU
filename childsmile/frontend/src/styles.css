@@ -44,9 +44,8 @@ body {
 
 .login-main-content .amit-title {
   display: inline-block;
-  /* Ensures it behaves like a block element */
-  transform: rotateX(-15deg);
-  transform-origin: center top;
+  position: relative;
+  /* anchor for the pink smile underline */
   letter-spacing: 3px;
   text-align: center;
   /* Centers the text horizontally */
@@ -56,15 +55,38 @@ body {
   /* Make the text bold */
   margin-bottom: 52px;
   /* Add spacing below the title */
-  color: #1da821;
-  /* Adjust text color */
+  background: linear-gradient(135deg, #3BC1C8 0%, #65BEC6 55%, #6EC1E4 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  color: #3BC1C8;
+  /* brand teal wordmark */
   font-family: Rubik, sans-serif;
   /* Use the specified font */
 }
 
+/* Pink curved "smile" underline beneath the wordmark (brand logo echo) */
+.login-main-content .amit-title .smile {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -6px;
+  width: 100%;
+  height: 40px;
+  overflow: visible;
+  pointer-events: none;
+}
+.login-main-content .amit-title .smile path {
+  fill: none;
+  stroke: #ED3B97;
+  stroke-width: 9;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+}
+
 .login-main-content .curved-text {
   font-size: 48px;
-  fill: #1da821;
+  fill: #3BC1C8;
   font-family: Rubik, sans-serif;
   font-weight: bold;
 }
@@ -93,7 +115,7 @@ body {
   width: 100%;
   padding: 15px;
   /* Increase padding for buttons */
-  background-color: #4CAF50;
+  background: linear-gradient(135deg, #3BC1C8 0%, #6EC1E4 100%);
   color: white;
   border: none;
   border-radius: 5px;
@@ -102,15 +124,15 @@ body {
 }
 
 .login-main-content button:hover {
-  background-color: #45a049;
+  background: linear-gradient(135deg, #34AEB4 0%, #58B0D9 100%);
 }
 
 .login-main-content .google-login {
-  background-color: #dd4b39;
+  background: linear-gradient(135deg, #ED3B97 0%, #DB4B95 100%);
 }
 
 .login-main-content .google-login:hover {
-  background-color: #c23321;
+  background: linear-gradient(135deg, #D42A83 0%, #C43A82 100%);
 }
 
 .top-left {
@@ -239,7 +261,7 @@ body {
 }
 
 .google-btn {
-  background-color: #a929db !important;
+  background: linear-gradient(135deg, #ED3B97 0%, #DB4B95 100%) !important;
   color: white;
   border: none;
   padding: 10px 15px;
@@ -252,7 +274,7 @@ body {
 }
 
 .google-btn:hover {
-  background-color: #c23321;
+  background: linear-gradient(135deg, #D42A83 0%, #C43A82 100%) !important;
 }
 
 .google-icon {

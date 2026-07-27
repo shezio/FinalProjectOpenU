@@ -210,7 +210,7 @@
 
 .filter select {
   padding: 10px;
-  border: 2px solid rgba(99, 102, 241, 0.3);
+  border: 2px solid rgba(59, 193, 200, 0.3);
   border-radius: 10px;
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(10px);
@@ -228,10 +228,10 @@
 
 .filter select:focus {
   outline: none;
-  border-color: rgba(99, 102, 241, 0.6);
+  border-color: rgba(59, 193, 200, 0.6);
   box-shadow: 
-    0 4px 15px rgba(99, 102, 241, 0.2),
-    0 0 0 3px rgba(99, 102, 241, 0.1);
+    0 4px 15px rgba(59, 193, 200, 0.2),
+    0 0 0 3px rgba(59, 193, 200, 0.1);
 }
 
 /* Ensure the container doesn't overflow */
@@ -944,7 +944,7 @@ textarea.scrollable-textarea {
 
 .tasks-main-content .status-filter-button {
   background: linear-gradient(135deg, 
-    rgba(147, 51, 234, 0.95) 0%,
+    rgba(59, 193, 200, 0.95) 0%,
     rgba(124, 58, 255, 0.95) 100%) !important;
   backdrop-filter: blur(15px) !important;
   -webkit-backdrop-filter: blur(15px) !important;
@@ -957,7 +957,7 @@ textarea.scrollable-textarea {
   cursor: pointer !important;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
   box-shadow: 
-    0 6px 20px rgba(147, 51, 234, 0.3),
+    0 6px 20px rgba(59, 193, 200, 0.3),
     inset 0 1px 0 rgba(255, 255, 255, 0.3) !important;
   display: flex !important;
   align-items: center !important;
@@ -987,11 +987,11 @@ textarea.scrollable-textarea {
 
 .tasks-main-content .status-filter-button:hover {
   background: linear-gradient(135deg, 
-    rgba(147, 51, 234, 1) 0%,
+    rgba(59, 193, 200, 1) 0%,
     rgba(124, 58, 255, 1) 100%) !important;
   transform: translateY(-2px) !important;
   box-shadow: 
-    0 8px 30px rgba(147, 51, 234, 0.4),
+    0 8px 30px rgba(59, 193, 200, 0.4),
     inset 0 1px 0 rgba(255, 255, 255, 0.4) !important;
 }
 
@@ -1012,10 +1012,10 @@ textarea.scrollable-textarea {
     rgba(249, 250, 251, 0.98) 100%);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border: 2px solid rgba(147, 51, 234, 0.4);
+  border: 2px solid rgba(59, 193, 200, 0.4);
   border-radius: 12px;
   box-shadow: 
-    0 20px 60px rgba(147, 51, 234, 0.35),
+    0 20px 60px rgba(59, 193, 200, 0.35),
     0 12px 40px rgba(0, 0, 0, 0.15),
     inset 0 1px 0 rgba(255, 255, 255, 0.6);
   padding: 12px 16px;
@@ -1040,14 +1040,14 @@ textarea.scrollable-textarea {
 }
 
 .tasks-main-content .status-checkbox-label:hover {
-  background-color: rgba(147, 51, 234, 0.1);
+  background-color: rgba(59, 193, 200, 0.1);
 }
 
 .tasks-main-content .status-checkbox-label input[type="checkbox"] {
   width: 20px;
   height: 20px;
   cursor: pointer;
-  accent-color: #9333ea;
+  accent-color: #3BC1C8;
 }
 
 .tasks-main-content .status-checkbox-label span {
@@ -1069,14 +1069,14 @@ textarea.scrollable-textarea {
 }
 
 .status-checkboxes-dropdown .status-checkbox-label:hover {
-  background-color: rgba(147, 51, 234, 0.1);
+  background-color: rgba(59, 193, 200, 0.1);
 }
 
 .status-checkboxes-dropdown .status-checkbox-label input[type="checkbox"] {
   width: 20px;
   height: 20px;
   cursor: pointer;
-  accent-color: #9333ea;
+  accent-color: #3BC1C8;
 }
 
 .status-checkboxes-dropdown .status-checkbox-label span {
@@ -1104,7 +1104,7 @@ textarea.scrollable-textarea {
   width: 20px;
   height: 20px;
   cursor: pointer;
-  accent-color: #9333ea;
+  accent-color: #3BC1C8;
 }
 
 /* Search input */
@@ -1124,7 +1124,7 @@ textarea.scrollable-textarea {
   padding: 3px 8px;
   border-radius: 4px;
   border: 1px solid #c5d0e6;
-  background: #f0f4ff;
+  background: #E3F4FA;
   color: #1a3a5c;
   cursor: pointer;
   white-space: nowrap;
@@ -1133,7 +1133,7 @@ textarea.scrollable-textarea {
 }
 
 .task-type-filter-clear-btn:hover {
-  background: #e0e7ff;
+  background: #E3F4FA;
 }
 
 /* Scrollable list */

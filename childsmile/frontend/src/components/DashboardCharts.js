@@ -72,7 +72,7 @@ const DashboardCharts = ({ data, timeframe, onTimeframeChange }) => {
         feedbackChartData?.general_volunteer_hospital_visit || data?.charts?.feedback_by_type?.general_volunteer_hospital_visit || 0,
         feedbackChartData?.tutorship || data?.charts?.feedback_by_type?.tutorship || 0
       ],
-      backgroundColor: ['#667eea', '#764ba2', '#ff6b6b', '#4caf50'],
+      backgroundColor: ['#6EC1E4', '#3BC1C8', '#ff6b6b', '#4caf50'],
       borderWidth: 0
     }]
   };
@@ -83,7 +83,7 @@ const DashboardCharts = ({ data, timeframe, onTimeframeChange }) => {
     datasets: [{
       label: 'משפחות הממתינות',
       data: data?.charts?.cities?.map(c => c.count) || [],
-      backgroundColor: '#667eea',
+      backgroundColor: '#6EC1E4',
       borderRadius: 8
     }]
   };
@@ -94,7 +94,7 @@ const DashboardCharts = ({ data, timeframe, onTimeframeChange }) => {
     datasets: [{
       label: 'ימים מהתחלה',
       data: data?.charts?.recent_tutorships?.map(t => t.days) || [],
-      backgroundColor: '#764ba2',
+      backgroundColor: '#3BC1C8',
       borderRadius: 8
     }]
   };
@@ -274,7 +274,7 @@ const DashboardCharts = ({ data, timeframe, onTimeframeChange }) => {
         if (workload.length === 0) return <p className="workload-loading">אין נתונים</p>;
 
         const names = workload.map(c => c.name);
-        const colors = ['#667eea','#764ba2','#ff6b6b','#4caf50','#ffa726','#26c6da','#ab47bc'];
+        const colors = ['#6EC1E4','#3BC1C8','#ff6b6b','#4caf50','#ffa726','#26c6da','#3BC1C8'];
 
         const familiesPie = {
           labels: names,
@@ -285,7 +285,7 @@ const DashboardCharts = ({ data, timeframe, onTimeframeChange }) => {
           datasets: [{ data: workload.map(c => c.open_tasks), backgroundColor: colors, borderWidth: 0 }]
         };
         const overdueNames = overdueReviews.map(r => r.name);
-        const overdueColors = ['#667eea','#764ba2','#ff6b6b','#4caf50','#ffa726','#26c6da','#ab47bc'];
+        const overdueColors = ['#6EC1E4','#3BC1C8','#ff6b6b','#4caf50','#ffa726','#26c6da','#3BC1C8'];
         const overduePie = {
           labels: overdueNames,
           datasets: [{ data: overdueReviews.map(r => r.count), backgroundColor: overdueColors, borderWidth: 0 }]

@@ -201,7 +201,7 @@ const FamiliesDuplicateReport = () => {
       <div className="page-content">
         <div className="missing-filter-card" style={{ marginBottom: 18 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
-            <span style={{ fontSize: 24, fontWeight: 600, color: "#5a3d8c" }}>
+            <span style={{ fontSize: 24, fontWeight: 600, color: "#143852" }}>
               {loading ? "טוען..." : `${groups.length} קבוצות כפילות אפשריות`}
             </span>
             <button

@@ -210,7 +210,7 @@ const FinanceOverview = () => {
     datasets: [{
       label: 'הוצאות מאוחדות (₪)',
       data: monthlyTrend.map(m => m.total),
-      backgroundColor: '#8b5cf6',
+      backgroundColor: '#6EC1E4',
       borderRadius: 8,
     }],
   };

@@ -299,22 +299,22 @@ def create_professional_slides(dashboard_data, timeframe):
         font_small = load_font("regular", 32)
 
     # Slide 1: Title Slide
-    img1 = Image.new('RGB', (width, height), color='#667EEA')
+    img1 = Image.new('RGB', (width, height), color='#6EC1E4')
     draw1 = ImageDraw.Draw(img1)
     draw1.text((640, 280), 'ChildSmile', font=font_large, fill='white', anchor='mm')
-    draw1.text((640, 380), fix_hebrew_text(f'סקירת מערכת - {timeframe}'), font=font_medium, fill='#E0E7FF', anchor='mm')
+    draw1.text((640, 380), fix_hebrew_text(f'סקירת מערכת - {timeframe}'), font=font_medium, fill='#E3F4FA', anchor='mm')
     slides.append(img1)
     
     # Slide 2: KPIs
     img2 = Image.new('RGB', (width, height), color='#1E293B')
     draw2 = ImageDraw.Draw(img2)
-    draw2.text((640, 80), fix_hebrew_text('מדדים עיקריים'), font=font_medium, fill='#667EEA', anchor='mm')
+    draw2.text((640, 80), fix_hebrew_text('מדדים עיקריים'), font=font_medium, fill='#6EC1E4', anchor='mm')
     
     kpis = [
         (fix_hebrew_text(f"סה\"כ משפחות: {dashboard_data.get('total_families', 0)}"), '#3B82F6'),
         (fix_hebrew_text(f"חונכויות פעילות: {dashboard_data.get('active_tutorships', 0)}"), '#10B981'),
         (fix_hebrew_text(f"משפחות ממתינות: {dashboard_data.get('waiting_families', 0)}"), '#F59E0B'),
-        (fix_hebrew_text(f"חונכים ממתינים: {dashboard_data.get('pending_tutors', 0)}"), '#8B5CF6'),
+        (fix_hebrew_text(f"חונכים ממתינים: {dashboard_data.get('pending_tutors', 0)}"), '#6EC1E4'),
     ]
     
     y_pos = 200
@@ -327,17 +327,17 @@ def create_professional_slides(dashboard_data, timeframe):
     # Slide 3: New Families
     img3 = Image.new('RGB', (width, height), color='#0F172A')
     draw3 = ImageDraw.Draw(img3)
-    draw3.text((640, 250), fix_hebrew_text('משפחות חדשות'), font=font_medium, fill='#667EEA', anchor='mm')
+    draw3.text((640, 250), fix_hebrew_text('משפחות חדשות'), font=font_medium, fill='#6EC1E4', anchor='mm')
     new_fam = dashboard_data.get('new_families', 0)
     draw3.text((640, 380), f'{new_fam}', font=font_large, fill='#10B981', anchor='mm')
     draw3.text((640, 480), fix_hebrew_text('הצטרפו לאחרונה'), font=font_small, fill='white', anchor='mm')
     slides.append(img3)
     
     # Slide 4: Thank You
-    img4 = Image.new('RGB', (width, height), color='#667EEA')
+    img4 = Image.new('RGB', (width, height), color='#6EC1E4')
     draw4 = ImageDraw.Draw(img4)
     draw4.text((640, 320), fix_hebrew_text('תודה רבה!'), font=font_large, fill='white', anchor='mm')
-    draw4.text((640, 420), fix_hebrew_text('יחד אנחנו עושים את ההבדל'), font=font_small, fill='#E0E7FF', anchor='mm')
+    draw4.text((640, 420), fix_hebrew_text('יחד אנחנו עושים את ההבדל'), font=font_small, fill='#E3F4FA', anchor='mm')
     slides.append(img4)
     
     return slides
