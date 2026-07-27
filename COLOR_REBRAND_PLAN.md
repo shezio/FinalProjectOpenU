@@ -21,6 +21,16 @@
 3. **Scope** → EVERYTHING: frontend app + backend email/PDF/image generators + repo-root HTML docs + PWA.
 4. **Status colors** → KEEP semantic green / red / amber; only rebrand the indigo/purple THEME.
 
+### ⭐ COLOUR PHILOSOPHY (refined 2026-07-27, from the live site + user)
+- **TEAL is the MAIN colour** (`#3BC1C8` / `#65BEC6`, with sky `#6EC1E4` as its lighter partner).
+  ALL big surfaces — headers, sidebar, grid headers, primary buttons — are teal / sky.
+- **PINK (`#ED3B97`) is a SEPARATOR / accent ONLY** — the lower edge of headers, heading
+  underlines, dividers, and the occasional donate-style CTA. NEVER a main fill or a gradient
+  stop on a large surface. (On achildssmile.org.il the teal hero carries only a thin pink
+  underline; pink otherwise appears just on the “תרמו” donate button.)
+- Therefore indigo/purple (incl. `#a855f7`) maps to **TEAL**, not pink. Pink is applied
+  deliberately as separators — it is not a swap target for large surfaces.
+
 ---
 
 ## Exact brand palette (from the site)
@@ -68,7 +78,7 @@ Fonts (FYI, **not** in scope): Fredoka (headings), Roboto (body), Roboto Slab.
 | `#6366f1` | `#3BC1C8` teal | primary solid accent (borders/icons/buttons) |
 | `#8b5cf6` | `#6EC1E4` sky | gradient partner + charts |
 | `#7c3aed` | `#3BC1C8` teal | action buttons / coordinator accent |
-| `#a855f7` | `#ED3B97` pink | bright-purple gradients / mockup |
+| `#a855f7` | `#3BC1C8` teal | was pink — now TEAL (pink is separator-only; see Colour Philosophy) |
 
 ### Dark accent TEXT (need contrast → brand navy)
 | Current | → Brand |
@@ -91,17 +101,54 @@ Fonts (FYI, **not** in scope): Fredoka (headings), Roboto (body), Roboto Slab.
 | `rgba(118,75,162,a)` [=`#764ba2`] | `rgba(59,193,200,a)` |
 | `rgba(99,102,241,a)` [=`#6366f1`] | `rgba(59,193,200,a)` |
 
+### ⭐ Table / grid HEADERS → TEAL (override — added 2026-07-27)
+EVERY table/grid column-header (`thead th` / `.*-data-grid th` / `.*-table th`) background → TEAL,
+regardless of its current colour. Real headers are mostly solid green `#4CAF50` (feedbacks, audit-log,
+reports `.data-grid th`, tutorships) or navy→blue `linear-gradient(#1a3a5c,#2a5298)` (reviewer);
+Families/refunds/etc were indigo (already mapped to teal). Use SOLID `#3BC1C8` where the header was a
+solid colour, or `linear-gradient(135deg,#3BC1C8,#6EC1E4)` where it was a gradient (matches the Families
+grid). Also recolor that grid's green zebra/hover tints (`rgba(76,175,80,a)`→`rgba(59,193,200,a)`).
+Applies on DESKTOP + MOBILE + report grids + PDF/Excel/image EXPORTS (see Exports below).
+
 ### KEEP — do NOT touch (semantic / categorical)
-`#10b981` `#4caf50` green · `#ef4444` `#ff6b6b` red · `#f59e0b` `#ffa726` amber ·
-`#3b82f6` blue · `#06b6d4` `#26c6da` cyan · `#14b8a6` teal-status.
+`#10b981` green, and `#4caf50` green ONLY as buttons/success/status/active/clock (NOT as a grid header —
+those → teal) · `#ef4444` `#ff6b6b` red · `#f59e0b` `#ffa726` amber · `#3b82f6` blue (except table
+headers → teal) · `#06b6d4` `#26c6da` cyan · `#14b8a6` teal-status.
 
 ### Charts (JS palettes)
 In `DashboardCharts.js` and `export_utils.js` COLORS arrays: swap ONLY the indigo/purple entries
-(`#667eea` `#764ba2` `#6366f1` `#8b5cf6` `#a78bfa` `#ab47bc` → sky / teal / pink / yellow);
-keep the other hues for categorical contrast.
+(`#667eea` `#764ba2` `#6366f1` `#8b5cf6` `#a78bfa` `#ab47bc` → sky / teal / `#65BEC6` / yellow — pink
+only as an occasional accent, not a main series colour); keep the other hues for categorical contrast.
+
+### ⭐ EXPORTS — PDF / Excel / image (headers → teal)
+`components/export_utils.js`:
+- jsPDF autotable `headStyles.fillColor`: `[76,175,80]` (green) AND `[59,130,246]` (blue) AND
+  `[99,102,241]` (indigo) → `[59,193,200]` (teal #3BC1C8). (lines ~517,636,775,905,1068,1248,1431,
+  1470,1919,2230,2359.)
+- Excel/image header cell `color:"#4caf50"` (~117,257) → `#3BC1C8`; `ctx.fillStyle='#6366f1'`
+  (~1795,1818,2123,2137) → `#3BC1C8`; COLORS arrays indigo/purple → teal/sky.
+Backend PDF/image generators: `refund_views.py` reportlab header `HexColor('#6366f1')` → `#3BC1C8`;
+`dashboard_services.py` PIL fills `#667EEA`→`#6EC1E4`, `#8B5CF6`→`#3BC1C8`, `#E0E7FF`→`#E3F4FA`.
+Any other report PDF generator that sets a header fill → teal.
 
 ### PWA theme-color
 `index.html` + `manifest.json` `#6366f1` → `#3BC1C8` (match new header). *(minor — recommended)*
+
+### Login wordmark "חיוך של ילד" — restyle to match the official logo
+The login screen renders `<span class="amit-title">{t("Amit's Smile")}</span>` where
+`"Amit's Smile" = "חיוך של ילד"` (i18n.js L769). Today it is GREEN + 3‑D tilted:
+`styles.css .login-main-content .amit-title { color:#1da821; transform:rotateX(-15deg) }`
+(and `.login-main-content .curved-text { fill:#1da821 }`). **Restyle it to look like the brand
+logo:** **teal letters** (`#3BC1C8` / `#65BEC6`) with a **single pink curved "smile" underline**
+(`#ED3B97` / `#DB4B95`) beneath the wordmark — the exact "teal text + pink separator" rule.
+Drop the green `#1da821` and (optionally) the `rotateX` tilt. Apply in **both** `styles.css`
+and the mobile rule `mobile.css .login-main-content .amit-title`.
+
+### ⚠️ mobile.css — MUST be in scope (do NOT skip)
+`styles/mobile.css` is ONE big `@media(max-width:767px)` block and carries its OWN hardcoded
+theme hex (e.g. `#6366f1` at ~L1430–1431 color/border-bottom) PLUS all the login-page mobile
+rules (`.login-main-content .amit-title`, `.header`, etc.). Sweep it with the same swap table,
+and apply the login-wordmark restyle here too.
 
 ---
 

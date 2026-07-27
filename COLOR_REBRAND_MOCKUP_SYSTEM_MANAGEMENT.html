@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>מוקאפ — עמוד ניהול מערכת (צבעי מותג חדשים)</title>
+<style>
+/* Same local Rubik variable font the real app uses (styles.css @font-face) so
+   the mock renders identically — NOT Google Fonts. */
+@font-face {
+  font-family: 'Rubik';
+  src: url('childsmile/frontend/src/fonts/Rubik-VariableFont_wght.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+}
+/* =====================================================================
+   System Management page (route /system-management) — STATIC recolored mock.
+   Faithful reproduction of the real page (InnerPageHeader + Sidebar +
+   controls toolbar + glassmorphism .staff-data-grid + pagination), with the
+   indigo/purple theme swapped to the A Child's Smile palette. Chrome (sidebar +
+   header + content wrapper + mock badge) copied VERBATIM from
+   COLOR_REBRAND_MOCKUP_FAMILIES.html. ONLY colour values differ from the real
+   page — structure/layout/fonts/spacing/labels are 1:1 with the code.
+   Brand: sky #6EC1E4 · teal #3BC1C8 · pink #ED3B97 · yellow #FCD20E · navy #143852
+   Indigo/purple → TEAL: header + sidebar + grid-header (rgba 99,102,241/139,92,246)
+   + pagination active + search-bar border + dashboard-button + mail-button.
+   PINK (#ED3B97) = SEPARATOR/accent ONLY (header lower edge, title underline,
+   sidebar divider). KEPT exactly as the real app: BLUE refresh + role-filter +
+   edit + info (real #3b82f6), GREEN add-button (#10b981), GRAY show-inactive,
+   dark-red audit-log button, RED delete, and the multicolour dashboard bar-chart
+   SVG (red/green/blue gradients).
+   ===================================================================== */
+
+*{box-sizing:border-box;font-family:Rubik,sans-serif}
+html{zoom:.8}
+body{
+  margin:0;direction:rtl;min-height:100vh;
+  display:flex;flex-direction:row-reverse;
+  background:
+    linear-gradient(135deg,
+      rgba(237,59,151,.14) 0%,
+      rgba(110,193,228,.14) 25%,
+      rgba(59,193,200,.14) 50%,
+      rgba(252,210,14,.14) 75%,
+      rgba(242,103,34,.14) 100%);
+  background-attachment:fixed;
+}
+
+/* ===================== SIDEBAR (faithful to common.css; bg recolored TEAL) ===================== */
+.sidebar{
+  background:linear-gradient(135deg,
+    rgba(110,193,228,.9) 0%,
+    rgba(59,193,200,.92) 45%,
+    rgba(101,190,198,.94) 100%);
+  color:#fff;width:280px;min-height:100vh;padding:60px 15px 25px;
+  box-shadow:-4px 0 40px rgba(59,193,200,.4), -2px 0 20px rgba(101,190,198,.3), inset 1px 0 0 rgba(255,255,255,.3);
+  position:fixed;right:0;top:0;display:flex;flex-direction:column;z-index:1001;
+  border-left:2px solid rgba(255,255,255,.3);overflow-y:auto;
+}
+.sidebar-toggle{position:absolute;top:15px;right:25px;width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px}
+.sidebar-user-info{background:linear-gradient(135deg,rgba(255,255,255,.25),rgba(255,255,255,.15));border:2px solid rgba(255,255,255,.3);border-radius:16px;padding:20px;margin-bottom:20px;text-align:center;box-shadow:0 4px 20px rgba(0,0,0,.15),inset 0 1px 0 rgba(255,255,255,.4)}
+.sidebar-username{font-size:28px;font-weight:700;color:#fff;text-shadow:0 2px 8px rgba(0,0,0,.3);margin-bottom:12px;letter-spacing:.5px}
+.sidebar-roles{display:flex;flex-direction:column;gap:6px}
+.sidebar-role{background:linear-gradient(90deg,rgba(255,255,255,.2),rgba(255,255,255,.1));padding:6px 12px;border-radius:8px;font-size:18px;font-weight:600;color:#fff;border:1px solid rgba(255,255,255,.2)}
+/* clock stays GREEN (not indigo/purple) */
+.sidebar-clock{background:linear-gradient(135deg,rgba(16,185,129,.85),rgba(5,150,105,.85));border:2px solid rgba(255,255,255,.4);border-radius:16px;padding:20px;margin-bottom:20px;text-align:center;box-shadow:0 6px 25px rgba(16,185,129,.35),inset 0 1px 0 rgba(255,255,255,.4)}
+.sidebar-time{font-size:36px;font-weight:800;color:#fff;letter-spacing:2px;text-shadow:0 3px 10px rgba(0,0,0,.3);margin-bottom:8px}
+.sidebar-date{font-size:18px;font-weight:600;color:rgba(255,255,255,.95)}
+/* logout stays RED */
+.sidebar-logout-button{background:linear-gradient(135deg,rgba(239,68,68,.95),rgba(220,38,38,.95));color:#fff;padding:16px 24px;border:2px solid rgba(255,255,255,.4);border-radius:14px;cursor:pointer;font-size:22px;font-weight:700;width:100%;margin-bottom:20px;box-shadow:0 6px 25px rgba(239,68,68,.4),inset 0 1px 0 rgba(255,255,255,.3)}
+/* PINK = separator only — the sidebar divider */
+.sidebar-divider{height:3px;background:linear-gradient(90deg,transparent,rgba(237,59,151,.9),transparent);margin:20px 0;border-radius:2px}
+.sidebar-nav-btn{display:block;width:100%;background:none;border:none;color:rgba(255,255,255,.82);font-size:32px;padding:6px 2px;cursor:pointer;text-align:right}
+.sidebar-nav-btn.top-level{font-weight:600;color:rgba(255,255,255,.85)}
+.sidebar-nav-btn.active{color:#fff;font-weight:700}
+.sidebar-section-header{display:flex;align-items:center;gap:4px;width:100%;background:none;border:none;border-bottom:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.85);font-size:32px;font-weight:600;padding:8px 2px 6px;cursor:pointer;margin-top:10px;text-align:right}
+.sidebar-section-label{flex:1;text-align:right}
+.sidebar-section-arrow{font-size:20px;font-weight:300;color:rgba(255,255,255,.55);transition:transform .2s;transform:rotate(0deg);line-height:1}
+.sidebar-section-arrow.open{transform:rotate(90deg)}
+.sidebar-section-items{display:flex;flex-direction:column;padding-right:12px;border-right:1px solid rgba(255,255,255,.15);margin:2px 6px 0 0}
+.sidebar-section-items .sidebar-nav-btn{font-size:24px;color:rgba(255,255,255,.7);padding:5px 2px}
+.sidebar-section-items .sidebar-nav-btn.active{color:#fff;font-weight:700}
+
+/* ===================== HEADER (fixed top) ===================== */
+.header{
+  background:linear-gradient(135deg,
+    rgba(110,193,228,.9) 0%,
+    rgba(59,193,200,.92) 45%,
+    rgba(101,190,198,.95) 100%);
+  color:#fff;display:flex;align-items:center;justify-content:center;
+  padding:20px 30px;height:200px;position:fixed;right:0;top:0;left:0;z-index:1000;
+  border-bottom:3px solid rgba(255,255,255,.3);
+  box-shadow:0 8px 40px rgba(59,193,200,.35), 0 4px 20px rgba(101,190,198,.28), inset 0 -1px 0 rgba(255,255,255,.3);
+}
+/* PINK = separator only — the header's lower edge (echoes the site's pink underline) */
+.header::before{content:'';position:absolute;bottom:0;left:0;right:0;height:5px;
+  background:linear-gradient(90deg, rgba(237,59,151,1) 0%, rgba(219,75,149,1) 100%);
+  box-shadow:0 2px 15px rgba(237,59,151,.5);}
+.logo{width:180px;height:180px;position:absolute;right:310px;top:10px;border-radius:20px;
+  border:3px solid rgba(255,255,255,.5);background:#fff;padding:10px;object-fit:contain;
+  box-shadow:0 6px 30px rgba(0,0,0,.2),0 0 20px rgba(255,255,255,.25);z-index:1002;}
+.title{font-size:4em;font-weight:900;margin:0;position:absolute;left:50%;transform:translateX(-50%);
+  white-space:nowrap;letter-spacing:2px;
+  background:linear-gradient(135deg,#fff 0%,#f0f9ff 25%,#e0f7fa 50%,#bae6fd 75%,#fff 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  filter:drop-shadow(0 4px 20px rgba(255,255,255,.4)) drop-shadow(0 2px 10px rgba(59,193,200,.65)) drop-shadow(0 0 30px rgba(101,190,198,.4));}
+/* PINK underline separator under the page title (mirrors the site's heading underline) */
+.title::after{content:'';position:absolute;left:50%;bottom:-14px;transform:translateX(-50%);width:78%;height:5px;border-radius:6px;
+  background:linear-gradient(90deg,rgba(237,59,151,.95),rgba(219,75,149,.95));box-shadow:0 3px 12px rgba(237,59,151,.5)}
+.top-left{position:absolute;top:20px;left:40px;display:flex;align-items:center;gap:25px;z-index:1001}
+.amit-img{width:130px;height:170px;object-fit:cover;border-radius:18px;border:3px solid rgba(255,255,255,.5);box-shadow:0 6px 30px rgba(0,0,0,.25)}
+.quote{font-size:20px;font-weight:600;text-align:right;color:#143852;max-width:360px;
+  background:linear-gradient(135deg,rgba(255,255,255,.95),rgba(249,250,251,.95));padding:14px 18px;border-radius:14px;
+  box-shadow:0 6px 24px rgba(0,0,0,.12)}
+.qr-code{width:140px;height:140px;border-radius:16px;border:3px solid rgba(255,255,255,.5);background:#fff;padding:10px;box-shadow:0 6px 30px rgba(0,0,0,.2)}
+
+/* ===================== CONTENT ===================== */
+.content{flex:1;margin-right:280px;padding:220px 40px 60px;min-width:0}
+
+/* =====================================================================
+   SYSTEM MANAGEMENT page CSS (styles/systemManagement.css) — recolored.
+   Only colour channels changed per the COLOUR MAP; all sizes/positions/fonts/
+   radii/shadow offsets are identical to the source file.
+   ===================================================================== */
+.staff-page-content{margin-top:60px;padding:20px}
+.staff-grid-container{margin-top:20px}
+.staff-page-content .search-bar{margin-bottom:40px;margin-left:10px;margin-top:40px}
+.staff-page-content .refresh-button{font-weight:600}
+.staff-grid-container .no-data{text-align:center;font-size:48px;font-weight:bold;color:#333;margin-top:20px}
+
+.staff-data-grid{
+  width:100%;border-collapse:separate;border-spacing:0;table-layout:auto !important;
+  border:2px solid rgba(255,255,255,.5);
+  background:linear-gradient(135deg, rgba(255,255,255,.65) 0%, rgba(245,245,245,.55) 100%);
+  backdrop-filter:blur(25px) saturate(180%);-webkit-backdrop-filter:blur(25px) saturate(180%);
+  box-shadow:
+    0 20px 60px rgba(59,130,246,.3),        /* KEPT blue */
+    0 10px 30px rgba(59,193,200,.25),        /* was rgba(168,85,247,.25) purple → teal */
+    inset 0 1px 0 rgba(255,255,255,.4);
+  border-radius:24px;overflow:hidden;position:relative;z-index:1;
+}
+.staff-data-grid th,
+.staff-data-grid td{border:1px solid #ddd;padding:10px;text-align:left;font-size:24px}
+.staff-data-grid th{
+  background:linear-gradient(135deg,
+    rgba(59,193,200,1) 0%,        /* was rgba(99,102,241,1) indigo → teal */
+    rgba(110,193,228,1) 100%);    /* was rgba(139,92,246,1) violet → sky */
+  backdrop-filter:blur(15px) saturate(180%);-webkit-backdrop-filter:blur(15px) saturate(180%);
+  font-weight:700;color:white;position:sticky !important;top:0;z-index:2;
+  border-bottom:2px solid rgba(255,255,255,.3);
+  box-shadow:0 4px 20px rgba(59,193,200,.35);   /* was rgba(99,102,241,.35) */
+  text-shadow:0 2px 10px rgba(0,0,0,.25);letter-spacing:.5px;text-align:right;
+}
+.staff-data-grid tr:nth-child(even){
+  background:linear-gradient(90deg, rgba(240,242,245,.8) 0%, rgba(230,232,236,.8) 100%);
+  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+}
+.staff-data-grid tr:hover{
+  background:linear-gradient(90deg,
+    rgba(110,193,228,.5) 0%,      /* was rgba(165,180,252,.5) → sky */
+    rgba(110,193,228,.5) 100%);   /* was rgba(192,132,252,.5) → sky */
+  backdrop-filter:blur(15px) saturate(150%);-webkit-backdrop-filter:blur(15px) saturate(150%);
+  box-shadow:0 8px 25px rgba(59,193,200,.3), inset 0 1px 0 rgba(255,255,255,.3);  /* was rgba(99,102,241,.3) */
+  transition:all .3s cubic-bezier(.4,0,.2,1);
+}
+.staff-data-grid tr:hover td{background-color:transparent !important}
+.staff-data-grid td{text-align:center;background-color:white;color:black;font-weight:normal}
+.inactive-user-row td{background-color:#84848b !important;color:#363434}   /* gray — KEPT */
+
+.controls{display:flex;justify-content:flex-start;gap:8px;align-items:center;margin-bottom:20px}
+
+/* refresh — KEEP blue (real #3b82f6 / #2563eb, not indigo/purple) */
+.refresh-button{
+  background:linear-gradient(135deg, rgba(59,130,246,.95) 0%, rgba(37,99,235,.95) 100%) !important;
+  backdrop-filter:blur(15px) !important;-webkit-backdrop-filter:blur(15px) !important;
+  color:white !important;border:2px solid rgba(255,255,255,.3) !important;border-radius:12px !important;
+  cursor:pointer !important;margin-left:0 !important;font-size:24px !important;font-weight:600;
+  letter-spacing:.3px;transition:all .3s cubic-bezier(.4,0,.2,1);
+  box-shadow:0 6px 20px rgba(59,130,246,.3) !important;position:relative;overflow:hidden;padding:12px 20px !important;
+}
+.refresh-button:hover{
+  background:linear-gradient(135deg, rgba(59,130,246,1) 0%, rgba(37,99,235,1) 100%) !important;
+  transform:translateY(-3px) scale(1.05);box-shadow:0 10px 30px rgba(59,130,246,.4) !important;
+}
+
+/* search bar — indigo border → TEAL */
+.search-bar{
+  padding:10px 15px;width:300px;
+  border:2px solid rgba(110,193,228,.6);   /* was rgba(102,126,234,.6) */
+  border-radius:8px;font-size:24px;
+  background:linear-gradient(135deg, rgba(240,242,245,.9) 0%, rgba(255,255,255,.95) 100%);
+  backdrop-filter:blur(15px) saturate(180%);-webkit-backdrop-filter:blur(15px) saturate(180%);
+  box-shadow:0 4px 12px rgba(110,193,228,.2), inset 0 1px 0 rgba(255,255,255,.5);  /* was rgba(102,126,234,.2) */
+  transition:all .3s ease;color:#333;
+}
+.search-bar:focus{
+  outline:none;border-color:rgba(110,193,228,.9);
+  box-shadow:0 6px 16px rgba(110,193,228,.3), inset 0 1px 0 rgba(255,255,255,.6);transform:translateY(-1px);
+}
+.staff-page-content input.search-bar{width:350px}
+
+/* role filter — KEEP blue (real #3b82f6 / #2563eb) */
+.role-filter-select{
+  background:linear-gradient(135deg, rgba(59,130,246,.95) 0%, rgba(37,99,235,.95) 100%);
+  backdrop-filter:blur(15px);-webkit-backdrop-filter:blur(15px);color:white;padding:12px 16px;
+  border:2px solid rgba(255,255,255,.3);border-radius:12px;cursor:pointer;font-size:24px;font-weight:600;
+  letter-spacing:.3px;transition:all .3s cubic-bezier(.4,0,.2,1);
+  box-shadow:0 6px 20px rgba(59,130,246,.3), inset 0 1px 0 rgba(255,255,255,.3);
+  position:relative;overflow:hidden;margin-left:0;appearance:none;padding-right:30px;
+}
+.role-filter-select option{background:white;color:#333;font-size:20px;padding:8px}
+.role-filter-select:hover{
+  background:linear-gradient(135deg, rgba(59,130,246,1) 0%, rgba(37,99,235,1) 100%);
+  transform:translateY(-3px) scale(1.05);box-shadow:0 10px 30px rgba(59,130,246,.4), inset 0 1px 0 rgba(255,255,255,.4);
+}
+
+/* add-button — KEEP green (real #10b981 / #059669) */
+.add-button{
+  background:linear-gradient(135deg, rgba(16,185,129,.95) 0%, rgba(5,150,105,.95) 100%);
+  backdrop-filter:blur(15px);-webkit-backdrop-filter:blur(15px);color:white;padding:12px 20px;
+  border:2px solid rgba(255,255,255,.3);border-radius:12px;cursor:pointer;font-size:24px;font-weight:600;
+  letter-spacing:.3px;transition:all .3s cubic-bezier(.4,0,.2,1);
+  box-shadow:0 6px 20px rgba(16,185,129,.3), inset 0 1px 0 rgba(255,255,255,.3);
+  position:relative;overflow:hidden;margin-left:0;
+}
+.add-button:hover{
+  background:linear-gradient(135deg, rgba(16,185,129,1) 0%, rgba(5,150,105,1) 100%);
+  transform:translateY(-3px) scale(1.05);box-shadow:0 10px 30px rgba(16,185,129,.4), inset 0 1px 0 rgba(255,255,255,.4);
+}
+
+/* show-inactive — KEEP gray, active KEEP red */
+.filter-inactive-button{
+  background:linear-gradient(135deg, rgba(107,114,128,.95) 0%, rgba(75,85,99,.95) 100%);
+  backdrop-filter:blur(15px);-webkit-backdrop-filter:blur(15px);color:white;padding:12px 20px;
+  border:2px solid rgba(255,255,255,.3);border-radius:12px;cursor:pointer;font-size:24px;font-weight:600;
+  letter-spacing:.3px;transition:all .3s cubic-bezier(.4,0,.2,1);
+  box-shadow:0 6px 20px rgba(107,114,128,.3), inset 0 1px 0 rgba(255,255,255,.3);
+  position:relative;overflow:hidden;margin-left:0;
+}
+.filter-inactive-button:hover{
+  background:linear-gradient(135deg, rgba(107,114,128,1) 0%, rgba(75,85,99,1) 100%);
+  transform:translateY(-3px) scale(1.05);box-shadow:0 10px 30px rgba(107,114,128,.4), inset 0 1px 0 rgba(255,255,255,.4);
+}
+.filter-inactive-button.active{
+  background:linear-gradient(135deg, rgba(239,68,68,.95) 0%, rgba(220,38,38,.95) 100%);
+  box-shadow:0 6px 20px rgba(239,68,68,.4), inset 0 1px 0 rgba(255,255,255,.3);border-color:rgba(255,255,255,.4);
+}
+
+/* dashboard — indigo → TEAL */
+.dashboard-button{
+  background:linear-gradient(135deg,
+    rgba(110,193,228,.95) 0%,     /* was rgba(102,126,234,.95) → sky */
+    rgba(59,193,200,.95) 100%);   /* was rgba(78,96,204,.95) indigo → teal */
+  backdrop-filter:blur(15px) !important;-webkit-backdrop-filter:blur(15px) !important;color:white;
+  padding:12px 20px;font-size:24px;border:2px solid rgba(255,255,255,.3) !important;border-radius:12px;
+  cursor:pointer;margin-left:0;font-weight:600;letter-spacing:.3px;transition:all .3s cubic-bezier(.4,0,.2,1);
+  box-shadow:0 6px 20px rgba(110,193,228,.3), inset 0 1px 0 rgba(255,255,255,.3);  /* was rgba(102,126,234,.3) */
+  position:relative;overflow:hidden;display:inline-flex;align-items:center;gap:8px;
+}
+.dashboard-button:hover{
+  background:linear-gradient(135deg, rgba(110,193,228,1) 0%, rgba(59,193,200,1) 100%) !important;
+  transform:translateY(-3px) scale(1.05);box-shadow:0 10px 30px rgba(110,193,228,.4) !important;
+}
+.dashboard-button svg{flex-shrink:0}
+
+/* audit-log — KEEP dark-red (real rgba(197,48,18) / rgba(150,20,0), not indigo) */
+.audit-log-data-button{
+  background:linear-gradient(135deg, rgba(197,48,18,.95) 0%, rgba(150,20,0,.95) 100%);
+  backdrop-filter:blur(15px) !important;-webkit-backdrop-filter:blur(15px) !important;color:white;
+  padding:12px 20px;font-size:24px;border:2px solid rgba(255,255,255,.3) !important;border-radius:12px;
+  cursor:pointer;margin-left:0;font-weight:600;letter-spacing:.3px;transition:all .3s cubic-bezier(.4,0,.2,1);
+  box-shadow:0 6px 20px rgba(197,48,18,.3), inset 0 1px 0 rgba(255,255,255,.3);
+  position:relative;overflow:hidden;order:999;
+}
+.audit-log-data-button:hover{
+  background:linear-gradient(135deg, rgba(197,48,18,1) 0%, rgba(150,20,0,1) 100%) !important;
+  transform:translateY(-3px) scale(1.05);box-shadow:0 10px 30px rgba(197,48,18,.4) !important;
+}
+
+/* info button — inline styled emoji in the source (background:none) */
+.info-button{cursor:pointer;background:none;border:none;font-size:18px;padding:0 5px;margin-right:5px}
+
+/* edit / delete base */
+.edit-button,
+.delete-button{
+  padding:12px 20px;margin-right:5px;border-radius:12px;cursor:pointer;font-size:24px;font-weight:600;
+  letter-spacing:.3px;transition:all .3s cubic-bezier(.4,0,.2,1);border:2px solid rgba(255,255,255,.3);
+  position:relative;overflow:hidden;
+}
+/* edit — KEEP blue (real #3b82f6 / #2563eb) */
+.edit-button{
+  background:linear-gradient(135deg, rgba(59,130,246,.95) 0%, rgba(37,99,235,.95) 100%);
+  backdrop-filter:blur(15px);-webkit-backdrop-filter:blur(15px);color:white;
+  box-shadow:0 6px 20px rgba(59,130,246,.3), inset 0 1px 0 rgba(255,255,255,.3);
+}
+.edit-button:hover{
+  background:linear-gradient(135deg, rgba(59,130,246,1) 0%, rgba(37,99,235,1) 100%);
+  transform:translateY(-3px) scale(1.05);box-shadow:0 10px 30px rgba(59,130,246,.4), inset 0 1px 0 rgba(255,255,255,.4);
+}
+/* delete — KEEP red */
+.delete-button{
+  background:linear-gradient(135deg, rgba(239,68,68,.95) 0%, rgba(220,38,38,.95) 100%);
+  backdrop-filter:blur(15px);-webkit-backdrop-filter:blur(15px);color:white;
+  box-shadow:0 6px 20px rgba(239,68,68,.3), inset 0 1px 0 rgba(255,255,255,.3);
+}
+.delete-button:hover{
+  background:linear-gradient(135deg, rgba(239,68,68,1) 0%, rgba(220,38,38,1) 100%);
+  transform:translateY(-3px) scale(1.05);box-shadow:0 10px 30px rgba(239,68,68,.4), inset 0 1px 0 rgba(255,255,255,.4);
+}
+
+/* mail — purple → TEAL/navy */
+.mail-button{
+  padding:12px 20px;margin-right:5px;
+  background:linear-gradient(135deg,
+    rgba(59,193,200,.95) 0%,      /* was rgba(147,51,234,.95) purple → teal */
+    rgba(20,56,82,.95) 100%);     /* was rgba(126,34,206,.95) [#7e22ce] → navy #143852 */
+  color:white;border:2px solid rgba(255,255,255,.3);border-radius:12px;cursor:pointer;font-size:24px;font-weight:600;
+  letter-spacing:.3px;transition:all .3s cubic-bezier(.4,0,.2,1);
+  box-shadow:0 6px 20px rgba(59,193,200,.3), inset 0 1px 0 rgba(255,255,255,.3);  /* was rgba(147,51,234,.3) */
+  position:relative;overflow:hidden;
+}
+.mail-button:hover{
+  background:linear-gradient(135deg, rgba(59,193,200,1) 0%, rgba(20,56,82,1) 100%);
+  transform:translateY(-3px) scale(1.05);box-shadow:0 10px 30px rgba(59,193,200,.4), inset 0 1px 0 rgba(255,255,255,.4);
+}
+
+/* sort button (in table header) */
+.sort-button{background:rgba(255,255,255,.25);border:none;color:#fff;border-radius:6px;cursor:pointer;font-size:16px;margin-right:6px;padding:2px 6px}
+
+/* pagination — indigo → TEAL */
+.pagination{display:flex;justify-content:center;align-items:center;gap:5px;margin-top:20px}
+.pagination button{
+  padding:10px 14px;
+  border:2px solid rgba(110,193,228,.6);    /* was rgba(102,126,234,.6) */
+  background:linear-gradient(135deg, rgba(240,242,245,.9) 0%, rgba(255,255,255,.95) 100%);
+  backdrop-filter:blur(15px) saturate(180%);-webkit-backdrop-filter:blur(15px) saturate(180%);
+  border-radius:6px;cursor:pointer;font-size:20px;font-weight:500;color:#333;transition:all .3s ease;
+  box-shadow:0 2px 8px rgba(110,193,228,.1);   /* was rgba(102,126,234,.1) */
+}
+.pagination button:hover:not(:disabled){
+  border-color:rgba(110,193,228,.9);
+  background:linear-gradient(135deg, rgba(110,193,228,.1) 0%, rgba(59,193,200,.1) 100%);  /* was rgba(102,126,234,.1)/rgba(118,75,162,.1) */
+  box-shadow:0 4px 12px rgba(110,193,228,.2);transform:translateY(-1px);
+}
+.pagination button.active{
+  background:linear-gradient(135deg, #6EC1E4 0%, #3BC1C8 100%);   /* was #667eea → #764ba2 */
+  color:white;font-weight:bold;border-color:rgba(110,193,228,.9);box-shadow:0 4px 12px rgba(110,193,228,.3);
+}
+.pagination button:disabled{background:rgba(240,242,245,.5);color:#ccc;cursor:not-allowed;border-color:rgba(110,193,228,.2);opacity:.6}
+.pagination-arrow{font-size:16px;font-weight:bold}
+
+/* mock badge */
+.mock-badge{position:fixed;bottom:16px;left:16px;z-index:3000;background:#143852;color:#fff;font-size:14px;font-weight:600;
+  padding:8px 14px;border-radius:10px;box-shadow:0 6px 20px rgba(0,0,0,.25);opacity:.92}
+.mock-badge b{color:#FCD20E}
+</style>
+</head>
+<body>
+
+  <!-- ===================== SIDEBAR (1:1 with Sidebar.js; ניהול section open, ניהול מערכת active) ===================== -->
+  <aside class="sidebar">
+    <button class="sidebar-toggle" title="צמצם סרגל">▶</button>
+    <div class="sidebar-user-info">
+      <div class="sidebar-username">שרה לוי</div>
+      <div class="sidebar-roles"><div class="sidebar-role">מנהל מערכת</div></div>
+    </div>
+    <div class="sidebar-clock">
+      <div class="sidebar-time">09:42:15</div>
+      <div class="sidebar-date">יום ראשון, 27 ביולי 2026</div>
+    </div>
+    <button class="sidebar-logout-button">יציאה מהמערכת</button>
+    <div class="sidebar-divider"></div>
+
+    <button class="sidebar-nav-btn top-level">לוח משימות</button>
+
+    <button class="sidebar-section-header"><span class="sidebar-section-label">משפחות</span><span class="sidebar-section-arrow">›</span></button>
+    <button class="sidebar-section-header"><span class="sidebar-section-label">מתנדבים</span><span class="sidebar-section-arrow">›</span></button>
+    <button class="sidebar-section-header"><span class="sidebar-section-label">כספים</span><span class="sidebar-section-arrow">›</span></button>
+    <button class="sidebar-section-header"><span class="sidebar-section-label">פעילויות</span><span class="sidebar-section-arrow">›</span></button>
+
+    <button class="sidebar-section-header"><span class="sidebar-section-label">ניהול</span><span class="sidebar-section-arrow open">›</span></button>
+    <div class="sidebar-section-items">
+      <button class="sidebar-nav-btn">דוחות</button>
+      <button class="sidebar-nav-btn active">ניהול מערכת</button>
+      <button class="sidebar-nav-btn">ניהול פגישות</button>
+      <button class="sidebar-nav-btn">עדכוני צוות</button>
+      <button class="sidebar-nav-btn">יומן ביקורת</button>
+      <button class="sidebar-nav-btn">מרכז העדכונים</button>
+      <button class="sidebar-nav-btn">שיחות ביקורת</button>
+    </div>
+  </aside>
+
+  <!-- ===================== HEADER (InnerPageHeader title = t('System Management')) ===================== -->
+  <header class="header">
+    <img class="logo" src="childsmile/frontend/src/assets/logo.png" alt="חיוך של ילד">
+    <div class="top-left">
+      <img class="amit-img" src="childsmile/frontend/src/assets/amit.jpg" alt="עמית">
+      <div class="quote">הרבה אנשים אומרים שהם רוצים להצליח אבל לא כולם מוכנים לשלם את המחיר שצריך כדי להצליח</div>
+      <img class="qr-code" src="childsmile/frontend/src/assets/qr-code.jpg" alt="QR">
+    </div>
+    <h1 class="title">ניהול מערכת</h1>
+  </header>
+
+  <!-- ===================== CONTENT (mirrors SystemManagement.js JSX) ===================== -->
+  <main class="content">
+    <div class="staff-page-content">
+
+      <!-- controls toolbar (exact button order + labels from SystemManagement.js) -->
+      <div class="controls">
+        <button class="refresh-button">רענן</button>
+        <input type="text" class="search-bar" placeholder="חפש לפי שם, אימייל או תפקיד">
+        <select class="role-filter-select">
+          <option value="">כל התפקידים</option>
+          <option>מנהל מערכת</option>
+          <option>רכז משפחות</option>
+          <option>רכז מתנדבים</option>
+          <option>מתנדב כללי</option>
+          <option>חונך</option>
+          <option>מבקר</option>
+        </select>
+        <button class="add-button">הוסף משתמש חדש</button>
+        <button class="filter-inactive-button" title="הצג רק משתמשים שעזבו">הצג משתמשים שעזבו</button>
+        <button class="dashboard-button">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-left:8px">
+            <defs>
+              <linearGradient id="barGradient1" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" style="stop-color:#ef4444;stop-opacity:1" />
+                <stop offset="100%" style="stop-color:#dc2626;stop-opacity:1" />
+              </linearGradient>
+              <linearGradient id="barGradient2" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" style="stop-color:#10b981;stop-opacity:1" />
+                <stop offset="100%" style="stop-color:#059669;stop-opacity:1" />
+              </linearGradient>
+              <linearGradient id="barGradient3" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" style="stop-color:#3b82f6;stop-opacity:1" />
+                <stop offset="100%" style="stop-color:#2563eb;stop-opacity:1" />
+              </linearGradient>
+            </defs>
+            <rect x="3" y="13" width="4" height="8" rx="1" fill="url(#barGradient1)" />
+            <rect x="10" y="8" width="4" height="13" rx="1" fill="url(#barGradient2)" />
+            <rect x="17" y="4" width="4" height="17" rx="1" fill="url(#barGradient3)" />
+            <line x1="2" y1="22" x2="22" y2="22" stroke="currentColor" stroke-width="2" />
+          </svg>
+          לוח בקרה
+        </button>
+        <button class="audit-log-data-button">יומן מערכת</button>
+      </div>
+
+      <!-- staff data grid -->
+      <div class="staff-grid-container">
+        <table class="staff-data-grid">
+          <thead>
+            <tr>
+              <th>שם משתמש</th>
+              <th>אימייל</th>
+              <th>שם פרטי</th>
+              <th>שם משפחה</th>
+              <th>נוצר בתאריך <button class="sort-button">▼</button></th>
+              <th>תפקידים</th>
+              <th>פעולות</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><button class="info-button" title="הצג פרטי משתמש">ℹ️</button>dana levi</td>
+              <td>dana.levi@childsmile.org.il</td>
+              <td>דנה</td>
+              <td>לוי</td>
+              <td>15/03/2025</td>
+              <td>מנהל מערכת</td>
+              <td>
+                <button class="mail-button" title="שלח דוא&quot;ל למשתמש זה">📧 שלח דוא"ל</button>
+                <button class="edit-button">ערוך</button>
+                <button class="delete-button">מחק</button>
+              </td>
+            </tr>
+            <tr>
+              <td><button class="info-button" title="הצג פרטי משתמש">ℹ️</button>yossi cohen</td>
+              <td>yossi.cohen@childsmile.org.il</td>
+              <td>יוסי</td>
+              <td>כהן</td>
+              <td>02/01/2025</td>
+              <td>רכז משפחות</td>
+              <td>
+                <button class="mail-button" title="שלח דוא&quot;ל למשתמש זה">📧 שלח דוא"ל</button>
+                <button class="edit-button">ערוך</button>
+                <button class="delete-button">מחק</button>
+              </td>
+            </tr>
+            <tr>
+              <td><button class="info-button" title="הצג פרטי משתמש">ℹ️</button>noa mizrahi</td>
+              <td>noa.mizrahi@childsmile.org.il</td>
+              <td>נועה</td>
+              <td>מזרחי</td>
+              <td>20/11/2024</td>
+              <td>רכז מתנדבים</td>
+              <td>
+                <button class="mail-button" title="שלח דוא&quot;ל למשתמש זה">📧 שלח דוא"ל</button>
+                <button class="edit-button">ערוך</button>
+                <button class="delete-button">מחק</button>
+              </td>
+            </tr>
+            <tr>
+              <td><button class="info-button" title="הצג פרטי משתמש">ℹ️</button>david peretz</td>
+              <td>david.peretz@childsmile.org.il</td>
+              <td>דוד</td>
+              <td>פרץ</td>
+              <td>08/07/2025</td>
+              <td>חונך</td>
+              <td>
+                <button class="mail-button" title="שלח דוא&quot;ל למשתמש זה">📧 שלח דוא"ל</button>
+                <button class="edit-button">ערוך</button>
+                <button class="delete-button">מחק</button>
+              </td>
+            </tr>
+            <tr>
+              <td><button class="info-button" title="הצג פרטי משתמש">ℹ️</button>shira avraham</td>
+              <td>shira.avraham@childsmile.org.il</td>
+              <td>שירה</td>
+              <td>אברהם</td>
+              <td>12/05/2025</td>
+              <td>מתנדב כללי</td>
+              <td>
+                <button class="mail-button" title="שלח דוא&quot;ל למשתמש זה">📧 שלח דוא"ל</button>
+                <button class="edit-button">ערוך</button>
+                <button class="delete-button">מחק</button>
+              </td>
+            </tr>
+            <tr>
+              <td><button class="info-button" title="הצג פרטי משתמש">ℹ️</button>amit bar</td>
+              <td>amit.bar@childsmile.org.il</td>
+              <td>עמית</td>
+              <td>בר</td>
+              <td>27/06/2025</td>
+              <td>מבקר, רכז משפחות</td>
+              <td>
+                <button class="mail-button" title="שלח דוא&quot;ל למשתמש זה">📧 שלח דוא"ל</button>
+                <button class="edit-button">ערוך</button>
+                <button class="delete-button">מחק</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- pagination -->
+      <div class="pagination">
+        <button class="pagination-arrow" disabled>&laquo;</button>
+        <button class="pagination-arrow" disabled>&lsaquo;</button>
+        <button class="active">1</button>
+        <button>2</button>
+        <button>3</button>
+        <button class="pagination-arrow">&rsaquo;</button>
+        <button class="pagination-arrow">&raquo;</button>
+      </div>
+
+    </div>
+  </main>
+
+  <div class="mock-badge">מוקאפ סטטי · צבעי מותג חדשים <b>«חיוך של ילד»</b></div>
+
+</body>
+</html>

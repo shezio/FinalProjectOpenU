@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>מוקאפ מובייל — משובים (iPhone 12 · צבעי מותג «חיוך של ילד»)</title>
+<style>
+/* Same local Rubik variable font the real app uses (styles.css @font-face) so
+   the mock renders identically — NOT Google Fonts. */
+@font-face {
+  font-family: 'Rubik';
+  src: url('childsmile/frontend/src/fonts/Rubik-VariableFont_wght.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+}
+/* =====================================================================
+   Feedbacks page (משובים) — STATIC recolored MOBILE mock (iPhone 12, 390×844).
+   Faithful reproduction of the REAL mobile layout (per mobile.css
+   @media(max-width:767px)): fixed InnerPageHeader (shrunk, single row) +
+   stacked toolbar (feedbacks-filter-create-container) + horizontally-scrolling
+   feedbacks-data-grid (the feedbacks LIST renders a table on mobile too) +
+   fixed bottom nav bar (#mobile-bottom-nav).
+   Colours ONLY differ from the real app: indigo/purple accents → A Child's Smile
+   palette (sky #6EC1E4 · teal #3BC1C8 · pink #ED3B97 separator · navy #143852).
+   NOTE: this page is mostly GREEN/BLUE/RED already (grid header green, create/info
+   green, edit/refresh/filter blue, delete red, bulk-edit amber) — those semantic
+   colours are KEPT. Only the indigo/purple bits (refund-link button, filter labels/
+   selects/date borders, toolbar shadow, td border) are recolored to teal.
+   The mobile.css @media block is assembled here WITH THE @media WRAPPER REMOVED
+   so it applies at the fixed 390px phone width, mimicking a real phone.
+   The iPhone 12 frame (bezel/status-bar/island/home-indicator) is presentation
+   chrome — kept independent of the app CSS so it is NOT recolored.
+   ===================================================================== */
+
+*{box-sizing:border-box;font-family:Rubik,sans-serif}
+
+/* =====================================================================
+   BASE APP CSS (recolored) — shared chrome reused verbatim from
+   COLOR_REBRAND_MOCKUP_MOBILE_FAMILIES.html
+   ===================================================================== */
+
+/* ---------- HEADER (fixed top, InnerPageHeader) ---------- */
+.header{
+  background:linear-gradient(135deg,
+    rgba(110,193,228,.9) 0%,
+    rgba(59,193,200,.92) 45%,
+    rgba(101,190,198,.95) 100%);
+  color:#fff;display:flex;align-items:center;justify-content:center;
+  padding:20px 30px;height:200px;position:fixed;right:0;top:0;left:0;z-index:1000;
+  border-bottom:3px solid rgba(255,255,255,.3);
+  box-shadow:0 8px 40px rgba(59,193,200,.35), 0 4px 20px rgba(101,190,198,.28), inset 0 -1px 0 rgba(255,255,255,.3);
+}
+/* PINK = separator only — the header's lower edge (echoes the site's pink underline) */
+.header::before{content:'';position:absolute;bottom:0;left:0;right:0;height:5px;
+  background:linear-gradient(90deg, rgba(237,59,151,1) 0%, rgba(219,75,149,1) 100%);
+  box-shadow:0 2px 15px rgba(237,59,151,.5);}
+.logo{width:180px;height:180px;position:absolute;right:310px;top:10px;border-radius:20px;
+  border:3px solid rgba(255,255,255,.5);background:#fff;padding:10px;object-fit:contain;
+  box-shadow:0 6px 30px rgba(0,0,0,.2),0 0 20px rgba(255,255,255,.25);z-index:1002;}
+.title{font-size:4em;font-weight:900;margin:0;position:absolute;left:50%;transform:translateX(-50%);
+  white-space:nowrap;letter-spacing:2px;
+  background:linear-gradient(135deg,#fff 0%,#f0f9ff 25%,#e0f7fa 50%,#bae6fd 75%,#fff 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  filter:drop-shadow(0 4px 20px rgba(255,255,255,.4)) drop-shadow(0 2px 10px rgba(59,193,200,.65)) drop-shadow(0 0 30px rgba(101,190,198,.4));}
+/* PINK underline separator under the page title (mirrors the site's heading underline) */
+.title::after{content:'';position:absolute;left:50%;bottom:-14px;transform:translateX(-50%);width:78%;height:5px;border-radius:6px;
+  background:linear-gradient(90deg,rgba(237,59,151,.95),rgba(219,75,149,.95));box-shadow:0 3px 12px rgba(237,59,151,.5)}
+.top-left{position:absolute;top:20px;left:40px;display:flex;align-items:center;gap:25px;z-index:1001}
+.amit-img{width:130px;height:170px;object-fit:cover;border-radius:18px;border:3px solid rgba(255,255,255,.5);box-shadow:0 6px 30px rgba(0,0,0,.25)}
+.quote{font-size:20px;font-weight:600;text-align:right;color:#143852;max-width:360px;
+  background:linear-gradient(135deg,rgba(255,255,255,.95),rgba(249,250,251,.95));padding:14px 18px;border-radius:14px;
+  box-shadow:0 6px 24px rgba(0,0,0,.12)}
+.qr-code{width:140px;height:140px;border-radius:16px;border:3px solid rgba(255,255,255,.5);background:#fff;padding:10px;box-shadow:0 6px 30px rgba(0,0,0,.2)}
+
+/* ---------- CONTENT WRAPPER (feedbacks-page-content) ---------- */
+.feedbacks-page-content{
+  display:flex;flex-direction:row;align-items:center;justify-content:center;gap:60px;
+  flex-grow:1;margin-top:150px;width:100%;padding:50px;flex-wrap:wrap;box-sizing:border-box}
+
+/* ---------- TOOLBAR (feedbacks-filter-create-container, recolored) ---------- */
+.feedbacks-filter-create-container{
+  display:flex;flex-direction:column;gap:12px;font-size:1em;padding:16px 24px;
+  transform:scale(0.9);transform-origin:top right;
+  background:linear-gradient(135deg,rgba(255,255,255,.95) 0%,rgba(249,250,251,.95) 100%);
+  backdrop-filter:blur(20px) saturate(180%);-webkit-backdrop-filter:blur(20px) saturate(180%);
+  border:2px solid rgba(255,255,255,.5);border-radius:20px;
+  box-shadow:0 10px 40px rgba(0,0,0,.15), 0 5px 20px rgba(59,193,200,.1), inset 0 2px 0 rgba(255,255,255,.8)}
+.feedbacks-toolbar-actions{display:flex;flex-direction:row;gap:12px;align-items:center}
+.feedbacks-toolbar-filters{display:flex;flex-direction:row;flex-wrap:wrap;gap:10px;align-items:flex-end}
+.feedbacks-filter-item{display:flex;flex-direction:column;gap:4px}
+.feedbacks-filter-item label{font-size:20px;font-weight:600;color:rgba(59,193,200,.9);white-space:nowrap}  /* was indigo → teal */
+.feedbacks-filter-item select{padding:8px 12px;font-size:20px;font-weight:500;
+  border:2px solid rgba(59,193,200,.5);background:rgba(255,255,255,.95);border-radius:10px;color:#333;cursor:pointer;transition:border-color .2s ease}  /* was indigo → teal */
+.feedbacks-filter-item select:focus{outline:none;border-color:rgba(59,193,200,.9)}
+
+/* Create Feedback — KEEP green (real #4caf50) */
+.feedbacks-create-btn{background:linear-gradient(135deg,rgba(76,175,80,.95) 0%,rgba(56,142,60,.95) 100%);color:#fff;
+  padding:10px 20px;border:2px solid rgba(255,255,255,.3);border-radius:12px;cursor:pointer;font-size:22px;font-weight:600;
+  white-space:nowrap;box-shadow:0 4px 12px rgba(76,175,80,.3);transition:all .2s ease}
+/* Refund-request link — was INDIGO/PURPLE gradient → brand TEAL→sky */
+.feedbacks-refund-link-btn{background:linear-gradient(135deg,rgba(59,193,200,.95) 0%,rgba(110,193,228,.95) 100%);color:#fff;
+  border:2px solid rgba(255,255,255,.3);border-radius:12px;padding:10px 20px;font-size:22px;font-weight:600;cursor:pointer;
+  transition:all .3s ease;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  box-shadow:0 4px 15px rgba(59,193,200,.3), inset 0 1px 0 rgba(255,255,255,.3);direction:rtl;white-space:nowrap;width:auto}
+/* Bulk-edit volunteer name — KEEP amber (real #f59e0b) */
+.feedbacks-bulk-edit-btn{background:linear-gradient(135deg,rgba(245,158,11,.95) 0%,rgba(217,119,6,.95) 100%);color:#fff;
+  border:2px solid rgba(255,255,255,.3);border-radius:12px;padding:10px 20px;font-size:22px;font-weight:600;cursor:pointer;
+  transition:all .3s ease;box-shadow:0 4px 15px rgba(245,158,11,.3), inset 0 1px 0 rgba(255,255,255,.3);direction:rtl;white-space:nowrap;width:auto}
+
+/* Date inputs — border was INDIGO → teal */
+.feedbacks-date-input{padding:10px 15px;font-size:20px;font-weight:500;border:3px solid rgba(59,193,200,.6);
+  background:linear-gradient(135deg,rgba(240,242,245,.9) 0%,rgba(255,255,255,.95) 100%);
+  backdrop-filter:blur(15px) saturate(180%);-webkit-backdrop-filter:blur(15px) saturate(180%);border-radius:12px;
+  box-shadow:0 4px 12px rgba(59,193,200,.2), inset 0 1px 0 rgba(255,255,255,.5);transition:all .3s ease;color:#333}
+.feedbacks-date-input:focus{outline:none;border-color:rgba(59,193,200,.9);box-shadow:0 6px 16px rgba(59,193,200,.3), inset 0 1px 0 rgba(255,255,255,.6);transform:translateY(-1px)}
+
+/* Filter button — KEEP blue (real #007bff) */
+.feedbacks-filter-button{background:linear-gradient(135deg,rgba(0,123,255,.95) 0%,rgba(0,86,179,.95) 100%);
+  backdrop-filter:blur(15px);-webkit-backdrop-filter:blur(15px);color:#fff;padding:10px 20px;border:2px solid rgba(255,255,255,.3);
+  border-radius:12px;cursor:pointer;margin-left:10px;font-size:24px;font-weight:600;
+  box-shadow:0 4px 15px rgba(0,123,255,.3), inset 0 1px 0 rgba(255,255,255,.3);transition:all .3s ease}
+/* Refresh button — KEEP blue (real #2196f3) */
+.feedbacks-refresh-button{background:linear-gradient(135deg,rgba(33,150,243,.95) 0%,rgba(11,125,218,.95) 100%);
+  backdrop-filter:blur(15px);-webkit-backdrop-filter:blur(15px);color:#fff;padding:10px 20px;border:2px solid rgba(255,255,255,.3);
+  border-radius:12px;cursor:pointer;margin-left:30px;font-size:24px;font-weight:600;
+  box-shadow:0 4px 15px rgba(33,150,243,.3), inset 0 1px 0 rgba(255,255,255,.3);transition:all .3s ease}
+
+/* ---------- GRID (feedbacks-data-grid, recolored) ---------- */
+.feedback-grid-container{overflow-y:auto;background:transparent;border:none;border-radius:20px;box-shadow:none;padding:20px}
+.feedbacks-data-grid{width:100%;border-collapse:collapse;font-size:30px;font-family:Rubik,sans-serif;background:transparent;
+  box-shadow:none;border-radius:8px;direction:rtl;margin-right:0;margin-top:0}
+/* Table header — TEAL (rebrand: ALL table headers teal, was green #4caf50) */
+.feedback-grid-container .feedbacks-data-grid th{
+  background:linear-gradient(135deg,rgba(59,193,200,.95),rgba(110,193,228,.95));color:#fff;font-weight:bold;font-size:30px;
+  text-align:right;padding:12px 16px;border:none;border-bottom:2px solid rgba(255,255,255,.2)}
+.feedback-grid-container .feedbacks-data-grid td{padding:12px 16px;text-align:right;font-size:24px;color:#333;
+  vertical-align:top;white-space:normal;border:none;border-bottom:1px solid rgba(59,193,200,.08)}
+.feedback-grid-container .feedbacks-data-grid tbody tr:nth-child(even){background:rgba(59,193,200,.04)}  /* teal zebra */
+.feedback-grid-container .feedbacks-data-grid tbody tr:hover{background:rgba(59,193,200,.08);cursor:pointer}  /* teal hover */
+.feedbacks-wide-column{width:1%;white-space:nowrap}
+.td-scroll{max-height:150px;overflow-y:auto;white-space:pre-line;scrollbar-width:thin;scrollbar-color:#ccc #fff}
+
+/* action buttons in grid */
+.feedbacks-edit-button,.feedbacks-delete-button,.feedbacks-info-button{padding:8px 16px;margin-right:5px;
+  border:2px solid rgba(255,255,255,.3);border-radius:10px;cursor:pointer;font-size:24px;font-weight:600;margin-bottom:12px;
+  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);transition:all .3s ease}
+/* Info — KEEP green (real #4caf50) */
+.feedbacks-info-button{background:linear-gradient(135deg,rgba(76,175,80,.95) 0%,rgba(69,160,73,.95) 100%);color:#fff;
+  box-shadow:0 4px 12px rgba(76,175,80,.3), inset 0 1px 0 rgba(255,255,255,.3)}
+/* Edit — KEEP blue (real #2196f3) */
+.feedbacks-edit-button{background:linear-gradient(135deg,rgba(33,150,243,.95) 0%,rgba(11,125,218,.95) 100%);color:#fff;
+  box-shadow:0 4px 12px rgba(33,150,243,.3), inset 0 1px 0 rgba(255,255,255,.3)}
+/* Delete — KEEP red (real #f44336) */
+.feedbacks-delete-button{background:linear-gradient(135deg,rgba(244,67,54,.95) 0%,rgba(218,25,11,.95) 100%);color:#fff;
+  box-shadow:0 4px 12px rgba(244,67,54,.3), inset 0 1px 0 rgba(255,255,255,.3)}
+
+/* sort button in header (recolored teal, reused from FAMILIES mock) */
+.sort-button{background:rgba(255,255,255,.25);border:none;color:#fff;border-radius:6px;cursor:pointer;font-size:16px;margin-right:6px;padding:2px 6px}
+
+/* ---------- PAGINATION (recolored teal, reused from FAMILIES mock) ---------- */
+.pagination{display:flex;justify-content:center;align-items:center;gap:6px;margin-top:26px}
+.pagination button{padding:10px 16px;border:2px solid rgba(204,204,204,.3);border-radius:12px;cursor:pointer;font-size:20px;font-weight:600;
+  background:linear-gradient(135deg,rgba(255,255,255,.95),rgba(249,250,251,.95));box-shadow:0 4px 15px rgba(0,0,0,.08)}
+.pagination button.active{color:#fff;border:2px solid rgba(255,255,255,.4);
+  background:linear-gradient(135deg,rgba(59,193,200,.97),rgba(110,193,228,.97));box-shadow:0 6px 25px rgba(59,193,200,.4)}
+.pagination button:disabled{color:#cbd5e1;background:rgba(240,240,240,.5);cursor:not-allowed;box-shadow:none}
+
+/* =====================================================================
+   MOBILE OVERRIDES — transcribed from mobile.css @media(max-width:767px)
+   WITH THE @media WRAPPER REMOVED (so they apply at 390px). Colour map
+   applied to colour channels ONLY; every size/position/font left intact.
+   ===================================================================== */
+
+/* ── 2. Hide the desktop sidebar ─────────────────────────── */
+.sidebar{ display:none !important; }
+
+/* ── 3. Inner page header – shrunk but ALL elements visible ── */
+.header{
+  height:90px !important;
+  min-height:90px !important;
+  max-height:90px !important;
+  padding:6px 10px !important;
+  padding-bottom:0 !important;
+  padding-top:20px !important;
+  flex-direction:row !important;
+  align-items:center !important;
+  justify-content:flex-start !important;
+  flex-wrap:nowrap !important;
+  position:fixed !important;
+  top:0 !important;
+  left:0 !important;
+  right:0 !important;
+  z-index:900 !important;
+  box-sizing:border-box !important;
+  overflow:hidden !important;
+  gap:6px !important;
+}
+.header .top-left{ display:contents !important; }
+.header .logo     { order:1 !important; }
+.header .amit-img { order:2 !important; }
+.header .quote    { order:3 !important; }
+.header .qr-code-link,
+.header .qr-code  { order:4 !important; }
+.header .amit-img{
+  display:block !important;
+  width:54px !important;
+  height:70px !important;
+  object-fit:cover !important;
+  border-radius:10px !important;
+  flex-shrink:0 !important;
+}
+.header .quote{
+  display:block !important;
+  font-size:9px !important;
+  width:100px !important;
+  padding-top:3px !important;
+  padding-bottom:3px !important;
+  margin-bottom:20px !important;
+  padding-left:8px !important;
+  padding-right:8px !important;
+  margin-left:2px !important;
+  margin-right:2px !important;
+  line-height:1.4 !important;
+  border-radius:8px !important;
+  flex-shrink:0 !important;
+}
+.header .qr-code{
+  display:block !important;
+  width:54px !important;
+  height:54px !important;
+  border-radius:8px !important;
+  padding:4px !important;
+  flex-shrink:0 !important;
+}
+.header .logo{
+  display:block !important;
+  position:static !important;
+  width:60px !important;
+  height:60px !important;
+  right:unset !important;
+  top:unset !important;
+  flex-shrink:0 !important;
+  border-radius:10px !important;
+  padding:4px !important;
+  margin-right:13px !important;
+}
+.header .right-header{ display:contents !important; }
+/* Title – no room on mobile, hidden entirely */
+.header .title,
+.header h1{ display:none !important; }
+
+/* ── 4. Page content area – fill screen, scroll (feedbacks classes) ── */
+.tutor-feedbacks-main-content,
+.volunteer-feedbacks-main-content{
+  margin-right:0 !important;
+  margin-top:0 !important;
+  padding:0 !important;
+  padding-top:calc(90px + 8px) !important;
+  padding-bottom:calc(72px + 8px) !important;
+  padding-left:10px !important;
+  padding-right:10px !important;
+  width:100vw !important;
+  max-width:100vw !important;
+  height:100dvh !important;
+  overflow-y:auto !important;
+  overflow-x:auto !important;
+  -webkit-overflow-scrolling:touch !important;
+  box-sizing:border-box !important;
+  display:block !important;
+  flex-direction:unset !important;
+}
+
+/* ── 20. Generic .feedbacks-page-content layout ─────────────── */
+.feedbacks-page-content{
+  margin-top:0 !important;
+  width:100% !important;
+  flex-direction:column !important;
+  gap:8px !important;
+  padding:6px !important;
+}
+
+/* ── 32. FEEDBACKS – toolbar on top (not floating far left) ──── */
+.feedbacks-filter-create-container{
+  position:static !important;
+  top:unset !important;
+  right:unset !important;
+  transform:none !important;
+  width:100% !important;
+  box-sizing:border-box !important;
+  padding:8px !important;
+  margin:0 0 8px 0 !important;
+  border-radius:12px !important;
+}
+.feedbacks-toolbar-actions button,
+.feedbacks-create-btn,
+.feedbacks-edit-button,
+.feedbacks-delete-button,
+.feedbacks-info-button,
+.feedbacks-back-button,
+.feedbacks-filter-button,
+.feedbacks-refresh-button{
+  font-size:13px !important;
+  padding:7px 12px !important;
+  transform:none !important;
+  box-shadow:none !important;
+  margin-bottom:0 !important;
+}
+.feedbacks-filter-item label{ font-size:12px !important; }
+.feedbacks-filter-item select,
+.feedbacks-date-input{ font-size:13px !important; }
+/* Toolbar date filters – narrow so they don't span the row */
+.volunteer-feedbacks-main-content .feedbacks-toolbar-filters .feedbacks-date-input{
+  width:132px !important;
+  max-width:132px !important;
+  min-width:0 !important;
+  padding:6px 8px !important;
+  box-sizing:border-box !important;
+}
+.volunteer-feedbacks-main-content .feedbacks-toolbar-filters .feedbacks-filter-item{
+  min-width:0 !important;
+}
+/* ── 19/32. Grid container – full width, horizontal scroll ──── */
+.feedbacks-page-content .feedback-grid-container,
+.feedback-grid-container{
+  width:100% !important;
+  max-width:100% !important;
+  height:auto !important;
+  max-height:55dvh !important;
+  overflow-x:auto !important;
+  margin:0 !important;
+  box-sizing:border-box !important;
+  padding:0 !important;
+}
+
+/* ── 9. Tables – horizontal scroll, compact cells ──────────── */
+table{
+  font-size:12px !important;
+  width:max-content !important;
+  min-width:100% !important;
+  table-layout:auto !important;
+}
+table thead th,
+table tbody td{
+  padding:6px 8px !important;
+  font-size:12px !important;
+  white-space:nowrap !important;
+  word-break:normal !important;
+}
+/* description cell keeps its inner scroll box compact */
+.feedback-grid-container .feedbacks-data-grid td .td-scroll{
+  max-height:80px !important;
+  min-width:180px !important;
+  white-space:pre-line !important;
+}
+
+/* ── 25. Pagination – compact, wrapping ───────────────────── */
+.pagination{
+  flex-wrap:wrap !important;
+  gap:3px !important;
+  justify-content:center !important;
+  padding:8px 4px !important;
+}
+.pagination button{
+  font-size:12px !important;
+  padding:5px 7px !important;
+  min-width:28px !important;
+  height:28px !important;
+  border-radius:7px !important;
+  transform:none !important;
+  box-shadow:0 1px 3px rgba(0,0,0,0.08) !important;
+  line-height:1 !important;
+  display:inline-flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+}
+.pagination button.active{
+  font-size:12px !important;
+  font-weight:700 !important;
+  padding:5px 10px !important;
+}
+.pagination button.pagination-arrow{
+  padding:5px 8px !important;
+  font-size:13px !important;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   BOTTOM NAV BAR (#mobile-bottom-nav) — horizontally scrollable
+   Recolored: active/border indigo #6366f1 → teal #3BC1C8,
+   border-top rgba(99,102,241,.15) → rgba(59,193,200,.15).
+   ───────────────────────────────────────────────────────────── */
+#mobile-bottom-nav{
+  position:fixed !important;
+  bottom:0 !important;
+  left:0 !important;
+  right:0 !important;
+  height:72px !important;
+  display:flex !important;
+  flex-direction:row !important;
+  align-items:stretch !important;
+  justify-content:flex-start !important;
+  overflow-x:auto !important;
+  overflow-y:hidden !important;
+  -webkit-overflow-scrolling:touch !important;
+  scrollbar-width:none !important;
+  background:rgba(255, 255, 255, 0.97) !important;
+  backdrop-filter:blur(20px) !important;
+  -webkit-backdrop-filter:blur(20px) !important;
+  border-top:2px solid rgba(59, 193, 200, 0.15) !important;
+  box-shadow:0 -4px 20px rgba(0, 0, 0, 0.12) !important;
+  z-index:1100 !important;
+  padding-top:4px !important;
+}
+#mobile-bottom-nav::-webkit-scrollbar{ display:none !important; }
+#mobile-bottom-nav button{
+  flex:0 0 auto !important;
+  min-width:72px !important;
+  display:flex !important;
+  flex-direction:column !important;
+  align-items:center !important;
+  justify-content:center !important;
+  gap:3px !important;
+  background:none !important;
+  border:none !important;
+  border-radius:0 !important;
+  padding:6px 10px 4px !important;
+  margin:0 !important;
+  height:68px !important;
+  color:#6b7280 !important;
+  cursor:pointer !important;
+  box-shadow:none !important;
+  transform:none !important;
+  transition:color 0.15s ease !important;
+  -webkit-tap-highlight-color:transparent !important;
+  white-space:nowrap !important;
+}
+#mobile-bottom-nav button.active{
+  color:#3BC1C8 !important;
+  border-bottom:3px solid #3BC1C8 !important;
+}
+#mobile-bottom-nav button .nav-icon{
+  font-size:22px !important;
+  line-height:1 !important;
+  display:block !important;
+}
+#mobile-bottom-nav button .nav-label{
+  font-size:10px !important;
+  line-height:1.2 !important;
+  display:block !important;
+  font-weight:500 !important;
+  text-align:center !important;
+}
+#mobile-bottom-nav button.nav-logout-btn{
+  color:#ef4444 !important;
+  border-right:1px solid rgba(0,0,0,0.08) !important;
+}
+
+/* =====================================================================
+   iPhone 12 FRAME — presentation chrome (INDEPENDENT of the app CSS,
+   NOT recolored). Also normalizes the un-media'd mobile rules so their
+   100vw / 100dvh / position:fixed resolve against the 390×844 screen
+   (a real phone's viewport) instead of the desktop browser window.
+   ===================================================================== */
+body{
+  margin:0;
+  background:#e5e7eb;
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:24px;
+}
+.phone{
+  background:#000;
+  padding:12px;
+  border-radius:46px;
+  box-shadow:0 30px 80px rgba(0,0,0,.45), 0 12px 32px rgba(0,0,0,.3);
+  flex-shrink:0;
+}
+.phone-screen{
+  position:relative;
+  width:390px;
+  height:844px;
+  border-radius:36px;
+  overflow:hidden;
+  background:#f0f4f6;
+  /* transform makes this the containing block for the app's position:fixed
+     header + bottom nav, so they anchor to the SCREEN, not the browser window. */
+  transform:translateZ(0);
+}
+/* Status bar (thin strip over the header safe-area) */
+.status-bar{
+  position:absolute;
+  top:0;left:0;right:0;
+  height:34px;
+  z-index:2000;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:0 26px;
+  direction:ltr;
+  color:#fff;
+  pointer-events:none;
+  font-size:14px;
+  font-weight:700;
+}
+.status-bar .sb-time{ font-weight:700; letter-spacing:.5px; }
+.status-bar .sb-glyphs{ display:flex; align-items:center; gap:6px; }
+.status-bar .sb-signal{ display:flex; align-items:flex-end; gap:2px; height:11px; }
+.status-bar .sb-signal i{ width:3px; background:#fff; border-radius:1px; display:block; }
+.status-bar .sb-signal i:nth-child(1){ height:4px; }
+.status-bar .sb-signal i:nth-child(2){ height:6px; }
+.status-bar .sb-signal i:nth-child(3){ height:8px; }
+.status-bar .sb-signal i:nth-child(4){ height:11px; }
+.status-bar .sb-battery{ width:24px; height:12px; border:1px solid rgba(255,255,255,.9); border-radius:3px; position:relative; padding:1px; }
+.status-bar .sb-battery::after{ content:''; position:absolute; right:-3px; top:3px; width:2px; height:6px; background:rgba(255,255,255,.9); border-radius:0 1px 1px 0; }
+.status-bar .sb-battery i{ display:block; height:100%; width:80%; background:#fff; border-radius:1px; }
+/* Dynamic island */
+.dynamic-island{
+  position:absolute;
+  top:9px;left:50%;transform:translateX(-50%);
+  width:120px;height:30px;
+  background:#000;
+  border-radius:16px;
+  z-index:2100;
+}
+/* Home indicator */
+.home-indicator{
+  position:absolute;
+  bottom:8px;left:50%;transform:translateX(-50%);
+  width:134px;height:5px;
+  background:rgba(20,56,82,.55);
+  border-radius:3px;
+  z-index:2200;
+}
+
+/* Phone environment normalization (frame-level, higher specificity so it wins):
+   pin the app root to the 390×844 screen and offset for the status bar / home
+   indicator (which a real iPhone 12 handles via env(safe-area-inset-*)). */
+.phone-screen .tutor-feedbacks-main-content{
+  width:390px !important;
+  max-width:390px !important;
+  height:844px !important;
+  padding-top:112px !important;    /* status-bar(34) + header(90-ish, pushed) + gap */
+  padding-bottom:100px !important; /* bottom nav(84) + gap */
+}
+.phone-screen .header{
+  top:0 !important;
+  height:104px !important;
+  min-height:104px !important;
+  max-height:104px !important;
+  padding-top:34px !important;     /* clear the status bar (safe-area inset) */
+}
+.phone-screen #mobile-bottom-nav{
+  height:84px !important;
+  padding-bottom:16px !important;  /* clear the home indicator (safe-area inset) */
+}
+
+/* Mock badge (outside the phone) */
+.mock-badge{position:fixed;bottom:16px;left:16px;z-index:3000;background:#143852;color:#fff;font-size:14px;font-weight:600;
+  padding:8px 14px;border-radius:10px;box-shadow:0 6px 20px rgba(0,0,0,.25);opacity:.94}
+.mock-badge b{color:#FCD20E}
+</style>
+</head>
+<body>
+
+  <!-- =============== iPhone 12 device =============== -->
+  <div class="phone">
+    <div class="phone-screen">
+
+      <!-- status bar + island -->
+      <div class="dynamic-island"></div>
+      <div class="status-bar">
+        <div class="sb-glyphs">
+          <span class="sb-signal"><i></i><i></i><i></i><i></i></span>
+          <svg width="16" height="12" viewBox="0 0 16 12" fill="none" aria-hidden="true">
+            <path d="M8 11.2 1 4.4A9.9 9.9 0 0 1 15 4.4L8 11.2Z" fill="#fff" opacity=".35"/>
+            <path d="M8 11.2 3.4 6.7a6.5 6.5 0 0 1 9.2 0L8 11.2Z" fill="#fff"/>
+          </svg>
+          <span class="sb-battery"><i></i></span>
+        </div>
+        <div class="sb-time">9:41</div>
+      </div>
+
+      <!-- =============== APP (mobile Feedbacks) =============== -->
+      <!-- NO desktop <aside class="sidebar"> on mobile -->
+      <div class="tutor-feedbacks-main-content volunteer-feedbacks-main-content">
+
+        <!-- InnerPageHeader (mobile-styled by the un-media'd rules; title hidden) -->
+        <header class="header">
+          <img class="logo" src="childsmile/frontend/src/assets/logo.png" alt="חיוך של ילד">
+          <div class="top-left">
+            <img class="amit-img" src="childsmile/frontend/src/assets/amit.jpg" alt="עמית">
+            <div class="quote">הרבה אנשים אומרים שהם רוצים להצליח אבל לא כולם מוכנים לשלם את המחיר שצריך כדי להצליח</div>
+            <img class="qr-code" src="childsmile/frontend/src/assets/qr-code.jpg" alt="QR">
+          </div>
+          <h1 class="title">משובים</h1>
+        </header>
+
+        <div class="feedbacks-page-content">
+
+          <!-- toolbar (exact rows/order + labels from Feedbacks.js) -->
+          <div class="feedbacks-filter-create-container">
+            <!-- Row 1: action buttons -->
+            <div class="feedbacks-toolbar-actions">
+              <button class="feedbacks-create-btn">צור משוב</button>
+              <button class="feedbacks-refund-link-btn">הגש בקשת החזר הוצאות</button>
+              <button class="feedbacks-bulk-edit-btn">עריכה מרוכזת של שם מתנדב</button>
+            </div>
+            <!-- Row 2: filters -->
+            <div class="feedbacks-toolbar-filters">
+              <div class="feedbacks-filter-item">
+                <label>סוג משוב:</label>
+                <select>
+                  <option>כל סוגי המשובים</option>
+                  <option>יום כיף בחונכות</option>
+                  <option>יום כיף בהתנדבות כללית</option>
+                  <option>ביקור בית חולים בהתנדבות כללית</option>
+                  <option>ביקור בחונכות</option>
+                </select>
+              </div>
+              <div class="feedbacks-filter-item">
+                <label>שם המתנדב/חונך:</label>
+                <select>
+                  <option>הכל</option>
+                  <option>דנה לוי</option>
+                  <option>יוסי אברהם</option>
+                  <option>מיכל רוזן</option>
+                  <option>אורי שלום</option>
+                </select>
+              </div>
+              <div class="feedbacks-filter-item">
+                <label>מתאריך אירוע:</label>
+                <input type="date" class="feedbacks-date-input">
+              </div>
+              <div class="feedbacks-filter-item">
+                <label>עד תאריך אירוע:</label>
+                <input type="date" class="feedbacks-date-input">
+              </div>
+              <div class="feedbacks-filter-item">
+                <label>מתאריך מילוי משוב:</label>
+                <input type="date" class="feedbacks-date-input">
+              </div>
+              <div class="feedbacks-filter-item">
+                <label>עד תאריך מילוי משוב:</label>
+                <input type="date" class="feedbacks-date-input">
+              </div>
+              <button class="feedbacks-filter-button">סנן</button>
+              <button class="feedbacks-refresh-button">רענן</button>
+            </div>
+          </div>
+
+          <!-- grid (feedbacks LIST renders a table on mobile too; h-scroll) -->
+          <div class="feedback-grid-container">
+            <table class="feedbacks-data-grid">
+              <thead>
+                <tr>
+                  <th>שם המתנדב/חונך</th>
+                  <th>שם חניך / שם בית חולים</th>
+                  <th>האם זה החניך שלך בחונכות?</th>
+                  <th class="feedbacks-wide-column">תאריך האירוע <button class="sort-button">▼</button></th>
+                  <th class="feedbacks-wide-column">מילוי המשוב <button class="sort-button">▼</button></th>
+                  <th>תיאור</th>
+                  <th>סוג משוב</th>
+                  <th>פעולות</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>יוסי אברהם</td>
+                  <td>בית חולים שניידר</td>
+                  <td>לא</td>
+                  <td>03/07/2025</td>
+                  <td>04/07/2025</td>
+                  <td><div class="td-scroll">ביקור במחלקת אונקולוגיה, חילקנו מתנות לילדים המאושפזים והפעלנו סדנת יצירה</div></td>
+                  <td>ביקור בית חולים בהתנדבות כללית</td>
+                  <td>
+                    <button class="feedbacks-info-button">מידע</button>
+                    <button class="feedbacks-edit-button">ערוך</button>
+                    <button class="feedbacks-delete-button">מחק</button>
+                  </td>
+                </tr>
+                <tr>
+                  <td>מיכל רוזן</td>
+                  <td>איתי מזרחי</td>
+                  <td>כן</td>
+                  <td>20/06/2025</td>
+                  <td>21/06/2025</td>
+                  <td><div class="td-scroll">יום כיף בפארק, שיחקנו כדורגל וערכנו פיקניק משפחתי משותף</div></td>
+                  <td>יום כיף בחונכות</td>
+                  <td>
+                    <button class="feedbacks-info-button">מידע</button>
+                    <button class="feedbacks-edit-button">ערוך</button>
+                    <button class="feedbacks-delete-button">מחק</button>
+                  </td>
+                </tr>
+                <tr>
+                  <td>דנה לוי</td>
+                  <td>יעל כהן</td>
+                  <td>לא</td>
+                  <td>12/06/2025</td>
+                  <td>15/06/2025</td>
+                  <td><div class="td-scroll">פגישת חונכות שבועית, יעל השתתפה בפעילות יצירה ונהנתה מאוד</div></td>
+                  <td>ביקור בחונכות</td>
+                  <td>
+                    <button class="feedbacks-info-button">מידע</button>
+                    <button class="feedbacks-edit-button">ערוך</button>
+                    <button class="feedbacks-delete-button">מחק</button>
+                  </td>
+                </tr>
+                <tr>
+                  <td>אורי שלום</td>
+                  <td>נועה פרץ</td>
+                  <td>לא</td>
+                  <td>10/07/2025</td>
+                  <td>11/07/2025</td>
+                  <td><div class="td-scroll">יום כיף בהתנדבות כללית עם קבוצת מתנדבים, ביקור בגן החיות התנ״כי</div></td>
+                  <td>יום כיף בהתנדבות כללית</td>
+                  <td>
+                    <button class="feedbacks-info-button">מידע</button>
+                    <button class="feedbacks-edit-button">ערוך</button>
+                    <button class="feedbacks-delete-button">מחק</button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- pagination -->
+          <div class="pagination">
+            <button class="pagination-arrow" disabled>&laquo;</button>
+            <button class="pagination-arrow" disabled>&lsaquo;</button>
+            <button class="active">1</button>
+            <button>2</button>
+            <button class="pagination-arrow">&rsaquo;</button>
+            <button class="pagination-arrow">&raquo;</button>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- =============== bottom nav (built in Sidebar.js on mobile) =============== -->
+      <nav id="mobile-bottom-nav">
+        <button data-path="/tasks"><span class="nav-icon">📋</span><span class="nav-label">לוח משימות</span></button>
+        <button data-path="/families"><span class="nav-icon">🏘️</span><span class="nav-label">משפחות</span></button>
+        <button data-path="/tutor-volunteer-mgmt"><span class="nav-icon">👥</span><span class="nav-label">חונכים ומתנדבים</span></button>
+        <button data-path="/tutorships"><span class="nav-icon">🤝</span><span class="nav-label">חונכות</span></button>
+        <button data-path="/feedbacks" class="active"><span class="nav-icon">💬</span><span class="nav-label">משובים</span></button>
+        <button data-path="/refunds"><span class="nav-icon">💰</span><span class="nav-label">החזרי הוצאות</span></button>
+        <button data-path="/activity-board"><span class="nav-icon">🎈</span><span class="nav-label">ימי כיף וביקורי בית</span></button>
+        <button data-path="/activity-signup"><span class="nav-icon">🙋</span><span class="nav-label">שיבוץ לפעילויות</span></button>
+        <button data-path="/system-management"><span class="nav-icon">⚙️</span><span class="nav-label">ניהול מערכת</span></button>
+        <button data-path="/meeting-management"><span class="nav-icon">📅</span><span class="nav-label">ניהול פגישות</span></button>
+        <button data-path="/coordinator-chat"><span class="nav-icon">📨</span><span class="nav-label">עדכוני צוות</span></button>
+        <button data-path="/reviewer"><span class="nav-icon">🔍</span><span class="nav-label">שיחות ביקורת</span></button>
+        <button data-path="/notification-messages"><span class="nav-icon">🔔</span><span class="nav-label">מרכז העדכונים</span></button>
+        <button class="nav-logout-btn"><span class="nav-icon">🚪</span><span class="nav-label">יציאה</span></button>
+      </nav>
+
+      <!-- home indicator -->
+      <div class="home-indicator"></div>
+
+    </div>
+  </div>
+
+  <div class="mock-badge">מוקאפ מובייל (iPhone 12) · צבעי מותג <b>«חיוך של ילד»</b></div>
+
+</body>
+</html>

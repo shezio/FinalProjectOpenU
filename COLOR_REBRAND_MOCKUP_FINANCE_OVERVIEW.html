@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>מוקאפ — סקירה כללית כספים (צבעי מותג חדשים)</title>
+<style>
+/* Same local Rubik variable font the real app uses (styles.css @font-face) so
+   the mock renders identically — NOT Google Fonts. */
+@font-face {
+  font-family: 'Rubik';
+  src: url('childsmile/frontend/src/fonts/Rubik-VariableFont_wght.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+}
+/* =====================================================================
+   Finance Overview page (/finance-overview · sidebar "סקירה כללית") —
+   STATIC recolored mock. Faithful reproduction of the real page
+   (InnerPageHeader + Sidebar + finance dashboard: controls, KPI chips,
+   two panels [module breakdown + monthly chart], vouchers strip), with
+   the indigo/purple theme swapped to the A Child's Smile palette.
+   Brand: sky #6EC1E4 · teal #3BC1C8 · pink #ED3B97 · yellow #FCD20E · navy #143852
+   Indigo/purple → TEAL (the MAIN brand colour): controls buttons, KPI accent,
+   modcard value, chart bars. PINK (#ED3B97) is used ONLY as a SEPARATOR / accent
+   (header lower edge, title underline, sidebar divider). KEPT exactly as the real
+   app: green send-summary button + green KPI accent, amber/red KPI accents, grays.
+   Structure/labels/spacing/fonts 1:1 with the code — ONLY colours differ.
+   ===================================================================== */
+
+*{box-sizing:border-box;font-family:Rubik,sans-serif}
+html{zoom:.8}
+body{
+  margin:0;direction:rtl;min-height:100vh;
+  display:flex;flex-direction:row-reverse;
+  background:
+    linear-gradient(135deg,
+      rgba(237,59,151,.14) 0%,
+      rgba(110,193,228,.14) 25%,
+      rgba(59,193,200,.14) 50%,
+      rgba(252,210,14,.14) 75%,
+      rgba(242,103,34,.14) 100%);
+  background-attachment:fixed;
+}
+
+/* ===================== SIDEBAR (faithful to common.css; bg recolored TEAL) ===================== */
+.sidebar{
+  background:linear-gradient(135deg,
+    rgba(110,193,228,.9) 0%,
+    rgba(59,193,200,.92) 45%,
+    rgba(101,190,198,.94) 100%);
+  color:#fff;width:280px;min-height:100vh;padding:60px 15px 25px;
+  box-shadow:-4px 0 40px rgba(59,193,200,.4), -2px 0 20px rgba(101,190,198,.3), inset 1px 0 0 rgba(255,255,255,.3);
+  position:fixed;right:0;top:0;display:flex;flex-direction:column;z-index:1001;
+  border-left:2px solid rgba(255,255,255,.3);overflow-y:auto;
+}
+.sidebar-toggle{position:absolute;top:15px;right:25px;width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px}
+.sidebar-user-info{background:linear-gradient(135deg,rgba(255,255,255,.25),rgba(255,255,255,.15));border:2px solid rgba(255,255,255,.3);border-radius:16px;padding:20px;margin-bottom:20px;text-align:center;box-shadow:0 4px 20px rgba(0,0,0,.15),inset 0 1px 0 rgba(255,255,255,.4)}
+.sidebar-username{font-size:28px;font-weight:700;color:#fff;text-shadow:0 2px 8px rgba(0,0,0,.3);margin-bottom:12px;letter-spacing:.5px}
+.sidebar-roles{display:flex;flex-direction:column;gap:6px}
+.sidebar-role{background:linear-gradient(90deg,rgba(255,255,255,.2),rgba(255,255,255,.1));padding:6px 12px;border-radius:8px;font-size:18px;font-weight:600;color:#fff;border:1px solid rgba(255,255,255,.2)}
+/* clock stays GREEN (not indigo/purple) */
+.sidebar-clock{background:linear-gradient(135deg,rgba(16,185,129,.85),rgba(5,150,105,.85));border:2px solid rgba(255,255,255,.4);border-radius:16px;padding:20px;margin-bottom:20px;text-align:center;box-shadow:0 6px 25px rgba(16,185,129,.35),inset 0 1px 0 rgba(255,255,255,.4)}
+.sidebar-time{font-size:36px;font-weight:800;color:#fff;letter-spacing:2px;text-shadow:0 3px 10px rgba(0,0,0,.3);margin-bottom:8px}
+.sidebar-date{font-size:18px;font-weight:600;color:rgba(255,255,255,.95)}
+/* logout stays RED */
+.sidebar-logout-button{background:linear-gradient(135deg,rgba(239,68,68,.95),rgba(220,38,38,.95));color:#fff;padding:16px 24px;border:2px solid rgba(255,255,255,.4);border-radius:14px;cursor:pointer;font-size:22px;font-weight:700;width:100%;margin-bottom:20px;box-shadow:0 6px 25px rgba(239,68,68,.4),inset 0 1px 0 rgba(255,255,255,.3)}
+/* PINK = separator only — the sidebar divider */
+.sidebar-divider{height:3px;background:linear-gradient(90deg,transparent,rgba(237,59,151,.9),transparent);margin:20px 0;border-radius:2px}
+.sidebar-nav-btn{display:block;width:100%;background:none;border:none;color:rgba(255,255,255,.82);font-size:32px;padding:6px 2px;cursor:pointer;text-align:right}
+.sidebar-nav-btn.top-level{font-weight:600;color:rgba(255,255,255,.85)}
+.sidebar-nav-btn.active{color:#fff;font-weight:700}
+.sidebar-section-header{display:flex;align-items:center;gap:4px;width:100%;background:none;border:none;border-bottom:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.85);font-size:32px;font-weight:600;padding:8px 2px 6px;cursor:pointer;margin-top:10px;text-align:right}
+.sidebar-section-label{flex:1;text-align:right}
+.sidebar-section-arrow{font-size:20px;font-weight:300;color:rgba(255,255,255,.55);transition:transform .2s;transform:rotate(0deg);line-height:1}
+.sidebar-section-arrow.open{transform:rotate(90deg)}
+.sidebar-section-items{display:flex;flex-direction:column;padding-right:12px;border-right:1px solid rgba(255,255,255,.15);margin:2px 6px 0 0}
+.sidebar-section-items .sidebar-nav-btn{font-size:24px;color:rgba(255,255,255,.7);padding:5px 2px}
+.sidebar-section-items .sidebar-nav-btn.active{color:#fff;font-weight:700}
+
+/* ===================== HEADER (fixed top) ===================== */
+.header{
+  background:linear-gradient(135deg,
+    rgba(110,193,228,.9) 0%,
+    rgba(59,193,200,.92) 45%,
+    rgba(101,190,198,.95) 100%);
+  color:#fff;display:flex;align-items:center;justify-content:center;
+  padding:20px 30px;height:200px;position:fixed;right:0;top:0;left:0;z-index:1000;
+  border-bottom:3px solid rgba(255,255,255,.3);
+  box-shadow:0 8px 40px rgba(59,193,200,.35), 0 4px 20px rgba(101,190,198,.28), inset 0 -1px 0 rgba(255,255,255,.3);
+}
+/* PINK = separator only — the header's lower edge (echoes the site's pink underline) */
+.header::before{content:'';position:absolute;bottom:0;left:0;right:0;height:5px;
+  background:linear-gradient(90deg, rgba(237,59,151,1) 0%, rgba(219,75,149,1) 100%);
+  box-shadow:0 2px 15px rgba(237,59,151,.5);}
+.logo{width:180px;height:180px;position:absolute;right:310px;top:10px;border-radius:20px;
+  border:3px solid rgba(255,255,255,.5);background:#fff;padding:10px;object-fit:contain;
+  box-shadow:0 6px 30px rgba(0,0,0,.2),0 0 20px rgba(255,255,255,.25);z-index:1002;}
+.title{font-size:4em;font-weight:900;margin:0;position:absolute;left:50%;transform:translateX(-50%);
+  white-space:nowrap;letter-spacing:2px;
+  background:linear-gradient(135deg,#fff 0%,#f0f9ff 25%,#e0f7fa 50%,#bae6fd 75%,#fff 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  filter:drop-shadow(0 4px 20px rgba(255,255,255,.4)) drop-shadow(0 2px 10px rgba(59,193,200,.65)) drop-shadow(0 0 30px rgba(101,190,198,.4));}
+/* PINK underline separator under the page title (mirrors the site's heading underline) */
+.title::after{content:'';position:absolute;left:50%;bottom:-14px;transform:translateX(-50%);width:78%;height:5px;border-radius:6px;
+  background:linear-gradient(90deg,rgba(237,59,151,.95),rgba(219,75,149,.95));box-shadow:0 3px 12px rgba(237,59,151,.5)}
+.top-left{position:absolute;top:20px;left:40px;display:flex;align-items:center;gap:25px;z-index:1001}
+.amit-img{width:130px;height:170px;object-fit:cover;border-radius:18px;border:3px solid rgba(255,255,255,.5);box-shadow:0 6px 30px rgba(0,0,0,.25)}
+.quote{font-size:20px;font-weight:600;text-align:right;color:#143852;max-width:360px;
+  background:linear-gradient(135deg,rgba(255,255,255,.95),rgba(249,250,251,.95));padding:14px 18px;border-radius:14px;
+  box-shadow:0 6px 24px rgba(0,0,0,.12)}
+.qr-code{width:140px;height:140px;border-radius:16px;border:3px solid rgba(255,255,255,.5);background:#fff;padding:10px;box-shadow:0 6px 30px rgba(0,0,0,.2)}
+
+/* ===================== CONTENT (finance-overview layout) ===================== */
+/* mirrors financeoverview.css .finance-overview-main-content clearance
+   (230px top / 280px right) + the .finance-overview-inner max-width cap. */
+.content{flex:1;margin-right:280px;padding:220px 40px 60px;min-width:0;display:flex;flex-direction:column;align-items:center}
+.finance-overview-inner{width:100%;max-width:1280px;margin:0 auto}
+
+/* ── Controls (mock .finance-overview-controls) ── */
+.finance-overview-controls{display:flex;gap:10px;margin-bottom:14px;width:100%}
+.finance-overview-controls button{
+  /* rgba(99,102,241,a)→rgba(59,193,200,a) ; rgba(168,85,247,a)→rgba(59,193,200,a) : indigo/violet → TEAL */
+  background:linear-gradient(135deg, rgba(59,193,200,.9), rgba(59,193,200,.9));
+  color:white;border:none;border-radius:12px;padding:12px 22px;font-size:18px;font-weight:600;
+  cursor:pointer;transition:opacity .2s ease;font-family:Rubik,sans-serif}
+.finance-overview-controls button:hover{opacity:.85}
+/* send-summary — KEPT green (real #25d366→#128c7e whatsapp) */
+.finance-overview-send-summary-btn{background:linear-gradient(135deg, rgba(37,211,102,.9), rgba(18,140,126,.9)) !important}
+.finance-overview-controls button:disabled{opacity:.6;cursor:not-allowed}
+
+/* ── KPI chips (mock .finance-overview-kpis / -kpi-chip) ── */
+.finance-overview-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:15px;margin-bottom:22px;width:100%}
+.finance-overview-kpi-chip{position:relative;overflow:hidden;background:#ffffff;
+  border:1px solid #EAF7F8;border-radius:18px;padding:22px 24px;
+  box-shadow:0 1px 2px rgba(59,193,200,.05), 0 10px 30px rgba(59,193,200,.08)}
+/* default accent — indigo #7c3aed → TEAL #3BC1C8 */
+.finance-overview-kpi-chip::before{content:"";position:absolute;inset:0 auto 0 0;width:5px;background:#3BC1C8}
+.finance-overview-kpi-chip--green::before{background:#16a34a}   /* KEEP green */
+.finance-overview-kpi-chip--amber::before{background:#d97706}   /* KEEP amber */
+.finance-overview-kpi-chip--red::before{background:#e23b3b}     /* KEEP red */
+.finance-overview-kpi-chip--amber.finance-overview-kpi-chip--active{background:#fffaf0}
+.finance-overview-kpi-label{font-size:18px;color:#8b86a0;font-weight:500;display:flex;gap:9px;align-items:center}
+.finance-overview-kpi-value{font-size:40px;font-weight:800;letter-spacing:-.5px;color:#2b2540;margin-top:9px}
+.finance-overview-kpi-sub{font-size:17px;color:#8b86a0;margin-top:4px}
+
+/* ── Two-column layout (mock .finance-overview-grid2: 1.1fr / 1fr) ── */
+.finance-overview-grid2{display:grid;grid-template-columns:1.1fr 1fr;gap:16px;width:100%;margin-bottom:8px}
+.finance-overview-panel{background:#ffffff;border:1px solid #EAF7F8;border-radius:18px;padding:28px;
+  box-shadow:0 1px 2px rgba(59,193,200,.05), 0 10px 30px rgba(59,193,200,.08)}
+.finance-overview-panel h3{font-size:25px;font-weight:700;margin:0 0 5px 0;color:#2b2540}
+.finance-overview-panel-sub{font-size:17px;color:#8b86a0;margin:0 0 18px 0}
+
+/* ── Module breakdown cards (mock .finance-overview-modcards / -modcard, 2 cols) ── */
+.finance-overview-modcards{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.finance-overview-modcard{position:relative;border:1px solid #EAF7F8;border-radius:14px;padding:20px;
+  cursor:pointer;transition:.16s;background:#EAF7F8}
+.finance-overview-modcard:hover{border-color:#6EC1E4;transform:translateY(-2px);
+  box-shadow:0 1px 2px rgba(59,193,200,.05), 0 10px 30px rgba(59,193,200,.08);background:#fff}
+.finance-overview-modcard-ic{font-size:32px}
+.finance-overview-modcard-nm{font-weight:700;font-size:19px;margin-top:9px;color:#2b2540}
+/* value — indigo #7c3aed → TEAL #3BC1C8 */
+.finance-overview-modcard-vv{font-size:28px;font-weight:800;color:#3BC1C8;margin-top:5px}
+.finance-overview-modcard-cnt{font-size:16px;color:#8b86a0;margin-top:3px}
+
+/* Vouchers strip below the grid2 row — a single wide card */
+.finance-overview-soon-strip{width:100%;margin-bottom:4px}
+.finance-overview-modcard--wide{display:flex;align-items:center;gap:12px;padding:10px 16px}
+.finance-overview-modcard--wide .finance-overview-modcard-nm{margin-top:0}
+
+/* ── Chart (mock .finance-overview-chart-container height:260px) ── */
+.finance-overview-chart-container{position:relative;height:260px;width:100%}
+.finance-overview-chart-legend{display:flex;align-items:center;gap:8px;font-size:17px;font-weight:700;color:#2b2540;margin-bottom:6px}
+.finance-overview-chart-legend .swatch{width:16px;height:16px;border-radius:4px;background:#6EC1E4}
+.finance-overview-chart-svg{width:100%;height:230px}
+
+/* ── Loading state ── */
+.finance-overview-loading{text-align:center;padding:40px;color:#8b86a0;font-size:22px}
+
+/* mock badge */
+.mock-badge{position:fixed;bottom:16px;left:16px;z-index:3000;background:#143852;color:#fff;font-size:14px;font-weight:600;
+  padding:8px 14px;border-radius:10px;box-shadow:0 6px 20px rgba(0,0,0,.25);opacity:.92}
+.mock-badge b{color:#FCD20E}
+</style>
+</head>
+<body>
+
+  <!-- ===================== SIDEBAR (1:1 with Sidebar.js; כספים open, סקירה כללית active) ===================== -->
+  <aside class="sidebar">
+    <button class="sidebar-toggle" title="צמצם סרגל">▶</button>
+    <div class="sidebar-user-info">
+      <div class="sidebar-username">שרה לוי</div>
+      <div class="sidebar-roles"><div class="sidebar-role">מנהל מערכת</div></div>
+    </div>
+    <div class="sidebar-clock">
+      <div class="sidebar-time">09:42:15</div>
+      <div class="sidebar-date">יום ראשון, 27 ביולי 2026</div>
+    </div>
+    <button class="sidebar-logout-button">יציאה מהמערכת</button>
+    <div class="sidebar-divider"></div>
+
+    <button class="sidebar-nav-btn top-level">לוח משימות</button>
+
+    <button class="sidebar-section-header"><span class="sidebar-section-label">משפחות</span><span class="sidebar-section-arrow">›</span></button>
+    <button class="sidebar-section-header"><span class="sidebar-section-label">מתנדבים</span><span class="sidebar-section-arrow">›</span></button>
+
+    <button class="sidebar-section-header"><span class="sidebar-section-label">כספים</span><span class="sidebar-section-arrow open">›</span></button>
+    <div class="sidebar-section-items">
+      <button class="sidebar-nav-btn active">סקירה כללית</button>
+      <button class="sidebar-nav-btn">החזרי הוצאות</button>
+      <button class="sidebar-nav-btn">קופה קטנה</button>
+      <button class="sidebar-nav-btn">הוצאות שוטפות</button>
+      <button class="sidebar-nav-btn">סיוע כספי</button>
+      <button class="sidebar-nav-btn">חלוקת תלושים</button>
+    </div>
+
+    <button class="sidebar-section-header"><span class="sidebar-section-label">פעילויות</span><span class="sidebar-section-arrow">›</span></button>
+    <button class="sidebar-section-header"><span class="sidebar-section-label">ניהול</span><span class="sidebar-section-arrow">›</span></button>
+  </aside>
+
+  <!-- ===================== HEADER ===================== -->
+  <header class="header">
+    <img class="logo" src="childsmile/frontend/src/assets/logo.png" alt="חיוך של ילד">
+    <div class="top-left">
+      <img class="amit-img" src="childsmile/frontend/src/assets/amit.jpg" alt="עמית">
+      <div class="quote">הרבה אנשים אומרים שהם רוצים להצליח אבל לא כולם מוכנים לשלם את המחיר שצריך כדי להצליח</div>
+      <img class="qr-code" src="childsmile/frontend/src/assets/qr-code.jpg" alt="QR">
+    </div>
+    <h1 class="title">סקירה כללית</h1>
+  </header>
+
+  <!-- ===================== CONTENT (mirrors FinanceOverview.js JSX DOM) ===================== -->
+  <main class="content">
+    <div class="finance-overview-inner">
+
+      <!-- controls -->
+      <div class="finance-overview-controls">
+        <button>רענן</button>
+        <button>ייצוא לאקסל</button>
+        <button class="finance-overview-send-summary-btn" title="שולח מיידית בוואטסאפ את סיכום ההוצאות השוטפות של החודש הנוכחי">📤 שליחת סיכום חודשי יזום</button>
+      </div>
+
+      <!-- KPI chips (4-col grid, colored left accents) -->
+      <div class="finance-overview-kpis">
+        <div class="finance-overview-kpi-chip">
+          <div class="finance-overview-kpi-label"><span>💰</span> סה"כ הוצאות (מאוחד)</div>
+          <div class="finance-overview-kpi-value">46,250.00 ₪</div>
+          <div class="finance-overview-kpi-sub">מאוחד מכל המקורות</div>
+        </div>
+        <div class="finance-overview-kpi-chip finance-overview-kpi-chip--green">
+          <div class="finance-overview-kpi-label"><span>📁</span> מודולים פעילים</div>
+          <div class="finance-overview-kpi-value">5 מתוך 5</div>
+          <div class="finance-overview-kpi-sub">מאוחדים למערכת אחת</div>
+        </div>
+        <div class="finance-overview-kpi-chip finance-overview-kpi-chip--amber finance-overview-kpi-chip--active">
+          <div class="finance-overview-kpi-label"><span>⏳</span> ממתין לטיפול</div>
+          <div class="finance-overview-kpi-value">7</div>
+          <div class="finance-overview-kpi-sub">החזרים לאישור / תשלום</div>
+        </div>
+        <div class="finance-overview-kpi-chip finance-overview-kpi-chip--red">
+          <div class="finance-overview-kpi-label"><span>🎟️</span> נשאר לחלק</div>
+          <div class="finance-overview-kpi-value">3,200.00 ₪</div>
+          <div class="finance-overview-kpi-sub">תלושים שטרם חולקו</div>
+        </div>
+      </div>
+
+      <!-- two panels side-by-side (1.1fr / 1fr) -->
+      <div class="finance-overview-grid2">
+        <div class="finance-overview-panel">
+          <h3>פילוח לפי מקור הוצאה</h3>
+          <p class="finance-overview-panel-sub">לחיצה על כרטיס פותחת את המודול</p>
+          <div class="finance-overview-modcards">
+            <div class="finance-overview-modcard">
+              <div class="finance-overview-modcard-ic">💰</div>
+              <div class="finance-overview-modcard-nm">החזרי הוצאות</div>
+              <div class="finance-overview-modcard-vv">12,450.00 ₪</div>
+              <div class="finance-overview-modcard-cnt">24 בקשות (18 שולמו)</div>
+            </div>
+            <div class="finance-overview-modcard">
+              <div class="finance-overview-modcard-ic">💵</div>
+              <div class="finance-overview-modcard-nm">קופה קטנה</div>
+              <div class="finance-overview-modcard-vv">8,900.00 ₪</div>
+              <div class="finance-overview-modcard-cnt">31 רשומות</div>
+            </div>
+            <div class="finance-overview-modcard">
+              <div class="finance-overview-modcard-ic">⛽</div>
+              <div class="finance-overview-modcard-nm">הוצאות שוטפות</div>
+              <div class="finance-overview-modcard-vv">15,600.00 ₪</div>
+              <div class="finance-overview-modcard-cnt">12 רשומות</div>
+            </div>
+            <div class="finance-overview-modcard">
+              <div class="finance-overview-modcard-ic">🤝</div>
+              <div class="finance-overview-modcard-nm">סיוע כספי</div>
+              <div class="finance-overview-modcard-vv">6,800.00 ₪</div>
+              <div class="finance-overview-modcard-cnt">9 רשומות</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="finance-overview-panel">
+          <h3>הוצאות לפי חודש</h3>
+          <p class="finance-overview-panel-sub">מגמה מאוחדת — 6 חודשים אחרונים</p>
+          <div class="finance-overview-chart-container">
+            <div class="finance-overview-chart-legend"><span class="swatch"></span> הוצאות מאוחדות (₪)</div>
+            <!-- static representation of the react-chartjs-2 Bar (recolored #8b5cf6 → #6EC1E4) -->
+            <svg class="finance-overview-chart-svg" viewBox="0 0 600 230" preserveAspectRatio="none" role="img" aria-label="תרשים עמודות: הוצאות מאוחדות ב-6 החודשים האחרונים">
+              <!-- gridlines -->
+              <line x1="20" y1="40"  x2="590" y2="40"  stroke="#eef2f4" stroke-width="1"/>
+              <line x1="20" y1="85"  x2="590" y2="85"  stroke="#eef2f4" stroke-width="1"/>
+              <line x1="20" y1="130" x2="590" y2="130" stroke="#eef2f4" stroke-width="1"/>
+              <line x1="20" y1="175" x2="590" y2="175" stroke="#eef2f4" stroke-width="1"/>
+              <line x1="20" y1="200" x2="590" y2="200" stroke="#d7dde0" stroke-width="1.5"/>
+              <!-- bars (borderRadius:8 → rounded top via rx) -->
+              <rect x="40"  y="111" width="55" height="89"  rx="8" fill="#6EC1E4"/>
+              <rect x="133" y="77"  width="55" height="123" rx="8" fill="#6EC1E4"/>
+              <rect x="226" y="125" width="55" height="75"  rx="8" fill="#6EC1E4"/>
+              <rect x="319" y="56"  width="55" height="144" rx="8" fill="#6EC1E4"/>
+              <rect x="412" y="96"  width="55" height="104" rx="8" fill="#6EC1E4"/>
+              <rect x="505" y="40"  width="55" height="160" rx="8" fill="#6EC1E4"/>
+              <!-- month labels -->
+              <g fill="#8b86a0" font-size="15" font-family="Rubik,sans-serif" text-anchor="middle">
+                <text x="67"  y="220">פבר 26</text>
+                <text x="160" y="220">מרץ 26</text>
+                <text x="253" y="220">אפר 26</text>
+                <text x="346" y="220">מאי 26</text>
+                <text x="439" y="220">יונ 26</text>
+                <text x="532" y="220">יול 26</text>
+              </g>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- vouchers — 5th module, own wide strip -->
+      <div class="finance-overview-soon-strip">
+        <div class="finance-overview-modcard finance-overview-modcard--wide">
+          <div class="finance-overview-modcard-ic">🎟️</div>
+          <div class="finance-overview-modcard-nm">חלוקת תלושים</div>
+          <div class="finance-overview-modcard-vv">5,000.00 ₪</div>
+          <div class="finance-overview-modcard-cnt">6 חלוקות (42 מקבלים)</div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <div class="mock-badge">מוקאפ סטטי · צבעי מותג חדשים <b>«חיוך של ילד»</b></div>
+
+</body>
+</html>

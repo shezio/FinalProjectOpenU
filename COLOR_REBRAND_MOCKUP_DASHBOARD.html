@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>מוקאפ — לוח בקרה (דאשבורד) (צבעי מותג חדשים)</title>
+<style>
+/* Same local Rubik variable font the real app uses (styles.css @font-face) so
+   the mock renders identically — NOT Google Fonts. */
+@font-face {
+  font-family: 'Rubik';
+  src: url('childsmile/frontend/src/fonts/Rubik-VariableFont_wght.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+}
+/* =====================================================================
+   Dashboard page — STATIC recolored mock.
+   Faithful reproduction of the real page (InnerPageHeader + Sidebar +
+   KPI stat cards + DashboardCharts: donut/pie + bar charts + big-number
+   card + tables), with the indigo/purple theme swapped to the
+   A Child's Smile palette.
+   Brand: sky #6EC1E4 · teal #3BC1C8 / #65BEC6 · pink #ED3B97 · yellow #FCD20E · navy #143852
+   Indigo/purple → TEAL (the MAIN brand colour): dashboard-header, kpi-card,
+   dashboard-table header, new-families-card, timeframe-btn.active, chart
+   primary series (#667eea/#764ba2 → #3BC1C8 / #6EC1E4 / #65BEC6 / #FCD20E).
+   PINK (#ED3B97) is used ONLY as a SEPARATOR / accent — the header's lower edge,
+   the title underline, and the sidebar divider. Dark-indigo text (#5a3d8c) → navy.
+   KEPT exactly as the real app for readable categorical/status contrast:
+   green #4caf50, red #f44336/#ff6b6b, amber #ffa726, cyan #26c6da, blue #3b82f6.
+   Structure/labels 1:1 with Dashboard.js + DashboardCharts.js.
+   (Static HTML has no Chart.js — donut/pie rendered with CSS conic-gradient,
+   bars with sized <div>s; chart TYPES + titles + Hebrew labels match the real page.)
+   ===================================================================== */
+
+*{box-sizing:border-box;font-family:Rubik,sans-serif}
+html{zoom:.8}
+body{
+  margin:0;direction:rtl;min-height:100vh;
+  display:flex;flex-direction:row-reverse;
+  /* was rainbow indigo/blue/green/orange/pink → brand rainbow (decorative, low alpha) */
+  background:
+    linear-gradient(135deg,
+      rgba(237,59,151,.14) 0%,
+      rgba(110,193,228,.14) 25%,
+      rgba(59,193,200,.14) 50%,
+      rgba(252,210,14,.14) 75%,
+      rgba(242,103,34,.14) 100%);
+  background-attachment:fixed;
+}
+
+/* ===================== SIDEBAR (faithful to common.css; bg recolored TEAL) ===================== */
+.sidebar{
+  background:linear-gradient(135deg,
+    rgba(110,193,228,.9) 0%,
+    rgba(59,193,200,.92) 45%,
+    rgba(101,190,198,.94) 100%);
+  color:#fff;width:280px;min-height:100vh;padding:60px 15px 25px;
+  box-shadow:-4px 0 40px rgba(59,193,200,.4), -2px 0 20px rgba(101,190,198,.3), inset 1px 0 0 rgba(255,255,255,.3);
+  position:fixed;right:0;top:0;display:flex;flex-direction:column;z-index:1001;
+  border-left:2px solid rgba(255,255,255,.3);overflow-y:auto;
+}
+.sidebar-toggle{position:absolute;top:15px;right:25px;width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px}
+.sidebar-user-info{background:linear-gradient(135deg,rgba(255,255,255,.25),rgba(255,255,255,.15));border:2px solid rgba(255,255,255,.3);border-radius:16px;padding:20px;margin-bottom:20px;text-align:center;box-shadow:0 4px 20px rgba(0,0,0,.15),inset 0 1px 0 rgba(255,255,255,.4)}
+.sidebar-username{font-size:28px;font-weight:700;color:#fff;text-shadow:0 2px 8px rgba(0,0,0,.3);margin-bottom:12px;letter-spacing:.5px}
+.sidebar-roles{display:flex;flex-direction:column;gap:6px}
+.sidebar-role{background:linear-gradient(90deg,rgba(255,255,255,.2),rgba(255,255,255,.1));padding:6px 12px;border-radius:8px;font-size:18px;font-weight:600;color:#fff;border:1px solid rgba(255,255,255,.2)}
+/* clock stays GREEN (not indigo/purple) */
+.sidebar-clock{background:linear-gradient(135deg,rgba(16,185,129,.85),rgba(5,150,105,.85));border:2px solid rgba(255,255,255,.4);border-radius:16px;padding:20px;margin-bottom:20px;text-align:center;box-shadow:0 6px 25px rgba(16,185,129,.35),inset 0 1px 0 rgba(255,255,255,.4)}
+.sidebar-time{font-size:36px;font-weight:800;color:#fff;letter-spacing:2px;text-shadow:0 3px 10px rgba(0,0,0,.3);margin-bottom:8px}
+.sidebar-date{font-size:18px;font-weight:600;color:rgba(255,255,255,.95)}
+/* logout stays RED */
+.sidebar-logout-button{background:linear-gradient(135deg,rgba(239,68,68,.95),rgba(220,38,38,.95));color:#fff;padding:16px 24px;border:2px solid rgba(255,255,255,.4);border-radius:14px;cursor:pointer;font-size:22px;font-weight:700;width:100%;margin-bottom:20px;box-shadow:0 6px 25px rgba(239,68,68,.4),inset 0 1px 0 rgba(255,255,255,.3)}
+/* PINK = separator only — the sidebar divider */
+.sidebar-divider{height:3px;background:linear-gradient(90deg,transparent,rgba(237,59,151,.9),transparent);margin:20px 0;border-radius:2px}
+.sidebar-nav-btn{display:block;width:100%;background:none;border:none;color:rgba(255,255,255,.82);font-size:32px;padding:6px 2px;cursor:pointer;text-align:right}
+.sidebar-nav-btn.top-level{font-weight:600;color:rgba(255,255,255,.85)}
+.sidebar-nav-btn.active{color:#fff;font-weight:700}
+.sidebar-section-header{display:flex;align-items:center;gap:4px;width:100%;background:none;border:none;border-bottom:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.85);font-size:32px;font-weight:600;padding:8px 2px 6px;cursor:pointer;margin-top:10px;text-align:right}
+.sidebar-section-label{flex:1;text-align:right}
+.sidebar-section-arrow{font-size:20px;font-weight:300;color:rgba(255,255,255,.55);transition:transform .2s;transform:rotate(0deg);line-height:1}
+.sidebar-section-arrow.open{transform:rotate(90deg)}
+.sidebar-section-items{display:flex;flex-direction:column;padding-right:12px;border-right:1px solid rgba(255,255,255,.15);margin:2px 6px 0 0}
+.sidebar-section-items .sidebar-nav-btn{font-size:24px;color:rgba(255,255,255,.7);padding:5px 2px}
+.sidebar-section-items .sidebar-nav-btn.active{color:#fff;font-weight:700}
+
+/* ===================== HEADER (fixed top) ===================== */
+.header{
+  background:linear-gradient(135deg,
+    rgba(110,193,228,.9) 0%,
+    rgba(59,193,200,.92) 45%,
+    rgba(101,190,198,.95) 100%);
+  color:#fff;display:flex;align-items:center;justify-content:center;
+  padding:20px 30px;height:200px;position:fixed;right:0;top:0;left:0;z-index:1000;
+  border-bottom:3px solid rgba(255,255,255,.3);
+  box-shadow:0 8px 40px rgba(59,193,200,.35), 0 4px 20px rgba(101,190,198,.28), inset 0 -1px 0 rgba(255,255,255,.3);
+}
+/* PINK = separator only — the header's lower edge (echoes the site's pink underline) */
+.header::before{content:'';position:absolute;bottom:0;left:0;right:0;height:5px;
+  background:linear-gradient(90deg, rgba(237,59,151,1) 0%, rgba(219,75,149,1) 100%);
+  box-shadow:0 2px 15px rgba(237,59,151,.5);}
+.logo{width:180px;height:180px;position:absolute;right:310px;top:10px;border-radius:20px;
+  border:3px solid rgba(255,255,255,.5);background:#fff;padding:10px;object-fit:contain;
+  box-shadow:0 6px 30px rgba(0,0,0,.2),0 0 20px rgba(255,255,255,.25);z-index:1002;}
+.title{font-size:4em;font-weight:900;margin:0;position:absolute;left:50%;transform:translateX(-50%);
+  white-space:nowrap;letter-spacing:2px;
+  background:linear-gradient(135deg,#fff 0%,#f0f9ff 25%,#e0f7fa 50%,#bae6fd 75%,#fff 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  filter:drop-shadow(0 4px 20px rgba(255,255,255,.4)) drop-shadow(0 2px 10px rgba(59,193,200,.65)) drop-shadow(0 0 30px rgba(101,190,198,.4));}
+/* PINK underline separator under the page title (mirrors the site's heading underline) */
+.title::after{content:'';position:absolute;left:50%;bottom:-14px;transform:translateX(-50%);width:78%;height:5px;border-radius:6px;
+  background:linear-gradient(90deg,rgba(237,59,151,.95),rgba(219,75,149,.95));box-shadow:0 3px 12px rgba(237,59,151,.5)}
+.top-left{position:absolute;top:20px;left:40px;display:flex;align-items:center;gap:25px;z-index:1001}
+.amit-img{width:130px;height:170px;object-fit:cover;border-radius:18px;border:3px solid rgba(255,255,255,.5);box-shadow:0 6px 30px rgba(0,0,0,.25)}
+.quote{font-size:20px;font-weight:600;text-align:right;color:#143852;max-width:360px;
+  background:linear-gradient(135deg,rgba(255,255,255,.95),rgba(249,250,251,.95));padding:14px 18px;border-radius:14px;
+  box-shadow:0 6px 24px rgba(0,0,0,.12)}
+.qr-code{width:140px;height:140px;border-radius:16px;border:3px solid rgba(255,255,255,.5);background:#fff;padding:10px;box-shadow:0 6px 30px rgba(0,0,0,.2)}
+
+/* ===================== CONTENT ===================== */
+.content{flex:1;margin-right:280px;padding:220px 40px 60px;min-width:0}
+
+/* ===================== DASHBOARD (Dashboard.css, recolored) ===================== */
+/* dashboard-header — was indigo #667eea→#764ba2 → brand TEAL (main colour) */
+.dashboard-header{
+  background:linear-gradient(135deg,#3BC1C8 0%,#65BEC6 100%);
+  color:#fff;padding:20px 30px;border-radius:20px;margin-bottom:30px;
+  box-shadow:0 10px 30px rgba(59,193,200,.3);
+}
+.dashboard-header-buttons{display:flex;gap:15px;justify-content:flex-start;flex-wrap:wrap}
+/* .btn — KEEP blue (real #3b82f6→#2563eb, not indigo/purple) */
+.btn{background:linear-gradient(135deg,rgba(59,130,246,.95) 0%,rgba(37,99,235,.95) 100%);
+  border:2px solid rgba(255,255,255,.3);color:#fff;padding:14px 24px;border-radius:12px;cursor:pointer;
+  font-size:18px;font-weight:600;letter-spacing:.3px;box-shadow:0 6px 20px rgba(59,130,246,.3)}
+.btn-refresh,.btn-export{border:none}
+
+/* KPI Section */
+.kpi-section{margin-bottom:40px}
+.kpi-section h2{font-size:28px;color:#333;margin-bottom:20px;font-weight:700}
+.kpi-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:20px}
+/* kpi-card — was indigo #667eea→#764ba2 → brand TEAL (main colour) */
+.kpi-card{background:linear-gradient(135deg,#3BC1C8 0%,#65BEC6 100%);color:#fff;padding:25px;border-radius:15px;
+  text-align:center;box-shadow:0 10px 30px rgba(59,193,200,.3)}
+.kpi-label{font-size:20px;opacity:.9;margin-bottom:10px;font-weight:600}
+.kpi-value{font-size:48px;font-weight:700}
+
+/* ===================== CHARTS (DashboardCharts.css, recolored) ===================== */
+.charts-section{margin-bottom:40px}
+.charts-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;direction:rtl}
+.charts-header h2{margin:0;font-size:36px;color:#333;font-weight:700}
+.charts-pagination{display:flex;align-items:center;gap:10px}
+.charts-page-btn{font-size:22px;padding:4px 14px;border-radius:8px;border:1px solid #ccc;background:#fff;cursor:pointer}
+.charts-page-btn:disabled{cursor:not-allowed;opacity:.4}
+/* was dark-indigo #5a3d8c → navy */
+.charts-page-indicator{font-size:24px;font-weight:600;color:#143852}
+
+.full-width-chart{background:#fff;border-radius:15px;padding:25px;box-shadow:0 5px 20px rgba(0,0,0,.08);margin-bottom:30px}
+.full-width-chart h3{font-size:28px;color:#333;margin-bottom:20px;font-weight:700}
+.chart-container,.chart-container-large{position:relative;width:100%;display:flex;align-items:center;justify-content:center}
+.chart-container{min-height:350px}
+.chart-container-large{min-height:400px}
+
+/* Timeframe selector */
+.timeframe-selector{display:flex;gap:10px;margin-bottom:15px;justify-content:center}
+.timeframe-btn{background:#f0f0f0;border:none;padding:8px 16px;border-radius:8px;cursor:pointer;font-size:24px;font-weight:600}
+/* active — was indigo gradient → brand TEAL */
+.timeframe-btn.active{background:linear-gradient(135deg,#3BC1C8 0%,#65BEC6 100%);color:#fff}
+
+/* New Families big-number card — was indigo gradient → brand TEAL */
+.new-families-card{background:linear-gradient(135deg,#3BC1C8 0%,#65BEC6 100%);color:#fff;padding:40px;border-radius:10px;
+  text-align:center;min-height:350px;display:flex;flex-direction:column;justify-content:center}
+.big-number{font-size:96px;font-weight:700}
+.subtitle{font-size:28px;margin-top:15px;opacity:.9}
+.growth{font-size:24px;margin-top:10px;opacity:.8}
+
+/* Tables */
+.table-card{background:#fff;border-radius:15px;overflow:hidden;box-shadow:0 5px 20px rgba(0,0,0,.08);margin-bottom:30px}
+.dashboard-table{width:100%;border-collapse:collapse;direction:rtl}
+/* header — was indigo gradient → brand TEAL */
+.dashboard-table th{padding:14px 10px;border-bottom:2px solid #eee;text-align:right;font-weight:700;font-size:22px;
+  background:linear-gradient(135deg,#3BC1C8 0%,#65BEC6 100%);color:#fff}
+.dashboard-table td{padding:12px 10px;text-align:right;font-size:22px;border-bottom:1px solid #f0f0f0;color:#333}
+.dashboard-table tbody tr:nth-child(even){background:#fafafa}
+.table-pagination{display:flex;align-items:center;justify-content:center;gap:15px;margin:0;padding:15px;border-top:1px solid #eee;direction:rtl}
+/* pagination-btn — was indigo #667eea → brand TEAL */
+.pagination-btn{padding:8px 16px;font-size:18px;border:1px solid #3BC1C8;background:#fff;color:#3BC1C8;border-radius:6px;cursor:pointer;font-weight:600}
+.pagination-btn:disabled{opacity:.4;cursor:not-allowed;border-color:#ccc;color:#ccc}
+.pagination-info{font-size:18px;font-weight:600;color:#333;min-width:120px;text-align:center}
+
+.charts-row{display:grid;grid-template-columns:1fr 1fr;gap:30px;margin-bottom:30px}
+.chart-card{background:#fff;border-radius:15px;padding:25px;box-shadow:0 5px 20px rgba(0,0,0,.08)}
+.chart-card h3{font-size:26px;color:#333;margin-bottom:20px;font-weight:700}
+.workload-loading{font-size:24px;text-align:center;padding:40px;color:#888}
+.workload-row-alert{background:#fff8f0 !important}
+.workload-overdue{color:#e53935;font-weight:700}
+
+/* ---- static chart primitives (no Chart.js) ---- */
+/* Donut/Pie via conic-gradient; white hub creates the donut hole */
+.donut-wrap{display:flex;align-items:center;gap:40px;flex-wrap:wrap;justify-content:center}
+.donut{width:300px;height:300px;border-radius:50%;position:relative;flex-shrink:0;
+  box-shadow:0 6px 20px rgba(0,0,0,.12)}
+.donut::after{content:'';position:absolute;inset:70px;border-radius:50%;background:#fff;
+  box-shadow:inset 0 2px 8px rgba(0,0,0,.08)}
+.legend{display:flex;flex-direction:column;gap:14px}
+.legend-item{display:flex;align-items:center;gap:12px;font-size:24px;font-weight:600;color:#333}
+.legend-swatch{width:26px;height:26px;border-radius:6px;flex-shrink:0}
+.legend-val{color:#666;font-weight:700}
+
+/* Bar charts */
+.bars-v{display:flex;align-items:flex-end;gap:26px;height:340px;padding:20px 10px 0;width:100%;justify-content:center;border-bottom:2px solid #e6e6e6}
+.bar-col{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;gap:8px}
+.bar-v{width:70px;border-radius:8px 8px 0 0;position:relative}
+.bar-v .bar-num{position:absolute;top:-30px;left:50%;transform:translateX(-50%);font-size:20px;font-weight:700;color:#333}
+.bar-label{font-size:20px;font-weight:600;color:#444;text-align:center;max-width:110px}
+/* Horizontal bars */
+.bars-h{display:flex;flex-direction:column;gap:18px;width:100%;padding:10px 0}
+.bar-row{display:flex;align-items:center;gap:14px}
+.bar-row .bar-label{width:130px;text-align:left;flex-shrink:0}
+.bar-h{height:44px;border-radius:0 8px 8px 0;display:flex;align-items:center;justify-content:flex-end;padding-left:12px;
+  color:#fff;font-weight:700;font-size:20px;min-width:40px}
+
+/* mock badge */
+.mock-badge{position:fixed;bottom:16px;left:16px;z-index:3000;background:#143852;color:#fff;font-size:14px;font-weight:600;
+  padding:8px 14px;border-radius:10px;box-shadow:0 6px 20px rgba(0,0,0,.25);opacity:.92}
+.mock-badge b{color:#FCD20E}
+</style>
+</head>
+<body>
+
+  <!-- ===================== SIDEBAR (1:1 with Sidebar.js; Dashboard has no nav entry → template as-is, no forced active) ===================== -->
+  <aside class="sidebar">
+    <button class="sidebar-toggle" title="צמצם סרגל">▶</button>
+    <div class="sidebar-user-info">
+      <div class="sidebar-username">שרה לוי</div>
+      <div class="sidebar-roles"><div class="sidebar-role">רכז משפחות</div></div>
+    </div>
+    <div class="sidebar-clock">
+      <div class="sidebar-time">09:42:15</div>
+      <div class="sidebar-date">יום ראשון, 27 ביולי 2026</div>
+    </div>
+    <button class="sidebar-logout-button">יציאה מהמערכת</button>
+    <div class="sidebar-divider"></div>
+
+    <button class="sidebar-nav-btn top-level">לוח משימות</button>
+
+    <button class="sidebar-section-header"><span class="sidebar-section-label">משפחות</span><span class="sidebar-section-arrow open">›</span></button>
+    <div class="sidebar-section-items">
+      <button class="sidebar-nav-btn">משפחות</button>
+      <button class="sidebar-nav-btn">חונכות</button>
+    </div>
+
+    <button class="sidebar-section-header"><span class="sidebar-section-label">מתנדבים</span><span class="sidebar-section-arrow">›</span></button>
+    <button class="sidebar-section-header"><span class="sidebar-section-label">כספים</span><span class="sidebar-section-arrow">›</span></button>
+    <button class="sidebar-section-header"><span class="sidebar-section-label">פעילויות</span><span class="sidebar-section-arrow">›</span></button>
+    <button class="sidebar-section-header"><span class="sidebar-section-label">ניהול</span><span class="sidebar-section-arrow">›</span></button>
+  </aside>
+
+  <!-- ===================== HEADER ===================== -->
+  <header class="header">
+    <img class="logo" src="childsmile/frontend/src/assets/logo.png" alt="חיוך של ילד">
+    <div class="top-left">
+      <img class="amit-img" src="childsmile/frontend/src/assets/amit.jpg" alt="עמית">
+      <div class="quote">הרבה אנשים אומרים שהם רוצים להצליח אבל לא כולם מוכנים לשלם את המחיר שצריך כדי להצליח</div>
+      <img class="qr-code" src="childsmile/frontend/src/assets/qr-code.jpg" alt="QR">
+    </div>
+    <h1 class="title">לוח בקרה מתקדם</h1>
+  </header>
+
+  <!-- ===================== CONTENT ===================== -->
+  <main class="content">
+
+    <!-- dashboard-header (Dashboard.js: refresh + export PPT buttons) -->
+    <div class="dashboard-header">
+      <div class="dashboard-header-buttons">
+        <button class="btn btn-refresh">🔄 רענן</button>
+        <button class="btn btn-export">📊 ייצוא PPT</button>
+      </div>
+    </div>
+
+    <!-- KPI Cards (Dashboard.js: 5 cards) -->
+    <div class="kpi-section">
+      <h2>📈 מדדים עיקריים</h2>
+      <div class="kpi-cards">
+        <div class="kpi-card">
+          <div class="kpi-label">סה"כ משפחות</div>
+          <div class="kpi-value">248</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">👥 משפחות פעילות</div>
+          <div class="kpi-value">193</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">משפחות הממתינות</div>
+          <div class="kpi-value">37</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">חונכויות פעילות</div>
+          <div class="kpi-value">156</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">אנשי הצוות</div>
+          <div class="kpi-value">42</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Charts Section (DashboardCharts.js). Real app paginates ONE chart/page;
+         for the review PDF all pages are stacked below the paginator. -->
+    <div class="charts-section">
+      <div class="charts-header">
+        <h2>📊 תצוגות בהתפלגות</h2>
+        <div class="charts-pagination">
+          <button class="charts-page-btn" disabled>&lsaquo;</button>
+          <span class="charts-page-indicator">1 / 8</span>
+          <button class="charts-page-btn">&rsaquo;</button>
+        </div>
+      </div>
+
+      <!-- Page 1 — Donut: סטטוס חונכויות משפחות (green/red kept) -->
+      <div class="full-width-chart">
+        <h3>סטטוס חונכויות משפחות</h3>
+        <div class="chart-container">
+          <div class="donut-wrap">
+            <div class="donut" style="background:conic-gradient(#4caf50 0 265deg,#f44336 265deg 360deg)"></div>
+            <div class="legend">
+              <div class="legend-item"><span class="legend-swatch" style="background:#4caf50"></span>עם חונך <span class="legend-val">156</span></div>
+              <div class="legend-item"><span class="legend-swatch" style="background:#f44336"></span>ממתינות <span class="legend-val">37</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Page 2 — Donut: משוב לפי סוג (indigo/purple → teal/sky; red/green kept) -->
+      <div class="full-width-chart">
+        <h3>משוב לפי סוג</h3>
+        <div class="timeframe-selector">
+          <button class="timeframe-btn">שבוע</button>
+          <button class="timeframe-btn active">חודש</button>
+          <button class="timeframe-btn">שנה</button>
+          <button class="timeframe-btn">הכל</button>
+        </div>
+        <div class="chart-container">
+          <div class="donut-wrap">
+            <div class="donut" style="background:conic-gradient(#3BC1C8 0 101deg,#6EC1E4 101deg 169deg,#ff6b6b 169deg 219deg,#4caf50 219deg 360deg)"></div>
+            <div class="legend">
+              <div class="legend-item"><span class="legend-swatch" style="background:#3BC1C8"></span>יום כיף חונכים <span class="legend-val">18</span></div>
+              <div class="legend-item"><span class="legend-swatch" style="background:#6EC1E4"></span>יום כיף מתנדבים <span class="legend-val">12</span></div>
+              <div class="legend-item"><span class="legend-swatch" style="background:#ff6b6b"></span>ביקור בבית חולים <span class="legend-val">9</span></div>
+              <div class="legend-item"><span class="legend-swatch" style="background:#4caf50"></span>חונכות רגילה <span class="legend-val">25</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Page 3 — Big-number card: משפחות חדשות בחודש זה (indigo → teal) -->
+      <div class="full-width-chart">
+        <h3>משפחות חדשות בחודש זה</h3>
+        <div class="new-families-card">
+          <div class="big-number">14</div>
+          <div class="subtitle">משפחות חדשות</div>
+          <div class="growth">+12% מהחודש שעבר</div>
+        </div>
+      </div>
+
+      <!-- Page 4 — Horizontal bar: ערים עם מרבית משפחות הממתינות (#667eea → teal) -->
+      <div class="full-width-chart">
+        <h3>ערים עם מרבית משפחות הממתינות</h3>
+        <div class="chart-container-large">
+          <div class="bars-h">
+            <div class="bar-row"><span class="bar-label">חיפה</span><div class="bar-h" style="width:92%;background:#3BC1C8">14</div></div>
+            <div class="bar-row"><span class="bar-label">תל אביב</span><div class="bar-h" style="width:72%;background:#3BC1C8">11</div></div>
+            <div class="bar-row"><span class="bar-label">ירושלים</span><div class="bar-h" style="width:59%;background:#3BC1C8">9</div></div>
+            <div class="bar-row"><span class="bar-label">באר שבע</span><div class="bar-h" style="width:46%;background:#3BC1C8">7</div></div>
+            <div class="bar-row"><span class="bar-label">נתניה</span><div class="bar-h" style="width:33%;background:#3BC1C8">5</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Page 5 — Vertical bar: חונכויות אחרונות (10 פעילויות) (#764ba2 → sky) -->
+      <div class="full-width-chart">
+        <h3>חונכויות אחרונות (10 פעילויות)</h3>
+        <div class="chart-container-large">
+          <div class="bars-v">
+            <div class="bar-col"><div class="bar-v" style="height:80%;background:#6EC1E4"><span class="bar-num">124</span></div><span class="bar-label">יעל</span></div>
+            <div class="bar-col"><div class="bar-v" style="height:62%;background:#6EC1E4"><span class="bar-num">96</span></div><span class="bar-label">איתי</span></div>
+            <div class="bar-col"><div class="bar-v" style="height:53%;background:#6EC1E4"><span class="bar-num">82</span></div><span class="bar-label">נועה</span></div>
+            <div class="bar-col"><div class="bar-v" style="height:45%;background:#6EC1E4"><span class="bar-num">70</span></div><span class="bar-label">דניאל</span></div>
+            <div class="bar-col"><div class="bar-v" style="height:38%;background:#6EC1E4"><span class="bar-num">58</span></div><span class="bar-label">שירה</span></div>
+            <div class="bar-col"><div class="bar-v" style="height:29%;background:#6EC1E4"><span class="bar-num">45</span></div><span class="bar-label">עומר</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Page 6 — Vertical bar: הזדמנויות התאמה לפי קבוצות גיל (green kept) -->
+      <div class="full-width-chart">
+        <h3>הזדמנויות התאמה לפי קבוצות גיל</h3>
+        <div class="chart-container-large">
+          <div class="bars-v">
+            <div class="bar-col"><div class="bar-v" style="height:52%;background:#4caf50"><span class="bar-num">8</span></div><span class="bar-label">6-8 שנים</span></div>
+            <div class="bar-col"><div class="bar-v" style="height:78%;background:#4caf50"><span class="bar-num">12</span></div><span class="bar-label">9-11 שנים</span></div>
+            <div class="bar-col"><div class="bar-v" style="height:40%;background:#4caf50"><span class="bar-num">6</span></div><span class="bar-label">12-14 שנים</span></div>
+            <div class="bar-col"><div class="bar-v" style="height:26%;background:#4caf50"><span class="bar-num">4</span></div><span class="bar-label">15-17 שנים</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Page 7 — Table: 📋 חונכויות פעילות אחרונות -->
+      <div class="full-width-chart">
+        <h3>📋 חונכויות פעילות אחרונות</h3>
+        <div class="table-card">
+          <table class="dashboard-table">
+            <thead>
+              <tr>
+                <th>שם הילד</th>
+                <th>שם החונך</th>
+                <th>תאריך התחלה</th>
+                <th>משך חונכות</th>
+                <th>סטטוס</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>יעל כהן</td><td>דנה לוי</td><td>15/03/2025</td><td>4 חודשים</td><td>פעיל</td></tr>
+              <tr><td>איתי לוי</td><td>יוסי כהן</td><td>02/01/2025</td><td>6 חודשים</td><td>פעיל</td></tr>
+              <tr><td>נועה מזרחי</td><td>מיכל אבן</td><td>20/11/2024</td><td>8 חודשים</td><td>פעיל</td></tr>
+              <tr><td>דניאל פרץ</td><td>רון שגב</td><td>08/07/2025</td><td>שבועיים</td><td>פעיל</td></tr>
+            </tbody>
+          </table>
+          <div class="table-pagination">
+            <button class="pagination-btn" disabled>→ הקודם</button>
+            <span class="pagination-info">עמוד 1 מתוך 3</span>
+            <button class="pagination-btn">הבא ←</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Page 8 — 👥 עומס רכזים (pies palette #667eea/#764ba2/#ab47bc → teal/sky/yellow; keep red/green/amber/cyan) -->
+      <div class="full-width-chart">
+        <h3>👥 עומס רכזים</h3>
+        <div class="charts-row">
+          <div class="chart-card">
+            <h3>משפחות באחריות</h3>
+            <div class="chart-container">
+              <div class="donut-wrap">
+                <div class="donut" style="width:240px;height:240px;background:conic-gradient(#3BC1C8 0 131deg,#6EC1E4 131deg 229deg,#ff6b6b 229deg 305deg,#4caf50 305deg 360deg)"></div>
+                <div class="legend">
+                  <div class="legend-item"><span class="legend-swatch" style="background:#3BC1C8"></span>דנה לוי <span class="legend-val">12</span></div>
+                  <div class="legend-item"><span class="legend-swatch" style="background:#6EC1E4"></span>יוסי כהן <span class="legend-val">9</span></div>
+                  <div class="legend-item"><span class="legend-swatch" style="background:#ff6b6b"></span>מיכל אבן <span class="legend-val">7</span></div>
+                  <div class="legend-item"><span class="legend-swatch" style="background:#4caf50"></span>רון שגב <span class="legend-val">5</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="chart-card">
+            <h3>משימות פתוחות</h3>
+            <div class="chart-container">
+              <div class="donut-wrap">
+                <div class="donut" style="width:240px;height:240px;background:conic-gradient(#3BC1C8 0 103deg,#6EC1E4 103deg 167deg,#ff6b6b 167deg 309deg,#4caf50 309deg 360deg)"></div>
+                <div class="legend">
+                  <div class="legend-item"><span class="legend-swatch" style="background:#3BC1C8"></span>דנה לוי <span class="legend-val">8</span></div>
+                  <div class="legend-item"><span class="legend-swatch" style="background:#6EC1E4"></span>יוסי כהן <span class="legend-val">5</span></div>
+                  <div class="legend-item"><span class="legend-swatch" style="background:#ff6b6b"></span>מיכל אבן <span class="legend-val">11</span></div>
+                  <div class="legend-item"><span class="legend-swatch" style="background:#4caf50"></span>רון שגב <span class="legend-val">4</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="chart-card" style="margin-bottom:30px">
+          <h3>שיחות ביקורת באיחור</h3>
+          <div class="chart-container">
+            <div class="donut-wrap">
+              <div class="donut" style="width:240px;height:240px;background:conic-gradient(#3BC1C8 0 180deg,#6EC1E4 180deg 300deg,#ff6b6b 300deg 360deg)"></div>
+              <div class="legend">
+                <div class="legend-item"><span class="legend-swatch" style="background:#3BC1C8"></span>יוסי כהן <span class="legend-val">3</span></div>
+                <div class="legend-item"><span class="legend-swatch" style="background:#6EC1E4"></span>דנה לוי <span class="legend-val">2</span></div>
+                <div class="legend-item"><span class="legend-swatch" style="background:#ff6b6b"></span>מיכל אבן <span class="legend-val">1</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="table-card">
+          <table class="dashboard-table">
+            <thead>
+              <tr><th>רכז/ת</th><th>משפחות</th><th>משימות פתוחות</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>דנה לוי</td><td>12</td><td>8</td></tr>
+              <tr><td>יוסי כהן</td><td>9</td><td>5</td></tr>
+              <tr><td>מיכל אבן</td><td>7</td><td>11</td></tr>
+              <tr><td>רון שגב</td><td>5</td><td>4</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="table-card">
+          <h3 style="padding:20px 20px 0">ביקורות באיחור לפי משויך</h3>
+          <table class="dashboard-table">
+            <thead>
+              <tr><th>משויך/ת</th><th>ביקורות באיחור</th></tr>
+            </thead>
+            <tbody>
+              <tr class="workload-row-alert"><td>יוסי כהן</td><td class="workload-overdue">3</td></tr>
+              <tr class="workload-row-alert"><td>דנה לוי</td><td class="workload-overdue">2</td></tr>
+              <tr class="workload-row-alert"><td>מיכל אבן</td><td class="workload-overdue">1</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <div class="mock-badge">מוקאפ סטטי · צבעי מותג חדשים <b>«חיוך של ילד»</b> — לא בוצעו שינויים בקוד</div>
+
+</body>
+</html>

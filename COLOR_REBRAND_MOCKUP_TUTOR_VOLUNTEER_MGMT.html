@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>מוקאפ — עמוד ניהול חונכים ומתנדבים (צבעי מותג חדשים)</title>
+<style>
+/* Same local Rubik variable font the real app uses (styles.css @font-face) so
+   the mock renders identically — NOT Google Fonts. */
+@font-face {
+  font-family: 'Rubik';
+  src: url('childsmile/frontend/src/fonts/Rubik-VariableFont_wght.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+}
+/* =====================================================================
+   Tutor & Volunteer Management page — STATIC recolored mock.
+   Faithful reproduction of the real page (InnerPageHeader + Sidebar +
+   filter toolbar + flip-wrapper glassmorphism tutor-vol-data-grid +
+   pagination), with the indigo/purple theme swapped to the A Child's
+   Smile palette. Chrome (Sidebar + header) copied VERBATIM from
+   COLOR_REBRAND_MOCKUP_FAMILIES.html so it is identical across pages.
+   Brand: sky #6EC1E4 · teal #3BC1C8 · pink #ED3B97 · yellow #FCD20E · navy #143852
+   Indigo/purple → TEAL (the MAIN brand colour): header + sidebar +
+   grid-header + pagination active + grid glass shadows.
+   PINK (#ED3B97) is used ONLY as a SEPARATOR / accent (header lower edge,
+   title underline, sidebar divider). KEPT exactly as the real app: orange
+   toggle (Show Volunteers), blue refresh, green tutorship-status filter,
+   blue search border + blue details button, green/red/orange/gray status
+   text. Structure/labels 1:1 with TutorVolunteerMgmt.js.
+   ===================================================================== */
+
+*{box-sizing:border-box;font-family:Rubik,sans-serif}
+html{zoom:.8}
+body{
+  margin:0;direction:rtl;min-height:100vh;
+  display:flex;flex-direction:row-reverse;
+  background:
+    linear-gradient(135deg,
+      rgba(237,59,151,.14) 0%,
+      rgba(110,193,228,.14) 25%,
+      rgba(59,193,200,.14) 50%,
+      rgba(252,210,14,.14) 75%,
+      rgba(242,103,34,.14) 100%);
+  background-attachment:fixed;
+}
+
+/* ===================== SIDEBAR (faithful to common.css; bg recolored TEAL) ===================== */
+.sidebar{
+  background:linear-gradient(135deg,
+    rgba(110,193,228,.9) 0%,
+    rgba(59,193,200,.92) 45%,
+    rgba(101,190,198,.94) 100%);
+  color:#fff;width:280px;min-height:100vh;padding:60px 15px 25px;
+  box-shadow:-4px 0 40px rgba(59,193,200,.4), -2px 0 20px rgba(101,190,198,.3), inset 1px 0 0 rgba(255,255,255,.3);
+  position:fixed;right:0;top:0;display:flex;flex-direction:column;z-index:1001;
+  border-left:2px solid rgba(255,255,255,.3);overflow-y:auto;
+}
+.sidebar-toggle{position:absolute;top:15px;right:25px;width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px}
+.sidebar-user-info{background:linear-gradient(135deg,rgba(255,255,255,.25),rgba(255,255,255,.15));border:2px solid rgba(255,255,255,.3);border-radius:16px;padding:20px;margin-bottom:20px;text-align:center;box-shadow:0 4px 20px rgba(0,0,0,.15),inset 0 1px 0 rgba(255,255,255,.4)}
+.sidebar-username{font-size:28px;font-weight:700;color:#fff;text-shadow:0 2px 8px rgba(0,0,0,.3);margin-bottom:12px;letter-spacing:.5px}
+.sidebar-roles{display:flex;flex-direction:column;gap:6px}
+.sidebar-role{background:linear-gradient(90deg,rgba(255,255,255,.2),rgba(255,255,255,.1));padding:6px 12px;border-radius:8px;font-size:18px;font-weight:600;color:#fff;border:1px solid rgba(255,255,255,.2)}
+/* clock stays GREEN (not indigo/purple) */
+.sidebar-clock{background:linear-gradient(135deg,rgba(16,185,129,.85),rgba(5,150,105,.85));border:2px solid rgba(255,255,255,.4);border-radius:16px;padding:20px;margin-bottom:20px;text-align:center;box-shadow:0 6px 25px rgba(16,185,129,.35),inset 0 1px 0 rgba(255,255,255,.4)}
+.sidebar-time{font-size:36px;font-weight:800;color:#fff;letter-spacing:2px;text-shadow:0 3px 10px rgba(0,0,0,.3);margin-bottom:8px}
+.sidebar-date{font-size:18px;font-weight:600;color:rgba(255,255,255,.95)}
+/* logout stays RED */
+.sidebar-logout-button{background:linear-gradient(135deg,rgba(239,68,68,.95),rgba(220,38,38,.95));color:#fff;padding:16px 24px;border:2px solid rgba(255,255,255,.4);border-radius:14px;cursor:pointer;font-size:22px;font-weight:700;width:100%;margin-bottom:20px;box-shadow:0 6px 25px rgba(239,68,68,.4),inset 0 1px 0 rgba(255,255,255,.3)}
+/* PINK = separator only — the sidebar divider */
+.sidebar-divider{height:3px;background:linear-gradient(90deg,transparent,rgba(237,59,151,.9),transparent);margin:20px 0;border-radius:2px}
+.sidebar-nav-btn{display:block;width:100%;background:none;border:none;color:rgba(255,255,255,.82);font-size:32px;padding:6px 2px;cursor:pointer;text-align:right}
+.sidebar-nav-btn.top-level{font-weight:600;color:rgba(255,255,255,.85)}
+.sidebar-nav-btn.active{color:#fff;font-weight:700}
+.sidebar-section-header{display:flex;align-items:center;gap:4px;width:100%;background:none;border:none;border-bottom:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.85);font-size:32px;font-weight:600;padding:8px 2px 6px;cursor:pointer;margin-top:10px;text-align:right}
+.sidebar-section-label{flex:1;text-align:right}
+.sidebar-section-arrow{font-size:20px;font-weight:300;color:rgba(255,255,255,.55);transition:transform .2s;transform:rotate(0deg);line-height:1}
+.sidebar-section-arrow.open{transform:rotate(90deg)}
+.sidebar-section-items{display:flex;flex-direction:column;padding-right:12px;border-right:1px solid rgba(255,255,255,.15);margin:2px 6px 0 0}
+.sidebar-section-items .sidebar-nav-btn{font-size:24px;color:rgba(255,255,255,.7);padding:5px 2px}
+.sidebar-section-items .sidebar-nav-btn.active{color:#fff;font-weight:700}
+
+/* ===================== HEADER (fixed top) ===================== */
+.header{
+  background:linear-gradient(135deg,
+    rgba(110,193,228,.9) 0%,
+    rgba(59,193,200,.92) 45%,
+    rgba(101,190,198,.95) 100%);
+  color:#fff;display:flex;align-items:center;justify-content:center;
+  padding:20px 30px;height:200px;position:fixed;right:0;top:0;left:0;z-index:1000;
+  border-bottom:3px solid rgba(255,255,255,.3);
+  box-shadow:0 8px 40px rgba(59,193,200,.35), 0 4px 20px rgba(101,190,198,.28), inset 0 -1px 0 rgba(255,255,255,.3);
+}
+/* PINK = separator only — the header's lower edge (echoes the site's pink underline) */
+.header::before{content:'';position:absolute;bottom:0;left:0;right:0;height:5px;
+  background:linear-gradient(90deg, rgba(237,59,151,1) 0%, rgba(219,75,149,1) 100%);
+  box-shadow:0 2px 15px rgba(237,59,151,.5);}
+.logo{width:180px;height:180px;position:absolute;right:310px;top:10px;border-radius:20px;
+  border:3px solid rgba(255,255,255,.5);background:#fff;padding:10px;object-fit:contain;
+  box-shadow:0 6px 30px rgba(0,0,0,.2),0 0 20px rgba(255,255,255,.25);z-index:1002;}
+.title{font-size:4em;font-weight:900;margin:0;position:absolute;left:50%;transform:translateX(-50%);
+  white-space:nowrap;letter-spacing:2px;
+  background:linear-gradient(135deg,#fff 0%,#f0f9ff 25%,#e0f7fa 50%,#bae6fd 75%,#fff 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  filter:drop-shadow(0 4px 20px rgba(255,255,255,.4)) drop-shadow(0 2px 10px rgba(59,193,200,.65)) drop-shadow(0 0 30px rgba(101,190,198,.4));}
+/* PINK underline separator under the page title (mirrors the site's heading underline) */
+.title::after{content:'';position:absolute;left:50%;bottom:-14px;transform:translateX(-50%);width:78%;height:5px;border-radius:6px;
+  background:linear-gradient(90deg,rgba(237,59,151,.95),rgba(219,75,149,.95));box-shadow:0 3px 12px rgba(237,59,151,.5)}
+.top-left{position:absolute;top:20px;left:40px;display:flex;align-items:center;gap:25px;z-index:1001}
+.amit-img{width:130px;height:170px;object-fit:cover;border-radius:18px;border:3px solid rgba(255,255,255,.5);box-shadow:0 6px 30px rgba(0,0,0,.25)}
+.quote{font-size:20px;font-weight:600;text-align:right;color:#143852;max-width:360px;
+  background:linear-gradient(135deg,rgba(255,255,255,.95),rgba(249,250,251,.95));padding:14px 18px;border-radius:14px;
+  box-shadow:0 6px 24px rgba(0,0,0,.12)}
+.qr-code{width:140px;height:140px;border-radius:16px;border:3px solid rgba(255,255,255,.5);background:#fff;padding:10px;box-shadow:0 6px 30px rgba(0,0,0,.2)}
+
+/* ===================== CONTENT ===================== */
+.content{flex:1;margin-right:280px;padding:220px 40px 60px;min-width:0}
+
+/* ===================== TOOLBAR (filter-create-container) =====================
+   Faithful to families.css/tut_vol_mgmt.css. All these controls are NON
+   indigo/purple in the real app, so KEPT: toggle=orange, refresh=blue,
+   tutorship-status filter=green, search=blue border. */
+.filter-create-container{display:flex;justify-content:flex-start;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:34px;overflow-x:auto;padding-bottom:10px}
+/* Show Volunteers/Tutors toggle — KEEP orange (real #fb923c→#f97316) */
+.toggle-healthy-btn{background:linear-gradient(135deg,rgba(251,146,60,.95) 0%,rgba(249,115,22,.95) 100%)!important;backdrop-filter:blur(15px);color:#fff;padding:12px 24px;font-size:24px;font-weight:600;border:2px solid rgba(255,255,255,.3);border-radius:14px;cursor:pointer;margin-left:10px;box-shadow:0 6px 20px rgba(251,146,60,.3),inset 0 1px 0 rgba(255,255,255,.3)}
+.toggle-healthy-btn:hover{transform:translateY(-2px) scale(1.02)}
+/* Refresh list — KEEP blue (real #3b82f6→#2563eb) */
+.refresh-volunteers-tutors-btn{background:linear-gradient(135deg,rgba(59,130,246,.95) 0%,rgba(37,99,235,.95) 100%)!important;color:#fff;padding:12px 24px;font-size:24px;font-weight:600;border:2px solid rgba(255,255,255,.3);border-radius:14px;cursor:pointer;margin-left:10px;box-shadow:0 6px 20px rgba(59,130,246,.3),inset 0 1px 0 rgba(255,255,255,.3)}
+.refresh-volunteers-tutors-btn:hover{transform:translateY(-2px) scale(1.02);box-shadow:0 8px 25px rgba(59,130,246,.4),inset 0 1px 0 rgba(255,255,255,.4)}
+/* Tutorship status filter — KEEP green (real #22c55e→#16a34a) */
+.tutorship-status-filter{background:linear-gradient(135deg,rgba(34,197,94,.95) 0%,rgba(22,163,74,.95) 100%)!important;backdrop-filter:blur(15px);color:#fff!important;padding:12px 24px!important;font-size:24px!important;font-weight:600!important;border:2px solid rgba(255,255,255,.3)!important;border-radius:14px!important;cursor:pointer!important;box-shadow:0 6px 20px rgba(34,197,94,.3),inset 0 1px 0 rgba(255,255,255,.3)!important;appearance:none;display:inline-flex;align-items:center;justify-content:center;margin-right:20px;line-height:1}
+.tutorship-status-filter option{padding:10px;font-size:16px;background-color:#fff;color:#1f2937}
+/* Search bar — KEEP blue border (real #3b82f6, not indigo/purple) */
+.search-bar,input.search-bar{padding:10px 15px;width:450px;height:30px;border:3px solid rgba(59,130,246,.75);background:linear-gradient(135deg,rgba(240,242,245,.8) 0%,rgba(255,255,255,.9) 100%);backdrop-filter:blur(15px);border-radius:16px;font-size:24px;font-weight:500;color:#1f2937;box-shadow:0 4px 15px rgba(59,130,246,.2),0 2px 8px rgba(0,0,0,.05),inset 0 1px 0 rgba(255,255,255,.8);display:inline-block;vertical-align:middle}
+.search-bar::placeholder,input.search-bar::placeholder{color:rgba(59,130,246,.5);font-weight:500}
+.search-bar:focus,input.search-bar:focus{outline:none;border-color:rgba(59,130,246,.9);box-shadow:0 6px 20px rgba(59,130,246,.3),0 0 0 3px rgba(59,130,246,.1),inset 0 1px 0 rgba(255,255,255,.8);transform:translateY(-2px) scale(1.02)}
+
+/* ===================== GRID (flip-wrapper + tutor-vol-data-grid) =====================
+   Faithful to tut_vol_mgmt.css. Only indigo/purple recolored to TEAL:
+   grid glass shadows, TH gradient, hover, flip-wrapper accent shadow.
+   KEPT: blue #3b82f6 (editable borders/details), pink/orange/green in
+   the decorative bubbleAppear ring, grays. */
+.families-grid-wrapper{perspective:2000px;width:1600px;height:480px;position:relative;margin-left:460px}
+.flip-wrapper{position:relative;width:1850px;height:600px;margin-right:240px;margin-top:350px;perspective:2000px;
+  background:linear-gradient(135deg,rgba(255,255,255,.95) 0%,rgba(255,255,255,.9) 100%);
+  backdrop-filter:blur(20px) saturate(180%);border-radius:20px;border:2px solid rgba(255,255,255,.5);padding:20px;
+  box-shadow:0 15px 50px rgba(0,0,0,.2), 0 8px 25px rgba(59,193,200,.15), inset 0 2px 0 rgba(255,255,255,.8)}
+.flip-inner{width:100%;height:100%;transform-style:preserve-3d;transition:transform .8s ease-in-out;position:relative}
+.flip-front,.flip-back{position:absolute;width:100%;height:100%;top:0;left:0;backface-visibility:hidden;pointer-events:none}
+.flip-front{transform:rotateX(0deg)}
+.flip-back{transform:rotateX(0deg)}
+.flip-front.active,.flip-back.active{pointer-events:auto;z-index:2}
+
+.tutor-vol-data-grid{width:100%;max-width:100%;border-collapse:separate;border-spacing:0;table-layout:auto;
+  border:2px solid rgba(255,255,255,.5);
+  background:linear-gradient(135deg,rgba(255,255,255,.65) 0%,rgba(245,245,245,.55) 100%);
+  backdrop-filter:blur(25px) saturate(180%);
+  box-shadow:0 20px 60px rgba(59,130,246,.3), 0 10px 30px rgba(59,193,200,.25), inset 0 1px 0 rgba(255,255,255,.4);
+  border-radius:24px;overflow:hidden;position:relative;z-index:1;isolation:isolate;font-size:30px;direction:rtl}
+.tutor-vol-data-grid th,.tutor-vol-data-grid td{border:1px solid #ddd;padding:8px 10px;text-align:right;white-space:nowrap;width:auto}
+.tutor-vol-data-grid th{
+  background:linear-gradient(135deg,rgba(59,193,200,1) 0%,rgba(110,193,228,1) 100%);
+  backdrop-filter:blur(15px) saturate(180%);font-weight:700;font-size:30px;color:#fff;position:sticky;top:0;z-index:2;
+  border-bottom:2px solid rgba(255,255,255,.3);box-shadow:0 4px 20px rgba(59,193,200,.35);
+  text-shadow:0 2px 10px rgba(0,0,0,.25);letter-spacing:.5px;white-space:nowrap;width:auto}
+.tutor-vol-data-grid td{font-size:26px;max-width:350px;overflow-x:auto}
+.tutor-vol-data-grid tr:nth-child(even){background:linear-gradient(90deg,rgba(240,242,245,.8) 0%,rgba(230,232,236,.8) 100%);backdrop-filter:blur(10px)}
+.tutor-vol-data-grid tr:hover{background:linear-gradient(90deg,rgba(110,193,228,.5) 0%,rgba(110,193,228,.5) 100%);backdrop-filter:blur(15px) saturate(150%);
+  box-shadow:0 8px 25px rgba(59,193,200,.3), inset 0 1px 0 rgba(255,255,255,.3);transition:all .3s cubic-bezier(0.4,0,0.2,1)}
+.tutor-vol-editable-cell{cursor:pointer;transition:background-color .2s ease}
+.tutor-vol-editable-cell:hover{background-color:rgba(59,130,246,.1)}
+.tutor-vol-text-cell-content{display:block;overflow:hidden;width:100%;word-wrap:break-word;white-space:normal;line-height:1.3;max-height:40px}
+
+/* sort arrow button (common.css) — white on the teal header */
+.sort-button{background:none;border:none;cursor:pointer;font-size:24px;margin-left:5px;margin-right:10px;color:#fdfbfb}
+
+/* Details button — KEEP blue (real #4a90d9→#357abd, not indigo/purple) */
+.details-button{background:linear-gradient(135deg,#4a90d9 0%,#357abd 100%);color:#fff;border:none;border-radius:6px;padding:6px 14px;cursor:pointer;font-size:18px;font-weight:600;font-family:Rubik,sans-serif;transition:all .3s ease;box-shadow:0 2px 8px rgba(74,144,217,.3);white-space:nowrap}
+.details-button:hover{background:linear-gradient(135deg,#357abd 0%,#2a5f8f 100%);transform:translateY(-2px);box-shadow:0 4px 12px rgba(74,144,217,.4)}
+
+/* pagination (recolored: active = TEAL) */
+.pagination{display:flex;justify-content:center;align-items:center;gap:6px;margin-top:26px}
+.pagination button{padding:10px 16px;border:2px solid rgba(204,204,204,.3);border-radius:12px;cursor:pointer;font-size:20px;font-weight:600;
+  background:linear-gradient(135deg,rgba(255,255,255,.95),rgba(249,250,251,.95));box-shadow:0 4px 15px rgba(0,0,0,.08)}
+.pagination button.active{color:#fff;border:2px solid rgba(255,255,255,.4);
+  background:linear-gradient(135deg,rgba(59,193,200,.97),rgba(110,193,228,.97));box-shadow:0 6px 25px rgba(59,193,200,.4)}
+.pagination button:disabled{color:#cbd5e1;background:rgba(240,240,240,.5);cursor:not-allowed;box-shadow:none}
+
+/* mock badge */
+.mock-badge{position:fixed;bottom:16px;left:16px;z-index:3000;background:#143852;color:#fff;font-size:14px;font-weight:600;
+  padding:8px 14px;border-radius:10px;box-shadow:0 6px 20px rgba(0,0,0,.25);opacity:.92}
+.mock-badge b{color:#FCD20E}
+</style>
+</head>
+<body>
+
+  <!-- ===================== SIDEBAR (1:1 with Sidebar.js — מתנדבים section open, this page active) ===================== -->
+  <aside class="sidebar">
+    <button class="sidebar-toggle" title="צמצם סרגל">▶</button>
+    <div class="sidebar-user-info">
+      <div class="sidebar-username">שרה לוי</div>
+      <div class="sidebar-roles"><div class="sidebar-role">רכז משפחות</div></div>
+    </div>
+    <div class="sidebar-clock">
+      <div class="sidebar-time">09:42:15</div>
+      <div class="sidebar-date">יום ראשון, 27 ביולי 2026</div>
+    </div>
+    <button class="sidebar-logout-button">יציאה מהמערכת</button>
+    <div class="sidebar-divider"></div>
+
+    <button class="sidebar-nav-btn top-level">לוח משימות</button>
+
+    <button class="sidebar-section-header"><span class="sidebar-section-label">משפחות</span><span class="sidebar-section-arrow">›</span></button>
+
+    <button class="sidebar-section-header"><span class="sidebar-section-label">מתנדבים</span><span class="sidebar-section-arrow open">›</span></button>
+    <div class="sidebar-section-items">
+      <button class="sidebar-nav-btn active">ניהול חונכים ומתנדבים</button>
+      <button class="sidebar-nav-btn">משובים</button>
+    </div>
+
+    <button class="sidebar-section-header"><span class="sidebar-section-label">כספים</span><span class="sidebar-section-arrow">›</span></button>
+    <button class="sidebar-section-header"><span class="sidebar-section-label">פעילויות</span><span class="sidebar-section-arrow">›</span></button>
+    <button class="sidebar-section-header"><span class="sidebar-section-label">ניהול</span><span class="sidebar-section-arrow">›</span></button>
+  </aside>
+
+  <!-- ===================== HEADER (InnerPageHeader, title = t("Tutors Management")) ===================== -->
+  <header class="header">
+    <img class="logo" src="childsmile/frontend/src/assets/logo.png" alt="חיוך של ילד">
+    <div class="top-left">
+      <img class="amit-img" src="childsmile/frontend/src/assets/amit.jpg" alt="עמית">
+      <div class="quote">הרבה אנשים אומרים שהם רוצים להצליח אבל לא כולם מוכנים לשלם את המחיר שצריך כדי להצליח</div>
+      <img class="qr-code" src="childsmile/frontend/src/assets/qr-code.jpg" alt="QR">
+    </div>
+    <h1 class="title">ניהול חונכים</h1>
+  </header>
+
+  <!-- ===================== CONTENT ===================== -->
+  <main class="content">
+
+    <!-- toolbar (exact button order + labels from TutorVolunteerMgmt.js, tutors view) -->
+    <div class="filter-create-container">
+      <button class="toggle-healthy-btn">הצג מתנדבים</button>
+      <button class="refresh-volunteers-tutors-btn">רענן רשימת חונכים</button>
+      <select class="tutorship-status-filter">
+        <option>כל מצבי החונכות</option>
+        <option>ממתין לראיון</option>
+        <option>יש חניך</option>
+        <option>אין חניך</option>
+        <option>לא זמין לשיבוץ</option>
+      </select>
+      <input class="search-bar" type="text" placeholder="חפש לפי שם, אימייל, טלפון, עיר או ת.ז">
+    </div>
+
+    <!-- grid (flip structure — tutors face active) -->
+    <div class="families-grid-wrapper">
+      <div class="flip-wrapper">
+        <div class="flip-inner">
+          <div class="flip-front active">
+            <table class="tutor-vol-data-grid">
+              <thead>
+                <tr>
+                  <th>תעודת זהות</th>
+                  <th>תאריך לידה</th>
+                  <th>גיל</th>
+                  <th>טלפון</th>
+                  <th>שם</th>
+                  <th>אימייל</th>
+                  <th>עיר</th>
+                  <th>מצב חונכות</th>
+                  <th>חונכות</th>
+                  <th>עודכן לאחרונה <button class="sort-button">▼</button></th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="tutor-vol-editable-cell">312456789</td>
+                  <td class="tutor-vol-editable-cell">15/04/1998</td>
+                  <td>27</td>
+                  <td class="tutor-vol-editable-cell">050-1234567</td>
+                  <td>דניאל אברהם</td>
+                  <td>daniel@gmail.com</td>
+                  <td class="tutor-vol-editable-cell">חיפה</td>
+                  <td class="tutor-vol-editable-cell"><span style="color:green;font-weight:bold">יש חניך</span></td>
+                  <td><button class="details-button">פרטים נוספים</button></td>
+                  <td>12/07/2026</td>
+                </tr>
+                <tr>
+                  <td class="tutor-vol-editable-cell">305678234</td>
+                  <td class="tutor-vol-editable-cell">22/09/1995</td>
+                  <td>30</td>
+                  <td class="tutor-vol-editable-cell">052-9876543</td>
+                  <td>מיכל רוזן</td>
+                  <td>michal@gmail.com</td>
+                  <td class="tutor-vol-editable-cell">תל אביב</td>
+                  <td class="tutor-vol-editable-cell"><span style="color:red;font-weight:bold">אין חניך</span></td>
+                  <td><button class="details-button">פרטים נוספים</button></td>
+                  <td>09:42</td>
+                </tr>
+                <tr>
+                  <td class="tutor-vol-editable-cell">328901456</td>
+                  <td class="tutor-vol-editable-cell">03/01/2001</td>
+                  <td>24</td>
+                  <td class="tutor-vol-editable-cell">054-5551234</td>
+                  <td>יוסי בן דוד</td>
+                  <td>yossi@walla.co.il</td>
+                  <td class="tutor-vol-editable-cell">ירושלים</td>
+                  <td class="tutor-vol-editable-cell"><span style="color:orange;font-weight:bold">ממתין לראיון</span></td>
+                  <td><button class="details-button">פרטים נוספים</button></td>
+                  <td>05/07/2026</td>
+                </tr>
+                <tr>
+                  <td class="tutor-vol-editable-cell">314567890</td>
+                  <td class="tutor-vol-editable-cell">30/06/1999</td>
+                  <td>26</td>
+                  <td class="tutor-vol-editable-cell">053-4443322</td>
+                  <td>נועה שמש</td>
+                  <td>noa@gmail.com</td>
+                  <td class="tutor-vol-editable-cell">באר שבע</td>
+                  <td class="tutor-vol-editable-cell"><span style="color:green;font-weight:bold">יש חניך</span></td>
+                  <td><button class="details-button">פרטים נוספים</button></td>
+                  <td>01/07/2026</td>
+                </tr>
+                <tr>
+                  <td class="tutor-vol-editable-cell">319234567</td>
+                  <td class="tutor-vol-editable-cell">11/11/1997</td>
+                  <td>28</td>
+                  <td class="tutor-vol-editable-cell">058-7778899</td>
+                  <td>אורי כץ</td>
+                  <td>uri@gmail.com</td>
+                  <td class="tutor-vol-editable-cell">רמת גן</td>
+                  <td class="tutor-vol-editable-cell"><span style="color:gray;font-weight:bold">לא זמין לשיבוץ</span></td>
+                  <td><button class="details-button">פרטים נוספים</button></td>
+                  <td>28/06/2026</td>
+                </tr>
+                <tr>
+                  <td class="tutor-vol-editable-cell">327845612</td>
+                  <td class="tutor-vol-editable-cell">18/02/2000</td>
+                  <td>25</td>
+                  <td class="tutor-vol-editable-cell">050-3216549</td>
+                  <td>תמר לוי</td>
+                  <td>tamar@gmail.com</td>
+                  <td class="tutor-vol-editable-cell">נתניה</td>
+                  <td class="tutor-vol-editable-cell"><span style="color:green;font-weight:bold">יש חניך</span></td>
+                  <td><button class="details-button">פרטים נוספים</button></td>
+                  <td>25/06/2026</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <!-- pagination -->
+            <div class="pagination">
+              <button disabled>&laquo;</button>
+              <button disabled>&lsaquo;</button>
+              <button class="active">1</button>
+              <button>2</button>
+              <button>3</button>
+              <button>&rsaquo;</button>
+              <button>&raquo;</button>
+            </div>
+          </div>
+          <div class="flip-back"></div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <div class="mock-badge">מוקאפ סטטי · צבעי מותג חדשים <b>«חיוך של ילד»</b></div>
+
+</body>
+</html>

@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>מוקאפ — ימי כיף וביקורי בית (צבעי מותג חדשים)</title>
+<style>
+/* Same local Rubik variable font the real app uses (styles.css @font-face) so
+   the mock renders identically — NOT Google Fonts. */
+@font-face {
+  font-family: 'Rubik';
+  src: url('childsmile/frontend/src/fonts/Rubik-VariableFont_wght.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+}
+/* =====================================================================
+   Activity Board (ימי כיף וביקורי בית) — STATIC recolored mock.
+   Faithful reproduction of the real /activity-board page (InnerPageHeader +
+   Sidebar + refunds.css page shell + activityboard.css rounds grid +
+   pagination), default 'rounds' view. Only colour values differ.
+   Brand: sky #6EC1E4 · teal #3BC1C8 · pink #ED3B97 · yellow #FCD20E · navy #143852
+   Indigo/purple → TEAL. PINK = separator/accent only. Semantic greens/reds/
+   ambers/blues/grays KEPT. Table/grid headers → TEAL.
+   ===================================================================== */
+
+*{box-sizing:border-box;font-family:Rubik,sans-serif}
+html{zoom:.8}
+body{
+  margin:0;direction:rtl;min-height:100vh;
+  display:flex;flex-direction:row-reverse;
+  background:
+    linear-gradient(135deg,
+      rgba(237,59,151,.14) 0%,
+      rgba(110,193,228,.14) 25%,
+      rgba(59,193,200,.14) 50%,
+      rgba(252,210,14,.14) 75%,
+      rgba(242,103,34,.14) 100%);
+  background-attachment:fixed;
+}
+
+/* ===================== SIDEBAR (faithful to common.css; bg recolored TEAL) ===================== */
+.sidebar{
+  background:linear-gradient(135deg,
+    rgba(110,193,228,.9) 0%,
+    rgba(59,193,200,.92) 45%,
+    rgba(101,190,198,.94) 100%);
+  color:#fff;width:280px;min-height:100vh;padding:60px 15px 25px;
+  box-shadow:-4px 0 40px rgba(59,193,200,.4), -2px 0 20px rgba(101,190,198,.3), inset 1px 0 0 rgba(255,255,255,.3);
+  position:fixed;right:0;top:0;display:flex;flex-direction:column;z-index:1001;
+  border-left:2px solid rgba(255,255,255,.3);overflow-y:auto;
+}
+.sidebar-toggle{position:absolute;top:15px;right:25px;width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px}
+.sidebar-user-info{background:linear-gradient(135deg,rgba(255,255,255,.25),rgba(255,255,255,.15));border:2px solid rgba(255,255,255,.3);border-radius:16px;padding:20px;margin-bottom:20px;text-align:center;box-shadow:0 4px 20px rgba(0,0,0,.15),inset 0 1px 0 rgba(255,255,255,.4)}
+.sidebar-username{font-size:28px;font-weight:700;color:#fff;text-shadow:0 2px 8px rgba(0,0,0,.3);margin-bottom:12px;letter-spacing:.5px}
+.sidebar-roles{display:flex;flex-direction:column;gap:6px}
+.sidebar-role{background:linear-gradient(90deg,rgba(255,255,255,.2),rgba(255,255,255,.1));padding:6px 12px;border-radius:8px;font-size:18px;font-weight:600;color:#fff;border:1px solid rgba(255,255,255,.2)}
+/* clock stays GREEN (not indigo/purple) */
+.sidebar-clock{background:linear-gradient(135deg,rgba(16,185,129,.85),rgba(5,150,105,.85));border:2px solid rgba(255,255,255,.4);border-radius:16px;padding:20px;margin-bottom:20px;text-align:center;box-shadow:0 6px 25px rgba(16,185,129,.35),inset 0 1px 0 rgba(255,255,255,.4)}
+.sidebar-time{font-size:36px;font-weight:800;color:#fff;letter-spacing:2px;text-shadow:0 3px 10px rgba(0,0,0,.3);margin-bottom:8px}
+.sidebar-date{font-size:18px;font-weight:600;color:rgba(255,255,255,.95)}
+/* logout stays RED */
+.sidebar-logout-button{background:linear-gradient(135deg,rgba(239,68,68,.95),rgba(220,38,38,.95));color:#fff;padding:16px 24px;border:2px solid rgba(255,255,255,.4);border-radius:14px;cursor:pointer;font-size:22px;font-weight:700;width:100%;margin-bottom:20px;box-shadow:0 6px 25px rgba(239,68,68,.4),inset 0 1px 0 rgba(255,255,255,.3)}
+/* PINK = separator only — the sidebar divider */
+.sidebar-divider{height:3px;background:linear-gradient(90deg,transparent,rgba(237,59,151,.9),transparent);margin:20px 0;border-radius:2px}
+.sidebar-nav-btn{display:block;width:100%;background:none;border:none;color:rgba(255,255,255,.82);font-size:32px;padding:6px 2px;cursor:pointer;text-align:right}
+.sidebar-nav-btn.top-level{font-weight:600;color:rgba(255,255,255,.85)}
+.sidebar-nav-btn.active{color:#fff;font-weight:700}
+.sidebar-section-header{display:flex;align-items:center;gap:4px;width:100%;background:none;border:none;border-bottom:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.85);font-size:32px;font-weight:600;padding:8px 2px 6px;cursor:pointer;margin-top:10px;text-align:right}
+.sidebar-section-label{flex:1;text-align:right}
+.sidebar-section-arrow{font-size:20px;font-weight:300;color:rgba(255,255,255,.55);transition:transform .2s;transform:rotate(0deg);line-height:1}
+.sidebar-section-arrow.open{transform:rotate(90deg)}
+.sidebar-section-items{display:flex;flex-direction:column;padding-right:12px;border-right:1px solid rgba(255,255,255,.15);margin:2px 6px 0 0}
+.sidebar-section-items .sidebar-nav-btn{font-size:24px;color:rgba(255,255,255,.7);padding:5px 2px}
+.sidebar-section-items .sidebar-nav-btn.active{color:#fff;font-weight:700}
+
+/* ===================== HEADER (fixed top) ===================== */
+.header{
+  background:linear-gradient(135deg,
+    rgba(110,193,228,.9) 0%,
+    rgba(59,193,200,.92) 45%,
+    rgba(101,190,198,.95) 100%);
+  color:#fff;display:flex;align-items:center;justify-content:center;
+  padding:20px 30px;height:200px;position:fixed;right:0;top:0;left:0;z-index:1000;
+  border-bottom:3px solid rgba(255,255,255,.3);
+  box-shadow:0 8px 40px rgba(59,193,200,.35), 0 4px 20px rgba(101,190,198,.28), inset 0 -1px 0 rgba(255,255,255,.3);
+}
+/* PINK = separator only — the header's lower edge (echoes the site's pink underline) */
+.header::before{content:'';position:absolute;bottom:0;left:0;right:0;height:5px;
+  background:linear-gradient(90deg, rgba(237,59,151,1) 0%, rgba(219,75,149,1) 100%);
+  box-shadow:0 2px 15px rgba(237,59,151,.5);}
+.logo{width:180px;height:180px;position:absolute;right:310px;top:10px;border-radius:20px;
+  border:3px solid rgba(255,255,255,.5);background:#fff;padding:10px;object-fit:contain;
+  box-shadow:0 6px 30px rgba(0,0,0,.2),0 0 20px rgba(255,255,255,.25);z-index:1002;}
+.title{font-size:4em;font-weight:900;margin:0;position:absolute;left:50%;transform:translateX(-50%);
+  white-space:nowrap;letter-spacing:2px;
+  background:linear-gradient(135deg,#fff 0%,#f0f9ff 25%,#e0f7fa 50%,#bae6fd 75%,#fff 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  filter:drop-shadow(0 4px 20px rgba(255,255,255,.4)) drop-shadow(0 2px 10px rgba(59,193,200,.65)) drop-shadow(0 0 30px rgba(101,190,198,.4));}
+/* PINK underline separator under the page title (mirrors the site's heading underline) */
+.title::after{content:'';position:absolute;left:50%;bottom:-14px;transform:translateX(-50%);width:78%;height:5px;border-radius:6px;
+  background:linear-gradient(90deg,rgba(237,59,151,.95),rgba(219,75,149,.95));box-shadow:0 3px 12px rgba(237,59,151,.5)}
+.top-left{position:absolute;top:20px;left:40px;display:flex;align-items:center;gap:25px;z-index:1001}
+.amit-img{width:130px;height:170px;object-fit:cover;border-radius:18px;border:3px solid rgba(255,255,255,.5);box-shadow:0 6px 30px rgba(0,0,0,.25)}
+.quote{font-size:20px;font-weight:600;text-align:right;color:#143852;max-width:360px;
+  background:linear-gradient(135deg,rgba(255,255,255,.95),rgba(249,250,251,.95));padding:14px 18px;border-radius:14px;
+  box-shadow:0 6px 24px rgba(0,0,0,.12)}
+.qr-code{width:140px;height:140px;border-radius:16px;border:3px solid rgba(255,255,255,.5);background:#fff;padding:10px;box-shadow:0 6px 30px rgba(0,0,0,.2)}
+
+/* ===================== PAGE SHELL (refunds.css — recolored) ===================== */
+.refunds-main-content{
+  display:flex;flex-direction:column;align-items:center;justify-content:flex-start;
+  flex-grow:1;padding:230px 40px 40px 40px;margin-right:280px;width:calc(100% - 280px);
+  background:transparent;
+}
+
+/* ── Page header controls ── */
+.refunds-controls{
+  display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap;justify-content:flex-start;width:100%;
+}
+/* was indigo/purple gradient → TEAL */
+.refunds-controls button:not(.export-button){
+  background:linear-gradient(135deg, rgba(59,193,200,.9), rgba(59,193,200,.9));
+  color:white;border:none;border-radius:12px;padding:10px 20px;font-size:24px;cursor:pointer;
+  transition:opacity .2s ease;font-family:Rubik,sans-serif;
+}
+.refunds-controls button:not(.export-button):hover{opacity:.85}
+/* Report/accent button — was #6366f1→#8b5cf6 → teal→sky */
+.refunds-controls button.btn-report{
+  background:linear-gradient(135deg, #3BC1C8, #6EC1E4);color:#fff;font-weight:700;
+}
+.refunds-status-filter{
+  background:linear-gradient(135deg, rgba(59,193,200,.9), rgba(59,193,200,.9));
+  color:white;border:none;border-radius:12px;padding:10px 20px;font-size:24px;cursor:pointer;
+  font-family:Rubik,sans-serif;min-width:180px;transition:opacity .2s ease;
+}
+.refunds-status-filter:hover{opacity:.85}
+
+/* search bar — KEEP blue (real #3b82f6, not indigo/purple) */
+.tutorship-search-bar{
+  padding:10px 15px;width:350px;margin-top:10px;height:55px;
+  border:3px solid rgba(59,130,246,.75);
+  background:linear-gradient(135deg, rgba(240,242,245,.8) 0%, rgba(255,255,255,.9) 100%);
+  backdrop-filter:blur(15px) saturate(180%);-webkit-backdrop-filter:blur(15px) saturate(180%);
+  border-radius:16px;font-size:24px;font-weight:500;color:#1f2937;
+  box-shadow:0 4px 15px rgba(59,130,246,.2),0 2px 8px rgba(0,0,0,.05),inset 0 1px 0 rgba(255,255,255,.8);
+  transition:all .3s cubic-bezier(0.4,0,0.2,1);
+  display:inline-block;vertical-align:middle;position:relative;font-family:inherit;box-sizing:border-box;
+}
+.tutorship-search-bar:focus{
+  outline:none;border-color:rgba(59,130,246,.9);
+  box-shadow:0 6px 20px rgba(59,130,246,.3),0 0 0 3px rgba(59,130,246,.1),inset 0 1px 0 rgba(255,255,255,.8);
+  transform:translateY(-2px) scale(1.02);
+}
+.tutorship-search-bar::placeholder{color:rgba(59,130,246,.5);font-weight:500}
+
+/* ── Table ── */
+.refunds-table-wrapper{
+  width:100%;overflow-x:auto;border-radius:16px;box-shadow:0 4px 24px rgba(59,193,200,.15);
+}
+.refunds-table{
+  width:90%;table-layout:auto;border-collapse:collapse;
+  background:rgba(255,255,255,.95);backdrop-filter:blur(10px);
+}
+/* table header → TEAL (override) */
+.refunds-table thead tr{
+  background:linear-gradient(135deg, #3BC1C8, #6EC1E4);color:white;
+}
+.refunds-table th,.refunds-table td{
+  padding:12px 20px;text-align:right;font-size:24px;white-space:nowrap;
+  border-bottom:1px solid rgba(59,193,200,.08);
+}
+.refunds-table tbody tr:hover{background:rgba(59,193,200,.05);cursor:pointer}
+
+/* ── Loading / empty state ── */
+.refunds-loading{text-align:center;padding:60px;color:#6b7280;font-size:24px}
+.refunds-empty{text-align:center;padding:60px;color:#9ca3af;font-size:24px}
+
+/* ===================== ACTIVITY BOARD (activityboard.css — recolored) ===================== */
+/* ── Status badges (rounds + requests) — semantic, KEPT ── */
+.activity-badge{
+  display:inline-block;padding:3px 12px;border-radius:12px;font-size:15px;font-weight:700;white-space:nowrap;
+}
+.activity-badge--open      { background:#fef3c7; color:#b45309; }  /* פתוח / ממתין לשיבוץ */
+.activity-badge--closed    { background:#e5e7eb; color:#374151; }  /* סגור */
+.activity-badge--assigned  { background:#dbeafe; color:#1d4ed8; }  /* משובץ */
+.activity-badge--completed { background:#d1fae5; color:#047857; }  /* הושלם */
+.activity-badge--cancelled { background:#fee2e2; color:#b91c1c; }  /* בוטל */
+
+/* ── Row action cluster ── */
+.activity-actions{display:flex;align-items:center;gap:8px;white-space:nowrap}
+.activity-icon-btn{cursor:pointer;font-size:20px;line-height:1;transition:transform .1s ease}
+.activity-icon-btn:hover{transform:scale(1.2)}
+
+.activity-round-title{font-size:20px;color:#143852;margin:8px 0 16px;width:100%}
+.activity-round-title strong{color:#143852}
+
+/* ── Rounds grid — board-scoped font bump ── */
+.activity-board-grid th,.activity-board-grid td{font-size:28px}
+/* in-cell "בקשות" btn — was rgba(99,102,241,.9)/rgba(168,85,247,.9) → teal→sky */
+.activity-board-grid .btn-report{
+  padding:6px 18px;font-size:22px;border:none;border-radius:10px;
+  background:linear-gradient(135deg, rgba(59,193,200,.9), rgba(110,193,228,.9));
+  color:#fff;cursor:pointer;
+}
+.activity-board-grid .activity-badge{font-size:22px;padding:5px 18px}
+.activity-board-grid .activity-icon-btn{font-size:30px}
+
+/* ── Pagination ── */
+.pagination{display:flex;justify-content:center;align-items:center;gap:5px;margin-top:20px}
+.pagination button{padding:8px 12px;border:1px solid #ccc;background-color:#fff;border-radius:4px;cursor:pointer;font-size:20px}
+.pagination button.active{background-color:#007bff;color:white;font-weight:bold}
+.pagination button:disabled{background-color:#f0f0f0;color:#ccc;cursor:not-allowed}
+.pagination-arrow{font-size:16px;font-weight:bold}
+.pagination-info{padding:0 12px;font-size:16px;color:#374151;align-self:center}
+
+/* mock badge */
+.mock-badge{position:fixed;bottom:16px;left:16px;z-index:3000;background:#143852;color:#fff;font-size:14px;font-weight:600;
+  padding:8px 14px;border-radius:10px;box-shadow:0 6px 20px rgba(0,0,0,.25);opacity:.92}
+.mock-badge b{color:#FCD20E}
+</style>
+</head>
+<body>
+
+  <!-- ===================== SIDEBAR (1:1 with Sidebar.js) ===================== -->
+  <aside class="sidebar">
+    <button class="sidebar-toggle" title="צמצם סרגל">▶</button>
+    <div class="sidebar-user-info">
+      <div class="sidebar-username">מיכל ברקוביץ'</div>
+      <div class="sidebar-roles"><div class="sidebar-role">רכז מתנדבים</div></div>
+    </div>
+    <div class="sidebar-clock">
+      <div class="sidebar-time">09:42:15</div>
+      <div class="sidebar-date">יום ראשון, 27 ביולי 2026</div>
+    </div>
+    <button class="sidebar-logout-button">יציאה מהמערכת</button>
+    <div class="sidebar-divider"></div>
+
+    <button class="sidebar-nav-btn top-level">לוח משימות</button>
+
+    <button class="sidebar-section-header"><span class="sidebar-section-label">משפחות</span><span class="sidebar-section-arrow">›</span></button>
+    <button class="sidebar-section-header"><span class="sidebar-section-label">מתנדבים</span><span class="sidebar-section-arrow">›</span></button>
+    <button class="sidebar-section-header"><span class="sidebar-section-label">כספים</span><span class="sidebar-section-arrow">›</span></button>
+
+    <button class="sidebar-section-header"><span class="sidebar-section-label">פעילויות</span><span class="sidebar-section-arrow open">›</span></button>
+    <div class="sidebar-section-items">
+      <button class="sidebar-nav-btn active">ימי כיף וביקורי בית</button>
+      <button class="sidebar-nav-btn">שיבוץ לפעילויות</button>
+    </div>
+
+    <button class="sidebar-section-header"><span class="sidebar-section-label">ניהול</span><span class="sidebar-section-arrow">›</span></button>
+  </aside>
+
+  <!-- ===================== HEADER ===================== -->
+  <header class="header">
+    <img class="logo" src="childsmile/frontend/src/assets/logo.png" alt="חיוך של ילד">
+    <div class="top-left">
+      <img class="amit-img" src="childsmile/frontend/src/assets/amit.jpg" alt="עמית">
+      <div class="quote">הרבה אנשים אומרים שהם רוצים להצליח אבל לא כולם מוכנים לשלם את המחיר שצריך כדי להצליח</div>
+      <img class="qr-code" src="childsmile/frontend/src/assets/qr-code.jpg" alt="QR">
+    </div>
+    <h1 class="title">ימי כיף וביקורי בית</h1>
+  </header>
+
+  <!-- ===================== MAIN (refunds-main-content, view='rounds') ===================== -->
+  <div class="refunds-main-content">
+
+    <!-- controls (exact button order + labels from ActivityBoard.js rounds view) -->
+    <div class="refunds-controls">
+      <button>+ מחזור חדש</button>
+      <button>רענן</button>
+      <input type="text" class="tutorship-search-bar" placeholder="חיפוש מחזור...">
+    </div>
+
+    <!-- rounds grid -->
+    <div class="refunds-table-wrapper">
+      <table class="refunds-table activity-board-grid">
+        <thead>
+          <tr>
+            <th>שם המחזור</th><th>סטטוס</th><th>מתאריך</th><th>עד תאריך</th><th>בקשות</th><th>פעולות</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>מחזור קיץ 2026</td>
+            <td><span class="activity-badge activity-badge--open">פתוח</span></td>
+            <td>01/07/2026</td><td>31/08/2026</td><td>12</td>
+            <td class="activity-actions">
+              <button class="btn-report">בקשות</button>
+              <span title="העתק קישור לשאלון" class="activity-icon-btn">🔗</span>
+              <span title="עריכה" class="activity-icon-btn">✏️</span>
+              <span title="מחיקה" class="activity-icon-btn">🗑️</span>
+            </td>
+          </tr>
+          <tr>
+            <td>מחזור פסח 2026</td>
+            <td><span class="activity-badge activity-badge--closed">סגור</span></td>
+            <td>15/03/2026</td><td>30/04/2026</td><td>8</td>
+            <td class="activity-actions">
+              <button class="btn-report">בקשות</button>
+              <span title="העתק קישור לשאלון" class="activity-icon-btn">🔗</span>
+              <span title="עריכה" class="activity-icon-btn">✏️</span>
+              <span title="מחיקה" class="activity-icon-btn">🗑️</span>
+            </td>
+          </tr>
+          <tr>
+            <td>מחזור אביב 2026</td>
+            <td><span class="activity-badge activity-badge--open">פתוח</span></td>
+            <td>01/04/2026</td><td>31/05/2026</td><td>6</td>
+            <td class="activity-actions">
+              <button class="btn-report">בקשות</button>
+              <span title="העתק קישור לשאלון" class="activity-icon-btn">🔗</span>
+              <span title="עריכה" class="activity-icon-btn">✏️</span>
+              <span title="מחיקה" class="activity-icon-btn">🗑️</span>
+            </td>
+          </tr>
+          <tr>
+            <td>מחזור חנוכה 2025</td>
+            <td><span class="activity-badge activity-badge--closed">סגור</span></td>
+            <td>01/12/2025</td><td>31/12/2025</td><td>15</td>
+            <td class="activity-actions">
+              <button class="btn-report">בקשות</button>
+              <span title="העתק קישור לשאלון" class="activity-icon-btn">🔗</span>
+              <span title="עריכה" class="activity-icon-btn">✏️</span>
+              <span title="מחיקה" class="activity-icon-btn">🗑️</span>
+            </td>
+          </tr>
+          <tr>
+            <td>מחזור ראש השנה 2025</td>
+            <td><span class="activity-badge activity-badge--closed">סגור</span></td>
+            <td>01/09/2025</td><td>15/10/2025</td><td>10</td>
+            <td class="activity-actions">
+              <button class="btn-report">בקשות</button>
+              <span title="העתק קישור לשאלון" class="activity-icon-btn">🔗</span>
+              <span title="עריכה" class="activity-icon-btn">✏️</span>
+              <span title="מחיקה" class="activity-icon-btn">🗑️</span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- pagination (rounds) -->
+      <div class="pagination">
+        <button disabled class="pagination-arrow">&laquo;</button>
+        <button disabled class="pagination-arrow">&lsaquo;</button>
+        <span class="pagination-info">1 / 1</span>
+        <button disabled class="pagination-arrow">&rsaquo;</button>
+        <button disabled class="pagination-arrow">&raquo;</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="mock-badge">מוקאפ סטטי · צבעי מותג חדשים <b>«חיוך של ילד»</b></div>
+
+</body>
+</html>

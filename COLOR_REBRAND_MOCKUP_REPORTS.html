@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>מוקאפ — עמוד דוחות (צבעי מותג חדשים)</title>
+<style>
+/* Same local Rubik variable font the real app uses (styles.css @font-face) so
+   the mock renders identically — NOT Google Fonts. */
+@font-face {
+  font-family: 'Rubik';
+  src: url('childsmile/frontend/src/fonts/Rubik-VariableFont_wght.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+}
+/* =====================================================================
+   Reports hub page (/reports, InnerPageHeader title="דוחות") — STATIC
+   recolored mock. Faithful reproduction of the real page (Sidebar +
+   InnerPageHeader + .reports-grid-page toolbar/table/pagination), with the
+   indigo/purple theme swapped to the A Child's Smile palette.
+   Brand: sky #6EC1E4 · teal #3BC1C8 · pink #ED3B97 · yellow #FCD20E · navy #143852
+   Indigo/purple → TEAL (the MAIN brand colour): header + sidebar + filter
+   accents + table header tint. PINK (#ED3B97) is used ONLY as a SEPARATOR /
+   accent (header lower edge, title underline, sidebar divider). Category
+   badges KEPT semantic: families = green, volunteers = blue (unchanged).
+   Structure / labels 1:1 with Reports.js (report names hardcoded in the JSX).
+   ===================================================================== */
+
+*{box-sizing:border-box;font-family:Rubik,sans-serif}
+html{zoom:.8}
+body{
+  margin:0;direction:rtl;min-height:100vh;
+  /* was rainbow indigo/blue/green/orange/pink → brand rainbow (decorative, low alpha) */
+  background:
+    linear-gradient(135deg,
+      rgba(237,59,151,.14) 0%,
+      rgba(110,193,228,.14) 25%,
+      rgba(59,193,200,.14) 50%,
+      rgba(252,210,14,.14) 75%,
+      rgba(242,103,34,.14) 100%);
+  background-attachment:fixed;
+}
+
+/* ===================== SIDEBAR (faithful to common.css; bg recolored TEAL) ===================== */
+.sidebar{
+  background:linear-gradient(135deg,
+    rgba(110,193,228,.9) 0%,
+    rgba(59,193,200,.92) 45%,
+    rgba(101,190,198,.94) 100%);
+  color:#fff;width:280px;min-height:100vh;padding:60px 15px 25px;
+  box-shadow:-4px 0 40px rgba(59,193,200,.4), -2px 0 20px rgba(101,190,198,.3), inset 1px 0 0 rgba(255,255,255,.3);
+  position:fixed;right:0;top:0;display:flex;flex-direction:column;z-index:1001;
+  border-left:2px solid rgba(255,255,255,.3);overflow-y:auto;
+}
+.sidebar-toggle{position:absolute;top:15px;right:25px;width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px}
+.sidebar-user-info{background:linear-gradient(135deg,rgba(255,255,255,.25),rgba(255,255,255,.15));border:2px solid rgba(255,255,255,.3);border-radius:16px;padding:20px;margin-bottom:20px;text-align:center;box-shadow:0 4px 20px rgba(0,0,0,.15),inset 0 1px 0 rgba(255,255,255,.4)}
+.sidebar-username{font-size:28px;font-weight:700;color:#fff;text-shadow:0 2px 8px rgba(0,0,0,.3);margin-bottom:12px;letter-spacing:.5px}
+.sidebar-roles{display:flex;flex-direction:column;gap:6px}
+.sidebar-role{background:linear-gradient(90deg,rgba(255,255,255,.2),rgba(255,255,255,.1));padding:6px 12px;border-radius:8px;font-size:18px;font-weight:600;color:#fff;border:1px solid rgba(255,255,255,.2)}
+/* clock stays GREEN (not indigo/purple) */
+.sidebar-clock{background:linear-gradient(135deg,rgba(16,185,129,.85),rgba(5,150,105,.85));border:2px solid rgba(255,255,255,.4);border-radius:16px;padding:20px;margin-bottom:20px;text-align:center;box-shadow:0 6px 25px rgba(16,185,129,.35),inset 0 1px 0 rgba(255,255,255,.4)}
+.sidebar-time{font-size:36px;font-weight:800;color:#fff;letter-spacing:2px;text-shadow:0 3px 10px rgba(0,0,0,.3);margin-bottom:8px}
+.sidebar-date{font-size:18px;font-weight:600;color:rgba(255,255,255,.95)}
+/* logout stays RED */
+.sidebar-logout-button{background:linear-gradient(135deg,rgba(239,68,68,.95),rgba(220,38,38,.95));color:#fff;padding:16px 24px;border:2px solid rgba(255,255,255,.4);border-radius:14px;cursor:pointer;font-size:22px;font-weight:700;width:100%;margin-bottom:20px;box-shadow:0 6px 25px rgba(239,68,68,.4),inset 0 1px 0 rgba(255,255,255,.3)}
+/* PINK = separator only — the sidebar divider */
+.sidebar-divider{height:3px;background:linear-gradient(90deg,transparent,rgba(237,59,151,.9),transparent);margin:20px 0;border-radius:2px}
+.sidebar-nav-btn{display:block;width:100%;background:none;border:none;color:rgba(255,255,255,.82);font-size:32px;padding:6px 2px;cursor:pointer;text-align:right}
+.sidebar-nav-btn.top-level{font-weight:600;color:rgba(255,255,255,.85)}
+.sidebar-nav-btn.active{color:#fff;font-weight:700}
+.sidebar-section-header{display:flex;align-items:center;gap:4px;width:100%;background:none;border:none;border-bottom:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.85);font-size:32px;font-weight:600;padding:8px 2px 6px;cursor:pointer;margin-top:10px;text-align:right}
+.sidebar-section-label{flex:1;text-align:right}
+.sidebar-section-arrow{font-size:20px;font-weight:300;color:rgba(255,255,255,.55);transition:transform .2s;transform:rotate(0deg);line-height:1}
+.sidebar-section-arrow.open{transform:rotate(90deg)}
+.sidebar-section-items{display:flex;flex-direction:column;padding-right:12px;border-right:1px solid rgba(255,255,255,.15);margin:2px 6px 0 0}
+.sidebar-section-items .sidebar-nav-btn{font-size:24px;color:rgba(255,255,255,.7);padding:5px 2px}
+.sidebar-section-items .sidebar-nav-btn.active{color:#fff;font-weight:700}
+
+/* ===================== HEADER (fixed top) ===================== */
+.header{
+  background:linear-gradient(135deg,
+    rgba(110,193,228,.9) 0%,
+    rgba(59,193,200,.92) 45%,
+    rgba(101,190,198,.95) 100%);
+  color:#fff;display:flex;align-items:center;justify-content:center;
+  padding:20px 30px;height:200px;position:fixed;right:0;top:0;left:0;z-index:1000;
+  border-bottom:3px solid rgba(255,255,255,.3);
+  box-shadow:0 8px 40px rgba(59,193,200,.35), 0 4px 20px rgba(101,190,198,.28), inset 0 -1px 0 rgba(255,255,255,.3);
+}
+/* PINK = separator only — the header's lower edge (echoes the site's pink underline) */
+.header::before{content:'';position:absolute;bottom:0;left:0;right:0;height:5px;
+  background:linear-gradient(90deg, rgba(237,59,151,1) 0%, rgba(219,75,149,1) 100%);
+  box-shadow:0 2px 15px rgba(237,59,151,.5);}
+.logo{width:180px;height:180px;position:absolute;right:310px;top:10px;border-radius:20px;
+  border:3px solid rgba(255,255,255,.5);background:#fff;padding:10px;object-fit:contain;
+  box-shadow:0 6px 30px rgba(0,0,0,.2),0 0 20px rgba(255,255,255,.25);z-index:1002;}
+.title{font-size:4em;font-weight:900;margin:0;position:absolute;left:50%;transform:translateX(-50%);
+  white-space:nowrap;letter-spacing:2px;
+  background:linear-gradient(135deg,#fff 0%,#f0f9ff 25%,#e0f7fa 50%,#bae6fd 75%,#fff 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  filter:drop-shadow(0 4px 20px rgba(255,255,255,.4)) drop-shadow(0 2px 10px rgba(59,193,200,.65)) drop-shadow(0 0 30px rgba(101,190,198,.4));}
+/* PINK underline separator under the page title (mirrors the site's heading underline) */
+.title::after{content:'';position:absolute;left:50%;bottom:-14px;transform:translateX(-50%);width:78%;height:5px;border-radius:6px;
+  background:linear-gradient(90deg,rgba(237,59,151,.95),rgba(219,75,149,.95));box-shadow:0 3px 12px rgba(237,59,151,.5)}
+.top-left{position:absolute;top:20px;left:40px;display:flex;align-items:center;gap:25px;z-index:1001}
+.amit-img{width:130px;height:170px;object-fit:cover;border-radius:18px;border:3px solid rgba(255,255,255,.5);box-shadow:0 6px 30px rgba(0,0,0,.25)}
+.quote{font-size:20px;font-weight:600;text-align:right;color:#143852;max-width:360px;
+  background:linear-gradient(135deg,rgba(255,255,255,.95),rgba(249,250,251,.95));padding:14px 18px;border-radius:14px;
+  box-shadow:0 6px 24px rgba(0,0,0,.12)}
+.qr-code{width:140px;height:140px;border-radius:16px;border:3px solid rgba(255,255,255,.5);background:#fff;padding:10px;box-shadow:0 6px 30px rgba(0,0,0,.2)}
+
+/* ===================== CONTENT LAYOUT (reports.css .reports-main-content) ===================== */
+.reports-main-content{
+  display:flex;flex-direction:column;align-items:center;justify-content:flex-start;
+  flex-grow:1;padding:230px 40px 40px 40px;margin-right:280px;background:transparent;
+}
+.page-content{padding:20px}
+
+/* ===================== REPORTS GRID PAGE (reports.css) ===================== */
+.reports-grid-page{
+  direction:rtl;
+  padding:24px 32px;
+  display:flex;
+  flex-direction:column;
+  gap:18px;
+  max-width:860px;
+  width:100%;
+}
+
+/* Toolbar: search + filter buttons */
+.reports-toolbar{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  flex-wrap:wrap;
+}
+
+.reports-search-input{
+  flex:1;
+  min-width:180px;
+  padding:9px 14px;
+  border:1.5px solid #d1d5db;
+  border-radius:8px;
+  font-size:28px;
+  font-family:Rubik, sans-serif;
+  background:#fff;
+  outline:none;
+  transition:border-color 0.2s;
+  direction:rtl;
+}
+
+/* was purple #7c5cbf → TEAL */
+.reports-search-input:focus{border-color:#3BC1C8}
+
+.reports-filter-btns{
+  display:flex;
+  gap:6px;
+}
+
+/* filter chip — was purple border/text → light-sky border + teal text */
+.reports-filter-btn{
+  padding:8px 18px;
+  border:1.5px solid #A9DCEF;
+  border-radius:20px;
+  background:#fff;
+  color:#3BC1C8;
+  font-family:Rubik, sans-serif;
+  font-size:28px;
+  cursor:pointer;
+  transition:all 0.18s;
+}
+
+/* was pale purple #ede9f7 → pale teal */
+.reports-filter-btn:hover{background:#EAF7F8}
+
+/* was purple #7c5cbf → TEAL */
+.reports-filter-btn--active{
+  background:#3BC1C8;
+  color:#fff;
+  border-color:#3BC1C8;
+}
+
+/* Table */
+.reports-table-wrapper{
+  background:#fff;
+  border-radius:14px;
+  box-shadow:0 2px 12px rgba(0,0,0,0.08);
+  overflow:hidden;
+}
+
+.reports-grid-table{
+  width:100%;
+  border-collapse:collapse;
+  font-family:Rubik, sans-serif;
+  font-size:28px;
+}
+
+/* header tint was pale purple #f3eff9 / text #5a3d8c / border #e2d9f3
+   → pale teal bg, brand navy text, pale-sky divider */
+.reports-th{
+  background:#EAF7F8;
+  color:#143852;
+  font-weight:600;
+  padding:12px 16px;
+  text-align:right;
+  border-bottom:2px solid #C9E9F5;
+}
+
+.reports-th-num{
+  width:48px;
+  text-align:center;
+}
+
+.reports-th-cat{
+  width:130px;
+  text-align:center;
+}
+
+/* row divider was pale purple #f0ecf8 → pale teal */
+.reports-td{
+  padding:13px 16px;
+  border-bottom:1px solid #EAF7F8;
+  text-align:right;
+  color:#222;
+}
+
+.reports-td-num{
+  text-align:center;
+  color:#888;
+  font-size:13px;
+}
+
+.reports-td-cat{
+  text-align:center;
+}
+
+.reports-grid-row{
+  cursor:pointer;
+  transition:background 0.15s;
+}
+
+/* row hover was pale purple #f7f3ff → pale teal */
+.reports-grid-row:hover{background:#F0FAFD}
+
+.reports-grid-row:last-child .reports-td{
+  border-bottom:none;
+}
+
+.reports-empty-row{
+  text-align:center;
+  color:#aaa;
+  padding:28px;
+  font-size:15px;
+}
+
+/* Category badges — KEPT semantic: families = green, volunteers = blue (unchanged) */
+.reports-cat-badge{
+  display:inline-block;
+  padding:3px 12px;
+  border-radius:12px;
+  font-size:22px;
+  font-weight:600;
+  white-space:nowrap;
+}
+
+.reports-cat-badge--families{
+  background:#dff4e8;
+  color:#1e7c45;
+}
+
+.reports-cat-badge--volunteers{
+  background:#e8eeff;
+  color:#2d57c5;
+}
+
+/* was pale purple #f3f0fb / #7c5cbf → pale teal + teal */
+.reports-cat-badge--other{
+  background:#EAF7F8;
+  color:#3BC1C8;
+}
+
+/* pagination (shared .pagination classes — recolored TEAL like FAMILIES) */
+.pagination{display:flex;justify-content:center;align-items:center;gap:6px;margin-top:8px}
+.pagination button{padding:10px 16px;border:2px solid rgba(204,204,204,.3);border-radius:12px;cursor:pointer;font-size:20px;font-weight:600;
+  background:linear-gradient(135deg,rgba(255,255,255,.95),rgba(249,250,251,.95));box-shadow:0 4px 15px rgba(0,0,0,.08)}
+.pagination button.active{color:#fff;border:2px solid rgba(255,255,255,.4);
+  background:linear-gradient(135deg,rgba(59,193,200,.97),rgba(110,193,228,.97));box-shadow:0 6px 25px rgba(59,193,200,.4)}
+.pagination button:disabled{color:#cbd5e1;background:rgba(240,240,240,.5);cursor:not-allowed;box-shadow:none}
+
+/* mock badge */
+.mock-badge{position:fixed;bottom:16px;left:16px;z-index:3000;background:#143852;color:#fff;font-size:14px;font-weight:600;
+  padding:8px 14px;border-radius:10px;box-shadow:0 6px 20px rgba(0,0,0,.25);opacity:.92}
+.mock-badge b{color:#FCD20E}
+</style>
+</head>
+<body>
+
+  <!-- ===================== REPORTS PAGE (1:1 with Reports.js DOM) ===================== -->
+  <div class="reports-main-content">
+
+    <!-- Sidebar (1:1 with Sidebar.js) — "ניהול" open, "דוחות" active -->
+    <aside class="sidebar">
+      <button class="sidebar-toggle" title="צמצם סרגל">▶</button>
+      <div class="sidebar-user-info">
+        <div class="sidebar-username">שרה לוי</div>
+        <div class="sidebar-roles"><div class="sidebar-role">רכז משפחות</div></div>
+      </div>
+      <div class="sidebar-clock">
+        <div class="sidebar-time">09:42:15</div>
+        <div class="sidebar-date">יום ראשון, 27 ביולי 2026</div>
+      </div>
+      <button class="sidebar-logout-button">יציאה מהמערכת</button>
+      <div class="sidebar-divider"></div>
+
+      <button class="sidebar-nav-btn top-level">לוח משימות</button>
+
+      <button class="sidebar-section-header"><span class="sidebar-section-label">משפחות</span><span class="sidebar-section-arrow">›</span></button>
+      <button class="sidebar-section-header"><span class="sidebar-section-label">מתנדבים</span><span class="sidebar-section-arrow">›</span></button>
+      <button class="sidebar-section-header"><span class="sidebar-section-label">כספים</span><span class="sidebar-section-arrow">›</span></button>
+      <button class="sidebar-section-header"><span class="sidebar-section-label">פעילויות</span><span class="sidebar-section-arrow">›</span></button>
+
+      <button class="sidebar-section-header"><span class="sidebar-section-label">ניהול</span><span class="sidebar-section-arrow open">›</span></button>
+      <div class="sidebar-section-items">
+        <button class="sidebar-nav-btn active">דוחות</button>
+        <button class="sidebar-nav-btn">ניהול מערכת</button>
+        <button class="sidebar-nav-btn">ניהול פגישות</button>
+        <button class="sidebar-nav-btn">עדכוני צוות</button>
+        <button class="sidebar-nav-btn">יומן ביקורת</button>
+      </div>
+    </aside>
+
+    <!-- Header (InnerPageHeader title="דוחות") -->
+    <header class="header">
+      <img class="logo" src="childsmile/frontend/src/assets/logo.png" alt="חיוך של ילד">
+      <div class="top-left">
+        <img class="amit-img" src="childsmile/frontend/src/assets/amit.jpg" alt="עמית">
+        <div class="quote">הרבה אנשים אומרים שהם רוצים להצליח אבל לא כולם מוכנים לשלם את המחיר שצריך כדי להצליח</div>
+        <img class="qr-code" src="childsmile/frontend/src/assets/qr-code.jpg" alt="QR">
+      </div>
+      <h1 class="title">דוחות</h1>
+    </header>
+
+    <!-- Page content -->
+    <div class="page-content">
+      <div class="reports-grid-page">
+
+        <!-- Search + Filter Row -->
+        <div class="reports-toolbar">
+          <input class="reports-search-input" type="text" placeholder="חיפוש דוח..." dir="rtl">
+          <div class="reports-filter-btns">
+            <button class="reports-filter-btn reports-filter-btn--active">הכל</button>
+            <button class="reports-filter-btn">משפחות</button>
+            <button class="reports-filter-btn">מתנדבים</button>
+            <button class="reports-filter-btn">כספים</button>
+          </div>
+        </div>
+
+        <!-- Table -->
+        <div class="reports-table-wrapper">
+          <table class="reports-grid-table" dir="rtl">
+            <thead>
+              <tr>
+                <th class="reports-th reports-th-num">#</th>
+                <th class="reports-th">שם הדוח</th>
+                <th class="reports-th reports-th-cat">קטגוריה</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="reports-grid-row">
+                <td class="reports-td reports-td-num">1</td>
+                <td class="reports-td">דוח משפחות לפי מיקום</td>
+                <td class="reports-td reports-td-cat"><span class="reports-cat-badge reports-cat-badge--families">משפחות</span></td>
+              </tr>
+              <tr class="reports-grid-row">
+                <td class="reports-td reports-td-num">2</td>
+                <td class="reports-td">דוח משפחות חדשות מהחודש האחרון</td>
+                <td class="reports-td reports-td-cat"><span class="reports-cat-badge reports-cat-badge--families">משפחות</span></td>
+              </tr>
+              <tr class="reports-grid-row">
+                <td class="reports-td reports-td-num">3</td>
+                <td class="reports-td">דוח משפחות הממתינות לחונכות</td>
+                <td class="reports-td reports-td-cat"><span class="reports-cat-badge reports-cat-badge--families">משפחות</span></td>
+              </tr>
+              <tr class="reports-grid-row">
+                <td class="reports-td reports-td-num">4</td>
+                <td class="reports-td">דוח התפלגות משפחות ממתינות לחונכות</td>
+                <td class="reports-td reports-td-cat"><span class="reports-cat-badge reports-cat-badge--families">משפחות</span></td>
+              </tr>
+              <tr class="reports-grid-row">
+                <td class="reports-td reports-td-num">5</td>
+                <td class="reports-td">דוח משפחות כללי</td>
+                <td class="reports-td reports-td-cat"><span class="reports-cat-badge reports-cat-badge--families">משפחות</span></td>
+              </tr>
+              <tr class="reports-grid-row">
+                <td class="reports-td reports-td-num">6</td>
+                <td class="reports-td">דוח משפחות עם נתונים חסרים</td>
+                <td class="reports-td reports-td-cat"><span class="reports-cat-badge reports-cat-badge--families">משפחות</span></td>
+              </tr>
+              <tr class="reports-grid-row">
+                <td class="reports-td reports-td-num">7</td>
+                <td class="reports-td">דוח כפילויות משפחות</td>
+                <td class="reports-td reports-td-cat"><span class="reports-cat-badge reports-cat-badge--families">משפחות</span></td>
+              </tr>
+              <tr class="reports-grid-row">
+                <td class="reports-td reports-td-num">8</td>
+                <td class="reports-td">דוח חונכויות פעילות</td>
+                <td class="reports-td reports-td-cat"><span class="reports-cat-badge reports-cat-badge--volunteers">מתנדבים</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination -->
+        <div class="pagination">
+          <button disabled class="pagination-arrow">&laquo;</button>
+          <button disabled class="pagination-arrow">&lsaquo;</button>
+          <button class="active">1</button>
+          <button>2</button>
+          <button class="pagination-arrow">&rsaquo;</button>
+          <button class="pagination-arrow">&raquo;</button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <div class="mock-badge">מוקאפ סטטי · צבעי מותג חדשים <b>«חיוך של ילד»</b></div>
+
+</body>
+</html>

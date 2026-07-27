@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>מוקאפ — ניהול פגישות צוות (צבעי מותג חדשים)</title>
+<style>
+/* Same local Rubik variable font the real app uses (styles.css @font-face) so
+   the mock renders identically — NOT Google Fonts. */
+@font-face {
+  font-family: 'Rubik';
+  src: url('childsmile/frontend/src/fonts/Rubik-VariableFont_wght.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+}
+/* =====================================================================
+   Meeting Management page — STATIC recolored mock.
+   Faithful reproduction of the real page (InnerPageHeader + Sidebar +
+   glassmorphism calendar-card with month nav, day-names row and 6×7 grid
+   of day cells + meeting chips), with the indigo/purple theme swapped to
+   the A Child's Smile palette.
+   Brand: sky #6EC1E4 · teal #3BC1C8 · pink #ED3B97 · yellow #FCD20E · navy #143852
+   Indigo/purple → TEAL (the MAIN brand colour): header + sidebar + calendar
+   header gradient + day-name text + today marker + meeting chips.
+   PINK (#ED3B97) is used ONLY as a SEPARATOR / accent — header lower edge,
+   title underline, sidebar divider. KEPT exactly as the real app: green
+   badge-active, red badge-cancelled, blue edit-modal, gray discard.
+   Structure/labels 1:1 with the code — only colour values differ.
+   ===================================================================== */
+
+*{box-sizing:border-box;font-family:Rubik,sans-serif}
+html{zoom:.8}
+body{
+  margin:0;direction:rtl;min-height:100vh;
+  display:flex;flex-direction:row-reverse;
+  background:
+    linear-gradient(135deg,
+      rgba(237,59,151,.14) 0%,
+      rgba(110,193,228,.14) 25%,
+      rgba(59,193,200,.14) 50%,
+      rgba(252,210,14,.14) 75%,
+      rgba(242,103,34,.14) 100%);
+  background-attachment:fixed;
+}
+
+/* ===================== SIDEBAR (faithful to common.css; bg recolored TEAL) ===================== */
+.sidebar{
+  background:linear-gradient(135deg,
+    rgba(110,193,228,.9) 0%,
+    rgba(59,193,200,.92) 45%,
+    rgba(101,190,198,.94) 100%);
+  color:#fff;width:280px;min-height:100vh;padding:60px 15px 25px;
+  box-shadow:-4px 0 40px rgba(59,193,200,.4), -2px 0 20px rgba(101,190,198,.3), inset 1px 0 0 rgba(255,255,255,.3);
+  position:fixed;right:0;top:0;display:flex;flex-direction:column;z-index:1001;
+  border-left:2px solid rgba(255,255,255,.3);overflow-y:auto;
+}
+.sidebar-toggle{position:absolute;top:15px;right:25px;width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px}
+.sidebar-user-info{background:linear-gradient(135deg,rgba(255,255,255,.25),rgba(255,255,255,.15));border:2px solid rgba(255,255,255,.3);border-radius:16px;padding:20px;margin-bottom:20px;text-align:center;box-shadow:0 4px 20px rgba(0,0,0,.15),inset 0 1px 0 rgba(255,255,255,.4)}
+.sidebar-username{font-size:28px;font-weight:700;color:#fff;text-shadow:0 2px 8px rgba(0,0,0,.3);margin-bottom:12px;letter-spacing:.5px}
+.sidebar-roles{display:flex;flex-direction:column;gap:6px}
+.sidebar-role{background:linear-gradient(90deg,rgba(255,255,255,.2),rgba(255,255,255,.1));padding:6px 12px;border-radius:8px;font-size:18px;font-weight:600;color:#fff;border:1px solid rgba(255,255,255,.2)}
+/* clock stays GREEN (not indigo/purple) */
+.sidebar-clock{background:linear-gradient(135deg,rgba(16,185,129,.85),rgba(5,150,105,.85));border:2px solid rgba(255,255,255,.4);border-radius:16px;padding:20px;margin-bottom:20px;text-align:center;box-shadow:0 6px 25px rgba(16,185,129,.35),inset 0 1px 0 rgba(255,255,255,.4)}
+.sidebar-time{font-size:36px;font-weight:800;color:#fff;letter-spacing:2px;text-shadow:0 3px 10px rgba(0,0,0,.3);margin-bottom:8px}
+.sidebar-date{font-size:18px;font-weight:600;color:rgba(255,255,255,.95)}
+/* logout stays RED */
+.sidebar-logout-button{background:linear-gradient(135deg,rgba(239,68,68,.95),rgba(220,38,38,.95));color:#fff;padding:16px 24px;border:2px solid rgba(255,255,255,.4);border-radius:14px;cursor:pointer;font-size:22px;font-weight:700;width:100%;margin-bottom:20px;box-shadow:0 6px 25px rgba(239,68,68,.4),inset 0 1px 0 rgba(255,255,255,.3)}
+/* PINK = separator only — the sidebar divider */
+.sidebar-divider{height:3px;background:linear-gradient(90deg,transparent,rgba(237,59,151,.9),transparent);margin:20px 0;border-radius:2px}
+.sidebar-nav-btn{display:block;width:100%;background:none;border:none;color:rgba(255,255,255,.82);font-size:32px;padding:6px 2px;cursor:pointer;text-align:right}
+.sidebar-nav-btn.top-level{font-weight:600;color:rgba(255,255,255,.85)}
+.sidebar-nav-btn.active{color:#fff;font-weight:700}
+.sidebar-section-header{display:flex;align-items:center;gap:4px;width:100%;background:none;border:none;border-bottom:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.85);font-size:32px;font-weight:600;padding:8px 2px 6px;cursor:pointer;margin-top:10px;text-align:right}
+.sidebar-section-label{flex:1;text-align:right}
+.sidebar-section-arrow{font-size:20px;font-weight:300;color:rgba(255,255,255,.55);transition:transform .2s;transform:rotate(0deg);line-height:1}
+.sidebar-section-arrow.open{transform:rotate(90deg)}
+.sidebar-section-items{display:flex;flex-direction:column;padding-right:12px;border-right:1px solid rgba(255,255,255,.15);margin:2px 6px 0 0}
+.sidebar-section-items .sidebar-nav-btn{font-size:24px;color:rgba(255,255,255,.7);padding:5px 2px}
+.sidebar-section-items .sidebar-nav-btn.active{color:#fff;font-weight:700}
+
+/* ===================== HEADER (fixed top) ===================== */
+.header{
+  background:linear-gradient(135deg,
+    rgba(110,193,228,.9) 0%,
+    rgba(59,193,200,.92) 45%,
+    rgba(101,190,198,.95) 100%);
+  color:#fff;display:flex;align-items:center;justify-content:center;
+  padding:20px 30px;height:200px;position:fixed;right:0;top:0;left:0;z-index:1000;
+  border-bottom:3px solid rgba(255,255,255,.3);
+  box-shadow:0 8px 40px rgba(59,193,200,.35), 0 4px 20px rgba(101,190,198,.28), inset 0 -1px 0 rgba(255,255,255,.3);
+}
+/* PINK = separator only — the header's lower edge (echoes the site's pink underline) */
+.header::before{content:'';position:absolute;bottom:0;left:0;right:0;height:5px;
+  background:linear-gradient(90deg, rgba(237,59,151,1) 0%, rgba(219,75,149,1) 100%);
+  box-shadow:0 2px 15px rgba(237,59,151,.5);}
+.logo{width:180px;height:180px;position:absolute;right:310px;top:10px;border-radius:20px;
+  border:3px solid rgba(255,255,255,.5);background:#fff;padding:10px;object-fit:contain;
+  box-shadow:0 6px 30px rgba(0,0,0,.2),0 0 20px rgba(255,255,255,.25);z-index:1002;}
+.title{font-size:4em;font-weight:900;margin:0;position:absolute;left:50%;transform:translateX(-50%);
+  white-space:nowrap;letter-spacing:2px;
+  background:linear-gradient(135deg,#fff 0%,#f0f9ff 25%,#e0f7fa 50%,#bae6fd 75%,#fff 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  filter:drop-shadow(0 4px 20px rgba(255,255,255,.4)) drop-shadow(0 2px 10px rgba(59,193,200,.65)) drop-shadow(0 0 30px rgba(101,190,198,.4));}
+/* PINK underline separator under the page title (mirrors the site's heading underline) */
+.title::after{content:'';position:absolute;left:50%;bottom:-14px;transform:translateX(-50%);width:78%;height:5px;border-radius:6px;
+  background:linear-gradient(90deg,rgba(237,59,151,.95),rgba(219,75,149,.95));box-shadow:0 3px 12px rgba(237,59,151,.5)}
+.top-left{position:absolute;top:20px;left:40px;display:flex;align-items:center;gap:25px;z-index:1001}
+.amit-img{width:130px;height:170px;object-fit:cover;border-radius:18px;border:3px solid rgba(255,255,255,.5);box-shadow:0 6px 30px rgba(0,0,0,.25)}
+.quote{font-size:20px;font-weight:600;text-align:right;color:#143852;max-width:360px;
+  background:linear-gradient(135deg,rgba(255,255,255,.95),rgba(249,250,251,.95));padding:14px 18px;border-radius:14px;
+  box-shadow:0 6px 24px rgba(0,0,0,.12)}
+.qr-code{width:140px;height:140px;border-radius:16px;border:3px solid rgba(255,255,255,.5);background:#fff;padding:10px;box-shadow:0 6px 30px rgba(0,0,0,.2)}
+
+/* ===================== CONTENT ===================== */
+.content{flex:1;margin-right:280px;padding:220px 40px 60px;min-width:0}
+
+/* ── Page wrapper (real .meeting-page-content; fixed margins neutralised for the
+     mock so it sits inside .content — layout tune only, colours unchanged) ── */
+.meeting-page-content{padding:20px;width:100%}
+
+/* ── Calendar card ────────────────────────────────────────── */
+.calendar-card{
+  background:linear-gradient(135deg,
+    rgba(255,255,255,.72) 0%,
+    rgba(245,245,255,.65) 100%);
+  backdrop-filter:blur(28px) saturate(180%);
+  -webkit-backdrop-filter:blur(28px) saturate(180%);
+  border:2px solid rgba(255,255,255,.55);
+  border-radius:28px;
+  box-shadow:
+    0 24px 64px rgba(59,193,200,.22),
+    0 8px 32px rgba(110,193,228,.18),
+    inset 0 2px 0 rgba(255,255,255,.5);
+  overflow:hidden;
+}
+
+/* ── Calendar header (month nav) ─────────────────────────── */
+.calendar-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:22px 32px 18px;
+  background:linear-gradient(135deg,
+    rgba(59,193,200,1) 0%,
+    rgba(110,193,228,1) 100%);
+  box-shadow:0 4px 20px rgba(59,193,200,.35);
+}
+.calendar-header-title{font-size:32px;font-weight:800;color:#fff;text-shadow:0 2px 10px rgba(0,0,0,.25);letter-spacing:1px}
+.cal-nav-btn{
+  background:rgba(255,255,255,.2);border:2px solid rgba(255,255,255,.4);color:#fff;
+  border-radius:12px;padding:8px 18px;font-size:24px;font-weight:700;cursor:pointer;
+  transition:all .2s ease;backdrop-filter:blur(10px);
+}
+.cal-nav-btn:hover{background:rgba(255,255,255,.35);transform:scale(1.08)}
+
+/* ── Day names row ────────────────────────────────────────── */
+.calendar-day-names{
+  display:grid;grid-template-columns:repeat(7,1fr);
+  background:linear-gradient(135deg,
+    rgba(59,193,200,.12) 0%,
+    rgba(110,193,228,.08) 100%);
+  border-bottom:2px solid rgba(59,193,200,.15);
+}
+.calendar-day-name{text-align:center;padding:12px 4px;font-size:24px;font-weight:700;color:#3BC1C8;letter-spacing:.5px}
+.calendar-day-name.shabbat{color:#e53e3e}
+
+/* ── Calendar grid ────────────────────────────────────────── */
+.calendar-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;background:rgba(59,193,200,.1);padding:1px}
+
+/* ── Day cell ─────────────────────────────────────────────── */
+.cal-day{
+  background:rgba(255,255,255,.85);min-height:100px;padding:8px 6px 6px;cursor:default;
+  transition:background .18s ease;display:flex;flex-direction:column;gap:4px;position:relative;
+}
+.cal-day.other-month{background:rgba(240,240,248,.5)}
+.cal-day.other-month .cal-day-num{color:#bbb}
+.cal-day.past-day{background:rgba(235,235,240,.6);cursor:not-allowed}
+.cal-day.past-day .cal-day-num{color:#bbb}
+.cal-day.today{
+  background:linear-gradient(135deg,
+    rgba(59,193,200,.12) 0%,
+    rgba(110,193,228,.08) 100%);
+}
+.cal-day.today .cal-day-num{
+  background:linear-gradient(135deg,#3BC1C8,#6EC1E4);color:#fff;border-radius:50%;
+  width:34px;height:34px;display:flex;align-items:center;justify-content:center;
+  font-weight:800;box-shadow:0 3px 10px rgba(59,193,200,.4);
+}
+.cal-day.has-meetings{cursor:pointer}
+.cal-day.has-meetings:hover{
+  background:linear-gradient(135deg,
+    rgba(110,193,228,.45) 0%,
+    rgba(110,193,228,.35) 100%);
+  box-shadow:inset 0 0 0 2px rgba(59,193,200,.4);
+}
+.cal-day-num{font-size:24px;font-weight:600;color:#333;line-height:1;margin-bottom:2px;align-self:flex-end}
+
+/* ── Meeting chips inside cells ───────────────────────────── */
+.cal-meeting-chip{
+  display:block;
+  background:linear-gradient(135deg, rgba(59,193,200,.9), rgba(110,193,228,.9));
+  color:#fff;border-radius:8px;padding:3px 7px;font-size:24px;font-weight:600;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  box-shadow:0 2px 6px rgba(59,193,200,.3);cursor:pointer;transition:all .18s ease;max-width:100%;
+}
+.cal-meeting-chip:hover{transform:scale(1.04);box-shadow:0 4px 12px rgba(59,193,200,.45)}
+.cal-meeting-chip.cancelled{background:linear-gradient(135deg, rgba(156,163,175,.8), rgba(107,114,128,.8));text-decoration:line-through}
+
+/* ── "more" overflow indicator ────────────────────────────── */
+.cal-more{font-size:13px;color:#6EC1E4;font-weight:700;padding:1px 4px;cursor:pointer}
+
+/* ── Loading / empty ──────────────────────────────────────── */
+.meeting-loader{text-align:center;font-size:28px;color:#3BC1C8;padding:60px 0}
+
+/* mock badge */
+.mock-badge{position:fixed;bottom:16px;left:16px;z-index:3000;background:#143852;color:#fff;font-size:14px;font-weight:600;
+  padding:8px 14px;border-radius:10px;box-shadow:0 6px 20px rgba(0,0,0,.25);opacity:.92}
+.mock-badge b{color:#FCD20E}
+</style>
+</head>
+<body>
+
+  <!-- ===================== SIDEBAR (1:1 with Sidebar.js) ===================== -->
+  <aside class="sidebar">
+    <button class="sidebar-toggle" title="צמצם סרגל">▶</button>
+    <div class="sidebar-user-info">
+      <div class="sidebar-username">שרה לוי</div>
+      <div class="sidebar-roles"><div class="sidebar-role">מנהל מערכת</div></div>
+    </div>
+    <div class="sidebar-clock">
+      <div class="sidebar-time">09:42:15</div>
+      <div class="sidebar-date">יום ראשון, 27 ביולי 2026</div>
+    </div>
+    <button class="sidebar-logout-button">יציאה מהמערכת</button>
+    <div class="sidebar-divider"></div>
+
+    <button class="sidebar-nav-btn top-level">לוח משימות</button>
+
+    <button class="sidebar-section-header"><span class="sidebar-section-label">משפחות</span><span class="sidebar-section-arrow">›</span></button>
+    <button class="sidebar-section-header"><span class="sidebar-section-label">מתנדבים</span><span class="sidebar-section-arrow">›</span></button>
+    <button class="sidebar-section-header"><span class="sidebar-section-label">כספים</span><span class="sidebar-section-arrow">›</span></button>
+    <button class="sidebar-section-header"><span class="sidebar-section-label">פעילויות</span><span class="sidebar-section-arrow">›</span></button>
+
+    <button class="sidebar-section-header"><span class="sidebar-section-label">ניהול</span><span class="sidebar-section-arrow open">›</span></button>
+    <div class="sidebar-section-items">
+      <button class="sidebar-nav-btn">דוחות</button>
+      <button class="sidebar-nav-btn">ניהול מערכת</button>
+      <button class="sidebar-nav-btn active">ניהול פגישות</button>
+      <button class="sidebar-nav-btn">עדכוני צוות</button>
+      <button class="sidebar-nav-btn">יומן ביקורת</button>
+    </div>
+  </aside>
+
+  <!-- ===================== HEADER ===================== -->
+  <header class="header">
+    <img class="logo" src="childsmile/frontend/src/assets/logo.png" alt="חיוך של ילד">
+    <div class="top-left">
+      <img class="amit-img" src="childsmile/frontend/src/assets/amit.jpg" alt="עמית">
+      <div class="quote">הרבה אנשים אומרים שהם רוצים להצליח אבל לא כולם מוכנים לשלם את המחיר שצריך כדי להצליח</div>
+      <img class="qr-code" src="childsmile/frontend/src/assets/qr-code.jpg" alt="QR">
+    </div>
+    <h1 class="title">ניהול פגישות צוות</h1>
+  </header>
+
+  <!-- ===================== CONTENT ===================== -->
+  <main class="content">
+    <div class="meeting-page-content">
+
+      <!-- Calendar card -->
+      <div class="calendar-card">
+
+        <!-- Month navigation header -->
+        <div class="calendar-header">
+          <button class="cal-nav-btn">‹</button>
+          <span class="calendar-header-title">יולי 2026</span>
+          <button class="cal-nav-btn">›</button>
+        </div>
+
+        <!-- Day name row — Sun first (Israeli week) -->
+        <div class="calendar-day-names">
+          <div class="calendar-day-name">ראשון</div>
+          <div class="calendar-day-name">שני</div>
+          <div class="calendar-day-name">שלישי</div>
+          <div class="calendar-day-name">רביעי</div>
+          <div class="calendar-day-name">חמישי</div>
+          <div class="calendar-day-name">שישי</div>
+          <div class="calendar-day-name shabbat">שבת</div>
+        </div>
+
+        <!-- Day cells -->
+        <div class="calendar-grid">
+          <!-- Week 1 -->
+          <div class="cal-day other-month"><span class="cal-day-num">29</span></div>
+          <div class="cal-day other-month"><span class="cal-day-num">30</span></div>
+          <div class="cal-day past-day"><span class="cal-day-num">1</span></div>
+          <div class="cal-day past-day"><span class="cal-day-num">2</span></div>
+          <div class="cal-day past-day"><span class="cal-day-num">3</span></div>
+          <div class="cal-day past-day"><span class="cal-day-num">4</span></div>
+          <div class="cal-day past-day"><span class="cal-day-num">5</span></div>
+          <!-- Week 2 -->
+          <div class="cal-day past-day"><span class="cal-day-num">6</span></div>
+          <div class="cal-day past-day"><span class="cal-day-num">7</span></div>
+          <div class="cal-day past-day"><span class="cal-day-num">8</span></div>
+          <div class="cal-day past-day"><span class="cal-day-num">9</span></div>
+          <div class="cal-day past-day"><span class="cal-day-num">10</span></div>
+          <div class="cal-day past-day"><span class="cal-day-num">11</span></div>
+          <div class="cal-day past-day"><span class="cal-day-num">12</span></div>
+          <!-- Week 3 -->
+          <div class="cal-day past-day"><span class="cal-day-num">13</span></div>
+          <div class="cal-day past-day"><span class="cal-day-num">14</span></div>
+          <div class="cal-day past-day"><span class="cal-day-num">15</span></div>
+          <div class="cal-day past-day"><span class="cal-day-num">16</span></div>
+          <div class="cal-day past-day"><span class="cal-day-num">17</span></div>
+          <div class="cal-day past-day"><span class="cal-day-num">18</span></div>
+          <div class="cal-day past-day"><span class="cal-day-num">19</span></div>
+          <!-- Week 4 -->
+          <div class="cal-day past-day has-meetings">
+            <span class="cal-day-num">20</span>
+            <span class="cal-meeting-chip cancelled" title="סיכום חודשי – 10:00">10:00 סיכום חודשי</span>
+          </div>
+          <div class="cal-day past-day"><span class="cal-day-num">21</span></div>
+          <div class="cal-day past-day"><span class="cal-day-num">22</span></div>
+          <div class="cal-day past-day"><span class="cal-day-num">23</span></div>
+          <div class="cal-day past-day"><span class="cal-day-num">24</span></div>
+          <div class="cal-day past-day"><span class="cal-day-num">25</span></div>
+          <div class="cal-day past-day"><span class="cal-day-num">26</span></div>
+          <!-- Week 5 -->
+          <div class="cal-day today has-meetings">
+            <span class="cal-day-num">27</span>
+            <span class="cal-meeting-chip" title="פגישת צוות – 10:00">10:00 פגישת צוות</span>
+            <span class="cal-meeting-chip" title="פגישת מעקב – 13:00">13:00 פגישת מעקב</span>
+            <span class="cal-more">+1 עוד</span>
+          </div>
+          <div class="cal-day"><span class="cal-day-num">28</span></div>
+          <div class="cal-day has-meetings">
+            <span class="cal-day-num">29</span>
+            <span class="cal-meeting-chip" title="פגישת רכזים – 14:00">14:00 פגישת רכזים</span>
+          </div>
+          <div class="cal-day has-meetings">
+            <span class="cal-day-num">30</span>
+            <span class="cal-meeting-chip" title="ישיבת הנהלה – 09:00">09:00 ישיבת הנהלה</span>
+          </div>
+          <div class="cal-day has-meetings">
+            <span class="cal-day-num">31</span>
+            <span class="cal-meeting-chip" title="פגישת מתנדבים – 11:00">11:00 פגישת מתנדבים</span>
+          </div>
+          <div class="cal-day other-month"><span class="cal-day-num">1</span></div>
+          <div class="cal-day other-month"><span class="cal-day-num">2</span></div>
+          <!-- Week 6 -->
+          <div class="cal-day other-month"><span class="cal-day-num">3</span></div>
+          <div class="cal-day other-month"><span class="cal-day-num">4</span></div>
+          <div class="cal-day other-month"><span class="cal-day-num">5</span></div>
+          <div class="cal-day other-month"><span class="cal-day-num">6</span></div>
+          <div class="cal-day other-month"><span class="cal-day-num">7</span></div>
+          <div class="cal-day other-month"><span class="cal-day-num">8</span></div>
+          <div class="cal-day other-month"><span class="cal-day-num">9</span></div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <div class="mock-badge">מוקאפ סטטי · צבעי מותג חדשים <b>«חיוך של ילד»</b> — לא בוצעו שינויים בקוד</div>
+
+</body>
+</html>

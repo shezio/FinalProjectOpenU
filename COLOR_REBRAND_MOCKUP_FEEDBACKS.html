@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>מוקאפ — עמוד משובים (צבעי מותג חדשים)</title>
+<style>
+/* Same local Rubik variable font the real app uses (styles.css @font-face) so
+   the mock renders identically — NOT Google Fonts. */
+@font-face {
+  font-family: 'Rubik';
+  src: url('childsmile/frontend/src/fonts/Rubik-VariableFont_wght.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+}
+/* =====================================================================
+   Feedbacks page — STATIC recolored mock.
+   Faithful reproduction of the real page (InnerPageHeader + Sidebar +
+   two-row feedbacks toolbar + feedbacks-data-grid + pagination),
+   with the indigo/purple accents swapped to the A Child's Smile palette.
+   Brand: sky #6EC1E4 · teal #3BC1C8 · pink #ED3B97 · yellow #FCD20E · navy #143852
+   Indigo/purple → TEAL (the MAIN brand colour): the refund-link CTA
+   (was #6366f1→#a855f7), all date-input / select borders + filter labels
+   (were #6366f1 indigo), the toolbar/grid indigo tints.
+   PINK (#ED3B97) is used ONLY as a SEPARATOR / accent — the header's lower edge,
+   the title underline, and the sidebar divider. KEPT exactly as the real app:
+   GREEN grid header + Create + Info (real #4CAF50), BLUE Filter/Refresh/Edit
+   (real #007bff/#2196f3), RED Delete, AMBER bulk-edit (#f59e0b). Structure/labels
+   1:1 with Feedbacks.js.
+   ===================================================================== */
+
+*{box-sizing:border-box;font-family:Rubik,sans-serif}
+html{zoom:.8}
+body{
+  margin:0;direction:rtl;min-height:100vh;
+  display:flex;flex-direction:row-reverse;
+  background:
+    linear-gradient(135deg,
+      rgba(237,59,151,.14) 0%,
+      rgba(110,193,228,.14) 25%,
+      rgba(59,193,200,.14) 50%,
+      rgba(252,210,14,.14) 75%,
+      rgba(242,103,34,.14) 100%);
+  background-attachment:fixed;
+}
+
+/* ===================== SIDEBAR (faithful to common.css; bg recolored TEAL) ===================== */
+.sidebar{
+  background:linear-gradient(135deg,
+    rgba(110,193,228,.9) 0%,
+    rgba(59,193,200,.92) 45%,
+    rgba(101,190,198,.94) 100%);
+  color:#fff;width:280px;min-height:100vh;padding:60px 15px 25px;
+  box-shadow:-4px 0 40px rgba(59,193,200,.4), -2px 0 20px rgba(101,190,198,.3), inset 1px 0 0 rgba(255,255,255,.3);
+  position:fixed;right:0;top:0;display:flex;flex-direction:column;z-index:1001;
+  border-left:2px solid rgba(255,255,255,.3);overflow-y:auto;
+}
+.sidebar-toggle{position:absolute;top:15px;right:25px;width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px}
+.sidebar-user-info{background:linear-gradient(135deg,rgba(255,255,255,.25),rgba(255,255,255,.15));border:2px solid rgba(255,255,255,.3);border-radius:16px;padding:20px;margin-bottom:20px;text-align:center;box-shadow:0 4px 20px rgba(0,0,0,.15),inset 0 1px 0 rgba(255,255,255,.4)}
+.sidebar-username{font-size:28px;font-weight:700;color:#fff;text-shadow:0 2px 8px rgba(0,0,0,.3);margin-bottom:12px;letter-spacing:.5px}
+.sidebar-roles{display:flex;flex-direction:column;gap:6px}
+.sidebar-role{background:linear-gradient(90deg,rgba(255,255,255,.2),rgba(255,255,255,.1));padding:6px 12px;border-radius:8px;font-size:18px;font-weight:600;color:#fff;border:1px solid rgba(255,255,255,.2)}
+/* clock stays GREEN (not indigo/purple) */
+.sidebar-clock{background:linear-gradient(135deg,rgba(16,185,129,.85),rgba(5,150,105,.85));border:2px solid rgba(255,255,255,.4);border-radius:16px;padding:20px;margin-bottom:20px;text-align:center;box-shadow:0 6px 25px rgba(16,185,129,.35),inset 0 1px 0 rgba(255,255,255,.4)}
+.sidebar-time{font-size:36px;font-weight:800;color:#fff;letter-spacing:2px;text-shadow:0 3px 10px rgba(0,0,0,.3);margin-bottom:8px}
+.sidebar-date{font-size:18px;font-weight:600;color:rgba(255,255,255,.95)}
+/* logout stays RED */
+.sidebar-logout-button{background:linear-gradient(135deg,rgba(239,68,68,.95),rgba(220,38,38,.95));color:#fff;padding:16px 24px;border:2px solid rgba(255,255,255,.4);border-radius:14px;cursor:pointer;font-size:22px;font-weight:700;width:100%;margin-bottom:20px;box-shadow:0 6px 25px rgba(239,68,68,.4),inset 0 1px 0 rgba(255,255,255,.3)}
+/* PINK = separator only — the sidebar divider */
+.sidebar-divider{height:3px;background:linear-gradient(90deg,transparent,rgba(237,59,151,.9),transparent);margin:20px 0;border-radius:2px}
+.sidebar-nav-btn{display:block;width:100%;background:none;border:none;color:rgba(255,255,255,.82);font-size:32px;padding:6px 2px;cursor:pointer;text-align:right}
+.sidebar-nav-btn.top-level{font-weight:600;color:rgba(255,255,255,.85)}
+.sidebar-nav-btn.active{color:#fff;font-weight:700}
+.sidebar-section-header{display:flex;align-items:center;gap:4px;width:100%;background:none;border:none;border-bottom:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.85);font-size:32px;font-weight:600;padding:8px 2px 6px;cursor:pointer;margin-top:10px;text-align:right}
+.sidebar-section-label{flex:1;text-align:right}
+.sidebar-section-arrow{font-size:20px;font-weight:300;color:rgba(255,255,255,.55);transition:transform .2s;transform:rotate(0deg);line-height:1}
+.sidebar-section-arrow.open{transform:rotate(90deg)}
+.sidebar-section-items{display:flex;flex-direction:column;padding-right:12px;border-right:1px solid rgba(255,255,255,.15);margin:2px 6px 0 0}
+.sidebar-section-items .sidebar-nav-btn{font-size:24px;color:rgba(255,255,255,.7);padding:5px 2px}
+.sidebar-section-items .sidebar-nav-btn.active{color:#fff;font-weight:700}
+
+/* ===================== HEADER (fixed top) ===================== */
+.header{
+  background:linear-gradient(135deg,
+    rgba(110,193,228,.9) 0%,
+    rgba(59,193,200,.92) 45%,
+    rgba(101,190,198,.95) 100%);
+  color:#fff;display:flex;align-items:center;justify-content:center;
+  padding:20px 30px;height:200px;position:fixed;right:0;top:0;left:0;z-index:1000;
+  border-bottom:3px solid rgba(255,255,255,.3);
+  box-shadow:0 8px 40px rgba(59,193,200,.35), 0 4px 20px rgba(101,190,198,.28), inset 0 -1px 0 rgba(255,255,255,.3);
+}
+/* PINK = separator only — the header's lower edge (echoes the site's pink underline) */
+.header::before{content:'';position:absolute;bottom:0;left:0;right:0;height:5px;
+  background:linear-gradient(90deg, rgba(237,59,151,1) 0%, rgba(219,75,149,1) 100%);
+  box-shadow:0 2px 15px rgba(237,59,151,.5);}
+.logo{width:180px;height:180px;position:absolute;right:310px;top:10px;border-radius:20px;
+  border:3px solid rgba(255,255,255,.5);background:#fff;padding:10px;object-fit:contain;
+  box-shadow:0 6px 30px rgba(0,0,0,.2),0 0 20px rgba(255,255,255,.25);z-index:1002;}
+.title{font-size:4em;font-weight:900;margin:0;position:absolute;left:50%;transform:translateX(-50%);
+  white-space:nowrap;letter-spacing:2px;
+  background:linear-gradient(135deg,#fff 0%,#f0f9ff 25%,#e0f7fa 50%,#bae6fd 75%,#fff 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  filter:drop-shadow(0 4px 20px rgba(255,255,255,.4)) drop-shadow(0 2px 10px rgba(59,193,200,.65)) drop-shadow(0 0 30px rgba(101,190,198,.4));}
+/* PINK underline separator under the page title (mirrors the site's heading underline) */
+.title::after{content:'';position:absolute;left:50%;bottom:-14px;transform:translateX(-50%);width:78%;height:5px;border-radius:6px;
+  background:linear-gradient(90deg,rgba(237,59,151,.95),rgba(219,75,149,.95));box-shadow:0 3px 12px rgba(237,59,151,.5)}
+.top-left{position:absolute;top:20px;left:40px;display:flex;align-items:center;gap:25px;z-index:1001}
+.amit-img{width:130px;height:170px;object-fit:cover;border-radius:18px;border:3px solid rgba(255,255,255,.5);box-shadow:0 6px 30px rgba(0,0,0,.25)}
+.quote{font-size:20px;font-weight:600;text-align:right;color:#143852;max-width:360px;
+  background:linear-gradient(135deg,rgba(255,255,255,.95),rgba(249,250,251,.95));padding:14px 18px;border-radius:14px;
+  box-shadow:0 6px 24px rgba(0,0,0,.12)}
+.qr-code{width:140px;height:140px;border-radius:16px;border:3px solid rgba(255,255,255,.5);background:#fff;padding:10px;box-shadow:0 6px 30px rgba(0,0,0,.2)}
+
+/* ===================== CONTENT ===================== */
+.content{flex:1;margin-right:280px;padding:220px 40px 60px;min-width:0}
+
+/* ===================== FEEDBACKS TOOLBAR (two-row, faithful to Feedbacks.js) ===================== */
+/* Real container is a glassmorphism panel; indigo tint → teal tint. */
+.feedbacks-filter-create-container{
+  display:flex;flex-direction:column;gap:14px;margin-bottom:34px;
+  padding:18px 24px;
+  background:linear-gradient(135deg,rgba(255,255,255,.95) 0%,rgba(249,250,251,.95) 100%);
+  border:2px solid rgba(255,255,255,.5);border-radius:20px;
+  box-shadow:0 10px 40px rgba(0,0,0,.15), 0 5px 20px rgba(59,193,200,.12), inset 0 2px 0 rgba(255,255,255,.8);
+}
+/* Row 1: action buttons */
+.feedbacks-toolbar-actions{display:flex;flex-direction:row;gap:12px;align-items:center;flex-wrap:wrap}
+/* Row 2: filters */
+.feedbacks-toolbar-filters{display:flex;flex-direction:row;flex-wrap:wrap;gap:12px;align-items:flex-end}
+.feedbacks-filter-item{display:flex;flex-direction:column;gap:5px}
+/* filter labels — were indigo #6366f1 → navy */
+.feedbacks-filter-item label{font-size:20px;font-weight:600;color:#143852;white-space:nowrap}
+/* selects/date inputs — indigo #6366f1 borders → TEAL */
+.feedbacks-filter-item select,.feedbacks-date-input{
+  padding:9px 14px;font-size:20px;font-weight:500;
+  border:2px solid rgba(59,193,200,.55);
+  background:linear-gradient(135deg,rgba(240,242,245,.9) 0%,rgba(255,255,255,.95) 100%);
+  border-radius:10px;color:#333;cursor:pointer;transition:border-color .2s ease;
+  box-shadow:0 4px 12px rgba(59,193,200,.15),inset 0 1px 0 rgba(255,255,255,.5)}
+.feedbacks-filter-item select:focus,.feedbacks-date-input:focus{outline:none;border-color:rgba(59,193,200,.95)}
+
+/* Create Feedback — KEEP green (real #4CAF50) */
+.feedbacks-create-btn{background:linear-gradient(135deg,rgba(76,175,80,.95) 0%,rgba(56,142,60,.95) 100%);
+  color:#fff;padding:11px 22px;border:2px solid rgba(255,255,255,.3);border-radius:12px;cursor:pointer;
+  font-size:22px;font-weight:600;white-space:nowrap;box-shadow:0 4px 12px rgba(76,175,80,.3)}
+/* Refund link — was INDIGO→PURPLE (#6366f1→#a855f7) → brand TEAL→SKY (main colour) */
+.feedbacks-refund-link-btn{background:linear-gradient(135deg,rgba(59,193,200,.95) 0%,rgba(110,193,228,.95) 100%);
+  color:#fff;padding:11px 22px;border:2px solid rgba(255,255,255,.3);border-radius:12px;cursor:pointer;
+  font-size:22px;font-weight:600;white-space:nowrap;box-shadow:0 4px 15px rgba(59,193,200,.3),inset 0 1px 0 rgba(255,255,255,.3)}
+/* Bulk edit — KEEP amber (real #f59e0b) */
+.feedbacks-bulk-edit-btn{background:linear-gradient(135deg,rgba(245,158,11,.95) 0%,rgba(217,119,6,.95) 100%);
+  color:#fff;padding:11px 22px;border:2px solid rgba(255,255,255,.3);border-radius:12px;cursor:pointer;
+  font-size:22px;font-weight:600;white-space:nowrap;box-shadow:0 4px 15px rgba(245,158,11,.3),inset 0 1px 0 rgba(255,255,255,.3)}
+/* Filter — KEEP blue (real #007bff) */
+.feedbacks-filter-button{background:linear-gradient(135deg,rgba(0,123,255,.95) 0%,rgba(0,86,179,.95) 100%);
+  color:#fff;padding:9px 22px;border:2px solid rgba(255,255,255,.3);border-radius:12px;cursor:pointer;
+  font-size:22px;font-weight:600;box-shadow:0 4px 15px rgba(0,123,255,.3),inset 0 1px 0 rgba(255,255,255,.3)}
+/* Refresh — KEEP blue (real #2196f3) */
+.feedbacks-refresh-button{background:linear-gradient(135deg,rgba(33,150,243,.95) 0%,rgba(11,125,218,.95) 100%);
+  color:#fff;padding:9px 22px;border:2px solid rgba(255,255,255,.3);border-radius:12px;cursor:pointer;
+  font-size:22px;font-weight:600;box-shadow:0 4px 15px rgba(33,150,243,.3),inset 0 1px 0 rgba(255,255,255,.3)}
+.feedbacks-toolbar-actions button:hover,.feedbacks-toolbar-filters button:hover{transform:translateY(-2px)}
+
+/* ===================== GRID (faithful to feedbacks-data-grid) ===================== */
+.feedback-grid-container{display:flex;flex-direction:column;align-items:stretch;overflow-x:auto;
+  border:2px solid rgba(255,255,255,.5);border-radius:24px;
+  background:linear-gradient(135deg,rgba(255,255,255,.72) 0%,rgba(245,245,245,.6) 100%);
+  box-shadow:0 20px 60px rgba(59,193,200,.22), 0 10px 30px rgba(110,193,228,.18), inset 0 1px 0 rgba(255,255,255,.4);
+  padding:6px}
+.feedbacks-data-grid{width:100%;border-collapse:separate;border-spacing:0;direction:rtl;overflow:hidden;border-radius:20px}
+/* Header — TEAL (rebrand: ALL table headers teal, was green #4CAF50) */
+.feedbacks-data-grid th{background:linear-gradient(135deg,rgba(59,193,200,.97),rgba(110,193,228,.97));
+  color:#fff;font-weight:700;font-size:22px;text-align:right;padding:14px 16px;white-space:nowrap;
+  border-bottom:2px solid rgba(255,255,255,.2)}
+.feedbacks-data-grid td{padding:14px 16px;text-align:right;font-size:19px;color:#333;vertical-align:top;
+  white-space:normal;border-bottom:1px solid rgba(59,193,200,.1)}
+/* Zebra + hover — teal (matches teal header) */
+.feedbacks-data-grid tbody tr:nth-child(even){background:rgba(59,193,200,.05)}
+.feedbacks-data-grid tbody tr:hover{background:rgba(59,193,200,.1)}
+.feedbacks-wide-column{min-width:160px}
+.sort-button{background:rgba(255,255,255,.25);border:none;color:#fff;border-radius:6px;cursor:pointer;font-size:16px;margin-right:6px;padding:2px 8px}
+.td-scroll{max-height:150px;overflow-y:auto;white-space:pre-line}
+
+/* action buttons */
+.feedbacks-actions-cell{display:flex;gap:8px;justify-content:flex-start;flex-wrap:wrap}
+.feedbacks-actions-cell button{color:#fff;padding:8px 16px;border:2px solid rgba(255,255,255,.3);border-radius:10px;cursor:pointer;font-size:18px;font-weight:600;transition:.25s}
+.feedbacks-actions-cell button:hover{transform:translateY(-2px) scale(1.03)}
+/* Info — KEPT green (real #4CAF50) */
+.feedbacks-info-button{background:linear-gradient(135deg,rgba(76,175,80,.95),rgba(69,160,73,.95));box-shadow:0 4px 12px rgba(76,175,80,.3)}
+/* Edit — KEPT blue (real #2196f3) */
+.feedbacks-edit-button{background:linear-gradient(135deg,rgba(33,150,243,.95),rgba(11,125,218,.95));box-shadow:0 4px 12px rgba(33,150,243,.3)}
+/* Delete — KEPT red (real #f44336) */
+.feedbacks-delete-button{background:linear-gradient(135deg,rgba(244,67,54,.95),rgba(218,25,11,.95));box-shadow:0 4px 12px rgba(244,67,54,.3)}
+
+/* pagination */
+.pagination{display:flex;justify-content:center;align-items:center;gap:6px;margin-top:26px}
+.pagination button{padding:10px 16px;border:2px solid rgba(204,204,204,.3);border-radius:12px;cursor:pointer;font-size:20px;font-weight:600;
+  background:linear-gradient(135deg,rgba(255,255,255,.95),rgba(249,250,251,.95));box-shadow:0 4px 15px rgba(0,0,0,.08)}
+/* active page — was indigo → brand TEAL */
+.pagination button.active{color:#fff;border:2px solid rgba(255,255,255,.4);
+  background:linear-gradient(135deg,rgba(59,193,200,.97),rgba(110,193,228,.97));box-shadow:0 6px 25px rgba(59,193,200,.4)}
+.pagination button:disabled{color:#cbd5e1;background:rgba(240,240,240,.5);cursor:not-allowed;box-shadow:none}
+
+/* mock badge */
+.mock-badge{position:fixed;bottom:16px;left:16px;z-index:3000;background:#143852;color:#fff;font-size:14px;font-weight:600;
+  padding:8px 14px;border-radius:10px;box-shadow:0 6px 20px rgba(0,0,0,.25);opacity:.92}
+.mock-badge b{color:#FCD20E}
+</style>
+</head>
+<body>
+
+  <!-- ===================== SIDEBAR (1:1 with Sidebar.js) ===================== -->
+  <aside class="sidebar">
+    <button class="sidebar-toggle" title="צמצם סרגל">▶</button>
+    <div class="sidebar-user-info">
+      <div class="sidebar-username">שרה לוי</div>
+      <div class="sidebar-roles">
+        <div class="sidebar-role">רכז מתנדבים</div>
+        <div class="sidebar-role">מנהל מערכת</div>
+      </div>
+    </div>
+    <div class="sidebar-clock">
+      <div class="sidebar-time">09:42:15</div>
+      <div class="sidebar-date">יום ראשון, 27 ביולי 2026</div>
+    </div>
+    <button class="sidebar-logout-button">יציאה מהמערכת</button>
+    <div class="sidebar-divider"></div>
+
+    <button class="sidebar-nav-btn top-level">לוח משימות</button>
+
+    <button class="sidebar-section-header"><span class="sidebar-section-label">משפחות</span><span class="sidebar-section-arrow">›</span></button>
+
+    <button class="sidebar-section-header"><span class="sidebar-section-label">מתנדבים</span><span class="sidebar-section-arrow open">›</span></button>
+    <div class="sidebar-section-items">
+      <button class="sidebar-nav-btn">ניהול חונכים ומתנדבים</button>
+      <button class="sidebar-nav-btn active">משובים</button>
+    </div>
+
+    <button class="sidebar-section-header"><span class="sidebar-section-label">כספים</span><span class="sidebar-section-arrow">›</span></button>
+    <button class="sidebar-section-header"><span class="sidebar-section-label">פעילויות</span><span class="sidebar-section-arrow">›</span></button>
+    <button class="sidebar-section-header"><span class="sidebar-section-label">ניהול</span><span class="sidebar-section-arrow">›</span></button>
+  </aside>
+
+  <!-- ===================== HEADER ===================== -->
+  <header class="header">
+    <img class="logo" src="childsmile/frontend/src/assets/logo.png" alt="חיוך של ילד">
+    <div class="top-left">
+      <img class="amit-img" src="childsmile/frontend/src/assets/amit.jpg" alt="עמית">
+      <div class="quote">הרבה אנשים אומרים שהם רוצים להצליח אבל לא כולם מוכנים לשלם את המחיר שצריך כדי להצליח</div>
+      <img class="qr-code" src="childsmile/frontend/src/assets/qr-code.jpg" alt="QR">
+    </div>
+    <h1 class="title">משובים</h1>
+  </header>
+
+  <!-- ===================== CONTENT ===================== -->
+  <main class="content">
+
+    <!-- toolbar (exact two-row structure + labels from Feedbacks.js) -->
+    <div class="feedbacks-filter-create-container">
+      <!-- Row 1: action buttons -->
+      <div class="feedbacks-toolbar-actions">
+        <button class="feedbacks-create-btn">צור משוב</button>
+        <button class="feedbacks-refund-link-btn">הגש בקשת החזר הוצאות</button>
+        <button class="feedbacks-bulk-edit-btn">עריכה מרוכזת של שם מתנדב</button>
+      </div>
+      <!-- Row 2: filters -->
+      <div class="feedbacks-toolbar-filters">
+        <div class="feedbacks-filter-item">
+          <label>סוג משוב:</label>
+          <select>
+            <option>כל סוגי המשובים</option>
+            <option>יום כיף בחונכות</option>
+            <option>יום כיף בהתנדבות כללית</option>
+            <option>ביקור בית חולים בהתנדבות כללית</option>
+            <option>ביקור בחונכות</option>
+          </select>
+        </div>
+        <div class="feedbacks-filter-item">
+          <label>שם המתנדב/חונך:</label>
+          <select>
+            <option>הכל</option>
+            <option>דנה אברהם</option>
+            <option>יוסי מזרחי</option>
+            <option>נועה פרידמן</option>
+            <option>אורי בן דוד</option>
+          </select>
+        </div>
+        <div class="feedbacks-filter-item">
+          <label>מתאריך אירוע:</label>
+          <input type="date" class="feedbacks-date-input" value="2026-01-01">
+        </div>
+        <div class="feedbacks-filter-item">
+          <label>עד תאריך אירוע:</label>
+          <input type="date" class="feedbacks-date-input" value="2026-07-27">
+        </div>
+        <div class="feedbacks-filter-item">
+          <label>מתאריך מילוי משוב:</label>
+          <input type="date" class="feedbacks-date-input" value="2026-01-01">
+        </div>
+        <div class="feedbacks-filter-item">
+          <label>עד תאריך מילוי משוב:</label>
+          <input type="date" class="feedbacks-date-input" value="2026-07-27">
+        </div>
+        <button class="feedbacks-filter-button">סנן</button>
+        <button class="feedbacks-refresh-button">רענן</button>
+      </div>
+    </div>
+
+    <!-- grid -->
+    <div class="feedback-grid-container">
+      <table class="feedbacks-data-grid">
+        <thead>
+          <tr>
+            <th>שם המתנדב/חונך</th>
+            <th>שם חניך / שם בית חולים</th>
+            <th>האם זה החניך שלך בחונכות?</th>
+            <th class="feedbacks-wide-column">תאריך האירוע <button class="sort-button">▼</button></th>
+            <th class="feedbacks-wide-column">מילוי המשוב <button class="sort-button">▼</button></th>
+            <th>תיאור</th>
+            <th>סוג משוב</th>
+            <th>פעולות</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>דנה אברהם</td><td>יעל כהן</td><td>כן</td>
+            <td>12/07/2026</td><td>13/07/2026</td>
+            <td><div class="td-scroll">מפגש חונכות שבועי. יעל שיתפה פעולה יפה בשיעורי הבית והתקדמה בקריאה.</div></td>
+            <td>ביקור בחונכות</td>
+            <td><div class="feedbacks-actions-cell"><button class="feedbacks-info-button">מידע</button><button class="feedbacks-edit-button">ערוך</button><button class="feedbacks-delete-button">מחק</button></div></td>
+          </tr>
+          <tr>
+            <td>יוסי מזרחי</td><td>איתי לוי</td><td>לא</td>
+            <td>05/07/2026</td><td>06/07/2026</td>
+            <td><div class="td-scroll">יום כיף בפארק עם קבוצת החונכות. הילדים נהנו מהפעילויות והאווירה הייתה מצוינת.</div></td>
+            <td>יום כיף בחונכות</td>
+            <td><div class="feedbacks-actions-cell"><button class="feedbacks-info-button">מידע</button><button class="feedbacks-edit-button">ערוך</button><button class="feedbacks-delete-button">מחק</button></div></td>
+          </tr>
+          <tr>
+            <td>נועה פרידמן</td><td>בית חולים שניידר</td><td>לא</td>
+            <td>28/06/2026</td><td>29/06/2026</td>
+            <td><div class="td-scroll">ביקור במחלקת ילדים. חילקנו מתנות וארגנו פעילות יצירה למאושפזים.</div></td>
+            <td>ביקור בית חולים בהתנדבות כללית</td>
+            <td><div class="feedbacks-actions-cell"><button class="feedbacks-info-button">מידע</button><button class="feedbacks-edit-button">ערוך</button><button class="feedbacks-delete-button">מחק</button></div></td>
+          </tr>
+          <tr>
+            <td>אורי בן דוד</td><td>שירה אברהם</td><td>כן</td>
+            <td>20/06/2026</td><td>21/06/2026</td>
+            <td><div class="td-scroll">מפגש חונכות בבית המשפחה. עבדנו על מתמטיקה, שירה מתקדמת יפה מאוד.</div></td>
+            <td>ביקור בחונכות</td>
+            <td><div class="feedbacks-actions-cell"><button class="feedbacks-info-button">מידע</button><button class="feedbacks-edit-button">ערוך</button><button class="feedbacks-delete-button">מחק</button></div></td>
+          </tr>
+          <tr>
+            <td>מיכל שרון</td><td>דניאל פרץ</td><td>לא</td>
+            <td>14/06/2026</td><td>15/06/2026</td>
+            <td><div class="td-scroll">יום כיף למתנדבים כלליים בחוף הים. פעילות גיבוש והנאה לכל המשתתפים.</div></td>
+            <td>יום כיף בהתנדבות כללית</td>
+            <td><div class="feedbacks-actions-cell"><button class="feedbacks-info-button">מידע</button><button class="feedbacks-edit-button">ערוך</button><button class="feedbacks-delete-button">מחק</button></div></td>
+          </tr>
+          <tr>
+            <td>רון גולן</td><td>נועה מזרחי</td><td>כן</td>
+            <td>07/06/2026</td><td>08/06/2026</td>
+            <td><div class="td-scroll">מפגש חונכות. נועה הייתה קצת עייפה אך השלמנו את החומר בהצלחה.</div></td>
+            <td>ביקור בחונכות</td>
+            <td><div class="feedbacks-actions-cell"><button class="feedbacks-info-button">מידע</button><button class="feedbacks-edit-button">ערוך</button><button class="feedbacks-delete-button">מחק</button></div></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- pagination -->
+      <div class="pagination">
+        <button disabled>&laquo;</button>
+        <button disabled>&lsaquo;</button>
+        <button class="active">1</button>
+        <button>2</button>
+        <button>&rsaquo;</button>
+        <button>&raquo;</button>
+      </div>
+    </div>
+  </main>
+
+  <div class="mock-badge">מוקאפ סטטי · צבעי מותג חדשים <b>«חיוך של ילד»</b> — לא בוצעו שינויים בקוד</div>
+
+</body>
+</html>

@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>מוקאפ — עמוד התחברות (צבעי מותג חדשים)</title>
+<style>
+/* Same local Rubik variable font the real app uses (styles.css @font-face) so
+   the mock renders identically — NOT Google Fonts. */
+@font-face {
+  font-family: 'Rubik';
+  src: url('childsmile/frontend/src/fonts/Rubik-VariableFont_wght.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+}
+/* =====================================================================
+   Login page — STATIC recolored mock.
+   Faithful reproduction of the real login (Header + big "חיוך של ילד"
+   wordmark + email input + login button + Google button), with the
+   theme swapped to the A Child's Smile palette.
+   Brand: sky #6EC1E4 · teal #3BC1C8 / #65BEC6 · pink #ED3B97 / #DB4B95 ·
+   yellow #FCD20E · navy #143852.
+   ⭐ Wordmark ".amit-title" was GREEN #1da821 + 3-D tilt → restyled to TEAL
+   letters with a single PINK curved "smile" underline (logo echo). TEAL is
+   the MAIN colour; PINK is a separator/accent only. Google button KEPT in
+   Google's standard style. Structure/labels 1:1 with the code.
+   NOTE: the login page has NO sidebar — single centered column.
+   ===================================================================== */
+
+*{box-sizing:border-box;font-family:Rubik,sans-serif}
+html{zoom:.8}
+body{
+  margin:0;direction:rtl;min-height:100vh;
+  background:
+    linear-gradient(135deg,
+      rgba(237,59,151,.10) 0%,
+      rgba(110,193,228,.12) 25%,
+      rgba(59,193,200,.12) 50%,
+      rgba(252,210,14,.10) 75%,
+      rgba(242,103,34,.10) 100%);
+  background-attachment:fixed;
+}
+
+/* ===================== HEADER (1:1 with Header.js: top-left cluster + centered logo bar, NO title) ===================== */
+.header{
+  background:linear-gradient(135deg,
+    rgba(110,193,228,.9) 0%,
+    rgba(59,193,200,.92) 45%,
+    rgba(101,190,198,.95) 100%);
+  color:#fff;display:flex;align-items:center;justify-content:center;
+  padding:20px 30px;height:200px;position:fixed;right:0;top:0;left:0;z-index:1000;
+  border-bottom:3px solid rgba(255,255,255,.3);
+  box-shadow:0 8px 40px rgba(59,193,200,.35), 0 4px 20px rgba(101,190,198,.28), inset 0 -1px 0 rgba(255,255,255,.3);
+}
+/* PINK = separator only — the header's lower edge (echoes the site's pink underline) */
+.header::before{content:'';position:absolute;bottom:0;left:0;right:0;height:5px;
+  background:linear-gradient(90deg, rgba(237,59,151,1) 0%, rgba(219,75,149,1) 100%);
+  box-shadow:0 2px 15px rgba(237,59,151,.5);}
+/* .header img → 150px logo, CENTERED (styles.css .header img). Login header has NO title. */
+.header .header-logo{width:150px;height:auto;object-fit:contain;background:#fff;border-radius:18px;padding:10px;
+  border:3px solid rgba(255,255,255,.55);box-shadow:0 6px 30px rgba(0,0,0,.2)}
+/* top-left fixed cluster: amit + quote + QR (styles.css .top-left / img.amit / .quote / img.qr-code) */
+.top-left{position:fixed;top:16px;left:20px;display:flex;align-items:center;gap:16px;z-index:1002}
+.top-left .amit{width:100px;height:150px;object-fit:cover;border-radius:14px;border:3px solid rgba(255,255,255,.6);box-shadow:0 6px 24px rgba(0,0,0,.22)}
+.top-left .quote{font-size:18px;font-weight:600;text-align:right;color:#143852;max-width:300px;line-height:1.5;
+  background:linear-gradient(135deg,rgba(255,255,255,.96),rgba(249,250,251,.96));padding:12px 16px;border-radius:12px;box-shadow:0 6px 22px rgba(0,0,0,.12)}
+.qr-code-link{display:inline-flex;line-height:0}
+.top-left .qr-code{width:120px;height:120px;object-fit:contain;border-radius:12px;border:3px solid rgba(255,255,255,.6);background:#fff;padding:6px;box-shadow:0 6px 24px rgba(0,0,0,.18)}
+
+/* ===================== LOGIN CONTENT (1:1 with Login.js / styles.css) ===================== */
+.login-main-content{
+  display:flex;flex-direction:column;align-items:center;justify-content:flex-start;
+  padding:240px 20px 120px;min-height:100vh;text-align:center;
+}
+
+/* ⭐ WORDMARK — was green #1da821 + rotateX(-15deg). Now TEAL brand letters with a
+   pink curved "smile" underline. Tilt dropped for a cleaner logo look. */
+.amit-title{
+  display:inline-block;position:relative;white-space:nowrap;
+  letter-spacing:3px;text-align:center;line-height:1;
+  font-size:120px;font-weight:bold;font-family:Rubik,sans-serif;
+  padding:0 12px 48px;margin-bottom:56px;
+  background:linear-gradient(135deg,#3BC1C8 0%,#65BEC6 55%,#6EC1E4 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;color:#3BC1C8;
+  filter:drop-shadow(0 4px 14px rgba(59,193,200,.25));
+}
+/* PINK curved "smile" swoosh BELOW the wordmark (logo echo) — sits under the letters, never over them */
+.amit-title .smile{
+  position:absolute;left:0;right:0;bottom:0;width:100%;height:46px;overflow:visible;pointer-events:none;
+}
+.amit-title .smile path{
+  fill:none;stroke:#ED3B97;stroke-width:9;stroke-linecap:round;vector-effect:non-scaling-stroke;
+  filter:drop-shadow(0 3px 8px rgba(237,59,151,.35));
+}
+
+/* form column — matches real login width/spacing */
+.login-main-content form{width:100%;max-width:760px;display:flex;flex-direction:column;align-items:center}
+
+.login-main-content input[type="text"]{
+  width:100%;padding:15px;margin:10px 0;
+  border:1px solid #ccc;border-radius:5px;box-sizing:border-box;
+  font-size:36px;font-family:Rubik,sans-serif;text-align:right;
+}
+/* input focus border → brand TEAL */
+.login-main-content input[type="text"]:focus{
+  outline:none;border-color:#3BC1C8;
+  box-shadow:0 0 0 4px rgba(59,193,200,.22);
+}
+
+.login-buttons{width:100%;display:flex;flex-direction:column;align-items:center;gap:4px}
+
+/* primary login button — was solid green #4CAF50 → brand TEAL→SKY gradient */
+.login-main-content button{
+  width:100%;padding:15px;color:#fff;border:none;border-radius:5px;cursor:pointer;
+  font-weight:bold;font-size:36px;font-family:Rubik,sans-serif;margin:10px 0;
+  background:linear-gradient(135deg,#3BC1C8 0%,#6EC1E4 100%);
+  box-shadow:0 6px 20px rgba(59,193,200,.32);transition:.2s;
+}
+.login-main-content button:hover{filter:brightness(1.05);transform:translateY(-1px)}
+
+/* Google button — KEPT in Google's standard style (white surface, Google mark) */
+.login-main-content button.google-btn{
+  background:#fff;color:#3c4043;border:1px solid #dadce0;
+  display:flex;align-items:center;justify-content:center;gap:14px;
+  box-shadow:0 1px 3px rgba(60,64,67,.3);
+}
+.login-main-content button.google-btn:hover{background:#f7f8f8;filter:none;transform:translateY(-1px)}
+.login-main-content .google-icon{flex-shrink:0}
+
+/* "או" separator + register link */
+.login-main-content span{
+  display:block;margin:16px 0;font-size:36px;font-family:Rubik,sans-serif;
+  text-align:center;color:#143852;font-weight:600;
+}
+
+/* ===================== MOCK BADGE ===================== */
+.mock-badge{position:fixed;bottom:16px;left:16px;z-index:3000;background:#143852;color:#fff;font-size:14px;font-weight:600;
+  padding:8px 14px;border-radius:10px;box-shadow:0 6px 20px rgba(0,0,0,.25);opacity:.92}
+.mock-badge b{color:#FCD20E}
+</style>
+</head>
+<body>
+
+  <!-- ===================== HEADER (1:1 with Header.js — top-left cluster + logo bar, NO title) ===================== -->
+  <div class="top-left">
+    <img class="amit" src="childsmile/frontend/src/assets/amit.jpg" alt="Amit">
+    <div class="quote">הרבה אנשים אומרים שהם רוצים להצליח<br>אבל לא כולם מוכנים לשלם את המחיר שצריך כדי להצליח</div>
+    <a class="qr-code-link" href="https://www.instagram.com/remember.amit.bunzel?igsh=YjFxNDBtaWNxMDdt" target="_blank" rel="noopener noreferrer">
+      <img class="qr-code" src="childsmile/frontend/src/assets/qr-code.jpg" alt="QR Code">
+    </a>
+  </div>
+  <header class="header">
+    <img class="header-logo" src="childsmile/frontend/src/assets/logo.png" alt="חיוך של ילד">
+  </header>
+
+  <!-- ===================== LOGIN CONTENT (1:1 with Login.js — email phase) ===================== -->
+  <div class="login-main-content">
+
+    <!-- ⭐ Wordmark: TEAL letters + PINK "smile" curved underline (BELOW the text, logo echo) -->
+    <span class="amit-title">חיוך של ילד<svg class="smile" viewBox="0 0 300 46" preserveAspectRatio="none" aria-hidden="true"><path d="M10 14 Q 150 44, 290 14" /></svg></span>
+
+    <!-- Email Input Phase -->
+    <form onsubmit="return false;">
+      <input type="text" placeholder="אנא הכניסו את כתובת האימייל שלכם">
+      <div class="login-buttons">
+        <button type="submit">התחברות עם חשבון אימייל</button>
+        <button type="button" class="google-btn">
+          <svg class="google-icon" viewBox="0 0 24 24" width="40" height="40">
+            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
+            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+          </svg>
+          התחברות עם חשבון גוגל
+        </button>
+      </div>
+      <span>או</span>
+      <button type="button">הירשם</button>
+    </form>
+  </div>
+
+  <div class="mock-badge">מוקאפ סטטי · צבעי מותג חדשים «<b>חיוך של ילד</b>» — לא בוצעו שינויים בקוד</div>
+
+</body>
+</html>

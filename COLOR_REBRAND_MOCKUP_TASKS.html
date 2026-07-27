@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>מוקאפ — לוח משימות (צבעי מותג חדשים)</title>
+<style>
+/* Same local Rubik variable font the real app uses (styles.css @font-face) so
+   the mock renders identically — NOT Google Fonts. */
+@font-face {
+  font-family: 'Rubik';
+  src: url('childsmile/frontend/src/fonts/Rubik-VariableFont_wght.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+}
+/* =====================================================================
+   Families page — STATIC recolored mock.
+   Faithful reproduction of the real page (InnerPageHeader + Sidebar +
+   filter toolbar + glassmorphism families-data-grid + pagination),
+   with the indigo/purple theme swapped to the A Child's Smile palette.
+   Brand: sky #6EC1E4 · teal #3BC1C8 · pink #ED3B97 · yellow #FCD20E · navy #143852
+   Indigo/purple → TEAL (the MAIN brand colour, e.g. #3BC1C8 / #65BEC6): header +
+   sidebar + grid-header + pagination + refresh circle + toggle-mature + edit button.
+   PINK (#ED3B97) is used ONLY as a SEPARATOR / accent — the header's lower edge, the
+   title underline, and the sidebar divider (mirrors the NPO site, where pink is just
+   an underline / donate-CTA accent, never a main surface). KEPT exactly as the real
+   app: pink "Initial Family Data" CTA, cyan "Add Family", orange status-filter, blue
+   info + search, red delete, green clock. Structure/labels 1:1 with the code.
+   ===================================================================== */
+
+*{box-sizing:border-box;font-family:Rubik,sans-serif}
+html{zoom:.8}
+body{
+  margin:0;direction:rtl;min-height:100vh;
+  display:flex;flex-direction:row-reverse;
+  /* was rainbow indigo/blue/green/orange/pink → brand rainbow (decorative, low alpha) */
+  background:
+    linear-gradient(135deg,
+      rgba(237,59,151,.14) 0%,
+      rgba(110,193,228,.14) 25%,
+      rgba(59,193,200,.14) 50%,
+      rgba(252,210,14,.14) 75%,
+      rgba(242,103,34,.14) 100%);
+  background-attachment:fixed;
+}
+
+/* ===================== SIDEBAR (faithful to common.css; bg recolored TEAL) ===================== */
+.sidebar{
+  background:linear-gradient(135deg,
+    rgba(110,193,228,.9) 0%,
+    rgba(59,193,200,.92) 45%,
+    rgba(101,190,198,.94) 100%);
+  color:#fff;width:280px;min-height:100vh;padding:60px 15px 25px;
+  box-shadow:-4px 0 40px rgba(59,193,200,.4), -2px 0 20px rgba(101,190,198,.3), inset 1px 0 0 rgba(255,255,255,.3);
+  position:fixed;right:0;top:0;display:flex;flex-direction:column;z-index:1001;
+  border-left:2px solid rgba(255,255,255,.3);overflow-y:auto;
+}
+.sidebar-toggle{position:absolute;top:15px;right:25px;width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px}
+.sidebar-user-info{background:linear-gradient(135deg,rgba(255,255,255,.25),rgba(255,255,255,.15));border:2px solid rgba(255,255,255,.3);border-radius:16px;padding:20px;margin-bottom:20px;text-align:center;box-shadow:0 4px 20px rgba(0,0,0,.15),inset 0 1px 0 rgba(255,255,255,.4)}
+.sidebar-username{font-size:28px;font-weight:700;color:#fff;text-shadow:0 2px 8px rgba(0,0,0,.3);margin-bottom:12px;letter-spacing:.5px}
+.sidebar-roles{display:flex;flex-direction:column;gap:6px}
+.sidebar-role{background:linear-gradient(90deg,rgba(255,255,255,.2),rgba(255,255,255,.1));padding:6px 12px;border-radius:8px;font-size:18px;font-weight:600;color:#fff;border:1px solid rgba(255,255,255,.2)}
+/* clock stays GREEN (not indigo/purple) */
+.sidebar-clock{background:linear-gradient(135deg,rgba(16,185,129,.85),rgba(5,150,105,.85));border:2px solid rgba(255,255,255,.4);border-radius:16px;padding:20px;margin-bottom:20px;text-align:center;box-shadow:0 6px 25px rgba(16,185,129,.35),inset 0 1px 0 rgba(255,255,255,.4)}
+.sidebar-time{font-size:36px;font-weight:800;color:#fff;letter-spacing:2px;text-shadow:0 3px 10px rgba(0,0,0,.3);margin-bottom:8px}
+.sidebar-date{font-size:18px;font-weight:600;color:rgba(255,255,255,.95)}
+/* logout stays RED */
+.sidebar-logout-button{background:linear-gradient(135deg,rgba(239,68,68,.95),rgba(220,38,38,.95));color:#fff;padding:16px 24px;border:2px solid rgba(255,255,255,.4);border-radius:14px;cursor:pointer;font-size:22px;font-weight:700;width:100%;margin-bottom:20px;box-shadow:0 6px 25px rgba(239,68,68,.4),inset 0 1px 0 rgba(255,255,255,.3)}
+/* PINK = separator only — the sidebar divider */
+.sidebar-divider{height:3px;background:linear-gradient(90deg,transparent,rgba(237,59,151,.9),transparent);margin:20px 0;border-radius:2px}
+.sidebar-nav-btn{display:block;width:100%;background:none;border:none;color:rgba(255,255,255,.82);font-size:32px;padding:6px 2px;cursor:pointer;text-align:right}
+.sidebar-nav-btn.top-level{font-weight:600;color:rgba(255,255,255,.85)}
+.sidebar-nav-btn.active{color:#fff;font-weight:700}
+.sidebar-section-header{display:flex;align-items:center;gap:4px;width:100%;background:none;border:none;border-bottom:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.85);font-size:32px;font-weight:600;padding:8px 2px 6px;cursor:pointer;margin-top:10px;text-align:right}
+.sidebar-section-label{flex:1;text-align:right}
+.sidebar-section-arrow{font-size:20px;font-weight:300;color:rgba(255,255,255,.55);transition:transform .2s;transform:rotate(0deg);line-height:1}
+.sidebar-section-arrow.open{transform:rotate(90deg)}
+.sidebar-section-items{display:flex;flex-direction:column;padding-right:12px;border-right:1px solid rgba(255,255,255,.15);margin:2px 6px 0 0}
+.sidebar-section-items .sidebar-nav-btn{font-size:24px;color:rgba(255,255,255,.7);padding:5px 2px}
+.sidebar-section-items .sidebar-nav-btn.active{color:#fff;font-weight:700}
+
+/* ===================== HEADER (fixed top) ===================== */
+.header{
+  background:linear-gradient(135deg,
+    rgba(110,193,228,.9) 0%,
+    rgba(59,193,200,.92) 45%,
+    rgba(101,190,198,.95) 100%);
+  color:#fff;display:flex;align-items:center;justify-content:center;
+  padding:20px 30px;height:200px;position:fixed;right:0;top:0;left:0;z-index:1000;
+  border-bottom:3px solid rgba(255,255,255,.3);
+  box-shadow:0 8px 40px rgba(59,193,200,.35), 0 4px 20px rgba(101,190,198,.28), inset 0 -1px 0 rgba(255,255,255,.3);
+}
+/* PINK = separator only — the header's lower edge (echoes the site's pink underline) */
+.header::before{content:'';position:absolute;bottom:0;left:0;right:0;height:5px;
+  background:linear-gradient(90deg, rgba(237,59,151,1) 0%, rgba(219,75,149,1) 100%);
+  box-shadow:0 2px 15px rgba(237,59,151,.5);}
+.logo{width:180px;height:180px;position:absolute;right:310px;top:10px;border-radius:20px;
+  border:3px solid rgba(255,255,255,.5);background:#fff;padding:10px;object-fit:contain;
+  box-shadow:0 6px 30px rgba(0,0,0,.2),0 0 20px rgba(255,255,255,.25);z-index:1002;}
+.title{font-size:4em;font-weight:900;margin:0;position:absolute;left:50%;transform:translateX(-50%);
+  white-space:nowrap;letter-spacing:2px;
+  background:linear-gradient(135deg,#fff 0%,#f0f9ff 25%,#e0f7fa 50%,#bae6fd 75%,#fff 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  filter:drop-shadow(0 4px 20px rgba(255,255,255,.4)) drop-shadow(0 2px 10px rgba(59,193,200,.65)) drop-shadow(0 0 30px rgba(101,190,198,.4));}
+/* PINK underline separator under the page title (mirrors the site's heading underline) */
+.title::after{content:'';position:absolute;left:50%;bottom:-14px;transform:translateX(-50%);width:78%;height:5px;border-radius:6px;
+  background:linear-gradient(90deg,rgba(237,59,151,.95),rgba(219,75,149,.95));box-shadow:0 3px 12px rgba(237,59,151,.5)}
+.top-left{position:absolute;top:20px;left:40px;display:flex;align-items:center;gap:25px;z-index:1001}
+.amit-img{width:130px;height:170px;object-fit:cover;border-radius:18px;border:3px solid rgba(255,255,255,.5);box-shadow:0 6px 30px rgba(0,0,0,.25)}
+.quote{font-size:20px;font-weight:600;text-align:right;color:#143852;max-width:360px;
+  background:linear-gradient(135deg,rgba(255,255,255,.95),rgba(249,250,251,.95));padding:14px 18px;border-radius:14px;
+  box-shadow:0 6px 24px rgba(0,0,0,.12)}
+.qr-code{width:140px;height:140px;border-radius:16px;border:3px solid rgba(255,255,255,.5);background:#fff;padding:10px;box-shadow:0 6px 30px rgba(0,0,0,.2)}
+
+/* ===================== CONTENT ===================== */
+.content{flex:1;margin-right:280px;padding:220px 40px 60px;min-width:0}
+
+/* toolbar — faithful single horizontal row (RTL) like the real overflow-x toolbar */
+.filter-create-container{display:flex;justify-content:flex-start;margin-bottom:34px;overflow-x:auto;padding-bottom:10px}
+.create-task{display:flex;flex-wrap:nowrap;gap:12px;align-items:center;width:max-content}
+.tbtn{color:#fff;padding:12px 24px;font-size:24px;font-weight:600;border:2px solid rgba(255,255,255,.3);border-radius:14px;cursor:pointer;white-space:nowrap;transition:.25s;box-shadow:inset 0 1px 0 rgba(255,255,255,.3)}
+.tbtn:hover{transform:translateY(-2px) scale(1.02)}
+/* refresh — was PURPLE circle → brand TEAL (main colour) */
+.refresh-icon-button{width:45px;height:45px;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;font-size:22px;border-radius:50%;background:rgba(59,193,200,.92);color:#fff;border:2px solid rgba(255,255,255,.3);cursor:pointer}
+/* Initial Family Data — KEEP pink (real #ec4899, not indigo/purple) */
+.btn-initial{background:linear-gradient(135deg,rgba(236,72,153,.95),rgba(219,39,119,.95));box-shadow:0 6px 20px rgba(236,72,153,.3),inset 0 1px 0 rgba(255,255,255,.3)}
+/* Add New Family — KEEP cyan (real #06b6d4) */
+.btn-add{background:linear-gradient(135deg,rgba(6,182,212,.95),rgba(14,165,233,.95));box-shadow:0 6px 20px rgba(6,182,212,.3),inset 0 1px 0 rgba(255,255,255,.3)}
+/* toggle mature — was PURPLE → brand TEAL (main colour) */
+.toggle-mature-btn{background:linear-gradient(135deg,rgba(59,193,200,.95),rgba(110,193,228,.95));box-shadow:0 6px 20px rgba(59,193,200,.3),inset 0 1px 0 rgba(255,255,255,.3)}
+/* status filter — KEEP orange (real #fb923c→#f97316) */
+.status-filter-button{background:linear-gradient(135deg,rgba(251,146,60,.95),rgba(249,115,22,.95));display:inline-flex;align-items:center;gap:8px;box-shadow:0 6px 20px rgba(249,115,22,.3),inset 0 1px 0 rgba(255,255,255,.3)}
+.status-filter-button .chev{font-size:18px}
+.tutorship-status-filter{flex-shrink:0;padding:12px 18px;font-size:20px;font-weight:600;border-radius:14px;border:2px solid rgba(59,193,200,.55);background:linear-gradient(135deg,rgba(255,255,255,.95),rgba(249,250,251,.95));color:#143852;cursor:pointer;box-shadow:0 4px 14px rgba(59,193,200,.15)}
+.age-range-filter{flex-shrink:0;display:flex;flex-direction:column;gap:4px;background:rgba(255,255,255,.75);border:2px solid rgba(110,193,228,.45);border-radius:14px;padding:8px 16px;color:#143852;font-size:18px;font-weight:600;box-shadow:0 4px 14px rgba(110,193,228,.15)}
+.age-sliders{display:flex;gap:8px}
+.age-sliders input[type=range]{accent-color:#3BC1C8;width:110px}
+/* search bar — KEEP blue border (real #3b82f6, not indigo/purple) */
+.families-search-bar{flex-shrink:0;padding:0 20px;min-width:170px;width:340px;height:60px;border:3px solid rgba(59,130,246,.75);background:linear-gradient(135deg,rgba(255,255,255,.85),rgba(240,242,245,.8));border-radius:16px;font-size:22px;font-weight:500;box-shadow:0 4px 20px rgba(59,130,246,.3),inset 0 1px 0 rgba(255,255,255,.7)}
+.families-search-bar::placeholder{color:rgba(59,130,246,.5)}
+.families-search-bar:focus{outline:none;border-color:rgba(59,130,246,.95);box-shadow:0 6px 30px rgba(59,130,246,.3),0 0 0 4px rgba(59,130,246,.2)}
+
+/* ===================== GRID ===================== */
+.families-grid-container{display:flex;flex-direction:column;align-items:stretch;overflow-x:auto}
+.families-data-grid{width:100%;border-collapse:separate;border-spacing:0;
+  border:2px solid rgba(255,255,255,.5);border-radius:24px;overflow:hidden;
+  background:linear-gradient(135deg,rgba(255,255,255,.72) 0%,rgba(245,245,245,.6) 100%);
+  box-shadow:0 20px 60px rgba(59,193,200,.3), 0 10px 30px rgba(110,193,228,.25), inset 0 1px 0 rgba(255,255,255,.4);}
+.families-data-grid th,.families-data-grid td{border:1px solid #e3e8ec;padding:14px 12px;text-align:right;font-size:19px}
+.families-data-grid th{
+  background:linear-gradient(135deg,rgba(59,193,200,1) 0%,rgba(110,193,228,1) 100%);
+  color:#fff;font-weight:700;letter-spacing:.5px;text-shadow:0 2px 10px rgba(0,0,0,.2);
+  box-shadow:0 4px 20px rgba(59,193,200,.35);white-space:nowrap}
+.families-data-grid tbody tr:nth-child(even){background:linear-gradient(90deg,rgba(240,248,250,.85),rgba(230,245,246,.85))}
+.families-data-grid tbody tr:hover{background:linear-gradient(90deg,rgba(110,193,228,.28),rgba(59,193,200,.28))}
+.sort-button{background:rgba(255,255,255,.25);border:none;color:#fff;border-radius:6px;cursor:pointer;font-size:16px;margin-right:6px;padding:2px 6px}
+
+/* (Status + Tutorship-Status columns render as PLAIN TEXT in the real app — no pills) */
+
+/* action buttons */
+.family-actions{display:flex;gap:10px;justify-content:flex-start}
+.family-actions button{color:#fff;padding:9px 18px;border:2px solid rgba(255,255,255,.3);border-radius:12px;cursor:pointer;font-size:17px;font-weight:600;transition:.25s}
+.family-actions button:hover{transform:translateY(-2px) scale(1.04)}
+.info-button{background:linear-gradient(135deg,rgba(59,130,246,.97),rgba(37,99,235,.97));box-shadow:0 6px 18px rgba(59,130,246,.35)}  /* KEEP blue (real #3b82f6) */
+.edit-button{background:linear-gradient(135deg,rgba(59,193,200,.97),rgba(110,193,228,.97));box-shadow:0 6px 18px rgba(59,193,200,.35)}  /* was PURPLE → brand TEAL */
+.delete-button{background:linear-gradient(135deg,rgba(239,68,68,.97),rgba(220,38,38,.97));box-shadow:0 6px 18px rgba(239,68,68,.35)}   /* KEPT red */
+
+/* pagination */
+.pagination{display:flex;justify-content:center;align-items:center;gap:6px;margin-top:26px}
+.pagination button{padding:10px 16px;border:2px solid rgba(204,204,204,.3);border-radius:12px;cursor:pointer;font-size:20px;font-weight:600;
+  background:linear-gradient(135deg,rgba(255,255,255,.95),rgba(249,250,251,.95));box-shadow:0 4px 15px rgba(0,0,0,.08)}
+.pagination button.active{color:#fff;border:2px solid rgba(255,255,255,.4);
+  background:linear-gradient(135deg,rgba(59,193,200,.97),rgba(110,193,228,.97));box-shadow:0 6px 25px rgba(59,193,200,.4)}
+.pagination button:disabled{color:#cbd5e1;background:rgba(240,240,240,.5);cursor:not-allowed;box-shadow:none}
+
+/* mock badge */
+.mock-badge{position:fixed;bottom:16px;left:16px;z-index:3000;background:#143852;color:#fff;font-size:14px;font-weight:600;
+  padding:8px 14px;border-radius:10px;box-shadow:0 6px 20px rgba(0,0,0,.25);opacity:.92}
+.mock-badge b{color:#FCD20E}
+</style>
+
+<!-- =====================================================================
+     TASKS-PAGE STYLES (appended) — 1:1 with tasks.css / Tasks.js, only the
+     indigo/purple recolored to TEAL. Semantic colours KEPT verbatim:
+       • create button = GREEN (real #4CAF50→#388E3C)
+       • refresh button = BLUE (real #007bff→#0056b3)
+       • "show only my tasks" = TEAL off / AMBER active (real #14b8a6 / #f59e0b)
+       • kanban column titles = GREEN #45a049
+       • task-card bg tints = green #d4edda (done) / red #ffcccc (overdue) /
+         amber #fff7cc (this week) / white (default)  — semantic, KEPT
+       • review-page link border = navy #1a3a5c  — KEPT
+     RECOLORED (was indigo/purple):
+       • "סנן לפי סוג" status-filter-button  — real #9333ea→#7c3aff  → TEAL
+       • ".filter select" border  — real #6366f1  → TEAL
+       • inline monthly-trigger button (Tasks.js ~L1166)  — real #7c3aed → TEAL
+     ===================================================================== -->
+<style>
+.tasks-toolbar{display:flex;flex-wrap:wrap;gap:15px;align-items:center;margin-bottom:40px}
+.t-btn{color:#fff;padding:12px 20px;font-size:24px;font-weight:600;border:2px solid rgba(255,255,255,.3);border-radius:10px;cursor:pointer;white-space:nowrap;box-shadow:inset 0 1px 0 rgba(255,255,255,.3);transition:.25s}
+.t-btn:hover{transform:translateY(-2px)}
+/* Create New Task — KEEP green (real #4CAF50→#388E3C) */
+.t-create{background:linear-gradient(135deg,rgba(76,175,80,.95),rgba(56,142,60,.95));box-shadow:0 4px 15px rgba(76,175,80,.3),inset 0 1px 0 rgba(255,255,255,.3)}
+/* Refresh Task List — KEEP blue (real #007bff→#0056b3) */
+.t-refresh{background:linear-gradient(135deg,rgba(0,123,255,.95),rgba(0,86,179,.95));box-shadow:0 4px 15px rgba(0,123,255,.3),inset 0 1px 0 rgba(255,255,255,.3)}
+/* status-filter "סנן לפי סוג" — was PURPLE #9333ea→#7c3aff → brand TEAL (main colour) */
+.t-status-filter{display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,rgba(59,193,200,.95),rgba(110,193,228,.95));box-shadow:0 6px 20px rgba(59,193,200,.3),inset 0 1px 0 rgba(255,255,255,.3)}
+.t-status-filter .chev{font-size:22px}
+/* show-my-tasks — KEEP teal-status/amber semantic (real #14b8a6 off / #f59e0b active) */
+.t-mytasks{background:linear-gradient(135deg,rgba(20,184,166,.95),rgba(13,148,136,.95));box-shadow:0 4px 15px rgba(20,184,166,.3),inset 0 1px 0 rgba(255,255,255,.3)}
+/* dev/admin monthly-review trigger — inline real #7c3aed → brand TEAL */
+.t-monthly{background:linear-gradient(135deg,rgba(59,193,200,.95),rgba(101,190,198,.95));box-shadow:0 4px 15px rgba(59,193,200,.3),inset 0 1px 0 rgba(255,255,255,.3)}
+.t-actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.t-actions label{font-size:24px;font-weight:600;color:#143852}
+/* filter select — border was indigo #6366f1 → brand TEAL */
+.t-select{padding:10px;border:2px solid rgba(59,193,200,.4);border-radius:10px;background:rgba(255,255,255,.95);font-size:22px;font-weight:600;color:#1f2937;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.05)}
+.t-date{padding:9px 12px;border:2px solid rgba(59,193,200,.4);border-radius:10px;background:rgba(255,255,255,.95);font-size:20px;color:#1f2937;font-family:Rubik,sans-serif}
+
+/* ---- Kanban board (tasks.css) ---- */
+.kanban-columns{display:flex;gap:2rem;width:100%;overflow-x:auto;padding-bottom:20px}
+.kanban-column{background:#f5f5f5;border-radius:8px;padding:1rem;flex:1 1 0;min-width:430px;display:flex;flex-direction:column;align-items:center}
+/* column titles — GREEN (real #45a049), semantic, KEPT */
+.kanban-column h3{text-align:center;margin:2px 0 2rem;font-size:52px;font-weight:bold;color:#45a049}
+.kanban-cards{display:flex;flex-direction:column;width:100%;align-items:center}
+.task-card{width:400px;background:#fff;padding:20px;border-radius:10px;box-shadow:0 0 10px rgba(0,0,0,.1);cursor:grab;margin-bottom:20px}
+.task-card h2{margin:0;font-size:30px}
+.task-card p{margin:5px 0;font-size:20px}
+.task-card .strong-p{font-weight:bold;font-size:24px;color:#333}
+.no-tasks{margin-top:20px;text-align:center;font-size:2em;color:#666}
+/* review-page link — real inline navy #1a3a5c, KEPT */
+.review-page-link-btn{margin-top:6px;font-size:.78rem;background:transparent;color:#1a3a5c;border:1px solid #1a3a5c;border-radius:4px;padding:3px 8px;cursor:pointer;font-weight:600}
+</style>
+</head>
+<body>
+
+  <!-- ===================== SIDEBAR (1:1 with Sidebar.js) ===================== -->
+  <aside class="sidebar">
+    <button class="sidebar-toggle" title="צמצם סרגל">▶</button>
+    <div class="sidebar-user-info">
+      <div class="sidebar-username">שרה לוי</div>
+      <div class="sidebar-roles"><div class="sidebar-role">רכז משפחות</div></div>
+    </div>
+    <div class="sidebar-clock">
+      <div class="sidebar-time">09:42:15</div>
+      <div class="sidebar-date">יום ראשון, 27 ביולי 2026</div>
+    </div>
+    <button class="sidebar-logout-button">יציאה מהמערכת</button>
+    <div class="sidebar-divider"></div>
+
+    <button class="sidebar-nav-btn top-level active">לוח משימות</button>
+
+    <button class="sidebar-section-header"><span class="sidebar-section-label">משפחות</span><span class="sidebar-section-arrow open">›</span></button>
+    <div class="sidebar-section-items">
+      <button class="sidebar-nav-btn">משפחות</button>
+      <button class="sidebar-nav-btn">חונכות</button>
+    </div>
+
+    <button class="sidebar-section-header"><span class="sidebar-section-label">מתנדבים</span><span class="sidebar-section-arrow">›</span></button>
+    <button class="sidebar-section-header"><span class="sidebar-section-label">כספים</span><span class="sidebar-section-arrow">›</span></button>
+    <button class="sidebar-section-header"><span class="sidebar-section-label">פעילויות</span><span class="sidebar-section-arrow">›</span></button>
+    <button class="sidebar-section-header"><span class="sidebar-section-label">ניהול</span><span class="sidebar-section-arrow">›</span></button>
+  </aside>
+
+  <!-- ===================== HEADER ===================== -->
+  <header class="header">
+    <img class="logo" src="childsmile/frontend/src/assets/logo.png" alt="חיוך של ילד">
+    <div class="top-left">
+      <img class="amit-img" src="childsmile/frontend/src/assets/amit.jpg" alt="עמית">
+      <div class="quote">הרבה אנשים אומרים שהם רוצים להצליח אבל לא כולם מוכנים לשלם את המחיר שצריך כדי להצליח</div>
+      <img class="qr-code" src="childsmile/frontend/src/assets/qr-code.jpg" alt="QR">
+    </div>
+    <h1 class="title">לוח משימות</h1>
+  </header>
+
+  <!-- ===================== CONTENT ===================== -->
+  <main class="content">
+
+    <!-- toolbar (exact button order + labels from Tasks.js, admin variant) -->
+    <div class="tasks-toolbar">
+      <button class="t-btn t-create">צור</button>
+      <button class="t-btn t-status-filter">סנן לפי סוג <span class="chev">▼</span></button>
+      <button class="t-btn t-refresh">רענן</button>
+      <button class="t-btn t-mytasks">הצג רק את המשימות שלי</button>
+      <button class="t-btn t-monthly">🔄 הפעל משימות ביקורת</button>
+      <div class="t-actions">
+        <label>סנן לפי</label>
+        <select class="t-select">
+          <option>תאריך סופי לביצוע</option>
+          <option>נוצר בתאריך</option>
+          <option>עודכן בתאריך</option>
+        </select>
+        <label>מ</label>
+        <input class="t-date" type="date" value="2026-06-30">
+        <label>עד</label>
+        <input class="t-date" type="date" value="2026-07-31">
+      </div>
+    </div>
+
+    <!-- Kanban Board (3 status columns from statusColumns) -->
+    <div class="kanban-columns">
+
+      <!-- ===== לא הושלמה ===== -->
+      <div class="kanban-column">
+        <h3>לא הושלמה</h3>
+        <div class="kanban-cards">
+          <!-- overdue → red #ffcccc -->
+          <div class="task-card" style="background-color:#ffcccc">
+            <h2>שיחת ביקורת עם משפחת כהן</h2>
+            <p>יש לבצע עד: 23/07/2026</p>
+            <p>סטטוס: לא הושלמה</p>
+            <p class="strong-p">לביצוע על ידי: דנה לוי</p>
+            <button class="review-page-link-btn">← שיחות ביקורת</button>
+          </div>
+          <!-- due this week → amber #fff7cc -->
+          <div class="task-card" style="background-color:#fff7cc">
+            <h2>אישור רישום חדש – יעל אברהם</h2>
+            <p>יש לבצע עד: 28/07/2026</p>
+            <p>סטטוס: לא הושלמה</p>
+            <p class="strong-p">לביצוע על ידי: יוסי כהן</p>
+          </div>
+          <!-- future → white -->
+          <div class="task-card" style="background-color:#fff">
+            <h2>ראיון מועמד לחונכות – איתי לוי</h2>
+            <p>יש לבצע עד: 11/08/2026</p>
+            <p>סטטוס: לא הושלמה</p>
+            <p class="strong-p">לביצוע על ידי: שרה לוי</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== בביצוע ===== -->
+      <div class="kanban-column">
+        <h3>בביצוע</h3>
+        <div class="kanban-cards">
+          <div class="task-card" style="background-color:#fff">
+            <h2>התאמת חונך לחניך – נועה מזרחי</h2>
+            <p>יש לבצע עד: 06/08/2026</p>
+            <p>סטטוס: בביצוע</p>
+            <p class="strong-p">לביצוע על ידי: דנה לוי</p>
+          </div>
+          <div class="task-card" style="background-color:#fff">
+            <h2>שיחת ביקורת עם משפחת פרץ</h2>
+            <p>יש לבצע עד: 13/08/2026</p>
+            <p>תאריך שיחה אחרונה: 15/03/2026</p>
+            <p>סטטוס: בביצוע</p>
+            <p class="strong-p">לביצוע על ידי: יוסי כהן</p>
+            <button class="review-page-link-btn">← שיחות ביקורת</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== הושלמה ===== -->
+      <div class="kanban-column">
+        <h3>הושלמה</h3>
+        <div class="kanban-cards">
+          <!-- completed → green #d4edda -->
+          <div class="task-card" style="background-color:#d4edda">
+            <h2>עדכון פרטי משפחה – שירה דוד</h2>
+            <p>יש לבצע עד: 20/07/2026</p>
+            <p>סטטוס: הושלמה</p>
+            <p class="strong-p">לביצוע על ידי: שרה לוי</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <div class="mock-badge">מוקאפ סטטי · צבעי מותג חדשים <b>«חיוך של ילד»</b> — לא בוצעו שינויים בקוד</div>
+
+</body>
+</html>

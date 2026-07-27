@@ -1,0 +1,1371 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>מוקאפ מובייל — עדכוני צוות / צ'אט רכזים (iPhone 12 · צבעי מותג «חיוך של ילד»)</title>
+<style>
+/* Same local Rubik variable font the real app uses (styles.css @font-face) so
+   the mock renders identically — NOT Google Fonts. */
+@font-face {
+  font-family: 'Rubik';
+  src: url('childsmile/frontend/src/fonts/Rubik-VariableFont_wght.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+}
+/* =====================================================================
+   Coordinator Chat / Team Updates page (route /coordinator-chat) —
+   STATIC recolored MOBILE mock (iPhone 12, 390×844).
+   Faithful reproduction of the REAL mobile layout (per CoordinatorChat.css
+   @media(max-width:1200px)+@media(max-width:768px) + mobile.css
+   @media(max-width:767px)): fixed InnerPageHeader (shrunk, single row) +
+   broadcast section + conversations list stacked above the chat window +
+   fixed bottom nav bar (#mobile-bottom-nav, "עדכוני צוות" active).
+   Colours ONLY differ from the real app: indigo/purple theme → A Child's
+   Smile palette (sky #6EC1E4 · teal #3BC1C8 · pink #ED3B97 separator ·
+   navy #143852). KEPT exactly: blue #4a90d9 broadcast/admin bubble, navy
+   chat-header gradient, red #e74c3c broadcast-all/unread badge, green
+   #27ae60 send button, grays. The responsive @media blocks are assembled
+   here WITH THE @media WRAPPER REMOVED so they apply at the fixed 390px
+   phone width. The iPhone 12 frame (bezel/status-bar/island/home-indicator)
+   is presentation chrome — kept independent of the app CSS, NOT recolored.
+   ===================================================================== */
+
+*{box-sizing:border-box;font-family:Rubik,sans-serif}
+
+/* =====================================================================
+   BASE APP CSS (recolored) — header chrome reused from
+   COLOR_REBRAND_MOCKUP_MOBILE_FAMILIES.html (InnerPageHeader is shared).
+   ===================================================================== */
+
+/* ---------- HEADER (fixed top, InnerPageHeader) ---------- */
+.header{
+  background:linear-gradient(135deg,
+    rgba(110,193,228,.9) 0%,
+    rgba(59,193,200,.92) 45%,
+    rgba(101,190,198,.95) 100%);
+  color:#fff;display:flex;align-items:center;justify-content:center;
+  padding:20px 30px;height:200px;position:fixed;right:0;top:0;left:0;z-index:1000;
+  border-bottom:3px solid rgba(255,255,255,.3);
+  box-shadow:0 8px 40px rgba(59,193,200,.35), 0 4px 20px rgba(101,190,198,.28), inset 0 -1px 0 rgba(255,255,255,.3);
+}
+/* PINK = separator only — the header's lower edge (echoes the site's pink underline) */
+.header::before{content:'';position:absolute;bottom:0;left:0;right:0;height:5px;
+  background:linear-gradient(90deg, rgba(237,59,151,1) 0%, rgba(219,75,149,1) 100%);
+  box-shadow:0 2px 15px rgba(237,59,151,.5);}
+.logo{width:180px;height:180px;position:absolute;right:310px;top:10px;border-radius:20px;
+  border:3px solid rgba(255,255,255,.5);background:#fff;padding:10px;object-fit:contain;
+  box-shadow:0 6px 30px rgba(0,0,0,.2),0 0 20px rgba(255,255,255,.25);z-index:1002;}
+.title{font-size:4em;font-weight:900;margin:0;position:absolute;left:50%;transform:translateX(-50%);
+  white-space:nowrap;letter-spacing:2px;
+  background:linear-gradient(135deg,#fff 0%,#f0f9ff 25%,#e0f7fa 50%,#bae6fd 75%,#fff 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  filter:drop-shadow(0 4px 20px rgba(255,255,255,.4)) drop-shadow(0 2px 10px rgba(59,193,200,.65)) drop-shadow(0 0 30px rgba(101,190,198,.4));}
+/* PINK underline separator under the page title (mirrors the site's heading underline) */
+.title::after{content:'';position:absolute;left:50%;bottom:-14px;transform:translateX(-50%);width:78%;height:5px;border-radius:6px;
+  background:linear-gradient(90deg,rgba(237,59,151,.95),rgba(219,75,149,.95));box-shadow:0 3px 12px rgba(237,59,151,.5)}
+.top-left{position:absolute;top:20px;left:40px;display:flex;align-items:center;gap:25px;z-index:1001}
+.amit-img{width:130px;height:170px;object-fit:cover;border-radius:18px;border:3px solid rgba(255,255,255,.5);box-shadow:0 6px 30px rgba(0,0,0,.25)}
+.quote{font-size:20px;font-weight:600;text-align:right;color:#143852;max-width:360px;
+  background:linear-gradient(135deg,rgba(255,255,255,.95),rgba(249,250,251,.95));padding:14px 18px;border-radius:14px;
+  box-shadow:0 6px 24px rgba(0,0,0,.12)}
+.qr-code{width:140px;height:140px;border-radius:16px;border:3px solid rgba(255,255,255,.5);background:#fff;padding:10px;box-shadow:0 6px 30px rgba(0,0,0,.2)}
+
+/* =====================================================================
+   CoordinatorChat.css — recolored (ONLY indigo/purple → brand). Every
+   other value (blues, navy chat-header, greens, reds, grays, sizes,
+   spacing, radii, shadows) copied VERBATIM from the real stylesheet.
+   ===================================================================== */
+.coordinator-chat-page {
+  display: flex;
+  flex-direction: column;
+  background: #f4f6fb;
+  direction: rtl;
+  margin-top: 200px;
+  padding: 24px 32px;
+  padding-right: 320px;
+  gap: 24px;
+  overflow-y: auto;
+  max-height: calc(100vh - 200px);
+}
+
+.coordinator-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 400px;
+  font-size: 24px;
+  color: #666;
+}
+
+/* TOP SECTION: Broadcast Controls (Independent) */
+.coordinator-broadcast-section {
+  background: white;
+  padding: 20px 24px;
+  border-radius: 10px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.07);
+}
+
+.broadcast-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.broadcast-header h3 {
+  margin: 0;
+  color: #2c3e50;
+  font-size: 26px;
+  font-weight: 600;
+}
+
+.selection-count {
+  font-size: 24px;
+  color: #4a90d9; /* KEPT blue */
+  font-weight: 600;
+}
+
+/* Coordinator Search */
+.coordinator-search-wrap {
+  position: relative;
+  margin: 6px 12px 8px;
+}
+
+.coordinator-search-input {
+  width: 100%;
+  padding: 8px 14px;
+  border: 1.5px solid #A9DCEF; /* was indigo tint #c4b5f4 → light sky */
+  border-radius: 10px;
+  font-size: 16px;
+  font-family: Rubik, sans-serif;
+  outline: none;
+  direction: rtl;
+  box-sizing: border-box;
+}
+
+.coordinator-search-input:focus {
+  border-color: #3BC1C8; /* was #7c3aed → teal */
+}
+
+.coordinator-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  left: 0;
+  background: #fff;
+  border: 1.5px solid #A9DCEF; /* was #c4b5f4 → light sky */
+  border-radius: 10px;
+  box-shadow: 0 6px 20px rgba(59, 193, 200, 0.15); /* was rgba(99,102,241,.15) → teal */
+  z-index: 1300;
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.coordinator-option {
+  padding: 9px 14px;
+  font-size: 16px;
+  font-family: Rubik, sans-serif;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  direction: rtl;
+  border-bottom: 1px solid #EAF7F8; /* was purple tint #f3f0ff → light teal */
+}
+
+.coordinator-option:last-child {
+  border-bottom: none;
+}
+
+.coordinator-option:hover:not(.already-added) {
+  background: #EAF7F8; /* was #f5f3ff → light teal */
+}
+
+.coordinator-option.already-added {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.option-phone {
+  font-size: 13px;
+  color: #888;
+}
+
+.option-added-badge {
+  margin-right: auto;
+  font-size: 13px;
+  color: #059669; /* KEPT green */
+  font-weight: 700;
+}
+
+/* Chips for selected coordinators */
+.coordinator-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  padding: 6px 12px 4px;
+}
+
+.coordinator-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: #EAF7F8; /* was #ede9fe → light teal */
+  color: #143852; /* was #5a3d8c → navy */
+  border-radius: 20px;
+  padding: 4px 12px 4px 8px;
+  font-size: 15px;
+  font-family: Rubik, sans-serif;
+  font-weight: 600;
+}
+
+.chip-remove-btn {
+  background: none;
+  border: none;
+  color: #3BC1C8; /* was #7c3aed → teal */
+  font-size: 14px;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+  margin-right: 2px;
+}
+
+.chip-remove-btn:hover {
+  color: #dc2626; /* KEPT red */
+}
+
+.coordinators-empty {
+  margin: 0;
+  padding: 8px 12px;
+  font-size: 14px;
+  color: #888;
+  text-align: right;
+  direction: rtl;
+}
+
+.broadcast-checkbox-label {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  font-weight: 600;
+  color: #2c3e50;
+  gap: 10px;
+  margin: 0;
+  font-size: 24px;
+}
+
+.broadcast-checkbox-label input[type="checkbox"] {
+  cursor: pointer;
+  width: 18px;
+  height: 18px;
+  accent-color: #3498db; /* KEPT blue */
+}
+
+.broadcast-message-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #e0e6ed;
+}
+
+.broadcast-message-input {
+  width: 100%;
+  min-height: 80px;
+  padding: 12px 16px;
+  border: 2px solid #e3eaf5;
+  border-radius: 8px;
+  font-family: Rubik, sans-serif;
+  font-size: 24px;
+  resize: vertical;
+  box-sizing: border-box;
+  direction: rtl;
+  text-align: right;
+  background: #fafbfc;
+}
+
+.broadcast-message-input:focus {
+  outline: none;
+  border-color: #4a90d9; /* KEPT blue */
+  box-shadow: 0 0 5px rgba(74, 144, 217, 0.2);
+}
+
+.broadcast-buttons {
+  display: flex;
+  gap: 12px;
+}
+
+.btn-broadcast-selected,
+.btn-broadcast-all {
+  flex: 1;
+  padding: 12px 16px;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 24px;
+  transition: all 0.3s ease;
+}
+
+.btn-broadcast-selected {
+  background: #4a90d9; /* KEPT blue */
+  color: white;
+}
+
+.btn-broadcast-selected:hover:not(:disabled) {
+  background: #3a7bc8;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(74, 144, 217, 0.3);
+}
+
+.btn-broadcast-all {
+  background: #e74c3c; /* KEPT red */
+  color: white;
+}
+
+.btn-broadcast-all:hover:not(:disabled) {
+  background: #c0392b;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(231, 76, 60, 0.3);
+}
+
+.btn-broadcast-selected:disabled,
+.btn-broadcast-all:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Main Chat Area */
+.chat-main {
+  display: flex;
+  gap: 20px;
+  flex: 1;
+  min-height: 500px;
+  max-height: 600px;
+  overflow: hidden;
+}
+
+/* Conversations List */
+.conversations-list {
+  width: 300px;
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.07);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.conversations-list h3 {
+  margin: 0;
+  padding: 16px;
+  border-bottom: 1px solid #ecf0f1;
+  font-size: 26px;
+  font-weight: 700;
+  color: #2c3e50;
+  background: #f8f9fa;
+}
+
+.conversations-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0;
+}
+
+.conversation-item {
+  padding: 14px 16px;
+  border-bottom: 1px solid #ecf0f1;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: white;
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.conversation-item:hover {
+  background: #f8f9fa;
+}
+
+.conversation-item.active {
+  background: #e3f2fd; /* KEPT light blue */
+  border-right: 4px solid #4a90d9; /* KEPT blue */
+  padding-right: 12px;
+}
+
+.conversation-item.unread {
+  font-weight: 600;
+  background: #fffaf0; /* KEPT warm */
+}
+
+.conversation-item.broadcast-selected {
+  background: #d4edff;
+  border-right: 4px solid #4a90d9;
+  padding-right: 12px;
+}
+
+.list-subtitle {
+  padding: 0 16px;
+  margin-bottom: 8px;
+}
+
+.conversation-header {
+  flex: 1;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.coordinator-name {
+  flex: 1;
+  font-weight: 500;
+  color: #2c3e50;
+  font-size: 24px;
+}
+
+.unread-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #e74c3c; /* KEPT red */
+  color: white;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  font-size: 24px;
+  font-weight: bold;
+  flex-shrink: 0;
+}
+
+.last-message {
+  font-size: 24px;
+  color: #7f8c8d;
+  margin-top: 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.checkbox-wrapper {
+  display: flex;
+  align-items: center;
+  margin-left: 12px;
+  margin-right: -8px;
+  flex-shrink: 0;
+}
+
+.checkbox-wrapper input[type="checkbox"] {
+  cursor: pointer;
+  width: 18px;
+  height: 18px;
+  accent-color: #4a90d9; /* KEPT blue */
+  margin: 0;
+}
+
+/* Chat Window */
+.chat-window {
+  flex: 1;
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.07);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+/* Chat header */
+.chat-header {
+  padding: 18px 24px;
+  border-bottom: 1px solid #ecf0f1;
+  background: linear-gradient(135deg, #1a3a5c 0%, #2c5aa0 100%); /* KEPT navy */
+  color: white;
+}
+
+.chat-header h3 {
+  margin: 0 0 8px 0;
+  font-size: 26px;
+  font-weight: 700;
+}
+
+.coordinator-info {
+  display: flex;
+  gap: 20px;
+  font-size: 24px;
+  opacity: 0.9;
+  align-items: center;
+}
+
+.refresh-chat-btn {
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  opacity: 0.9;
+  transition: transform 0.3s, opacity 0.2s;
+  padding: 4px 8px;
+  border-radius: 6px;
+}
+
+.refresh-chat-btn:hover {
+  opacity: 1;
+  transform: rotate(180deg);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.refresh-chat-btn:active {
+  transform: rotate(180deg) scale(0.9);
+}
+
+.coordinator-info small {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.no-selection {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #95a5a6;
+  font-size: 24px;
+}
+
+/* Messages Container */
+.messages-container {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.no-messages {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: #95a5a6;
+  font-style: italic;
+  font-size: 24px;
+}
+
+.message {
+  display: flex;
+  margin-bottom: 8px;
+  animation: slideIn 0.3s ease;
+  gap: 8px;
+  align-items: flex-end;
+  position: relative;
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.message-menu-wrapper {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  flex-shrink: 0;
+  z-index: 1401;
+}
+
+.message-menu-btn {
+  background: none;
+  border: none;
+  color: #000;
+  font-size: 16px;
+  cursor: pointer;
+  padding: 0;
+  opacity: 0;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  width: 20px;
+  height: 20px;
+  line-height: 1;
+  transform: rotate(-90deg);
+}
+
+.message:hover .message-menu-btn {
+  opacity: 1;
+  color: #000;
+}
+
+.message-menu-btn:hover {
+  opacity: 0.7;
+}
+
+.message-menu-dropdown {
+  position: absolute;
+  top: 24px;
+  right: 0;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 1400;
+  min-width: 120px;
+  overflow: hidden;
+}
+
+.menu-item {
+  width: 100%;
+  padding: 10px 14px;
+  border: none;
+  background: none;
+  text-align: right;
+  direction: rtl;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  font-family: Rubik, sans-serif;
+}
+
+.menu-item:hover {
+  background-color: #f5f5f5;
+}
+
+.menu-item.delete-option:hover {
+  background-color: #ffe6e6; /* KEPT red tint */
+  color: #e74c3c;
+}
+
+.menu-item.reply-option:hover {
+  background-color: #e6f2ff; /* KEPT blue tint */
+  color: #4a90d9;
+}
+
+.admin-message {
+  justify-content: flex-end;
+  flex-direction: row-reverse;
+  direction: rtl;
+}
+
+.admin-message .message-content {
+  background: #4a90d9; /* KEPT blue */
+  color: white;
+  border-radius: 12px 12px 0 12px;
+  max-width: 70%;
+}
+
+.coordinator-message {
+  justify-content: flex-end;
+}
+
+.coordinator-message .message-content {
+  background: #ecf0f1; /* KEPT gray */
+  color: #2c3e50;
+  border-radius: 12px 12px 12px 0;
+  max-width: 70%;
+  direction: rtl;
+  text-align: right;
+}
+
+.message-content {
+  padding: 12px 16px;
+  word-wrap: break-word;
+  direction: rtl;
+  text-align: right;
+  position: relative;
+}
+
+.message-content strong {
+  display: block;
+  font-size: 24px;
+  opacity: 0.9;
+  margin-bottom: 4px;
+  text-align: right;
+  direction: rtl;
+}
+
+.message-content p {
+  margin: 4px 0;
+  line-height: 1.4;
+  word-break: break-word;
+  font-size: 24px;
+}
+
+.message-content small {
+  display: block;
+  font-size: 24px;
+  opacity: 0.7;
+  margin-top: 6px;
+}
+
+/* Message Input Container */
+.message-input-container {
+  padding: 16px 20px;
+  border-top: 1px solid #ecf0f1;
+  display: flex;
+  gap: 12px;
+  background: #f8f9fa;
+  position: relative;
+  align-items: flex-end;
+}
+
+.reply-preview {
+  position: absolute;
+  top: 8px;
+  right: 16px;
+  left: 16px;
+  background: rgba(59, 193, 200, 0.1); /* was rgba(124,58,237,.1) → teal */
+  border-right: 3px solid #3BC1C8; /* was #7c3aed → teal */
+  padding: 8px 12px;
+  border-radius: 4px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  flex-direction: row-reverse;
+  z-index: 10;
+}
+
+.reply-preview-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  text-align: right;
+}
+
+.reply-preview-content strong {
+  font-size: 18px;
+  color: #3BC1C8; /* was #7c3aed → teal */
+}
+
+.reply-preview-content p {
+  margin: 0;
+  font-size: 16px;
+  color: #555;
+  line-height: 1.2;
+}
+
+.reply-close-btn {
+  background: none;
+  border: none;
+  font-size: 18px;
+  color: #3BC1C8; /* was #7c3aed → teal */
+  cursor: pointer;
+  padding: 0 4px;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.reply-close-btn:hover {
+  color: #143852; /* was #5b21b6 → navy */
+  transform: scale(1.15);
+}
+
+.message-input-container:has(.reply-preview) {
+  padding-top: 60px;
+}
+
+.message-input-container > textarea,
+.message-input-container > button {
+  padding: 16px 20px;
+}
+
+.message-input-container > textarea {
+  margin: 0;
+  padding: 12px 16px;
+  flex: 1;
+}
+
+.message-input-container > button {
+  padding: 12px 24px;
+}
+
+.message-input {
+  flex: 1;
+  padding: 12px 16px;
+  border: 2px solid #e3eaf5;
+  border-radius: 8px;
+  font-family: Rubik, sans-serif;
+  font-size: 24px;
+  resize: none;
+  max-height: 100px;
+  direction: rtl;
+  text-align: right;
+  box-sizing: border-box;
+  background: white;
+}
+
+.message-input:focus {
+  outline: none;
+  border-color: #4a90d9; /* KEPT blue */
+  box-shadow: 0 0 5px rgba(74, 144, 217, 0.2);
+}
+
+.send-button {
+  padding: 12px 24px;
+  background: #27ae60; /* KEPT green */
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 24px;
+  white-space: nowrap;
+}
+
+.send-button:hover:not(:disabled) {
+  background: #229954;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(39, 174, 96, 0.3);
+}
+
+.send-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Scrollbar Styling */
+.conversations-scroll::-webkit-scrollbar,
+.messages-container::-webkit-scrollbar { width: 6px; }
+.conversations-scroll::-webkit-scrollbar-track,
+.messages-container::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 3px; }
+.conversations-scroll::-webkit-scrollbar-thumb,
+.messages-container::-webkit-scrollbar-thumb { background: #bdc3c7; border-radius: 3px; }
+.conversations-scroll::-webkit-scrollbar-thumb:hover,
+.messages-container::-webkit-scrollbar-thumb:hover { background: #95a5a6; }
+
+/* =====================================================================
+   MOBILE OVERRIDES — transcribed from mobile.css @media(max-width:767px)
+   WITH THE @media WRAPPER REMOVED (so they apply at 390px). Colour map
+   applied to colour channels ONLY; every size/position/font left intact.
+   ===================================================================== */
+
+/* ── 2. Hide the desktop sidebar ─────────────────────────── */
+.sidebar{ display:none !important; }
+
+/* ── 3. Inner page header – shrunk but ALL elements visible ── */
+.header{
+  height:90px !important;
+  min-height:90px !important;
+  max-height:90px !important;
+  padding:6px 10px !important;
+  padding-bottom:0 !important;
+  padding-top:20px !important;
+  flex-direction:row !important;
+  align-items:center !important;
+  justify-content:flex-start !important;
+  flex-wrap:nowrap !important;
+  position:fixed !important;
+  top:0 !important;
+  left:0 !important;
+  right:0 !important;
+  z-index:900 !important;
+  box-sizing:border-box !important;
+  overflow:hidden !important;
+  gap:6px !important;
+}
+.header .top-left{ display:contents !important; }
+.header .logo     { order:1 !important; }
+.header .amit-img { order:2 !important; }
+.header .quote    { order:3 !important; }
+.header .qr-code-link,
+.header .qr-code  { order:4 !important; }
+.header .amit-img{
+  display:block !important;
+  width:54px !important;
+  height:70px !important;
+  object-fit:cover !important;
+  border-radius:10px !important;
+  flex-shrink:0 !important;
+}
+.header .quote{
+  display:block !important;
+  font-size:9px !important;
+  width:100px !important;
+  padding-top:3px !important;
+  padding-bottom:3px !important;
+  margin-bottom:20px !important;
+  padding-left:8px !important;
+  padding-right:8px !important;
+  margin-left:2px !important;
+  margin-right:2px !important;
+  line-height:1.4 !important;
+  border-radius:8px !important;
+  flex-shrink:0 !important;
+}
+.header .qr-code{
+  display:block !important;
+  width:54px !important;
+  height:54px !important;
+  border-radius:8px !important;
+  padding:4px !important;
+  flex-shrink:0 !important;
+}
+.header .logo{
+  display:block !important;
+  position:static !important;
+  width:60px !important;
+  height:60px !important;
+  right:unset !important;
+  top:unset !important;
+  flex-shrink:0 !important;
+  border-radius:10px !important;
+  padding:4px !important;
+  margin-right:13px !important;
+}
+.header .right-header{ display:contents !important; }
+/* Title – no room on mobile, hidden entirely */
+.header .title,
+.header h1{ display:none !important; }
+
+/* =====================================================================
+   CoordinatorChat.css @media(max-width:1200px) — un-@media'd (applies at 390px)
+   ===================================================================== */
+.chat-main{
+  flex-direction: column;
+}
+.conversations-list{
+  width: 100%;
+  max-height: 250px;
+}
+.message-content{
+  max-width: 85% !important;
+}
+.broadcast-buttons{
+  flex-direction: column;
+}
+
+/* =====================================================================
+   CoordinatorChat.css @media(max-width:768px) — un-@media'd (applies at 390px,
+   later in the cascade so it wins where it overlaps the 1200px block)
+   ===================================================================== */
+.coordinator-chat-page{
+  padding: 16px;
+  padding-right: 16px;
+  margin-top: 180px;
+}
+.chat-main{
+  flex-direction: column;
+  gap: 16px;
+}
+.conversations-list{
+  width: 100%;
+  max-height: 200px;
+}
+.message-content{
+  max-width: 90% !important;
+}
+.broadcast-buttons{
+  flex-direction: column;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   BOTTOM NAV BAR (#mobile-bottom-nav) — horizontally scrollable
+   Recolored: active/border indigo #6366f1 → teal #3BC1C8,
+   border-top rgba(99,102,241,.15) → rgba(59,193,200,.15).
+   ───────────────────────────────────────────────────────────── */
+#mobile-bottom-nav{
+  position:fixed !important;
+  bottom:0 !important;
+  left:0 !important;
+  right:0 !important;
+  height:72px !important;
+  display:flex !important;
+  flex-direction:row !important;
+  align-items:stretch !important;
+  justify-content:flex-start !important;
+  overflow-x:auto !important;
+  overflow-y:hidden !important;
+  -webkit-overflow-scrolling:touch !important;
+  scrollbar-width:none !important;
+  background:rgba(255, 255, 255, 0.97) !important;
+  backdrop-filter:blur(20px) !important;
+  -webkit-backdrop-filter:blur(20px) !important;
+  border-top:2px solid rgba(59, 193, 200, 0.15) !important;
+  box-shadow:0 -4px 20px rgba(0, 0, 0, 0.12) !important;
+  z-index:1100 !important;
+  padding-top:4px !important;
+}
+#mobile-bottom-nav::-webkit-scrollbar{ display:none !important; }
+#mobile-bottom-nav button{
+  flex:0 0 auto !important;
+  min-width:72px !important;
+  display:flex !important;
+  flex-direction:column !important;
+  align-items:center !important;
+  justify-content:center !important;
+  gap:3px !important;
+  background:none !important;
+  border:none !important;
+  border-radius:0 !important;
+  padding:6px 10px 4px !important;
+  margin:0 !important;
+  height:68px !important;
+  color:#6b7280 !important;
+  cursor:pointer !important;
+  box-shadow:none !important;
+  transform:none !important;
+  transition:color 0.15s ease !important;
+  -webkit-tap-highlight-color:transparent !important;
+  white-space:nowrap !important;
+}
+#mobile-bottom-nav button.active{
+  color:#3BC1C8 !important;
+  border-bottom:3px solid #3BC1C8 !important;
+}
+#mobile-bottom-nav button .nav-icon{
+  font-size:22px !important;
+  line-height:1 !important;
+  display:block !important;
+}
+#mobile-bottom-nav button .nav-label{
+  font-size:10px !important;
+  line-height:1.2 !important;
+  display:block !important;
+  font-weight:500 !important;
+  text-align:center !important;
+}
+#mobile-bottom-nav button.nav-logout-btn{
+  color:#ef4444 !important;
+  border-right:1px solid rgba(0,0,0,0.08) !important;
+}
+
+/* =====================================================================
+   iPhone 12 FRAME — presentation chrome (INDEPENDENT of the app CSS,
+   NOT recolored). Also normalizes the un-media'd mobile rules so their
+   100vw / 100dvh / position:fixed resolve against the 390×844 screen
+   (a real phone's viewport) instead of the desktop browser window.
+   ===================================================================== */
+body{
+  margin:0;
+  background:#e5e7eb;
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:24px;
+}
+.phone{
+  background:#000;
+  padding:12px;
+  border-radius:46px;
+  box-shadow:0 30px 80px rgba(0,0,0,.45), 0 12px 32px rgba(0,0,0,.3);
+  flex-shrink:0;
+}
+.phone-screen{
+  position:relative;
+  width:390px;
+  height:844px;
+  border-radius:36px;
+  overflow:hidden;
+  background:#f4f6fb;
+  /* transform makes this the containing block for the app's position:fixed
+     header + bottom nav, so they anchor to the SCREEN, not the browser window. */
+  transform:translateZ(0);
+}
+/* Status bar (thin strip over the header safe-area) */
+.status-bar{
+  position:absolute;
+  top:0;left:0;right:0;
+  height:34px;
+  z-index:2000;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:0 26px;
+  direction:ltr;
+  color:#fff;
+  pointer-events:none;
+  font-size:14px;
+  font-weight:700;
+}
+.status-bar .sb-time{ font-weight:700; letter-spacing:.5px; }
+.status-bar .sb-glyphs{ display:flex; align-items:center; gap:6px; }
+.status-bar .sb-signal{ display:flex; align-items:flex-end; gap:2px; height:11px; }
+.status-bar .sb-signal i{ width:3px; background:#fff; border-radius:1px; display:block; }
+.status-bar .sb-signal i:nth-child(1){ height:4px; }
+.status-bar .sb-signal i:nth-child(2){ height:6px; }
+.status-bar .sb-signal i:nth-child(3){ height:8px; }
+.status-bar .sb-signal i:nth-child(4){ height:11px; }
+.status-bar .sb-battery{ width:24px; height:12px; border:1px solid rgba(255,255,255,.9); border-radius:3px; position:relative; padding:1px; }
+.status-bar .sb-battery::after{ content:''; position:absolute; right:-3px; top:3px; width:2px; height:6px; background:rgba(255,255,255,.9); border-radius:0 1px 1px 0; }
+.status-bar .sb-battery i{ display:block; height:100%; width:80%; background:#fff; border-radius:1px; }
+/* Dynamic island */
+.dynamic-island{
+  position:absolute;
+  top:9px;left:50%;transform:translateX(-50%);
+  width:120px;height:30px;
+  background:#000;
+  border-radius:16px;
+  z-index:2100;
+}
+/* Home indicator */
+.home-indicator{
+  position:absolute;
+  bottom:8px;left:50%;transform:translateX(-50%);
+  width:134px;height:5px;
+  background:rgba(20,56,82,.55);
+  border-radius:3px;
+  z-index:2200;
+}
+
+/* Phone environment normalization (frame-level, higher specificity so it wins):
+   pin the app root to the 390×844 screen and offset for the status bar / home
+   indicator (which a real iPhone 12 handles via env(safe-area-inset-*)). */
+.phone-screen .coordinator-chat-page{
+  width:390px !important;
+  max-width:390px !important;
+  height:844px !important;
+  margin-top:0 !important;
+  padding-top:112px !important;    /* status-bar(34) + header + gap */
+  padding-bottom:100px !important; /* bottom nav(84) + gap */
+  padding-left:10px !important;
+  padding-right:10px !important;
+  max-height:none !important;
+  overflow-y:auto !important;
+  -webkit-overflow-scrolling:touch !important;
+  box-sizing:border-box !important;
+}
+.phone-screen .header{
+  top:0 !important;
+  height:104px !important;
+  min-height:104px !important;
+  max-height:104px !important;
+  padding-top:34px !important;     /* clear the status bar (safe-area inset) */
+}
+.phone-screen #mobile-bottom-nav{
+  height:84px !important;
+  padding-bottom:16px !important;  /* clear the home indicator (safe-area inset) */
+}
+
+/* Mock badge (outside the phone) */
+.mock-badge{position:fixed;bottom:16px;left:16px;z-index:3000;background:#143852;color:#fff;font-size:14px;font-weight:600;
+  padding:8px 14px;border-radius:10px;box-shadow:0 6px 20px rgba(0,0,0,.25);opacity:.94}
+.mock-badge b{color:#FCD20E}
+</style>
+</head>
+<body>
+
+  <!-- =============== iPhone 12 device =============== -->
+  <div class="phone">
+    <div class="phone-screen">
+
+      <!-- status bar + island -->
+      <div class="dynamic-island"></div>
+      <div class="status-bar">
+        <div class="sb-glyphs">
+          <span class="sb-signal"><i></i><i></i><i></i><i></i></span>
+          <svg width="16" height="12" viewBox="0 0 16 12" fill="none" aria-hidden="true">
+            <path d="M8 11.2 1 4.4A9.9 9.9 0 0 1 15 4.4L8 11.2Z" fill="#fff" opacity=".35"/>
+            <path d="M8 11.2 3.4 6.7a6.5 6.5 0 0 1 9.2 0L8 11.2Z" fill="#fff"/>
+          </svg>
+          <span class="sb-battery"><i></i></span>
+        </div>
+        <div class="sb-time">9:41</div>
+      </div>
+
+      <!-- =============== APP (mobile Coordinator Chat) =============== -->
+      <!-- NO desktop <aside class="sidebar"> on mobile -->
+
+      <!-- InnerPageHeader (mobile-styled by the un-media'd rules; title hidden) -->
+      <header class="header">
+        <img class="logo" src="childsmile/frontend/src/assets/logo.png" alt="חיוך של ילד">
+        <div class="top-left">
+          <img class="amit-img" src="childsmile/frontend/src/assets/amit.jpg" alt="עמית">
+          <div class="quote">הרבה אנשים אומרים שהם רוצים להצליח אבל לא כולם מוכנים לשלם את המחיר שצריך כדי להצליח</div>
+          <img class="qr-code" src="childsmile/frontend/src/assets/qr-code.jpg" alt="QR">
+        </div>
+        <h1 class="title">עדכוני צוות</h1>
+      </header>
+
+      <!-- ===================== PAGE (1:1 with CoordinatorChat.js render) ===================== -->
+      <div class="coordinator-chat-page">
+
+        <!-- TOP SECTION: Coordinator Search for Broadcasting -->
+        <div class="coordinator-broadcast-section">
+          <div class="broadcast-header">
+            <h3>שלח הודעה לכמה רכזים</h3>
+            <span class="selection-count">2 נבחרים</span>
+          </div>
+
+          <!-- Selected chips -->
+          <div class="coordinator-chips">
+            <span class="coordinator-chip">
+              רותם ברק
+              <button type="button" class="chip-remove-btn">✕</button>
+            </span>
+            <span class="coordinator-chip">
+              מיכל שרון
+              <button type="button" class="chip-remove-btn">✕</button>
+            </span>
+          </div>
+
+          <!-- Coordinator Search -->
+          <div class="coordinator-search-wrap">
+            <input type="text" class="coordinator-search-input" placeholder="🔍 חפש רכז להוסיף...">
+          </div>
+
+          <div class="broadcast-message-section">
+            <textarea placeholder="הודעה..." class="broadcast-message-input"></textarea>
+            <div class="broadcast-buttons">
+              <button class="btn-broadcast-all">שלח לכולם</button>
+              <button class="btn-broadcast-selected">שלח 2 </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- BOTTOM SECTION: Chat History with Selected Coordinator -->
+        <div class="chat-main">
+          <!-- Conversations List -->
+          <div class="conversations-list">
+            <h3>שיחות (5)</h3>
+            <div class="conversations-scroll">
+              <div class="conversation-item active">
+                <div class="conversation-header">
+                  <div class="manager-name">דנה לוי</div>
+                </div>
+                <div class="last-message">👨‍💼 כן, אושרה אתמול. אפשר להתקדם...</div>
+              </div>
+              <div class="conversation-item unread">
+                <div class="conversation-header">
+                  <div class="manager-name">יוסי כהן</div>
+                  <span class="unread-badge">3</span>
+                </div>
+                <div class="last-message">👤 מתי הפגישה הבאה של הצוות?...</div>
+              </div>
+              <div class="conversation-item">
+                <div class="conversation-header">
+                  <div class="manager-name">רותם ברק</div>
+                </div>
+                <div class="last-message">👨‍💼 תודה על העדכון המהיר!...</div>
+              </div>
+              <div class="conversation-item unread">
+                <div class="conversation-header">
+                  <div class="manager-name">מיכל שרון</div>
+                  <span class="unread-badge">1</span>
+                </div>
+                <div class="last-message">👤 שלחתי את הדוח החודשי במייל...</div>
+              </div>
+              <div class="conversation-item">
+                <div class="conversation-header">
+                  <div class="manager-name">אבי גולן</div>
+                </div>
+                <div class="last-message">👨‍💼 בסדר גמור, נדבר מחר בבוקר...</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Chat Window -->
+          <div class="chat-window">
+            <div class="chat-header">
+              <h3>דנה לוי</h3>
+              <div class="coordinator-info">
+                <small>📱 050-1234567</small>
+                <button class="refresh-chat-btn" title="Refresh chat">🔄</button>
+              </div>
+            </div>
+
+            <div class="messages-container">
+              <div class="message admin-message">
+                <div class="message-content">
+                  <div class="message-menu-wrapper">
+                    <button class="message-menu-btn" title="אפשרויות הודעה">&gt;</button>
+                  </div>
+                  <strong>👨‍💼 ליאם</strong>
+                  <p>שלום דנה, נא לעדכן את רשימת המשפחות עד סוף השבוע 🙏</p>
+                  <small>27.7.2026, 9:12:04</small>
+                </div>
+              </div>
+              <div class="message coordinator-message">
+                <div class="message-content">
+                  <div class="message-menu-wrapper">
+                    <button class="message-menu-btn" title="אפשרויות הודעה">&gt;</button>
+                  </div>
+                  <strong>👤 רכז</strong>
+                  <p>בטח, אעדכן היום אחר הצהריים</p>
+                  <small>27.7.2026, 9:15:31</small>
+                </div>
+              </div>
+              <div class="message admin-message">
+                <div class="message-content">
+                  <div class="message-menu-wrapper">
+                    <button class="message-menu-btn" title="אפשרויות הודעה">&gt;</button>
+                  </div>
+                  <strong>👨‍💼 ליאם</strong>
+                  <p>מעולה, תודה רבה!</p>
+                  <small>27.7.2026, 9:16:12</small>
+                </div>
+              </div>
+              <div class="message coordinator-message">
+                <div class="message-content">
+                  <div class="message-menu-wrapper">
+                    <button class="message-menu-btn" title="אפשרויות הודעה">&gt;</button>
+                  </div>
+                  <strong>👤 רכז</strong>
+                  <p>יש לי שאלה לגבי משפחת כהן — האם אושרה החונכות?</p>
+                  <small>27.7.2026, 9:33:47</small>
+                </div>
+              </div>
+              <div class="message admin-message">
+                <div class="message-content">
+                  <div class="message-menu-wrapper">
+                    <button class="message-menu-btn" title="אפשרויות הודעה">&gt;</button>
+                  </div>
+                  <strong>👨‍💼 ליאם</strong>
+                  <p>כן, אושרה אתמול. אפשר להתקדם.</p>
+                  <small>27.7.2026, 9:41:58</small>
+                </div>
+              </div>
+            </div>
+
+            <div class="message-input-container">
+              <div class="reply-preview">
+                <div class="reply-preview-content">
+                  <strong>📍 ענה ל: 👤 רכז</strong>
+                  <p>יש לי שאלה לגבי משפחת כהן — האם אושרה החונכות?</p>
+                </div>
+                <button class="reply-close-btn">✕</button>
+              </div>
+              <textarea placeholder="הקלד הודעה..." class="message-input"></textarea>
+              <button class="send-button">שלח</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- =============== bottom nav (built in Sidebar.js on mobile) =============== -->
+      <nav id="mobile-bottom-nav">
+        <button data-path="/tasks"><span class="nav-icon">📋</span><span class="nav-label">לוח משימות</span></button>
+        <button data-path="/families"><span class="nav-icon">🏘️</span><span class="nav-label">משפחות</span></button>
+        <button data-path="/tutor-volunteer-mgmt"><span class="nav-icon">👥</span><span class="nav-label">חונכים ומתנדבים</span></button>
+        <button data-path="/tutorships"><span class="nav-icon">🤝</span><span class="nav-label">חונכות</span></button>
+        <button data-path="/feedbacks"><span class="nav-icon">💬</span><span class="nav-label">משובים</span></button>
+        <button data-path="/refunds"><span class="nav-icon">💰</span><span class="nav-label">החזרי הוצאות</span></button>
+        <button data-path="/activity-board"><span class="nav-icon">🎈</span><span class="nav-label">ימי כיף וביקורי בית</span></button>
+        <button data-path="/activity-signup"><span class="nav-icon">🙋</span><span class="nav-label">שיבוץ לפעילויות</span></button>
+        <button data-path="/system-management"><span class="nav-icon">⚙️</span><span class="nav-label">ניהול מערכת</span></button>
+        <button data-path="/meeting-management"><span class="nav-icon">📅</span><span class="nav-label">ניהול פגישות</span></button>
+        <button data-path="/coordinator-chat" class="active"><span class="nav-icon">📨</span><span class="nav-label">עדכוני צוות</span></button>
+        <button data-path="/reviewer"><span class="nav-icon">🔍</span><span class="nav-label">שיחות ביקורת</span></button>
+        <button data-path="/notification-messages"><span class="nav-icon">🔔</span><span class="nav-label">מרכז העדכונים</span></button>
+        <button class="nav-logout-btn"><span class="nav-icon">🚪</span><span class="nav-label">יציאה</span></button>
+      </nav>
+
+      <!-- home indicator -->
+      <div class="home-indicator"></div>
+
+    </div>
+  </div>
+
+  <div class="mock-badge">מוקאפ מובייל (iPhone 12) · צבעי מותג <b>«חיוך של ילד»</b></div>
+
+</body>
+</html>

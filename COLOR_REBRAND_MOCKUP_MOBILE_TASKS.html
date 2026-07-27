@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>מוקאפ מובייל — לוח משימות (iPhone 12 · צבעי מותג «חיוך של ילד»)</title>
+<style>
+/* Same local Rubik variable font the real app uses (styles.css @font-face) so
+   the mock renders identically — NOT Google Fonts. */
+@font-face {
+  font-family: 'Rubik';
+  src: url('childsmile/frontend/src/fonts/Rubik-VariableFont_wght.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+}
+/* =====================================================================
+   Tasks page (לוח משימות) — STATIC recolored MOBILE mock (iPhone 12, 390×844).
+   Faithful reproduction of the REAL mobile layout (per mobile.css
+   @media(max-width:767px)): fixed InnerPageHeader (shrunk, single row) +
+   wrapping filter toolbar + swipeable horizontal kanban board (3 status
+   columns, ~85vw each, snap scroll) with task cards + fixed bottom nav
+   (#mobile-bottom-nav).
+   Colours ONLY differ from the real app: indigo/purple theme → A Child's Smile
+   palette (sky #6EC1E4 · teal #3BC1C8 · pink #ED3B97 separator · navy #143852).
+   The mobile.css @media block is assembled here WITH THE @media WRAPPER REMOVED
+   so it applies at the fixed 390px phone width, mimicking a real phone.
+   The iPhone 12 frame (bezel/status-bar/island/home-indicator) is presentation
+   chrome — kept independent of the app CSS so it is NOT recolored.
+   ===================================================================== */
+
+*{box-sizing:border-box;font-family:Rubik,sans-serif}
+
+/* =====================================================================
+   BASE APP CSS (recolored) — header/frame reused from the FAMILIES mobile mock
+   ===================================================================== */
+
+/* ---------- HEADER (fixed top, InnerPageHeader) ---------- */
+.header{
+  background:linear-gradient(135deg,
+    rgba(110,193,228,.9) 0%,
+    rgba(59,193,200,.92) 45%,
+    rgba(101,190,198,.95) 100%);
+  color:#fff;display:flex;align-items:center;justify-content:center;
+  padding:20px 30px;height:200px;position:fixed;right:0;top:0;left:0;z-index:1000;
+  border-bottom:3px solid rgba(255,255,255,.3);
+  box-shadow:0 8px 40px rgba(59,193,200,.35), 0 4px 20px rgba(101,190,198,.28), inset 0 -1px 0 rgba(255,255,255,.3);
+}
+/* PINK = separator only — the header's lower edge (echoes the site's pink underline) */
+.header::before{content:'';position:absolute;bottom:0;left:0;right:0;height:5px;
+  background:linear-gradient(90deg, rgba(237,59,151,1) 0%, rgba(219,75,149,1) 100%);
+  box-shadow:0 2px 15px rgba(237,59,151,.5);}
+.logo{width:180px;height:180px;position:absolute;right:310px;top:10px;border-radius:20px;
+  border:3px solid rgba(255,255,255,.5);background:#fff;padding:10px;object-fit:contain;
+  box-shadow:0 6px 30px rgba(0,0,0,.2),0 0 20px rgba(255,255,255,.25);z-index:1002;}
+.title{font-size:4em;font-weight:900;margin:0;position:absolute;left:50%;transform:translateX(-50%);
+  white-space:nowrap;letter-spacing:2px;
+  background:linear-gradient(135deg,#fff 0%,#f0f9ff 25%,#e0f7fa 50%,#bae6fd 75%,#fff 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  filter:drop-shadow(0 4px 20px rgba(255,255,255,.4)) drop-shadow(0 2px 10px rgba(59,193,200,.65)) drop-shadow(0 0 30px rgba(101,190,198,.4));}
+/* PINK underline separator under the page title (mirrors the site's heading underline) */
+.title::after{content:'';position:absolute;left:50%;bottom:-14px;transform:translateX(-50%);width:78%;height:5px;border-radius:6px;
+  background:linear-gradient(90deg,rgba(237,59,151,.95),rgba(219,75,149,.95));box-shadow:0 3px 12px rgba(237,59,151,.5)}
+.top-left{position:absolute;top:20px;left:40px;display:flex;align-items:center;gap:25px;z-index:1001}
+.amit-img{width:130px;height:170px;object-fit:cover;border-radius:18px;border:3px solid rgba(255,255,255,.5);box-shadow:0 6px 30px rgba(0,0,0,.25)}
+.quote{font-size:20px;font-weight:600;text-align:right;color:#143852;max-width:360px;
+  background:linear-gradient(135deg,rgba(255,255,255,.95),rgba(249,250,251,.95));padding:14px 18px;border-radius:14px;
+  box-shadow:0 6px 24px rgba(0,0,0,.12)}
+.qr-code{width:140px;height:140px;border-radius:16px;border:3px solid rgba(255,255,255,.5);background:#fff;padding:10px;box-shadow:0 6px 30px rgba(0,0,0,.2)}
+
+/* ---------- CONTENT (plain wrapper div in the real DOM) ---------- */
+.content{width:100%;box-sizing:border-box}
+
+/* =====================================================================
+   TASKS BASE CSS (recolored) — transcribed from styles/tasks.css.
+   Colour map applied to colour channels ONLY (indigo/purple → teal/sky).
+   Greens (#4caf50 create / #45a049 column heading), blue refresh (#007bff),
+   teal/amber "my tasks" toggle, grays kept EXACTLY per the colour map.
+   ===================================================================== */
+
+.tasks-main-content{flex-grow:1;padding:20px;display:flex;flex-direction:row;margin-top:250px;padding-right:320px;position:relative;z-index:1}
+.tasks-page-content{padding:20px}
+.strong-p{font-weight:bold;font-size:24px !important;color:#333}
+.no-tasks{margin-top:20px;text-align:center;font-size:2em;color:#666}
+
+/* toolbar container (desktop fixed; overridden by mobile rules below) */
+.filter-create-container{display:flex;justify-content:flex-end;align-items:center;gap:15px;position:fixed;top:200px;right:250px;font-size:1em;padding:10px 20px}
+.tasks-main-content .filter-create-container{display:flex;flex-wrap:nowrap;gap:10px;align-items:center}
+.filter-create-container > *{flex:1 1 auto}
+.tasks-main-content .filter-create-container label{font-size:24px !important;margin-right:10px}
+.tasks-main-content .filter-create-container .date-input{width:15%}
+
+/* Create New Task — KEEP green (real #4caf50, semantic create action) */
+.create-task button{background:linear-gradient(135deg,rgba(76,175,80,.95) 0%,rgba(56,142,60,.95) 100%);color:#fff;padding:10px 15px;border:2px solid rgba(255,255,255,.3);border-radius:10px;cursor:pointer;font-size:24px;margin-right:20px;box-shadow:0 4px 15px rgba(76,175,80,.3),inset 0 1px 0 rgba(255,255,255,.3);transition:all .3s ease}
+
+/* Refresh — KEEP blue (real #007bff) */
+.refresh button{background:linear-gradient(135deg,rgba(0,123,255,.95) 0%,rgba(0,86,179,.95) 100%);color:#fff;padding:10px 15px;border:2px solid rgba(255,255,255,.3);border-radius:10px;cursor:pointer;font-size:24px;box-shadow:0 4px 15px rgba(0,123,255,.3),inset 0 1px 0 rgba(255,255,255,.3);transition:all .3s ease}
+
+/* Admin "show only my tasks" toggle — KEEP teal (real #14b8a6) off, amber active */
+.refresh .show-my-tasks-btn{background:linear-gradient(135deg,rgba(20,184,166,.95) 0%,rgba(13,148,136,.95) 100%);box-shadow:0 4px 15px rgba(20,184,166,.3),inset 0 1px 0 rgba(255,255,255,.3)}
+.refresh .show-my-tasks-btn.active{background:linear-gradient(135deg,rgba(245,158,11,.98) 0%,rgba(217,119,6,.98) 100%);box-shadow:0 4px 18px rgba(245,158,11,.45),inset 0 1px 0 rgba(255,255,255,.4)}
+
+/* filter select — border indigo rgba(99,102,241) → brand TEAL rgba(59,193,200) */
+.filter select{padding:10px;border:2px solid rgba(59,193,200,.3);border-radius:10px;background:rgba(255,255,255,.95);font-size:24px;min-width:150px;color:#1f2937;font-weight:600;box-shadow:0 2px 8px rgba(0,0,0,.05),inset 0 1px 0 rgba(255,255,255,.8);cursor:pointer;transition:all .3s ease}
+.filter select:focus{outline:none;border-color:rgba(59,193,200,.6);box-shadow:0 4px 15px rgba(59,193,200,.2),0 0 0 3px rgba(59,193,200,.1)}
+
+/* Task-type filter button — was PURPLE #9333ea/#7c3aXX → brand TEAL */
+.tasks-main-content .status-filter{position:relative;display:inline-block}
+.tasks-main-content .status-filter-button{background:linear-gradient(135deg,rgba(59,193,200,.95) 0%,rgba(59,193,200,.95) 100%) !important;color:#fff !important;padding:12px 20px !important;font-size:24px !important;font-weight:600 !important;border:2px solid rgba(255,255,255,.3) !important;border-radius:10px !important;cursor:pointer !important;transition:all .3s cubic-bezier(.4,0,.2,1) !important;box-shadow:0 6px 20px rgba(59,193,200,.3),inset 0 1px 0 rgba(255,255,255,.3) !important;display:flex !important;align-items:center !important;gap:8px !important;white-space:nowrap !important;position:relative !important;overflow:hidden !important}
+.tasks-main-content .status-filter-chevron{display:inline-block;transition:transform .3s ease;font-size:24px}
+.tasks-main-content .status-filter-chevron.open{transform:rotate(-180deg)}
+
+/* ---------- KANBAN BOARD ---------- */
+.split-view{display:flex;height:100%;position:relative}
+.kanban-board{display:flex;flex-direction:column;width:100%;overflow-y:auto;max-height:100vh;flex:2;margin-top:80px}
+.kanban-columns{display:flex;gap:2rem;width:100%;overflow-y:auto;max-height:100vh}
+/* column bg #f5f5f5 (gray) KEPT */
+.kanban-column{background:#f5f5f5;border-radius:8px;padding:1rem;flex:1 1 0;min-width:450px;display:flex;flex-direction:column;align-items:center}
+/* column heading colour #45a049 (green — status heading) KEPT */
+.kanban-column h3{text-align:center;margin-bottom:2rem;margin-top:2px;font-size:52px;font-weight:bold;color:#45a049;font-family:Rubik}
+.kanban-cards{overflow-y:auto;flex:1 1 auto;min-height:0;padding-left:24px;transition:box-shadow .2s;height:550px}
+/* task card white bg (overridden per-card by the due-date/status colour via inline style) */
+.kanban-column .task-card{width:400px;background-color:#fff;padding:20px;border-radius:10px;box-shadow:0 0 10px rgba(0,0,0,.1);cursor:grab;transition:transform .2s ease-in-out;margin-bottom:20px}
+.kanban-column .task-card h2{margin:0;font-size:30px}
+.kanban-column .task-card p{margin:5px 0;font-size:20px}
+
+/* =====================================================================
+   MOBILE OVERRIDES — transcribed from mobile.css @media(max-width:767px)
+   WITH THE @media WRAPPER REMOVED (so they apply at 390px). Colour map
+   applied to colour channels ONLY; every size/position/font left intact.
+   ===================================================================== */
+
+/* ── 2. Hide the desktop sidebar ─────────────────────────── */
+.sidebar{ display:none !important; }
+
+/* ── 3. Inner page header – shrunk but ALL elements visible ── */
+.header{
+  height:90px !important;
+  min-height:90px !important;
+  max-height:90px !important;
+  padding:6px 10px !important;
+  padding-bottom:0 !important;
+  padding-top:20px !important;
+  flex-direction:row !important;
+  align-items:center !important;
+  justify-content:flex-start !important;
+  flex-wrap:nowrap !important;
+  position:fixed !important;
+  top:0 !important;
+  left:0 !important;
+  right:0 !important;
+  z-index:900 !important;
+  box-sizing:border-box !important;
+  overflow:hidden !important;
+  gap:6px !important;
+}
+.header .top-left{ display:contents !important; }
+.header .logo     { order:1 !important; }
+.header .amit-img { order:2 !important; }
+.header .quote    { order:3 !important; }
+.header .qr-code-link,
+.header .qr-code  { order:4 !important; }
+.header .amit-img{
+  display:block !important;
+  width:54px !important;
+  height:70px !important;
+  object-fit:cover !important;
+  border-radius:10px !important;
+  flex-shrink:0 !important;
+}
+.header .quote{
+  display:block !important;
+  font-size:9px !important;
+  width:100px !important;
+  padding-top:3px !important;
+  padding-bottom:3px !important;
+  margin-bottom:20px !important;
+  padding-left:8px !important;
+  padding-right:8px !important;
+  margin-left:2px !important;
+  margin-right:2px !important;
+  line-height:1.4 !important;
+  border-radius:8px !important;
+  flex-shrink:0 !important;
+}
+.header .qr-code{
+  display:block !important;
+  width:54px !important;
+  height:54px !important;
+  border-radius:8px !important;
+  padding:4px !important;
+  flex-shrink:0 !important;
+}
+.header .logo{
+  display:block !important;
+  position:static !important;
+  width:60px !important;
+  height:60px !important;
+  right:unset !important;
+  top:unset !important;
+  flex-shrink:0 !important;
+  border-radius:10px !important;
+  padding:4px !important;
+  margin-right:13px !important;
+}
+.header .right-header{ display:contents !important; }
+/* Title – no room on mobile, hidden entirely */
+.header .title,
+.header h1{ display:none !important; }
+
+/* ── 4. Page content area – fill screen, scroll ──────────── */
+.tasks-main-content{
+  margin-right:0 !important;
+  margin-top:0 !important;
+  padding:0 !important;
+  padding-top:calc(90px + 8px) !important;
+  padding-bottom:calc(72px + 8px) !important;
+  padding-left:10px !important;
+  padding-right:10px !important;
+  width:100vw !important;
+  max-width:100vw !important;
+  height:100dvh !important;
+  overflow-y:auto !important;
+  overflow-x:auto !important;
+  -webkit-overflow-scrolling:touch !important;
+  box-sizing:border-box !important;
+  display:block !important;
+  flex-direction:unset !important;
+}
+
+/* ── 5. Tasks page content area ───────────────────────────── */
+.tasks-page-content{
+  padding:8px 0 !important;
+  overflow-x:auto !important;
+}
+
+/* ── 6. Filter-Create toolbar ─────────────────────────────── */
+.filter-create-container{
+  position:static !important;
+  top:unset !important;
+  right:unset !important;
+  display:flex !important;
+  flex-direction:row !important;
+  flex-wrap:wrap !important;
+  gap:6px !important;
+  align-items:center !important;
+  justify-content:flex-start !important;
+  padding:6px 4px !important;
+  margin:0 0 8px 0 !important;
+  width:100% !important;
+  max-width:100% !important;
+  box-sizing:border-box !important;
+  background:rgba(255,255,255,0.95) !important;
+  border-radius:10px !important;
+  box-shadow:0 2px 8px rgba(0,0,0,0.08) !important;
+}
+.filter-create-container > *{
+  flex:0 1 auto !important;
+  min-width:0 !important;
+}
+.filter-create-container button,
+.create-task button,
+.refresh button,
+.status-filter-button{
+  font-size:12px !important;
+  padding:7px 12px !important;
+  white-space:nowrap !important;
+  width:auto !important;
+  min-width:unset !important;
+  margin:0 !important;
+  box-sizing:border-box !important;
+}
+.refresh .show-my-tasks-btn{
+  font-size:11px !important;
+  padding:6px 10px !important;
+  line-height:1.2 !important;
+  white-space:nowrap !important;
+  width:auto !important;
+}
+.tasks-main-content .filter-create-container > .create-task,
+.tasks-main-content .filter-create-container > .refresh,
+.tasks-main-content .filter-create-container > .status-filter,
+.tasks-main-content .filter-create-container > .filter{
+  flex:0 0 auto !important;
+  min-width:0 !important;
+}
+.tasks-main-content .filter-create-container > .filter select{
+  width:auto !important;
+  max-width:150px !important;
+}
+.filter-create-container select{
+  font-size:12px !important;
+  padding:6px 8px !important;
+  min-width:0 !important;
+  max-width:150px !important;
+}
+.filter-create-container input[type="date"],
+.tasks-main-content .filter-create-container .date-input{
+  font-size:12px !important;
+  padding:6px 6px !important;
+  box-sizing:border-box !important;
+}
+
+/* Date-filter sub-row (TASKS ONLY) – 2-column grid, own full-width line */
+.tasks-main-content .filter-create-container .actions{
+  display:grid !important;
+  grid-template-columns:auto auto !important;
+  justify-content:start !important;
+  align-items:center !important;
+  gap:6px 10px !important;
+  flex:1 1 100% !important;
+  width:100% !important;
+  margin-top:4px !important;
+  padding-top:6px !important;
+  border-top:1px solid #eef0f2 !important;
+}
+.tasks-main-content .filter-create-container .actions > .filter,
+.tasks-main-content .filter-create-container .actions .filter select,
+.tasks-main-content .filter-create-container .actions .date-input{
+  width:auto !important;
+  max-width:160px !important;
+  min-width:0 !important;
+}
+.tasks-main-content .filter-create-container .actions label,
+.tasks-main-content .filter-create-container label{
+  font-size:11px !important;
+  font-weight:600 !important;
+  white-space:nowrap !important;
+  margin:0 !important;
+  text-align:right !important;
+}
+
+/* ── 7. Tasks page – swipeable horizontal kanban columns ──── */
+.split-view{
+  display:block !important;
+  position:static !important;
+  overflow:visible !important;
+}
+.kanban-board{
+  overflow:visible !important;
+  max-height:unset !important;
+  width:100% !important;
+  margin-top:0 !important;
+  flex:unset !important;
+}
+.kanban-columns{
+  display:flex !important;
+  flex-direction:row !important;
+  gap:10px !important;
+  overflow-x:auto !important;
+  overflow-y:visible !important;
+  -webkit-overflow-scrolling:touch !important;
+  scroll-snap-type:x mandatory !important;
+  padding:0 4px 12px !important;
+  max-height:unset !important;
+  width:calc(100vw - 20px) !important;
+  max-width:calc(100vw - 20px) !important;
+}
+.kanban-column{
+  min-width:calc(85vw) !important;
+  max-width:calc(85vw) !important;
+  flex-shrink:0 !important;
+  flex:0 0 auto !important;
+  scroll-snap-align:start !important;
+  box-sizing:border-box !important;
+}
+.kanban-column h3{
+  font-size:18px !important;
+  margin-bottom:8px !important;
+  margin-top:0 !important;
+}
+.kanban-column .task-card{
+  width:100% !important;
+  max-width:100% !important;
+  box-sizing:border-box !important;
+  padding:10px 12px !important;
+  margin-bottom:8px !important;
+}
+.kanban-column .task-card h2{
+  font-size:14px !important;
+  margin:0 0 4px !important;
+}
+.kanban-column .task-card p{
+  font-size:12px !important;
+  margin:2px 0 !important;
+}
+.kanban-cards{
+  height:auto !important;
+  max-height:55dvh !important;
+  overflow-y:auto !important;
+  -webkit-overflow-scrolling:touch !important;
+  padding-left:0 !important;
+}
+/* strong-p (assignee) shrinks along with the other card lines */
+.kanban-column .task-card p.strong-p{ font-size:12px !important; }
+
+/* ─────────────────────────────────────────────────────────────
+   BOTTOM NAV BAR (#mobile-bottom-nav) — horizontally scrollable
+   Recolored: active/border indigo #6366f1 → teal #3BC1C8,
+   border-top rgba(99,102,241,.15) → rgba(59,193,200,.15).
+   ───────────────────────────────────────────────────────────── */
+#mobile-bottom-nav{
+  position:fixed !important;
+  bottom:0 !important;
+  left:0 !important;
+  right:0 !important;
+  height:72px !important;
+  display:flex !important;
+  flex-direction:row !important;
+  align-items:stretch !important;
+  justify-content:flex-start !important;
+  overflow-x:auto !important;
+  overflow-y:hidden !important;
+  -webkit-overflow-scrolling:touch !important;
+  scrollbar-width:none !important;
+  background:rgba(255, 255, 255, 0.97) !important;
+  backdrop-filter:blur(20px) !important;
+  -webkit-backdrop-filter:blur(20px) !important;
+  border-top:2px solid rgba(59, 193, 200, 0.15) !important;
+  box-shadow:0 -4px 20px rgba(0, 0, 0, 0.12) !important;
+  z-index:1100 !important;
+  padding-top:4px !important;
+}
+#mobile-bottom-nav::-webkit-scrollbar{ display:none !important; }
+#mobile-bottom-nav button{
+  flex:0 0 auto !important;
+  min-width:72px !important;
+  display:flex !important;
+  flex-direction:column !important;
+  align-items:center !important;
+  justify-content:center !important;
+  gap:3px !important;
+  background:none !important;
+  border:none !important;
+  border-radius:0 !important;
+  padding:6px 10px 4px !important;
+  margin:0 !important;
+  height:68px !important;
+  color:#6b7280 !important;
+  cursor:pointer !important;
+  box-shadow:none !important;
+  transform:none !important;
+  transition:color 0.15s ease !important;
+  -webkit-tap-highlight-color:transparent !important;
+  white-space:nowrap !important;
+}
+#mobile-bottom-nav button.active{
+  color:#3BC1C8 !important;
+  border-bottom:3px solid #3BC1C8 !important;
+}
+#mobile-bottom-nav button .nav-icon{
+  font-size:22px !important;
+  line-height:1 !important;
+  display:block !important;
+}
+#mobile-bottom-nav button .nav-label{
+  font-size:10px !important;
+  line-height:1.2 !important;
+  display:block !important;
+  font-weight:500 !important;
+  text-align:center !important;
+}
+#mobile-bottom-nav button.nav-logout-btn{
+  color:#ef4444 !important;
+  border-right:1px solid rgba(0,0,0,0.08) !important;
+}
+
+/* =====================================================================
+   iPhone 12 FRAME — presentation chrome (INDEPENDENT of the app CSS,
+   NOT recolored). Also normalizes the un-media'd mobile rules so their
+   100vw / 100dvh / position:fixed resolve against the 390×844 screen
+   (a real phone's viewport) instead of the desktop browser window.
+   ===================================================================== */
+body{
+  margin:0;
+  background:#e5e7eb;
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:24px;
+}
+.phone{
+  background:#000;
+  padding:12px;
+  border-radius:46px;
+  box-shadow:0 30px 80px rgba(0,0,0,.45), 0 12px 32px rgba(0,0,0,.3);
+  flex-shrink:0;
+}
+.phone-screen{
+  position:relative;
+  width:390px;
+  height:844px;
+  border-radius:36px;
+  overflow:hidden;
+  background:#f0f4f6;
+  /* transform makes this the containing block for the app's position:fixed
+     header + bottom nav, so they anchor to the SCREEN, not the browser window. */
+  transform:translateZ(0);
+}
+/* Status bar (thin strip over the header safe-area) */
+.status-bar{
+  position:absolute;
+  top:0;left:0;right:0;
+  height:34px;
+  z-index:2000;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:0 26px;
+  direction:ltr;
+  color:#fff;
+  pointer-events:none;
+  font-size:14px;
+  font-weight:700;
+}
+.status-bar .sb-time{ font-weight:700; letter-spacing:.5px; }
+.status-bar .sb-glyphs{ display:flex; align-items:center; gap:6px; }
+.status-bar .sb-signal{ display:flex; align-items:flex-end; gap:2px; height:11px; }
+.status-bar .sb-signal i{ width:3px; background:#fff; border-radius:1px; display:block; }
+.status-bar .sb-signal i:nth-child(1){ height:4px; }
+.status-bar .sb-signal i:nth-child(2){ height:6px; }
+.status-bar .sb-signal i:nth-child(3){ height:8px; }
+.status-bar .sb-signal i:nth-child(4){ height:11px; }
+.status-bar .sb-battery{ width:24px; height:12px; border:1px solid rgba(255,255,255,.9); border-radius:3px; position:relative; padding:1px; }
+.status-bar .sb-battery::after{ content:''; position:absolute; right:-3px; top:3px; width:2px; height:6px; background:rgba(255,255,255,.9); border-radius:0 1px 1px 0; }
+.status-bar .sb-battery i{ display:block; height:100%; width:80%; background:#fff; border-radius:1px; }
+/* Dynamic island */
+.dynamic-island{
+  position:absolute;
+  top:9px;left:50%;transform:translateX(-50%);
+  width:120px;height:30px;
+  background:#000;
+  border-radius:16px;
+  z-index:2100;
+}
+/* Home indicator */
+.home-indicator{
+  position:absolute;
+  bottom:8px;left:50%;transform:translateX(-50%);
+  width:134px;height:5px;
+  background:rgba(20,56,82,.55);
+  border-radius:3px;
+  z-index:2200;
+}
+
+/* Phone environment normalization (frame-level, higher specificity so it wins):
+   pin the app root to the 390×844 screen and offset for the status bar / home
+   indicator (which a real iPhone 12 handles via env(safe-area-inset-*)). */
+.phone-screen .tasks-main-content{
+  width:390px !important;
+  max-width:390px !important;
+  height:844px !important;
+  padding-top:112px !important;    /* status-bar(34) + header(90-ish, pushed) + gap */
+  padding-bottom:100px !important; /* bottom nav(84) + gap */
+}
+.phone-screen .header{
+  top:0 !important;
+  height:104px !important;
+  min-height:104px !important;
+  max-height:104px !important;
+  padding-top:34px !important;     /* clear the status bar (safe-area inset) */
+}
+.phone-screen #mobile-bottom-nav{
+  height:84px !important;
+  padding-bottom:16px !important;  /* clear the home indicator (safe-area inset) */
+}
+
+/* Mock badge (outside the phone) */
+.mock-badge{position:fixed;bottom:16px;left:16px;z-index:3000;background:#143852;color:#fff;font-size:14px;font-weight:600;
+  padding:8px 14px;border-radius:10px;box-shadow:0 6px 20px rgba(0,0,0,.25);opacity:.94}
+.mock-badge b{color:#FCD20E}
+</style>
+</head>
+<body>
+
+  <!-- =============== iPhone 12 device =============== -->
+  <div class="phone">
+    <div class="phone-screen">
+
+      <!-- status bar + island -->
+      <div class="dynamic-island"></div>
+      <div class="status-bar">
+        <div class="sb-glyphs">
+          <span class="sb-signal"><i></i><i></i><i></i><i></i></span>
+          <svg width="16" height="12" viewBox="0 0 16 12" fill="none" aria-hidden="true">
+            <path d="M8 11.2 1 4.4A9.9 9.9 0 0 1 15 4.4L8 11.2Z" fill="#fff" opacity=".35"/>
+            <path d="M8 11.2 3.4 6.7a6.5 6.5 0 0 1 9.2 0L8 11.2Z" fill="#fff"/>
+          </svg>
+          <span class="sb-battery"><i></i></span>
+        </div>
+        <div class="sb-time">9:41</div>
+      </div>
+
+      <!-- =============== APP (mobile Tasks) =============== -->
+      <!-- NO desktop <aside class="sidebar"> on mobile -->
+      <div class="tasks-main-content">
+
+        <!-- InnerPageHeader (mobile-styled by the un-media'd rules; title hidden) -->
+        <header class="header">
+          <img class="logo" src="childsmile/frontend/src/assets/logo.png" alt="חיוך של ילד">
+          <div class="top-left">
+            <img class="amit-img" src="childsmile/frontend/src/assets/amit.jpg" alt="עמית">
+            <div class="quote">הרבה אנשים אומרים שהם רוצים להצליח אבל לא כולם מוכנים לשלם את המחיר שצריך כדי להצליח</div>
+            <img class="qr-code" src="childsmile/frontend/src/assets/qr-code.jpg" alt="QR">
+          </div>
+          <h1 class="title">לוח משימות</h1>
+        </header>
+
+        <div class="tasks-page-content">
+
+          <!-- toolbar (exact structure + labels from Tasks.js — admin view) -->
+          <div class="filter-create-container">
+            <div class="create-task">
+              <button>צור</button>
+            </div>
+            <!-- admin: task-type dropdown hidden (display:none in real DOM) -->
+            <div class="filter" style="display:none">
+              <select>
+                <option>סנן לפי סוג משימה</option>
+              </select>
+            </div>
+            <!-- admin: task-type filter checkboxes trigger -->
+            <div class="status-filter">
+              <button class="status-filter-button">סנן לפי סוג <span class="status-filter-chevron">▼</span></button>
+            </div>
+            <div class="refresh">
+              <button>רענן</button>
+            </div>
+            <div class="refresh show-my-tasks">
+              <button class="show-my-tasks-btn">הצג רק את המשימות שלי</button>
+            </div>
+            <div class="actions">
+              <label for="date-field">סנן לפי</label>
+              <div class="filter">
+                <select id="date-field">
+                  <option>תאריך סופי לביצוע</option>
+                  <option>נוצר בתאריך</option>
+                  <option>עודכן בתאריך</option>
+                </select>
+              </div>
+              <label for="date-from">מ</label>
+              <input type="date" id="date-from" class="date-input" value="2026-07-01">
+              <label for="date-to">עד</label>
+              <input type="date" id="date-to" class="date-input" value="2026-07-31">
+            </div>
+          </div>
+
+          <!-- Kanban Board -->
+          <div class="split-view">
+            <div class="kanban-board">
+              <div class="kanban-columns">
+
+                <!-- Column: לא הושלמה -->
+                <div class="kanban-column">
+                  <h3>לא הושלמה</h3>
+                  <div class="kanban-cards">
+                    <div class="task-card" style="background-color:#fff">
+                      <h2>שיחת ביקורת חודשית – משפחת כהן</h2>
+                      <p>יש לבצע עד: 12/08/2026</p>
+                      <p>תאריך שיחה אחרונה: 05/04/2026</p>
+                      <p>סטטוס: לא הושלמה</p>
+                      <p class="strong-p">לביצוע על ידי: דנה לוי</p>
+                    </div>
+                    <div class="task-card" style="background-color:#ffcccc">
+                      <h2>אישור הרשמת מתנדב חדש</h2>
+                      <p>יש לבצע עד: 22/07/2026</p>
+                      <p>סטטוס: לא הושלמה</p>
+                      <p class="strong-p">לביצוע על ידי: יוסי כהן</p>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Column: בביצוע -->
+                <div class="kanban-column">
+                  <h3>בביצוע</h3>
+                  <div class="kanban-cards">
+                    <div class="task-card" style="background-color:#fff7cc">
+                      <h2>התאמת חונך לחניך – איתי לוי</h2>
+                      <p>יש לבצע עד: 28/07/2026</p>
+                      <p>סטטוס: בביצוע</p>
+                      <p class="strong-p">לביצוע על ידי: מיכל ברק</p>
+                    </div>
+                    <div class="task-card" style="background-color:#fff">
+                      <h2>עדכון פרטי משפחה – משפחת מזרחי</h2>
+                      <p>יש לבצע עד: 05/08/2026</p>
+                      <p>סטטוס: בביצוע</p>
+                      <p class="strong-p">לביצוע על ידי: דנה לוי</p>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Column: הושלמה -->
+                <div class="kanban-column">
+                  <h3>הושלמה</h3>
+                  <div class="kanban-cards">
+                    <div class="task-card" style="background-color:#d4edda">
+                      <h2>שיבוץ לפעילות יום כיף</h2>
+                      <p>יש לבצע עד: 15/07/2026</p>
+                      <p>סטטוס: הושלמה</p>
+                      <p class="strong-p">לביצוע על ידי: רון אבידן</p>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- =============== bottom nav (built in Sidebar.js on mobile) =============== -->
+      <nav id="mobile-bottom-nav">
+        <button data-path="/tasks" class="active"><span class="nav-icon">📋</span><span class="nav-label">לוח משימות</span></button>
+        <button data-path="/families"><span class="nav-icon">🏘️</span><span class="nav-label">משפחות</span></button>
+        <button data-path="/tutor-volunteer-mgmt"><span class="nav-icon">👥</span><span class="nav-label">חונכים ומתנדבים</span></button>
+        <button data-path="/tutorships"><span class="nav-icon">🤝</span><span class="nav-label">חונכות</span></button>
+        <button data-path="/feedbacks"><span class="nav-icon">💬</span><span class="nav-label">משובים</span></button>
+        <button data-path="/refunds"><span class="nav-icon">💰</span><span class="nav-label">החזרי הוצאות</span></button>
+        <button data-path="/activity-board"><span class="nav-icon">🎈</span><span class="nav-label">ימי כיף וביקורי בית</span></button>
+        <button data-path="/activity-signup"><span class="nav-icon">🙋</span><span class="nav-label">שיבוץ לפעילויות</span></button>
+        <button data-path="/system-management"><span class="nav-icon">⚙️</span><span class="nav-label">ניהול מערכת</span></button>
+        <button data-path="/meeting-management"><span class="nav-icon">📅</span><span class="nav-label">ניהול פגישות</span></button>
+        <button data-path="/coordinator-chat"><span class="nav-icon">📨</span><span class="nav-label">עדכוני צוות</span></button>
+        <button data-path="/reviewer"><span class="nav-icon">🔍</span><span class="nav-label">שיחות ביקורת</span></button>
+        <button data-path="/notification-messages"><span class="nav-icon">🔔</span><span class="nav-label">מרכז העדכונים</span></button>
+        <button class="nav-logout-btn"><span class="nav-icon">🚪</span><span class="nav-label">יציאה</span></button>
+      </nav>
+
+      <!-- home indicator -->
+      <div class="home-indicator"></div>
+
+    </div>
+  </div>
+
+  <div class="mock-badge">מוקאפ מובייל (iPhone 12) · צבעי מותג <b>«חיוך של ילד»</b></div>
+
+</body>
+</html>
