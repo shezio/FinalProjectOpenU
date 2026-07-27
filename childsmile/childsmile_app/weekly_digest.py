@@ -771,7 +771,7 @@ def build_digest_html(data):
 
           <!-- LOGO / HEADER -->
           <tr>
-            <td style="background:linear-gradient(135deg,{_C_PRIMARY} 0%,#5a3d8c 100%);
+            <td style="background:linear-gradient(135deg,{_C_PRIMARY} 0%,#143852 100%);
                         padding:28px 24px;text-align:center;">
               <div style="font-family:{_FONT};font-size:26px;font-weight:900;
                            color:#fff;letter-spacing:-0.5px;">

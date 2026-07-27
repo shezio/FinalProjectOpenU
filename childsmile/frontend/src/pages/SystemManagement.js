@@ -1556,7 +1556,7 @@ const SystemManagement = () => {
                               <label htmlFor={`role-${role.id}`}>
                                 {t(role.role_name)}
                                 {hasCoordinatorRole && !hasGV && !hasTutor && (
-                                  <span style={{ fontSize: '11px', color: '#9333ea', marginRight: '6px' }}>
+                                  <span style={{ fontSize: '11px', color: '#3BC1C8', marginRight: '6px' }}>
                                     {' '}{role.role_name === "Tutor" ? '(החזרה לתפקיד חונך)' : '(החזרה לתפקיד מתנדב)'}
                                   </span>
                                 )}
@@ -1685,7 +1685,7 @@ const SystemManagement = () => {
                         type="button"
                         className="mute-notifications-btn"
                         onClick={openMuteModal}
-                        style={{ padding: '10px 16px', cursor: 'pointer', borderRadius: '8px', border: '1px solid #6366f1', background: '#eef0ff', color: '#4338ca', fontWeight: 600 }}
+                        style={{ padding: '10px 16px', cursor: 'pointer', borderRadius: '8px', border: '1px solid #3BC1C8', background: '#E3F4FA', color: '#143852', fontWeight: 600 }}
                       >
                         ✏️ עריכת התראות{(staffData.muted_notifications || []).length > 0 ? ` (${(staffData.muted_notifications || []).length} מושתקות)` : ''}
                       </button>

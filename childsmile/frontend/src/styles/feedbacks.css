@@ -293,7 +293,7 @@
 }
 
 .feedbacks-page-content .feedbacks-data-grid th {
-    background-color: #4CAF50;
+    background-color: #3BC1C8;
     /* Green header background */
     color: white;
     font-weight: bold;
@@ -407,7 +407,7 @@
     padding: 10px 15px;
     font-size: 20px;
     font-weight: 500;
-    border: 3px solid rgba(99, 102, 241, 0.6);
+    border: 3px solid rgba(59, 193, 200, 0.6);
     background: linear-gradient(135deg, 
         rgba(240, 242, 245, 0.9) 0%,
         rgba(255, 255, 255, 0.95) 100%);
@@ -415,7 +415,7 @@
     -webkit-backdrop-filter: blur(15px) saturate(180%);
     border-radius: 12px;
     box-shadow: 
-        0 4px 12px rgba(99, 102, 241, 0.2),
+        0 4px 12px rgba(59, 193, 200, 0.2),
         inset 0 1px 0 rgba(255, 255, 255, 0.5);
     transition: all 0.3s ease;
     color: #333;
@@ -423,9 +423,9 @@
 
 .feedbacks-date-input:focus {
     outline: none;
-    border-color: rgba(99, 102, 241, 0.9);
+    border-color: rgba(59, 193, 200, 0.9);
     box-shadow: 
-        0 6px 16px rgba(99, 102, 241, 0.3),
+        0 6px 16px rgba(59, 193, 200, 0.3),
         inset 0 1px 0 rgba(255, 255, 255, 0.6);
     transform: translateY(-1px);
 }
@@ -529,7 +529,7 @@
 /* Table headers — scoped to feedbacks grids only */
 .feedbacks-grid-container .feedbacks-data-grid th,
 .feedback-grid-container .feedbacks-data-grid th {
-    background: linear-gradient(135deg, rgba(76, 175, 80, 0.9), rgba(56, 142, 60, 0.9));
+    background: linear-gradient(135deg, rgba(59, 193, 200, 0.9), rgba(110, 193, 228, 0.9));
     color: white;
     font-weight: bold;
     font-size: 30px;
@@ -549,18 +549,18 @@
     vertical-align: top;
     white-space: normal;
     border: none;
-    border-bottom: 1px solid rgba(99, 102, 241, 0.08);
+    border-bottom: 1px solid rgba(59, 193, 200, 0.08);
 }
 
 /* Zebra striping scoped to feedbacks grids */
 .feedbacks-grid-container .feedbacks-data-grid tbody tr:nth-child(even),
 .feedback-grid-container .feedbacks-data-grid tbody tr:nth-child(even) {
-    background: rgba(76, 175, 80, 0.04);
+    background: rgba(59, 193, 200, 0.04);
 }
 
 .feedbacks-grid-container .feedbacks-data-grid tbody tr:hover,
 .feedback-grid-container .feedbacks-data-grid tbody tr:hover {
-    background: rgba(76, 175, 80, 0.08);
+    background: rgba(59, 193, 200, 0.08);
     cursor: pointer;
 }
 
@@ -764,7 +764,7 @@
     border-radius: 20px;
     box-shadow:
         0 10px 40px rgba(0, 0, 0, 0.15),
-        0 5px 20px rgba(99, 102, 241, 0.1),
+        0 5px 20px rgba(59, 193, 200, 0.1),
         inset 0 2px 0 rgba(255, 255, 255, 0.8);
 }
 
@@ -795,7 +795,7 @@
 .feedbacks-filter-item label {
     font-size: 20px;
     font-weight: 600;
-    color: rgba(99, 102, 241, 0.9);
+    color: rgba(59, 193, 200, 0.9);
     white-space: nowrap;
 }
 
@@ -803,7 +803,7 @@
     padding: 8px 12px;
     font-size: 20px;
     font-weight: 500;
-    border: 2px solid rgba(99, 102, 241, 0.5);
+    border: 2px solid rgba(59, 193, 200, 0.5);
     background: rgba(255, 255, 255, 0.95);
     border-radius: 10px;
     color: #333;
@@ -813,7 +813,7 @@
 
 .feedbacks-filter-item select:focus {
     outline: none;
-    border-color: rgba(99, 102, 241, 0.9);
+    border-color: rgba(59, 193, 200, 0.9);
 }
 
 /* Create Feedback button */
@@ -975,7 +975,7 @@
     max-width: 90%;
     box-shadow: 
         0 20px 60px rgba(0, 0, 0, 0.3),
-        0 10px 30px rgba(99, 102, 241, 0.2),
+        0 10px 30px rgba(59, 193, 200, 0.2),
         inset 0 2px 0 rgba(255, 255, 255, 0.8);
     position: relative;
     height: 100%;
@@ -1179,7 +1179,7 @@
     padding: 8px 15px;
     font-size: 20px;
     font-weight: 500;
-    border: 3px solid rgba(99, 102, 241, 0.6);
+    border: 3px solid rgba(59, 193, 200, 0.6);
     background: linear-gradient(135deg,
         rgba(240, 242, 245, 0.9) 0%,
         rgba(255, 255, 255, 0.95) 100%);
@@ -1187,7 +1187,7 @@
     -webkit-backdrop-filter: blur(15px) saturate(180%);
     border-radius: 12px;
     box-shadow:
-        0 4px 12px rgba(99, 102, 241, 0.2),
+        0 4px 12px rgba(59, 193, 200, 0.2),
         inset 0 1px 0 rgba(255, 255, 255, 0.5);
     transition: all 0.3s ease;
     color: #333;
@@ -1196,9 +1196,9 @@
 
 .feedbacks-filter-item select:focus {
     outline: none;
-    border-color: rgba(99, 102, 241, 0.9);
+    border-color: rgba(59, 193, 200, 0.9);
     box-shadow:
-        0 6px 16px rgba(99, 102, 241, 0.3),
+        0 6px 16px rgba(59, 193, 200, 0.3),
         inset 0 1px 0 rgba(255, 255, 255, 0.6);
     transform: translateY(-1px);
 }
@@ -1346,8 +1346,8 @@
 /* ── Refund shortcut button inside feedback toolbar ── */
 .feedbacks-refund-link-btn {
     background: linear-gradient(135deg,
-        rgba(99, 102, 241, 0.95) 0%,
-        rgba(168, 85, 247, 0.95) 100%);
+        rgba(59, 193, 200, 0.95) 0%,
+        rgba(59, 193, 200, 0.95) 100%);
     color: white;
     border: 2px solid rgba(255, 255, 255, 0.3);
     border-radius: 12px;
@@ -1359,7 +1359,7 @@
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
     box-shadow:
-        0 4px 15px rgba(99, 102, 241, 0.3),
+        0 4px 15px rgba(59, 193, 200, 0.3),
         inset 0 1px 0 rgba(255, 255, 255, 0.3);
     direction: rtl;
     white-space: nowrap;
@@ -1372,7 +1372,7 @@
         rgba(148, 65, 227, 1) 100%);
     transform: translateY(-2px);
     box-shadow:
-        0 6px 20px rgba(99, 102, 241, 0.4),
+        0 6px 20px rgba(59, 193, 200, 0.4),
         inset 0 1px 0 rgba(255, 255, 255, 0.4);
 }
 
@@ -1420,7 +1420,7 @@
 .feedbacks-bulk-edit-count {
     font-size: 18px;
     font-weight: 600;
-    color: rgba(99, 102, 241, 0.9);
+    color: rgba(59, 193, 200, 0.9);
 }
 
 .validation-popup {

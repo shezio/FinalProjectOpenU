@@ -45,7 +45,7 @@
   -webkit-backdrop-filter: blur(25px) saturate(180%);
   box-shadow: 
     0 20px 60px rgba(59, 130, 246, 0.3),
-    0 10px 30px rgba(168, 85, 247, 0.25),
+    0 10px 30px rgba(59, 193, 200, 0.25),
     inset 0 1px 0 rgba(255, 255, 255, 0.4);
   border-radius: 24px;
   overflow: hidden;
@@ -63,8 +63,8 @@
 
 .staff-data-grid th {
   background: linear-gradient(135deg, 
-    rgba(99, 102, 241, 1) 0%,
-    rgba(139, 92, 246, 1) 100%);
+    rgba(59, 193, 200, 1) 0%,
+    rgba(110, 193, 228, 1) 100%);
   backdrop-filter: blur(15px) saturate(180%);
   -webkit-backdrop-filter: blur(15px) saturate(180%);
   font-weight: 700;
@@ -73,7 +73,7 @@
   top: 0;
   z-index: 2;
   border-bottom: 2px solid rgba(255, 255, 255, 0.3);
-  box-shadow: 0 4px 20px rgba(99, 102, 241, 0.35);
+  box-shadow: 0 4px 20px rgba(59, 193, 200, 0.35);
   text-shadow: 0 2px 10px rgba(0, 0, 0, 0.25);
   letter-spacing: 0.5px;
   text-align: right;
@@ -89,12 +89,12 @@
 
 .staff-data-grid tr:hover {
   background: linear-gradient(90deg, 
-    rgba(165, 180, 252, 0.5) 0%,
-    rgba(192, 132, 252, 0.5) 100%);
+    rgba(110, 193, 228, 0.5) 0%,
+    rgba(110, 193, 228, 0.5) 100%);
   backdrop-filter: blur(15px) saturate(150%);
   -webkit-backdrop-filter: blur(15px) saturate(150%);
   box-shadow: 
-    0 8px 25px rgba(99, 102, 241, 0.3),
+    0 8px 25px rgba(59, 193, 200, 0.3),
     inset 0 1px 0 rgba(255, 255, 255, 0.3);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -105,8 +105,8 @@
 
 .staff-data-grid tr.selected {
   background: linear-gradient(135deg, 
-    rgba(99, 102, 241, 0.95) 0%,
-    rgba(139, 92, 246, 0.95) 100%);
+    rgba(59, 193, 200, 0.95) 0%,
+    rgba(110, 193, 228, 0.95) 100%);
   color: white;
   transition: all 0.3s ease;
 }
@@ -148,7 +148,7 @@
   gap: 1.5rem;
   box-shadow: 
     0 20px 60px rgba(0, 0, 0, 0.3),
-    0 10px 30px rgba(99, 102, 241, 0.2),
+    0 10px 30px rgba(59, 193, 200, 0.2),
     inset 0 2px 0 rgba(255, 255, 255, 0.8);
   position: relative;
   z-index: 1000;
@@ -181,7 +181,7 @@
   border: 2px solid rgba(255, 255, 255, 0.5);
   box-shadow: 
     0 20px 60px rgba(0, 0, 0, 0.3),
-    0 10px 30px rgba(102, 126, 234, 0.2),
+    0 10px 30px rgba(110, 193, 228, 0.2),
     inset 0 2px 0 rgba(255, 255, 255, 0.8);
   position: relative;
 }
@@ -311,7 +311,7 @@
 .audit-log-date-input {
   padding: 10px 15px;
   margin: 0;
-  border: 2px solid rgba(102, 126, 234, 0.6);
+  border: 2px solid rgba(110, 193, 228, 0.6);
   border-radius: 8px;
   width: 200px;
   height: 50px;
@@ -322,7 +322,7 @@
   backdrop-filter: blur(15px) saturate(180%);
   -webkit-backdrop-filter: blur(15px) saturate(180%);
   box-shadow: 
-    0 4px 12px rgba(102, 126, 234, 0.2),
+    0 4px 12px rgba(110, 193, 228, 0.2),
     inset 0 1px 0 rgba(255, 255, 255, 0.5);
   transition: all 0.3s ease;
   color: #333;
@@ -330,9 +330,9 @@
 
 .audit-log-date-input:focus {
   outline: none;
-  border-color: rgba(102, 126, 234, 0.9);
+  border-color: rgba(110, 193, 228, 0.9);
   box-shadow: 
-    0 6px 16px rgba(102, 126, 234, 0.3),
+    0 6px 16px rgba(110, 193, 228, 0.3),
     inset 0 1px 0 rgba(255, 255, 255, 0.6);
   transform: translateY(-1px);
 }
@@ -389,7 +389,7 @@
 
 .dashboard-button {
   background: linear-gradient(135deg, 
-    rgba(102, 126, 234, 0.95) 0%,
+    rgba(110, 193, 228, 0.95) 0%,
     rgba(78, 96, 204, 0.95) 100%);
   backdrop-filter: blur(15px) !important;
   -webkit-backdrop-filter: blur(15px) !important;
@@ -404,7 +404,7 @@
   letter-spacing: 0.3px;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow: 
-    0 6px 20px rgba(102, 126, 234, 0.3),
+    0 6px 20px rgba(110, 193, 228, 0.3),
     inset 0 1px 0 rgba(255, 255, 255, 0.3);
   position: relative;
   overflow: hidden;
@@ -433,10 +433,10 @@
 
 .dashboard-button:hover {
   background: linear-gradient(135deg, 
-    rgba(102, 126, 234, 1) 0%,
+    rgba(110, 193, 228, 1) 0%,
     rgba(78, 96, 204, 1) 100%) !important;
   transform: translateY(-3px) scale(1.05);
-  box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4) !important;
+  box-shadow: 0 10px 30px rgba(110, 193, 228, 0.4) !important;
 }
 
 .dashboard-button svg {
@@ -450,7 +450,7 @@
 .search-bar {
   padding: 10px 15px;
   width: 300px;
-  border: 2px solid rgba(102, 126, 234, 0.6);
+  border: 2px solid rgba(110, 193, 228, 0.6);
   border-radius: 8px;
   font-size: 24px;
   background: linear-gradient(135deg, 
@@ -459,7 +459,7 @@
   backdrop-filter: blur(15px) saturate(180%);
   -webkit-backdrop-filter: blur(15px) saturate(180%);
   box-shadow: 
-    0 4px 12px rgba(102, 126, 234, 0.2),
+    0 4px 12px rgba(110, 193, 228, 0.2),
     inset 0 1px 0 rgba(255, 255, 255, 0.5);
   transition: all 0.3s ease;
   color: #333;
@@ -467,9 +467,9 @@
 
 .search-bar:focus {
   outline: none;
-  border-color: rgba(102, 126, 234, 0.9);
+  border-color: rgba(110, 193, 228, 0.9);
   box-shadow: 
-    0 6px 16px rgba(102, 126, 234, 0.3),
+    0 6px 16px rgba(110, 193, 228, 0.3),
     inset 0 1px 0 rgba(255, 255, 255, 0.6);
   transform: translateY(-1px);
 }
@@ -734,7 +734,7 @@
 
 .pagination button {
   padding: 10px 14px;
-  border: 2px solid rgba(102, 126, 234, 0.6);
+  border: 2px solid rgba(110, 193, 228, 0.6);
   background: linear-gradient(135deg, 
     rgba(240, 242, 245, 0.9) 0%,
     rgba(255, 255, 255, 0.95) 100%);
@@ -746,31 +746,31 @@
   font-weight: 500;
   color: #333;
   transition: all 0.3s ease;
-  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.1);
+  box-shadow: 0 2px 8px rgba(110, 193, 228, 0.1);
 }
 
 .pagination button:hover:not(:disabled) {
-  border-color: rgba(102, 126, 234, 0.9);
+  border-color: rgba(110, 193, 228, 0.9);
   background: linear-gradient(135deg, 
-    rgba(102, 126, 234, 0.1) 0%,
-    rgba(118, 75, 162, 0.1) 100%);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+    rgba(110, 193, 228, 0.1) 0%,
+    rgba(59, 193, 200, 0.1) 100%);
+  box-shadow: 0 4px 12px rgba(110, 193, 228, 0.2);
   transform: translateY(-1px);
 }
 
 .pagination button.active {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #6EC1E4 0%, #3BC1C8 100%);
   color: white;
   font-weight: bold;
-  border-color: rgba(102, 126, 234, 0.9);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  border-color: rgba(110, 193, 228, 0.9);
+  box-shadow: 0 4px 12px rgba(110, 193, 228, 0.3);
 }
 
 .pagination button:disabled {
   background: rgba(240, 242, 245, 0.5);
   color: #ccc;
   cursor: not-allowed;
-  border-color: rgba(102, 126, 234, 0.2);
+  border-color: rgba(110, 193, 228, 0.2);
   opacity: 0.6;
 }
 
@@ -840,7 +840,7 @@
   text-align: center;
   box-shadow: 
     0 20px 60px rgba(0, 0, 0, 0.3),
-    0 10px 30px rgba(102, 126, 234, 0.2),
+    0 10px 30px rgba(110, 193, 228, 0.2),
     inset 0 2px 0 rgba(255, 255, 255, 0.8);
 }
 
@@ -972,7 +972,7 @@
 .staff-form-row input,
 .staff-form-row select {
   padding: 10px 15px;
-  border: 2px solid rgba(102, 126, 234, 0.6);
+  border: 2px solid rgba(110, 193, 228, 0.6);
   border-radius: 8px;
   background: linear-gradient(135deg, 
     rgba(240, 242, 245, 0.9) 0%,
@@ -980,7 +980,7 @@
   backdrop-filter: blur(15px) saturate(180%);
   -webkit-backdrop-filter: blur(15px) saturate(180%);
   box-shadow: 
-    0 4px 12px rgba(102, 126, 234, 0.2),
+    0 4px 12px rgba(110, 193, 228, 0.2),
     inset 0 1px 0 rgba(255, 255, 255, 0.5);
   transition: all 0.3s ease;
 }
@@ -988,9 +988,9 @@
 .staff-form-row input:focus,
 .staff-form-row select:focus {
   outline: none;
-  border-color: rgba(102, 126, 234, 0.9);
+  border-color: rgba(110, 193, 228, 0.9);
   box-shadow: 
-    0 6px 16px rgba(102, 126, 234, 0.3),
+    0 6px 16px rgba(110, 193, 228, 0.3),
     inset 0 1px 0 rgba(255, 255, 255, 0.6);
   transform: translateY(-1px);
 }
@@ -1003,7 +1003,7 @@
 /* Dropdown Button */
 .roles-dropdown-button {
   padding: 10px 15px;
-  border: 2px solid rgba(102, 126, 234, 0.6);
+  border: 2px solid rgba(110, 193, 228, 0.6);
   border-radius: 8px;
   background: linear-gradient(135deg, 
     rgba(240, 242, 245, 0.9) 0%,
@@ -1016,14 +1016,14 @@
   font-size: 24px;
   font-weight: 500;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+  box-shadow: 0 4px 12px rgba(110, 193, 228, 0.2);
   color: #333;
 }
 
 .roles-dropdown-button:hover {
-  border-color: rgba(102, 126, 234, 0.9);
+  border-color: rgba(110, 193, 228, 0.9);
   box-shadow: 
-    0 6px 16px rgba(102, 126, 234, 0.3),
+    0 6px 16px rgba(110, 193, 228, 0.3),
     inset 0 1px 0 rgba(255, 255, 255, 0.6);
   transform: translateY(-1px);
 }
@@ -1039,13 +1039,13 @@
     rgba(255, 255, 255, 0.95) 100%);
   backdrop-filter: blur(25px) saturate(180%);
   -webkit-backdrop-filter: blur(25px) saturate(180%);
-  border: 2px solid rgba(102, 126, 234, 0.6);
+  border: 2px solid rgba(110, 193, 228, 0.6);
   border-radius: 8px;
   max-height: 200px;
   overflow-y: auto;
   z-index: 1000;
   box-shadow: 
-    0 8px 25px rgba(102, 126, 234, 0.3),
+    0 8px 25px rgba(110, 193, 228, 0.3),
     inset 0 1px 0 rgba(255, 255, 255, 0.5);
   font-size: 24px;
 }
@@ -1063,8 +1063,8 @@
 
 .roles-dropdown-item:hover {
   background: linear-gradient(135deg, 
-    rgba(102, 126, 234, 0.15) 0%,
-    rgba(118, 75, 162, 0.15) 100%);
+    rgba(110, 193, 228, 0.15) 0%,
+    rgba(59, 193, 200, 0.15) 100%);
   backdrop-filter: blur(15px) saturate(150%);
   -webkit-backdrop-filter: blur(15px) saturate(150%);
 }
@@ -1090,7 +1090,7 @@
 .password-input {
   width: 100%;
   padding: 10px 15px;
-  border: 2px solid rgba(102, 126, 234, 0.6);
+  border: 2px solid rgba(110, 193, 228, 0.6);
   border-radius: 8px;
   font-size: 16px;
   text-align: right;
@@ -1100,7 +1100,7 @@
   backdrop-filter: blur(15px) saturate(180%);
   -webkit-backdrop-filter: blur(15px) saturate(180%);
   box-shadow: 
-    0 4px 12px rgba(102, 126, 234, 0.2),
+    0 4px 12px rgba(110, 193, 228, 0.2),
     inset 0 1px 0 rgba(255, 255, 255, 0.5);
   transition: all 0.3s ease;
   color: #333;
@@ -1108,9 +1108,9 @@
 
 .password-input:focus {
   outline: none;
-  border-color: rgba(102, 126, 234, 0.9);
+  border-color: rgba(110, 193, 228, 0.9);
   box-shadow: 
-    0 6px 16px rgba(102, 126, 234, 0.3),
+    0 6px 16px rgba(110, 193, 228, 0.3),
     inset 0 1px 0 rgba(255, 255, 255, 0.6);
   transform: translateY(-1px);
 }
@@ -1200,7 +1200,7 @@
   text-align: center;
   font-size: 24px;
   font-weight: bold;
-  border: 2px solid rgba(102, 126, 234, 0.6);
+  border: 2px solid rgba(110, 193, 228, 0.6);
   border-radius: 8px;
   outline: none;
   background: linear-gradient(135deg, 
@@ -1209,16 +1209,16 @@
   backdrop-filter: blur(15px) saturate(180%);
   -webkit-backdrop-filter: blur(15px) saturate(180%);
   box-shadow: 
-    0 4px 12px rgba(102, 126, 234, 0.2),
+    0 4px 12px rgba(110, 193, 228, 0.2),
     inset 0 1px 0 rgba(255, 255, 255, 0.5);
   transition: all 0.3s ease;
   color: #333;
 }
 
 .totp-input-box:focus {
-  border-color: rgba(102, 126, 234, 0.9);
+  border-color: rgba(110, 193, 228, 0.9);
   box-shadow: 
-    0 6px 16px rgba(102, 126, 234, 0.3),
+    0 6px 16px rgba(110, 193, 228, 0.3),
     inset 0 1px 0 rgba(255, 255, 255, 0.6);
   transform: translateY(-1px);
 }
@@ -1541,7 +1541,7 @@
   padding: 12px 20px;
   margin-right: 5px;
   background: linear-gradient(135deg, 
-    rgba(147, 51, 234, 0.95) 0%,
+    rgba(59, 193, 200, 0.95) 0%,
     rgba(126, 34, 206, 0.95) 100%);
   color: white;
   border: 2px solid rgba(255, 255, 255, 0.3);
@@ -1552,7 +1552,7 @@
   letter-spacing: 0.3px;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow: 
-    0 6px 20px rgba(147, 51, 234, 0.3),
+    0 6px 20px rgba(59, 193, 200, 0.3),
     inset 0 1px 0 rgba(255, 255, 255, 0.3);
   position: relative;
   overflow: hidden;
@@ -1578,11 +1578,11 @@
 
 .mail-button:hover {
   background: linear-gradient(135deg, 
-    rgba(147, 51, 234, 1) 0%,
+    rgba(59, 193, 200, 1) 0%,
     rgba(126, 34, 206, 1) 100%);
   transform: translateY(-3px) scale(1.05);
   box-shadow: 
-    0 10px 30px rgba(147, 51, 234, 0.4),
+    0 10px 30px rgba(59, 193, 200, 0.4),
     inset 0 1px 0 rgba(255, 255, 255, 0.4);
 }
 
@@ -1596,7 +1596,7 @@
 
 .mail-modal-content h2 {
   margin: 0 0 25px 0;
-  background: linear-gradient(135deg, rgba(147, 51, 234, 1) 0%, rgba(126, 34, 206, 1) 100%);
+  background: linear-gradient(135deg, rgba(59, 193, 200, 1) 0%, rgba(126, 34, 206, 1) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;

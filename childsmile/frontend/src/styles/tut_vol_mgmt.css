@@ -112,7 +112,7 @@
 .flip-back .tutor-vol-data-grid td:nth-child(5) textarea::-webkit-scrollbar-thumb {
   background: linear-gradient(180deg, 
     rgba(59, 130, 246, 0.5) 0%,
-    rgba(99, 102, 241, 0.5) 100%);
+    rgba(59, 193, 200, 0.5) 100%);
   border-radius: 3px;
 }
 
@@ -121,7 +121,7 @@
 .flip-back .tutor-vol-data-grid td:nth-child(5) textarea::-webkit-scrollbar-thumb:hover {
   background: linear-gradient(180deg, 
     rgba(59, 130, 246, 0.8) 0%,
-    rgba(99, 102, 241, 0.8) 100%);
+    rgba(59, 193, 200, 0.8) 100%);
 }
 
 /* Editable cell - click to edit styling */
@@ -169,7 +169,7 @@
   -webkit-backdrop-filter: blur(25px) saturate(180%);
   box-shadow: 
     0 20px 60px rgba(59, 130, 246, 0.3),
-    0 10px 30px rgba(168, 85, 247, 0.25),
+    0 10px 30px rgba(59, 193, 200, 0.25),
     inset 0 1px 0 rgba(255, 255, 255, 0.4);
   border-radius: 24px;
   overflow: hidden;
@@ -187,14 +187,14 @@
     transform: scale(0.88);
     filter: blur(3px);
     border-radius: 50%;
-    border: 6px solid rgba(99, 102, 241, 0.9);
+    border: 6px solid rgba(59, 193, 200, 0.9);
     box-shadow: 
-      0 0 0 4px rgba(168, 85, 247, 0.8),
+      0 0 0 4px rgba(59, 193, 200, 0.8),
       0 0 0 8px rgba(236, 72, 153, 0.7),
       0 0 0 12px rgba(251, 146, 60, 0.6),
       0 0 0 16px rgba(16, 185, 129, 0.5),
-      0 0 60px rgba(99, 102, 241, 0.6),
-      0 0 80px rgba(168, 85, 247, 0.5),
+      0 0 60px rgba(59, 193, 200, 0.6),
+      0 0 80px rgba(59, 193, 200, 0.5),
       0 20px 60px rgba(59, 130, 246, 0.3),
       inset 0 0 30px rgba(255, 255, 255, 0.3);
   }
@@ -206,7 +206,7 @@
     border: 2px solid rgba(255, 255, 255, 0.5);
     box-shadow: 
       0 20px 60px rgba(59, 130, 246, 0.3),
-      0 10px 30px rgba(168, 85, 247, 0.25),
+      0 10px 30px rgba(59, 193, 200, 0.25),
       inset 0 1px 0 rgba(255, 255, 255, 0.4);
   }
 }
@@ -222,8 +222,8 @@
 
 .tutor-vol-data-grid th {
   background: linear-gradient(135deg, 
-    rgba(99, 102, 241, 1) 0%,
-    rgba(139, 92, 246, 1) 100%);
+    rgba(59, 193, 200, 1) 0%,
+    rgba(110, 193, 228, 1) 100%);
   backdrop-filter: blur(15px) saturate(180%);
   -webkit-backdrop-filter: blur(15px) saturate(180%);
   font-weight: 700;
@@ -233,7 +233,7 @@
   top: 0;
   z-index: 2;
   border-bottom: 2px solid rgba(255, 255, 255, 0.3);
-  box-shadow: 0 4px 20px rgba(99, 102, 241, 0.35);
+  box-shadow: 0 4px 20px rgba(59, 193, 200, 0.35);
   text-shadow: 0 2px 10px rgba(0, 0, 0, 0.25);
   letter-spacing: 0.5px;
   white-space: nowrap;
@@ -256,12 +256,12 @@
 
 .tutor-vol-data-grid tr:hover {
   background: linear-gradient(90deg, 
-    rgba(165, 180, 252, 0.5) 0%,
-    rgba(192, 132, 252, 0.5) 100%);
+    rgba(110, 193, 228, 0.5) 0%,
+    rgba(110, 193, 228, 0.5) 100%);
   backdrop-filter: blur(15px) saturate(150%);
   -webkit-backdrop-filter: blur(15px) saturate(150%);
   box-shadow: 
-    0 8px 25px rgba(99, 102, 241, 0.3),
+    0 8px 25px rgba(59, 193, 200, 0.3),
     inset 0 1px 0 rgba(255, 255, 255, 0.3);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -283,7 +283,7 @@
   padding: 20px;
   box-shadow: 
     0 15px 50px rgba(0, 0, 0, 0.2),
-    0 8px 25px rgba(99, 102, 241, 0.15),
+    0 8px 25px rgba(59, 193, 200, 0.15),
     inset 0 2px 0 rgba(255, 255, 255, 0.8);
 }
 
@@ -475,7 +475,7 @@ input.search-bar::placeholder {
   border: 2px solid rgba(255, 255, 255, 0.5);
   box-shadow: 
     0 20px 60px rgba(0, 0, 0, 0.3),
-    0 10px 30px rgba(102, 126, 234, 0.2),
+    0 10px 30px rgba(110, 193, 228, 0.2),
     inset 0 2px 0 rgba(255, 255, 255, 0.8);
   position: relative;
   animation: slideDown 0.3s ease;
@@ -684,8 +684,8 @@ input.search-bar::placeholder {
 .tutorship-details-header h2 {
   font-size: 2.5em;
   background: linear-gradient(135deg, 
-    rgba(99, 102, 241, 1) 0%,
-    rgba(168, 85, 247, 1) 100%);
+    rgba(59, 193, 200, 1) 0%,
+    rgba(59, 193, 200, 1) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -711,7 +711,7 @@ input.search-bar::placeholder {
 }
 
 .tutorship-detail-row h3 {
-  color: #9333ea;
+  color: #3BC1C8;
   margin: 0 0 10px 0;
   font-size: 24px;
   font-weight: 600;
@@ -723,7 +723,7 @@ input.search-bar::placeholder {
   min-height: 80px;
   max-height: 120px;
   padding: 12px;
-  border: 1px solid rgba(147, 51, 234, 0.3);
+  border: 1px solid rgba(59, 193, 200, 0.3);
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.95);
   color: #1f2937;
@@ -738,8 +738,8 @@ input.search-bar::placeholder {
 
 .tutorship-detail-textarea:focus {
   outline: none;
-  border-color: #9333ea;
-  box-shadow: 0 0 0 3px rgba(147, 51, 234, 0.2);
+  border-color: #3BC1C8;
+  box-shadow: 0 0 0 3px rgba(59, 193, 200, 0.2);
 }
 
 .tutorship-detail-textarea::placeholder {
@@ -751,7 +751,7 @@ input.search-bar::placeholder {
 .tutorship-detail-select {
   width: 100%;
   padding: 12px;
-  border: 1px solid rgba(147, 51, 234, 0.3);
+  border: 1px solid rgba(59, 193, 200, 0.3);
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.95);
   color: #1f2937;
@@ -763,8 +763,8 @@ input.search-bar::placeholder {
 
 .tutorship-detail-select:focus {
   outline: none;
-  border-color: #9333ea;
-  box-shadow: 0 0 0 3px rgba(147, 51, 234, 0.2);
+  border-color: #3BC1C8;
+  box-shadow: 0 0 0 3px rgba(59, 193, 200, 0.2);
 }
 
 .tutorship-detail-select option {
@@ -834,7 +834,7 @@ input.search-bar::placeholder {
 /* Import button styling */
 .import-volunteers-btn {
   padding: 10px 16px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #6EC1E4 0%, #3BC1C8 100%);
   color: white;
   border: none;
   border-radius: 6px;
@@ -842,13 +842,13 @@ input.search-bar::placeholder {
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+  box-shadow: 0 2px 8px rgba(110, 193, 228, 0.3);
   margin: 0 8px;
 }
 
 .import-volunteers-btn:hover:not(:disabled) {
-  background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.5);
+  background: linear-gradient(135deg, #3BC1C8 0%, #6EC1E4 100%);
+  box-shadow: 0 4px 12px rgba(110, 193, 228, 0.5);
   transform: translateY(-2px);
 }
 

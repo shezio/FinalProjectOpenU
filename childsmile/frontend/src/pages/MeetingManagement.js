@@ -554,7 +554,7 @@ const MeetingManagement = () => {
               <p style={{ fontSize: '20px', color: '#444', marginBottom: '6px', textAlign: 'center' }}>
                 תזכורות יישלחו למשתתפים הבאים:
               </p>
-              <p style={{ fontSize: '20px', fontWeight: '700', color: '#5a3d8c', marginBottom: '14px', textAlign: 'center' }}>
+              <p style={{ fontSize: '20px', fontWeight: '700', color: '#143852', marginBottom: '14px', textAlign: 'center' }}>
                 {remindTarget.title} — {formatDate(remindTarget.meeting_date)} {remindTarget.meeting_time?.slice(0,5)}
               </p>
 
@@ -610,7 +610,7 @@ const MeetingManagement = () => {
             <p style={{ fontSize: '20px', color: '#444', marginBottom: '8px' }}>
               האם לבטל את הפגישה:
             </p>
-            <p style={{ fontSize: '22px', fontWeight: '700', color: '#5a3d8c', marginBottom: '8px' }}>
+            <p style={{ fontSize: '22px', fontWeight: '700', color: '#143852', marginBottom: '8px' }}>
               {cancelTarget.title}
             </p>
             <p style={{ fontSize: '18px', color: '#666', marginBottom: '24px' }}>

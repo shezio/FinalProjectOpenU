@@ -91,13 +91,13 @@ def send_meeting_reminder(meeting, reminder_type):
 
     body_html = f"""
 <div dir="rtl" style="font-family:Arial,sans-serif;font-size:16px;color:#333">
-  <h2 style="color:#5a3d8c">{header}</h2>
+  <h2 style="color:#143852">{header}</h2>
   <table style="border-collapse:collapse;width:100%;max-width:500px">
     <tr><td style="padding:8px;font-weight:bold">📅 תאריך ושעה</td><td style="padding:8px">{date_str}</td></tr>
     <tr style="background:#f5f5f5"><td style="padding:8px;font-weight:bold">📍 מיקום</td><td style="padding:8px">{location}</td></tr>
     {'<tr><td style="padding:8px;font-weight:bold">📝 הערות</td><td style="padding:8px">' + notes + '</td></tr>' if notes else ''}
   </table>
-  {'<p style="margin-top:20px;color:#764ba2;font-weight:bold">' + urgency + '</p>' if urgency else ''}
+  {'<p style="margin-top:20px;color:#3BC1C8;font-weight:bold">' + urgency + '</p>' if urgency else ''}
   <hr style="margin-top:30px;border:1px solid #eee"/>
   <small style="color:#999">– מערכת ChildSmile</small>
 </div>

@@ -21,7 +21,7 @@ html {
   flex-direction: row;
   overflow: hidden;
   background: linear-gradient(135deg, 
-    rgba(168, 85, 247, 0.15) 0%,
+    rgba(59, 193, 200, 0.15) 0%,
     rgba(59, 130, 246, 0.15) 25%,
     rgba(16, 185, 129, 0.15) 50%,
     rgba(251, 146, 60, 0.15) 75%,
@@ -103,7 +103,7 @@ html {
   -webkit-backdrop-filter: blur(25px) saturate(180%);
   box-shadow: 
     0 20px 60px rgba(59, 130, 246, 0.3),
-    0 10px 30px rgba(168, 85, 247, 0.25),
+    0 10px 30px rgba(59, 193, 200, 0.25),
     inset 0 1px 0 rgba(255, 255, 255, 0.4);
   border-radius: 24px;
   overflow: hidden;
@@ -119,14 +119,14 @@ html {
     transform: scale(0.88);
     filter: blur(3px);
     border-radius: 50%;
-    border: 6px solid rgba(99, 102, 241, 0.9);
+    border: 6px solid rgba(59, 193, 200, 0.9);
     box-shadow: 
-      0 0 0 4px rgba(168, 85, 247, 0.8),
+      0 0 0 4px rgba(59, 193, 200, 0.8),
       0 0 0 8px rgba(236, 72, 153, 0.7),
       0 0 0 12px rgba(251, 146, 60, 0.6),
       0 0 0 16px rgba(16, 185, 129, 0.5),
-      0 0 60px rgba(99, 102, 241, 0.6),
-      0 0 80px rgba(168, 85, 247, 0.5),
+      0 0 60px rgba(59, 193, 200, 0.6),
+      0 0 80px rgba(59, 193, 200, 0.5),
       0 20px 60px rgba(59, 130, 246, 0.3),
       inset 0 0 30px rgba(255, 255, 255, 0.3);
   }
@@ -138,7 +138,7 @@ html {
     border: 2px solid rgba(255, 255, 255, 0.5);
     box-shadow: 
       0 20px 60px rgba(59, 130, 246, 0.3),
-      0 10px 30px rgba(168, 85, 247, 0.25),
+      0 10px 30px rgba(59, 193, 200, 0.25),
       inset 0 1px 0 rgba(255, 255, 255, 0.4);
   }
 }
@@ -152,8 +152,8 @@ html {
 
 .families-data-grid th {
   background: linear-gradient(135deg, 
-    rgba(99, 102, 241, 1) 0%,
-    rgba(139, 92, 246, 1) 100%);
+    rgba(59, 193, 200, 1) 0%,
+    rgba(110, 193, 228, 1) 100%);
   backdrop-filter: blur(15px) saturate(180%);
   -webkit-backdrop-filter: blur(15px) saturate(180%);
   font-weight: 700;
@@ -162,7 +162,7 @@ html {
   top: 0;
   z-index: 2;
   border-bottom: 2px solid rgba(255, 255, 255, 0.3);
-  box-shadow: 0 4px 20px rgba(99, 102, 241, 0.35);
+  box-shadow: 0 4px 20px rgba(59, 193, 200, 0.35);
   text-shadow: 0 2px 10px rgba(0, 0, 0, 0.25);
   letter-spacing: 0.5px;
 }
@@ -177,12 +177,12 @@ html {
 
 .families-data-grid tr:hover {
   background: linear-gradient(90deg, 
-    rgba(165, 180, 252, 0.5) 0%,
-    rgba(192, 132, 252, 0.5) 100%);
+    rgba(110, 193, 228, 0.5) 0%,
+    rgba(110, 193, 228, 0.5) 100%);
   backdrop-filter: blur(15px) saturate(150%);
   -webkit-backdrop-filter: blur(15px) saturate(150%);
   box-shadow: 
-    0 8px 25px rgba(99, 102, 241, 0.3),
+    0 8px 25px rgba(59, 193, 200, 0.3),
     inset 0 1px 0 rgba(255, 255, 255, 0.3);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -266,19 +266,19 @@ html {
 
 .family-actions .edit-button {
   background: linear-gradient(135deg, 
-    rgba(168, 85, 247, 0.95) 0%,
-    rgba(147, 51, 234, 0.95) 100%);
+    rgba(59, 193, 200, 0.95) 0%,
+    rgba(59, 193, 200, 0.95) 100%);
   box-shadow: 
-    0 6px 20px rgba(168, 85, 247, 0.3),
+    0 6px 20px rgba(59, 193, 200, 0.3),
     inset 0 1px 0 rgba(255, 255, 255, 0.3);
 }
 
 .family-actions .edit-button:hover {
   background: linear-gradient(135deg, 
-    rgba(168, 85, 247, 1) 0%,
-    rgba(147, 51, 234, 1) 100%);
+    rgba(59, 193, 200, 1) 0%,
+    rgba(59, 193, 200, 1) 100%);
   box-shadow: 
-    0 10px 30px rgba(168, 85, 247, 0.4),
+    0 10px 30px rgba(59, 193, 200, 0.4),
     inset 0 1px 0 rgba(255, 255, 255, 0.4);
 }
 
@@ -303,8 +303,8 @@ html {
 /* Loader styling with vibrant modern design */
 .loader {
   border: 15px solid rgba(249, 250, 251, 0.3);
-  border-top: 15px solid rgba(99, 102, 241, 0.9);
-  border-right: 15px solid rgba(168, 85, 247, 0.7);
+  border-top: 15px solid rgba(59, 193, 200, 0.9);
+  border-right: 15px solid rgba(59, 193, 200, 0.7);
   border-bottom: 15px solid rgba(236, 72, 153, 0.5);
   border-radius: 50%;
   width: 200px;
@@ -321,8 +321,8 @@ html {
   font-weight: 600;
   text-align: center;
   box-shadow: 
-    0 0 40px rgba(99, 102, 241, 0.3),
-    0 0 80px rgba(168, 85, 247, 0.2);
+    0 0 40px rgba(59, 193, 200, 0.3),
+    0 0 80px rgba(59, 193, 200, 0.2);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
 }
@@ -333,7 +333,7 @@ html {
   inset: -20px;
   border-radius: 50%;
   background: radial-gradient(circle, 
-    rgba(99, 102, 241, 0.1) 0%,
+    rgba(59, 193, 200, 0.1) 0%,
     transparent 70%);
   animation: pulse 2s ease-in-out infinite;
 }
@@ -392,8 +392,8 @@ html {
   width: 70%;
   max-width: 1920px;
   box-shadow: 
-    0 25px 80px rgba(99, 102, 241, 0.3),
-    0 15px 40px rgba(168, 85, 247, 0.2),
+    0 25px 80px rgba(59, 193, 200, 0.3),
+    0 15px 40px rgba(59, 193, 200, 0.2),
     inset 0 1px 0 rgba(255, 255, 255, 0.8);
   font-size: 1em;
   margin-right: 30px;
@@ -409,16 +409,16 @@ html {
   right: 0;
   height: 4px;
   background: linear-gradient(90deg, 
-    rgba(99, 102, 241, 1) 0%,
-    rgba(168, 85, 247, 1) 50%,
+    rgba(59, 193, 200, 1) 0%,
+    rgba(59, 193, 200, 1) 50%,
     rgba(236, 72, 153, 1) 100%);
 }
 
 .modal-content h2 {
   font-size: 2.5em;
   background: linear-gradient(135deg, 
-    rgba(99, 102, 241, 1) 0%,
-    rgba(168, 85, 247, 1) 100%);
+    rgba(59, 193, 200, 1) 0%,
+    rgba(59, 193, 200, 1) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -525,7 +525,7 @@ html {
 .form-column textarea {
   width: 100%;
   padding: 12px;
-  border: 2px solid rgba(168, 85, 247, 0.3);
+  border: 2px solid rgba(59, 193, 200, 0.3);
   background: linear-gradient(135deg, 
     rgba(255, 255, 255, 0.95) 0%,
     rgba(249, 250, 251, 0.95) 100%);
@@ -534,17 +534,17 @@ html {
   border-radius: 10px;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow: 
-    0 2px 10px rgba(168, 85, 247, 0.1),
+    0 2px 10px rgba(59, 193, 200, 0.1),
     inset 0 1px 0 rgba(255, 255, 255, 0.6);
 }
 
 .form-column select:focus,
 .form-column textarea:focus {
   outline: none;
-  border-color: rgba(168, 85, 247, 0.6);
+  border-color: rgba(59, 193, 200, 0.6);
   box-shadow: 
-    0 4px 20px rgba(168, 85, 247, 0.2),
-    0 0 0 4px rgba(168, 85, 247, 0.1),
+    0 4px 20px rgba(59, 193, 200, 0.2),
+    0 0 0 4px rgba(59, 193, 200, 0.1),
     inset 0 1px 0 rgba(255, 255, 255, 0.8);
   transform: translateY(-1px);
 }
@@ -561,7 +561,7 @@ html {
 .form-column input {
   width: 90%;
   padding: 12px;
-  border: 2px solid rgba(99, 102, 241, 0.3);
+  border: 2px solid rgba(59, 193, 200, 0.3);
   background: linear-gradient(135deg, 
     rgba(255, 255, 255, 0.95) 0%,
     rgba(249, 250, 251, 0.95) 100%);
@@ -572,16 +572,16 @@ html {
   font-weight: 500;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow: 
-    0 2px 10px rgba(99, 102, 241, 0.1),
+    0 2px 10px rgba(59, 193, 200, 0.1),
     inset 0 1px 0 rgba(255, 255, 255, 0.6);
 }
 
 .form-column input:focus {
   outline: none;
-  border-color: rgba(99, 102, 241, 0.6);
+  border-color: rgba(59, 193, 200, 0.6);
   box-shadow: 
-    0 4px 20px rgba(99, 102, 241, 0.2),
-    0 0 0 4px rgba(99, 102, 241, 0.1),
+    0 4px 20px rgba(59, 193, 200, 0.2),
+    0 0 0 4px rgba(59, 193, 200, 0.1),
     inset 0 1px 0 rgba(255, 255, 255, 0.8);
   transform: translateY(-1px);
 }
@@ -650,12 +650,12 @@ textarea.error {
 .family-financial-aid-history {
   margin-top: 20px;
   padding-top: 16px;
-  border-top: 1px solid rgba(99, 102, 241, 0.2);
+  border-top: 1px solid rgba(59, 193, 200, 0.2);
 }
 
 .family-financial-aid-history h3 {
   font-size: 1.4em;
-  color: #4f46e5;
+  color: #143852;
   margin: 0 0 10px 0;
 }
 
@@ -669,7 +669,7 @@ textarea.error {
   padding: 8px 12px;
   text-align: right;
   font-size: 1.1em;
-  border-bottom: 1px solid rgba(99, 102, 241, 0.1);
+  border-bottom: 1px solid rgba(59, 193, 200, 0.1);
 }
 
 .family-financial-aid-table th {
@@ -680,11 +680,11 @@ textarea.error {
 /* MULTI-TUTOR SUPPORT: Tutors section styling */
 .tutors-section {
   grid-column: span 2;
-  background: linear-gradient(135deg, rgba(168, 85, 247, 0.1) 0%, rgba(59, 130, 246, 0.1) 100%);
+  background: linear-gradient(135deg, rgba(59, 193, 200, 0.1) 0%, rgba(59, 130, 246, 0.1) 100%);
   border-radius: 12px;
   padding: 15px;
   margin: 10px 0;
-  border: 1px solid rgba(168, 85, 247, 0.3);
+  border: 1px solid rgba(59, 193, 200, 0.3);
 }
 
 .tutors-section p {
@@ -892,22 +892,22 @@ textarea.error {
 .pagination button:hover:not(:disabled) {
   transform: translateY(-2px);
   box-shadow: 
-    0 6px 20px rgba(99, 102, 241, 0.2),
+    0 6px 20px rgba(59, 193, 200, 0.2),
     inset 0 1px 0 rgba(255, 255, 255, 0.8);
-  border-color: rgba(99, 102, 241, 0.5);
+  border-color: rgba(59, 193, 200, 0.5);
 }
 
 .pagination button.active {
   background: linear-gradient(135deg, 
-    rgba(99, 102, 241, 0.95) 0%,
-    rgba(139, 92, 246, 0.95) 100%);
+    rgba(59, 193, 200, 0.95) 0%,
+    rgba(110, 193, 228, 0.95) 100%);
   backdrop-filter: blur(15px);
   -webkit-backdrop-filter: blur(15px);
   color: white;
   font-weight: 700;
   border: 2px solid rgba(255, 255, 255, 0.4);
   box-shadow: 
-    0 6px 25px rgba(99, 102, 241, 0.4),
+    0 6px 25px rgba(59, 193, 200, 0.4),
     inset 0 1px 0 rgba(255, 255, 255, 0.4);
 }
 
@@ -976,7 +976,7 @@ textarea.error {
 .families-added-filter {
   padding: 12px 16px;
   width: 300px;
-  border: 3px solid rgba(168, 85, 247, 0.75);
+  border: 3px solid rgba(59, 193, 200, 0.75);
   background: linear-gradient(135deg, 
     rgba(255, 255, 255, 0.85) 0%,
     rgba(240, 242, 245, 0.8) 100%);
@@ -986,17 +986,17 @@ textarea.error {
   font-size: 20px;
   font-weight: 500;
   box-shadow: 
-    0 4px 20px rgba(168, 85, 247, 0.3),
+    0 4px 20px rgba(59, 193, 200, 0.3),
     inset 0 1px 0 rgba(255, 255, 255, 0.7);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .families-added-filter:focus-within {
-  border-color: rgba(168, 85, 247, 0.9);
+  border-color: rgba(59, 193, 200, 0.9);
   box-shadow: 
-    0 6px 30px rgba(168, 85, 247, 0.3),
-    0 0 0 4px rgba(168, 85, 247, 0.2),
-    0 0 20px rgba(168, 85, 247, 0.25),
+    0 6px 30px rgba(59, 193, 200, 0.3),
+    0 0 0 4px rgba(59, 193, 200, 0.2),
+    0 0 20px rgba(59, 193, 200, 0.25),
     inset 0 1px 0 rgba(255, 255, 255, 0.8);
   transform: translateY(-2px) scale(1.02);
 }
@@ -1013,7 +1013,7 @@ textarea.error {
 .families-added-filter select {
   padding: 10px 12px;
   width: 120px;
-  border: 2px solid rgba(168, 85, 247, 0.6);
+  border: 2px solid rgba(59, 193, 200, 0.6);
   background: linear-gradient(135deg, 
     rgba(255, 255, 255, 0.85) 0%,
     rgba(240, 242, 245, 0.8) 100%);
@@ -1025,20 +1025,20 @@ textarea.error {
   color: #4b5563;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 2px 8px rgba(168, 85, 247, 0.2);
+  box-shadow: 0 2px 8px rgba(59, 193, 200, 0.2);
 }
 
 .families-added-filter select:hover {
-  border-color: rgba(168, 85, 247, 0.6);
-  box-shadow: 0 4px 12px rgba(168, 85, 247, 0.2);
+  border-color: rgba(59, 193, 200, 0.6);
+  box-shadow: 0 4px 12px rgba(59, 193, 200, 0.2);
 }
 
 .families-added-filter select:focus {
   outline: none;
-  border-color: rgba(168, 85, 247, 0.8);
+  border-color: rgba(59, 193, 200, 0.8);
   box-shadow: 
-    0 4px 15px rgba(168, 85, 247, 0.25),
-    0 0 0 3px rgba(168, 85, 247, 0.1);
+    0 4px 15px rgba(59, 193, 200, 0.25),
+    0 0 0 3px rgba(59, 193, 200, 0.1);
 }
 
 
@@ -1101,7 +1101,7 @@ textarea.error {
 .init-family-date-input {
   padding: 12px;
   margin: 0;
-  border: 3px solid rgba(99, 102, 241, 0.8);
+  border: 3px solid rgba(59, 193, 200, 0.8);
   background: linear-gradient(135deg, 
     rgba(255, 255, 255, 0.85) 0%,
     rgba(240, 242, 245, 0.8) 100%);
@@ -1114,18 +1114,18 @@ textarea.error {
   font-weight: 600;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow: 
-    0 2px 10px rgba(99, 102, 241, 0.25),
+    0 2px 10px rgba(59, 193, 200, 0.25),
     inset 0 1px 0 rgba(255, 255, 255, 0.5);
   /* Adjust width as needed */
 }
 
 .init-family-date-input:focus {
   outline: none;
-  border-color: rgba(99, 102, 241, 0.9);
+  border-color: rgba(59, 193, 200, 0.9);
   box-shadow: 
-    0 4px 20px rgba(99, 102, 241, 0.3),
-    0 0 0 4px rgba(99, 102, 241, 0.2),
-    0 0 20px rgba(99, 102, 241, 0.25),
+    0 4px 20px rgba(59, 193, 200, 0.3),
+    0 0 0 4px rgba(59, 193, 200, 0.2),
+    0 0 20px rgba(59, 193, 200, 0.25),
     inset 0 1px 0 rgba(255, 255, 255, 0.8);
   transform: translateY(-1px) scale(1.02);
 }
@@ -1381,8 +1381,8 @@ textarea.error {
 
 .toggle-mature-btn {
   background: linear-gradient(135deg, 
-    rgba(168, 85, 247, 0.95) 0%,
-    rgba(147, 51, 234, 0.95) 100%) !important;
+    rgba(59, 193, 200, 0.95) 0%,
+    rgba(59, 193, 200, 0.95) 100%) !important;
   backdrop-filter: blur(15px);
   -webkit-backdrop-filter: blur(15px);
   color: white;
@@ -1395,7 +1395,7 @@ textarea.error {
   margin-left: 10px;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow: 
-    0 6px 20px rgba(168, 85, 247, 0.3),
+    0 6px 20px rgba(59, 193, 200, 0.3),
     inset 0 1px 0 rgba(255, 255, 255, 0.3);
   position: relative;
   overflow: hidden;
@@ -1693,7 +1693,7 @@ textarea.error {
 
 /* Glass morphed refresh icon button */
 .refresh-icon-button {
-  background: rgba(168, 85, 247, 0.85);
+  background: rgba(59, 193, 200, 0.85);
   backdrop-filter: blur(15px);
   -webkit-backdrop-filter: blur(15px);
   border: 2px solid rgba(255, 255, 255, 0.25);
@@ -1708,17 +1708,17 @@ textarea.error {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   color: white;
   box-shadow: 
-    0 8px 32px 0 rgba(168, 85, 247, 0.3),
+    0 8px 32px 0 rgba(59, 193, 200, 0.3),
     inset 0 1px 0 rgba(255, 255, 255, 0.3);
   position: relative;
   overflow: hidden;
 }
 
 .refresh-icon-button:hover:not(:disabled) {
-  background: rgba(168, 85, 247, 1);
+  background: rgba(59, 193, 200, 1);
   border-color: rgba(255, 255, 255, 0.4);
   box-shadow: 
-    0 12px 40px 0 rgba(168, 85, 247, 0.4),
+    0 12px 40px 0 rgba(59, 193, 200, 0.4),
     inset 0 1px 0 rgba(255, 255, 255, 0.4);
 }
 
@@ -1812,8 +1812,8 @@ textarea.error {
   font-weight: 700;
   color: white;
   background: linear-gradient(135deg, 
-    rgba(99, 102, 241, 0.9) 0%,
-    rgba(139, 92, 246, 0.9) 100%);
+    rgba(59, 193, 200, 0.9) 0%,
+    rgba(110, 193, 228, 0.9) 100%);
   padding: 10px 20px;
   border-radius: 14px;
   border: 2px solid rgba(255, 255, 255, 0.4);
@@ -1821,7 +1821,7 @@ textarea.error {
   backdrop-filter: blur(15px);
   -webkit-backdrop-filter: blur(15px);
   box-shadow: 
-    0 4px 15px rgba(99, 102, 241, 0.3),
+    0 4px 15px rgba(59, 193, 200, 0.3),
     inset 0 1px 0 rgba(255, 255, 255, 0.3);
   transition: all 0.3s ease;
   letter-spacing: 0.3px;
@@ -1830,12 +1830,12 @@ textarea.error {
 .filter-create-container label[for="date-from"]:hover,
 .filter-create-container label[for="date-to"]:hover {
   background: linear-gradient(135deg, 
-    rgba(99, 102, 241, 1) 0%,
-    rgba(139, 92, 246, 1) 100%);
+    rgba(59, 193, 200, 1) 0%,
+    rgba(110, 193, 228, 1) 100%);
   border-color: rgba(255, 255, 255, 0.5);
   transform: translateY(-2px) scale(1.02);
   box-shadow: 
-    0 6px 20px rgba(99, 102, 241, 0.4),
+    0 6px 20px rgba(59, 193, 200, 0.4),
     inset 0 1px 0 rgba(255, 255, 255, 0.4);
 }
 
@@ -1887,8 +1887,8 @@ textarea.error {
 /* Toggle Button for Age Filter */
 .age-filter-toggle-btn {
   background: linear-gradient(135deg, 
-    rgba(99, 102, 241, 0.95) 0%,
-    rgba(168, 85, 247, 0.95) 100%);
+    rgba(59, 193, 200, 0.95) 0%,
+    rgba(59, 193, 200, 0.95) 100%);
   color: white;
   padding: 12px 24px;
   font-size: 16px;
@@ -1901,14 +1901,14 @@ textarea.error {
   gap: 10px;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   white-space: nowrap;
-  box-shadow: 0 8px 20px rgba(99, 102, 241, 0.3);
+  box-shadow: 0 8px 20px rgba(59, 193, 200, 0.3);
 }
 
 .age-filter-toggle-btn:hover {
   background: linear-gradient(135deg, 
-    rgba(99, 102, 241, 1) 0%,
-    rgba(168, 85, 247, 1) 100%);
-  box-shadow: 0 12px 30px rgba(99, 102, 241, 0.4);
+    rgba(59, 193, 200, 1) 0%,
+    rgba(59, 193, 200, 1) 100%);
+  box-shadow: 0 12px 30px rgba(59, 193, 200, 0.4);
   border-color: rgba(255, 255, 255, 0.5);
   transform: translateY(-2px);
 }
@@ -2252,7 +2252,7 @@ select[name="responsible_coordinator"] option {
 }
 
 .families-main-content .filter-create-container .create-task.init-family-data-button .refresh-icon-button {
-  background: rgba(168, 85, 247, 0.85) !important;
+  background: rgba(59, 193, 200, 0.85) !important;
   border-radius: 50% !important;
   width: 45px !important;
   height: 45px !important;
@@ -2264,8 +2264,8 @@ select[name="responsible_coordinator"] option {
 }
 
 .families-main-content .filter-create-container .create-task.init-family-data-button .refresh-icon-button:hover {
-  background: rgba(168, 85, 247, 1) !important;
-  box-shadow: 0 12px 40px 0 rgba(168, 85, 247, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.4) !important;
+  background: rgba(59, 193, 200, 1) !important;
+  box-shadow: 0 12px 40px 0 rgba(59, 193, 200, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.4) !important;
 }
 
 .families-main-content .filter-create-container .create-task.init-family-data-button .status-filter-button {
@@ -2344,7 +2344,7 @@ select[name="responsible_coordinator"] option {
 .dup-compare-label-th {
   padding: 8px 10px;
   border: 1px solid #ddd;
-  background: #f0f4ff;
+  background: #E3F4FA;
   font-weight: 700;
   color: #374151;
   text-align: right;

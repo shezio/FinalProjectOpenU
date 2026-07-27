@@ -17,11 +17,11 @@
   border-radius: 50%;
   border: 3px solid rgba(255,255,255,0.5);
   background: linear-gradient(135deg,
-    rgba(99,102,241,0.92) 0%,
-    rgba(139,92,246,0.92) 100%);
+    rgba(59,193,200,0.92) 0%,
+    rgba(110,193,228,0.92) 100%);
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
-  box-shadow: 0 6px 28px rgba(99,102,241,0.55);
+  box-shadow: 0 6px 28px rgba(59,193,200,0.55);
   cursor: pointer;
   font-size: 38px;
   display: flex;
@@ -32,7 +32,7 @@
 }
 .notif-bell-btn:hover {
   transform: scale(1.1);
-  box-shadow: 0 10px 34px rgba(99,102,241,0.7);
+  box-shadow: 0 10px 34px rgba(59,193,200,0.7);
 }
 
 /* Badge count */

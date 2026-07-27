@@ -262,7 +262,7 @@ def send_mail_via_ui(request):
         body {{ text-align: right; font-family: Arial, sans-serif; line-height: 1.6; margin: 0; padding: 0; }}
         .container {{ max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9f9f9; direction: rtl; }}
         .content {{ background-color: white; padding: 20px; border: 1px solid #ddd; border-radius: 5px; direction: rtl; text-align: right; }}
-        .header {{ border-bottom: 2px solid #9333EA; padding-bottom: 10px; margin-bottom: 20px; direction: rtl; text-align: right; }}
+        .header {{ border-bottom: 2px solid #3BC1C8; padding-bottom: 10px; margin-bottom: 20px; direction: rtl; text-align: right; }}
         .subject {{ font-size: 18px; font-weight: bold; color: #333; margin-bottom: 10px; direction: rtl; text-align: right; }}
         .body-text {{ color: #555; white-space: pre-wrap; word-wrap: break-word; direction: rtl; text-align: right; unicode-bidi: embed; }}
         .footer {{ margin-top: 20px; padding-top: 10px; border-top: 1px solid #ddd; font-size: 12px; color: #999; direction: rtl; text-align: right; }}

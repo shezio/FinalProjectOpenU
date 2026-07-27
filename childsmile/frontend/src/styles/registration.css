@@ -7,7 +7,7 @@
 .registration-page {
   min-height: 100vh;
   background: linear-gradient(135deg, 
-    rgba(168, 85, 247, 0.15) 0%,
+    rgba(59, 193, 200, 0.15) 0%,
     rgba(59, 130, 246, 0.15) 25%,
     rgba(16, 185, 129, 0.15) 50%,
     rgba(251, 146, 60, 0.15) 75%,
@@ -41,7 +41,7 @@
   padding: 50px;
   box-shadow: 
     0 20px 60px rgba(59, 130, 246, 0.3),
-    0 10px 30px rgba(168, 85, 247, 0.25),
+    0 10px 30px rgba(59, 193, 200, 0.25),
     inset 0 1px 0 rgba(255, 255, 255, 0.4);
   width: 100%;
   max-width: 900px;
@@ -56,8 +56,8 @@
     font-weight: 700;
     font-family: Rubik;
     background: linear-gradient(135deg, 
-      rgba(99, 102, 241, 1) 0%,
-      rgba(139, 92, 246, 1) 100%);
+      rgba(59, 193, 200, 1) 0%,
+      rgba(110, 193, 228, 1) 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -69,8 +69,8 @@
     width: 100%;
     padding: 20px 32px;
     background: linear-gradient(135deg, 
-      rgba(99, 102, 241, 0.95) 0%,
-      rgba(139, 92, 246, 0.95) 100%);
+      rgba(59, 193, 200, 0.95) 0%,
+      rgba(110, 193, 228, 0.95) 100%);
     color: white;
     border: 2px solid rgba(255, 255, 255, 0.4);
     border-radius: 12px;
@@ -81,7 +81,7 @@
     margin-top: 20px;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     box-shadow: 
-      0 8px 25px rgba(99, 102, 241, 0.3),
+      0 8px 25px rgba(59, 193, 200, 0.3),
       inset 0 1px 0 rgba(255, 255, 255, 0.3);
     position: relative;
     overflow: hidden;
@@ -107,11 +107,11 @@
 
 .registration-form button:hover {
     background: linear-gradient(135deg, 
-      rgba(139, 92, 246, 1) 0%,
-      rgba(168, 85, 247, 1) 100%);
+      rgba(110, 193, 228, 1) 0%,
+      rgba(59, 193, 200, 1) 100%);
     transform: translateY(-3px) scale(1.02);
     box-shadow: 
-      0 12px 35px rgba(99, 102, 241, 0.4),
+      0 12px 35px rgba(59, 193, 200, 0.4),
       inset 0 1px 0 rgba(255, 255, 255, 0.4);
 }
 
@@ -131,7 +131,7 @@
     width: 100%;
     padding: 14px 18px;
     margin-bottom: 24px;
-    border: 2px solid rgba(102, 126, 234, 0.6);
+    border: 2px solid rgba(110, 193, 228, 0.6);
     border-radius: 10px;
     background: linear-gradient(135deg, 
       rgba(240, 242, 245, 0.9) 0%,
@@ -142,7 +142,7 @@
     font-family: Rubik;
     transition: all 0.3s ease;
     box-shadow: 
-      0 4px 12px rgba(102, 126, 234, 0.2),
+      0 4px 12px rgba(110, 193, 228, 0.2),
       inset 0 1px 0 rgba(255, 255, 255, 0.5);
     color: #333;
 }
@@ -151,12 +151,12 @@
 .registration-form select:focus,
 .registration-form textarea:focus {
     outline: none;
-    border-color: rgba(102, 126, 234, 0.9);
+    border-color: rgba(110, 193, 228, 0.9);
     background: linear-gradient(135deg, 
       rgba(240, 242, 245, 0.95) 0%,
       rgba(255, 255, 255, 1) 100%);
     box-shadow: 
-      0 6px 16px rgba(102, 126, 234, 0.3),
+      0 6px 16px rgba(110, 193, 228, 0.3),
       inset 0 1px 0 rgba(255, 255, 255, 0.6);
     transform: translateY(-1px);
 }
@@ -225,7 +225,7 @@
     width: 100%;
     height: 8px;
     margin-bottom: 20px;
-    accent-color: #667eea;
+    accent-color: #6EC1E4;
     -webkit-appearance: none;
     appearance: none;
     background: linear-gradient(135deg, 
@@ -243,16 +243,16 @@
     height: 24px;
     border-radius: 50%;
     background: linear-gradient(135deg, 
-      rgba(102, 126, 234, 1) 0%,
-      rgba(139, 92, 246, 1) 100%);
+      rgba(110, 193, 228, 1) 0%,
+      rgba(110, 193, 228, 1) 100%);
     cursor: pointer;
     border: 3px solid white;
-    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
+    box-shadow: 0 2px 8px rgba(110, 193, 228, 0.4);
     transition: all 0.3s ease;
 }
 
 .registration-form input[type="range"]::-webkit-slider-thumb:hover {
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.6);
+    box-shadow: 0 4px 12px rgba(110, 193, 228, 0.6);
     transform: scale(1.1);
 }
 
@@ -261,11 +261,11 @@
     height: 24px;
     border-radius: 50%;
     background: linear-gradient(135deg, 
-      rgba(102, 126, 234, 1) 0%,
-      rgba(139, 92, 246, 1) 100%);
+      rgba(110, 193, 228, 1) 0%,
+      rgba(110, 193, 228, 1) 100%);
     cursor: pointer;
     border: 3px solid white;
-    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
+    box-shadow: 0 2px 8px rgba(110, 193, 228, 0.4);
     transition: all 0.3s ease;
 }
 
@@ -281,7 +281,7 @@
 .phone-container select {
     width: 120px;
     padding: 10px 14px;
-    border: 2px solid rgba(102, 126, 234, 0.6);
+    border: 2px solid rgba(110, 193, 228, 0.6);
     border-radius: 8px;
     font-size: 18px;
     font-family: Rubik;
@@ -296,8 +296,8 @@
 
 .phone-container select:focus {
     outline: none;
-    border-color: rgba(102, 126, 234, 0.9);
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+    border-color: rgba(110, 193, 228, 0.9);
+    box-shadow: 0 4px 12px rgba(110, 193, 228, 0.2);
 }
 
 .phone-container .dash {
@@ -309,7 +309,7 @@
 .phone-container input {
     flex: 1;
     padding: 10px 14px;
-    border: 2px solid rgba(102, 126, 234, 0.6);
+    border: 2px solid rgba(110, 193, 228, 0.6);
     border-radius: 8px;
     font-size: 18px;
     font-family: Rubik;
@@ -323,8 +323,8 @@
 
 .phone-container input:focus {
     outline: none;
-    border-color: rgba(102, 126, 234, 0.9);
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+    border-color: rgba(110, 193, 228, 0.9);
+    box-shadow: 0 4px 12px rgba(110, 193, 228, 0.2);
 }
 
 .phone-container input.error,
@@ -363,7 +363,7 @@
 .switch-container .custom-switch input:checked ~ .react-switch-handle {
     background: #ffffff !important;
     box-shadow: 
-      0 4px 16px rgba(124, 58, 237, 0.4),
+      0 4px 16px rgba(59, 193, 200, 0.4),
       inset 0 -1px 3px rgba(0, 0, 0, 0.05),
       inset 0 1px 3px rgba(255, 255, 255, 0.8) !important;
 }
@@ -428,7 +428,7 @@
   padding: 40px;
   box-shadow: 
     0 20px 60px rgba(59, 130, 246, 0.3),
-    0 10px 30px rgba(168, 85, 247, 0.25),
+    0 10px 30px rgba(59, 193, 200, 0.25),
     inset 0 1px 0 rgba(255, 255, 255, 0.4);
   text-align: center;
   width: 100%;
@@ -457,7 +457,7 @@
   text-align: center;
   font-size: 32px;
   font-weight: bold;
-  border: 2px solid rgba(102, 126, 234, 0.6);
+  border: 2px solid rgba(110, 193, 228, 0.6);
   border-radius: 10px;
   outline: none;
   background: linear-gradient(135deg, 
@@ -466,7 +466,7 @@
   backdrop-filter: blur(15px) saturate(180%);
   -webkit-backdrop-filter: blur(15px) saturate(180%);
   box-shadow: 
-    0 4px 12px rgba(102, 126, 234, 0.2),
+    0 4px 12px rgba(110, 193, 228, 0.2),
     inset 0 1px 0 rgba(255, 255, 255, 0.5);
   transition: all 0.3s ease;
   color: #333;
@@ -475,9 +475,9 @@
 
 .totp-input-box:focus {
   outline: none;
-  border-color: rgba(102, 126, 234, 0.9);
+  border-color: rgba(110, 193, 228, 0.9);
   box-shadow: 
-    0 6px 16px rgba(102, 126, 234, 0.3),
+    0 6px 16px rgba(110, 193, 228, 0.3),
     inset 0 1px 0 rgba(255, 255, 255, 0.6);
   transform: translateY(-2px);
   background: linear-gradient(135deg, 
@@ -500,13 +500,13 @@
   border-radius: 10px;
   cursor: pointer;
   background: linear-gradient(135deg, 
-    rgba(99, 102, 241, 0.95) 0%,
-    rgba(139, 92, 246, 0.95) 100%);
+    rgba(59, 193, 200, 0.95) 0%,
+    rgba(110, 193, 228, 0.95) 100%);
   color: white;
   font-family: Rubik;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow: 
-    0 6px 20px rgba(99, 102, 241, 0.3),
+    0 6px 20px rgba(59, 193, 200, 0.3),
     inset 0 1px 0 rgba(255, 255, 255, 0.3);
   position: relative;
   overflow: hidden;
@@ -532,28 +532,28 @@
 
 .totp-buttons button:hover {
   background: linear-gradient(135deg, 
-    rgba(139, 92, 246, 1) 0%,
-    rgba(168, 85, 247, 1) 100%);
+    rgba(110, 193, 228, 1) 0%,
+    rgba(59, 193, 200, 1) 100%);
   transform: translateY(-3px) scale(1.05);
   box-shadow: 
-    0 10px 30px rgba(99, 102, 241, 0.4),
+    0 10px 30px rgba(59, 193, 200, 0.4),
     inset 0 1px 0 rgba(255, 255, 255, 0.4);
 }
 
 .totp-buttons button:last-child {
   background: linear-gradient(135deg, 
-    rgba(99, 102, 241, 0.95) 0%,
-    rgba(139, 92, 246, 0.95) 100%);
+    rgba(59, 193, 200, 0.95) 0%,
+    rgba(110, 193, 228, 0.95) 100%);
   box-shadow: 
-    0 6px 20px rgba(99, 102, 241, 0.3),
+    0 6px 20px rgba(59, 193, 200, 0.3),
     inset 0 1px 0 rgba(255, 255, 255, 0.3);
 }
 
 .totp-buttons button:last-child:hover {
   background: linear-gradient(135deg, 
-    rgba(99, 102, 241, 1) 0%,
-    rgba(139, 92, 246, 1) 100%);
+    rgba(59, 193, 200, 1) 0%,
+    rgba(110, 193, 228, 1) 100%);
   box-shadow: 
-    0 10px 30px rgba(99, 102, 241, 0.4),
+    0 10px 30px rgba(59, 193, 200, 0.4),
     inset 0 1px 0 rgba(255, 255, 255, 0.4);
 }

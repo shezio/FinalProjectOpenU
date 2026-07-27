@@ -1391,7 +1391,7 @@
     background: rgba(255, 255, 255, 0.97) !important;
     backdrop-filter: blur(20px) !important;
     -webkit-backdrop-filter: blur(20px) !important;
-    border-top: 2px solid rgba(99, 102, 241, 0.15) !important;
+    border-top: 2px solid rgba(59, 193, 200, 0.15) !important;
     box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.12) !important;
     z-index: 1100 !important;
     /* Give it a clear visual separation so user knows to scroll it */
@@ -1427,8 +1427,8 @@
   }
 
   #mobile-bottom-nav button.active {
-    color: #6366f1 !important;
-    border-bottom: 3px solid #6366f1 !important;
+    color: #3BC1C8 !important;
+    border-bottom: 3px solid #3BC1C8 !important;
   }
 
   #mobile-bottom-nav button .nav-icon {
@@ -2414,7 +2414,7 @@
     width: 40px !important;
     height: 40px !important;
     font-size: 20px !important;
-    box-shadow: 0 2px 10px rgba(99,102,241,0.4) !important;
+    box-shadow: 0 2px 10px rgba(59,193,200,0.4) !important;
     border-width: 2px !important;
   }
 

@@ -47,7 +47,7 @@
 }
 
 .finance-overview-controls button {
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.9), rgba(168, 85, 247, 0.9));
+  background: linear-gradient(135deg, rgba(59, 193, 200, 0.9), rgba(59, 193, 200, 0.9));
   color: white;
   border: none;
   border-radius: 12px;
@@ -96,7 +96,7 @@
   position: absolute;
   inset: 0 auto 0 0;
   width: 5px;
-  background: #7c3aed;
+  background: #3BC1C8;
 }
 
 .finance-overview-kpi-chip--green::before { background: #16a34a; }
@@ -179,7 +179,7 @@
 }
 
 .finance-overview-modcard:hover {
-  border-color: #a78bfa;
+  border-color: #6EC1E4;
   transform: translateY(-2px);
   box-shadow: 0 1px 2px rgba(80, 60, 140, 0.05), 0 10px 30px rgba(80, 60, 140, 0.08);
   background: #fff;
@@ -199,7 +199,7 @@
 .finance-overview-modcard-vv {
   font-size: 28px;
   font-weight: 800;
-  color: #7c3aed;
+  color: #3BC1C8;
   margin-top: 5px;
 }
 

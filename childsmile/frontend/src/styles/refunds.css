@@ -33,7 +33,7 @@
 }
 
 .refunds-controls button:not(.export-button) {
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.9), rgba(168, 85, 247, 0.9));
+  background: linear-gradient(135deg, rgba(59, 193, 200, 0.9), rgba(59, 193, 200, 0.9));
   color: white;
   border: none;
   border-radius: 12px;
@@ -49,7 +49,7 @@
 }
 
 .refunds-status-filter {
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.9), rgba(168, 85, 247, 0.9));
+  background: linear-gradient(135deg, rgba(59, 193, 200, 0.9), rgba(59, 193, 200, 0.9));
   color: white;
   border: none;
   border-radius: 12px;
@@ -108,7 +108,7 @@
   width: 100%;
   overflow-x: auto;
   border-radius: 16px;
-  box-shadow: 0 4px 24px rgba(99, 102, 241, 0.15);
+  box-shadow: 0 4px 24px rgba(59, 193, 200, 0.15);
 }
 
 .refunds-table {
@@ -120,7 +120,7 @@
 }
 
 .refunds-table thead tr {
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.9), rgba(168, 85, 247, 0.9));
+  background: linear-gradient(135deg, rgba(59, 193, 200, 0.9), rgba(59, 193, 200, 0.9));
   color: white;
 }
 
@@ -130,11 +130,11 @@
   text-align: right;
   font-size: 24px;
   white-space: nowrap;
-  border-bottom: 1px solid rgba(99, 102, 241, 0.08);
+  border-bottom: 1px solid rgba(59, 193, 200, 0.08);
 }
 
 .refunds-table tbody tr:hover {
-  background: rgba(99, 102, 241, 0.05);
+  background: rgba(59, 193, 200, 0.05);
   cursor: pointer;
 }
 
@@ -151,7 +151,7 @@
 .refund-status-badge.ממתין     { background: #fef3c7; color: #92400e; }
 .refund-status-badge.אושר      { background: #d1fae5; color: #065f46; }
 .refund-status-badge.אושר-חלקית { background: #dbeafe; color: #1e40af; }
-.refund-status-badge.שולם      { background: #ede9fe; color: #5b21b6; }
+.refund-status-badge.שולם      { background: #EAF7F8; color: #143852; }
 .refund-status-badge.בוטל-נדחה { background: #fee2e2; color: #991b1b; }
 
 /* ── Modal overlay ──────────────────────────────────────────────────────── */
@@ -174,14 +174,14 @@
   max-height: 120vh;
   overflow-y: auto;
   direction: rtl;
-  box-shadow: 0 20px 60px rgba(99, 102, 241, 0.25);
+  box-shadow: 0 20px 60px rgba(59, 193, 200, 0.25);
   position: relative;
 }
 
 .refund-modal h2 {
   margin: 0 0 24px 0;
   font-size: 28px;
-  color: #4f46e5;
+  color: #143852;
 }
 
 .refund-modal-close {
@@ -229,8 +229,8 @@
 .refund-form-group select:focus,
 .refund-form-group textarea:focus {
   outline: none;
-  border-color: #6366f1;
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+  border-color: #3BC1C8;
+  box-shadow: 0 0 0 3px rgba(59, 193, 200, 0.15);
 }
 
 /* Disabled / read-only (view mode) — clean greyed-out look. iOS Safari fades
@@ -286,13 +286,13 @@
 
 /* ── Phone section ──────────────────────────────────────────────────────── */
 .refund-phone-hint {
-  background: rgba(99, 102, 241, 0.06);
-  border: 1px solid rgba(99, 102, 241, 0.2);
+  background: rgba(59, 193, 200, 0.06);
+  border: 1px solid rgba(59, 193, 200, 0.2);
   border-radius: 10px;
   padding: 10px 16px;
   margin-top: 6px;
   font-size: inherit;
-  color: #4f46e5;
+  color: #143852;
 }
 
 .refund-phone-hint strong {
@@ -312,7 +312,7 @@
 }
 
 .refund-upload-zone:hover {
-  background: rgba(99, 102, 241, 0.04);
+  background: rgba(59, 193, 200, 0.04);
 }
 
 .refund-upload-zone.has-file {
@@ -325,7 +325,7 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  color: #4f46e5;
+  color: #143852;
   font-size: 24px;
   text-decoration: underline;
   cursor: pointer;
@@ -345,14 +345,14 @@
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-  background: rgba(99, 102, 241, 0.06);
+  background: rgba(59, 193, 200, 0.06);
   border-radius: 10px;
   padding: 8px 14px;
   font-size: 20px;
 }
 
 .refund-attachment-chip a {
-  color: #4f46e5;
+  color: #143852;
   text-decoration: underline;
 }
 
@@ -399,7 +399,7 @@
 }
 
 .refund-modal-actions .btn-primary {
-  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  background: linear-gradient(135deg, #3BC1C8, #6EC1E4);
   color: white;
 }
 
@@ -439,7 +439,7 @@
 
 .refunds-total-chip {
   background: rgba(255, 255, 255, 0.9);
-  border: 1px solid rgba(99, 102, 241, 0.2);
+  border: 1px solid rgba(59, 193, 200, 0.2);
   border-radius: 12px;
   padding: 8px 18px;
   font-size: 24px;
@@ -447,7 +447,7 @@
 }
 
 .refunds-total-chip strong {
-  color: #4f46e5;
+  color: #143852;
   font-size: 24px;
 }
 
@@ -515,7 +515,7 @@
 }
 
 .report-section-title {
-  color: #6366f1;
+  color: #3BC1C8;
   margin-bottom: 12px;
   font-size: 24px;
   font-weight: 700;
@@ -536,16 +536,16 @@
   font-size: 0.75rem;
   padding: 2px 8px;
   border-radius: 4px;
-  border: 1px solid #6366f1;
-  background: rgba(99, 102, 241, 0.08);
-  color: #6366f1;
+  border: 1px solid #3BC1C8;
+  background: rgba(59, 193, 200, 0.08);
+  color: #3BC1C8;
   cursor: pointer;
   font-weight: 600;
   vertical-align: middle;
   transition: background 0.15s;
 }
 .drill-open-btn:hover {
-  background: rgba(99, 102, 241, 0.2);
+  background: rgba(59, 193, 200, 0.2);
 }
 
 /* Sortable column headers */
@@ -555,7 +555,7 @@
   white-space: nowrap;
 }
 .sortable-th:hover {
-  background: rgba(99, 102, 241, 0.1);
+  background: rgba(59, 193, 200, 0.1);
 }
 
 /* Description cell — wrap long text */
@@ -578,8 +578,8 @@
 
 /* Description block shown at top of view modal */
 .refund-view-description {
-  background: rgba(99, 102, 241, 0.06);
-  border-right: 3px solid #6366f1;
+  background: rgba(59, 193, 200, 0.06);
+  border-right: 3px solid #3BC1C8;
   border-radius: 6px;
   padding: 10px 14px;
   margin-bottom: 14px;
@@ -602,8 +602,8 @@
 
 .refunds-table tfoot tr {
   font-weight: bold;
-  border-top: 2px solid #6366f1;
-  background: rgba(99, 102, 241, 0.07);
+  border-top: 2px solid #3BC1C8;
+  background: rgba(59, 193, 200, 0.07);
 }
 
 /* ── Table action buttons ──────────────────────────────────────────────── */
@@ -708,9 +708,9 @@
   background: #f3f4f6;
 }
 .refund-staff-option.selected {
-  background: #ede9fe;
+  background: #EAF7F8;
   font-weight: 600;
-  color: #6366f1;
+  color: #3BC1C8;
 }
 .refund-staff-option--self {
   border-bottom: 1px solid #e5e7eb;
@@ -732,7 +732,7 @@
 
 /* ── Report period button (accent) ──────────────────────────────────────── */
 .refunds-controls button.btn-report {
-  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  background: linear-gradient(135deg, #3BC1C8, #6EC1E4);
   color: #fff;
   font-weight: 700;
 }

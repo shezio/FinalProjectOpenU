@@ -45,7 +45,7 @@
   padding: 20px 25px;
   box-shadow: 
     0 20px 60px rgba(59, 130, 246, 0.2),
-    0 10px 30px rgba(168, 85, 247, 0.15),
+    0 10px 30px rgba(59, 193, 200, 0.15),
     inset 0 1px 0 rgba(255, 255, 255, 0.4);
   z-index: 100;
 }
@@ -61,7 +61,7 @@
   padding: 0 10px;
   width: 250px;
   height: 50px;
-  border: 2px solid rgba(102, 126, 234, 0.6);
+  border: 2px solid rgba(110, 193, 228, 0.6);
   border-radius: 8px;
   font-size: 24px;
   background: linear-gradient(135deg, 
@@ -70,7 +70,7 @@
   backdrop-filter: blur(15px) saturate(180%);
   -webkit-backdrop-filter: blur(15px) saturate(180%);
   box-shadow: 
-    0 4px 12px rgba(102, 126, 234, 0.2),
+    0 4px 12px rgba(110, 193, 228, 0.2),
     inset 0 1px 0 rgba(255, 255, 255, 0.5);
   transition: all 0.3s ease;
   color: #333;
@@ -78,9 +78,9 @@
 
 .audit-log-search-bar:focus {
   outline: none;
-  border-color: rgba(102, 126, 234, 0.9);
+  border-color: rgba(110, 193, 228, 0.9);
   box-shadow: 
-    0 6px 16px rgba(102, 126, 234, 0.3),
+    0 6px 16px rgba(110, 193, 228, 0.3),
     inset 0 1px 0 rgba(255, 255, 255, 0.6);
   transform: translateY(-1px);
 }
@@ -113,7 +113,7 @@
 .audit-log-filters .filter-select,
 .audit-log-filters .date-input {
   padding: 8px 12px;
-  border: 2px solid rgba(102, 126, 234, 0.6);
+  border: 2px solid rgba(110, 193, 228, 0.6);
   border-radius: 8px;
   font-size: 24px;
   background: linear-gradient(135deg, 
@@ -122,7 +122,7 @@
   backdrop-filter: blur(15px) saturate(180%);
   -webkit-backdrop-filter: blur(15px) saturate(180%);
   box-shadow: 
-    0 4px 12px rgba(102, 126, 234, 0.2),
+    0 4px 12px rgba(110, 193, 228, 0.2),
     inset 0 1px 0 rgba(255, 255, 255, 0.5);
   transition: all 0.3s ease;
   color: #333;
@@ -136,9 +136,9 @@
 .audit-log-filters .filter-select:focus,
 .audit-log-filters .date-input:focus {
   outline: none;
-  border-color: rgba(102, 126, 234, 0.9);
+  border-color: rgba(110, 193, 228, 0.9);
   box-shadow: 
-    0 6px 16px rgba(102, 126, 234, 0.3),
+    0 6px 16px rgba(110, 193, 228, 0.3),
     inset 0 1px 0 rgba(255, 255, 255, 0.6);
   transform: translateY(-1px);
 }
@@ -228,7 +228,7 @@
     rgba(255, 255, 255, 0.95) 100%);
   backdrop-filter: blur(15px) saturate(180%);
   -webkit-backdrop-filter: blur(15px) saturate(180%);
-  border: 2px solid rgba(102, 126, 234, 0.6);
+  border: 2px solid rgba(110, 193, 228, 0.6);
   border-radius: 8px;
   cursor: pointer;
   display: flex;
@@ -236,17 +236,17 @@
   justify-content: center;
   transition: all 0.3s ease;
   box-shadow: 
-    0 4px 12px rgba(102, 126, 234, 0.2),
+    0 4px 12px rgba(110, 193, 228, 0.2),
     inset 0 1px 0 rgba(255, 255, 255, 0.5);
 }
 
 .audit-log-actions .export-button:hover {
-  border-color: rgba(102, 126, 234, 0.9);
+  border-color: rgba(110, 193, 228, 0.9);
   background: linear-gradient(135deg, 
-    rgba(102, 126, 234, 0.1) 0%,
-    rgba(118, 75, 162, 0.1) 100%);
+    rgba(110, 193, 228, 0.1) 0%,
+    rgba(59, 193, 200, 0.1) 100%);
   box-shadow: 
-    0 6px 16px rgba(102, 126, 234, 0.3),
+    0 6px 16px rgba(110, 193, 228, 0.3),
     inset 0 1px 0 rgba(255, 255, 255, 0.6);
   transform: translateY(-1px);
 }
@@ -309,7 +309,7 @@
 .audit-jump-time {
   padding: 8px 12px;
   font-size: 24px;
-  border: 2px solid rgba(102, 126, 234, 0.6);
+  border: 2px solid rgba(110, 193, 228, 0.6);
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.95);
   color: #333;
@@ -336,7 +336,7 @@
 }
 
 .audit-log-data-grid th {
-  background-color: #4caf50;
+  background-color: #3BC1C8;
   color: white;
   font-weight: bold;
   position: sticky !important;

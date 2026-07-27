@@ -242,7 +242,7 @@ const Login = () => {
   return (
     <div className="login-main-content">
       <Header />
-      <span className="amit-title">{t("Amit's Smile")}</span>
+      <span className="amit-title">{t("Amit's Smile")}<svg className="smile" viewBox="0 0 300 46" preserveAspectRatio="none" aria-hidden="true"><path d="M10 14 Q 150 44, 290 14" /></svg></span>
       
       {!showTotpInput ? (
         // Email Input Phase
