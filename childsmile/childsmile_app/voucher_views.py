@@ -110,6 +110,7 @@ def _recipient_to_dict(r, child_lookup=None):
         "ready": r.ready,
         "assigned_volunteer": r.assigned_volunteer,
         "delivered": r.delivered,
+        "delivered_date": r.delivered_date.strftime("%Y-%m-%d") if r.delivered_date else None,
         "notes": r.notes,
         "linked_child_id": r.linked_child_id,
         "linked_child_name": linked_child_name,
@@ -522,6 +523,13 @@ def _apply_recipient_fields(recipient, data, updated_by):
         recipient.assigned_volunteer = data['assigned_volunteer'] or None
     if 'delivered' in data:
         recipient.delivered = data['delivered'] or None
+    if 'delivered_date' in data:
+        # Nullable by design (backward compatibility + `delivered` is optional).
+        # The UI defaults this to today and requires it when `delivered` is
+        # 'כן'/'איסוף עצמי', but the backend accepts null - a direct API call
+        # may legitimately omit it. Mirrors the distribution date handling
+        # above; Django's DateField parses the 'YYYY-MM-DD' string on save.
+        recipient.delivered_date = data['delivered_date'] or None
     if 'notes' in data:
         recipient.notes = data['notes'] or None
     if 'linked_child_id' in data:

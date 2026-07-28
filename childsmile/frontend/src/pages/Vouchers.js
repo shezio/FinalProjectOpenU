@@ -58,6 +58,20 @@ const clampRecipientField = (name, value) => {
 // user testing showed it rejects too many legitimate entries.
 const isValidIsraeliId = (idNumber) => /^\d{5,9}$/.test(String(idNumber).trim());
 
+// Local (not UTC) today as YYYY-MM-DD - the value format an <input type="date">
+// expects. Built manually rather than toISOString() so it can't roll to the
+// next day near midnight in timezones ahead of UTC.
+const todayISODate = () => {
+  const d = new Date();
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return `${d.getFullYear()}-${mm}-${dd}`;
+};
+
+// `delivered` values that mean the voucher was actually handed over / picked up
+// - the only cases where a delivery date applies (and is required in the UI).
+const DELIVERED_HANDED_OVER = ['כן', 'איסוף עצמי'];
+
 const fmtDate = (dateStr) => {
   if (!dateStr) return '—';
   if (/^\d{2}\/\d{2}\/\d{4}$/.test(dateStr)) return dateStr;
@@ -102,7 +116,7 @@ const Vouchers = () => {
     full_name: '', parent_id_number: '', phone: '', child_name: '', child_treatment_status: '',
     child_id_number: '', num_children_at_home: '', city: '', street_address: '',
     case_description: '', referral_source: '', approved_amount: '', ready: false,
-    assigned_volunteer: '', delivered: '', notes: '', linked_child_id: '',
+    assigned_volunteer: '', delivered: '', delivered_date: '', notes: '', linked_child_id: '',
   };
   const [recipientFormData, setRecipientFormData] = useState(emptyRecipientForm);
   const [recipientFormErrors, setRecipientFormErrors] = useState({});
@@ -251,6 +265,7 @@ const Vouchers = () => {
   );
   const recipientsApprovedTotal = filteredRecipients.reduce((s, r) => s + parseFloat(r.approved_amount || 0), 0);
   const recipientsReadyCount = filteredRecipients.filter(r => r.ready).length;
+  const recipientsDeliveredCount = filteredRecipients.filter(r => DELIVERED_HANDED_OVER.includes(r.delivered)).length;
 
   // ── Recipient form ──────────────────────────────────────────────────────────
   const validateRecipientForm = (data) => {
@@ -295,6 +310,14 @@ const Vouchers = () => {
       }
     }
 
+    // A delivery date is required in the UI once the voucher is marked as
+    // handed over / picked up (today is pre-filled as a default, but the user
+    // may change it). The DB/backend keep it nullable for backward
+    // compatibility, so this requirement lives only here.
+    if (DELIVERED_HANDED_OVER.includes(data.delivered) && !data.delivered_date) {
+      errs.delivered_date = 'יש להזין תאריך מסירה';
+    }
+
     return errs;
   };
 
@@ -324,7 +347,8 @@ const Vouchers = () => {
       child_id_number: r.child_id_number || '', num_children_at_home: r.num_children_at_home ?? '',
       city: r.city || '', street_address: r.street_address || '', case_description: r.case_description || '',
       referral_source: r.referral_source || '', approved_amount: r.approved_amount || '', ready: !!r.ready,
-      assigned_volunteer: r.assigned_volunteer || '', delivered: r.delivered || '', notes: r.notes || '',
+      assigned_volunteer: r.assigned_volunteer || '', delivered: r.delivered || '',
+      delivered_date: r.delivered_date || '', notes: r.notes || '',
       linked_child_id: r.linked_child_id || '',
     });
     setRecipientFormErrors({});
@@ -467,11 +491,34 @@ const Vouchers = () => {
         <div className="vouchers-form-group">
           <label>נמסר</label>
           <select value={recipientFormData.delivered}
-            onChange={e => setRecipientFormData(p => ({ ...p, delivered: e.target.value }))}>
+            onChange={e => {
+              const val = e.target.value;
+              setRecipientFormData(p => {
+                const next = { ...p, delivered: val };
+                if (DELIVERED_HANDED_OVER.includes(val)) {
+                  // Default the delivery date to today when marking as handed
+                  // over, but don't overwrite a date the user already set.
+                  if (!next.delivered_date) next.delivered_date = todayISODate();
+                } else {
+                  // 'לא' or cleared - a delivery date no longer applies.
+                  next.delivered_date = '';
+                }
+                return next;
+              });
+              setRecipientFormErrors(p => ({ ...p, delivered_date: '' }));
+            }}>
             <option value="">בחר</option>
             {DELIVERED_OPTIONS.map(d => <option key={d} value={d}>{d}</option>)}
           </select>
         </div>
+        {DELIVERED_HANDED_OVER.includes(recipientFormData.delivered) && (
+          <div className="vouchers-form-group">
+            <label>תאריך מסירה *</label>
+            <input type="date" value={recipientFormData.delivered_date}
+              onChange={e => setRecipientFormData(p => ({ ...p, delivered_date: e.target.value }))} />
+            {recipientFormErrors.delivered_date && <div className="vouchers-field-error">{recipientFormErrors.delivered_date}</div>}
+          </div>
+        )}
         <div className="vouchers-form-group full-width">
           <label>משפחה רשומה במערכת (אופציונלי — אם לא נמצאת, הנתמך יישאר "לא רשומה")</label>
           <Select
@@ -783,6 +830,7 @@ const Vouchers = () => {
           {/* dir="ltr" so the ratio reads current/total (current on the LEFT, "out of" total on the RIGHT)
               instead of getting bidi-reordered inside the RTL chip. */}
           <div className="vouchers-total-chip">מוכנים למסירה: <strong dir="ltr">{recipientsReadyCount} / {filteredRecipients.length}</strong></div>
+          <div className="vouchers-total-chip">נמסרו: <strong dir="ltr">{recipientsDeliveredCount} / {filteredRecipients.length}</strong></div>
         </div>
       )}
 
@@ -805,6 +853,7 @@ const Vouchers = () => {
                 <th>מוכן</th>
                 <th>מתנדב</th>
                 <th>נמסר</th>
+                <th>תאריך מסירה</th>
                 <th>משפחה</th>
                 <th>פעולות</th>
               </tr>
@@ -820,6 +869,7 @@ const Vouchers = () => {
                   <td>{r.ready ? '✅' : '—'}</td>
                   <td>{r.assigned_volunteer || '—'}</td>
                   <td>{r.delivered || '—'}</td>
+                  <td>{r.delivered_date ? fmtDate(r.delivered_date) : '—'}</td>
                   <td>
                     {r.linked_child_id
                       ? <span className="vouchers-linked-badge" title="מקושר לתיק משפחה קיים">🔗 {r.linked_child_name}</span>
