@@ -2670,7 +2670,7 @@ export const exportVoucherRecipientsToExcel = async (recipients, t) => {
 
     const headers = [
       '#', 'שם מלא', 'טלפון', 'עיר', 'כתובת', 'שם הילד', 'מצב טיפול (מדווח)', 'מספר ילדים בבית',
-      'תיאור המקרה', 'גורם מפנה', 'סכום מאושר', 'מוכן', 'מתנדב', 'נמסר', 'משפחה רשומה', 'מצב טיפול (במערכת)', 'הערות',
+      'תיאור המקרה', 'גורם מפנה', 'סכום מאושר', 'מוכן', 'מתנדב', 'נמסר', 'תאריך מסירה', 'משפחה רשומה', 'מצב טיפול (במערכת)', 'הערות',
     ];
     const rows = recipients.map(r => [
       r.id,
@@ -2687,6 +2687,8 @@ export const exportVoucherRecipientsToExcel = async (recipients, t) => {
       r.ready ? 'כן' : 'לא',
       r.assigned_volunteer || '',
       r.delivered || '',
+      // delivered_date arrives as 'YYYY-MM-DD' → show as DD/MM/YYYY
+      r.delivered_date ? r.delivered_date.split('-').reverse().join('/') : '',
       r.linked_child_id ? (r.linked_child_name || 'כן') : 'לא רשומה',
       r.linked_child_id ? (r.linked_child_status || '') : '',
       r.notes || '',

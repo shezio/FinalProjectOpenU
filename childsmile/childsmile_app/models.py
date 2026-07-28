@@ -1280,6 +1280,12 @@ class VoucherRecipient(models.Model):
     ready = models.BooleanField(default=False)  # "מוכן"
     assigned_volunteer = models.CharField(max_length=255, null=True, blank=True)  # "מתנדב" - free text, same as PettyCash.paid_by
     delivered = models.CharField(max_length=20, choices=DeliveredStatus.choices, null=True, blank=True)  # "נמסר"
+    # "תאריך מסירה" - when the voucher was actually handed over / picked up.
+    # Only meaningful when `delivered` is 'כן' or 'איסוף עצמי'. Nullable for
+    # backward compatibility (existing rows have none) and because a direct API
+    # call may omit it - the UI defaults it to today and requires it when
+    # `delivered` is a handed-over value, but the backend accepts null.
+    delivered_date = models.DateField(null=True, blank=True)  # "תאריך מסירה"
     notes = models.TextField(null=True, blank=True)  # e.g. "סל מזון"
 
     # Link to an existing registered family - AUTO-matched by child_id_number
