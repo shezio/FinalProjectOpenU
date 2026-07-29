@@ -805,7 +805,7 @@ const Vouchers = () => {
   return (
     <div className="vouchers-main-content">
       <Sidebar />
-      <InnerPageHeader title={`מקבלים — ${selectedDistribution?.name || ''}`} />
+      <InnerPageHeader title={selectedDistribution?.name || ''} />
 
       <div className="vouchers-controls">
         <button onClick={backToDistributions}>&rarr; חזרה לחלוקות</button>
