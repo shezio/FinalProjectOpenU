@@ -103,9 +103,17 @@ def _get_authenticated_user(request):
         )
     try:
         staff = Staff.objects.get(staff_id=user_id)
-        return staff, None
     except Staff.DoesNotExist:
         return None, JsonResponse({"detail": "User not found."}, status=403)
+    # INACTIVE STAFF FEATURE: a deactivated/left ("עזב") user keeps their session's
+    # cached permissions, so has_permission alone would still let them act. The Staff
+    # row is fetched fresh here, so it reflects deactivation immediately — block them.
+    if not staff.is_active:
+        return None, JsonResponse(
+            {"detail": "Your account is inactive. Please contact the administrator."},
+            status=403,
+        )
+    return staff, None
 
 
 def _ownership_guard(refund, staff, user_is_admin):
