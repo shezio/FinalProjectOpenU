@@ -393,6 +393,30 @@ def verify_totp(request):
             api_logger.warning(f"User {user_id} attempted to log in without providing a staff email.")
             return JsonResponse({"error": "Staff member not found"}, status=404)
         
+        # INACTIVE STAFF FEATURE: block inactive (deactivated/left "עזב") users from
+        # completing login. login_email already blocks them before a code is sent, but
+        # this endpoint must re-check (defense in depth: a user deactivated after a code
+        # was issued, or any direct call to verify-totp, must not receive a session).
+        if not staff_user.is_active:
+            log_api_action(
+                request=request,
+                action='USER_LOGIN_FAILED',
+                success=False,
+                error_message="User account is inactive",
+                status_code=403,
+                additional_data={
+                    'attempted_email': email,
+                    'staff_id': staff_user.staff_id,
+                    'reason': 'account_inactive',
+                    'deactivation_reason': staff_user.deactivation_reason or 'Not specified'
+                }
+            )
+            api_logger.warning(f"TOTP verify attempt by inactive user {staff_user.staff_id} ({email})")
+            return JsonResponse({
+                "error": "Your account is inactive. Please contact the administrator.",
+                "account_inactive": True
+            }, status=403)
+        
         # CHECK IF USER IS APPROVED FOR REGISTRATION
         if not staff_user.registration_approved:
             log_api_action(
@@ -533,6 +557,31 @@ def google_login_success(request):
     try:
         # Find the Staff record by email (case-insensitive)
         staff_user = Staff.objects.get(email__iexact=django_user.email)
+        
+        # INACTIVE STAFF FEATURE: block inactive (deactivated/left "עזב") users from
+        # logging in via Google. This path bypassed the login_email is_active gate
+        # entirely, so the check must live here too.
+        if not staff_user.is_active:
+            log_api_action(
+                request=request,
+                action='GOOGLE_LOGIN_FAILED',
+                success=False,
+                error_message="User account is inactive",
+                status_code=403,
+                entity_type='Staff',
+                entity_ids=[staff_user.staff_id],
+                additional_data={
+                    'login_method': 'Google OAuth',
+                    'attempted_email': django_user.email,
+                    'reason': 'account_inactive',
+                    'deactivation_reason': staff_user.deactivation_reason or 'Not specified'
+                }
+            )
+            api_logger.warning(f"Google login attempt by inactive user {staff_user.staff_id} ({django_user.email})")
+            return JsonResponse({
+                "error": "Your account is inactive. Please contact the administrator.",
+                "account_inactive": True
+            }, status=403)
         
         # Create session
         request.session.flush()
