@@ -73,6 +73,7 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 @conditional_csrf
 @api_view(["POST"])
+@block_viewer_writes
 def calculate_possible_matches(request):
     api_logger.info("calculate_possible_matches called")
     try:
@@ -1132,6 +1133,7 @@ def get_available_tutors(request):
 
 @conditional_csrf
 @api_view(["POST"])
+@block_viewer_writes
 def calculate_manual_match(request):
     """
     Calculate a match for a manually selected tutor-child pair.
