@@ -793,10 +793,19 @@ def submit_voucher_questionnaire(request, distribution_id):
     if validation_error:
         return JsonResponse({"error": validation_error}, status=400)
 
+    # SECURITY (PT F17): this is an UNAUTHENTICATED public submit — a crafted POST must not be able to
+    # set admin-only fields (self-approve an amount, mark itself ready/delivered, link a child, etc.).
+    # Strip every privileged/processing field defensively; keep only family-submitted data. Mirrors the
+    # activity questionnaire's public_data filter.
+    public_data = {k: v for k, v in data.items() if k not in (
+        'approved_amount', 'ready', 'delivered', 'delivered_date', 'assigned_volunteer',
+        'status', 'linked_child_id', 'linked_child', 'recipient_id', 'updated_by',
+    )}
+
     try:
         with transaction.atomic():
             recipient = VoucherRecipient(distribution=distribution, submitted_at=timezone.now())
-            _apply_recipient_fields(recipient, data, updated_by=None)
+            _apply_recipient_fields(recipient, public_data, updated_by=None)
             recipient.save()
 
         log_api_action(request=request, action='SUBMIT_VOUCHER_QUESTIONNAIRE', success=True,

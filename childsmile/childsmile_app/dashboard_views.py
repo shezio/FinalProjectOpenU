@@ -13,7 +13,7 @@ import uuid
 from pathlib import Path
 
 from .models import Children, Tutors, Tutorships, Feedback, Staff, Tasks
-from .utils import conditional_csrf
+from .utils import conditional_csrf, has_permission
 from .audit_utils import is_admin, log_api_action
 from .logger import api_logger
 from .dashboard_services import (
@@ -681,6 +681,10 @@ def get_coordinator_workload(request):
     user_id = request.session.get("user_id")
     if not user_id:
         return JsonResponse({"detail": "Authentication credentials were not provided."}, status=403)
+
+    # SECURITY (PT F12): coordinator workload exposes staff names — require staff:VIEW.
+    if not has_permission(request, "staff", "VIEW"):
+        return JsonResponse({"error": "You do not have permission to view this data."}, status=401)
 
     today = timezone.now().date()
 
