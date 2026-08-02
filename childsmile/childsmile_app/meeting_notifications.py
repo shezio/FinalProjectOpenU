@@ -103,12 +103,14 @@ def send_meeting_reminder(meeting, reminder_type):
 </div>
 """
 
+    _mute_key = {'week_before': 'meeting_reminder_week', 'two_days_before': 'meeting_reminder_two_days', 'same_day': 'meeting_reminder_same_day'}.get(reminder_type)
+
     sent_email = 0
     failed_email = 0
 
-    # Send email to each invitee
+    # Send email to each invitee (skip anyone who muted this reminder — mute covers email too)
     for staff in recipients:
-        if staff.email:
+        if staff.email and not is_whatsapp_muted(staff, _mute_key):
             try:
                 send_mail(
                     subject=subject,
@@ -138,7 +140,6 @@ def send_meeting_reminder(meeting, reminder_type):
         )
         # Only send WhatsApp to coordinators/admins in the recipient list
         wa_recipients = [s for s in recipients if s.staff_id in coordinator_ids]
-        _mute_key = {'week_before': 'meeting_reminder_week', 'two_days_before': 'meeting_reminder_two_days', 'same_day': 'meeting_reminder_same_day'}.get(reminder_type)
         if _mute_key:
             wa_recipients = [s for s in wa_recipients if not is_whatsapp_muted(s, _mute_key)]
         phones = [s.staff_phone for s in wa_recipients if s.staff_phone]
@@ -260,9 +261,9 @@ def notify_meeting_created(meeting):
     sent_email = 0
     failed_email = 0
 
-    # Send email to each invitee
+    # Send email to each invitee (skip anyone who muted this notification — mute covers email too)
     for staff in recipients:
-        if staff.email:
+        if staff.email and not is_whatsapp_muted(staff, 'meeting_created'):
             try:
                 send_mail(
                     subject=subject,
@@ -366,7 +367,7 @@ def notify_meeting_updated(meeting):
     failed_email = 0
 
     for staff in recipients:
-        if staff.email:
+        if staff.email and not is_whatsapp_muted(staff, 'meeting_updated'):
             try:
                 send_mail(
                     subject=subject,
@@ -469,7 +470,7 @@ def notify_meeting_cancelled(meeting):
     failed_email = 0
 
     for staff in recipients:
-        if staff.email:
+        if staff.email and not is_whatsapp_muted(staff, 'meeting_cancelled'):
             try:
                 send_mail(
                     subject=subject,

@@ -232,15 +232,18 @@ def create_tasks_for_admins(staff_user_id, user_name, user_email):
 </body>
 </html>"""
 
-                    # Send email
-                    send_mail(
-                        subject,
-                        message,
-                        settings.DEFAULT_FROM_EMAIL,
-                        [staff_member.email],
-                        fail_silently=True,
-                        html_message=message
-                    )
+                    # Send email (skip if this coordinator muted this notification — mute covers email too)
+                    if is_whatsapp_muted(staff_member, 'new_volunteer_registration'):
+                        api_logger.info(f"🔕 Coordinator {staff_member.staff_id} muted 'new_volunteer_registration' — email skipped")
+                    else:
+                        send_mail(
+                            subject,
+                            message,
+                            settings.DEFAULT_FROM_EMAIL,
+                            [staff_member.email],
+                            fail_silently=True,
+                            html_message=message
+                        )
                     
                     # Send WhatsApp message to coordinator (prod only)
                     if not getattr(settings, 'IS_PROD', False):
@@ -513,14 +516,17 @@ def notify_tutored_families_coordinators(child_id):
 </body>
 </html>"""
 
-            send_mail(
-                subject,
-                message,
-                settings.DEFAULT_FROM_EMAIL,
-                [coordinator.email],
-                fail_silently=True,
-                html_message=message
-            )
+            if is_whatsapp_muted(coordinator, 'new_family_needs_tutor'):
+                api_logger.info(f"🔕 Coordinator {coordinator.staff_id} muted 'new_family_needs_tutor' — email skipped")
+            else:
+                send_mail(
+                    subject,
+                    message,
+                    settings.DEFAULT_FROM_EMAIL,
+                    [coordinator.email],
+                    fail_silently=True,
+                    html_message=message
+                )
             
             # Send WhatsApp message to coordinator (prod only)
             if coordinator.staff_phone and getattr(settings, 'IS_PROD', False) and not is_whatsapp_muted(coordinator, 'new_family_needs_tutor'):
@@ -909,23 +915,26 @@ def notify_families_coordinator_of_new_family(child_id):
 </body>
 </html>"""
 
-            try:
-                send_mail(
-                    subject,
-                    html_message,
-                    settings.DEFAULT_FROM_EMAIL,
-                    [coordinator.email],
-                    fail_silently=False,
-                    html_message=html_message,
-                )
-                api_logger.info(
-                    f"✅ notify_families_coordinator: email sent to {coordinator.email} "
-                    f"for child {child_id} ({child_name})"
-                )
-            except Exception as mail_err:
-                api_logger.error(
-                    f"❌ notify_families_coordinator: email failed for {coordinator.email}: {mail_err}"
-                )
+            if is_whatsapp_muted(coordinator, 'new_family_families_coordinator'):
+                api_logger.info(f"🔕 notify_families_coordinator: coordinator {coordinator.staff_id} muted 'new_family_families_coordinator' — email skipped")
+            else:
+                try:
+                    send_mail(
+                        subject,
+                        html_message,
+                        settings.DEFAULT_FROM_EMAIL,
+                        [coordinator.email],
+                        fail_silently=False,
+                        html_message=html_message,
+                    )
+                    api_logger.info(
+                        f"✅ notify_families_coordinator: email sent to {coordinator.email} "
+                        f"for child {child_id} ({child_name})"
+                    )
+                except Exception as mail_err:
+                    api_logger.error(
+                        f"❌ notify_families_coordinator: email failed for {coordinator.email}: {mail_err}"
+                    )
 
             # WhatsApp (prod only, same template as admin/tutored coordinator)
             if coordinator.staff_phone and getattr(settings, 'IS_PROD', False) and not is_whatsapp_muted(coordinator, 'new_family_families_coordinator'):
@@ -1204,15 +1213,18 @@ def notify_admins_of_new_family(child_id):
 </body>
 </html>"""
                 
-                send_mail(
-                    subject,
-                    message,
-                    settings.DEFAULT_FROM_EMAIL,
-                    [special_admin.email],
-                    fail_silently=True,
-                    html_message=message
-                )
-                api_logger.debug(f"✅ Email notification sent to special admin {special_admin.staff_id} ({special_admin.email})")
+                if is_whatsapp_muted(special_admin, 'new_family_admins'):
+                    api_logger.info(f"🔕 Special admin {special_admin.staff_id} muted 'new_family_admins' — email skipped")
+                else:
+                    send_mail(
+                        subject,
+                        message,
+                        settings.DEFAULT_FROM_EMAIL,
+                        [special_admin.email],
+                        fail_silently=True,
+                        html_message=message
+                    )
+                    api_logger.debug(f"✅ Email notification sent to special admin {special_admin.staff_id} ({special_admin.email})")
                 
             except Exception as email_error:
                 api_logger.error(f"❌ Error sending email to special admin {special_admin.staff_id}: {str(email_error)}")

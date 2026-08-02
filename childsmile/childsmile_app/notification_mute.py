@@ -1,9 +1,11 @@
 """
-Per-user WhatsApp notification mute preferences.
+Per-user notification mute preferences.
 
-Single source of truth for WHICH WhatsApp notifications a user is allowed to
-mute (per-user, toggled in the Edit User modal in System Management), plus the
-helper used at every send site to decide whether to skip a recipient.
+Single source of truth for WHICH notifications a user is allowed to mute
+(per-user, toggled in the Edit User modal in System Management), plus the
+helper used at every send site to decide whether to skip a recipient. Muting an
+event suppresses BOTH its WhatsApp message AND its email (whichever channels the
+event uses).
 
 Muting is keyed per NOTIFICATION EVENT (a stable string `key`), NOT per Twilio
 template SID — because one SID can back two distinct events (e.g. NEW_FAMILY_ADMIN_SID
@@ -55,6 +57,9 @@ def get_muted_notifications(staff):
 def is_whatsapp_muted(staff, key):
     """
     True if `staff` has muted the notification identified by `key`.
+
+    NOTE: despite the historical name, a muted event is suppressed on BOTH
+    channels — the WhatsApp message AND the email are skipped at every send site.
 
     Safe to call with staff=None (e.g. a recipient identified only by phone with
     no Staff row) — returns False so the message still goes out. Only keys in
