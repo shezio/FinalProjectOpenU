@@ -1680,7 +1680,7 @@ const SystemManagement = () => {
 
                   {modalType === 'edit' && muteableNotifications.length > 0 && (
                     <div className="staff-form-row" style={{ gridColumn: '1 / -1' }}>
-                      <label>התראות וואטסאפ</label>
+                      <label>התראות</label>
                       <button
                         type="button"
                         className="mute-notifications-btn"
@@ -1710,9 +1710,9 @@ const SystemManagement = () => {
         <div className="staff-modal-overlay">
           <div className="staff-modal-content" style={{ maxWidth: '560px' }}>
             <span className="staff-close" onClick={closeMuteModal}>&times;</span>
-            <h2>עריכת התראות וואטסאפ</h2>
+            <h2>עריכת התראות</h2>
             <p style={{ fontSize: '0.9em', color: '#666', marginBottom: '12px' }}>
-              כל ההתראות פעילות כברירת מחדל. בטלו סימון של התראה כדי להשתיק אותה עבור {staffData.first_name} {staffData.last_name} (לא תישלח בוואטסאפ).
+              כל ההתראות פעילות כברירת מחדל. בטלו סימון של התראה כדי להשתיק אותה עבור {staffData.first_name} {staffData.last_name} (ההתראה לא תישלח כלל).
             </p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '55vh', overflowY: 'auto', padding: '4px 2px' }}>
               {muteableNotifications.map(n => (
