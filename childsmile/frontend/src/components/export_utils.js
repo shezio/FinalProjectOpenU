@@ -2424,6 +2424,81 @@ const _autoFitColumns = (worksheetData) =>
     ) + 2,
   }));
 
+// ── Period filtering for "ייצוא לאקסל" (Excel export scoped by year / month) ──
+// Parse a raw date value ('YYYY-MM-DD', 'DD/MM/YYYY', or anything Date can read)
+// into { year, month } (month 1-12), or null when empty / unparseable.
+export const _periodOf = (raw) => {
+  if (!raw) return null;
+  const s = String(raw).trim();
+  let m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (m) return { year: Number(m[1]), month: Number(m[2]) };
+  m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+  if (m) return { year: Number(m[3]), month: Number(m[2]) };
+  const d = new Date(s);
+  return isNaN(d.getTime()) ? null : { year: d.getFullYear(), month: d.getMonth() + 1 };
+};
+
+// Scope rows to an optional year and/or month using getDate(row) to read each
+// row's raw date string. An empty/undefined year or month means "don't filter
+// that dimension", so no selection at all returns every row unchanged. When a
+// filter IS active, rows whose date can't be parsed are excluded (they can't
+// belong to a period).
+export const filterRowsByPeriod = (rows, getDate, year, month) => {
+  const y = year ? Number(year) : null;
+  const mo = month ? Number(month) : null;
+  if (!y && !mo) return rows || [];
+  return (rows || []).filter((row) => {
+    const p = _periodOf(getDate(row));
+    if (!p) return false;
+    if (y && p.year !== y) return false;
+    if (mo && p.month !== mo) return false;
+    return true;
+  });
+};
+
+export const exportRefundsToExcel = async (entries, t) => {
+  const reportName = 'refunds';
+  const format = 'EXCEL';
+  try {
+    if (!entries || entries.length === 0) {
+      const errorMsg = 'אין נתונים לייצוא';
+      await auditExportFailure(format, reportName, errorMsg, 'VALIDATION');
+      showErrorToast(t, '', { message: errorMsg });
+      return;
+    }
+
+    const headers = ['#', 'שם מלא', 'תאריך הוצאה', 'סכום מבוקש (₪)', 'סכום שאושר (₪)', 'סטטוס', 'אמצעי תשלום', 'אושר ע"י', 'תאריך יצירה', 'תיאור'];
+    const rows = entries.map(e => [
+      e.id,
+      e.staff_full_name || '',
+      e.expense_date || '',
+      Number(e.requested_amount || 0).toFixed(2),
+      e.approved_amount ? Number(e.approved_amount).toFixed(2) : '',
+      e.status || '',
+      e.refund_method || '',
+      e.approved_by || '',
+      (e.created_at || '').toString().slice(0, 10),
+      e.description || '',
+    ]);
+
+    const worksheetData = [headers, ...rows];
+    const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
+    worksheet['!cols'] = _autoFitColumns(worksheetData);
+    worksheet['!dir'] = 'rtl';
+
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'החזרי הוצאות');
+    XLSX.writeFile(workbook, 'החזרי_הוצאות.xlsx');
+    toast.success(t('Exported to Excel successfully'));
+
+    await auditExportSuccess(format, entries.length, reportName, ['staff_names', 'refund_amounts']);
+  } catch (error) {
+    console.error('Export failed:', error);
+    await auditExportFailure(format, reportName, error.message, 'TECHNICAL');
+    showErrorToast(t, '', { message: 'Export failed' });
+  }
+};
+
 export const exportPettyCashToExcel = async (entries, t) => {
   const reportName = 'petty_cash';
   const format = 'EXCEL';

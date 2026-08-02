@@ -5,7 +5,8 @@ import InnerPageHeader from '../components/InnerPageHeader';
 import axios from '../axiosConfig';
 import { toast } from 'react-toastify';
 import { showErrorToast } from '../components/toastUtils';
-import { exportOngoingExpensesToExcel } from '../components/export_utils';
+import { exportOngoingExpensesToExcel, filterRowsByPeriod } from '../components/export_utils';
+import ExportPeriodPicker from '../components/ExportPeriodPicker';
 import { useTranslation } from 'react-i18next';
 import { hasAllPermissions } from '../components/utils';
 import '../i18n';
@@ -285,7 +286,7 @@ const OngoingExpenses = () => {
         <button onClick={() => navigate('/finance-overview')}>← לסקירה כללית</button>
         <button onClick={openCreateModal}>+ הוצאה חדשה</button>
         <button onClick={fetchEntries}>רענן</button>
-        <button onClick={() => exportOngoingExpensesToExcel(filteredEntries, t)}>ייצוא לאקסל</button>
+        <ExportPeriodPicker onExport={(year, month) => exportOngoingExpensesToExcel(filterRowsByPeriod(filteredEntries, e => e.expense_date, year, month), t)} />
         <button className="btn-report" onClick={() => navigate('/reports/ongoing-expenses-report')}>דוח לפי תקופה</button>
         <input
           type="text"

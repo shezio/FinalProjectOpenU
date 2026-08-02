@@ -5,7 +5,8 @@ import InnerPageHeader from '../components/InnerPageHeader';
 import axios from '../axiosConfig';
 import { toast } from 'react-toastify';
 import { showErrorToast } from '../components/toastUtils';
-import { exportVoucherDistributionsToExcel, exportVoucherRecipientsToExcel } from '../components/export_utils';
+import { exportVoucherDistributionsToExcel, exportVoucherRecipientsToExcel, filterRowsByPeriod } from '../components/export_utils';
+import ExportPeriodPicker from '../components/ExportPeriodPicker';
 import { useTranslation } from 'react-i18next';
 import { hasAllPermissions } from '../components/utils';
 import Select from 'react-select';
@@ -570,7 +571,7 @@ const Vouchers = () => {
           <button onClick={() => navigate('/finance-overview')}>← לסקירה כללית</button>
           <button onClick={openCreateDistModal}>+ חלוקה חדשה</button>
           <button onClick={fetchDistributions}>רענן</button>
-          <button onClick={() => exportVoucherDistributionsToExcel(filteredDistributions, t)}>ייצוא לאקסל</button>
+          <ExportPeriodPicker onExport={(year, month) => exportVoucherDistributionsToExcel(filterRowsByPeriod(filteredDistributions, d => d.start_date, year, month), t)} />
           <input
             type="text"
             className="tutorship-search-bar"
@@ -811,7 +812,7 @@ const Vouchers = () => {
         <button onClick={backToDistributions}>&rarr; חזרה לחלוקות</button>
         <button onClick={openCreateRecipientModal}>+ הוספת מקבל</button>
         <button onClick={() => fetchRecipients(selectedDistribution.id)}>רענן</button>
-        <button onClick={() => exportVoucherRecipientsToExcel(filteredRecipients, t)}>ייצוא לאקסל</button>
+        <ExportPeriodPicker onExport={(year, month) => exportVoucherRecipientsToExcel(filterRowsByPeriod(filteredRecipients, r => r.delivered_date, year, month), t)} />
         {selectedDistribution?.questionnaire_type !== 'ללא' && (
           <button onClick={() => copyPublicLink(selectedDistribution)}>🔗 העתק קישור לשאלון</button>
         )}

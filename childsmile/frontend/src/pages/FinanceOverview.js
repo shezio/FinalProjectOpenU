@@ -7,7 +7,8 @@ import InnerPageHeader from '../components/InnerPageHeader';
 import axios from '../axiosConfig';
 import { toast } from 'react-toastify';
 import { showErrorToast } from '../components/toastUtils';
-import { exportFinanceOverviewToExcel } from '../components/export_utils';
+import { exportFinanceOverviewToExcel, filterRowsByPeriod } from '../components/export_utils';
+import ExportPeriodPicker from '../components/ExportPeriodPicker';
 import { useTranslation } from 'react-i18next';
 import { hasAllPermissions } from '../components/utils';
 import '../i18n';
@@ -118,31 +119,46 @@ const FinanceOverview = () => {
   // (e.g. Petty Cash's card includes the auto-synced rows too) — only the
   // combined grand total needs the de-duplication.
   const paidRefunds = refunds.filter(r => r.status === 'שולם');
+
+  // ── On-screen money totals — always the current calendar year ────────────
+  // Fixed to the CURRENT calendar year (Jan–Dec) — independent of the Excel
+  // export (its own month/year modal) and of the summary pickers below (which
+  // only drive the WhatsApp monthly-summary send). Operational KPIs
+  // (ממתין לטיפול / נשאר לחלק) stay live and are NOT period-scoped.
+  const displayYear = String(new Date().getFullYear());
+  const periodLabel = `שנת ${displayYear}`;
+  const refundsP = filterRowsByPeriod(refunds, r => r.expense_date, displayYear, '');
+  const paidRefundsP = filterRowsByPeriod(paidRefunds, r => r.expense_date, displayYear, '');
+  const pettyCashP = filterRowsByPeriod(pettyCash, p => p.expense_date, displayYear, '');
+  const pettyCashManualP = pettyCashP.filter(p => !p.source_refund_id);
+  const ongoingP = filterRowsByPeriod(ongoingExpenses, o => o.expense_date, displayYear, '');
+  const financialAidP = filterRowsByPeriod(financialAid, a => a.aid_date, displayYear, '');
+  const vouchersP = filterRowsByPeriod(vouchers, d => d.start_date, displayYear, '');
   // "Still needs action" = anything not in a FINAL state (שולם/בוטלנדחה) - i.e.
   // ממתין (pending review) OR אושר/אושר חלקית (approved but not yet paid out) ALL
   // still need staff to do something. Was previously only counting the literal
   // 'ממתין' status, which undercounted (e.g. showed 0 even with several
   // approved-but-unpaid refunds still outstanding).
   const pendingRefundsCount = refunds.filter(r => r.status !== 'שולם' && r.status !== 'בוטל/נדחה').length;
-  const refundsPaidTotal = paidRefunds.reduce(
+  const refundsPaidTotal = paidRefundsP.reduce(
     (s, r) => s + parseFloat(r.approved_amount || r.requested_amount || 0), 0
   );
 
   const pettyCashManual = pettyCash.filter(p => !p.source_refund_id);
-  const pettyCashTotal = pettyCash.reduce((s, p) => s + parseFloat(p.amount || 0), 0);
-  const pettyCashManualTotal = pettyCashManual.reduce((s, p) => s + parseFloat(p.amount || 0), 0);
+  const pettyCashTotal = pettyCashP.reduce((s, p) => s + parseFloat(p.amount || 0), 0);
+  const pettyCashManualTotal = pettyCashManualP.reduce((s, p) => s + parseFloat(p.amount || 0), 0);
 
-  const ongoingTotal = ongoingExpenses.reduce((s, o) => s + parseFloat(o.amount || 0), 0);
+  const ongoingTotal = ongoingP.reduce((s, o) => s + parseFloat(o.amount || 0), 0);
 
-  const financialAidTotal = financialAid.reduce((s, a) => s + parseFloat(a.amount || 0), 0);
+  const financialAidTotal = financialAidP.reduce((s, a) => s + parseFloat(a.amount || 0), 0);
 
   // Vouchers: distributed_amount is already the sum of that distribution's
   // approved recipient amounts (computed server-side, see voucher_views.py's
   // _distribution_to_dict) - money ACTUALLY given out, same semantic as the
   // other modules' totals. recipients_count sums across all distributions,
   // shown in the modcard below ("X חלוקות (Y מקבלים)").
-  const vouchersDistributedTotal = vouchers.reduce((s, d) => s + parseFloat(d.distributed_amount || 0), 0);
-  const vouchersRecipientsCount = vouchers.reduce((s, d) => s + (d.recipients_count || 0), 0);
+  const vouchersDistributedTotal = vouchersP.reduce((s, d) => s + parseFloat(d.distributed_amount || 0), 0);
+  const vouchersRecipientsCount = vouchersP.reduce((s, d) => s + (d.recipients_count || 0), 0);
 
   const grandTotal = refundsPaidTotal + pettyCashManualTotal + ongoingTotal + financialAidTotal + vouchersDistributedTotal;
   // Vouchers' own "remaining budget" (not yet distributed) - the mock's 4th KPI
@@ -260,33 +276,38 @@ const FinanceOverview = () => {
       <div className="finance-overview-inner">
       <div className="finance-overview-controls">
         <button onClick={fetchAll}>רענן</button>
-        <button onClick={() => exportFinanceOverviewToExcel(combinedTransactions, t)}>ייצוא לאקסל</button>
-        <select
-          className="finance-overview-period-select"
-          value={summaryMonth}
-          onChange={e => setSummaryMonth(Number(e.target.value))}
-          disabled={sendingMonthlySummary}
-          title="בחר חודש לסיכום"
-        >
-          {SUMMARY_MONTH_NAMES.map((nm, i) => <option key={i + 1} value={i + 1}>{nm}</option>)}
-        </select>
-        <select
-          className="finance-overview-period-select"
-          value={summaryYear}
-          onChange={e => setSummaryYear(Number(e.target.value))}
-          disabled={sendingMonthlySummary}
-          title="בחר שנה לסיכום"
-        >
-          {SUMMARY_YEARS.map(y => <option key={y} value={y}>{y}</option>)}
-        </select>
-        <button
-          className="finance-overview-send-summary-btn"
-          onClick={handleSendMonthlySummaryNow}
-          disabled={sendingMonthlySummary}
-          title="שולח מיידית בוואטסאפ את סיכום ההוצאות השוטפות של החודש והשנה שנבחרו"
-        >
-          {sendingMonthlySummary ? 'שולח...' : '📤 שליחת סיכום חודשי יזום'}
-        </button>
+        <ExportPeriodPicker onExport={(year, month) => exportFinanceOverviewToExcel(filterRowsByPeriod(combinedTransactions, tr => tr.date, year, month), t)} />
+        <div className="finance-overview-summary-group">
+          <span className="finance-overview-summary-caption">
+            לשליחת סיכום חודשי בלבד:
+          </span>
+          <select
+            className="finance-overview-period-select"
+            value={summaryMonth}
+            onChange={e => setSummaryMonth(Number(e.target.value))}
+            disabled={sendingMonthlySummary}
+            title="חודש לסיכום החודשי הנשלח בוואטסאפ"
+          >
+            {SUMMARY_MONTH_NAMES.map((nm, i) => <option key={i + 1} value={i + 1}>{nm}</option>)}
+          </select>
+          <select
+            className="finance-overview-period-select"
+            value={summaryYear}
+            onChange={e => setSummaryYear(Number(e.target.value))}
+            disabled={sendingMonthlySummary}
+            title="שנה לסיכום החודשי הנשלח בוואטסאפ"
+          >
+            {SUMMARY_YEARS.map(y => <option key={y} value={y}>{y}</option>)}
+          </select>
+          <button
+            className="finance-overview-send-summary-btn"
+            onClick={handleSendMonthlySummaryNow}
+            disabled={sendingMonthlySummary}
+            title="שולח מיידית בוואטסאפ את סיכום ההוצאות השוטפות של החודש והשנה שנבחרו"
+          >
+            {sendingMonthlySummary ? 'שולח...' : '📤 שליחת סיכום חודשי יזום'}
+          </button>
+        </div>
       </div>
 
       {loading ? (
@@ -298,7 +319,7 @@ const FinanceOverview = () => {
             <div className="finance-overview-kpi-chip">
               <div className="finance-overview-kpi-label"><span>💰</span> סה"כ הוצאות (מאוחד)</div>
               <div className="finance-overview-kpi-value">{grandTotal.toFixed(2)} ₪</div>
-              <div className="finance-overview-kpi-sub">מאוחד מכל המקורות</div>
+              <div className="finance-overview-kpi-sub">מאוחד — {periodLabel}</div>
             </div>
             <div className="finance-overview-kpi-chip finance-overview-kpi-chip--green">
               <div className="finance-overview-kpi-label"><span>📁</span> מודולים פעילים</div>
@@ -327,25 +348,25 @@ const FinanceOverview = () => {
                   <div className="finance-overview-modcard-ic">💰</div>
                   <div className="finance-overview-modcard-nm">החזרי הוצאות</div>
                   <div className="finance-overview-modcard-vv">{refundsPaidTotal.toFixed(2)} ₪</div>
-                  <div className="finance-overview-modcard-cnt">{refunds.length} בקשות ({paidRefunds.length} שולמו)</div>
+                  <div className="finance-overview-modcard-cnt">{refundsP.length} בקשות ({paidRefundsP.length} שולמו)</div>
                 </div>
                 <div className="finance-overview-modcard" onClick={() => navigate('/petty-cash')}>
                   <div className="finance-overview-modcard-ic">💵</div>
                   <div className="finance-overview-modcard-nm">קופה קטנה</div>
                   <div className="finance-overview-modcard-vv">{pettyCashTotal.toFixed(2)} ₪</div>
-                  <div className="finance-overview-modcard-cnt">{pettyCash.length} רשומות</div>
+                  <div className="finance-overview-modcard-cnt">{pettyCashP.length} רשומות</div>
                 </div>
                 <div className="finance-overview-modcard" onClick={() => navigate('/ongoing-expenses')}>
                   <div className="finance-overview-modcard-ic">⛽</div>
                   <div className="finance-overview-modcard-nm">הוצאות שוטפות</div>
                   <div className="finance-overview-modcard-vv">{ongoingTotal.toFixed(2)} ₪</div>
-                  <div className="finance-overview-modcard-cnt">{ongoingExpenses.length} רשומות</div>
+                  <div className="finance-overview-modcard-cnt">{ongoingP.length} רשומות</div>
                 </div>
                 <div className="finance-overview-modcard" onClick={() => navigate('/financial-aid')}>
                   <div className="finance-overview-modcard-ic">🤝</div>
                   <div className="finance-overview-modcard-nm">סיוע כספי</div>
                   <div className="finance-overview-modcard-vv">{financialAidTotal.toFixed(2)} ₪</div>
-                  <div className="finance-overview-modcard-cnt">{financialAid.length} רשומות</div>
+                  <div className="finance-overview-modcard-cnt">{financialAidP.length} רשומות</div>
                 </div>
               </div>
             </div>
@@ -365,7 +386,7 @@ const FinanceOverview = () => {
               <div className="finance-overview-modcard-ic">🎟️</div>
               <div className="finance-overview-modcard-nm">חלוקת תלושים</div>
               <div className="finance-overview-modcard-vv">{vouchersDistributedTotal.toFixed(2)} ₪</div>
-              <div className="finance-overview-modcard-cnt">{vouchers.length} חלוקות ({vouchersRecipientsCount} מקבלים)</div>
+              <div className="finance-overview-modcard-cnt">{vouchersP.length} חלוקות ({vouchersRecipientsCount} מקבלים)</div>
             </div>
           </div>
         </>

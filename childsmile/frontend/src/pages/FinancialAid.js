@@ -5,7 +5,8 @@ import InnerPageHeader from '../components/InnerPageHeader';
 import axios from '../axiosConfig';
 import { toast } from 'react-toastify';
 import { showErrorToast } from '../components/toastUtils';
-import { exportFinancialAidToExcel } from '../components/export_utils';
+import { exportFinancialAidToExcel, filterRowsByPeriod } from '../components/export_utils';
+import ExportPeriodPicker from '../components/ExportPeriodPicker';
 import { useTranslation } from 'react-i18next';
 import { hasAllPermissions } from '../components/utils';
 import Select from 'react-select';
@@ -443,7 +444,7 @@ const FinancialAid = () => {
         <button onClick={() => navigate('/finance-overview')}>← לסקירה כללית</button>
         <button onClick={openCreateModal}>+ רישום סיוע</button>
         <button onClick={fetchEntries}>רענן</button>
-        <button onClick={() => exportFinancialAidToExcel(filteredEntries, t)}>ייצוא לאקסל</button>
+        <ExportPeriodPicker onExport={(year, month) => exportFinancialAidToExcel(filterRowsByPeriod(filteredEntries, e => e.aid_date, year, month), t)} />
         <input
           type="text"
           className="tutorship-search-bar"

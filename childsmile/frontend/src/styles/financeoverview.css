@@ -52,7 +52,7 @@
   border: none;
   border-radius: 12px;
   padding: 12px 22px;
-  font-size: 18px;
+  font-size: 22px;
   font-weight: 600;
   cursor: pointer;
   transition: opacity 0.2s ease;
@@ -76,7 +76,7 @@
   border: 1px solid #3BC1C8;
   border-radius: 12px;
   padding: 12px 14px;
-  font-size: 16px;
+  font-size: 22px;
   font-weight: 600;
   font-family: Rubik, sans-serif;
   background: #ffffff;
@@ -88,7 +88,29 @@
   opacity: 0.6;
   cursor: not-allowed;
 }
+.finance-overview-summary-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 8px 14px;
+  border: 1px dashed #b8c4cf;
+  border-radius: 12px;
+  background: #f8fafc;
+}
 
+.finance-overview-summary-caption {
+  align-self: center;
+  max-width: 300px;
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.35;
+  color: #475569;
+}
+
+.finance-overview-summary-caption strong {
+  color: #143852;
+}
 /* ── KPI chips (mirrors mock .kpis / .kpi) ──────────────────────────────── */
 .finance-overview-kpis {
   display: grid;
@@ -125,7 +147,7 @@
 }
 
 .finance-overview-kpi-label {
-  font-size: 18px;
+  font-size: 20px;
   color: #8b86a0;
   font-weight: 500;
   display: flex;
@@ -142,7 +164,7 @@
 }
 
 .finance-overview-kpi-sub {
-  font-size: 17px;
+  font-size: 19px;
   color: #8b86a0;
   margin-top: 4px;
 }
@@ -166,14 +188,14 @@
 }
 
 .finance-overview-panel h3 {
-  font-size: 25px;
+  font-size: 28px;
   font-weight: 700;
   margin: 0 0 5px 0;
   color: #2b2540;
 }
 
 .finance-overview-panel-sub {
-  font-size: 17px;
+  font-size: 19px;
   color: #8b86a0;
   margin: 0 0 18px 0;
 }
@@ -208,20 +230,20 @@
 
 .finance-overview-modcard-nm {
   font-weight: 700;
-  font-size: 19px;
+  font-size: 22px;
   margin-top: 9px;
   color: #2b2540;
 }
 
 .finance-overview-modcard-vv {
-  font-size: 28px;
+  font-size: 32px;
   font-weight: 800;
   color: #3BC1C8;
   margin-top: 5px;
 }
 
 .finance-overview-modcard-cnt {
-  font-size: 16px;
+  font-size: 18px;
   color: #8b86a0;
   margin-top: 3px;
 }
