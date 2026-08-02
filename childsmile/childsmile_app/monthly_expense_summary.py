@@ -62,7 +62,59 @@ def _find_noam_nizri():
     ).first()
 
 
-def send_monthly_ongoing_expenses_summary(force=False):
+def _write_summary_audit(action, success, description, actor=None,
+                         month_label=None, total=None, recipient=None,
+                         error_message=None):
+    """
+    Write ONE AuditLog row for a monthly-summary send attempt so it appears on
+    the Audit Log page. Works for BOTH the scheduled/system run (actor=None,
+    logged as "מערכת (מתוזמן)") and an admin's manual proactive send (actor set).
+    Never raises — a failed audit write must not break the send.
+    """
+    try:
+        from .models import AuditLog
+        if actor is not None:
+            user_email = getattr(actor, 'email', '') or 'system@childsmile.local'
+            username = f"{actor.first_name} {actor.last_name}".strip() or getattr(actor, 'username', 'מנהל')
+            method = 'MANUAL'
+            try:
+                roles = list(actor.roles.values_list('role_name', flat=True))
+            except Exception:
+                roles = []
+        else:
+            user_email = 'system@childsmile.local'
+            username = 'מערכת (מתוזמן)'
+            method = 'SCHEDULED'
+            roles = []
+        AuditLog.objects.create(
+            user_email=user_email,
+            username=username,
+            action=action,
+            endpoint='send_monthly_ongoing_expenses_summary',
+            method=method,
+            affected_tables=['childsmile_app_ongoingexpense'],
+            user_roles=roles,
+            permissions=[],
+            entity_type='OngoingExpense',
+            entity_ids=[],
+            ip_address=None,
+            user_agent='',
+            status_code=200 if success else 500,
+            success=success,
+            error_message=error_message,
+            additional_data={
+                'month_label': month_label,
+                'total': total,
+                'recipient': recipient,
+                'triggered_by': 'manual' if actor is not None else 'scheduler',
+            },
+            description=description,
+        )
+    except Exception as e:
+        api_logger.error(f"[MONTHLY_EXPENSES_SUMMARY] audit log write failed: {e}")
+
+
+def send_monthly_ongoing_expenses_summary(force=False, year=None, month=None, actor=None):
     """
     Send the end-of-month Ongoing Expenses (הוצאות שוטפות) WhatsApp summary to
     נעם ניזרי. Called by the scheduler on the last day of every month.
@@ -76,6 +128,11 @@ def send_monthly_ongoing_expenses_summary(force=False):
             check (used by the admin proactive-send button so it can be sent
             on demand without waiting for month-end). Everything else — file
             lock, recipient lookup, template SID requirement — still applies.
+        year, month: optional target period to summarize (e.g. re-send July's
+            totals). Defaults to the current month when omitted (the normal
+            scheduled month-end run). Only meaningful together with force=True.
+        actor: optional Staff who triggered a MANUAL send — recorded in the
+            audit log. None => the scheduled/system run (logged as "מערכת").
 
     Returns:
         dict: {"success": True, "message": str, "recipient": str, "phone": str,
@@ -96,6 +153,18 @@ def send_monthly_ongoing_expenses_summary(force=False):
         api_logger.debug(f"[MONTHLY_EXPENSES_SUMMARY] Not the last day of the month "
                           f"(today={today.day}, last day={last_day_of_month}) — skipping")
         return {"success": False, "message": msg}
+
+    # Target period to summarize: an explicit year/month (admin re-sending a
+    # specific past month, e.g. July) or, by default, the current month (the
+    # normal scheduled month-end run).
+    try:
+        target_year = int(year) if year else today.year
+        target_month = int(month) if month else today.month
+    except (TypeError, ValueError):
+        return {"success": False, "message": "חודש/שנה לא תקינים."}
+    if not (1 <= target_month <= 12):
+        return {"success": False, "message": "חודש לא תקין (יש לבחור 1–12)."}
+    month_label = f"{HEBREW_MONTHS[target_month - 1]} {target_year}"
 
     # File lock: prevent duplicate sends (Django runserver spawns 2 processes)
     lock_fd = open(_LOCK_FILE, 'w')
@@ -128,16 +197,19 @@ def send_monthly_ongoing_expenses_summary(force=False):
                 "[MONTHLY_EXPENSES_SUMMARY] Neither נעם ניזרי nor Liam (fallback) have a "
                 "phone on file — skipping monthly expenses summary entirely"
             )
+            _write_summary_audit(
+                'MONTHLY_EXPENSES_SUMMARY_FAILED', False,
+                f'שליחת סיכום הוצאות שוטפות לחודש {month_label} נכשלה — לא נמצא נמען',
+                actor=actor, month_label=month_label, error_message=msg,
+            )
             return {"success": False, "message": msg}
 
         totals = OngoingExpense.objects.filter(
-            expense_date__year=today.year,
-            expense_date__month=today.month,
+            expense_date__year=target_year,
+            expense_date__month=target_month,
         ).aggregate(total=Sum('amount'), count=Count('ongoing_expense_id'))
         total_amount = totals['total'] or 0
         count = totals['count'] or 0  # kept for the server log line only, not sent in the message
-
-        month_label = f"{HEBREW_MONTHS[today.month - 1]} {today.year}"
 
         template_sid = os.getenv('TWILIO_MONTHLY_EXPENSES_SUMMARY_SID', '').strip()
         if not template_sid:
@@ -149,6 +221,11 @@ def send_monthly_ongoing_expenses_summary(force=False):
             api_logger.error(
                 "[MONTHLY_EXPENSES_SUMMARY] TWILIO_MONTHLY_EXPENSES_SUMMARY_SID not configured "
                 "— skipping send (no fallback; set the SID before merging/deploying)"
+            )
+            _write_summary_audit(
+                'MONTHLY_EXPENSES_SUMMARY_FAILED', False,
+                f'שליחת סיכום הוצאות שוטפות לחודש {month_label} נכשלה — תבנית וואטסאפ לא הוגדרה',
+                actor=actor, month_label=month_label, error_message=msg,
             )
             return {"success": False, "message": msg}
 
@@ -168,6 +245,12 @@ def send_monthly_ongoing_expenses_summary(force=False):
             f"{recipient_label} ({recipient_phone}) — "
             f"total={total_amount:.2f}₪, count={count}"
         )
+        _write_summary_audit(
+            'MONTHLY_EXPENSES_SUMMARY_SENT', True,
+            f'סיכום הוצאות שוטפות לחודש {month_label} נשלח אל {recipient_label} — סה"כ {total_amount:.2f} ₪',
+            actor=actor, month_label=month_label, total=float(total_amount),
+            recipient=recipient_label,
+        )
         return {
             "success": True,
             "message": f"סיכום ההוצאות השוטפות לחודש {month_label} נשלח בהצלחה אל {recipient_label} — סה\"כ {total_amount:.2f} ₪",
@@ -179,6 +262,11 @@ def send_monthly_ongoing_expenses_summary(force=False):
         }
     except Exception as e:
         api_logger.error(f"[MONTHLY_EXPENSES_SUMMARY] Error sending: {e}")
+        _write_summary_audit(
+            'MONTHLY_EXPENSES_SUMMARY_FAILED', False,
+            f'שליחת סיכום הוצאות שוטפות לחודש {month_label} נכשלה — {e}',
+            actor=actor, month_label=month_label, error_message=str(e),
+        )
         return {"success": False, "message": str(e)}
     finally:
         fcntl.flock(lock_fd, fcntl.LOCK_UN)

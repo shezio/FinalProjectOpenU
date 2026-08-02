@@ -28,6 +28,15 @@ const requiredPermissions = [
 
 const HEBREW_MONTHS = ['ינו', 'פבר', 'מרץ', 'אפר', 'מאי', 'יונ', 'יול', 'אוג', 'ספט', 'אוק', 'נוב', 'דצמ'];
 
+// Full Hebrew month names + selectable years for the manual "send monthly summary" period picker
+const SUMMARY_MONTH_NAMES = ['ינואר', 'פברואר', 'מרץ', 'אפריל', 'מאי', 'יוני', 'יולי', 'אוגוסט', 'ספטמבר', 'אוקטובר', 'נובמבר', 'דצמבר'];
+const SUMMARY_YEARS = (() => {
+  const cy = new Date().getFullYear();
+  const years = [];
+  for (let y = 2024; y <= cy; y++) years.push(y);
+  return years;
+})();
+
 // Extract "YYYY-MM" from an ISO-ish date string (expense_date is "YYYY-MM-DD")
 const monthKeyOf = (dateStr) => {
   const m = String(dateStr || '').match(/^(\d{4})-(\d{2})/);
@@ -47,6 +56,9 @@ const FinanceOverview = () => {
   const [vouchers, setVouchers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [sendingMonthlySummary, setSendingMonthlySummary] = useState(false);
+  // Target period for the manual monthly-summary send (defaults to current month/year)
+  const [summaryMonth, setSummaryMonth] = useState(new Date().getMonth() + 1);
+  const [summaryYear, setSummaryYear] = useState(new Date().getFullYear());
 
   useEffect(() => {
     if (hasPermissionOnFinanceOverview) fetchAll();
@@ -76,12 +88,12 @@ const FinanceOverview = () => {
   };
 
   // Manual proactive trigger for the monthly Ongoing Expenses WhatsApp summary
-  // (see monthly_expense_summary.py) — lets an admin send the summary on demand,
-  // without waiting for the last day of the month.
+  // (see monthly_expense_summary.py) — lets an admin send the summary on demand
+  // for the selected month/year, without waiting for the last day of the month.
   const handleSendMonthlySummaryNow = () => {
     if (sendingMonthlySummary) return;
     setSendingMonthlySummary(true);
-    axios.post('/api/ongoing-expenses/send-monthly-summary-now/')
+    axios.post('/api/ongoing-expenses/send-monthly-summary-now/', { month: summaryMonth, year: summaryYear })
       .then(res => {
         if (res.data.success) {
           toast.success(res.data.message);
@@ -249,11 +261,29 @@ const FinanceOverview = () => {
       <div className="finance-overview-controls">
         <button onClick={fetchAll}>רענן</button>
         <button onClick={() => exportFinanceOverviewToExcel(combinedTransactions, t)}>ייצוא לאקסל</button>
+        <select
+          className="finance-overview-period-select"
+          value={summaryMonth}
+          onChange={e => setSummaryMonth(Number(e.target.value))}
+          disabled={sendingMonthlySummary}
+          title="בחר חודש לסיכום"
+        >
+          {SUMMARY_MONTH_NAMES.map((nm, i) => <option key={i + 1} value={i + 1}>{nm}</option>)}
+        </select>
+        <select
+          className="finance-overview-period-select"
+          value={summaryYear}
+          onChange={e => setSummaryYear(Number(e.target.value))}
+          disabled={sendingMonthlySummary}
+          title="בחר שנה לסיכום"
+        >
+          {SUMMARY_YEARS.map(y => <option key={y} value={y}>{y}</option>)}
+        </select>
         <button
           className="finance-overview-send-summary-btn"
           onClick={handleSendMonthlySummaryNow}
           disabled={sendingMonthlySummary}
-          title="שולח מיידית בוואטסאפ את סיכום ההוצאות השוטפות של החודש הנוכחי"
+          title="שולח מיידית בוואטסאפ את סיכום ההוצאות השוטפות של החודש והשנה שנבחרו"
         >
           {sendingMonthlySummary ? 'שולח...' : '📤 שליחת סיכום חודשי יזום'}
         </button>

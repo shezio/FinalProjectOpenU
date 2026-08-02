@@ -296,3 +296,10 @@ INSERT INTO public.childsmile_app_audittranslation (action, hebrew_translation) 
 ON CONFLICT (action) DO UPDATE
     SET hebrew_translation = EXCLUDED.hebrew_translation;
 
+-- Monthly Ongoing Expenses WhatsApp summary (סיכום חודשי הוצאות שוטפות) — scheduled + manual send
+INSERT INTO public.childsmile_app_audittranslation (action, hebrew_translation) VALUES
+    ('MONTHLY_EXPENSES_SUMMARY_SENT',    'שליחת סיכום חודשי הוצאות שוטפות'),
+    ('MONTHLY_EXPENSES_SUMMARY_FAILED',  'כישלון בשליחת סיכום חודשי הוצאות שוטפות')
+ON CONFLICT (action) DO UPDATE
+    SET hebrew_translation = EXCLUDED.hebrew_translation;
+

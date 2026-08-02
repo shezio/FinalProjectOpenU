@@ -72,6 +72,23 @@
   cursor: not-allowed;
 }
 
+.finance-overview-period-select {
+  border: 1px solid #3BC1C8;
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-size: 16px;
+  font-weight: 600;
+  font-family: Rubik, sans-serif;
+  background: #ffffff;
+  color: #143852;
+  cursor: pointer;
+}
+
+.finance-overview-period-select:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 /* ── KPI chips (mirrors mock .kpis / .kpi) ──────────────────────────────── */
 .finance-overview-kpis {
   display: grid;
