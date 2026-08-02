@@ -18,8 +18,20 @@ on:
   workflow_dispatch:
 
 jobs:
+  # PT F11: fail the deploy BEFORE publish if any authenticated write endpoint is missing
+  # @block_viewer_writes. Pure stdlib (no venv/pip/Django) -> runs in seconds. A SEPARATE gating
+  # job (the deploy job `needs:` it) so a violation stops publish rather than crashing the live app.
+  guard-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Viewer-write guard coverage (PT F11)
+        run: python3 check_viewer_guards.py
+
   deploy:
     runs-on: ubuntu-latest
+    needs: guard-check
 
     steps:
       - name: Checkout code

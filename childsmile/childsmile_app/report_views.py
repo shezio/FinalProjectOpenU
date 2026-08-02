@@ -596,8 +596,10 @@ def roles_spread_stats(request):
         )
 
     # Count staff per role using the correct related_name 'staff_members'
-    role_counts = Role.objects.annotate(count=Count("staff_members")).values(
-        name=F("role_name"), count=F("count")
+    # NOTE: annotate under a DISTINCT alias (`cnt`) and only rename to `count` in .values() —
+    # annotating `count=` then referencing F("count") in .values() collides and 500s (PT F10).
+    role_counts = Role.objects.annotate(cnt=Count("staff_members")).values(
+        name=F("role_name"), count=F("cnt")
     )
 
     return JsonResponse({"roles": list(role_counts)})

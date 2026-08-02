@@ -1,0 +1,7 @@
+{
+  "globalHeaders": {
+    "X-Frame-Options": "DENY",
+    "X-Content-Type-Options": "nosniff",
+    "Content-Security-Policy-Report-Only": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https://*.blob.core.windows.net; connect-src 'self' https://app.achildssmile.org.il; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
+  }
+}
