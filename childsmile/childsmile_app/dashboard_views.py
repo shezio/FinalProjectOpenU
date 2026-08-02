@@ -13,7 +13,7 @@ import uuid
 from pathlib import Path
 
 from .models import Children, Tutors, Tutorships, Feedback, Staff, Tasks
-from .utils import conditional_csrf, has_permission
+from .utils import conditional_csrf, has_permission, block_viewer_writes
 from .audit_utils import is_admin, log_api_action
 from .logger import api_logger
 from .dashboard_services import (
@@ -245,6 +245,7 @@ def get_dashboard_data(request):
 
 @conditional_csrf
 @api_view(['POST'])
+@block_viewer_writes
 def generate_video_ai(request):
     """Generate AI video based on dashboard data"""
     api_logger.info("generate_video_ai called")
@@ -424,6 +425,7 @@ def video_generation_status(request, video_id):
 
 @conditional_csrf
 @api_view(['POST'])
+@block_viewer_writes
 def export_ppt(request):
     """Export dashboard as PowerPoint slide"""
     api_logger.info("export_ppt called")
@@ -588,6 +590,7 @@ def get_feedback_data(request):
 
 @conditional_csrf
 @api_view(['POST'])
+@block_viewer_writes
 def ai_chat(request):
     """Handle AI chat messages"""
     api_logger.info("ai_chat called")

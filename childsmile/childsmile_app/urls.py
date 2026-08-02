@@ -12,8 +12,6 @@ from .views import (
     get_available_coordinators,
     get_roles,
     get_general_volunteers_not_pending,
-    test_email_setup,
-    test_gmail_auth,
 )
 from .views_auth import (
     google_login_success,
@@ -407,8 +405,6 @@ urlpatterns = [
     ),
     path("api/auth/login-email/", login_email, name="login_email"),
     path("api/auth/verify-totp/", verify_totp, name="verify_totp"),
-    path("api/test-email-setup/", test_email_setup, name="test_email_setup"),
-    path("api/test-gmail-auth/", test_gmail_auth, name="test_gmail_auth"),
     path("api/send-mail/", send_mail_via_ui, name="send_mail_via_ui"),
     path("api/register-send-totp/", register_send_totp, name="register_send_totp"),
     path(
