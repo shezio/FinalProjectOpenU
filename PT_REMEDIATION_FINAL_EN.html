@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Final Fix Plan — not v2, not v3, not v_my_grandma</title>
+<style>
+  :root{
+    --ink:#1f2933; --muted:#5b6b7b; --line:#e2e8f0; --bg:#f7f9fc; --card:#ffffff;
+    --brand:#3BC1C8; --brand-dark:#2a97a0;
+    --fix:#1f9d57; --fix-bg:#e7f6ee;
+    --accept:#6b7280; --accept-bg:#f0f1f3;
+    --done:#3a78c2; --done-bg:#e8f0fb;
+    --high:#e05d20; --med:#c99700; --low:#3a78c2; --info:#7a8794;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:"Segoe UI",Tahoma,Arial,sans-serif;color:var(--ink);background:var(--bg);line-height:1.6;padding:32px 16px}
+  .wrap{max-width:980px;margin:0 auto}
+  header.masthead{background:linear-gradient(135deg,var(--brand) 0%,var(--brand-dark) 100%);color:#fff;border-radius:14px;padding:30px 34px;box-shadow:0 6px 24px rgba(43,151,160,.25)}
+  header.masthead h1{font-size:1.8em;margin-bottom:6px;letter-spacing:.2px}
+  header.masthead .sub{font-size:1.0em;opacity:.95}
+  header.masthead .meta{margin-top:14px;font-size:.85em;opacity:.92;display:flex;flex-wrap:wrap;gap:6px 22px}
+  section.block{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:22px 26px;margin-top:22px;box-shadow:0 1px 3px rgba(0,0,0,.03)}
+  h2{font-size:1.24em;color:var(--brand-dark);margin-bottom:12px;padding-bottom:8px;border-bottom:2px solid var(--line)}
+  h2 .lead{color:var(--muted);font-weight:400;font-size:.72em}
+  p{margin-bottom:10px}
+  .bottomline{background:#f1fafb;border:1px solid #cfeef0;border-radius:10px;padding:16px 18px}
+  .bottomline strong{color:var(--brand-dark)}
+  table.summary{width:100%;border-collapse:collapse;margin-top:6px;font-size:.92em}
+  table.summary th,table.summary td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+  table.summary th{background:#f1f5f9;color:var(--muted);font-weight:600;text-transform:uppercase;font-size:.76em;letter-spacing:.5px}
+  table.summary td.id{font-weight:700;white-space:nowrap}
+  .tag{display:inline-block;font-size:.72em;font-weight:700;padding:3px 9px;border-radius:6px;white-space:nowrap}
+  .tag.fix{color:var(--fix);background:var(--fix-bg)}
+  .tag.accept{color:var(--accept);background:var(--accept-bg)}
+  .tag.done{color:var(--done);background:var(--done-bg)}
+  .item{border:1px solid var(--line);border-left:5px solid var(--fix);border-radius:10px;padding:16px 18px;margin-top:14px;background:#fff}
+  .item.accept{border-left-color:#c3cad2}
+  .item .top{display:flex;flex-wrap:wrap;align-items:center;gap:9px;margin-bottom:8px}
+  .item .fid{font-weight:800;font-size:1.02em}
+  .item .title{font-weight:600}
+  .row{font-size:.94em;margin-top:6px}
+  .row .k{font-weight:700;color:var(--muted);display:inline-block;min-width:120px;vertical-align:top}
+  .row .v{display:inline-block;max-width:calc(100% - 128px)}
+  code{background:#f0f3f7;border:1px solid #e2e8f0;border-radius:4px;padding:1px 5px;font-size:.9em;font-family:"SF Mono",Consolas,monospace}
+  ul.pl{margin:4px 0 4px 20px} ul.pl li{margin-bottom:4px}
+  .ps{margin-top:24px;padding:16px 20px;background:#fffdf5;border:1px dashed #e6d9a8;border-radius:12px;color:#6b5b2a;font-size:.92em}
+  footer.note{margin-top:18px;padding:16px 22px;background:#fff;border:1px dashed var(--line);border-radius:12px;color:var(--muted);font-size:.9em}
+  @media print{body{background:#fff;padding:0}.wrap{max-width:100%}section.block,.item,footer.note,.ps{box-shadow:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="masthead">
+    <h1>Final Fix Plan — not v2, not v3, not v_my_grandma</h1>
+    <div class="sub">A Child's Smile · Penetration-Test Remediation · agreed set, ready to build</div>
+    <div class="meta">
+      <span><strong>Consolidates:</strong> the 30 Jul report + both review rounds (Liam Avivi)</span>
+      <span><strong>Date:</strong> 2 August 2026</span>
+      <span><strong>Status:</strong> All items agreed — implementation pending internal go-ahead</span>
+    </div>
+  </header>
+
+  <section class="block">
+    <h2>Bottom line</h2>
+    <div class="bottomline">
+      <p>Every open finding is now settled. <strong>Seven are being fixed</strong>, <strong>four are accepted</strong> as deliberate design (with reasons), and the two long-debated items landed cleanly:</p>
+      <ul class="pl">
+        <li><strong>F12</strong> — we enforce the read-permission checks, and the narrow Reviewer role is granted <em>only</em> the non-sensitive staff-directory view (data-minimization) — it never sees a national-ID.</li>
+        <li><strong>F11</strong> — the Viewer read-only guard is now mechanically enforced by a <em>static</em> build check that blocks a deploy if any write endpoint is missing the guard — no reliance on anyone remembering, and no risk to the running app.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="block">
+    <h2>Final disposition — all findings</h2>
+    <table class="summary">
+      <thead><tr><th>ID</th><th>Finding</th><th>Decision</th></tr></thead>
+      <tbody>
+        <tr><td class="id">F1–F4, F6</td><td>Unauth PII / audit-log / login-enumeration / API headers / write-authz</td><td><span class="tag done">Resolved earlier</span></td></tr>
+        <tr><td class="id">F7</td><td>Receipts &amp; aid docs in public storage</td><td><span class="tag fix">Fix — private + short-lived signed links</span></td></tr>
+        <tr><td class="id">F8</td><td>Upload accepts any file type</td><td><span class="tag fix">Fix — allow-list pdf/jpg/png</span></td></tr>
+        <tr><td class="id">F9</td><td>Frontend missing security headers</td><td><span class="tag fix">Fix — X-Frame-Options + nosniff, CSP report-only</span></td></tr>
+        <tr><td class="id">F10</td><td>roles_spread_stats returns 500</td><td><span class="tag fix">Fix — query bug</span></td></tr>
+        <tr><td class="id">F11</td><td>Viewer read-only enforcement</td><td><span class="tag fix">Fix — static guard-coverage build check</span></td></tr>
+        <tr><td class="id">F12</td><td>Read authorization on PII endpoints</td><td><span class="tag fix">Fix — enforce VIEW; Reviewer gets staff-only</span></td></tr>
+        <tr><td class="id">F13</td><td>Disabled user retains access</td><td><span class="tag fix">Fix — revoke sessions on disable</span></td></tr>
+        <tr><td class="id">F17</td><td>Public voucher form field injection</td><td><span class="tag fix">Fix — whitelist submitted fields</span></td></tr>
+        <tr><td class="id">F5</td><td>CSRF token not enforced server-side</td><td><span class="tag accept">Accept — SameSite=Lax + CSP layer</span></td></tr>
+        <tr><td class="id">F14</td><td>Any staff can submit a refund</td><td><span class="tag accept">Accept — by design (submit ≠ approve)</span></td></tr>
+        <tr><td class="id">F15</td><td>Questionnaire uses a simple id</td><td><span class="tag accept">Accept — public by design</span></td></tr>
+        <tr><td class="id">F16</td><td>Questionnaire existence inferable</td><td><span class="tag accept">Accept — follows F15</span></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="block">
+    <h2>What we will implement</h2>
+
+    <div class="item">
+      <div class="top"><span class="fid">F7</span><span class="tag fix">Fix</span><span class="title">Private storage + short-lived signed links</span></div>
+      <div class="row"><span class="k">Do</span><span class="v">Set the receipts and financial-aid containers to <strong>private</strong>; serve each file via a short-lived (~1h) signed read link generated on read. Trade-off accepted: links become time-limited. The "open in a new tab" experience is unchanged — a signed link opens with no login, and the swap from public URL to signed link happens on the server, so no frontend change.</span></div>
+      <div class="row"><span class="k">Order</span><span class="v">Deploy the signed-link code first, flip the containers to private last (so no in-app link breaks in the gap). Also delete the leftover PoC marker blob.</span></div>
+    </div>
+
+    <div class="item">
+      <div class="top"><span class="fid">F8</span><span class="tag fix">Fix</span><span class="title">Upload file-type allow-list</span></div>
+      <div class="row"><span class="k">Do</span><span class="v">Restrict receipt/document uploads to <strong>pdf / jpg / png</strong>; reject anything else before a link is issued, and mark stored files as attachments so active content can't be served inline.</span></div>
+    </div>
+
+    <div class="item">
+      <div class="top"><span class="fid">F9</span><span class="tag fix">Fix</span><span class="title">Frontend security headers (+ report-only CSP)</span></div>
+      <div class="row"><span class="k">Do</span><span class="v">Add <code>X-Frame-Options: DENY</code> + <code>X-Content-Type-Options: nosniff</code> to the web app (verified: no effect on TOTP or Google sign-in — no iframes, sign-in is a full-page redirect). Add a <strong>Content-Security-Policy in report-only mode</strong> as the defense-in-depth layer — it enforces nothing, only reports, so it can't break anything; enforce later once proven clean.</span></div>
+    </div>
+
+    <div class="item">
+      <div class="top"><span class="fid">F10</span><span class="tag fix">Fix</span><span class="title">Roles-distribution report error</span></div>
+      <div class="row"><span class="k">Do</span><span class="v">Fix the report's database query so the page loads again. Plain bug, no data exposure.</span></div>
+    </div>
+
+    <div class="item">
+      <div class="top"><span class="fid">F13</span><span class="tag fix">Fix</span><span class="title">Immediate offboarding</span></div>
+      <div class="row"><span class="k">Do</span><span class="v">On disabling a user, immediately end that specific user's active session(s) so access is revoked on the spot — scoped strictly to that one user, no effect on anyone active. Login is already blocked for disabled users; we'll re-verify that's live in production.</span></div>
+    </div>
+
+    <div class="item">
+      <div class="top"><span class="fid">F17</span><span class="tag fix">Fix</span><span class="title">Public voucher form — field whitelist</span></div>
+      <div class="row"><span class="k">Do</span><span class="v">On the public voucher form, accept only the fields a family is meant to fill and ignore any admin-only fields (approved amount, "ready", "delivered", status) if injected — matching the protection the activity form already has.</span></div>
+    </div>
+
+    <div class="item">
+      <div class="top"><span class="fid">F12</span><span class="tag fix">Fix</span><span class="title">Enforce read authorization — with data-minimization</span></div>
+      <div class="row"><span class="k">Do</span><span class="v">Add the missing <code>resource:VIEW</code> permission checks to the PII read endpoints, so enforcement exists on every read — a role or account <em>without</em> the permission (e.g. a deactivated account) is blocked.</span></div>
+      <div class="row"><span class="k">Minimize</span><span class="v">A permission audit showed only the <strong>Reviewer</strong> role lacked the needed views. We grant it <strong>staff-directory VIEW only</strong> (names/phones/roles — <em>no</em> national-IDs) and <em>not</em> the tutor/pending-tutor endpoints. Verified against its screen: the Reviewer page never calls those endpoints, so it keeps working while being <strong>blocked from tutor national-IDs entirely</strong> — the minimizing outcome, with no names-only endpoint needed.</span></div>
+    </div>
+
+    <div class="item">
+      <div class="top"><span class="fid">F11</span><span class="tag fix">Fix</span><span class="title">Viewer guard — mechanically enforced</span></div>
+      <div class="row"><span class="k">Agreed</span><span class="v">The reviewer's point is accepted: a "remember to add the guard" fix for a "forgot the guard" bug is circular — the check must be mechanical, not a convention.</span></div>
+      <div class="row"><span class="k">Do</span><span class="v">Add a <strong>static</strong> guard-coverage check (plain text/AST parsing — no framework boot, no database, runs in seconds) that scans for any state-changing endpoint missing the <code>@block_viewer_writes</code> guard. It runs as a <strong>gate in the deploy pipeline</strong>: if a guard is ever missing, <strong>the deploy is stopped before it publishes</strong> — production keeps serving the current version and the build simply reports failed.</span></div>
+      <div class="row"><span class="k">Why this form</span><span class="v">It's a guarantee, not a reminder, so it closes the exact "future endpoint ships without the guard" risk — while, deliberately, <em>never</em> running inside the live application, so it can't cause a runtime outage. The Viewer keeps its identical read-only admin experience.</span></div>
+    </div>
+  </section>
+
+  <section class="block">
+    <h2>Accepted — no action <span class="lead">— deliberate, with reasons</span></h2>
+    <div class="item accept">
+      <div class="top"><span class="fid">F5</span><span class="tag accept">Accept</span><span class="title">CSRF token not enforced server-side</span></div>
+      <div class="row"><span class="k">Why</span><span class="v">The session cookie is <code>SameSite=Lax</code>, which browsers use to block the cross-site vector; with the F9 report-only CSP added as a second layer, server-side token enforcement is low value and carries real breakage risk.</span></div>
+    </div>
+    <div class="item accept">
+      <div class="top"><span class="fid">F14</span><span class="tag accept">Accept</span><span class="title">Any staff can submit a refund</span></div>
+      <div class="row"><span class="k">Why</span><span class="v">By design — anyone may request reimbursement for money they spent. Confirmed in code that approving / setting the amount / marking paid is administrators-only, so a staff member cannot approve or pay their own refund (segregation of duties holds).</span></div>
+    </div>
+    <div class="item accept">
+      <div class="top"><span class="fid">F15 / F16</span><span class="tag accept">Accept</span><span class="title">Public questionnaire id &amp; existence</span></div>
+      <div class="row"><span class="k">Why</span><span class="v">The questionnaires are intentionally open to the public; there are no invite-only rounds, so a simple id grants no extra access and there is nothing to conceal. The reviewer confirmed no personal data is exposed and submitted responses are never publicly readable.</span></div>
+    </div>
+  </section>
+
+  <div class="ps">
+    <strong>P.S. — with genuine affection for the reviewer's AI:</strong> you reviewed our v3 <em>before</em> we'd even sent it. Either you've built a time machine or you're running on Opus&nbsp;5 with tokens to spare — either way, we're impressed by the enthusiasm (and mildly worried about your monthly bill 😄). We'll try to keep our token footprint smaller than your review cadence. Same team, same goal — kids' smiles over token budgets. 🙂
+  </div>
+
+  <footer class="note">
+    <p><strong>Next step:</strong> on internal go-ahead, we implement the seven fixes (F7, F8, F9, F10, F12, F13, F17) plus the F11 static guard-coverage check, run the one-time permission SQL, and re-verify the F13 login block live. The reviewer has offered to re-test the implemented set — with F11 mechanically enforced and F12 minimized, we consider the plan complete and ready to sign off.</p>
+  </footer>
+
+</div>
+</body>
+</html>
