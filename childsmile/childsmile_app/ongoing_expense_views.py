@@ -279,8 +279,15 @@ def send_monthly_expenses_summary_now(request):
         return JsonResponse({"detail": "Forbidden."}, status=403)
 
     from .monthly_expense_summary import send_monthly_ongoing_expenses_summary
+    # Optional target period — lets an admin re-send a specific past month (e.g. July)
+    # instead of the current month. Omitted => current month (original behavior).
+    payload = request.data if hasattr(request, 'data') and request.data else {}
+    target_month = payload.get('month') if hasattr(payload, 'get') else None
+    target_year = payload.get('year') if hasattr(payload, 'get') else None
     try:
-        result = send_monthly_ongoing_expenses_summary(force=True)
+        result = send_monthly_ongoing_expenses_summary(
+            force=True, year=target_year, month=target_month, actor=staff
+        )
     except Exception as e:
         api_logger.error(f"send_monthly_expenses_summary_now error: {e}")
         return JsonResponse({"success": False, "message": str(e)}, status=500)
