@@ -5,6 +5,8 @@ import InnerPageHeader from '../components/InnerPageHeader';
 import axios from '../axiosConfig';
 import { toast } from 'react-toastify';
 import { showErrorToast } from '../components/toastUtils';
+import { exportRefundsToExcel, filterRowsByPeriod } from '../components/export_utils';
+import ExportPeriodPicker from '../components/ExportPeriodPicker';
 import { useTranslation } from 'react-i18next';
 import '../i18n';
 import '../styles/common.css';
@@ -789,6 +791,7 @@ const Refunds = () => {
             >
               דוח לפי תקופה
             </button>
+            <ExportPeriodPicker onExport={(year, month) => exportRefundsToExcel(filterRowsByPeriod(filteredRefunds, r => r.expense_date, year, month), t)} />
             <button
               onClick={() => importFileRef.current?.click()}
               disabled={importing}
