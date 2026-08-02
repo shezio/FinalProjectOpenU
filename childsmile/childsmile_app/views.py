@@ -163,6 +163,13 @@ def get_staff(request):
     """
     Retrieve all staff along with their roles.
     """
+    # SECURITY (PT F12): enforce staff:VIEW — authentication alone is not enough. A role/account
+    # without the permission (e.g. a deactivated user whose grants were cleared) must not read the
+    # staff directory. All active roles hold staff:VIEW (Reviewer granted via fix_role_permissions_pt.sql).
+    if not has_permission(request, "staff", "VIEW"):
+        log_api_action(request=request, action='VIEW_STAFF_LIST_FAILED', success=False,
+                       error_message="Missing staff:VIEW permission", status_code=401)
+        return JsonResponse({"error": "You do not have permission to view this data."}, status=401)
     staff = Staff.objects.filter(is_active=True)
     staff_data = []
 
@@ -213,6 +220,11 @@ def get_children(request):
     """
     Retrieve all children along with their tutoring status.
     """
+    # SECURITY (PT F12): enforce children:VIEW (auth alone is not enough).
+    if not has_permission(request, "children", "VIEW"):
+        log_api_action(request=request, action='VIEW_CHILDREN_LIST_FAILED', success=False,
+                       error_message="Missing children:VIEW permission", status_code=401)
+        return JsonResponse({"error": "You do not have permission to view this data."}, status=401)
     children = Children.objects.all()
     children_data = [
         {
@@ -246,6 +258,12 @@ def get_tutors(request):
     """
     Retrieve all tutors along with their tutorship status.
     """
+    # SECURITY (PT F12): enforce tutors:VIEW — this endpoint exposes tutor national-IDs + contact
+    # details, so a role without the permission (e.g. Reviewer, deactivated account) is blocked.
+    if not has_permission(request, "tutors", "VIEW"):
+        log_api_action(request=request, action='VIEW_TUTORS_LIST_FAILED', success=False,
+                       error_message="Missing tutors:VIEW permission", status_code=401)
+        return JsonResponse({"error": "You do not have permission to view this data."}, status=401)
     # Fetch all tutors
     tutors_queryset = Tutors.objects.select_related("staff", "id").filter(staff__is_active=True)
     tutors = tutors_queryset
@@ -322,6 +340,11 @@ def get_pending_tutors(request):
     """
     Retrieve all pending tutors with their full details.
     """
+    # SECURITY (PT F12): enforce signedup:VIEW — pending-applicant PII, blocked without the permission.
+    if not has_permission(request, "signedup", "VIEW"):
+        log_api_action(request=request, action='VIEW_PENDING_TUTORS_FAILED', success=False,
+                       error_message="Missing signedup:VIEW permission", status_code=401)
+        return JsonResponse({"error": "You do not have permission to view this data."}, status=401)
     try:
         pending_tutors = Pending_Tutor.objects.select_related(
             "id"
@@ -845,6 +868,10 @@ def get_available_coordinators(request):
     user_id = request.session.get("user_id")
     if not user_id:
         return JsonResponse({"detail": "Authentication credentials were not provided."}, status=403)
+
+    # SECURITY (PT F12): the coordinator directory is staff data — require staff:VIEW.
+    if not has_permission(request, "staff", "VIEW"):
+        return JsonResponse({"error": "You do not have permission to view this data."}, status=401)
 
     try:
         # Get Families Coordinators (for non-tutored families)

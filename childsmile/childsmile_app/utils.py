@@ -1629,6 +1629,27 @@ def get_staff_name_by_id(staff_id):
 
 # INACTIVE STAFF FEATURE: Core functions for staff deactivation/reactivation
 
+def delete_all_sessions_for_user(user_id):
+    """
+    Delete EVERY active (non-expired) Django session that belongs to `user_id`.
+    Unlike logout_all_other_sessions (views_auth.py) this keeps NO current session — it is used on
+    deactivation to revoke a departed user's access immediately. Scoped strictly to `user_id`: it
+    decodes each live session and deletes only the ones whose session_data user_id matches; no other
+    user's session is touched. Returns the number deleted.
+    """
+    from django.contrib.sessions.models import Session
+    from django.utils import timezone as _tz
+    deleted = 0
+    for session in Session.objects.filter(expire_date__gte=_tz.now()):
+        try:
+            if session.get_decoded().get("user_id") == user_id:
+                session.delete()
+                deleted += 1
+        except Exception:
+            continue
+    return deleted
+
+
 def deactivate_staff(staff, performed_by_user, deactivation_reason, request=None):
     """
     Deactivate a staff member and preserve their tutorships as historical records.
@@ -1682,6 +1703,15 @@ def deactivate_staff(staff, performed_by_user, deactivation_reason, request=None
     # Step 5: Set is_active flag
     staff.is_active = False
     staff.save()
+
+    # SECURITY (PT F13): immediately revoke ALL of this user's live sessions on deactivate, so a
+    # departed ("עזב") user with an open session loses access at once — not only at the 24h expiry.
+    # Scoped to this staff member only; no other user's session is affected.
+    try:
+        revoked = delete_all_sessions_for_user(staff.staff_id)
+        api_logger.info(f"Deactivate: revoked {revoked} live session(s) for staff {staff.staff_id}")
+    except Exception as sess_err:
+        api_logger.error(f"Deactivate: failed to revoke sessions for staff {staff.staff_id}: {sess_err}")
     
     # Step 6: Handle tutorships - DELETE ALL (single-approval workflow)
     # In the new workflow, when staff deactivates, all their tutorships are deleted

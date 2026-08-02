@@ -232,6 +232,34 @@ _REFUND_FILE_SLOTS = [
 ]
 
 
+def _read_sas_url(file_url):
+    """PT F7: the receipts container is PRIVATE, so a stored bare blob URL is not anonymously
+    readable. On READ, mint a short-lived (1h) READ SAS so the frontend link opens in a new tab
+    with no login (the SAS token IS the auth). Local dev (not IS_PROD) serves files itself, so the
+    stored url is returned unchanged. Never raises — falls back to the stored url on any error."""
+    if not file_url or not settings.IS_PROD:
+        return file_url
+    try:
+        from azure.storage.blob import generate_blob_sas, BlobSasPermissions
+        from datetime import timezone as dt_timezone
+        account_name = os.getenv('AZURE_STORAGE_ACCOUNT_NAME')
+        account_key = os.getenv('AZURE_STORAGE_ACCOUNT_KEY')
+        container = os.getenv('AZURE_REFUNDS_CONTAINER', 'refund-receipts')
+        marker = f"/{container}/"
+        if not (account_name and account_key) or marker not in file_url:
+            return file_url
+        blob_name = file_url.split(marker, 1)[1].split("?")[0]
+        expiry = datetime.datetime.now(dt_timezone.utc) + datetime.timedelta(hours=1)
+        sas = generate_blob_sas(
+            account_name=account_name, container_name=container, blob_name=blob_name,
+            account_key=account_key, permission=BlobSasPermissions(read=True), expiry=expiry,
+        )
+        return f"https://{account_name}.blob.core.windows.net/{container}/{blob_name}?{sas}"
+    except Exception as e:
+        api_logger.warning(f"refund read-SAS generation failed for {file_url}: {e}")
+        return file_url
+
+
 def _refund_attachments_list(refund):
     """Build a list of {slot, file_url, file_name, file_size} dicts from whichever
     of the 3 file slots are occupied — lets the frontend iterate over "however many
@@ -242,7 +270,7 @@ def _refund_attachments_list(refund):
         if url:
             result.append({
                 "slot": i,
-                "file_url": url,
+                "file_url": _read_sas_url(url),
                 "file_name": getattr(refund, name_f),
                 "file_size": getattr(refund, size_f),
             })
@@ -302,7 +330,7 @@ def get_refunds(request):
             "volunteer_comment": r.volunteer_comment,
             "admin_comment": r.admin_comment,
             "approved_by": r.approved_by,
-            "file_url": r.file_url,
+            "file_url": _read_sas_url(r.file_url),
             "attachments": _refund_attachments_list(r),
             "status": r.status,
             "refund_method": r.refund_method,
@@ -792,6 +820,11 @@ def get_receipt_upload_url(request):
 
     filename = request.GET.get('filename', 'receipt')
     safe_filename = os.path.basename(filename)
+
+    # SECURITY (PT F8): allow-list receipt types — reject anything else BEFORE issuing an upload URL,
+    # so nobody can stage executable/active content (.html/.svg/.exe) in the container.
+    if not safe_filename.lower().endswith(('.pdf', '.jpg', '.jpeg', '.png')):
+        return JsonResponse({"error": "סוג הקובץ אינו נתמך. יש להעלות קובץ PDF, JPG או PNG בלבד."}, status=400)
 
     if not settings.IS_PROD:
         # ── Local dev: return a fake upload_url pointing at our own upload endpoint

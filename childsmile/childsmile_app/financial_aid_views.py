@@ -59,6 +59,34 @@ def _get_authenticated_user(request):
         return None, JsonResponse({"detail": "User not found."}, status=403)
 
 
+def _read_sas_url(file_url):
+    """PT F7: the financial-aid-docs container is PRIVATE, so a stored bare blob URL is not
+    anonymously readable. On READ, mint a short-lived (1h) READ SAS so the frontend link opens in a
+    new tab with no login (the SAS token IS the auth). Local dev (not IS_PROD) serves files itself,
+    so the stored url is returned unchanged. Never raises — falls back to the stored url on error."""
+    if not file_url or not settings.IS_PROD:
+        return file_url
+    try:
+        from azure.storage.blob import generate_blob_sas, BlobSasPermissions
+        from datetime import timezone as dt_timezone
+        account_name = os.getenv('AZURE_STORAGE_ACCOUNT_NAME')
+        account_key = os.getenv('AZURE_STORAGE_ACCOUNT_KEY')
+        container = os.getenv('AZURE_FINANCIAL_AID_CONTAINER', 'financial-aid-docs')
+        marker = f"/{container}/"
+        if not (account_name and account_key) or marker not in file_url:
+            return file_url
+        blob_name = file_url.split(marker, 1)[1].split("?")[0]
+        expiry = datetime.datetime.now(dt_timezone.utc) + datetime.timedelta(hours=1)
+        sas = generate_blob_sas(
+            account_name=account_name, container_name=container, blob_name=blob_name,
+            account_key=account_key, permission=BlobSasPermissions(read=True), expiry=expiry,
+        )
+        return f"https://{account_name}.blob.core.windows.net/{container}/{blob_name}?{sas}"
+    except Exception as e:
+        api_logger.warning(f"financial-aid read-SAS generation failed for {file_url}: {e}")
+        return file_url
+
+
 def _financial_aid_to_dict(entry):
     return {
         "id": entry.financial_aid_id,
@@ -76,7 +104,7 @@ def _financial_aid_to_dict(entry):
         "updated_at": entry.updated_at.strftime("%d/%m/%Y %H:%M"),
         "updated_by": entry.updated_by,
         "attachments": [
-            {"id": a.attachment_id, "file_url": a.file_url, "file_name": a.file_name}
+            {"id": a.attachment_id, "file_url": _read_sas_url(a.file_url), "file_name": a.file_name}
             for a in entry.attachments.all()
         ],
     }
@@ -384,6 +412,11 @@ def get_financial_aid_upload_url(request):
 
     filename = request.GET.get('filename', 'document')
     safe_filename = os.path.basename(filename)
+
+    # SECURITY (PT F8): allow-list document types — reject anything else BEFORE issuing an upload URL,
+    # so nobody can stage executable/active content (.html/.svg/.exe) in the container.
+    if not safe_filename.lower().endswith(('.pdf', '.jpg', '.jpeg', '.png')):
+        return JsonResponse({"error": "סוג הקובץ אינו נתמך. יש להעלות קובץ PDF, JPG או PNG בלבד."}, status=400)
 
     if not settings.IS_PROD:
         unique_id = uuid.uuid4().hex[:12]
