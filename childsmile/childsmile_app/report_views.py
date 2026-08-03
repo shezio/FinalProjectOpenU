@@ -574,9 +574,6 @@ def families_tutorships_stats(request):
 
 @conditional_csrf
 @api_view(["GET"])
-
-@conditional_csrf
-@api_view(["GET"])
 def roles_spread_stats(request):
     api_logger.info("roles_spread_stats called")
     """
