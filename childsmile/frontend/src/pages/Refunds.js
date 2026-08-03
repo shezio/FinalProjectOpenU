@@ -362,11 +362,14 @@ const Refunds = () => {
         const uploadHeaders = { 'Content-Type': file.type };
         if (isAzure) uploadHeaders['x-ms-blob-type'] = 'BlockBlob';
 
-        await fetch(upload_url, {
+        const putRes = await fetch(upload_url, {
           method: 'PUT',
           headers: uploadHeaders,
           body: file,
         });
+        if (!putRes.ok) {
+          throw new Error(`Upload failed for ${file.name} (HTTP ${putRes.status})`);
+        }
 
         uploaded.push({ file_url: blob_url, file_name: file.name, file_size: file.size });
       }
