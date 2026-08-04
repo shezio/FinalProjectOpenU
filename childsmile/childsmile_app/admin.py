@@ -1,38 +1,28 @@
 from django.contrib import admin
-from .models import (
-    Permissions,
-    Role,
-    Staff,
-    SignedUp,
-    General_Volunteer,
-    Pending_Tutor,
-    Tutors,
-    Children,
-    Tutorships,
-    Matures,
-    Feedback,
-    Tutor_Feedback,
-    General_V_Feedback,
-    Tasks,
-    PossibleMatches,  # Add this line
-    InitialFamilyData,
-    PrevTutorshipStatuses,
-)
+from django.contrib.auth.models import Group, User
 
-admin.site.register(Permissions)
-admin.site.register(Role)
-admin.site.register(Staff)
-admin.site.register(SignedUp)
-admin.site.register(General_Volunteer)
-admin.site.register(Pending_Tutor)
-admin.site.register(Tutors)
-admin.site.register(Children)
-admin.site.register(Tutorships)
-admin.site.register(Matures)
-admin.site.register(Feedback)
-admin.site.register(Tutor_Feedback)
-admin.site.register(General_V_Feedback)
-admin.site.register(Tasks)
-admin.site.register(PossibleMatches)  # Add this line
-admin.site.register(InitialFamilyData)
-admin.site.register(PrevTutorshipStatuses)
+# ---------------------------------------------------------------------------
+# SECURITY — the Django admin site intentionally exposes NOTHING.
+#
+# /admin/ is a parallel CRUD surface that bypasses this application's entire
+# authorization model: the custom Staff/role permissions, the is_admin gate,
+# the TOTP step-up, and audit logging. Registering models such as Role,
+# Permissions or Staff here would let anyone holding a Django auth_user with
+# is_staff/superuser grant themselves permissions or edit roles directly
+# ("administer themselves") with none of the app-level guardrails.
+#
+# We therefore register NO application models here, and also strip Django's
+# built-in User/Group admin so /admin/ cannot be used to mint a new superuser
+# either. All administration happens through the application's own screens and
+# APIs (System Management, and the planned Access Management screen).
+#
+# ⚠️  Do NOT register models here without a security review.
+# ---------------------------------------------------------------------------
+
+# Remove Django's default auth admin. Guarded broadly so a missing registration
+# (load-order dependent) can never break app startup.
+for _model in (Group, User):
+    try:
+        admin.site.unregister(_model)
+    except Exception:
+        pass
