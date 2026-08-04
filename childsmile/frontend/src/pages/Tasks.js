@@ -316,10 +316,66 @@ const Tasks = () => {
     fetchData(true); // force fetch every time the route changes
   }, [location.pathname]);
 
-  // Re-fetch tasks when date field, date range, or task type filter changes
+  // Re-fetch tasks when date field, date range, or task type filter changes.
+  // IDLE debounce (1.5s) that resets on ANY page interaction, not just on value
+  // changes. Rationale: a native <input type="date"> emits an onChange for every
+  // INTERMEDIATE (partial) date while a full date is typed manually (the year
+  // "2026" fires as 0002 → 0020 → 0202 → 2026), and after editing the "From"
+  // date the user often wants to click into the "To" date too — we must NOT
+  // re-filter mid-edit. So the fetch only fires once the whole page has been
+  // idle (no typing AND no clicks) for 1.5s. Any mousedown/keydown/touch while a
+  // filter change is pending restarts the countdown. Mount is skipped —
+  // the [] and [location.pathname] effects above already do the initial fetch.
+  const filterFetchMountedRef = useRef(false);
+  const filterTimerRef = useRef(null);
+  const filterPendingRef = useRef(false);
+  const latestFetchDataRef = useRef(fetchData);
+  // Keep a ref to the latest fetchData so the (mount-only) interaction listener
+  // and the debounce timer always call it with fresh startDate/endDate/etc.
   useEffect(() => {
-    fetchData(true);
+    latestFetchDataRef.current = fetchData;
+  });
+
+  // (Re)start the 1.5s idle countdown. Only touches refs, so it's safe to call
+  // from either effect regardless of which render's closure captured it.
+  const armFilterFetchTimer = () => {
+    if (filterTimerRef.current) clearTimeout(filterTimerRef.current);
+    filterTimerRef.current = setTimeout(() => {
+      filterTimerRef.current = null;
+      filterPendingRef.current = false;
+      latestFetchDataRef.current(true);
+    }, 1500);
+  };
+
+  // A filter VALUE changed → mark a fetch pending and (re)arm the idle timer.
+  useEffect(() => {
+    if (!filterFetchMountedRef.current) {
+      filterFetchMountedRef.current = true;
+      return;
+    }
+    filterPendingRef.current = true;
+    armFilterFetchTimer();
+    return () => {
+      if (filterTimerRef.current) clearTimeout(filterTimerRef.current);
+    };
   }, [selectedDateField, startDate, endDate, selectedFilter, showOnlyMyTasks]);
+
+  // Any interaction on the page while a filter change is pending resets the
+  // countdown, so the user has time to click/edit the other date field without
+  // the board re-filtering mid-edit. Idle (page doing nothing) 1.5s = fetch.
+  useEffect(() => {
+    const onInteract = () => {
+      if (filterPendingRef.current) armFilterFetchTimer();
+    };
+    document.addEventListener('mousedown', onInteract);
+    document.addEventListener('keydown', onInteract);
+    document.addEventListener('touchstart', onInteract);
+    return () => {
+      document.removeEventListener('mousedown', onInteract);
+      document.removeEventListener('keydown', onInteract);
+      document.removeEventListener('touchstart', onInteract);
+    };
+  }, []);
 
   // Initialize task type filters for admins - review task unchecked, others checked by default
   useEffect(() => {
