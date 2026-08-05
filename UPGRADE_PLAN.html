@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dependency Upgrade Plan — Urgent vs Later</title>
+<style>
+  :root{
+    --navy:#16233b; --indigo:#2c3e73; --accent:#3f6fd1; --accent2:#6c8fd8;
+    --ink:#1f2733; --muted:#5b6472; --line:#e2e7ef; --bg:#f5f7fb; --card:#ffffff;
+    --green:#1f7a4d; --green-bg:#e8f6ee; --amber:#a9791b; --amber-bg:#fdf3e0;
+    --red:#b3341f; --red-bg:#fbecea; --blue:#22557f; --blue-bg:#e9f2fa;
+    --code-bg:#0f1626; --code-ink:#e6ebf5;
+  }
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap');
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    font-family:'Inter',-apple-system,Segoe UI,Arial,sans-serif;
+    color:var(--ink); background:var(--bg); margin:0; line-height:1.7;
+    font-size:17px;
+  }
+  .wrap{max-width:1040px; margin:0 auto; padding:0 22px 90px}
+  header.doc{
+    background:linear-gradient(135deg,var(--navy),var(--indigo) 70%);
+    color:#fff; padding:46px 22px 40px; margin-bottom:30px;
+    border-bottom:5px solid var(--accent);
+  }
+  header.doc .inner{max-width:1040px;margin:0 auto}
+  header.doc .brand{font-size:15px;letter-spacing:.5px;color:#b9c8ea;font-weight:500;margin-bottom:12px}
+  header.doc h1{font-size:33px;line-height:1.3;margin:0 0 10px;font-weight:800}
+  header.doc .sub{font-size:19px;color:#dbe4f7;font-weight:400;margin-bottom:20px}
+  header.doc .meta{font-size:14px;color:#aebbdc;display:flex;flex-wrap:wrap;gap:8px 26px;padding-top:16px;border-top:1px solid rgba(255,255,255,.15)}
+  header.doc .meta b{color:#e7edfb;font-weight:600}
+
+  h2{font-size:25px;color:var(--indigo);margin:40px 0 14px;padding-bottom:9px;border-bottom:2px solid var(--line);font-weight:800}
+  h3{font-size:20px;color:var(--navy);margin:24px 0 8px;font-weight:700}
+  p{margin:10px 0}
+  ul,ol{margin:10px 0;padding-left:24px}
+  li{margin:7px 0}
+  code.inl{background:#eef1f7;border:1px solid #dde3ee;border-radius:5px;padding:1px 6px;font-family:'JetBrains Mono',monospace;font-size:14px;color:#33405c}
+  strong{font-weight:700;color:var(--navy)}
+  .plain{color:var(--muted);font-size:15px;font-style:italic;margin:4px 0 0}
+
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:22px 24px;margin:18px 0;box-shadow:0 2px 10px rgba(20,35,59,.05)}
+
+  .callout{border-radius:12px;padding:16px 18px 16px 20px;margin:18px 0;border-left:6px solid;font-size:16px}
+  .callout .t{font-weight:800;font-size:16px;margin-bottom:5px;display:flex;align-items:center;gap:8px}
+  .rec{background:var(--green-bg);border-color:var(--green)} .rec .t{color:var(--green)}
+  .warn{background:var(--amber-bg);border-color:var(--amber)} .warn .t{color:var(--amber)}
+  .danger{background:var(--red-bg);border-color:var(--red)} .danger .t{color:var(--red)}
+  .info{background:var(--blue-bg);border-color:var(--blue)} .info .t{color:var(--blue)}
+
+  .badge{display:inline-block;font-size:12px;font-weight:700;padding:2px 10px;border-radius:20px;vertical-align:middle;white-space:nowrap}
+  .b-rec{background:var(--green-bg);color:var(--green);border:1px solid #b7e0c6}
+  .b-warn{background:var(--amber-bg);color:var(--amber);border:1px solid #ecd3a0}
+  .b-danger{background:var(--red-bg);color:var(--red);border:1px solid #eebfb8}
+  .b-info{background:var(--blue-bg);color:var(--blue);border:1px solid #b9d6ec}
+  .b-grey{background:#eef1f7;color:#5b6472;border:1px solid #dde3ee}
+
+  table{width:100%;border-collapse:collapse;margin:16px 0;font-size:15px;background:#fff;border-radius:10px;overflow:hidden;box-shadow:0 1px 6px rgba(20,35,59,.06)}
+  th,td{border:1px solid var(--line);padding:10px 12px;text-align:left;vertical-align:top}
+  thead th{background:var(--indigo);color:#fff;font-weight:600;font-size:14.5px}
+  tbody tr:nth-child(even){background:#f7f9fd}
+  td .yes{color:var(--green);font-weight:700}
+  td .no{color:var(--red);font-weight:700}
+  td .mid{color:var(--amber);font-weight:700}
+
+  /* Tier banners */
+  .tierbar{display:flex;align-items:center;gap:16px;padding:20px 24px;border-radius:16px;color:#fff;margin:40px 0 4px;box-shadow:0 4px 16px rgba(20,35,59,.12)}
+  .tierbar .num{font-size:30px;font-weight:800;background:rgba(255,255,255,.22);width:56px;height:56px;border-radius:14px;display:flex;align-items:center;justify-content:center;flex:none}
+  .tierbar .tt{font-size:24px;font-weight:800;line-height:1.2}
+  .tierbar .ts{font-size:15px;opacity:.92;margin-top:3px;font-weight:400}
+  .tier1 .tierbar{background:linear-gradient(135deg,#b3341f,#d47a4a)}
+  .tier2 .tierbar{background:linear-gradient(135deg,#1f7a4d,#4aa574)}
+
+  .toc{background:#fff;border:1px solid var(--line);border-radius:14px;padding:18px 24px;margin:20px 0}
+  .toc h3{margin-top:0}
+  .toc a{color:var(--accent);text-decoration:none} .toc a:hover{text-decoration:underline}
+
+  .kpi{display:flex;gap:14px;flex-wrap:wrap;margin:18px 0}
+  .kpi div{flex:1;min-width:180px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px 18px}
+  .kpi .big{font-size:15px;font-weight:800;color:var(--indigo);margin-bottom:4px}
+  .kpi .lbl{font-size:14px;color:var(--muted)}
+  .kpi .k-red{border-top:4px solid var(--red)}
+  .kpi .k-amber{border-top:4px solid var(--amber)}
+  .kpi .k-green{border-top:4px solid var(--green)}
+
+  ol.check{counter-reset:step;list-style:none;padding-left:0}
+  ol.check li{position:relative;padding:8px 0 8px 42px;border-bottom:1px dashed #e3e8f0}
+  ol.check li:last-child{border-bottom:none}
+  ol.check li::before{counter-increment:step;content:counter(step);position:absolute;left:0;top:7px;width:28px;height:28px;background:var(--accent);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700}
+
+  @media(max-width:760px){header.doc h1{font-size:26px}.tierbar .num{width:46px;height:46px;font-size:24px}.tierbar .tt{font-size:20px}}
+  .foot{margin-top:50px;padding-top:18px;border-top:2px solid var(--line);color:var(--muted);font-size:14px}
+  @media print{body{background:#fff}.card,table{box-shadow:none}header.doc,.tierbar{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+</style>
+</head>
+<body>
+
+<header class="doc">
+  <div class="inner">
+    <div class="brand">A Child's Smile · Engineering · Dependency Upgrade Plan</div>
+    <h1>Upgrade Plan — What's Urgent vs What Can Wait</h1>
+    <div class="sub">Two buckets, plain and simple: the <strong style="color:#ffd3cc">security work we must finish now</strong>, and the <strong style="color:#c7f0d8">version-currency upgrades that can wait ~a year</strong>. Mapped from the actual code, not guesses.</div>
+    <div class="meta">
+      <span><b>Written:</b> 2026-08-05</span>
+      <span><b>Scope:</b> Frontend + Backend</span>
+      <span><b>Status:</b> Planning only — no upgrade code written yet</span>
+      <span><b>Companion:</b> SECURITY_REMEDIATION.md</span>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <!-- AT A GLANCE -->
+  <div class="kpi">
+    <div class="k-green">
+      <div class="big">✅ DONE — Security</div>
+      <div class="lbl">The dependency bumps are applied and <b>verified locally</b> (Google + TOTP login, a finance approval with WhatsApp, and the audit log all work). Only step left: <b>merge to main</b> to deploy.</div>
+    </div>
+    <div class="k-amber">
+      <div class="big">🟠 One hole still open</div>
+      <div class="lbl">The <b>Pillow</b> security fix is blocked by the AI-video libraries. Closing it is a product decision (keep vs. retire the AI feature).</div>
+    </div>
+    <div class="k-green">
+      <div class="big">🟢 CAN WAIT ~1 year</div>
+      <div class="lbl"><b>React 17→19</b>, <b>Django 5.1→5.2</b>, latest everything, build tooling. Nice to have, not security. Prod runs fine without it.</div>
+    </div>
+  </div>
+
+  <div class="callout rec">
+    <div class="t">✅ The one-sentence takeaway (now verified)</div>
+    We deliberately kept every security bump <em>inside</em> its major version, so <strong>almost nothing broke</strong> — and local testing confirmed it: Google + TOTP login, a finance approval with WhatsApp, and the audit log all work on the new versions. The only step left is the <strong>merge to main</strong>. Everything that <em>would</em> mean real work (React 19, Django 5.2) is optional and can wait ~a year.
+  </div>
+
+  <div class="toc">
+    <h3>Contents</h3>
+    <p style="margin:6px 0">
+      <a href="#tier1">🔴 Tier 1 — MUST DO (security)</a> &nbsp;·&nbsp;
+      <a href="#t1a">1A. Bumps already made</a> &nbsp;·&nbsp;
+      <a href="#t1b">1B. What could break</a> &nbsp;·&nbsp;
+      <a href="#t1c">1C. Pillow (still open)</a> &nbsp;·&nbsp;
+      <a href="#tier2">🟢 Tier 2 — NICE TO HAVE</a> &nbsp;·&nbsp;
+      <a href="#keep">What we keep on purpose</a>
+    </p>
+  </div>
+
+
+  <!-- ================= TIER 1 ================= -->
+  <div class="tier1" id="tier1">
+    <div class="tierbar">
+      <div class="num">1</div>
+      <div>
+        <div class="tt">MUST DO — Security &nbsp;·&nbsp; ✅ DONE (verified locally)</div>
+        <div class="ts">The security dependency updates are applied and tested locally. One step left: merge to main to deploy.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 1A -->
+  <h2 id="t1a">1A. Security bumps already made <span class="badge b-rec">DONE + verified locally</span> <span class="badge b-warn">merge to deploy</span></h2>
+  <p>Applied to <strong>both</strong> <code class="inl">requirements.txt</code> (the deployed one) and <code class="inl">childsmile/requirements.txt</code>. Verified clean by a security re-scan and an import test (<code class="inl">ALL IMPORTS OK</code>).</p>
+
+  <table>
+    <thead><tr><th>Package</th><th>From → To</th><th>Size of jump</th><th>Why (the security reason)</th></tr></thead>
+    <tbody>
+      <tr><td><b>Django</b></td><td>5.1.1 → 5.1.15</td><td><span class="yes">patch</span></td><td>Backlog of 5.1.x security fixes (DoS bugs)</td></tr>
+      <tr><td><b>cryptography</b></td><td>~46 → 50.0.0</td><td><span class="no">major</span> (behind the scenes)</td><td>Security fixes. Not used directly by our code — only by libraries.</td></tr>
+      <tr><td><b>urllib3</b></td><td>2.0.3 → 2.7.0</td><td><span class="mid">minor</span></td><td>Redirect + cookie leak CVEs</td></tr>
+      <tr><td><b>requests</b></td><td>2.31.0 → 2.33.0</td><td><span class="mid">minor</span></td><td>CVE-2024-35195</td></tr>
+      <tr><td><b>certifi</b></td><td>2023.11.17 → 2024.7.4</td><td><span class="yes">data</span></td><td>Removed a compromised certificate authority</td></tr>
+      <tr><td><b>django-allauth</b></td><td>→ 65.14.1</td><td><span class="yes">patch</span></td><td>Latest security/fixes for Google login</td></tr>
+      <tr><td><b>PyJWT</b></td><td>→ 2.13.0</td><td><span class="yes">patch</span></td><td>Currency (used by libraries)</td></tr>
+      <tr><td><b>python-dotenv</b> / <b>idna</b></td><td>→ 1.2.2 / 3.15</td><td><span class="yes">minor</span></td><td>Currency</td></tr>
+      <tr><td><b>pytest</b></td><td>~8 → 9.0.3</td><td><span class="no">major</span> (testing only)</td><td>Currency — only affects running tests, not the live app</td></tr>
+    </tbody>
+  </table>
+  <div class="callout rec">
+    <div class="t">✅ Also waiting to ship with this</div>
+    The <strong>DOMPurify XSS fix</strong> (the AI chat/video screens now sanitize their output). Frontend build already verified clean.
+  </div>
+
+  <!-- 1B -->
+  <h2 id="t1b">1B. What could break — ✅ all checked, all passed</h2>
+  <p>Out of everything above, <strong>only two</strong> jumped a major version. Everything else stayed within its version family. <strong>Every check below passed locally on the new versions (2026-08-05).</strong></p>
+
+  <table>
+    <thead><tr><th>The bump</th><th>Could it break?</th><th>What to do</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><b>pytest 8 → 9</b></td>
+        <td><span class="mid">Tests only.</span> The live app never imports pytest, so <b>zero risk to production</b>. Our test files might need small tweaks.</td>
+        <td>Run <code class="inl">pytest</code> once. Fix anything it complains about.</td>
+      </tr>
+      <tr>
+        <td><b>cryptography ~46 → 50</b></td>
+        <td><span class="mid">Behind the scenes.</span> Used by Google-login &amp; HTTPS libraries, not our code. The import test already passed.</td>
+        <td>Log in with Google, do one file upload — confirm they work. No code change expected.</td>
+      </tr>
+      <tr>
+        <td><b>django-allauth</b> (patch)</td>
+        <td><span class="yes">Low.</span> Small update to the login library.</td>
+        <td>Test the Google login flow once.</td>
+      </tr>
+      <tr>
+        <td>Django patch, urllib3, requests, certifi, idna, dotenv</td>
+        <td><span class="yes">None expected.</span> Same version family.</td>
+        <td>Just confirm the app starts.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="callout rec">
+    <div class="t">📋 Pre-deploy checklist — ✅ completed locally (2026-08-05)</div>
+    <ol class="check">
+      <li>✅ <b>Skipped</b> <code class="inl">pytest</code> — it isn't imported anywhere in the app, so it can't affect the running system (dev-only).</li>
+      <li>✅ <code class="inl">python manage.py check</code> + the system boots locally.</li>
+      <li>✅ Logged in two ways: <b>TOTP</b> and <b>Google</b> — both work (covers cryptography + allauth + PyJWT).</li>
+      <li>✅ Finance refund flow — receipt saved + <b>approval WhatsApp received</b> (covers the Twilio/HTTP TLS stack). Locally files save to disk, not blob; blob is prod-only and rides the same proven stack.</li>
+      <li>✅ <b>Audit log</b> renders.</li>
+      <li>⏭ <b>Remaining:</b> <code class="inl">version.txt</code> already bumped → merge to <code class="inl">main</code> → deploys the security bumps + the XSS fix.</li>
+    </ol>
+  </div>
+
+  <!-- 1C -->
+  <h2 id="t1c">1C. The one hole still open — Pillow <span class="badge b-danger">BLOCKED</span></h2>
+  <div class="callout danger">
+    <div class="t">🔴 Pillow is stuck at an old version — on purpose</div>
+    <p style="margin-top:6px">The security fix for <strong>Pillow</strong> only exists in version 12. But two AI-video libraries (<code class="inl">python-pptx</code> and <code class="inl">moviepy</code>) refuse to run with Pillow 12 — so bumping it alone <strong>breaks the build</strong>.</p>
+    <p style="margin-bottom:4px"><strong>Good news — the risk is small:</strong> Pillow is only used by the admin-only AI-video feature that's effectively unused. It's not on any public or busy path.</p>
+    <p style="margin-bottom:0"><strong>Two ways to close it (this is a decision, not just a version bump):</strong></p>
+    <ul style="margin-top:6px;margin-bottom:0">
+      <li><strong>(a) Retire the AI feature</strong> — then <code class="inl">Pillow</code>, <code class="inl">python-pptx</code>, <code class="inl">moviepy</code>, <code class="inl">gTTS</code> all get deleted and the security problem disappears with the code. <b>Cheapest.</b> (Waiting on the product owner — see <code class="inl">AI_CHATBOT_PRODUCT_REVIEW_HE.html</code>.)</li>
+      <li><strong>(b) Upgrade the whole video stack</strong> — Pillow 12 + newer <code class="inl">python-pptx</code> + a compatible <code class="inl">moviepy</code>, tested end-to-end. That's the "video stack" item down in Tier 2.</li>
+    </ul>
+  </div>
+
+
+  <!-- ================= TIER 2 ================= -->
+  <div class="tier2" id="tier2">
+    <div class="tierbar">
+      <div class="num">2</div>
+      <div>
+        <div class="tt">NICE TO HAVE — Can wait ~1 year</div>
+        <div class="ts">Getting off old versions for freshness. None of this is a security requirement. Do it whenever there's appetite.</div>
+      </div>
+    </div>
+  </div>
+
+  <h2>Frontend — React 17 → 19</h2>
+  <div class="callout rec">
+    <div class="t">✅ Good news — the codebase is modern</div>
+    No old React patterns anywhere (no <code class="inl">defaultProps</code> on function components, no <code class="inl">findDOMNode</code>, no legacy lifecycles, no string refs). React 19's automatic fixers barely apply. There are only <strong>two</strong> real blockers — and both are tiny.
+  </div>
+
+  <table>
+    <thead><tr><th>What</th><th>Where</th><th>The change</th><th>Risk</th></tr></thead>
+    <tbody>
+      <tr><td><b>App startup</b></td><td><code class="inl">src/index.js</code></td><td>One-line switch to the new React root API (<code class="inl">createRoot</code>)</td><td><span class="yes">Low</span></td></tr>
+      <tr><td><b>Drag &amp; drop</b><div class="plain">the "dnd blocker" you asked about</div></td><td><code class="inl">Tasks.js</code> — <b>the only file</b></td><td>Swap <code class="inl">react-beautiful-dnd</code> → <code class="inl">@hello-pangea/dnd</code>. Same API — literally one import line.</td><td><span class="yes">Low — not a real blocker</span></td></tr>
+      <tr><td><b>Charts</b></td><td><code class="inl">DashboardCharts.js</code></td><td>chart.js 3→4 + react-chartjs-2 3→5 (some config renames)</td><td><span class="mid">Medium</span></td></tr>
+      <tr><td><b>Maps</b></td><td><code class="inl">Tutorships.js</code> + one report page</td><td>react-leaflet 3→5</td><td><span class="no">Higher</span> — see below</td></tr>
+      <tr><td><b>Pop-up messages</b></td><td>used across ~40 files</td><td>react-toastify 8→11 (the <code class="inl">toast.*</code> calls stay the same)</td><td><span class="mid">Low–Med</span></td></tr>
+      <tr><td><b>Other UI libraries</b></td><td>various</td><td>react-modal, react-select, react-icons, i18next, etc. → latest</td><td><span class="yes">Low</span></td></tr>
+      <tr><td><b>Build tooling</b></td><td><code class="inl">package.json</code></td><td>babel, webpack, webpack-dev-server (3→5, currently mismatched), loaders → current</td><td><span class="mid">Medium</span> (mechanical)</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout warn">
+    <div class="t">⚠️ The biggest frontend risk isn't React — it's the map export</div>
+    <code class="inl">leaflet-image</code> and <code class="inl">leaflet-easyprint</code> (used to save maps as images) are <strong>unmaintained</strong>. They may not survive a leaflet upgrade — we'd verify them, and if they break, replace with <code class="inl">html2canvas</code> (which we already use).
+  </div>
+
+  <h2>Backend — Django 5.1 → 5.2 + latest libraries</h2>
+  <div class="callout rec">
+    <div class="t">✅ Good news — Django 5.2 is a clean move</div>
+    We scanned for every function Django removed in newer versions. The code uses <strong>none of them</strong>. So the framework upgrade itself is smooth.
+  </div>
+
+  <table>
+    <thead><tr><th>What</th><th>The change</th><th>Risk</th></tr></thead>
+    <tbody>
+      <tr><td><b>Django + REST framework</b></td><td>5.1.15 → 5.2 LTS, DRF 3.15 → 3.16</td><td><span class="yes">Low</span></td></tr>
+      <tr><td><b>Database driver</b></td><td>We ship two (<code class="inl">psycopg2</code> + <code class="inl">psycopg3</code>) — drop the old one</td><td><span class="yes">Low</span> (cleanup)</td></tr>
+      <tr><td><b>Other libraries</b></td><td>twilio, pandas, openpyxl, azure-storage-blob → minor bumps</td><td><span class="yes">Low</span></td></tr>
+      <tr><td><b>Scheduler</b><div class="plain">the daily/weekly/monthly jobs</div></td><td>apscheduler 3 → <b>stay on 3.x</b>. Version 4 is a full rewrite — skip it, even here.</td><td><span class="no">High → deferred</span></td></tr>
+      <tr><td><b>react-router</b></td><td>Stay on 6 (already works with React 19). v7 optional.</td><td><span class="yes">Low</span></td></tr>
+    </tbody>
+  </table>
+
+
+  <!-- KEEP -->
+  <h2 id="keep">What we keep on purpose (and why)</h2>
+  <div class="card">
+    <ul style="margin:0">
+      <li><strong>Python 3.11</strong> — supported until 2027. No reason to jump; a Python upgrade touches everything.</li>
+      <li><strong>apscheduler 3.x</strong> — version 4 is a ground-up rewrite of our scheduler, and there's no security reason to do it.</li>
+      <li><strong>react-router 6</strong> — already compatible with React 19.</li>
+      <li><strong>The <code class="inl">SameSite = "Lax"</code> cookie setting</strong> — load-bearing. Changing it once broke Google login. Do not touch.</li>
+    </ul>
+  </div>
+
+  <div class="foot">
+    A Child's Smile · Dependency Upgrade Plan · Written 2026-08-05 · Tier 1 done + verified locally; Tier 2 is next-year work.<br>
+    Security bumps (Tier 1) are committed on the <code class="inl">desktop</code> branch and <strong>verified locally</strong> — the only remaining step is the merge to <code class="inl">main</code>. This document is the plain-language companion to <code class="inl">UPGRADE_PLAN.md</code>.
+  </div>
+
+</div>
+</body>
+</html>

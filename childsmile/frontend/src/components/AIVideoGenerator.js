@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import axios from '../axiosConfig';
+import DOMPurify from 'dompurify';
 import './AIVideoGenerator.css';
 
 const AIVideoGenerator = () => {
@@ -143,7 +144,7 @@ const AIVideoGenerator = () => {
           {chatMessages.map((msg, index) => (
             <div key={index} className={`ai-message ${msg.type}`}>
               <strong>{msg.type === 'user' ? 'אתה:' : 'AI:'}</strong> 
-              <span dangerouslySetInnerHTML={{ __html: msg.text.replace(/\n/g, '<br>') }} />
+              <span dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(msg.text.replace(/\n/g, '<br>')) }} />
             </div>
           ))}
           
