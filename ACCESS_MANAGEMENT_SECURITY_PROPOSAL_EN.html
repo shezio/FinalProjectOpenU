@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Access Management — Round 3 Final Design (Both PT Rounds Resolved)</title>
+<style>
+  :root{
+    --navy:#16233b; --indigo:#2c3e73; --accent:#3f6fd1; --accent2:#6c8fd8;
+    --ink:#1f2733; --muted:#5b6472; --line:#e2e7ef; --bg:#f5f7fb; --card:#ffffff;
+    --green:#1f7a4d; --green-bg:#e8f6ee; --amber:#a9791b; --amber-bg:#fdf3e0;
+    --red:#b3341f; --red-bg:#fbecea; --blue:#22557f; --blue-bg:#e9f2fa;
+    --code-bg:#0f1626; --code-ink:#e6ebf5;
+  }
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap');
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    font-family:'Inter',-apple-system,Segoe UI,Arial,sans-serif;
+    color:var(--ink); background:var(--bg); margin:0; line-height:1.75;
+    font-size:17px;
+  }
+  .wrap{max-width:1040px; margin:0 auto; padding:0 22px 90px}
+  header.doc{
+    background:linear-gradient(135deg,var(--navy),var(--indigo) 70%);
+    color:#fff; padding:46px 22px 40px; margin-bottom:30px;
+    border-bottom:5px solid var(--accent);
+  }
+  header.doc .inner{max-width:1040px;margin:0 auto}
+  header.doc .brand{font-size:15px;letter-spacing:.5px;color:#b9c8ea;font-weight:500;margin-bottom:12px}
+  header.doc h1{font-size:33px;line-height:1.3;margin:0 0 10px;font-weight:800}
+  header.doc .sub{font-size:19px;color:#dbe4f7;font-weight:400;margin-bottom:20px}
+  header.doc .meta{font-size:14px;color:#aebbdc;display:flex;flex-wrap:wrap;gap:8px 26px;padding-top:16px;border-top:1px solid rgba(255,255,255,.15)}
+  header.doc .meta b{color:#e7edfb;font-weight:600}
+
+  h2{font-size:25px;color:var(--indigo);margin:44px 0 14px;padding-bottom:9px;border-bottom:2px solid var(--line);font-weight:800}
+  h2 .n{display:inline-block;background:var(--indigo);color:#fff;font-size:16px;width:32px;height:32px;line-height:32px;text-align:center;border-radius:8px;margin-right:10px;font-weight:700}
+  h3{font-size:20px;color:var(--navy);margin:26px 0 8px;font-weight:700}
+  p{margin:10px 0}
+  ul,ol{margin:10px 0;padding-left:24px}
+  li{margin:7px 0}
+  code.inl{background:#eef1f7;border:1px solid #dde3ee;border-radius:5px;padding:1px 6px;font-family:'JetBrains Mono',monospace;font-size:14px;color:#33405c}
+  strong{font-weight:700;color:var(--navy)}
+
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:22px 24px;margin:18px 0;box-shadow:0 2px 10px rgba(20,35,59,.05)}
+
+  .callout{border-radius:12px;padding:16px 18px 16px 20px;margin:18px 0;border-left:6px solid;font-size:16px}
+  .callout .t{font-weight:800;font-size:16px;margin-bottom:5px;display:flex;align-items:center;gap:8px}
+  .rec{background:var(--green-bg);border-color:var(--green)} .rec .t{color:var(--green)}
+  .warn{background:var(--amber-bg);border-color:var(--amber)} .warn .t{color:var(--amber)}
+  .danger{background:var(--red-bg);border-color:var(--red)} .danger .t{color:var(--red)}
+  .info{background:var(--blue-bg);border-color:var(--blue)} .info .t{color:var(--blue)}
+  .badge{display:inline-block;font-size:12.5px;font-weight:700;padding:2px 10px;border-radius:20px;vertical-align:middle}
+  .b-rec{background:var(--green-bg);color:var(--green);border:1px solid #b7e0c6}
+  .b-warn{background:var(--amber-bg);color:var(--amber);border:1px solid #ecd3a0}
+  .b-danger{background:var(--red-bg);color:var(--red);border:1px solid #eebfb8}
+  .b-info{background:var(--blue-bg);color:var(--blue);border:1px solid #b9d6ec}
+
+  .verdict{background:linear-gradient(135deg,#eef3fc,#e8f6ee);border:1px solid #cfe0d6;border-radius:16px;padding:24px 26px;margin:6px 0 10px}
+  .verdict h3{margin-top:0;color:var(--green);font-size:22px}
+
+  table{width:100%;border-collapse:collapse;margin:16px 0;font-size:15px;background:#fff;border-radius:10px;overflow:hidden;box-shadow:0 1px 6px rgba(20,35,59,.06)}
+  th,td{border:1px solid var(--line);padding:10px 12px;text-align:left;vertical-align:top}
+  thead th{background:var(--indigo);color:#fff;font-weight:600;font-size:14.5px}
+  tbody tr:nth-child(even){background:#f7f9fd}
+  td .yes{color:var(--green);font-weight:700}
+  td .no{color:var(--red);font-weight:700}
+  td .mid{color:var(--amber);font-weight:700}
+  .idc{font-family:'JetBrains Mono',monospace;font-weight:600;color:var(--indigo);white-space:nowrap}
+
+  .toc{background:#fff;border:1px solid var(--line);border-radius:14px;padding:18px 24px;margin:20px 0}
+  .toc h3{margin-top:0}
+  .toc ol{padding-left:20px;columns:2;column-gap:34px}
+  .toc a{color:var(--accent);text-decoration:none} .toc a:hover{text-decoration:underline}
+
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:760px){.grid2{grid-template-columns:1fr}.toc ol{columns:1}header.doc h1{font-size:26px}}
+  .pill-row{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
+  hr.soft{border:none;border-top:1px dashed #cdd5e3;margin:34px 0}
+  .foot{margin-top:50px;padding-top:18px;border-top:2px solid var(--line);color:var(--muted);font-size:14px}
+  a.ref{color:var(--accent);text-decoration:none} a.ref:hover{text-decoration:underline}
+  .kpi{display:flex;gap:14px;flex-wrap:wrap;margin:14px 0}
+  .kpi div{flex:1;min-width:150px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+  .kpi .big{font-size:22px;font-weight:800;color:var(--indigo)}
+  .kpi .lbl{font-size:13.5px;color:var(--muted)}
+  @media print{body{background:#fff}.card,table,pre{box-shadow:none}header.doc{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+</style>
+</head>
+<body>
+
+<header class="doc">
+  <div class="inner">
+    <div class="brand">A Child's Smile · Security Architecture Document · Round 3 (Final)</div>
+    <h1>Access Management — Final Design, Both PT Rounds Resolved</h1>
+    <div class="sub">Your Round-2 findings are all folded in — including the one you didn't have to name because we hadn't found it yet: a <strong style="color:#ffd3cc">live Django-admin backdoor</strong> to the crown-jewel tables. Final confirmation pass, please.</div>
+    <div class="meta">
+      <span><b>For:</b> Liam Avivi &amp; his reviewing model</span>
+      <span><b>Task:</b> Final confirmation — anything still open?</span>
+      <span><b>Written:</b> 2026-08-03 · <b>Updated:</b> 2026-08-04</span>
+      <span><b>Status:</b> Final design — NO CODE yet</span>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <div class="verdict">
+    <h3>Where we are</h3>
+    <p style="margin-top:6px">Two static-PT rounds done. Round 1 hardened the screen; Round 2 correctly moved the risk to the <strong>~50-gate migration</strong> and the <strong>firewall</strong>, and pushed us to fail closed. In chasing your "blind spots" point (§4), we found a <strong>live parallel backdoor</strong> — Django admin with <code class="inl">Role</code>/<code class="inl">Permissions</code>/<code class="inl">Staff</code> registered at <code class="inl">/admin/</code>, plus one dormant superuser (<code class="inl">amit_admin</code>). <strong>We already found it live and closed it</strong> (disabled the account + an admin lockdown, shipped in PR #511) — so it's out of the plan below.</p>
+    <p style="margin-bottom:4px">Two of your recommendations we deliberately did <em>not</em> take, with reasons below — we'd like you to sanity-check the risk-acceptance:</p>
+    <ul style="margin:6px 0 4px">
+      <li><strong>No DB restore</strong> (the org will never run a DB restore) — so R2 #7 is N/A; recovery is a manual re-grant via the screen.</li>
+      <li><strong>No shadow phase</strong> and <strong>no DRF deny-by-default</strong> — the latter genuinely doesn't fit our custom session auth (§6). We close the real gap (Django admin) directly and lean on a deterministic CI guard + negative tests instead.</li>
+    </ul>
+    <p style="margin-bottom:0"><strong>Still no code.</strong> This is the final design review before we build.</p>
+  </div>
+
+  <div class="toc">
+    <h3>Table of Contents</h3>
+    <ol>
+      <li><a href="#r2">Your Round-2 findings — resolutions</a></li>
+      <li><a href="#django">The Django-admin backdoor (found &amp; fixed)</a></li>
+      <li><a href="#firewall">Firewall — now code-constant, binds admins</a></li>
+      <li><a href="#migration">Migration safety — no shadow, no deny-by-default</a></li>
+      <li><a href="#names">Reserved names on translations + normalization</a></li>
+      <li><a href="#capabilities">Capability seeding (golden-master)</a></li>
+      <li><a href="#freshness">Freshness on a generic removal event</a></li>
+      <li><a href="#decisions">Two deliberate risk-acceptances</a></li>
+      <li><a href="#scenarios">Scenario catalog (updated + DA)</a></li>
+      <li><a href="#confirm">What we still confirm at build</a></li>
+      <li><a href="#questions">Final questions</a></li>
+    </ol>
+  </div>
+
+  <!-- 1 -->
+  <h2 id="r2"><span class="n">1</span>Your Round-2 findings — resolutions</h2>
+  <table>
+    <thead><tr><th>Round-2 finding</th><th>Resolution</th></tr></thead>
+    <tbody>
+      <tr><td><strong>#1 Fail-closed migration</strong> (deny-by-default)</td><td>Deny-by-default doesn't fit (§4/§6). Instead we <strong>already closed</strong> the real blind spot (Django admin, §2 — shipped in PR #511) and enforce the migration with a <strong>deterministic CI guard</strong> (presence + order + coverage) + <strong>negative per-gate tests</strong>. See the risk-acceptance in §6.</td></tr>
+      <tr><td><strong>#2 Firewall config must be immutable</strong></td><td><span class="yes">Done.</span> <code class="inl">ADMIN_DEFINING</code>, <code class="inl">RESERVED_ROLE_NAMES</code>, and the <code class="inl">is_admin</code> name-set are <strong>code constants</strong> — never readable/editable via any API/DB-config/screen (§3).</td></tr>
+      <tr><td><strong>#3 Reserved names on the translations table</strong></td><td><span class="yes">Done.</span> The reserved-name check now covers <code class="inl">name_he</code> and <code class="inl">name_en</code> too, on create and any translation edit — blocks the impersonation vector (§5).</td></tr>
+      <tr><td><strong>#4 CI guard: order + coverage</strong></td><td><span class="yes">Done.</span> The guard asserts decorator <strong>order</strong>, not just presence, and <strong>declares its coverage model</strong> (what it scans; anything outside — e.g. Django admin — is handled directly) (§6).</td></tr>
+      <tr><td><strong>#5 Negative per-gate tests</strong></td><td><span class="yes">Done.</span> Every migrated gate asserts <strong>both</strong> "intended role in" and "unauthorized role denied", and the <code class="inl">(resource, action)</code> mapping is verified (§6).</td></tr>
+      <tr><td><strong>#6 Capability seeding</strong></td><td><span class="yes">Done.</span> Golden-master back-compat + seed-<em>before</em>-switch (same txn, idempotent) + confirm pure-routing (§5).</td></tr>
+      <tr><td><strong>#7 Restore re-validates through the firewall</strong></td><td><span class="mid">N/A</span> — there is <strong>no restore</strong> (§7).</td></tr>
+      <tr><td><strong>#8 Freshness on a generic removal event</strong></td><td><span class="yes">Done.</span> Session-kill hangs off a generic "permission-removed" event — screen save, capability revoke, role delete all trigger it (§6).</td></tr>
+      <tr><td><strong>RN4 normalization</strong></td><td><span class="yes">Done.</span> NFKC + case-fold + trim/collapse + strip bidi/RTL + strip Hebrew niqqud, applied to input, the reserved list, and the translations (§5).</td></tr>
+    </tbody>
+  </table>
+
+  <!-- 2 -->
+  <h2 id="django"><span class="n">2</span>The Django-admin backdoor — found live, already closed (PR #511)</h2>
+  <div class="callout rec">
+    <div class="t">Resolved ahead of the build — no longer part of the plan</div>
+    <p style="margin:0">Chasing your "coverage blind spots" point, we found <code class="inl">childsmile_app/admin.py</code> registering <code class="inl">Role</code>, <code class="inl">Permissions</code>, <code class="inl">Staff</code> (+ PII) with <code class="inl">/admin/</code> routed — a full CRUD path around the firewall, TOTP, <code class="inl">ADMIN_DEFINING</code>, decorators and audit. A live prod check found <strong>one dormant superuser</strong> (<code class="inl">amit_admin</code>, last login 2025-10-12). So it was live, not hypothetical.</p>
+  </div>
+  <div class="callout rec">
+    <div class="t">What shipped (PR #511)</div>
+    <p style="margin:0">(1) <strong>Disabled <code class="inl">amit_admin</code></strong> in prod (<code class="inl">is_active/is_staff/is_superuser = False</code>) — the immediate key removed. (2) <code class="inl">admin.py</code> now registers <strong>no</strong> models and <strong>unregisters</strong> the built-in <code class="inl">User</code>/<code class="inl">Group</code> admin (broadly guarded so it can't break startup), so <code class="inl">/admin/</code> exposes nothing and cannot mint a superuser; <code class="inl">django.contrib.admin</code> + the route are kept (OAuth-safe — <code class="inl">/admin/</code> is nowhere in the allauth <code class="inl">/accounts/</code> flow or the <code class="inl">/#/google-success</code> redirect). <code class="inl">version.txt</code> → 26.08.1.0. Verified: OAuth-created <code class="inl">auth.User</code>s are <code class="inl">is_staff=False</code>, and <code class="inl">amit_admin</code> was the only superuser.</p>
+  </div>
+  <p style="color:var(--muted);font-size:14.5px">Other blind spots checked: no websocket consumers; the 5 management commands are ops-CLI only (not user-reachable).</p>
+
+  <!-- 3 -->
+  <h2 id="firewall"><span class="n">3</span>Firewall — now code-constant, still binds admins</h2>
+  <p><strong><code class="inl">ADMIN_DEFINING</code></strong> (non-grantable) = any action on <code class="inl">role</code>, <code class="inl">permissions</code>, and <code class="inl">staff</code> CREATE/UPDATE/DELETE. Three layers: (L1) admin-defining surfaces stay <code class="inl">is_admin</code> name-based only; (L2) the set is non-grantable — save/create/rename hard-reject it for <strong>every caller incl. admins</strong>; (L3) <code class="inl">is_admin</code> name-based ⇒ a stray admin-defining perm is inert.</p>
+  <div class="callout danger">
+    <div class="t">R2 #2 — the config that defines the firewall is itself immutable</div>
+    <p style="margin:0"><code class="inl">ADMIN_DEFINING</code>, <code class="inl">RESERVED_ROLE_NAMES</code>, and the <code class="inl">is_admin</code> role-name set are <strong>code constants deployed with the app</strong> — not readable or editable through any API, DB-config table, or admin screen. Changing them is a code deploy (covered by review + the CI guard). No runtime mutation surface = no meta-admin control to attack.</p>
+  </div>
+  <div class="callout rec"><div class="t">UX intact</div><p style="margin:0">Everything outside the set is grantable → an admin can build a "Finance Manager" custom role that reaches finance and nothing admin-defining.</p></div>
+
+  <!-- 4 -->
+  <h2 id="migration"><span class="n">4</span>Migration safety — no shadow, no deny-by-default, and why that's OK here</h2>
+  <div class="callout warn">
+    <div class="t">Why DRF deny-by-default doesn't fit (R2 #1)</div>
+    <p style="margin:0">The app runs DRF with <code class="inl">DEFAULT_AUTHENTICATION_CLASSES = []</code> and does its own session auth, so <code class="inl">request.user</code> is always <code class="inl">AnonymousUser</code>. A DRF <code class="inl">IsAuthenticated</code>/deny default would <strong>403 every valid session</strong>. Making it work needs a custom DRF auth shim over the session (touches the auth path) — and it still wouldn't cover Django admin. So we address the actual risk directly.</p>
+  </div>
+  <p>Our three safety nets for the ~50-gate cutover:</p>
+  <div class="kpi">
+    <div><div class="big">1</div><div class="lbl"><strong>Hardened Django admin (§2)</strong> — closes the real parallel mutation surface.</div></div>
+    <div><div class="big">2</div><div class="lbl"><strong>CI guard (deterministic, deploy-blocking)</strong> — presence + <strong>order</strong> + declared coverage. This, not "the AI won't forget", is what guarantees no gate is missed on the <code class="inl">@api_view</code> surface.</div></div>
+    <div><div class="big">3</div><div class="lbl"><strong>Negative per-gate tests</strong> — assert "unauthorized denied" as well as "intended allowed"; verify each <code class="inl">(resource, action)</code> mapping.</div></div>
+  </div>
+  <p><strong>Decorators:</strong> <code class="inl">@admin_only</code> (name-based; admin-defining surfaces) and <code class="inl">@admin_or_permission(resource, action)</code> (everything else). Order: <code class="inl">@conditional_csrf → @api_view → @admin_or_permission → @block_viewer_writes → def</code>. Freshness (R2 #8) hangs off a generic permission-removed event so no removal path is missed.</p>
+
+  <!-- 5 -->
+  <h2 id="names"><span class="n">5</span>Reserved names, normalization, capabilities</h2>
+  <div class="grid2">
+    <div class="callout warn"><div class="t">Reserved names — now on the translation fields too (R2 #3)</div><p style="margin:0">Reject on create/rename against <code class="inl">role_name</code> <strong>and</strong> <code class="inl">name_he</code>/<code class="inl">name_en</code> — UI + backend, any caller. Blocks setting a custom role's Hebrew label to <code class="inl">מנהל מערכת</code> to impersonate the admin role.</p></div>
+    <div class="callout info"><div class="t">Normalization (RN4)</div><p style="margin:0">NFKC + Unicode case-fold + trim/collapse-whitespace + strip bidi/RTL marks + strip Hebrew niqqud — applied identically to input, the reserved list, and the translations.</p></div>
+  </div>
+  <div class="callout rec"><div class="t" id="capabilities">Capability seeding (R2 #6)</div><p style="margin:0">~5 grantable capability resources replace the coordinator name-lookups. <strong>Golden-master:</strong> capture today's routing per role, assert byte-identical after seeding. <strong>Seed before switching</strong> routing (same transaction, idempotent) so no notification window drops. <strong>Confirm pure-routing</strong> — none also gates a data read.</p></div>
+
+  <!-- 6 -->
+  <h2 id="freshness"><span class="n">6</span>Freshness — generic removal event (R2 #8)</h2>
+  <p>The session-kill hangs off a single <strong>"permission-row-removed"</strong> event, so every removal path — screen save, capability revoke, role delete (CASCADE) — triggers it and none can be forgotten. Additions stay lazy (next login). No Redis, no <code class="inl">security_version</code>, no auth change.</p>
+
+  <!-- 7 -->
+  <h2 id="decisions"><span class="n">7</span>Two deliberate risk-acceptances — please sanity-check</h2>
+  <div class="callout danger">
+    <div class="t">No DB restore, ever (makes R2 #7 N/A)</div>
+    <p style="margin:0">The org will never run a DB restore, so we're not building one. Mitigations against a mistaken removal: <strong>per-cell explicit deltas</strong> (no accidental mass-delete), a <strong>confirm modal listing every removal</strong>, TOTP step-up, atomic apply, and an <strong>audit before-snapshot</strong>. Recovery = an admin re-checks the boxes via the screen using that snapshot — not a <code class="inl">pg_restore</code>. Acceptable?</p>
+  </div>
+  <div class="callout danger">
+    <div class="t">No shadow phase; no DRF deny-by-default</div>
+    <p style="margin:0">Hard all-or-nothing cutover. We rely on the deterministic CI guard (order + coverage) + negative tests + the Django-admin fix, rather than a shadow-log period or a framework default that doesn't fit our auth. Is that residual risk acceptable given the guard is deploy-blocking and the real parallel surface is closed?</p>
+  </div>
+
+  <!-- 8 -->
+  <h2 id="scenarios"><span class="n">8</span>Scenario catalog — updated, plus DA (Django admin, ✅ shipped)</h2>
+  <table>
+    <thead><tr><th>ID</th><th>Action</th><th>Expected defense</th></tr></thead>
+    <tbody>
+      <tr><td class="idc">DA1</td><td>CRUD <code class="inl">Role</code>/<code class="inl">Permissions</code>/<code class="inl">Staff</code> via <code class="inl">/admin/</code></td><td><span class="yes">No models registered</span> ⇒ nothing to edit</td></tr>
+      <tr><td class="idc">DA2</td><td>An OAuth-created <code class="inl">auth.User</code> opens <code class="inl">/admin/</code></td><td><span class="yes">Not <code class="inl">is_staff</code></span> ⇒ can't log in to admin</td></tr>
+      <tr><td class="idc">DA3</td><td>A stray Django superuser exists</td><td><span class="yes">Confirmed: only <code class="inl">amit_admin</code>, now disabled</span> (PR #511)</td></tr>
+      <tr><td class="idc">FW1–6</td><td>Grant admin-defining / edit System Admin / build backdoor role</td><td><span class="yes">Blocked</span> — code-constant config + non-grantable set + name-based <code class="inl">is_admin</code></td></tr>
+      <tr><td class="idc">MG1–6</td><td>Missed/opened gate; Viewer; background job; order</td><td><span class="yes">CI guard (order+coverage) + negative tests</span>; deny-by-default not needed</td></tr>
+      <tr><td class="idc">RN1–4</td><td>Reserved name via role_name / translation / API / look-alike</td><td><span class="yes">Rejected</span> on all three fields with NFKC+casefold normalization</td></tr>
+      <tr><td class="idc">CAP1–3</td><td>Seeding back-compat; grant/revoke; capability-as-data-gate</td><td><span class="yes">Golden-master + pure-routing confirmed</span></td></tr>
+    </tbody>
+  </table>
+
+  <!-- 9 -->
+  <h2 id="confirm"><span class="n">9</span>What we still confirm at build</h2>
+  <ol>
+    <li><code class="inl">deactivate_staff</code> removes the <code class="inl">System Administrator</code> role (not just adds <code class="inl">Inactive</code>).</li>
+    <li>The new <code class="inl">/api/access/*</code> endpoints carry <code class="inl">@conditional_csrf</code>, and the SPA sends <code class="inl">X-CSRFToken</code> on them.</li>
+    <li>The assignment-screen step-up uses a TOTP <code class="inl">purpose</code> distinct from <code class="inl">access_save</code>.</li>
+    <li><span style="color:var(--green);font-weight:700">✓ Done (PR #511):</span> OAuth-created <code class="inl">auth.User</code>s are <code class="inl">is_staff=False</code> (data-confirmed) and the only superuser (<code class="inl">amit_admin</code>) is disabled.</li>
+    <li>None of the ~5 capabilities gate a sensitive data read (pure routing).</li>
+  </ol>
+
+  <!-- 10 -->
+  <h2 id="questions"><span class="n">10</span>Final questions</h2>
+  <ol>
+    <li>Are the two risk-acceptances in §7 (no restore; no shadow / no deny-by-default) acceptable given the compensating controls?</li>
+    <li>With Django admin closed, the CI guard order+coverage in place, and the firewall config code-constant — is there any remaining path where a permission edit becomes admin, or a gate opens silently, that we haven't covered?</li>
+    <li>Anything in <code class="inl">ADMIN_DEFINING</code> you'd add now that gates are permission-based?</li>
+  </ol>
+
+  <div class="foot">
+    <p><strong>A Child's Smile</strong> · Access Management — Round 3 final design, both PT rounds resolved · Written 2026-08-03, updated 2026-08-04 · <strong>No code has been written yet.</strong></p>
+    <p>All Round-1 and Round-2 findings folded in; the Django-admin backdoor <strong>found live and already closed</strong> (PR #511, out of this plan); two documented risk-acceptances for your sign-off. If this passes, we build.</p>
+  </div>
+
+</div>
+</body>
+</html>
