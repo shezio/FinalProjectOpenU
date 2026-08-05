@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import axios from '../axiosConfig';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'react-toastify';
+import DOMPurify from 'dompurify';
 import './AIChatBot.css';
 
 const AIChatBot = () => {
@@ -280,7 +281,7 @@ const AIChatBot = () => {
                 className={`ai-chat-message ${msg.type}`}
               >
                 <div className="ai-chat-message-bubble">
-                  <div dangerouslySetInnerHTML={{ __html: msg.text }} />
+                  <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(msg.text) }} />
                   {msg.showSpinner && <div className="loading-spinner"></div>}
                 </div>
               </div>
