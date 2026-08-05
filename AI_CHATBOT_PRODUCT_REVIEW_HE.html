@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>עוזר ה‑AI — תמונת מצב מלאה להכרעת מנהלת המוצר</title>
+<style>
+  :root{
+    --navy:#16233b; --indigo:#2c3e73; --accent:#3f6fd1; --accent2:#6c8fd8;
+    --ink:#1f2733; --muted:#5b6472; --line:#e2e7ef; --bg:#f5f7fb; --card:#ffffff;
+    --green:#1f7a4d; --green-bg:#e8f6ee; --amber:#a9791b; --amber-bg:#fdf3e0;
+    --red:#b3341f; --red-bg:#fbecea; --blue:#22557f; --blue-bg:#e9f2fa;
+  }
+  @import url('https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap');
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    font-family:'Heebo',-apple-system,Segoe UI,Arial,sans-serif;
+    color:var(--ink); background:var(--bg); margin:0; line-height:1.85;
+    font-size:17px; direction:rtl;
+  }
+  .wrap{max-width:1040px; margin:0 auto; padding:0 22px 90px}
+  header.doc{
+    background:linear-gradient(135deg,var(--navy),var(--indigo) 70%);
+    color:#fff; padding:46px 22px 40px; margin-bottom:30px;
+    border-bottom:5px solid var(--accent);
+  }
+  header.doc .inner{max-width:1040px;margin:0 auto}
+  header.doc .brand{font-size:15px;letter-spacing:.3px;color:#b9c8ea;font-weight:500;margin-bottom:12px}
+  header.doc h1{font-size:32px;line-height:1.35;margin:0 0 10px;font-weight:800}
+  header.doc .sub{font-size:19px;color:#dbe4f7;font-weight:400;margin-bottom:20px}
+  header.doc .meta{font-size:14px;color:#aebbdc;display:flex;flex-wrap:wrap;gap:8px 26px;padding-top:16px;border-top:1px solid rgba(255,255,255,.15)}
+  header.doc .meta b{color:#e7edfb;font-weight:600}
+
+  h2{font-size:25px;color:var(--indigo);margin:44px 0 14px;padding-bottom:9px;border-bottom:2px solid var(--line);font-weight:800}
+  h2 .n{display:inline-block;background:var(--indigo);color:#fff;font-size:16px;width:32px;height:32px;line-height:32px;text-align:center;border-radius:8px;margin-left:10px;font-weight:700}
+  h3{font-size:20px;color:var(--navy);margin:26px 0 8px;font-weight:700}
+  p{margin:10px 0}
+  ul,ol{margin:10px 0;padding-right:26px;padding-left:0}
+  li{margin:7px 0}
+  code.inl{background:#eef1f7;border:1px solid #dde3ee;border-radius:5px;padding:1px 6px;font-family:'JetBrains Mono',monospace;font-size:13.5px;color:#33405c;direction:ltr;unicode-bidi:embed;display:inline-block}
+  strong{font-weight:700;color:var(--navy)}
+
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:22px 24px;margin:18px 0;box-shadow:0 2px 10px rgba(20,35,59,.05)}
+
+  .callout{border-radius:12px;padding:16px 20px 16px 18px;margin:18px 0;border-right:6px solid;font-size:16px}
+  .callout .t{font-weight:800;font-size:16px;margin-bottom:5px}
+  .rec{background:var(--green-bg);border-color:var(--green)} .rec .t{color:var(--green)}
+  .warn{background:var(--amber-bg);border-color:var(--amber)} .warn .t{color:var(--amber)}
+  .danger{background:var(--red-bg);border-color:var(--red)} .danger .t{color:var(--red)}
+  .info{background:var(--blue-bg);border-color:var(--blue)} .info .t{color:var(--blue)}
+  .badge{display:inline-block;font-size:12.5px;font-weight:700;padding:2px 10px;border-radius:20px;vertical-align:middle}
+  .b-rec{background:var(--green-bg);color:var(--green);border:1px solid #b7e0c6}
+  .b-warn{background:var(--amber-bg);color:var(--amber);border:1px solid #ecd3a0}
+  .b-danger{background:var(--red-bg);color:var(--red);border:1px solid #eebfb8}
+  .b-info{background:var(--blue-bg);color:var(--blue);border:1px solid #b9d6ec}
+
+  .verdict{background:linear-gradient(135deg,#eef3fc,#e8f6ee);border:1px solid #cfe0d6;border-radius:16px;padding:24px 26px;margin:6px 0 10px}
+  .verdict h3{margin-top:0;color:var(--green);font-size:22px}
+
+  table{width:100%;border-collapse:collapse;margin:16px 0;font-size:15px;background:#fff;border-radius:10px;overflow:hidden;box-shadow:0 1px 6px rgba(20,35,59,.06)}
+  th,td{border:1px solid var(--line);padding:10px 14px;text-align:right;vertical-align:top}
+  thead th{background:var(--indigo);color:#fff;font-weight:600;font-size:14.5px}
+  tbody tr:nth-child(even){background:#f7f9fd}
+  td .yes{color:var(--green);font-weight:700}
+  td .no{color:var(--red);font-weight:700}
+  td .mid{color:var(--amber);font-weight:700}
+
+  .toc{background:#fff;border:1px solid var(--line);border-radius:14px;padding:18px 24px;margin:20px 0}
+  .toc h3{margin-top:0}
+  .toc ol{padding-right:20px;columns:2;column-gap:34px}
+  .toc a{color:var(--accent);text-decoration:none} .toc a:hover{text-decoration:underline}
+
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:760px){.grid2{grid-template-columns:1fr}.toc ol{columns:1}header.doc h1{font-size:26px}}
+  .foot{margin-top:50px;padding-top:18px;border-top:2px solid var(--line);color:var(--muted);font-size:14px}
+  .kpi{display:flex;gap:14px;flex-wrap:wrap;margin:14px 0}
+  .kpi div{flex:1;min-width:170px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+  .kpi .big{font-size:19px;font-weight:800;color:var(--indigo)}
+  .kpi .lbl{font-size:13.5px;color:var(--muted)}
+  @media print{body{background:#fff}.card,table{box-shadow:none}header.doc{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+</style>
+</head>
+<body>
+
+<header class="doc">
+  <div class="inner">
+    <div class="brand">חיוך של ילד · מסמך מוצר</div>
+    <h1>עוזר ה‑AI במערכת — תמונת מצב מלאה להכרעה</h1>
+    <div class="sub">מה קיים היום, איך זה עובד באמת, ולמה זה כמעט לא בשימוש — כבסיס להחלטה על פתרון חדש</div>
+    <div class="meta">
+      <span><b>עבור:</b> מנהלת המוצר</span>
+      <span><b>מטרה:</b> סקירה והכרעה על המשך הדרך</span>
+      <span><b>נכתב:</b> 04/08/2026</span>
+      <span><b>רכיב:</b> לוח הבקרה — «עוזר AI»</span>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <div class="verdict">
+    <h3>בקצרה — למה קיבלת את המסמך הזה</h3>
+    <p style="margin-top:6px">במערכת קיימים כיום <strong>שני ממשקי «עוזר AI» נפרדים</strong>: בועת צ'אט צפה שמופיעה בפינת המסך, ומחולל «סרטוני סקירה» בתוך לוח הבקרה. בפועל, שני הרכיבים <strong>כמעט אינם בשימוש</strong>.</p>
+    <p>נקודה חשובה שכדאי לדעת מראש: <strong>מה שמוצג כ«בוט AI» אינו מבוסס בינה מלאכותית.</strong> אין במערכת שום מודל שפה (LLM) ואין חיבור לספק AI חיצוני. הצ'אט מגיב לפי <strong>מספר קטן של מילות מפתח קבועות מראש</strong> — לא יותר מזה.</p>
+    <p style="margin-bottom:0">מטרת המסמך היא לתת לך תמונה מלאה, כנה ומדויקת — כדי שתוכלי להכריע בעצמך: <strong>לשפר, להחליף בפתרון חדש, או להסיר</strong>. אין כאן המלצה נחרצת; יש כאן את כל העובדות כדי שההחלטה תהיה שלך.</p>
+  </div>
+
+  <div class="toc">
+    <h3>תוכן העניינים</h3>
+    <ol>
+      <li><a href="#ui">מה המשתמשים רואים היום</a></li>
+      <li><a href="#how">איך זה עובד באמת (מתחת למכסה המנוע)</a></li>
+      <li><a href="#why">למה הפיצ'ר לא בשימוש</a></li>
+      <li><a href="#risk">סיכונים וחוב טכני</a></li>
+      <li><a href="#options">אפשרויות להמשך</a></li>
+      <li><a href="#questions">שאלות להכרעה שלך</a></li>
+      <li><a href="#appendix">נספח טכני (לצוות הפיתוח)</a></li>
+    </ol>
+  </div>
+
+  <!-- 1 -->
+  <h2 id="ui"><span class="n">1</span>מה המשתמשים רואים היום</h2>
+  <p>קיימים שני ממשקים שונים, שחלקם חופפים — וזה כשלעצמו מקור לבלבול:</p>
+  <div class="grid2">
+    <div class="card">
+      <h3 style="margin-top:0">א. בועת הצ'אט הצפה 🤖</h3>
+      <p style="margin:0">כפתור עגול בפינת המסך שפותח חלון צ'אט. המשתמש מקליד שאלה, והבוט «עונה». אפשר גם לבקש דרכו לייצר סרטון סקירה. מיועד ל<strong>מנהל מערכת בלבד</strong>.</p>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0">ב. מחולל הסרטונים בלוח הבקרה 🎬</h3>
+      <p style="margin:0">אזור ייעודי בלוח הבקרה עם צ'אט משלו + טופס אפשרויות (טווח זמן, אורך, אילו עמודים לכלול, סגנון), וכפתור «צור סרטון סקירה». גם הוא ל<strong>מנהל מערכת בלבד</strong>.</p>
+    </div>
+  </div>
+  <div class="callout warn">
+    <div class="t">כבר כאן יש בעיה מוצרית</div>
+    <p style="margin:0">שני הממשקים עושים <strong>דברים חופפים</strong> (שניהם מצ'אטטים, שניהם מייצרים סרטון), אבל הם נפרדים, מתנהגים מעט שונה, ולא ברור למשתמש מתי להשתמש בכל אחד. אין «כניסה» אחת ברורה לפיצ'ר.</p>
+  </div>
+
+  <!-- 2 -->
+  <h2 id="how"><span class="n">2</span>איך זה עובד באמת — מתחת למכסה המנוע</h2>
+
+  <h3>2.1 · הצ'אט: לא בינה מלאכותית, אלא כמה כללים קבועים</h3>
+  <p>זה החלק הכי חשוב להבנה. ה«בוט» אינו מבין שפה חופשית. בצד השרת הוא בודק אם ההודעה מכילה מילת מפתח מסוימת, ומחזיר טקסט קבוע מראש. בפועל יש רק ארבעה מצבים:</p>
+  <table>
+    <thead><tr><th>אם ההודעה מכילה…</th><th>מה הבוט מחזיר</th></tr></thead>
+    <tbody>
+      <tr><td>«סרטון» / «וידאו»</td><td>טקסט קבוע שמסכם את הגדרות הסרטון ושואל אם לשנות משהו</td></tr>
+      <tr><td>«כן» / «התחל» / «בסדר»</td><td>טקסט קבוע: «מתחיל לייצר…» (מפנה ללחוץ על הכפתור)</td></tr>
+      <tr><td>«משפחות» / «נתונים»</td><td><span class="yes">הענף היחיד עם מידע אמיתי</span> — שולף מהמסד: כמה משפחות רשומות, כמה חדשות החודש, כמה ממתינות לחונך, וכמה חונכויות פעילות</td></tr>
+      <tr><td>כל דבר אחר</td><td>הודעת עזרה כללית וקבועה</td></tr>
+    </tbody>
+  </table>
+  <div class="callout danger">
+    <div class="t">המשמעות בשורה אחת</div>
+    <p style="margin:0">אם המשתמש שואל כל שאלה שאינה מכילה בדיוק את מילות המפתח האלה — הוא מקבל הודעת ברירת מחדל. זו <strong>לא שיחה חכמה</strong>, וזו כנראה הסיבה המרכזית לכך שאיש אינו טורח להשתמש בזה יותר מפעם אחת.</p>
+  </div>
+
+  <h3>2.2 · מחולל הסרטונים: מנגנון קיים, אך לא בשל וברובו «דמו»</h3>
+  <p>כאן דווקא <em>יש</em> מנגנון אמיתי בצד השרת: הפקת הקראה קולית, בניית שקופיות, והרכבתן לסרטון (באמצעות ספריות ייעודיות). אבל:</p>
+  <ul>
+    <li>בקוד עצמו שלב הפקת הווידאו מסומן במפורש כ<strong>«סימולציה»</strong> — כלומר לא ברור עד כמה התוצר הסופי מלא ומוכן.</li>
+    <li>בממשק, אחרי «ההפקה», מוצג <strong>«סרטון דוגמה» עם תוכן קבוע וכתוב מראש</strong> (כותרת, רשימת פרקים) — ולא נגן וידאו אמיתי עם התוכן שנוצר.</li>
+    <li>סרגל ההתקדמות בממשק הוא <strong>הדמיה</strong> (עולה מ‑0% ל‑100% לבד), ולא מדד אמיתי של תהליך ההפקה.</li>
+  </ul>
+  <div class="callout info">
+    <div class="t">מה שכן — ומה שצריך לאמת</div>
+    <p style="margin:0">קיימת תשתית אמיתית להפקת וידאו מנתונים. לפני כל החלטה «להשקיע בזה», שווה שהצוות <strong>יריץ הפקה אחת מקצה לקצה ויראה מה באמת יוצא</strong> — כי ייתכן שהתוצר בסיסי או חלקי. אל תסמכי על מסך ה«דוגמה».</p>
+  </div>
+
+  <h3>2.3 · פערים גלויים בממשק</h3>
+  <ul>
+    <li>כפתורי <strong>«שלח במייל»</strong> ו<strong>«שתף קישור»</strong> אינם ממומשים — לחיצה עליהם מציגה הודעת «תכונה תתווסף בקרוב».</li>
+    <li>ההרשאה לשני הרכיבים היא <strong>מנהל מערכת בלבד</strong> — כלומר גם אם הם היו מצוינים, קהל היעד היום צר מאוד.</li>
+  </ul>
+
+  <!-- 3 -->
+  <h2 id="why"><span class="n">3</span>למה הפיצ'ר לא בשימוש — סיכום כן</h2>
+  <div class="kpi">
+    <div><div class="big">אין AI אמיתי</div><div class="lbl">צ'אט מבוסס מילות מפתח קבועות, לא מודל שפה. שיחה אחת וכבר ברור שאין «עם מי לדבר».</div></div>
+    <div><div class="big">כפילות ובלבול</div><div class="lbl">שני ממשקים חופפים בלי כניסה אחת ברורה ובלי סיפור משתמש אחד.</div></div>
+    <div><div class="big">תוצר לא בשל</div><div class="lbl">הסרטון מסומן «סימולציה» ומוצג כ«דוגמה» — אין תחושת ערך אמיתי ומוגמר.</div></div>
+  </div>
+  <div class="kpi">
+    <div><div class="big">חלקים לא גמורים</div><div class="lbl">כפתורי «מייל» ו«שיתוף» = «בקרוב». תחושת מוצר לא שלם.</div></div>
+    <div><div class="big">לא משולב בעבודה</div><div class="lbl">הפיצ'ר עומד בצד, לא נובע מצורך בתהליך יומיומי של אף תפקיד.</div></div>
+    <div><div class="big">קהל צר</div><div class="lbl">מנהל מערכת בלבד — לא רכזים, לא מתנדבים.</div></div>
+  </div>
+
+  <!-- 4 -->
+  <h2 id="risk"><span class="n">4</span>סיכונים וחוב טכני שכדאי שתכירי</h2>
+  <div class="callout danger">
+    <div class="t">אבטחה — הצגת תוכן כ‑HTML גולמי (סיכון XSS)</div>
+    <p style="margin:0">שני הרכיבים מציגים את טקסט התשובות כ‑HTML גולמי ללא סינון. במצב כזה, תוכן זדוני עלול לרוץ בדפדפן של המנהל. הסיכון מתועד וכבר נכלל במסמך תיקונים נפרד (<code class="inl">SECURITY_REMEDIATION.md</code>). זו סיבה נוספת לא להשאיר את הרכיב «כמו שהוא» בלי טיפול.</p>
+  </div>
+  <div class="grid2">
+    <div class="callout warn"><div class="t">תלויות כבדות</div><p style="margin:0">הפקת הווידאו נשענת על ספריות כבדות (עיבוד וידאו/אודיו/מצגות). הן מכבידות על גודל הפריסה ועל התחזוקה — עלות שמוצדקת רק אם באמת משתמשים בפיצ'ר.</p></div>
+    <div class="callout warn"><div class="t">קוד «מת» עולה כסף</div><p style="margin:0">כל עוד הרכיב קיים, הוא דורש תחזוקה, בדיקות ותשומת לב אבטחה — גם אם אף אחד לא משתמש בו. מוצר שלא בשימוש הוא נטל, לא נכס.</p></div>
+  </div>
+
+  <!-- 5 -->
+  <h2 id="options"><span class="n">5</span>אפשרויות להמשך — ההחלטה שלך</h2>
+  <p>ארבעה כיוונים אפשריים. הצגתי אותם ניטרלית, עם השיקולים לכל אחד:</p>
+  <table>
+    <thead><tr><th style="width:20%">אפשרות</th><th>מה זה אומר</th><th>שיקולים</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>א. להסיר / להקפיא</strong> <span class="badge b-rec">הכי פשוט</span></td>
+        <td>להוריד את הרכיב מהמערכת (או להסתירו), ולנקות את הקוד והתלויות.</td>
+        <td><span class="yes">יתרון:</span> מסיר מיידית את חוב התחזוקה ואת סיכון האבטחה. <span class="no">חיסרון:</span> מאבדים את התשתית שכבר נבנתה — אם יש לה עתיד.</td>
+      </tr>
+      <tr>
+        <td><strong>ב. צ'אטבוט AI אמיתי</strong> <span class="badge b-warn">הכי שאפתני</span></td>
+        <td>לחבר מודל שפה אמיתי (ספק חיצוני) שיענה על שאלות חופשיות על נתוני המערכת.</td>
+        <td><span class="mid">לשקול:</span> עלות שוטפת; <strong>פרטיות</strong> — המערכת מכילה מידע רגיש על קטינים, ושליחת נתונים לספק חיצוני מחייבת בדיקה משפטית/אבטחתית; והכי חשוב — האם בכלל יש צורך אמיתי בצ'אט?</td>
+      </tr>
+      <tr>
+        <td><strong>ג. מעבר לדוח/סיכום אוטומטי</strong> <span class="badge b-info">מעשי</span></td>
+        <td>לזנוח את רעיון «הצ'אט», ולהשתמש בתשתית הקיימת כדי להפיק <strong>דוח או סרטון סקירה יזום/מתוזמן</strong> (למשל סיכום חודשי) — בלחיצת כפתור, בלי שיחה.</td>
+        <td><span class="yes">יתרון:</span> נשען על מה שכבר קיים, ערך ברור למנהלים. <span class="mid">לשקול:</span> להגדיר בדיוק מי הנמען, מתי, ובאיזה פורמט (PDF/מצגת/וידאו).</td>
+      </tr>
+      <tr>
+        <td><strong>ד. להשאיר כמו שהוא</strong> <span class="badge b-danger">לא מומלץ</span></td>
+        <td>לא לגעת.</td>
+        <td><span class="no">חיסרון:</span> ממשיכים לשלם תחזוקה וסיכון אבטחה על משהו שלא בשימוש. הגרוע משני העולמות.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- 6 -->
+  <h2 id="questions"><span class="n">6</span>שאלות שיעזרו לך להכריע</h2>
+  <div class="card">
+    <ul style="margin:0">
+      <li><strong>מי המשתמש?</strong> האם יש תפקיד אמיתי (מנהל, רכז, מתנדב) שחסר לו כלי כזה — או שזה «נחמד שיהיה»?</li>
+      <li><strong>איזו בעיה פותרים?</strong> האם הצורך הוא «לשאול שאלות על הנתונים», או «להפיק סקירה יפה להצגה/גיוס תרומות»? אלו שני מוצרים שונים לגמרי.</li>
+      <li><strong>צ'אט או כפתור?</strong> אם הצורך הוא סיכום — האם בכלל צריך שיחה, או שכפתור «הפק סקירה» מספיק?</li>
+      <li><strong>וידאו הוא הפורמט הנכון?</strong> אולי דוח PDF או מצגת ישרתו טוב יותר, בעלות ובמורכבות נמוכות בהרבה.</li>
+      <li><strong>פרטיות ותקציב:</strong> אם הכיוון הוא AI אמיתי — יש תקציב שוטף, ומי מאשר שליחת מידע (גם אם מצומצם) לספק חיצוני?</li>
+    </ul>
+  </div>
+
+  <!-- 7 -->
+  <h2 id="appendix"><span class="n">7</span>נספח טכני — לצוות הפיתוח</h2>
+  <p style="color:var(--muted);font-size:14.5px">לא נדרש לקריאה מנהלית; מיועד לתיאום מול הפיתוח בהמשך.</p>
+  <div class="card">
+    <ul style="margin:0">
+      <li><strong>Frontend:</strong> <code class="inl">AIChatBot.js</code> (בועת הצ'אט הצפה) · <code class="inl">AIVideoGenerator.js</code> (האזור בלוח הבקרה) + קובצי ה‑CSS שלהם.</li>
+      <li><strong>הצ'אט בצד השרת:</strong> <code class="inl">dashboard_views.py → ai_chat / get_ai_chat_response</code> — לוגיקת מילות המפתח. <strong>אין</strong> שום קריאה לספק AI/LLM בכל בסיס הקוד (נבדק).</li>
+      <li><strong>הפקת הווידאו:</strong> <code class="inl">generate_video_ai → generate_ai_video</code>, בליווי <code class="inl">video-status</code> / <code class="inl">download-video</code> / <code class="inl">export-ppt</code>. השלב מסומן בקוד כ«simulated».</li>
+      <li><strong>נקודות קצה:</strong> <code class="inl">/api/dashboard/ai-chat/</code> · <code class="inl">/api/dashboard/generate-video/</code> · <code class="inl">/api/dashboard/video-status/&lt;id&gt;/</code> · <code class="inl">/api/dashboard/download-video/&lt;id&gt;/</code>. כולן מוגבלות למנהל מערכת.</li>
+      <li><strong>תלויות רלוונטיות:</strong> <code class="inl">gTTS</code> (הקראה), <code class="inl">python-pptx</code> (מצגות), <code class="inl">moviepy</code> + <code class="inl">imageio-ffmpeg</code> (וידאו), <code class="inl">Pillow</code> (תמונות).</li>
+      <li><strong>אבטחה:</strong> רינדור באמצעות <code class="inl">dangerouslySetInnerHTML</code> ללא סינון — מתועד ב‑<code class="inl">SECURITY_REMEDIATION.md</code> (מומלץ סינון עם DOMPurify או הצגה כטקסט).</li>
+    </ul>
+  </div>
+
+  <div class="foot">
+    <p><strong>חיוך של ילד</strong> · מסמך מוצר — עוזר ה‑AI · נכתב 04/08/2026.</p>
+    <p>המסמך מציג את המצב הקיים במלואו כדי לאפשר החלטה מיודעת. ההכרעה — לשפר, להחליף או להסיר — בידייך.</p>
+  </div>
+
+</div>
+</body>
+</html>
