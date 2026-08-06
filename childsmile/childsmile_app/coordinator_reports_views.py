@@ -6,13 +6,12 @@ from django.db.models import Q
 import os
 
 from .models import Staff, CoordinatorProgressReport, WeeklyCoordinatorRequest
-from .audit_utils import is_admin
 from .logger import api_logger
 from .weekly_coordinator_reports import (
     send_weekly_coordinator_request,
     get_iso_week_start,
 )
-from .utils import conditional_csrf, block_viewer_writes
+from .utils import conditional_csrf, block_viewer_writes, is_admin
 
 
 def _get_staff(request):

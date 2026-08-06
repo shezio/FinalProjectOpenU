@@ -57,13 +57,20 @@ const Sidebar = () => {
   // ── Section open/close state ──────────────────────────────────
   const [openSections, setOpenSections] = useState(() => {
     try {
-      return JSON.parse(localStorage.getItem('sidebarSections') || '{}');
+      const saved = JSON.parse(localStorage.getItem('sidebarSections') || '{}');
+      // Accordion: at most one section open. Clamp any older multi-open state
+      // that may have been persisted before this behavior existed.
+      const openKey = Object.keys(saved).find(k => saved[k] === true);
+      return openKey ? { [openKey]: true } : {};
     } catch { return {}; }
   });
 
   const toggleSection = (key) => {
     setOpenSections(prev => {
-      const next = { ...prev, [key]: !prev[key] };
+      // Accordion: only ONE section open at a time. Opening a section closes all
+      // others (so two expanded menus can never overlap the bottom nav items);
+      // clicking the already-open section closes it.
+      const next = prev[key] ? {} : { [key]: true };
       localStorage.setItem('sidebarSections', JSON.stringify(next));
       return next;
     });

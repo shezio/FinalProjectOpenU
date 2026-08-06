@@ -622,7 +622,7 @@ def google_login_success(request):
         request.session.create()
         request.session["user_id"] = staff_user.staff_id
         request.session["username"] = staff_user.username
-        request.session.set_expiry(86400)
+        request.session.set_expiry(1800)  # 30-min idle timeout (refreshed per request via SESSION_SAVE_EVERY_REQUEST)
 
         api_logger.info(f"User {staff_user.staff_id} logged in successfully via Google OAuth")
         # **ENHANCED GOOGLE LOGIN SUCCESS**

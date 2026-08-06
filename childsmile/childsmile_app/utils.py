@@ -1021,6 +1021,34 @@ def has_permission(request, resource, action):
     )
 
 
+def _get_authenticated_user(request):
+    """Return (staff_obj, None) or (None, error_JsonResponse).
+
+    Single shared session-auth helper for the finance/activity endpoints. Resolves
+    the logged-in Staff from the session and re-checks is_active on the FRESH Staff
+    row: a deactivated/left ("עזב") user keeps their session's cached permissions,
+    so a permission check alone would still let them act. Fetching the row here
+    reflects deactivation immediately, so we block them even if their session was
+    not (yet) killed. (F21 — this used to be copy-pasted into 6 modules with the
+    is_active check present in only one of them.)
+    """
+    user_id = request.session.get("user_id")
+    if not user_id:
+        return None, JsonResponse(
+            {"detail": "Authentication credentials were not provided."}, status=403
+        )
+    try:
+        staff = Staff.objects.get(staff_id=user_id)
+    except Staff.DoesNotExist:
+        return None, JsonResponse({"detail": "User not found."}, status=403)
+    if not staff.is_active:
+        return None, JsonResponse(
+            {"detail": "Your account is inactive. Please contact the administrator."},
+            status=403,
+        )
+    return staff, None
+
+
 # ============================================================================
 # READ-ONLY "VIEWER" ROLE ENFORCEMENT
 # ============================================================================
@@ -1053,10 +1081,14 @@ def is_viewer_user(request):
         return Staff.objects.filter(
             staff_id=user_id, roles__role_name=VIEWER_ROLE_NAME
         ).exists()
-    except Exception:
-        # Fail "open" to normal (non-viewer) behavior so this check can never
-        # break a legitimate request.
-        return False
+    except Exception as e:
+        # F22 — fail CLOSED: if we cannot determine Viewer status, treat the user AS
+        # a Viewer and block the write. A wrongly-blocked write is visible and
+        # harmless; wrongly ALLOWING a Viewer write is a silent integrity failure.
+        api_logger.error(
+            f"is_viewer_user check failed — failing closed (treating as Viewer): {e}"
+        )
+        return True
 
 
 def viewer_readonly_response(request, action_name=None):

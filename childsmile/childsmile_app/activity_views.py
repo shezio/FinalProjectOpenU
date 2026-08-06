@@ -52,7 +52,7 @@ from .models import (
     Staff, Role, ChildrenLookup,
     ActivityRound, ActivityRequest, ActivityAssignment,
 )
-from .utils import has_permission, conditional_csrf, block_viewer_writes
+from .utils import has_permission, conditional_csrf, block_viewer_writes, _get_authenticated_user
 from .audit_utils import log_api_action
 from .logger import api_logger
 
@@ -81,18 +81,9 @@ _TEXT_FIELD_MAX_LENGTH = 4000
 _ISRAELI_PHONE_RE = re.compile(r'^0\d{9}$')
 
 
-def _get_authenticated_user(request):
-    """Return (staff_obj, None) or (None, error_JsonResponse)."""
-    user_id = request.session.get("user_id")
-    if not user_id:
-        return None, JsonResponse(
-            {"detail": "Authentication credentials were not provided."}, status=403
-        )
-    try:
-        staff = Staff.objects.get(staff_id=user_id)
-        return staff, None
-    except Staff.DoesNotExist:
-        return None, JsonResponse({"detail": "User not found."}, status=403)
+# _get_authenticated_user is imported from utils.py (single shared helper — it
+# includes the INACTIVE-STAFF (is_active) check so a deactivated user with a live
+# session is rejected here, not only when their session is killed). See F21.
 
 
 def _parse_date(value):

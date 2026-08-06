@@ -14,8 +14,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.utils import timezone
 
 from .models import Staff, StaffMeeting
-from .audit_utils import is_admin
-from .utils import block_viewer_writes
+from .utils import block_viewer_writes, is_admin
 from .meeting_notifications import (
     send_meeting_reminder,
     notify_meeting_created,
