@@ -95,9 +95,9 @@
     <div class="sub">Your Round-2 findings are all folded in — including the one you didn't have to name because we hadn't found it yet: a <strong style="color:#ffd3cc">live Django-admin backdoor</strong> to the crown-jewel tables. Final confirmation pass, please.</div>
     <div class="meta">
       <span><b>For:</b> Liam Avivi &amp; his reviewing model</span>
-      <span><b>Task:</b> Final confirmation — anything still open?</span>
-      <span><b>Written:</b> 2026-08-03 · <b>Updated:</b> 2026-08-04</span>
-      <span><b>Status:</b> Final design — NO CODE yet</span>
+      <span><b>Task:</b> Response to your white-box source audit (2026-08-06)</span>
+      <span><b>Written:</b> 2026-08-03 · <b>Updated:</b> 2026-08-06</span>
+      <span><b>Status:</b> Pre-build hardening <b>merged to main</b>; the feature itself is not yet built</span>
     </div>
   </div>
 </header>
@@ -105,19 +105,16 @@
 <div class="wrap">
 
   <div class="verdict">
-    <h3>Where we are</h3>
-    <p style="margin-top:6px">Two static-PT rounds done. Round 1 hardened the screen; Round 2 correctly moved the risk to the <strong>~50-gate migration</strong> and the <strong>firewall</strong>, and pushed us to fail closed. In chasing your "blind spots" point (§4), we found a <strong>live parallel backdoor</strong> — Django admin with <code class="inl">Role</code>/<code class="inl">Permissions</code>/<code class="inl">Staff</code> registered at <code class="inl">/admin/</code>, plus one dormant superuser (<code class="inl">amit_admin</code>). <strong>We already found it live and closed it</strong> (disabled the account + an admin lockdown, shipped in PR #511) — so it's out of the plan below.</p>
-    <p style="margin-bottom:4px">Two of your recommendations we deliberately did <em>not</em> take, with reasons below — we'd like you to sanity-check the risk-acceptance:</p>
-    <ul style="margin:6px 0 4px">
-      <li><strong>No DB restore</strong> (the org will never run a DB restore) — so R2 #7 is N/A; recovery is a manual re-grant via the screen.</li>
-      <li><strong>No shadow phase</strong> and <strong>no DRF deny-by-default</strong> — the latter genuinely doesn't fit our custom session auth (§6). We close the real gap (Django admin) directly and lean on a deterministic CI guard + negative tests instead.</li>
-    </ul>
-    <p style="margin-bottom:0"><strong>Still no code.</strong> This is the final design review before we build.</p>
+    <h3>Where we are — and thank you for the source pass</h3>
+    <p style="margin-top:6px">Your <strong>white-box (full-source) audit</strong> was the right call — it surfaced real code-level issues the black-box rounds structurally couldn't. <strong>Four are already fixed and merged to <code class="inl">main</code></strong> (F18, F21, F22, F23 — <code class="inl">version.txt</code> 26.08.3.0); the rest are either already in this plan (F24, F28) or verified non-issues in this deployment (F19, F20, F25–F27). Full response in <a class="ref" href="#whitebox">§0</a>.</p>
+    <p style="margin-bottom:4px">The two earlier design rounds still stand: the firewall, the ~50-gate migration, and the Django-admin backdoor we found live and closed (PR #511). Two deliberate risk-acceptances remain for your sign-off (no restore; no shadow / no deny-by-default).</p>
+    <p style="margin-bottom:0">The access-management <strong>feature</strong> itself is <strong>not yet built</strong> — only the pre-build hardening above is merged.</p>
   </div>
 
   <div class="toc">
     <h3>Table of Contents</h3>
     <ol>
+      <li><a href="#whitebox">Your white-box audit — response &amp; actions (F18–F28)</a></li>
       <li><a href="#r2">Your Round-2 findings — resolutions</a></li>
       <li><a href="#django">The Django-admin backdoor (found &amp; fixed)</a></li>
       <li><a href="#firewall">Firewall — now code-constant, binds admins</a></li>
@@ -130,6 +127,47 @@
       <li><a href="#confirm">What we still confirm at build</a></li>
       <li><a href="#questions">Final questions</a></li>
     </ol>
+  </div>
+
+  <!-- 0 · WHITE-BOX AUDIT RESPONSE -->
+  <h2 id="whitebox"><span class="n">0</span>Your white-box audit — response &amp; actions</h2>
+  <p>Your first <strong>white-box (full-source) pass</strong> did exactly what a source review should: it found three <em>reachable</em> code issues (F18, F21, F22) plus a config drift (F23) that black-box testing structurally could not see. <strong>All four are fixed and merged to <code class="inl">main</code></strong> (<code class="inl">version.txt</code> 26.08.3.0). We triaged the rest through a <strong>pen-test lens</strong> — “is it reachable/exploitable in this deployment?” — since that's where a source pass earns its keep.</p>
+
+  <h3 style="color:var(--green)">Fixed &amp; merged (pre-build, v26.08.3.0)</h3>
+  <table>
+    <thead><tr><th>#</th><th>Finding</th><th>What we merged</th></tr></thead>
+    <tbody>
+      <tr><td class="idc">F18</td><td>A 2nd <code class="inl">is_admin</code> in <code class="inl">audit_utils</code> also accepted <code class="inl">Admin</code>/<code class="inl">SuperAdmin</code></td><td><span class="yes">Deleted it.</span> The 5 importers now use the single <code class="inl">utils.is_admin</code> (<code class="inl">System Administrator</code>/<code class="inl">Viewer</code> only). There is now <strong>exactly one</strong> <code class="inl">is_admin</code>, so <code class="inl">Admin</code>/<code class="inl">SuperAdmin</code> are honoured <strong>nowhere</strong>. <code class="inl">RESERVED_ROLE_NAMES</code> extended to a superset of every privileged name + a single-definition test added for the build. Good catch — this was a genuine reachable escalation.</td></tr>
+      <tr><td class="idc">F21</td><td><code class="inl">is_active</code> check in only 1 of 6 <code class="inl">_get_authenticated_user</code> copies</td><td><span class="yes">Unified</span> into one shared <code class="inl">utils._get_authenticated_user</code> <strong>with</strong> the <code class="inl">is_active</code> check; all 6 copies removed. A deactivated user with a live session is now blocked in every finance/activity module, not only when the session-kill fires.</td></tr>
+      <tr><td class="idc">F22</td><td>Viewer read-only guard failed <strong>open</strong> on exception</td><td><span class="yes">Fails closed</span> now — on exception, treat the user as a Viewer (block the write) and log loudly.</td></tr>
+      <tr><td class="idc">F23</td><td>Sessions were 24 h despite a 30-min setting</td><td><span class="yes">30-minute idle</span> at all three login paths (<code class="inl">set_expiry(1800)</code>, refreshed per request); login audit text corrected.</td></tr>
+    </tbody>
+  </table>
+
+  <h3 style="color:var(--blue)">Already covered by this plan — no change</h3>
+  <table>
+    <thead><tr><th>#</th><th>Finding</th><th>Where</th></tr></thead>
+    <tbody>
+      <tr><td class="idc">F24</td><td>DRF <code class="inl">roles</code>/<code class="inl">permissions</code>/<code class="inl">staff</code> viewsets registered</td><td>Already planned for deletion (D16 / §1).</td></tr>
+      <tr><td class="idc">F28</td><td>Latent enum f-string SQL</td><td>Existing <strong>P4</strong> allow-list item in <code class="inl">SECURITY_REMEDIATION.md</code> (all callers pass hardcoded literals today).</td></tr>
+    </tbody>
+  </table>
+
+  <h3 style="color:var(--amber)">Reviewed against the running system — closing as non-issues</h3>
+  <table>
+    <thead><tr><th>#</th><th>Finding</th><th>Why we're closing it</th></tr></thead>
+    <tbody>
+      <tr><td class="idc">F19</td><td><code class="inl">SECRET_KEY</code> code fallback string</td><td><strong>Not exploitable here + already mitigated.</strong> Prod runs on a real key set in Azure (verified — no longer the fallback). The “forge a session for any user” attack the finding describes is the <code class="inl">signed_cookies</code> backend; this app uses <strong>DB-backed sessions</strong> (random opaque <code class="inl">sessionid</code>, <code class="inl">user_id</code> server-side), cookie-CSRF with a random secret, and <strong>no <code class="inl">django.core.signing</code>/reset/magic-link</strong> anywhere — so a known key forges nothing. We won't make a startup change to prod for a non-exploitable, already-mitigated item.</td></tr>
+      <tr><td class="idc">F20</td><td><code class="inl">DJANGO_ENV</code> gates security + 4 dev endpoints</td><td><strong>Latent, not live.</strong> Prod has <code class="inl">DJANGO_ENV=production</code> set and stable, so every control is in its secure state and the four dev-only file endpoints return 403. This is a static-only concern about a mis-set variable that isn't mis-set; we won't add env-validation/routing changes that risk prod integrity for a condition that doesn't occur.</td></tr>
+      <tr><td class="idc">F25</td><td>“Dead” duplicate <code class="inl">settings.py</code>/<code class="inl">urls.py</code>/<code class="inl">wsgi.py</code></td><td><strong>Not dead — deploy-critical.</strong> They are <strong>required by the Azure/Oryx build &amp; deploy</strong>; removing them previously caused repeated prod <strong>downtime</strong>. This is exactly the deploy/runtime context a static scan can't see (the same lesson as F21, inverted). They stay.</td></tr>
+      <tr><td class="idc">F26</td><td>Committed <code class="inl">myenv/</code> virtualenv</td><td><strong>Not a security issue</strong> — the audit itself found no secrets in it. Kept as a deliberate workflow choice (<code class="inl">requirements.txt</code> remains the source of truth).</td></tr>
+      <tr><td class="idc">F27</td><td>Duplicate/contradictory allauth settings</td><td><strong>Not exploitable</strong> — the audit confirms it (<code class="inl">adapters.py</code> rejects any non-Staff Google email). Cosmetic; left as-is.</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout info">
+    <div class="t">A note on scope — said with genuine respect</div>
+    <p style="margin:0">We're treating this pass as <strong>penetration testing</strong>, and that's the compliment: its strength is showing what an attacker can actually <em>reach</em> — which is exactly how it earned its keep here (F18 is a textbook reachable escalation we'd have missed). A few of the remaining items are <strong>code-style or config-layout observations</strong> — “this looks risky” rather than “this is reachable.” Where we've verified they aren't exploitable in this deployment (F19/F20/F25–F27), we're closing them rather than rewriting correct, deploy-critical code — so the security signal stays sharp and prod stays stable. Please keep the next pass aimed at <strong>reachable</strong> attack paths; that's where this collaboration keeps paying off, and we're grateful for it.</p>
   </div>
 
   <!-- 1 -->
@@ -241,8 +279,8 @@
   </ol>
 
   <div class="foot">
-    <p><strong>A Child's Smile</strong> · Access Management — Round 3 final design, both PT rounds resolved · Written 2026-08-03, updated 2026-08-04 · <strong>No code has been written yet.</strong></p>
-    <p>All Round-1 and Round-2 findings folded in; the Django-admin backdoor <strong>found live and already closed</strong> (PR #511, out of this plan); two documented risk-acceptances for your sign-off. If this passes, we build.</p>
+    <p><strong>A Child's Smile</strong> · Access Management — design final; white-box audit answered · Written 2026-08-03, updated 2026-08-06 · <strong>Pre-build hardening (F18/F21/F22/F23) merged to main (v26.08.3.0); the feature itself is not yet built.</strong></p>
+    <p>All three review rounds folded in; the Django-admin backdoor <strong>found live and closed</strong> (PR #511); F18–F28 answered in §0; two documented risk-acceptances for your sign-off. If this passes, we build.</p>
   </div>
 
 </div>

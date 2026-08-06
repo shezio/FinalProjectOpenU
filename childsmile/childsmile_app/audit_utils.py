@@ -61,16 +61,12 @@ def get_user_info(request):
     except Staff.DoesNotExist:
         return None, None, [], []
 
-def is_admin(staff):
-    """Check if staff member is admin.
-
-    The read-only 'Viewer' role is treated as admin so a Viewer can SEE every
-    admin-gated screen. Viewers still cannot change anything - all write
-    endpoints are guarded by block_viewer_writes and return 200 before any write.
-    """
-    admin_roles = ['Admin', 'System Administrator', 'SuperAdmin', 'Viewer']
-    user_roles = [role.role_name for role in staff.roles.all()]
-    return any(role in admin_roles for role in user_roles)
+# NOTE (F18): the divergent is_admin() that used to live here — which also accepted
+# the non-seed role names 'Admin' and 'SuperAdmin' — has been REMOVED. There is now
+# exactly ONE is_admin() (utils.is_admin, role names 'System Administrator' /
+# 'Viewer'). Do NOT reintroduce an is_admin here: a second definition with a wider
+# role set silently breaks the Access-Management firewall premise (a custom role
+# named "Admin"/"SuperAdmin" would gain admin power on the modules that imported it).
 
 def generate_audit_description(user_email, username, action, timestamp, user_roles, success, error_message, 
                               entity_type=None, entity_ids=None, report_name=None, additional_data=None, client_ip=None):
@@ -104,14 +100,14 @@ def generate_audit_description(user_email, username, action, timestamp, user_rol
     elif action == 'USER_LOGIN_SUCCESS' and additional_data:
         user_full_name = additional_data.get('user_full_name', f'{username}')
         login_method = additional_data.get('login_method', 'Unknown')
-        session_duration = additional_data.get('session_duration_hours', 24)
+        session_timeout = additional_data.get('session_timeout', '30-minute idle')
 
         description = f"Timestamp: {timestamp_formatted}\n"
         description += f"User: {user_full_name}\n"
         description += f"Email: {user_email}\n"
         description += f"Action: Successfully logged in\n"
         description += f"Method: {login_method}\n"
-        description += f"Session duration: {session_duration} hours\n"
+        description += f"Session timeout: {session_timeout}\n"
         description += f"Timestamp: {timestamp_formatted}\n"
         description += f"Roles: {roles_text}"
     

@@ -8,7 +8,7 @@ from django.utils import timezone
 from datetime import timedelta, datetime
 from .models import AuditLog, Staff, AuditTranslation
 from .utils import *
-from .audit_utils import is_admin, log_api_action
+from .audit_utils import log_api_action
 from .whatsapp_utils import send_security_breach_alert_whatsapp, _is_expired_session, get_client_ip
 from .logger import api_logger
 import csv

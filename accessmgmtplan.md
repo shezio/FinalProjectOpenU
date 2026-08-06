@@ -3,16 +3,17 @@
 **Feature:** Admin-only "Access Management" screen + APIs to edit `role`/`permissions`, **plus** a system-wide
 migration to permission-based authorization that makes custom roles first-class, behind a hard anti-escalation firewall.
 **Reviewed by:** Liam Avivi — **two** static-PT rounds, all findings folded in.
-**Written:** 2026-08-03 · **Updated:** 2026-08-04 (post-Round-2) · **Status:** Final design — **NO CODE YET**
+**Written:** 2026-08-03 · **Updated:** 2026-08-06 (post-Round-3 white-box audit) · **Status:** Feature design final — **NOT built**; four pre-build code fixes from Round 3 shipped (F18/F21/F22/F23, `version.txt` 26.08.3.0).
 **System:** A Child's Smile · Backend 26.07.2x.x (Django DB-backed sessions, passwordless TOTP login, allauth Google OAuth)
 
 ---
 
 ## 0. Status
 
-Two static-PT rounds are complete. Round 1 hardened the screen; Round 2 moved the risk to the **~50-gate migration** and
-the **firewall**, and surfaced a **live Django-admin backdoor** to the crown-jewel tables. Every finding is resolved
-below. This document is the definitive build spec — **still no code written.**
+Two static-PT rounds hardened the design; **Round 3 was the first white-box (source) audit** (2026-08-06). It found
+real code-level issues — four are **fixed now** (F18/F21/F22/F23, shipped pre-build, `version.txt` 26.08.3.0) and the rest
+are already planned or verified non-issues. See **§20** for the full response. The access-management feature itself is
+**still not built.**
 
 ---
 
@@ -48,7 +49,7 @@ below. This document is the definitive build spec — **still no code written.**
 ## 2. Ground truth — verified facts
 
 1. **Data model.** `Role(id, role_name UNIQUE)`; `Permissions(permission_id, role FK ON DELETE CASCADE, resource, action)`; `Staff.roles` M2M. Permission = `(role, resource, action)`; `action ∈ {VIEW,CREATE,UPDATE,DELETE}`.
-2. **`is_admin(user)` is ROLE-NAME based** (`role_name IN ('System Administrator','Viewer')`, fresh DB). Editing permission rows cannot mint an admin — **the firewall's backbone.**
+2. **`is_admin(user)` is ROLE-NAME based** (`role_name IN ('System Administrator','Viewer')`, fresh DB). Editing permission rows cannot mint an admin — **the firewall's backbone.** *(Round 3/F18: a second, more permissive `is_admin` in `audit_utils` that also accepted `Admin`/`SuperAdmin` has been **deleted** — there is now exactly ONE definition; see §20.)*
 3. **`has_permission` reads the SESSION cache** (loaded at login); `is_admin`/`is_viewer_user` hit the DB fresh.
 4. **`TOTPCode`** (email/code[6]/created_at/used/attempts; 5-min, 3-try) — **no `purpose` field today** (we add one, additively).
 5. **`conditional_csrf` = `csrf_protect` in prod / `csrf_exempt` in dev**; the SPA sends `X-CSRFToken` in prod. → **CSRF already enforced in prod.**
@@ -175,7 +176,7 @@ path) — and it still would not cover Django admin. The Django-admin hardening 
 - **Verified:** OAuth-created `auth.User` rows are `is_staff=False` (data-confirmed); `amit_admin` was the only staff/superuser and is now disabled.
 
 ## 12. Reserved names, i18n, XSS
-- **`RESERVED_ROLE_NAMES`** = the ~11 seed names, **bilingual**. Reject on create/rename — UI ("system reserved name") **and** backend (any caller) — applied to **`role_name` AND `name_he`/`name_en`** (Liam R2 #3: block impersonation via the translation fields).
+- **`RESERVED_ROLE_NAMES`** = the ~11 seed names **plus every admin role-name any `is_admin` honours or that a person would plausibly type** — `Admin`, `SuperAdmin`, `Administrator`, `Superuser`, `Root` (+ Hebrew equivalents) — **bilingual** (Round 3/F18: the reserved list must be a **superset of every privileged name**, not just the seeds). Reject on create/rename — UI ("system reserved name") **and** backend (any caller) — applied to **`role_name` AND `name_he`/`name_en`** (Liam R2 #3: block impersonation via the translation fields).
 - **Normalization (RN4):** NFKC + Unicode case-fold + trim/collapse-whitespace + strip bidi/RTL marks + strip Hebrew niqqud — applied identically to input, the reserved list, and the translations, on create and any translation edit.
 - **Bilingual names:** new `role_name_translations` table (`name_he`, `name_en`); seeds prepopulated; `role_name` stays the canonical key (custom = typed English or `newroleN` fallback). Matrix shows both columns.
 - **XSS/charset:** both name fields — Hebrew + Latin letters, digits, space, hyphen; reject HTML/control chars; escape on every render surface (matrix, Audit Log, emails, exports, non-React).
@@ -211,6 +212,7 @@ path) — and it still would not cover Django admin. The Django-admin hardening 
 | **R2 #7 Restore re-validates** | **N/A — no restore** (D4). |
 | **R2 #8 Freshness generic event** | Done (§9). |
 | **R2 (new) Django admin backdoor** | ✅ **Shipped separately** (PR #511, v26.08.1.0): `amit_admin` disabled + admin registers nothing. Not part of this build (§11). |
+| **R3 white-box audit (F18–F28)** | F18/F21/F22/F23 **fixed pre-build** (v26.08.3.0); F24/F28 already planned; F19/F20/F25–F27 verified non-issues / accepted. Full response in **§20**. |
 
 ---
 
@@ -226,7 +228,7 @@ backed by the CI guard + the (already-shipped) Django-admin fix rather than deny
 1. Python `ast`/`py_compile` on all new/edited `.py`.
 2. `check_viewer_guards.py` (extended) exits 0 — presence + **order** + coverage.
 3. **Negative + positive per-gate tests** for every converted `is_admin` gate; verify each `(resource, action)` mapping.
-4. Firewall: no `ADMIN_DEFINING` grantable; System Administrator perms immutable; reserved names rejected (UI + API, all three name fields); enforced for an admin caller too; config is code-only.
+4. Firewall: no `ADMIN_DEFINING` grantable; System Administrator perms immutable; reserved names rejected (UI + API, all three name fields); enforced for an admin caller too; config is code-only. **Single-`is_admin` test (Round 3/F18): assert there is exactly ONE `is_admin` definition in the codebase and that its role-name set equals the privileged subset of `RESERVED_ROLE_NAMES`.**
 5. Django admin (✅ already shipped, PR #511 — not this build): `/admin/` exposes no models; `amit_admin` disabled; OAuth users `is_staff=False` (verified).
 6. Screen: per-cell delta save inserts/deletes exactly the deltas, scoped + atomic; preview matches applied; empty save no-op; **no restore path exists.**
 7. Custom "Finance Manager" reaches finance and nothing else; capability grant/revoke changes routing; **golden-master back-compat** byte-identical after seeding.
@@ -242,6 +244,7 @@ backed by the CI guard + the (already-shipped) Django-admin fix rather than deny
 - No change to authentication, sessions, or the trust model beyond the additive TOTP `purpose` column. No Redis/JWT/PASETO/`security_version`.
 - Assignment of the real System Administrator role stays on System Management (TOTP-gated) — the single admin-minting path.
 - Mobile UI (desktop-only). Role soft-delete (guarded hard-delete + snapshot instead).
+- **Round 3 / F19, F20, F25–F27 (accepted — verified non-issues, see §20):** `SECRET_KEY` fallback (prod key set in Azure; no signing vectors in this architecture); `DJANGO_ENV` gate (set + stable → controls in their secure state, dev endpoints 403); duplicate `settings.py`/`urls.py`/`wsgi.py` (**required by Azure/Oryx deploy** — removing them caused prod downtime); committed `myenv/` (no secrets — a workflow choice); duplicate allauth settings (not exploitable — adapter rejects non-Staff).
 
 ## 19. Build-time confirmations (must verify during implementation)
 1. `deactivate_staff` removes the `System Administrator` role (not just adds `Inactive`).
@@ -249,3 +252,45 @@ backed by the CI guard + the (already-shipped) Django-admin fix rather than deny
 3. The assignment-screen step-up uses a TOTP `purpose` distinct from `access_save`.
 4. ✅ DONE (PR #511): OAuth-created `auth.User` rows are `is_staff=False` (data-confirmed) and the only superuser (`amit_admin`) is disabled.
 5. None of the ~5 capability resources gate a sensitive data read (pure routing).
+
+---
+
+## 20. Round 3 — white-box source audit (2026-08-06): response & actions
+
+Liam ran the **first white-box (full-source) pass** after `main` was updated. It correctly surfaced real code-level
+issues that the black-box rounds structurally could not — three of which we fixed on the spot. Source access clearly
+paid off, and the review is appreciated.
+
+**A note on scope.** The automated static pass is most valuable as a **security / pen-test aid** — finding *reachable*
+weaknesses. A few of its findings are **static-only observations** that read as problems without the **runtime and
+deploy context** a static view can't see (a correctly-set prod env var, the Azure/Oryx deploy layout). We verified each
+against the **running** system and accept those deliberately, with reasons below — they are not exploitable conditions.
+
+### Fixed now (shipped pre-build — `version.txt` 26.08.3.0)
+
+| # | Finding | What we did |
+|---|---|---|
+| **F18** | 2nd `is_admin` (`audit_utils`) also accepted `Admin`/`SuperAdmin` | **Deleted it.** The 5 importers now use the single `utils.is_admin` (`System Administrator`/`Viewer` only). There is now **exactly one** `is_admin`, so `Admin`/`SuperAdmin` are honoured **nowhere**. Reserved-name list extended (§12) + a single-definition test (§17) as belt-and-suspenders for the build. |
+| **F21** | `is_active` check in only 1 of 6 `_get_authenticated_user` copies | **Unified** into one shared `utils._get_authenticated_user` **with** the `is_active` check; deleted all 6 copies. A deactivated user with a live session is now blocked in every finance/activity module, not only when the session-kill happens to fire. |
+| **F22** | Viewer read-only guard failed **open** on exception | `is_viewer_user` now **fails closed** — on exception, treat as Viewer → block the write + log loudly. |
+| **F23** | Sessions were 24 h despite a 30-min setting | All three login paths now `set_expiry(1800)` → **30-minute idle** timeout (refreshed each request via `SESSION_SAVE_EVERY_REQUEST`); login audit text corrected. |
+
+### Already covered by this plan (no change)
+
+| # | Finding | Where |
+|---|---|---|
+| **F24** | DRF `roles`/`permissions`/`staff` viewsets registered | **D16 / §15** — deletion already planned. |
+| **F28** | Latent enum f-string SQL | Existing **P4** allow-list item in `SECURITY_REMEDIATION.md`. |
+
+### Reviewed and deliberately accepted (verified against the running system)
+
+| # | Finding | Why we are not changing it |
+|---|---|---|
+| **F19** | `SECRET_KEY` code fallback string | **Not exploitable here + already mitigated.** Prod runs on a real key set in Azure (verified — no longer the fallback). The "forge a session for any user" attack the finding describes is the **`signed_cookies`** backend; this app uses **DB-backed sessions** (random opaque `sessionid`, `user_id` server-side), cookie-CSRF with a random secret, and **no `django.core.signing` / password-reset / magic-link** anywhere — so a known key forges nothing. We will not make a startup change to prod for a non-exploitable, already-mitigated item. |
+| **F20** | `DJANGO_ENV` gates security + 4 dev endpoints | **Latent, not live.** Prod has `DJANGO_ENV=production` set and stable, so every control is in its secure state and the four dev-only file endpoints return 403. This is a static-only concern about a mis-set variable that isn't mis-set; we will not add env-validation/routing changes that risk prod integrity for a condition that doesn't occur. |
+| **F25** | "Dead" duplicate `settings.py`/`urls.py`/`wsgi.py` | **Not dead — deploy-critical.** They are **required by the Azure/Oryx build & deploy**; removing them previously caused repeated prod **downtime**. This is exactly the kind of deploy/runtime context a static scan can't see (the same lesson as F21, inverted). They stay. |
+| **F26** | Committed `myenv/` virtualenv | **Not a security issue** — the audit itself found no secrets in it. Kept as a deliberate workflow choice (`requirements.txt` remains the source of truth). |
+| **F27** | Duplicate/contradictory allauth settings | **Not exploitable** — the audit confirms it (`adapters.py` rejects any non-Staff Google email). Cosmetic; left as-is. |
+
+**Bottom line:** every *reachable* code issue the white-box pass found is fixed (F18/F21/F22/F23); the rest are already
+planned (F24/F28) or verified non-issues in this deployment (F19/F20/F25–F27).

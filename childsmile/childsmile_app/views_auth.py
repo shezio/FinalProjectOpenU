@@ -460,7 +460,7 @@ def verify_totp(request):
         request.session.create()
         request.session["user_id"] = staff_user.staff_id
         request.session["username"] = staff_user.username
-        request.session.set_expiry(86400)
+        request.session.set_expiry(1800)  # 30-min idle timeout (refreshed per request via SESSION_SAVE_EVERY_REQUEST)
         
         # Logout all other sessions for this user (single device login)
         other_sessions_count = logout_all_other_sessions(
@@ -481,7 +481,7 @@ def verify_totp(request):
                 'totp_attempts': totp_record.attempts,
                 'user_full_name': f"{staff_user.first_name} {staff_user.last_name}",
                 'user_roles': [role.role_name for role in staff_user.roles.all()],
-                'session_duration_hours': 24,
+                'session_timeout': '30-minute idle',
                 'login_step': 'session_created'
             }
         )
@@ -588,7 +588,7 @@ def google_login_success(request):
         request.session.create()
         request.session["user_id"] = staff_user.staff_id
         request.session["username"] = staff_user.username
-        request.session.set_expiry(86400)
+        request.session.set_expiry(1800)  # 30-min idle timeout (refreshed per request via SESSION_SAVE_EVERY_REQUEST)
         
         # Logout all other sessions for this user (single device login)
         other_sessions_count = logout_all_other_sessions(

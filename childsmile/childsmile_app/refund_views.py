@@ -55,6 +55,7 @@ from .utils import (
     conditional_csrf,
     create_task_internal,
     block_viewer_writes,
+    _get_authenticated_user,
 )
 from .audit_utils import log_api_action
 from .logger import api_logger
@@ -94,26 +95,9 @@ MAX_RECEIPT_ATTACHMENTS = 3  # 3 fixed file slots on ExpenseRefund — see _REFU
 # HELPERS
 # ──────────────────────────────────────────────────────────────────────────────
 
-def _get_authenticated_user(request):
-    """Return (staff_obj, None) or (None, error_JsonResponse)."""
-    user_id = request.session.get("user_id")
-    if not user_id:
-        return None, JsonResponse(
-            {"detail": "Authentication credentials were not provided."}, status=403
-        )
-    try:
-        staff = Staff.objects.get(staff_id=user_id)
-    except Staff.DoesNotExist:
-        return None, JsonResponse({"detail": "User not found."}, status=403)
-    # INACTIVE STAFF FEATURE: a deactivated/left ("עזב") user keeps their session's
-    # cached permissions, so has_permission alone would still let them act. The Staff
-    # row is fetched fresh here, so it reflects deactivation immediately — block them.
-    if not staff.is_active:
-        return None, JsonResponse(
-            {"detail": "Your account is inactive. Please contact the administrator."},
-            status=403,
-        )
-    return staff, None
+# _get_authenticated_user is imported from utils.py (single shared helper — it
+# includes the INACTIVE-STAFF (is_active) check so a deactivated user with a live
+# session is rejected here, not only when their session is killed). See F21.
 
 
 def _ownership_guard(refund, staff, user_is_admin):

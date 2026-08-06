@@ -19,9 +19,8 @@ from django.utils import timezone
 from django.db.models import Q
 
 from .models import Staff, CoordinatorChatMessage, Role
-from .audit_utils import is_admin
 from .logger import api_logger
-from .utils import conditional_csrf, block_viewer_writes
+from .utils import conditional_csrf, block_viewer_writes, is_admin
 from .whatsapp_utils import send_whatsapp_message
 from .notification_mute import is_whatsapp_muted
 
