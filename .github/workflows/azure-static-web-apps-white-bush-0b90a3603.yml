@@ -8,6 +8,7 @@ on:
       - 'childsmile/frontend/**'
       - '.github/workflows/azure-static-web-apps-white-bush-0b90a3603.yml'
   # Removed pull_request trigger - we only want to deploy AFTER merge, not on PR open/sync
+  workflow_dispatch:  # Manual "Run workflow" button (checks out the selected branch tip, default = main)
 
 jobs:
   build_and_deploy_job:
